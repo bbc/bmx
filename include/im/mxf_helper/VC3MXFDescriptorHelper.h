@@ -47,6 +47,9 @@ public:
     static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
     static bool IsSupported(EssenceType essence_type);
 
+private:
+    static bool IsAvidDNxHD(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label, size_t *index);
+
 public:
     VC3MXFDescriptorHelper();
     virtual ~VC3MXFDescriptorHelper();
