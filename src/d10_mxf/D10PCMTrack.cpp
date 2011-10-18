@@ -1,0 +1,150 @@
+/*
+ * Copyright (C) 2011, British Broadcasting Corporation
+ * All Rights Reserved.
+ *
+ * Author: Philip de Nier
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *     * Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the British Broadcasting Corporation nor the names
+ *       of its contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <im/d10_mxf/D10PCMTrack.h>
+#include <im/MXFUtils.h>
+#include <im/IMException.h>
+#include <im/Logging.h>
+
+using namespace std;
+using namespace im;
+using namespace mxfpp;
+
+
+
+D10PCMTrack::D10PCMTrack(D10File *file, uint32_t track_index, mxfRational frame_rate, D10EssenceType essence_type)
+: D10Track(file, track_index, frame_rate, essence_type)
+{
+    IM_ASSERT(essence_type == D10_PCM);
+
+    mIsPicture = false;
+
+    mSoundDescriptorHelper = dynamic_cast<SoundMXFDescriptorHelper*>(mDescriptorHelper);
+    IM_ASSERT(mSoundDescriptorHelper);
+
+    mSoundDescriptorHelper->SetSamplingRate(SAMPLING_RATE_48K);
+    mSoundDescriptorHelper->SetQuantizationBits(16);
+    mSoundDescriptorHelper->SetChannelCount(1);
+
+    mOutputChannelIndex = (uint8_t)(-1);
+
+    SetSampleSequence();
+}
+
+D10PCMTrack::~D10PCMTrack()
+{
+}
+
+void D10PCMTrack::SetSamplingRate(mxfRational sampling_rate)
+{
+    IM_CHECK(sampling_rate.numerator == 48000 && sampling_rate.denominator == 1);
+
+    mSoundDescriptorHelper->SetSamplingRate(sampling_rate);
+
+    SetSampleSequence();
+}
+
+void D10PCMTrack::SetQuantizationBits(uint32_t bits)
+{
+    IM_CHECK(bits == 16 || bits == 24);
+
+    mSoundDescriptorHelper->SetQuantizationBits(bits);
+}
+
+void D10PCMTrack::SetChannelCount(uint32_t count)
+{
+    IM_CHECK(count == 1); // currently support one channel per track only
+
+    mSoundDescriptorHelper->SetChannelCount(count);
+}
+
+void D10PCMTrack::SetLocked(bool locked)
+{
+    mSoundDescriptorHelper->SetLocked(locked);
+}
+
+void D10PCMTrack::SetAudioRefLevel(int8_t level)
+{
+    mSoundDescriptorHelper->SetAudioRefLevel(level);
+}
+
+void D10PCMTrack::SetDialNorm(int8_t dial_norm)
+{
+    mSoundDescriptorHelper->SetDialNorm(dial_norm);
+}
+
+void D10PCMTrack::SetSequenceOffset(uint8_t offset)
+{
+    mCPManager->SetSoundSequenceOffset(offset);
+}
+
+void D10PCMTrack::SetOutputChannelIndex(uint8_t track_index)
+{
+    IM_CHECK(track_index < 8);
+
+    mOutputChannelIndex = track_index;
+}
+
+bool D10PCMTrack::HaveSequenceOffset() const
+{
+    return mCPManager->HaveSoundSequenceOffset();
+}
+
+uint8_t D10PCMTrack::GetSequenceOffset() const
+{
+    IM_CHECK(mCPManager->HaveSoundSequenceOffset());
+    return mCPManager->GetSoundSequenceOffset();
+}
+
+vector<uint32_t> D10PCMTrack::GetShiftedSampleSequence() const
+{
+    vector<uint32_t> shifted_sample_sequence = mSampleSequence;
+    offset_sound_sample_sequence(shifted_sample_sequence, GetSequenceOffset());
+
+    return shifted_sample_sequence;
+}
+
+void D10PCMTrack::PrepareWrite()
+{
+    mCPManager->RegisterPCMTrackElement(mTrackIndex, mOutputChannelIndex, mSampleSequence,
+                                        mSoundDescriptorHelper->GetSampleSize());
+}
+
+void D10PCMTrack::SetSampleSequence()
+{
+    mSampleSequence.clear();
+    IM_CHECK(get_sound_sample_sequence(mFrameRate, mSoundDescriptorHelper->GetSamplingRate(), &mSampleSequence));
+}
+

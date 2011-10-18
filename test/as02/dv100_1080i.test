@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check.sh 5 dv100_1080i
+

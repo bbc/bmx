@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check.sh 31 vc3_1080p_1235
+

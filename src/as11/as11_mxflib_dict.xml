@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AMWA AS-11 and UK DPP Dictionary -->
+<MXFDictionary>
+
+    <MXFLabels>
+        <AS11CoreSchemeLabel         detail="AS-11 Core DM Scheme"         ul="06 0e 2b 34 04 01 01 01 0d 01 04 01 0b 01 00 00"/>
+        <AS11SegmentationSchemeLabel detail="AS-11 Segmentation DM Scheme" ul="06 0e 2b 34 04 01 01 01 0d 01 04 01 0b 02 00 00"/>
+        <UKDPPSchemeLabel            detail="UK DPP DM Scheme"             ul="06 0e 2b 34 04 01 01 01 0d 0c 01 01 01 00 00 00"/> 
+    </MXFLabels>
+
+    <MXFTypes>
+        <Enumeration>
+            <CaptionsType         type="UInt8">
+                <HardOfHearing        value="0"/>
+                <Translation          value="1"/>
+            </CaptionsType>
+            <AudioTrackLayoutType type="UInt8">
+                <EBU_R48_1a           value="0"/>
+                <EBU_R48_1b           value="1"/>
+                <EBU_R48_1c           value="2"/>
+                <EBU_R48_2a           value="3"/>
+                <EBU_R48_2b           value="4"/>
+                <EBU_R48_2c           value="5"/>
+                <EBU_R48_3a           value="6"/>
+                <EBU_R48_3b           value="7"/>
+                <EBU_R48_4a           value="8"/>
+                <EBU_R48_4b           value="9"/>
+                <EBU_R48_4c           value="10"/>
+                <EBU_R48_5a           value="11"/>
+                <EBU_R48_5b           value="12"/>
+                <EBU_R48_6a           value="13"/>
+                <EBU_R48_6b           value="14"/>
+                <EBU_R48_7a           value="15"/>
+                <EBU_R48_7b           value="16"/>
+                <EBU_R48_8a           value="17"/>
+                <EBU_R48_8b           value="18"/>
+                <EBU_R48_8c           value="19"/>
+                <EBU_R48_9a           value="20"/>
+                <EBU_R48_9b           value="21"/>
+                <EBU_R48_10a          value="22"/>
+                <EBU_R48_11a          value="23"/>
+                <EBU_R48_11b          value="24"/>
+                <EBU_R48_11c          value="25"/>
+                <EBU_R123_2a          value="26"/>
+                <EBU_R123_4a          value="27"/>
+                <EBU_R123_4b          value="28"/>
+                <EBU_R123_4c          value="29"/>
+                <EBU_R123_8a          value="30"/>
+                <EBU_R123_8b          value="31"/>
+                <EBU_R123_8c          value="32"/>
+                <EBU_R123_8d          value="33"/>
+                <EBU_R123_8e          value="34"/>
+                <EBU_R123_8f          value="35"/>
+                <EBU_R123_8g          value="36"/>
+                <EBU_R123_8h          value="37"/>
+                <EBU_R123_8i          value="38"/>
+                <EBU_R123_12a         value="39"/>
+                <EBU_R123_12b         value="40"/>
+                <EBU_R123_12c         value="41"/>
+                <EBU_R123_12d         value="42"/>
+                <EBU_R123_12e         value="43"/>
+                <EBU_R123_12f         value="44"/>
+                <EBU_R123_12g         value="45"/>
+                <EBU_R123_12h         value="46"/>
+                <EBU_R123_16a         value="47"/>
+                <EBU_R123_16b         value="48"/>
+                <EBU_R123_16c         value="49"/>
+                <EBU_R123_16d         value="50"/>
+                <EBU_R123_16e         value="51"/>
+                <EBU_R123_16f         value="52"/>
+                <Undefined            value="255"/>
+            </AudioTrackLayoutType>
+            <FPAPassType          type="UInt8">
+                <Yes                  value="0"/>
+                <No                   value="1"/>
+                <NotTested            value="2"/>
+            </FPAPassType>
+            <SigningPresentType   type="UInt8">
+                <Yes                  value="0"/>
+                <No                   value="1"/>
+                <SignerOnly           value="2"/>
+            </SigningPresentType>
+            <3DTypeType           type="UInt8">
+                <SideBySide           value="0"/>
+                <Dual                 value="1"/>
+                <LeftEyeOnly          value="2"/>
+                <RightEyeOnly         value="3"/>
+            </3DTypeType>
+            <AudioLoudStdType     type="UInt8">
+                <None                 value="0"/>
+                <EBU_R128             value="1"/>
+            </AudioLoudStdType>
+            <AudioDescType        type="UInt8">
+                <ControlData_Naration value="0"/>
+                <ADMix                value="1"/>
+            </AudioDescType>
+            <SignLanguageType     type="UInt8">
+                <BritishSignLanguage  value="0"/>
+                <Makaton              value="1"/>
+            </SignLanguageType>
+        </Enumeration>
+    </MXFTypes>
+
+
+    <AS11CoreFramework base="DM_Framework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 04 01 0b 01 01 00">
+        <SeriesTitle                type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 01"/>
+        <ProgrammeTitle             type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 02"/>
+        <EpisodeTitleNumber         type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 03"/>
+        <ShimName                   type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 04"/>
+        <AudioTrackLayout           type="AudioTrackLayoutType" use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 05"/>
+        <PrimaryAudioLanguage       type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 06"/>
+        <ClosedCaptions             type="Boolean"              use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 07"/>
+        <ClosedCaptionsType         type="CaptionsType"         use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 08"/>
+        <ClosedCaptionsLanguage     type="UTF16String"          use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 09"/>
+    </AS11CoreFramework>
+
+    <AS11SegmentationFramework base="DM_Framework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 04 01 0b 02 01 00">
+        <PartNumber                 type="UInt16"       use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 02 01 01"/>
+        <PartTotal                  type="UInt16"       use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 02 01 02"/>
+    </AS11SegmentationFramework>
+
+    <UKDPPFramework base="DM_Framework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 0c 01 01 01 01 00 00">
+        <ProductionNumber           type="UTF16String"        use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 01 00"/>
+        <Synopsis                   type="UTF16String"        use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 02 00"/>
+        <Originator                 type="UTF16String"        use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 03 00"/>
+        <CopyrightYear              type="UInt16"             use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 04 00"/>
+        <OtherIdentifier            type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 05 00"/>
+        <OtherIdentifierType        type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 06 00"/>
+        <Genre                      type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 07 00"/>
+        <Distributor                type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 08 00"/>
+        <PictureRatio               type="Rational"           use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 09 00"/>
+        <3D                         type="Boolean"            use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0a 00"/>
+        <3DType                     type="3DTypeType"         use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0b 00"/>
+        <ProductPlacement           type="Boolean"            use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0c 00"/>
+        <FPAPass                    type="FPAPassType"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0d 00"/>
+        <FPAManufacturer            type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0e 00"/>
+        <FPAVersion                 type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0f 00"/>
+        <VideoComments              type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 10 00"/>
+        <SecondaryAudioLanguage     type="UTF16String"        use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 11 00"/>
+        <TertiaryAudioLanguage      type="UTF16String"        use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 12 00"/>
+        <AudioLoudnessStandard      type="AudioLoudStdType"   use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 13 00"/>
+        <AudioComments              type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 14 00"/>
+        <LineUpStart                type="Position"           use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 15 00"/>
+        <IdentClockStart            type="Position"           use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 16 00"/>
+        <TotalNumberOfParts         type="UInt16"             use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 17 00"/>
+        <TotalProgrammeDuration     type="Length"             use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 18 00"/>
+        <AudioDescriptionPresent    type="Boolean"            use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 19 00"/>
+        <AudioDescriptionType       type="AudioDescType"      use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 1a 00"/>
+        <OpenCaptions               type="Boolean"            use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 1b 00"/>
+        <OpenCaptionsType           type="CaptionsType"       use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 1c 00"/>
+        <OpenCaptionsLanguage       type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 1d 00"/>
+        <SigningPresent             type="SigningPresentType" use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 1e 00"/>
+        <SignLanguage               type="SignLanguageType"   use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 1f 00"/>
+        <CompletionDate             type="Timestamp"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 20 00"/>
+        <TextlessElementsExist      type="Boolean"            use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 21 00"/>
+        <ProgrammeHasText           type="Boolean"            use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 22 00"/>
+        <ProgrammeTextLanguage      type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 23 00"/>
+        <ContactEmail               type="UTF16String"        use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 24 00"/>
+        <ContactTelephoneNo         type="UTF16String"        use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 25 00"/>
+    </UKDPPFramework>
+
+
+    <Filler base="StructuralComponent" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 09 00"/>
+
+</MXFDictionary>

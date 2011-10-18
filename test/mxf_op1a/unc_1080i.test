@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check.sh 18 unc_1080i
+
