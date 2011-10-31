@@ -48,10 +48,12 @@
 #include <im/mxf_op1a/OP1AAVCITrack.h>
 #include <im/mxf_op1a/OP1AMPEG2LGTrack.h>
 #include <im/mxf_op1a/OP1AUncTrack.h>
+#include <im/mxf_op1a/OP1AVC3Track.h>
 #include <im/mxf_op1a/OP1APCMTrack.h>
 #include <im/essence_parser/DVEssenceParser.h>
 #include <im/essence_parser/MPEG2EssenceParser.h>
 #include <im/essence_parser/AVCIRawEssenceReader.h>
+#include <im/essence_parser/VC3EssenceParser.h>
 #include <im/essence_parser/RawEssenceReader.h>
 #include <im/Utils.h>
 #include <im/MXFUtils.h>
@@ -69,6 +71,7 @@ typedef enum
 {
     NO_ESSENCE_GROUP = 0,
     DV_ESSENCE_GROUP,
+    VC3_ESSENCE_GROUP,
     MPEG2LG_ESSENCE_GROUP,
     D10_ESSENCE_GROUP,
 } EssenceTypeGroup;
@@ -240,6 +243,17 @@ static void usage(const char* cmd)
     fprintf(stderr, "  --mpeg2lg_422p_hl <name>  Raw MPEG-2 Long GOP 422P@HL (eg. XDCAM HD422) video input file\n");
     fprintf(stderr, "  --mpeg2lg_mp_hl <name>    Raw MPEG-2 Long GOP MP@HL (eg. XDCAM EX) video input file\n");
     fprintf(stderr, "  --mpeg2lg_mp_h14 <name>   Raw MPEG-2 Long GOP MP@H14 (eg. XDCAM HD / HDV) video input file\n");
+    fprintf(stderr, "  --vc3 <name>            Raw VC3/DNxHD input file\n");
+    fprintf(stderr, "  --vc3_1080p_1235 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps 10bit input file\n");
+    fprintf(stderr, "  --vc3_1080p_1237 <name> Raw VC3/DNxHD 1920x1080p 145/120/115 Mbps input file\n");
+    fprintf(stderr, "  --vc3_1080p_1238 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps input file\n");
+    fprintf(stderr, "  --vc3_1080i_1241 <name> Raw VC3/DNxHD 1920x1080i 220/185 Mbps 10bit input file\n");
+    fprintf(stderr, "  --vc3_1080i_1242 <name> Raw VC3/DNxHD 1920x1080i 145/120 Mbps input file\n");
+    fprintf(stderr, "  --vc3_1080i_1243 <name> Raw VC3/DNxHD 1920x1080i 220/185 Mbps input file\n");
+    fprintf(stderr, "  --vc3_720p_1250 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps 10bit input file\n");
+    fprintf(stderr, "  --vc3_720p_1251 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps input file\n");
+    fprintf(stderr, "  --vc3_720p_1252 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps input file\n");
+    fprintf(stderr, "  --vc3_1080p_1253 <name> Raw VC3/DNxHD 1920x1080p 45/36 Mbps input file\n");
     fprintf(stderr, "  --pcm <name>            Raw PCM audio input file\n");
 }
 
@@ -966,6 +980,149 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--vc3") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type_group = VC3_ESSENCE_GROUP;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc3_1080p_1235") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = OP1A_VC3_1080P_1235;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc3_1080p_1237") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = OP1A_VC3_1080P_1237;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc3_1080p_1238") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = OP1A_VC3_1080P_1238;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc3_1080i_1241") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = OP1A_VC3_1080I_1241;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc3_1080i_1242") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = OP1A_VC3_1080I_1242;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc3_1080i_1243") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = OP1A_VC3_1080I_1243;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc3_720p_1250") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = OP1A_VC3_720P_1250;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc3_720p_1251") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = OP1A_VC3_720P_1251;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc3_720p_1252") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = OP1A_VC3_720P_1252;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc3_1080p_1253") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = OP1A_VC3_1080P_1253;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--pcm") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -1110,6 +1267,56 @@ int main(int argc, const char** argv)
 
                     if (!input->aspect_ratio_set)
                         input->aspect_ratio = dv_parser->GetAspectRatio();
+                }
+            }
+            else if (input->essence_type_group == VC3_ESSENCE_GROUP)
+            {
+                VC3EssenceParser *vc3_parser = new VC3EssenceParser();
+                input->raw_reader->SetEssenceParser(vc3_parser);
+
+                input->raw_reader->ReadSamples(1);
+                if (input->raw_reader->GetNumSamples() == 0) {
+                    // default to OP1A_VC3_1080I_1242 if no essence samples
+                    input->essence_type = OP1A_VC3_1080I_1242;
+                } else {
+                    vc3_parser->ParseFrameInfo(input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
+
+                    switch (vc3_parser->GetCompressionId())
+                    {
+                        case 1235:
+                            input->essence_type = OP1A_VC3_1080P_1235;
+                            break;
+                        case 1237:
+                            input->essence_type = OP1A_VC3_1080P_1237;
+                            break;
+                        case 1238:
+                            input->essence_type = OP1A_VC3_1080P_1238;
+                            break;
+                        case 1241:
+                            input->essence_type = OP1A_VC3_1080I_1241;
+                            break;
+                        case 1242:
+                            input->essence_type = OP1A_VC3_1080I_1242;
+                            break;
+                        case 1243:
+                            input->essence_type = OP1A_VC3_1080I_1243;
+                            break;
+                        case 1250:
+                            input->essence_type = OP1A_VC3_720P_1250;
+                            break;
+                        case 1251:
+                            input->essence_type = OP1A_VC3_720P_1251;
+                            break;
+                        case 1252:
+                            input->essence_type = OP1A_VC3_720P_1252;
+                            break;
+                        case 1253:
+                            input->essence_type = OP1A_VC3_1080P_1253;
+                            break;
+                        default:
+                            log_error("Unknown VC3 essence type\n");
+                            throw false;
+                    }
                 }
             }
             else if (input->essence_type_group == D10_ESSENCE_GROUP ||
@@ -1289,6 +1496,7 @@ int main(int argc, const char** argv)
         OP1AAVCITrack *avci_track = 0;
         OP1AMPEG2LGTrack *mpeg2lg_track = 0;
         OP1AUncTrack *unc_track = 0;
+        OP1AVC3Track *vc3_track = 0;
         OP1APCMTrack *pcm_track = 0;
         for (i = 0; i < inputs.size(); i++) {
             RawInput *input = &inputs[i];
@@ -1364,6 +1572,20 @@ int main(int argc, const char** argv)
                     mpeg2lg_track->SetSignalStandard(input->mpeg2lg_signal_standard);
                     mpeg2lg_track->SetFrameLayout(input->mpeg2lg_frame_layout);
                     break;
+                case OP1A_VC3_1080P_1235:
+                case OP1A_VC3_1080P_1237:
+                case OP1A_VC3_1080P_1238:
+                case OP1A_VC3_1080I_1241:
+                case OP1A_VC3_1080I_1242:
+                case OP1A_VC3_1080I_1243:
+                case OP1A_VC3_720P_1250:
+                case OP1A_VC3_720P_1251:
+                case OP1A_VC3_720P_1252:
+                case OP1A_VC3_1080P_1253:
+                    vc3_track = dynamic_cast<OP1AVC3Track*>(input->track);
+                    if (input->afd)
+                        vc3_track->SetAFD(input->afd);
+                    break;
                 case OP1A_PCM:
                     pcm_track = dynamic_cast<OP1APCMTrack*>(input->track);
                     pcm_track->SetSamplingRate(input->sampling_rate);
@@ -1402,6 +1624,16 @@ int main(int argc, const char** argv)
                 case OP1A_UNC_HD_1080I:
                 case OP1A_UNC_HD_1080P:
                 case OP1A_UNC_HD_720P:
+                case OP1A_VC3_1080P_1235:
+                case OP1A_VC3_1080P_1237:
+                case OP1A_VC3_1080P_1238:
+                case OP1A_VC3_1080I_1241:
+                case OP1A_VC3_1080I_1242:
+                case OP1A_VC3_1080I_1243:
+                case OP1A_VC3_720P_1250:
+                case OP1A_VC3_720P_1251:
+                case OP1A_VC3_720P_1252:
+                case OP1A_VC3_1080P_1253:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
                     if (input->raw_reader->GetFixedSampleSize() == 0)

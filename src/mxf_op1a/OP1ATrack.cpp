@@ -44,6 +44,7 @@
 #include <im/mxf_op1a/OP1AAVCITrack.h>
 #include <im/mxf_op1a/OP1AUncTrack.h>
 #include <im/mxf_op1a/OP1AMPEG2LGTrack.h>
+#include <im/mxf_op1a/OP1AVC3Track.h>
 #include <im/mxf_op1a/OP1APCMTrack.h>
 #include <im/MXFUtils.h>
 #include <im/Utils.h>
@@ -85,6 +86,16 @@ static const EssenceTypeMap ESSENCE_TYPE_MAP[] =
     {OP1A_MPEG2LG_422P_HL,  MXFDescriptorHelper::MPEG2LG_422P_HL},
     {OP1A_MPEG2LG_MP_HL,    MXFDescriptorHelper::MPEG2LG_MP_HL},
     {OP1A_MPEG2LG_MP_H14,   MXFDescriptorHelper::MPEG2LG_MP_H14},
+    {OP1A_VC3_1080P_1235,   MXFDescriptorHelper::VC3_1080P_1235},
+    {OP1A_VC3_1080P_1237,   MXFDescriptorHelper::VC3_1080P_1237},
+    {OP1A_VC3_1080P_1238,   MXFDescriptorHelper::VC3_1080P_1238},
+    {OP1A_VC3_1080I_1241,   MXFDescriptorHelper::VC3_1080I_1241},
+    {OP1A_VC3_1080I_1242,   MXFDescriptorHelper::VC3_1080I_1242},
+    {OP1A_VC3_1080I_1243,   MXFDescriptorHelper::VC3_1080I_1243},
+    {OP1A_VC3_720P_1250,    MXFDescriptorHelper::VC3_720P_1250},
+    {OP1A_VC3_720P_1251,    MXFDescriptorHelper::VC3_720P_1251},
+    {OP1A_VC3_720P_1252,    MXFDescriptorHelper::VC3_720P_1252},
+    {OP1A_VC3_1080P_1253,   MXFDescriptorHelper::VC3_1080P_1253},
     {OP1A_PCM,              MXFDescriptorHelper::WAVE_PCM},
 };
 
@@ -123,6 +134,16 @@ static const OP1ASampleRateSupport OP1A_SAMPLE_RATE_SUPPORT[] =
     {OP1A_MPEG2LG_MP_HL,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
     {OP1A_MPEG2LG_MP_HL,      true,     {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {OP1A_MPEG2LG_MP_H14,     false,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {OP1A_VC3_1080P_1235,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {OP1A_VC3_1080P_1237,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {OP1A_VC3_1080P_1238,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {OP1A_VC3_1080I_1241,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {OP1A_VC3_1080I_1242,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {OP1A_VC3_1080I_1243,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {OP1A_VC3_720P_1250,      false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {OP1A_VC3_720P_1251,      false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {OP1A_VC3_720P_1252,      false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {OP1A_VC3_1080P_1253,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {OP1A_PCM,                false,    {{48000, 1}, {0, 0}}},
 };
 
@@ -202,6 +223,17 @@ OP1ATrack* OP1ATrack::Create(OP1AFile *file, uint32_t track_index, uint32_t trac
         case OP1A_MPEG2LG_MP_HL:
         case OP1A_MPEG2LG_MP_H14:
             return new OP1AMPEG2LGTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
+        case OP1A_VC3_1080P_1235:
+        case OP1A_VC3_1080P_1237:
+        case OP1A_VC3_1080P_1238:
+        case OP1A_VC3_1080I_1241:
+        case OP1A_VC3_1080I_1242:
+        case OP1A_VC3_1080I_1243:
+        case OP1A_VC3_720P_1250:
+        case OP1A_VC3_720P_1251:
+        case OP1A_VC3_720P_1252:
+        case OP1A_VC3_1080P_1253:
+            return new OP1AVC3Track(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         case OP1A_PCM:
             return new OP1APCMTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         case OP1A_UNKNOWN_ESSENCE:

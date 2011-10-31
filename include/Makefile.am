@@ -49,6 +49,7 @@ nobase_library_include_HEADERS = \
 	im/mxf_op1a/OP1APictureTrack.h \
 	im/mxf_op1a/OP1ATrack.h \
 	im/mxf_op1a/OP1AUncTrack.h \
+	im/mxf_op1a/OP1AVC3Track.h \
 	im/d10_mxf/D10ContentPackage.h \
 	im/d10_mxf/D10File.h \
 	im/d10_mxf/D10MPEGTrack.h \

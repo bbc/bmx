@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check.sh 37 vc3_720p_1250
+
