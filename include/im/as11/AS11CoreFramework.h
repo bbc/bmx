@@ -62,7 +62,7 @@ public:
     std::string GetShimName();
     uint8_t GetAudioTrackLayout();
     std::string GetPrimaryAudioLanguage();
-    bool GetClosedCaptions();
+    bool GetClosedCaptionsPresent();
     bool HaveClosedCaptionsType();
     uint8_t GetClosedCaptionsType();
     bool HaveClosedCaptionsLanguage();
@@ -74,7 +74,7 @@ public:
     void SetShimName(std::string value);
     void SetAudioTrackLayout(uint8_t value);
     void SetPrimaryAudioLanguage(std::string value);
-    void SetClosedCaptions(bool value);
+    void SetClosedCaptionsPresent(bool value);
     void SetClosedCaptionsType(uint8_t value);
     void SetClosedCaptionsLanguage(std::string value);
 

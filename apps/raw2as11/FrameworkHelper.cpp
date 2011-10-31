@@ -56,7 +56,7 @@ static const PropertyInfo AS11_CORE_PROPERTY_INFO[] =
     {"ShimName",                    MXF_ITEM_K(AS11CoreFramework, AS11ShimName)},
     {"AudioTrackLayout",            MXF_ITEM_K(AS11CoreFramework, AS11AudioTrackLayout)},
     {"PrimaryAudioLanguage",        MXF_ITEM_K(AS11CoreFramework, AS11PrimaryAudioLanguage)},
-    {"ClosedCaptions",              MXF_ITEM_K(AS11CoreFramework, AS11ClosedCaptions)},
+    {"ClosedCaptionsPresent",       MXF_ITEM_K(AS11CoreFramework, AS11ClosedCaptionsPresent)},
     {"ClosedCaptionsType",          MXF_ITEM_K(AS11CoreFramework, AS11ClosedCaptionsType)},
     {"ClosedCaptionsLanguage",      MXF_ITEM_K(AS11CoreFramework, AS11ClosedCaptionsLanguage)},
 
@@ -99,7 +99,7 @@ static const PropertyInfo UK_DPP_PROPERTY_INFO[] =
     {"TotalProgrammeDuration",      MXF_ITEM_K(UKDPPFramework, UKDPPTotalProgrammeDuration)},
     {"AudioDescriptionPresent",     MXF_ITEM_K(UKDPPFramework, UKDPPAudioDescriptionPresent)},
     {"AudioDescriptionType",        MXF_ITEM_K(UKDPPFramework, UKDPPAudioDescriptionType)},
-    {"OpenCaptions",                MXF_ITEM_K(UKDPPFramework, UKDPPOpenCaptions)},
+    {"OpenCaptionsPresent",         MXF_ITEM_K(UKDPPFramework, UKDPPOpenCaptionsPresent)},
     {"OpenCaptionsType",            MXF_ITEM_K(UKDPPFramework, UKDPPOpenCaptionsType)},
     {"OpenCaptionsLanguage",        MXF_ITEM_K(UKDPPFramework, UKDPPOpenCaptionsLanguage)},
     {"SigningPresent",              MXF_ITEM_K(UKDPPFramework, UKDPPSigningPresent)},

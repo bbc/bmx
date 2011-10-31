@@ -95,7 +95,7 @@ public:
     bool GetAudioDescriptionPresent();
     bool HaveAudioDescriptionType();
     uint8_t GetAudioDescriptionType();
-    bool GetOpenCaptions();
+    bool GetOpenCaptionsPresent();
     bool HaveOpenCaptionsType();
     uint8_t GetOpenCaptionsType();
     bool HaveOpenCaptionsLanguage();
@@ -139,7 +139,7 @@ public:
     void SetTotalProgrammeDuration(int64_t value);
     void SetAudioDescriptionPresent(bool value);
     void SetAudioDescriptionType(uint8_t value);
-    void SetOpenCaptions(bool value);
+    void SetOpenCaptionsPresent(bool value);
     void SetOpenCaptionsType(uint8_t value);
     void SetOpenCaptionsLanguage(std::string value);
     void SetSigningPresent(uint8_t value);

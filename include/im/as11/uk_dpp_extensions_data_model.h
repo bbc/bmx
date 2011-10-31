@@ -246,7 +246,7 @@ MXF_SET_DEFINITION(DMFramework, UKDPPFramework,
         0
     );
 
-    MXF_ITEM_DEFINITION(UKDPPFramework, UKDPPOpenCaptions,
+    MXF_ITEM_DEFINITION(UKDPPFramework, UKDPPOpenCaptionsPresent,
         MXF_LABEL(0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x01, 0x0d, 0x0c, 0x01, 0x01, 0x01, 0x01, 0x1b, 0x00),
         0x0000,
         MXF_BOOLEAN_TYPE,

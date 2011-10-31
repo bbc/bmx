@@ -264,9 +264,9 @@ uint8_t UKDPPFramework::GetAudioDescriptionType()
     return getUInt8Item(&MXF_ITEM_K(UKDPPFramework, UKDPPAudioDescriptionType));
 }
 
-bool UKDPPFramework::GetOpenCaptions()
+bool UKDPPFramework::GetOpenCaptionsPresent()
 {
-    return getBooleanItem(&MXF_ITEM_K(UKDPPFramework, UKDPPOpenCaptions));
+    return getBooleanItem(&MXF_ITEM_K(UKDPPFramework, UKDPPOpenCaptionsPresent));
 }
 
 bool UKDPPFramework::HaveOpenCaptionsType()
@@ -479,9 +479,9 @@ void UKDPPFramework::SetAudioDescriptionType(uint8_t value)
     setUInt8Item(&MXF_ITEM_K(UKDPPFramework, UKDPPAudioDescriptionType), value);
 }
 
-void UKDPPFramework::SetOpenCaptions(bool value)
+void UKDPPFramework::SetOpenCaptionsPresent(bool value)
 {
-    setBooleanItem(&MXF_ITEM_K(UKDPPFramework, UKDPPOpenCaptions), value);
+    setBooleanItem(&MXF_ITEM_K(UKDPPFramework, UKDPPOpenCaptionsPresent), value);
 }
 
 void UKDPPFramework::SetOpenCaptionsType(uint8_t value)

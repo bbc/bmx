@@ -97,9 +97,9 @@ string AS11CoreFramework::GetPrimaryAudioLanguage()
     return getStringItem(&MXF_ITEM_K(AS11CoreFramework, AS11PrimaryAudioLanguage));
 }
 
-bool AS11CoreFramework::GetClosedCaptions()
+bool AS11CoreFramework::GetClosedCaptionsPresent()
 {
-    return getBooleanItem(&MXF_ITEM_K(AS11CoreFramework, AS11ClosedCaptions));
+    return getBooleanItem(&MXF_ITEM_K(AS11CoreFramework, AS11ClosedCaptionsPresent));
 }
 
 bool AS11CoreFramework::HaveClosedCaptionsType()
@@ -152,9 +152,9 @@ void AS11CoreFramework::SetPrimaryAudioLanguage(string value)
     setStringItem(&MXF_ITEM_K(AS11CoreFramework, AS11PrimaryAudioLanguage), value);
 }
 
-void AS11CoreFramework::SetClosedCaptions(bool value)
+void AS11CoreFramework::SetClosedCaptionsPresent(bool value)
 {
-    setBooleanItem(&MXF_ITEM_K(AS11CoreFramework, AS11ClosedCaptions), value);
+    setBooleanItem(&MXF_ITEM_K(AS11CoreFramework, AS11ClosedCaptionsPresent), value);
 }
 
 void AS11CoreFramework::SetClosedCaptionsType(uint8_t value)
