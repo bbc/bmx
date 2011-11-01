@@ -128,8 +128,7 @@ private:
     } PackageType;
 
 private:
-    MXFReader(std::string filename, mxfpp::File *file, mxfpp::Partition *header_partition,
-              MXFPackageResolver *resolver, bool resolver_take_ownership);
+    MXFReader(std::string filename, mxfpp::File *file, MXFPackageResolver *resolver, bool resolver_take_ownership);
 
     void ProcessMetadata(mxfpp::Partition *partition);
 

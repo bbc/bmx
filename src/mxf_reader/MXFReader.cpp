@@ -128,7 +128,6 @@ MXFReader::OpenResult MXFReader::Open(string filename, MXFPackageResolver *resol
     IM_ASSERT(MXF_RESULT_FAIL + 1 == RESULT_STRINGS_SIZE);
 
     File *file = 0;
-    Partition *header_partition = 0;
 
     try
     {
@@ -143,20 +142,19 @@ MXFReader::OpenResult MXFReader::Open(string filename, MXFPackageResolver *resol
         }
 
         // read the header partition pack and check the operational pattern
-        header_partition = Partition::findAndReadHeaderPartition(file);
-        if (!header_partition)
+        if (!file->readHeaderPartition())
             THROW_RESULT(MXF_RESULT_INVALID_FILE);
+        Partition &header_partition = file->getPartition(0);
 
-        if (!is_op_atom(header_partition->getOperationalPattern()) &&
-            !is_op_1a(header_partition->getOperationalPattern()) &&
-            !is_op_1b(header_partition->getOperationalPattern()))
+        if (!is_op_atom(header_partition.getOperationalPattern()) &&
+            !is_op_1a(header_partition.getOperationalPattern()) &&
+            !is_op_1b(header_partition.getOperationalPattern()))
         {
             THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
         }
 
-        *reader = new MXFReader(filename, file, header_partition, resolver, resolver_take_ownership);
+        *reader = new MXFReader(filename, file, resolver, resolver_take_ownership);
 
-        delete header_partition;
         return MXF_RESULT_SUCCESS;
     }
     catch (const OpenResult &ex)
@@ -164,7 +162,6 @@ MXFReader::OpenResult MXFReader::Open(string filename, MXFPackageResolver *resol
         if (resolver_take_ownership)
             delete resolver;
         delete file;
-        delete header_partition;
         return ex;
     }
     catch (const IMException &ex)
@@ -173,7 +170,6 @@ MXFReader::OpenResult MXFReader::Open(string filename, MXFPackageResolver *resol
         if (resolver_take_ownership)
             delete resolver;
         delete file;
-        delete header_partition;
         return MXF_RESULT_FAIL;
     }
     catch (...)
@@ -181,7 +177,6 @@ MXFReader::OpenResult MXFReader::Open(string filename, MXFPackageResolver *resol
         if (resolver_take_ownership)
             delete resolver;
         delete file;
-        delete header_partition;
         return MXF_RESULT_FAIL;
     }
 }
@@ -195,8 +190,7 @@ string MXFReader::ResultToString(OpenResult result)
 }
 
 
-MXFReader::MXFReader(string filename, File *file, Partition *header_partition,
-                     MXFPackageResolver *resolver, bool resolver_take_ownership)
+MXFReader::MXFReader(string filename, File *file, MXFPackageResolver *resolver, bool resolver_take_ownership)
 : MXFClipReader()
 {
     mFilename = filename;
@@ -213,6 +207,7 @@ MXFReader::MXFReader(string filename, File *file, Partition *header_partition,
     mReadStartPosition = 0;
     mReadEndPosition = 0;
     mEssenceReader = 0;
+    Partition &header_partition = file->getPartition(0);
 
     try
     {
@@ -226,11 +221,11 @@ MXFReader::MXFReader(string filename, File *file, Partition *header_partition,
         // TODO: require a table that maps essence container labels to wrapping type
 
         // guess the wrapping type based on the OP
-        mIsClipWrapped = is_op_atom(header_partition->getOperationalPattern());
+        mIsClipWrapped = is_op_atom(header_partition.getOperationalPattern());
 
         // change frame wrapped guess if file is op1a containing clip wrapped pcm audio
         if (!mIsClipWrapped) {
-            vector<mxfUL> essence_labels = header_partition->getEssenceContainers();
+            vector<mxfUL> essence_labels = header_partition.getEssenceContainers();
             size_t i;
             for (i = 0; i < essence_labels.size(); i++) {
                 if (mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(BWFClipWrapped)) ||
@@ -246,9 +241,10 @@ MXFReader::MXFReader(string filename, File *file, Partition *header_partition,
         mDataModel = new DataModel();
         mHeaderMetadata = new AvidHeaderMetadata(mDataModel);
 
-        mFile->readPartitions(header_partition);
-
         // find last partition with header metadata
+
+        if (!mFile->readPartitions())
+            log_warn("Failed to read all partitions. File may be incomplete or invalid\n");
 
         const vector<Partition*> &partitions = mFile->getPartitions();
         Partition *metadata_partition = 0;
