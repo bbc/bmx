@@ -52,17 +52,17 @@ ResolvedPackage::ResolvedPackage()
     package = 0;
     generic_track = 0;
     track_id = 0;
-    reader = 0;
+    file_reader = 0;
     is_file_source_package = false;
     external_essence = false;
 }
 
 
 
-MXFDefaultPackageResolver::MXFDefaultPackageResolver(MXFFileReader *reader)
+MXFDefaultPackageResolver::MXFDefaultPackageResolver(MXFFileReader *file_reader)
 {
-    mReader = reader;
-    ExtractResolvedPackages(reader);
+    mFileReader = file_reader;
+    ExtractResolvedPackages(file_reader);
 }
 
 MXFDefaultPackageResolver::~MXFDefaultPackageResolver()
@@ -123,7 +123,7 @@ vector<ResolvedPackage> MXFDefaultPackageResolver::ResolveSourceClip(SourceClip 
             continue;
 
         if (uri.IsRelative())
-            uri.MakeAbsolute(mReader->GetAbsoluteURI());
+            uri.MakeAbsolute(mFileReader->GetAbsoluteURI());
 
         // check whether file has already been opened
         size_t j;
@@ -131,27 +131,27 @@ vector<ResolvedPackage> MXFDefaultPackageResolver::ResolveSourceClip(SourceClip 
             if (mExternalReaders[i]->GetAbsoluteURI() == uri)
                 break;
         }
-        if (j < mExternalReaders.size() || mReader->GetAbsoluteURI() == uri)
+        if (j < mExternalReaders.size() || mFileReader->GetAbsoluteURI() == uri)
             continue;
 
         string filename = uri.ToFilename();
-        MXFFileReader *reader;
-        MXFFileReader::OpenResult result = MXFFileReader::Open(filename, 0, false, &reader);
+        MXFFileReader *file_reader;
+        MXFFileReader::OpenResult result = MXFFileReader::Open(filename, 0, false, &file_reader);
         if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
             log_warn("Failed to open external MXF file '%s'\n", filename.c_str());
             continue;
         }
 
-        mExternalReaders.push_back(reader);
-        ExtractResolvedPackages(reader);
+        mExternalReaders.push_back(file_reader);
+        ExtractResolvedPackages(file_reader);
     }
 
     return ResolveSourceClip(source_clip);
 }
 
-void MXFDefaultPackageResolver::ExtractResolvedPackages(MXFFileReader *reader)
+void MXFDefaultPackageResolver::ExtractResolvedPackages(MXFFileReader *file_reader)
 {
-    ContentStorage *content_storage = reader->GetHeaderMetadata()->getPreface()->getContentStorage();
+    ContentStorage *content_storage = file_reader->GetHeaderMetadata()->getPreface()->getContentStorage();
 
     vector<GenericPackage*> packages = content_storage->getPackages();
     vector<EssenceContainerData*> ess_data;
@@ -162,7 +162,7 @@ void MXFDefaultPackageResolver::ExtractResolvedPackages(MXFFileReader *reader)
     for (i = 0; i < packages.size(); i++) {
         ResolvedPackage resolved_package;
         resolved_package.package = packages[i];
-        resolved_package.reader = reader;
+        resolved_package.file_reader = file_reader;
 
         SourcePackage *source_package = dynamic_cast<SourcePackage*>(packages[i]);
         if (source_package &&

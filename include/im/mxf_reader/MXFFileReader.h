@@ -68,7 +68,7 @@ public:
 
 public:
     static OpenResult Open(std::string filename, MXFPackageResolver *resolver, bool resolver_take_ownership,
-                           MXFFileReader **reader);
+                           MXFFileReader **file_reader);
     static std::string ResultToString(OpenResult result);
 
 public:

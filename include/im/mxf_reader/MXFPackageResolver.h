@@ -54,7 +54,7 @@ public:
     mxfpp::GenericPackage *package;
     mxfpp::GenericTrack *generic_track; /* can be 0 when resolving package only */
     uint32_t track_id;
-    MXFFileReader *reader;
+    MXFFileReader *file_reader;
     bool is_file_source_package;
     bool external_essence;
 };
@@ -77,7 +77,7 @@ public:
 class MXFDefaultPackageResolver : public MXFPackageResolver
 {
 public:
-    MXFDefaultPackageResolver(MXFFileReader *reader);
+    MXFDefaultPackageResolver(MXFFileReader *file_reader);
     virtual ~MXFDefaultPackageResolver();
 
     virtual std::vector<ResolvedPackage> ResolveSourceClip(mxfpp::SourceClip *source_clip);
@@ -87,12 +87,12 @@ public:
     virtual std::vector<ResolvedPackage> GetResolvedPackages() { return mResolvedPackages; }
 
 protected:
-    void ExtractResolvedPackages(MXFFileReader *reader);
+    void ExtractResolvedPackages(MXFFileReader *file_reader);
 
 protected:
     std::vector<ResolvedPackage> mResolvedPackages;
 
-    MXFFileReader* mReader;
+    MXFFileReader* mFileReader;
     std::vector<MXFFileReader*> mExternalReaders;
 };
 

@@ -114,7 +114,7 @@ static bool compare_track_reader(const MXFTrackReader *left_reader, const MXFTra
 
 
 MXFFileReader::OpenResult MXFFileReader::Open(string filename, MXFPackageResolver *resolver,
-                                              bool resolver_take_ownership, MXFFileReader **reader)
+                                              bool resolver_take_ownership, MXFFileReader **file_reader)
 {
     IM_ASSERT(MXF_RESULT_FAIL + 1 == RESULT_STRINGS_SIZE);
 
@@ -144,7 +144,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(string filename, MXFPackageResolve
             THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
         }
 
-        *reader = new MXFFileReader(filename, file, resolver, resolver_take_ownership);
+        *file_reader = new MXFFileReader(filename, file, resolver, resolver_take_ownership);
 
         return MXF_RESULT_SUCCESS;
     }
@@ -666,7 +666,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         const ResolvedPackage *resolved_package = 0;
         size_t j;
         for (j = 0; j < resolved_packages.size(); j++) {
-            if (resolved_packages[j].is_file_source_package && resolved_packages[j].reader == this) {
+            if (resolved_packages[j].is_file_source_package && resolved_packages[j].file_reader == this) {
                 resolved_package = &resolved_packages[j];
                 break;
             }
@@ -871,7 +871,7 @@ MXFTrackReader* MXFFileReader::GetExternalTrackReader(SourceClip *mp_source_clip
         return 0;
 
     MXFTrackReader *external_track_reader =
-        resolved_package->reader->GetInternalTrackReaderById(resolved_package->track_id);
+        resolved_package->file_reader->GetInternalTrackReaderById(resolved_package->track_id);
     if (!external_track_reader)
         return 0;
 
@@ -883,11 +883,11 @@ MXFTrackReader* MXFFileReader::GetExternalTrackReader(SourceClip *mp_source_clip
 
     // add external reader if not already present
     for (i = 0; i < mExternalReaders.size(); i++) {
-        if (mExternalReaders[i] == resolved_package->reader)
+        if (mExternalReaders[i] == resolved_package->file_reader)
             break;
     }
     if (i >= mExternalReaders.size())
-        mExternalReaders.push_back(resolved_package->reader);
+        mExternalReaders.push_back(resolved_package->file_reader);
 
     mExternalTrackReaders.push_back(external_track_reader);
     return external_track_reader;
