@@ -54,19 +54,19 @@ using namespace mxfpp;
 
 
 
-EssenceReader::EssenceReader(MXFFileReader *parent_reader)
-: mEssenceChunkHelper(parent_reader), mIndexTableHelper(parent_reader)
+EssenceReader::EssenceReader(MXFFileReader *file_reader)
+: mEssenceChunkHelper(file_reader), mIndexTableHelper(file_reader)
 {
-    mParentReader = parent_reader;
+    mFileReader = file_reader;
     mPosition = 0;
 
     // read Avid first frame offset extension property
     int32_t avid_first_frame_offset = 0;
-    if (mParentReader->IsClipWrapped()) {
-        IM_ASSERT(mParentReader->GetNumInternalTrackReaders() == 1);
+    if (mFileReader->IsClipWrapped()) {
+        IM_ASSERT(mFileReader->GetNumInternalTrackReaders() == 1);
         auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
-            mParentReader->GetInternalTrackReader(0)->GetFileDescriptor(),
-            mParentReader->GetInternalTrackReader(0)->GetTrackInfo()->essence_container_label));
+            mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),
+            mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->essence_container_label));
 
         PictureMXFDescriptorHelper *picture_helper = dynamic_cast<PictureMXFDescriptorHelper*>(helper.get());
         if (picture_helper && picture_helper->HaveAvidFirstFrameOffset())
@@ -78,7 +78,7 @@ EssenceReader::EssenceReader(MXFFileReader *parent_reader)
 
     // extract essence container index
     mIndexTableHelper.ExtractIndexTable();
-    IM_CHECK(mIndexTableHelper.GetEditRate() == mParentReader->mSampleRate);
+    IM_CHECK(mIndexTableHelper.GetEditRate() == mFileReader->mSampleRate);
     mIndexTableHelper.SetEssenceDataSize(mEssenceChunkHelper.GetEssenceDataSize());
 
     // check there is sufficient essence container data
@@ -146,13 +146,13 @@ uint32_t EssenceReader::Read(uint32_t num_samples, int64_t frame_position)
 
 
     size_t i;
-    for (i = 0; i < mParentReader->GetNumInternalTrackReaders(); i++)
-        mParentReader->GetInternalTrackReader(i)->Reset(frame_position);
+    for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++)
+        mFileReader->GetInternalTrackReader(i)->Reset(frame_position);
 
 
     int64_t start_position = mPosition;
 
-    if (mParentReader->IsClipWrapped())
+    if (mFileReader->IsClipWrapped())
         ReadClipWrappedSamples(read_num_samples, frame_position);
     else
         ReadFrameWrappedSamples(read_num_samples, frame_position);
@@ -169,9 +169,9 @@ uint32_t EssenceReader::Read(uint32_t num_samples, int64_t frame_position)
                                   &flags, &index_offset, &index_size);
 
     MXFFrame *frame;
-    for (i = 0; i < mParentReader->GetNumInternalTrackReaders(); i++) {
-        if (mParentReader->GetInternalTrackReader(i)->IsEnabled()) {
-            frame = mParentReader->GetInternalTrackReader(i)->GetFrameBuffer()->GetFrame(frame_position);
+    for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
+        if (mFileReader->GetInternalTrackReader(i)->IsEnabled()) {
+            frame = mFileReader->GetInternalTrackReader(i)->GetFrameBuffer()->GetFrame(frame_position);
             if (frame) {
                 frame->SetFirstSampleOffset(first_sample_offset);
                 frame->SetTemporalOffset(temporal_offset);
@@ -184,9 +184,9 @@ uint32_t EssenceReader::Read(uint32_t num_samples, int64_t frame_position)
 
     // signal that frame is complete
 
-    for (i = 0; i < mParentReader->GetNumInternalTrackReaders(); i++) {
-        if (mParentReader->GetInternalTrackReader(i)->IsEnabled()) {
-            frame = mParentReader->GetInternalTrackReader(i)->GetFrameBuffer()->GetFrame(frame_position);
+    for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
+        if (mFileReader->GetInternalTrackReader(i)->IsEnabled()) {
+            frame = mFileReader->GetInternalTrackReader(i)->GetFrameBuffer()->GetFrame(frame_position);
             if (frame)
                 frame->Complete();
         }
@@ -205,7 +205,7 @@ void EssenceReader::Seek(int64_t position)
     if (position >= 0 && position < mReadEndPosition) {
         int64_t file_position, size;
         GetEditUnit(position, &file_position, &size);
-        mParentReader->mFile->seek(file_position, SEEK_SET);
+        mFileReader->mFile->seek(file_position, SEEK_SET);
     }
 
     mPosition = position;
@@ -238,11 +238,11 @@ int64_t EssenceReader::LegitimisePosition(int64_t position)
 
 void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples, int64_t frame_position)
 {
-    File *mxf_file = mParentReader->mFile;
+    File *mxf_file = mFileReader->mFile;
 
     MXFFrame *frame = 0;
-    if (mParentReader->GetInternalTrackReader(0)->IsEnabled())
-        frame = mParentReader->GetInternalTrackReader(0)->GetFrameBuffer()->CreateFrame(frame_position);
+    if (mFileReader->GetInternalTrackReader(0)->IsEnabled())
+        frame = mFileReader->GetInternalTrackReader(0)->GetFrameBuffer()->CreateFrame(frame_position);
 
     int64_t current_file_position = mxf_file->tell();
     uint32_t total_num_samples = 0;
@@ -283,7 +283,7 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples, int64_t frame_p
 
 void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples, int64_t frame_position)
 {
-    File *mxf_file = mParentReader->mFile;
+    File *mxf_file = mFileReader->mFile;
 
     int64_t start_position = mPosition;
 
@@ -311,7 +311,7 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples, int64_t frame_
                 MXFFrame *frame = 0;
                 if (enabled_track_readers.find(track_number) == enabled_track_readers.end()) {
                     // frame does not yet exist - create it if track is enabled
-                    track_reader = mParentReader->GetInternalTrackReaderByNumber(track_number);
+                    track_reader = mFileReader->GetInternalTrackReaderByNumber(track_number);
                     if (start_position == mPosition && track_reader && track_reader->IsEnabled()) {
                         frame = track_reader->GetFrameBuffer()->CreateFrame(frame_position);
                         frame->SetCPFilePosition(cp_file_position);

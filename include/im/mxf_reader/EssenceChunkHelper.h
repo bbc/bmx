@@ -60,7 +60,7 @@ public:
 class EssenceChunkHelper
 {
 public:
-    EssenceChunkHelper(MXFFileReader *parent_reader);
+    EssenceChunkHelper(MXFFileReader *file_reader);
     ~EssenceChunkHelper();
 
     void ExtractEssenceChunkIndex(uint32_t avid_first_frame_offset);
@@ -69,7 +69,7 @@ public:
     void GetEditUnit(int64_t index_offset, int64_t index_size, int64_t *file_position);
 
 private:
-    MXFFileReader *mParentReader;
+    MXFFileReader *mFileReader;
 
     std::vector<EssenceChunk> mEssenceChunks;
     size_t mLastEssenceChunk;

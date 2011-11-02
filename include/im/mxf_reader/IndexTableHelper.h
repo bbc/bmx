@@ -87,7 +87,7 @@ private:
 class IndexTableHelper
 {
 public:
-    IndexTableHelper(MXFFileReader *parent_reader);
+    IndexTableHelper(MXFFileReader *file_reader);
     ~IndexTableHelper();
 
     void ExtractIndexTable();
@@ -109,7 +109,7 @@ public:
     bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position);
 
 private:
-    MXFFileReader *mParentReader;
+    MXFFileReader *mFileReader;
 
     std::vector<IndexTableHelperSegment*> mSegments;
     size_t mLastEditUnitSegment;

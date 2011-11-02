@@ -199,9 +199,9 @@ int64_t IndexTableHelperSegment::GetEssenceEndOffset()
 
 
 
-IndexTableHelper::IndexTableHelper(MXFFileReader *parent_reader)
+IndexTableHelper::IndexTableHelper(MXFFileReader *file_reader)
 {
-    mParentReader = parent_reader;
+    mFileReader = file_reader;
     mLastEditUnitSegment = 0;
     mHaveFixedEditUnitByteCount = true;
     mFixedEditUnitByteCount = 0;
@@ -221,12 +221,12 @@ void IndexTableHelper::ExtractIndexTable()
     mxfKey key;
     uint8_t llen;
     uint64_t len;
-    File *mxf_file = mParentReader->mFile;
+    File *mxf_file = mFileReader->mFile;
 
-    const vector<Partition*> &partitions = mParentReader->mFile->getPartitions();
+    const vector<Partition*> &partitions = mFileReader->mFile->getPartitions();
     size_t i;
     for (i = 0; i < partitions.size(); i++) {
-        if (partitions[i]->getIndexSID() != mParentReader->mIndexSID)
+        if (partitions[i]->getIndexSID() != mFileReader->mIndexSID)
             continue;
 
         // find the start of the first index table segment

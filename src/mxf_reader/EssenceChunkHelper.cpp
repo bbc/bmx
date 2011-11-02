@@ -59,9 +59,9 @@ EssenceChunk::EssenceChunk()
 
 
 
-EssenceChunkHelper::EssenceChunkHelper(MXFFileReader *parent_reader)
+EssenceChunkHelper::EssenceChunkHelper(MXFFileReader *file_reader)
 {
-    mParentReader = parent_reader;
+    mFileReader = file_reader;
     mLastEssenceChunk = 0;
 }
 
@@ -74,12 +74,12 @@ void EssenceChunkHelper::ExtractEssenceChunkIndex(uint32_t avid_first_frame_offs
     mxfKey key;
     uint8_t llen;
     uint64_t len;
-    File *mxf_file = mParentReader->mFile;
+    File *mxf_file = mFileReader->mFile;
 
-    const vector<Partition*> &partitions = mParentReader->mFile->getPartitions();
+    const vector<Partition*> &partitions = mFileReader->mFile->getPartitions();
     size_t i;
     for (i = 0; i < partitions.size(); i++) {
-        if (partitions[i]->getBodySID() != mParentReader->mBodySID)
+        if (partitions[i]->getBodySID() != mFileReader->mBodySID)
             continue;
 
         int64_t partition_end;
@@ -96,9 +96,9 @@ void EssenceChunkHelper::ExtractEssenceChunkIndex(uint32_t avid_first_frame_offs
             mxf_file->readNextNonFillerKL(&key, &llen, &len);
 
             if (mxf_is_gc_essence_element(&key) || mxf_avid_is_essence_element(&key)) {
-                if (mParentReader->IsClipWrapped()) {
+                if (mFileReader->IsClipWrapped()) {
                     // check whether this is the target essence container; skip and continue if not
-                    if (!mParentReader->GetInternalTrackReaderByNumber(mxf_get_track_number(&key))) {
+                    if (!mFileReader->GetInternalTrackReaderByNumber(mxf_get_track_number(&key))) {
                         mxf_file->skip(len);
                         continue;
                     }
@@ -129,7 +129,7 @@ void EssenceChunkHelper::ExtractEssenceChunkIndex(uint32_t avid_first_frame_offs
                 EssenceChunk essence_chunk;
                 essence_chunk.offset = body_offset;
                 essence_chunk.file_position = mxf_file->tell();
-                if (mParentReader->IsFrameWrapped()) {
+                if (mFileReader->IsFrameWrapped()) {
                     essence_chunk.file_position -= mxfKey_extlen + llen;
                     essence_chunk.size = partition_end - essence_chunk.file_position;
                 } else {
@@ -144,7 +144,7 @@ void EssenceChunkHelper::ExtractEssenceChunkIndex(uint32_t avid_first_frame_offs
                     mEssenceChunks.push_back(essence_chunk);
 
                 // continue with clip-wrapped to support multiple essence container elements in this partition
-                if (mParentReader->IsClipWrapped()) {
+                if (mFileReader->IsClipWrapped()) {
                     mxf_file->skip(len);
                     continue;
                 }

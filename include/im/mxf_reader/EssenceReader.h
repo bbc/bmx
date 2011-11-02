@@ -50,7 +50,7 @@ class MXFFileReader;
 class EssenceReader
 {
 public:
-    EssenceReader(MXFFileReader *parent_reader);
+    EssenceReader(MXFFileReader *file_reader);
     ~EssenceReader();
 
     void SetReadLimits(int64_t start_position, int64_t end_position);
@@ -75,7 +75,7 @@ private:
                           uint32_t *num_samples);
 
 private:
-    MXFFileReader *mParentReader;
+    MXFFileReader *mFileReader;
 
     EssenceChunkHelper mEssenceChunkHelper;
     IndexTableHelper mIndexTableHelper;
