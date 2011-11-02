@@ -574,7 +574,7 @@ int64_t MXFFileReader::GetFixedLeadFillerOffset()
         if (i == 0)
             fixed_offset = offset;
         else if (fixed_offset != offset)
-            return 0; // default to 0 if HaveFixedOffsetToTrackSegments returns false
+            return 0; // default to 0 if HaveFixedLeadFillerOffset returns false
     }
 
     return fixed_offset;
