@@ -505,8 +505,12 @@ int16_t MXFFileReader::GetMaxPrecharge(int64_t position, bool limit_to_available
 
         int16_t ext_reader_precharge = mExternalReaders[i]->GetMaxPrecharge(GetExternalPosition(target_position, i),
                                                                             limit_to_available);
-        if (ext_reader_precharge < precharge)
+        if (ext_reader_precharge < precharge) {
+            IM_CHECK_M(mExternalReaders[i]->GetSampleRate() == mSampleRate,
+                       ("Currently only support precharge in external reader if "
+                        "external reader sample rate equals group sample rate"));
             precharge = ext_reader_precharge;
+        }
     }
 
     if (precharge > 0)
@@ -532,8 +536,12 @@ int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available)
 
         int16_t ext_reader_rollout = mExternalReaders[i]->GetMaxRollout(GetExternalPosition(target_position, i),
                                                                         limit_to_available);
-        if (ext_reader_rollout > rollout)
+        if (ext_reader_rollout > rollout) {
+            IM_CHECK_M(mExternalReaders[i]->GetSampleRate() == mSampleRate,
+                       ("Currently only support rollout in external reader if "
+                        "external reader sample rate equals group sample rate"));
             rollout = ext_reader_rollout;
+        }
     }
 
     if (rollout < 0)
