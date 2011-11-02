@@ -39,7 +39,7 @@
 #include <cstring>
 #include <cerrno>
 
-#include <im/mxf_reader/MXFReader.h>
+#include <im/mxf_reader/MXFFileReader.h>
 #include <im/essence_parser/SoundConversion.h>
 #include <im/MD5.h>
 #include <im/MXFUtils.h>
@@ -492,10 +492,10 @@ int main(int argc, const char** argv)
     int cmd_result = 0;
     try
     {
-        MXFReader *reader;
-        MXFReader::OpenResult result = MXFReader::Open(filename, 0, false, &reader);
-        if (result != MXFReader::MXF_RESULT_SUCCESS) {
-            log_error("Failed to open MXF file: %s\n", MXFReader::ResultToString(result).c_str());
+        MXFFileReader *reader;
+        MXFFileReader::OpenResult result = MXFFileReader::Open(filename, 0, false, &reader);
+        if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
+            log_error("Failed to open MXF file: %s\n", MXFFileReader::ResultToString(result).c_str());
             throw false;
         }
 

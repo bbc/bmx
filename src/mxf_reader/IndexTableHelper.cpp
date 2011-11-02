@@ -42,7 +42,7 @@
 #include <mxf/mxf_avid.h>
 
 #include <im/mxf_reader/IndexTableHelper.h>
-#include <im/mxf_reader/MXFReader.h>
+#include <im/mxf_reader/MXFFileReader.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
 
@@ -199,7 +199,7 @@ int64_t IndexTableHelperSegment::GetEssenceEndOffset()
 
 
 
-IndexTableHelper::IndexTableHelper(MXFReader *parent_reader)
+IndexTableHelper::IndexTableHelper(MXFFileReader *parent_reader)
 {
     mParentReader = parent_reader;
     mLastEditUnitSegment = 0;

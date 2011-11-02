@@ -44,13 +44,13 @@ namespace im
 {
 
 
-class MXFReader;
+class MXFFileReader;
 
 
 class EssenceReader
 {
 public:
-    EssenceReader(MXFReader *parent_reader);
+    EssenceReader(MXFFileReader *parent_reader);
     ~EssenceReader();
 
     void SetReadLimits(int64_t start_position, int64_t end_position);
@@ -75,7 +75,7 @@ private:
                           uint32_t *num_samples);
 
 private:
-    MXFReader *mParentReader;
+    MXFFileReader *mParentReader;
 
     EssenceChunkHelper mEssenceChunkHelper;
     IndexTableHelper mIndexTableHelper;

@@ -44,7 +44,7 @@ namespace im
 {
 
 
-class MXFReader;
+class MXFFileReader;
 
 
 class IndexTableHelperSegment : public mxfpp::IndexTableSegment
@@ -87,7 +87,7 @@ private:
 class IndexTableHelper
 {
 public:
-    IndexTableHelper(MXFReader *parent_reader);
+    IndexTableHelper(MXFFileReader *parent_reader);
     ~IndexTableHelper();
 
     void ExtractIndexTable();
@@ -109,7 +109,7 @@ public:
     bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position);
 
 private:
-    MXFReader *mParentReader;
+    MXFFileReader *mParentReader;
 
     std::vector<IndexTableHelperSegment*> mSegments;
     size_t mLastEditUnitSegment;

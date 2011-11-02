@@ -43,7 +43,7 @@ namespace im
 {
 
 
-class MXFReader;
+class MXFFileReader;
 
 
 class ResolvedPackage
@@ -54,7 +54,7 @@ public:
     mxfpp::GenericPackage *package;
     mxfpp::GenericTrack *generic_track; /* can be 0 when resolving package only */
     uint32_t track_id;
-    MXFReader *reader;
+    MXFFileReader *reader;
     bool is_file_source_package;
     bool external_essence;
 };
@@ -77,7 +77,7 @@ public:
 class MXFDefaultPackageResolver : public MXFPackageResolver
 {
 public:
-    MXFDefaultPackageResolver(MXFReader *reader);
+    MXFDefaultPackageResolver(MXFFileReader *reader);
     virtual ~MXFDefaultPackageResolver();
 
     virtual std::vector<ResolvedPackage> ResolveSourceClip(mxfpp::SourceClip *source_clip);
@@ -87,13 +87,13 @@ public:
     virtual std::vector<ResolvedPackage> GetResolvedPackages() { return mResolvedPackages; }
 
 protected:
-    void ExtractResolvedPackages(MXFReader *reader);
+    void ExtractResolvedPackages(MXFFileReader *reader);
 
 protected:
     std::vector<ResolvedPackage> mResolvedPackages;
 
-    MXFReader* mReader;
-    std::vector<MXFReader*> mExternalReaders;
+    MXFFileReader* mReader;
+    std::vector<MXFFileReader*> mExternalReaders;
 };
 
 

@@ -34,7 +34,7 @@
 #endif
 
 #include <im/mxf_reader/MXFTrackReader.h>
-#include <im/mxf_reader/MXFReader.h>
+#include <im/mxf_reader/MXFFileReader.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
 
@@ -44,7 +44,7 @@ using namespace mxfpp;
 
 
 
-MXFTrackReader::MXFTrackReader(MXFReader *file_reader, MXFTrackInfo *track_info, FileDescriptor *file_descriptor,
+MXFTrackReader::MXFTrackReader(MXFFileReader *file_reader, MXFTrackInfo *track_info, FileDescriptor *file_descriptor,
                                SourcePackage *file_source_package)
 {
     mFileReader = file_reader;

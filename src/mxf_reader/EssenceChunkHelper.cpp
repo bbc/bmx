@@ -38,7 +38,7 @@
 #include <libMXF++/MXF.h>
 
 #include <im/mxf_reader/EssenceChunkHelper.h>
-#include <im/mxf_reader/MXFReader.h>
+#include <im/mxf_reader/MXFFileReader.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
 
@@ -59,7 +59,7 @@ EssenceChunk::EssenceChunk()
 
 
 
-EssenceChunkHelper::EssenceChunkHelper(MXFReader *parent_reader)
+EssenceChunkHelper::EssenceChunkHelper(MXFFileReader *parent_reader)
 {
     mParentReader = parent_reader;
     mLastEssenceChunk = 0;

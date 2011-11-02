@@ -88,7 +88,7 @@ nobase_library_include_HEADERS = \
 	im/mxf_reader/EssenceChunkHelper.h \
 	im/mxf_reader/EssenceReader.h \
 	im/mxf_reader/IndexTableHelper.h \
-	im/mxf_reader/MXFClipReader.h \
+	im/mxf_reader/MXFFileReader.h \
 	im/mxf_reader/MXFFrame.h \
 	im/mxf_reader/MXFFrameBuffer.h \
 	im/mxf_reader/MXFIndexEntryExt.h \

@@ -40,7 +40,7 @@
 #include <memory>
 
 #include <im/mxf_reader/EssenceReader.h>
-#include <im/mxf_reader/MXFReader.h>
+#include <im/mxf_reader/MXFFileReader.h>
 #include <im/mxf_helper/PictureMXFDescriptorHelper.h>
 #include <im/MXFUtils.h>
 #include <im/IMException.h>
@@ -54,7 +54,7 @@ using namespace mxfpp;
 
 
 
-EssenceReader::EssenceReader(MXFReader *parent_reader)
+EssenceReader::EssenceReader(MXFFileReader *parent_reader)
 : mEssenceChunkHelper(parent_reader), mIndexTableHelper(parent_reader)
 {
     mParentReader = parent_reader;

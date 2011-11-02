@@ -4,7 +4,7 @@ libmxfreader_la_SOURCES = \
 	EssenceChunkHelper.cpp \
 	EssenceReader.cpp \
 	IndexTableHelper.cpp \
-	MXFClipReader.cpp \
+	MXFFileReader.cpp \
 	MXFFrame.cpp \
 	MXFFrameBuffer.cpp \
 	MXFIndexEntryExt.cpp \

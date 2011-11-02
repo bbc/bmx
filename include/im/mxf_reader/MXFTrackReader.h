@@ -47,19 +47,19 @@
 namespace im
 {
 
-class MXFReader;
+class MXFFileReader;
 
 class MXFTrackReader
 {
 public:
-    MXFTrackReader(MXFReader *file_reader, MXFTrackInfo *track_info, mxfpp::FileDescriptor *file_descriptor,
+    MXFTrackReader(MXFFileReader *file_reader, MXFTrackInfo *track_info, mxfpp::FileDescriptor *file_descriptor,
                    mxfpp::SourcePackage *file_source_package);
     ~MXFTrackReader();
 
     void SetEnable(bool enable);
     void SetFrameBuffer(MXFFrameBuffer *frame_buffer, bool take_ownership);
 
-    MXFReader* GetFileReader() { return mFileReader; }
+    MXFFileReader* GetFileReader() { return mFileReader; }
 
 public:
     void SetReadLimits();
@@ -92,7 +92,7 @@ public:
     void Reset(int64_t position);
 
 private:
-    MXFReader *mFileReader;
+    MXFFileReader *mFileReader;
     MXFTrackInfo *mTrackInfo;
     mxfpp::FileDescriptor *mFileDescriptor;
     mxfpp::SourcePackage *mFileSourcePackage;

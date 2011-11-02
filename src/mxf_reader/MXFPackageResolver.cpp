@@ -34,7 +34,7 @@
 #endif
 
 #include <im/mxf_reader/MXFPackageResolver.h>
-#include <im/mxf_reader/MXFReader.h>
+#include <im/mxf_reader/MXFFileReader.h>
 #include <im/MXFUtils.h>
 #include <im/URI.h>
 #include <im/Utils.h>
@@ -59,7 +59,7 @@ ResolvedPackage::ResolvedPackage()
 
 
 
-MXFDefaultPackageResolver::MXFDefaultPackageResolver(MXFReader *reader)
+MXFDefaultPackageResolver::MXFDefaultPackageResolver(MXFFileReader *reader)
 {
     mReader = reader;
     ExtractResolvedPackages(reader);
@@ -135,9 +135,9 @@ vector<ResolvedPackage> MXFDefaultPackageResolver::ResolveSourceClip(SourceClip 
             continue;
 
         string filename = uri.ToFilename();
-        MXFReader *reader;
-        MXFReader::OpenResult result = MXFReader::Open(filename, 0, false, &reader);
-        if (result != MXFReader::MXF_RESULT_SUCCESS) {
+        MXFFileReader *reader;
+        MXFFileReader::OpenResult result = MXFFileReader::Open(filename, 0, false, &reader);
+        if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
             log_warn("Failed to open external MXF file '%s'\n", filename.c_str());
             continue;
         }
@@ -149,7 +149,7 @@ vector<ResolvedPackage> MXFDefaultPackageResolver::ResolveSourceClip(SourceClip 
     return ResolveSourceClip(source_clip);
 }
 
-void MXFDefaultPackageResolver::ExtractResolvedPackages(MXFReader *reader)
+void MXFDefaultPackageResolver::ExtractResolvedPackages(MXFFileReader *reader)
 {
     ContentStorage *content_storage = reader->GetHeaderMetadata()->getPreface()->getContentStorage();
 
