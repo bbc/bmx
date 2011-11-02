@@ -7,6 +7,7 @@ libmxfreader_la_SOURCES = \
 	MXFFileReader.cpp \
 	MXFFrame.cpp \
 	MXFFrameBuffer.cpp \
+	MXFGroupReader.cpp \
 	MXFIndexEntryExt.cpp \
 	MXFPackageResolver.cpp \
 	MXFReader.cpp \
