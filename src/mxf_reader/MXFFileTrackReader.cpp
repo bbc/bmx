@@ -88,17 +88,17 @@ void MXFFileTrackReader::SetReadLimits(int64_t start_position, int64_t end_posit
     mFileReader->SetReadLimits(start_position, end_position, seek_to_start);
 }
 
-int64_t MXFFileTrackReader::GetReadStartPosition()
+int64_t MXFFileTrackReader::GetReadStartPosition() const
 {
     return mFileReader->GetReadStartPosition();
 }
 
-int64_t MXFFileTrackReader::GetReadEndPosition()
+int64_t MXFFileTrackReader::GetReadEndPosition() const
 {
     return mFileReader->GetReadEndPosition();
 }
 
-int64_t MXFFileTrackReader::GetReadDuration()
+int64_t MXFFileTrackReader::GetReadDuration() const
 {
     return mFileReader->GetReadDuration();
 }
@@ -113,32 +113,32 @@ void MXFFileTrackReader::Seek(int64_t position)
     mFileReader->Seek(position);
 }
 
-int64_t MXFFileTrackReader::GetPosition()
+int64_t MXFFileTrackReader::GetPosition() const
 {
     return mFileReader->GetPosition();
 }
 
-mxfRational MXFFileTrackReader::GetSampleRate()
+mxfRational MXFFileTrackReader::GetSampleRate() const
 {
     return mFileReader->GetSampleRate();
 }
 
-int64_t MXFFileTrackReader::GetDuration()
+int64_t MXFFileTrackReader::GetDuration() const
 {
     return mFileReader->GetDuration();
 }
 
-bool MXFFileTrackReader::GetIndexEntry(MXFIndexEntryExt *entry, int64_t position)
+bool MXFFileTrackReader::GetIndexEntry(MXFIndexEntryExt *entry, int64_t position) const
 {
     return mFileReader->GetInternalIndexEntry(entry, position);
 }
 
-int16_t MXFFileTrackReader::GetPrecharge(int64_t position, bool limit_to_available)
+int16_t MXFFileTrackReader::GetPrecharge(int64_t position, bool limit_to_available) const
 {
     return mFileReader->GetInternalPrecharge(position, limit_to_available);
 }
 
-int16_t MXFFileTrackReader::GetRollout(int64_t position, bool limit_to_available)
+int16_t MXFFileTrackReader::GetRollout(int64_t position, bool limit_to_available) const
 {
     return mFileReader->GetInternalRollout(position, limit_to_available);
 }

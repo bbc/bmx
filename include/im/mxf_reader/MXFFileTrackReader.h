@@ -46,21 +46,21 @@ public:
 public:
     virtual void SetReadLimits();
     virtual void SetReadLimits(int64_t start_position, int64_t end_position, bool seek_start_position);
-    virtual int64_t GetReadStartPosition();
-    virtual int64_t GetReadEndPosition();
-    virtual int64_t GetReadDuration();
+    virtual int64_t GetReadStartPosition() const;
+    virtual int64_t GetReadEndPosition() const;
+    virtual int64_t GetReadDuration() const;
 
     virtual uint32_t Read(uint32_t num_samples, int64_t frame_position = CURRENT_POSITION_VALUE);
     virtual void Seek(int64_t position);
 
-    virtual int64_t GetPosition();
-    virtual mxfRational GetSampleRate();
-    virtual int64_t GetDuration();
+    virtual int64_t GetPosition() const;
+    virtual mxfRational GetSampleRate() const;
+    virtual int64_t GetDuration() const;
 
-    virtual bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position = CURRENT_POSITION_VALUE);
+    virtual bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position = CURRENT_POSITION_VALUE) const;
 
-    virtual int16_t GetPrecharge(int64_t position, bool limit_to_available);
-    virtual int16_t GetRollout(int64_t position, bool limit_to_available);
+    virtual int16_t GetPrecharge(int64_t position, bool limit_to_available) const;
+    virtual int16_t GetRollout(int64_t position, bool limit_to_available) const;
 
     virtual MXFTrackInfo* GetTrackInfo() const { return mTrackInfo; }
     virtual mxfpp::FileDescriptor* GetFileDescriptor() const { return mFileDescriptor; }
