@@ -294,7 +294,7 @@ MXFFileReader::MXFFileReader(string filename, File *file, MXFPackageResolver *re
 
         // extract the sample sequences for each external reader
         for (i = 0; i < mExternalReaders.size(); i++) {
-            vector<uint32_t> sample_sequence = mExternalReaders[i]->GetSampleSequence(mSampleRate);
+            vector<uint32_t> sample_sequence = GetSampleSequence(mExternalReaders[i]->GetSampleRate());
             if (sample_sequence.empty()) {
                 mxfRational external_sample_rate = mExternalReaders[i]->GetSampleRate();
                 log_error("Incompatible clip sample rate (%d/%d) for referenced file (%d/%d)\n",
@@ -1185,47 +1185,6 @@ void MXFFileReader::ForceDuration(int64_t duration)
 {
     IM_CHECK(duration <= mDuration);
     mDuration = duration;
-}
-
-vector<uint32_t> MXFFileReader::GetSampleSequence(mxfRational clip_sample_rate) const
-{
-    vector<uint32_t> sample_sequence;
-
-    if (clip_sample_rate == mSampleRate) {
-        // 1 reader sample equals 1 clip sample
-        sample_sequence.push_back(1);
-    } else {
-        int64_t num_samples = (int64_t)(mSampleRate.numerator * clip_sample_rate.denominator) /
-                                    (int64_t)(mSampleRate.denominator * clip_sample_rate.numerator);
-        int64_t remainder = (int64_t)(mSampleRate.numerator * clip_sample_rate.denominator) %
-                                    (int64_t)(mSampleRate.denominator * clip_sample_rate.numerator);
-        if (num_samples > 0) {
-            if (remainder == 0) {
-                // fixed integer number of reader samples for each clip sample
-                sample_sequence.push_back(num_samples);
-            } else {
-                // try well known sample sequences
-                size_t i;
-                for (i = 0; i < SAMPLE_SEQUENCES_SIZE; i++) {
-                    if (clip_sample_rate == SAMPLE_SEQUENCES[i].clip_sample_rate &&
-                        mSampleRate == SAMPLE_SEQUENCES[i].reader_sample_rate)
-                    {
-                        size_t j = 0;
-                        while (SAMPLE_SEQUENCES[i].sample_sequence[j] != 0) {
-                            sample_sequence.push_back(SAMPLE_SEQUENCES[i].sample_sequence[j]);
-                            j++;
-                        }
-                        break;
-                    }
-                }
-
-                // if sample_sequence is empty then sample sequence is unknown
-            }
-        }
-        // else clip_sample_rate not supported
-    }
-
-    return sample_sequence;
 }
 
 uint32_t MXFFileReader::GetNumExternalSamples(uint32_t num_internal_samples, size_t external_reader_index,

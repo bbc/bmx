@@ -45,6 +45,23 @@ using namespace im;
 using namespace mxfpp;
 
 
+typedef struct
+{
+    mxfRational reader_sample_rate;
+    mxfRational target_sample_rate;
+    uint32_t sample_sequence[11];
+} SampleSequence;
+
+static const SampleSequence SAMPLE_SEQUENCES[] =
+{
+    {{30000, 1001}, {48000,1}, {1602, 1601, 1602, 1601, 1602, 0, 0, 0, 0, 0}},
+    {{60000, 1001}, {48000,1}, {801, 801, 801, 800, 801, 801, 801, 800, 801, 801, 0}},
+    {{24000, 1001}, {48000,1}, {2002, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+};
+
+#define SAMPLE_SEQUENCES_SIZE   (sizeof(SAMPLE_SEQUENCES) / sizeof(SampleSequence))
+
+
 
 MXFReader::MXFReader()
 {
@@ -117,6 +134,47 @@ Timecode MXFReader::GetSourceTimecode(int64_t position) const
         return GetPhysicalSourceTimecode(position);
 
     return Timecode(get_rounded_tc_base(mSampleRate), false);
+}
+
+vector<uint32_t> MXFReader::GetSampleSequence(mxfRational target_sample_rate) const
+{
+    vector<uint32_t> sample_sequence;
+
+    if (mSampleRate == target_sample_rate) {
+        // 1 track sample equals 1 group sample
+        sample_sequence.push_back(1);
+    } else {
+        int64_t num_samples = (int64_t)(target_sample_rate.numerator * mSampleRate.denominator) /
+                                    (int64_t)(target_sample_rate.denominator * mSampleRate.numerator);
+        int64_t remainder = (int64_t)(target_sample_rate.numerator * mSampleRate.denominator) %
+                                    (int64_t)(target_sample_rate.denominator * mSampleRate.numerator);
+        if (num_samples > 0) {
+            if (remainder == 0) {
+                // fixed integer number of reader samples for each clip sample
+                sample_sequence.push_back(num_samples);
+            } else {
+                // try well known sample sequences
+                size_t i;
+                for (i = 0; i < SAMPLE_SEQUENCES_SIZE; i++) {
+                    if (mSampleRate == SAMPLE_SEQUENCES[i].reader_sample_rate &&
+                        target_sample_rate == SAMPLE_SEQUENCES[i].target_sample_rate)
+                    {
+                        size_t j = 0;
+                        while (SAMPLE_SEQUENCES[i].sample_sequence[j] != 0) {
+                            sample_sequence.push_back(SAMPLE_SEQUENCES[i].sample_sequence[j]);
+                            j++;
+                        }
+                        break;
+                    }
+                }
+
+                // if sample_sequence is empty then sample sequence is unknown
+            }
+        }
+        // else input sample rate > mSampleRate and therefore input sample doesn't fit into sequence's sample
+    }
+
+    return sample_sequence;
 }
 
 Timecode MXFReader::CreateTimecode(const Timecode *start_timecode, int64_t position) const

@@ -155,7 +155,7 @@ bool MXFGroupReader::Finalize()
     // extract the sample sequences for each reader. The samples sequences determine how many member samples
     // are read for each group sample. They are also used for converting position and durations
     for (i = 0; i < mReaders.size(); i++) {
-        vector<uint32_t> sample_sequence = GetSampleSequence(i);
+        vector<uint32_t> sample_sequence = GetSampleSequence(mReaders[i]->GetSampleRate());
         if (sample_sequence.empty()) {
             mxfRational member_sample_rate = mReaders[i]->GetSampleRate();
             log_error("Incompatible group sample rate (%d/%d) and member sample rate (%d/%d)\n",
@@ -400,49 +400,6 @@ bool MXFGroupReader::IsEnabled() const
     }
 
     return false;
-}
-
-vector<uint32_t> MXFGroupReader::GetSampleSequence(size_t member_index) const
-{
-    vector<uint32_t> sample_sequence;
-
-    mxfRational member_sample_rate = mReaders[member_index]->GetSampleRate();
-
-    if (mSampleRate == member_sample_rate) {
-        // 1 track sample equals 1 group sample
-        sample_sequence.push_back(1);
-    } else {
-        int64_t num_samples = (int64_t)(member_sample_rate.numerator * mSampleRate.denominator) /
-                                    (int64_t)(member_sample_rate.denominator * mSampleRate.numerator);
-        int64_t remainder = (int64_t)(member_sample_rate.numerator * mSampleRate.denominator) %
-                                    (int64_t)(member_sample_rate.denominator * mSampleRate.numerator);
-        if (num_samples > 0) {
-            if (remainder == 0) {
-                // fixed integer number of reader samples for each clip sample
-                sample_sequence.push_back(num_samples);
-            } else {
-                // try well known sample sequences
-                size_t i;
-                for (i = 0; i < SAMPLE_SEQUENCES_SIZE; i++) {
-                    if (mSampleRate == SAMPLE_SEQUENCES[i].group_sample_rate &&
-                        member_sample_rate == SAMPLE_SEQUENCES[i].member_sample_rate)
-                    {
-                        size_t j = 0;
-                        while (SAMPLE_SEQUENCES[i].sample_sequence[j] != 0) {
-                            sample_sequence.push_back(SAMPLE_SEQUENCES[i].sample_sequence[j]);
-                            j++;
-                        }
-                        break;
-                    }
-                }
-
-                // if sample_sequence is empty then sample sequence is unknown
-            }
-        }
-        // else input sample rate > mSampleRate and therefore input sample doesn't fit into group sample
-    }
-
-    return sample_sequence;
 }
 
 int64_t MXFGroupReader::ConvertGroupDuration(int64_t group_duration, size_t member_index) const

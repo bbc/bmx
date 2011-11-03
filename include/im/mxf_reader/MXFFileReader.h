@@ -146,7 +146,6 @@ private:
 
     void ForceDuration(int64_t duration);
 
-    std::vector<uint32_t> GetSampleSequence(mxfRational clip_sample_rate) const;
     uint32_t GetNumExternalSamples(uint32_t num_internal_samples, size_t external_reader_index, int64_t position) const;
     uint32_t GetNumInternalSamples(uint32_t num_external_samples, size_t external_reader_index, int64_t position) const;
     int64_t GetExternalPosition(int64_t internal_position, size_t external_reader_index) const;
