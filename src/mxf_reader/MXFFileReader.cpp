@@ -512,10 +512,7 @@ int16_t MXFFileReader::GetMaxPrecharge(int64_t position, bool limit_to_available
         }
     }
 
-    if (precharge > 0)
-        log_warn("Unexpected positive precharge value %d\n", precharge);
-
-    return precharge < 0 ? precharge : 0;
+    return precharge;
 }
 
 int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available) const
@@ -543,10 +540,7 @@ int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available) 
         }
     }
 
-    if (rollout < 0)
-        log_warn("Unexpected negative rollout value %d\n", rollout);
-
-    return rollout > 0 ? rollout : 0;
+    return rollout;
 }
 
 bool MXFFileReader::HaveFixedLeadFillerOffset() const
