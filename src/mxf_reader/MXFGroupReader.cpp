@@ -184,6 +184,38 @@ bool MXFGroupReader::Finalize()
     }
 
 
+    // set group timecodes and package infos if all members have the same values
+    for (i = 0; i < mReaders.size(); i++) {
+        if (i == 0) {
+            if (mReaders[i]->mMaterialStartTimecode)
+                mMaterialStartTimecode = new Timecode(*mReaders[i]->mMaterialStartTimecode);
+            if (mReaders[i]->mFileSourceStartTimecode)
+                mMaterialStartTimecode = new Timecode(*mReaders[i]->mFileSourceStartTimecode);
+            if (mReaders[i]->mPhysicalSourceStartTimecode)
+                mMaterialStartTimecode = new Timecode(*mReaders[i]->mPhysicalSourceStartTimecode);
+            mMaterialPackageName = mReaders[i]->mMaterialPackageName;
+            mMaterialPackageUID = mReaders[i]->mMaterialPackageUID;
+            mPhysicalSourcePackageName = mReaders[i]->mPhysicalSourcePackageName;
+        } else {
+#define CHECK_TIMECODE(tc_var) \
+            if ((tc_var != 0) != (mReaders[i]->tc_var != 0) || \
+                (tc_var && tc_var != mReaders[i]->tc_var)) \
+            { \
+                delete tc_var; \
+                tc_var = 0; \
+            }
+            CHECK_TIMECODE(mMaterialStartTimecode)
+            CHECK_TIMECODE(mFileSourceStartTimecode)
+            CHECK_TIMECODE(mPhysicalSourceStartTimecode)
+            if (mMaterialPackageName != mReaders[i]->mMaterialPackageName)
+                mMaterialPackageName.clear();
+            if (mMaterialPackageUID != mReaders[i]->mMaterialPackageUID)
+                mMaterialPackageUID = g_Null_UMID;
+            if (mPhysicalSourcePackageName != mReaders[i]->mPhysicalSourcePackageName)
+                mPhysicalSourcePackageName.clear();
+        }
+    }
+
     // set default group read limits
     SetReadLimits();
 
