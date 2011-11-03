@@ -407,12 +407,19 @@ int64_t MXFGroupReader::ConvertGroupDuration(int64_t group_duration, size_t memb
     const vector<uint32_t> &sample_sequence = mSampleSequences[member_index];
 
     int64_t num_sequences = group_duration / sample_sequence.size();
-    int64_t sequence_remainder = group_duration % sample_sequence.size();
-
     int64_t member_duration = num_sequences * mSampleSequenceSizes[member_index];
-    uint32_t i;
-    for (i = 0; i < sequence_remainder; i++)
-        member_duration += sample_sequence[i];
+
+    if (group_duration >= 0) {
+        size_t sequence_remainder = group_duration % sample_sequence.size();
+        uint32_t i;
+        for (i = 0; i < sequence_remainder; i++)
+            member_duration += sample_sequence[i];
+    } else {
+        size_t sequence_remainder = ( - group_duration) % sample_sequence.size();
+        uint32_t i;
+        for (i = 0; i < sequence_remainder; i++)
+            member_duration -= sample_sequence[sample_sequence.size() - i - 1];
+    }
 
     return member_duration;
 }
@@ -427,16 +434,28 @@ int64_t MXFGroupReader::ConvertMemberDuration(int64_t member_duration, size_t me
     const vector<uint32_t> &sample_sequence = mSampleSequences[member_index];
 
     int64_t num_sequences = member_duration / mSampleSequenceSizes[member_index];
-    int64_t sequence_remainder = member_duration % mSampleSequenceSizes[member_index];
-
     int64_t group_duration = num_sequences * sample_sequence.size();
-    size_t sequence_offset = 0;
-    while (sequence_remainder > 0) {
-        sequence_remainder -= sample_sequence[sequence_offset];
-        // rounding down
-        if (sequence_remainder >= 0)
-            group_duration++;
-        sequence_offset = (sequence_offset + 1) % sample_sequence.size();
+
+    if (member_duration >= 0) {
+        int64_t sequence_remainder = member_duration % mSampleSequenceSizes[member_index];
+        size_t sequence_offset = 0;
+        while (sequence_remainder > 0) {
+            sequence_remainder -= sample_sequence[sequence_offset];
+            // rounding down
+            if (sequence_remainder >= 0)
+                group_duration++;
+            sequence_offset = (sequence_offset + 1) % sample_sequence.size();
+        }
+    } else {
+        int64_t sequence_remainder = ( - member_duration) % mSampleSequenceSizes[member_index];
+        size_t sequence_offset = 0;
+        while (sequence_remainder > 0) {
+            sequence_remainder -= sample_sequence[sample_sequence.size() - sequence_offset - 1];
+            // rounding down
+            if (sequence_remainder >= 0)
+                group_duration--;
+            sequence_offset = (sequence_offset + 1) % sample_sequence.size();
+        }
     }
 
     return group_duration;
@@ -447,15 +466,26 @@ int64_t MXFGroupReader::ConvertMemberPosition(int64_t member_position, size_t me
     const vector<uint32_t> &sample_sequence = mSampleSequences[member_index];
 
     int64_t num_sequences = member_position / mSampleSequenceSizes[member_index];
-    int64_t sequence_remainder = member_position % mSampleSequenceSizes[member_index];
-
     int64_t group_position = num_sequences * sample_sequence.size();
-    size_t sequence_offset = 0;
-    while (sequence_remainder > 0) {
-        sequence_remainder -= sample_sequence[sequence_offset];
-        // rounding up
-        group_position++;
-        sequence_offset = (sequence_offset + 1) % sample_sequence.size();
+
+    if (member_position >= 0) {
+        int64_t sequence_remainder = member_position % mSampleSequenceSizes[member_index];
+        size_t sequence_offset = 0;
+        while (sequence_remainder > 0) {
+            sequence_remainder -= sample_sequence[sequence_offset];
+            // rounding up
+            group_position++;
+            sequence_offset = (sequence_offset + 1) % sample_sequence.size();
+        }
+    } else {
+        int64_t sequence_remainder = ( - member_position) % mSampleSequenceSizes[member_index];
+        size_t sequence_offset = 0;
+        while (sequence_remainder > 0) {
+            sequence_remainder -= sample_sequence[sample_sequence.size() - sequence_offset - 1];
+            // rounding up
+            group_position--;
+            sequence_offset = (sequence_offset + 1) % sample_sequence.size();
+        }
     }
 
     return group_position;

@@ -1232,12 +1232,19 @@ int64_t MXFFileReader::GetExternalPosition(int64_t internal_position, size_t ext
         return internal_position * sample_sequence[0];
 
     int64_t num_sequences = internal_position / sample_sequence.size();
-    size_t sequence_remainder = (size_t)(internal_position % sample_sequence.size());
-
     int64_t external_position = num_sequences * mExternalSampleSequenceSizes[external_reader_index];
-    size_t j;
-    for (j = 0; j < sequence_remainder; j++)
-        external_position += sample_sequence[j];
+
+    if (internal_position >= 0) {
+        size_t sequence_remainder = (size_t)(internal_position % sample_sequence.size());
+        size_t i;
+        for (i = 0; i < sequence_remainder; i++)
+            external_position += sample_sequence[i];
+    } else {
+        size_t sequence_remainder = (size_t)(( - internal_position) % sample_sequence.size());
+        size_t i;
+        for (i = 0; i < sequence_remainder; i++)
+            external_position -= sample_sequence[sample_sequence.size() - i - 1];
+    }
 
     return external_position;
 }
@@ -1249,15 +1256,28 @@ int64_t MXFFileReader::GetInternalPosition(int64_t external_position, size_t ext
         return external_position / sample_sequence[0];
 
     int64_t num_sequences = external_position / mExternalSampleSequenceSizes[external_reader_index];
-    int64_t sequence_remainder = external_position % mExternalSampleSequenceSizes[external_reader_index];
-
     int64_t internal_position = num_sequences * sample_sequence.size();
-    size_t sequence_offset = 0;
-    while (sequence_remainder > 0) {
-        sequence_remainder -= sample_sequence[sequence_offset];
-        if (sequence_remainder >= 0)
-            internal_position++;
-        sequence_offset = (sequence_offset + 1) % sample_sequence.size();
+
+    if (external_position >= 0) {
+        int64_t sequence_remainder = external_position % mExternalSampleSequenceSizes[external_reader_index];
+        size_t sequence_offset = 0;
+        while (sequence_remainder > 0) {
+            sequence_remainder -= sample_sequence[sequence_offset];
+            // rounding down
+            if (sequence_remainder >= 0)
+                internal_position++;
+            sequence_offset = (sequence_offset + 1) % sample_sequence.size();
+        }
+    } else {
+        int64_t sequence_remainder = ( - external_position) % mExternalSampleSequenceSizes[external_reader_index];
+        size_t sequence_offset = 0;
+        while (sequence_remainder > 0) {
+            sequence_remainder -= sample_sequence[sample_sequence.size() - sequence_offset - 1];
+            // rounding down
+            if (sequence_remainder >= 0)
+                internal_position--;
+            sequence_offset = (sequence_offset + 1) % sample_sequence.size();
+        }
     }
 
     return internal_position;
