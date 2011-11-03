@@ -115,8 +115,10 @@ void MXFGroupReader::AddReader(MXFReader *reader)
 
 bool MXFGroupReader::Finalize()
 {
-    if (mReaders.empty())
+    if (mReaders.empty()) {
+        log_warn("Group reader has no members\n");
         return false;
+    }
 
     // the lowest input sample rate is the group sample rate
     float lowest_sample_rate = 1000000.0;
