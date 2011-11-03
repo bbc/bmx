@@ -1292,6 +1292,10 @@ int16_t MXFFileReader::GetInternalPrecharge(int64_t position, bool limit_to_avai
     if (target_position == CURRENT_POSITION_VALUE)
         target_position = GetPosition();
 
+    // no precharge if target position outside essence range
+    if (FROM_ESS_READER_POS(mEssenceReader->LegitimisePosition(TO_ESS_READER_POS(target_position))) != target_position)
+        return 0;
+
     int16_t precharge = 0;
     MXFIndexEntryExt index_entry;
     if (GetInternalIndexEntry(&index_entry, target_position)) {
@@ -1306,8 +1310,7 @@ int16_t MXFFileReader::GetInternalPrecharge(int64_t position, bool limit_to_avai
 
     if (precharge > 0)
         log_warn("Unexpected positive precharge value %d\n", precharge);
-
-    if (limit_to_available)
+    else if (precharge < 0 && limit_to_available)
         precharge = FROM_ESS_READER_POS(mEssenceReader->LegitimisePosition(TO_ESS_READER_POS(target_position + precharge))) - target_position;
 
     return precharge < 0 ? precharge : 0;
@@ -1321,6 +1324,10 @@ int16_t MXFFileReader::GetInternalRollout(int64_t position, bool limit_to_availa
     if (target_position == CURRENT_POSITION_VALUE)
         target_position = GetPosition();
 
+    // no rollout if target position outside essence range
+    if (FROM_ESS_READER_POS(mEssenceReader->LegitimisePosition(TO_ESS_READER_POS(target_position))) != target_position)
+        return 0;
+
     int16_t rollout = 0;
     MXFIndexEntryExt index_entry;
     if (GetInternalIndexEntry(&index_entry, target_position) && index_entry.temporal_offset > 0)
@@ -1328,8 +1335,7 @@ int16_t MXFFileReader::GetInternalRollout(int64_t position, bool limit_to_availa
 
     if (rollout < 0)
         log_warn("Unexpected negative rollout value %d\n", rollout);
-
-    if (limit_to_available)
+    else if (rollout > 0 && limit_to_available)
         rollout = FROM_ESS_READER_POS(mEssenceReader->LegitimisePosition(TO_ESS_READER_POS(target_position + rollout))) - target_position;
 
     return rollout > 0 ? rollout : 0;
