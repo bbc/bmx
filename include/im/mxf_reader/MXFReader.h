@@ -59,36 +59,36 @@ public:
 public:
     virtual void SetReadLimits() = 0;
     virtual void SetReadLimits(int64_t start_position, int64_t end_position, bool seek_start_position) = 0;
-    virtual int64_t GetReadStartPosition() = 0;
-    virtual int64_t GetReadEndPosition() = 0;
-    virtual int64_t GetReadDuration() = 0;
+    virtual int64_t GetReadStartPosition() const = 0;
+    virtual int64_t GetReadEndPosition() const = 0;
+    virtual int64_t GetReadDuration() const = 0;
 
     virtual uint32_t Read(uint32_t num_samples, int64_t frame_position = CURRENT_POSITION_VALUE) = 0;
     virtual void Seek(int64_t position) = 0;
 
-    virtual int64_t GetPosition() = 0;
+    virtual int64_t GetPosition() const = 0;
 
-    virtual int16_t GetMaxPrecharge(int64_t position, bool limit_to_available) = 0;
-    virtual int16_t GetMaxRollout(int64_t position, bool limit_to_available) = 0;
+    virtual int16_t GetMaxPrecharge(int64_t position, bool limit_to_available) const = 0;
+    virtual int16_t GetMaxRollout(int64_t position, bool limit_to_available) const = 0;
 
-    mxfRational GetSampleRate() { return mSampleRate; }
-    int64_t GetDuration() { return mDuration; }
+    mxfRational GetSampleRate() const { return mSampleRate; }
+    int64_t GetDuration() const       { return mDuration; }
 
 public:
-    virtual bool HaveFixedLeadFillerOffset() = 0;
-    virtual int64_t GetFixedLeadFillerOffset() = 0;
+    virtual bool HaveFixedLeadFillerOffset() const = 0;
+    virtual int64_t GetFixedLeadFillerOffset() const = 0;
 
     bool HaveMaterialTimecode() const { return mMaterialStartTimecode != 0; }
-    Timecode GetMaterialTimecode(int64_t position = CURRENT_POSITION_VALUE);
+    Timecode GetMaterialTimecode(int64_t position = CURRENT_POSITION_VALUE) const;
     bool HaveFileSourceTimecode() const { return mFileSourceStartTimecode != 0; }
-    Timecode GetFileSourceTimecode(int64_t position = CURRENT_POSITION_VALUE);
+    Timecode GetFileSourceTimecode(int64_t position = CURRENT_POSITION_VALUE) const;
     bool HavePhysicalSourceTimecode() const { return mPhysicalSourceStartTimecode != 0; }
-    Timecode GetPhysicalSourceTimecode(int64_t position = CURRENT_POSITION_VALUE);
+    Timecode GetPhysicalSourceTimecode(int64_t position = CURRENT_POSITION_VALUE) const;
 
     bool HavePlayoutTimecode() const;
-    Timecode GetPlayoutTimecode(int64_t position = CURRENT_POSITION_VALUE);
+    Timecode GetPlayoutTimecode(int64_t position = CURRENT_POSITION_VALUE) const;
     bool HaveSourceTimecode() const;
-    Timecode GetSourceTimecode(int64_t position = CURRENT_POSITION_VALUE);
+    Timecode GetSourceTimecode(int64_t position = CURRENT_POSITION_VALUE) const;
 
     std::string GetMaterialPackageName() const       { return mMaterialPackageName; }
     mxfUMID GetMaterialPackageUID() const            { return mMaterialPackageUID; }
@@ -113,7 +113,7 @@ protected:
     std::string mPhysicalSourcePackageName;
 
 private:
-    Timecode CreateTimecode(const Timecode *start_timecode, int64_t position);
+    Timecode CreateTimecode(const Timecode *start_timecode, int64_t position) const;
 };
 
 

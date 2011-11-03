@@ -63,7 +63,7 @@ MXFReader::~MXFReader()
     delete mPhysicalSourceStartTimecode;
 }
 
-Timecode MXFReader::GetMaterialTimecode(int64_t position)
+Timecode MXFReader::GetMaterialTimecode(int64_t position) const
 {
     if (!HaveMaterialTimecode())
         return Timecode(get_rounded_tc_base(mSampleRate), false);
@@ -71,7 +71,7 @@ Timecode MXFReader::GetMaterialTimecode(int64_t position)
     return CreateTimecode(mMaterialStartTimecode, position);
 }
 
-Timecode MXFReader::GetFileSourceTimecode(int64_t position)
+Timecode MXFReader::GetFileSourceTimecode(int64_t position) const
 {
     if (!HaveFileSourceTimecode())
         return Timecode(get_rounded_tc_base(mSampleRate), false);
@@ -79,7 +79,7 @@ Timecode MXFReader::GetFileSourceTimecode(int64_t position)
     return CreateTimecode(mFileSourceStartTimecode, position);
 }
 
-Timecode MXFReader::GetPhysicalSourceTimecode(int64_t position)
+Timecode MXFReader::GetPhysicalSourceTimecode(int64_t position) const
 {
     if (!HavePhysicalSourceTimecode())
         return Timecode(get_rounded_tc_base(mSampleRate), false);
@@ -92,7 +92,7 @@ bool MXFReader::HavePlayoutTimecode() const
     return HaveMaterialTimecode() || HaveFileSourceTimecode() || HavePhysicalSourceTimecode();
 }
 
-Timecode MXFReader::GetPlayoutTimecode(int64_t position)
+Timecode MXFReader::GetPlayoutTimecode(int64_t position) const
 {
     if (HaveMaterialTimecode())
         return GetMaterialTimecode(position);
@@ -109,7 +109,7 @@ bool MXFReader::HaveSourceTimecode() const
     return HaveFileSourceTimecode() || HavePhysicalSourceTimecode();
 }
 
-Timecode MXFReader::GetSourceTimecode(int64_t position)
+Timecode MXFReader::GetSourceTimecode(int64_t position) const
 {
     if (HaveFileSourceTimecode())
         return GetFileSourceTimecode(position);
@@ -119,7 +119,7 @@ Timecode MXFReader::GetSourceTimecode(int64_t position)
     return Timecode(get_rounded_tc_base(mSampleRate), false);
 }
 
-Timecode MXFReader::CreateTimecode(const Timecode *start_timecode, int64_t position)
+Timecode MXFReader::CreateTimecode(const Timecode *start_timecode, int64_t position) const
 {
     int64_t offset = position;
     if (position == CURRENT_POSITION_VALUE)

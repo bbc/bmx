@@ -468,7 +468,7 @@ void MXFFileReader::Seek(int64_t position)
     }
 }
 
-int64_t MXFFileReader::GetPosition()
+int64_t MXFFileReader::GetPosition() const
 {
     int64_t position = 0;
     if (InternalIsEnabled()) {
@@ -487,7 +487,7 @@ int64_t MXFFileReader::GetPosition()
     return position;
 }
 
-int16_t MXFFileReader::GetMaxPrecharge(int64_t position, bool limit_to_available)
+int16_t MXFFileReader::GetMaxPrecharge(int64_t position, bool limit_to_available) const
 {
     int64_t target_position = position;
     if (target_position == CURRENT_POSITION_VALUE)
@@ -518,7 +518,7 @@ int16_t MXFFileReader::GetMaxPrecharge(int64_t position, bool limit_to_available
     return precharge < 0 ? precharge : 0;
 }
 
-int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available)
+int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available) const
 {
     int64_t target_position = position;
     if (target_position == CURRENT_POSITION_VALUE)
@@ -549,7 +549,7 @@ int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available)
     return rollout > 0 ? rollout : 0;
 }
 
-bool MXFFileReader::HaveFixedLeadFillerOffset()
+bool MXFFileReader::HaveFixedLeadFillerOffset() const
 {
     int64_t fixed_offset = 0;
     size_t i;
@@ -568,7 +568,7 @@ bool MXFFileReader::HaveFixedLeadFillerOffset()
     return true;
 }
 
-int64_t MXFFileReader::GetFixedLeadFillerOffset()
+int64_t MXFFileReader::GetFixedLeadFillerOffset() const
 {
     int64_t fixed_offset = 0;
     size_t i;
@@ -1187,7 +1187,7 @@ void MXFFileReader::ForceDuration(int64_t duration)
     mDuration = duration;
 }
 
-vector<uint32_t> MXFFileReader::GetSampleSequence(mxfRational clip_sample_rate)
+vector<uint32_t> MXFFileReader::GetSampleSequence(mxfRational clip_sample_rate) const
 {
     vector<uint32_t> sample_sequence;
 
@@ -1229,9 +1229,9 @@ vector<uint32_t> MXFFileReader::GetSampleSequence(mxfRational clip_sample_rate)
 }
 
 uint32_t MXFFileReader::GetNumExternalSamples(uint32_t num_internal_samples, size_t external_reader_index,
-                                              int64_t position)
+                                              int64_t position) const
 {
-    vector<uint32_t> &sample_sequence = mExternalSampleSequences[external_reader_index];
+    const vector<uint32_t> &sample_sequence = mExternalSampleSequences[external_reader_index];
     if (sample_sequence.size() == 1)
         return num_internal_samples * sample_sequence[0];
 
@@ -1247,9 +1247,9 @@ uint32_t MXFFileReader::GetNumExternalSamples(uint32_t num_internal_samples, siz
 }
 
 uint32_t MXFFileReader::GetNumInternalSamples(uint32_t num_external_samples, size_t external_reader_index,
-                                              int64_t position)
+                                              int64_t position) const
 {
-    vector<uint32_t> &sample_sequence = mExternalSampleSequences[external_reader_index];
+    const vector<uint32_t> &sample_sequence = mExternalSampleSequences[external_reader_index];
     if (sample_sequence.size() == 1)
         return num_external_samples / sample_sequence[0];
 
@@ -1266,9 +1266,9 @@ uint32_t MXFFileReader::GetNumInternalSamples(uint32_t num_external_samples, siz
     return num_internal_samples;
 }
 
-int64_t MXFFileReader::GetExternalPosition(int64_t internal_position, size_t external_reader_index)
+int64_t MXFFileReader::GetExternalPosition(int64_t internal_position, size_t external_reader_index) const
 {
-    vector<uint32_t> &sample_sequence = mExternalSampleSequences[external_reader_index];
+    const vector<uint32_t> &sample_sequence = mExternalSampleSequences[external_reader_index];
     if (sample_sequence.size() == 1)
         return internal_position * sample_sequence[0];
 
@@ -1283,9 +1283,9 @@ int64_t MXFFileReader::GetExternalPosition(int64_t internal_position, size_t ext
     return external_position;
 }
 
-int64_t MXFFileReader::GetInternalPosition(int64_t external_position, size_t external_reader_index)
+int64_t MXFFileReader::GetInternalPosition(int64_t external_position, size_t external_reader_index) const
 {
-    vector<uint32_t> &sample_sequence = mExternalSampleSequences[external_reader_index];
+    const vector<uint32_t> &sample_sequence = mExternalSampleSequences[external_reader_index];
     if (sample_sequence.size() == 1)
         return external_position / sample_sequence[0];
 
@@ -1304,14 +1304,14 @@ int64_t MXFFileReader::GetInternalPosition(int64_t external_position, size_t ext
     return internal_position;
 }
 
-bool MXFFileReader::GetInternalIndexEntry(MXFIndexEntryExt *entry, int64_t position)
+bool MXFFileReader::GetInternalIndexEntry(MXFIndexEntryExt *entry, int64_t position) const
 {
     IM_ASSERT(mEssenceReader);
 
     return mEssenceReader->GetIndexEntry(entry, TO_ESS_READER_POS(position));
 }
 
-int16_t MXFFileReader::GetInternalPrecharge(int64_t position, bool limit_to_available)
+int16_t MXFFileReader::GetInternalPrecharge(int64_t position, bool limit_to_available) const
 {
     IM_ASSERT(mEssenceReader);
 
@@ -1340,7 +1340,7 @@ int16_t MXFFileReader::GetInternalPrecharge(int64_t position, bool limit_to_avai
     return precharge < 0 ? precharge : 0;
 }
 
-int16_t MXFFileReader::GetInternalRollout(int64_t position, bool limit_to_available)
+int16_t MXFFileReader::GetInternalRollout(int64_t position, bool limit_to_available) const
 {
     IM_ASSERT(mEssenceReader);
 

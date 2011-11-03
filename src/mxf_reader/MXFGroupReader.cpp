@@ -288,7 +288,7 @@ void MXFGroupReader::Seek(int64_t position)
     }
 }
 
-int64_t MXFGroupReader::GetPosition()
+int64_t MXFGroupReader::GetPosition() const
 {
     size_t i;
     for (i = 0; i < mReaders.size(); i++) {
@@ -301,7 +301,7 @@ int64_t MXFGroupReader::GetPosition()
     return 0;
 }
 
-int16_t MXFGroupReader::GetMaxPrecharge(int64_t position, bool limit_to_available)
+int16_t MXFGroupReader::GetMaxPrecharge(int64_t position, bool limit_to_available) const
 {
     int16_t max_precharge = 0;
 
@@ -322,7 +322,7 @@ int16_t MXFGroupReader::GetMaxPrecharge(int64_t position, bool limit_to_availabl
     return max_precharge;
 }
 
-int16_t MXFGroupReader::GetMaxRollout(int64_t position, bool limit_to_available)
+int16_t MXFGroupReader::GetMaxRollout(int64_t position, bool limit_to_available) const
 {
     int16_t max_rollout = 0;
 
@@ -343,7 +343,7 @@ int16_t MXFGroupReader::GetMaxRollout(int64_t position, bool limit_to_available)
     return max_rollout;
 }
 
-bool MXFGroupReader::HaveFixedLeadFillerOffset()
+bool MXFGroupReader::HaveFixedLeadFillerOffset() const
 {
     int64_t fixed_offset = -1;
     size_t i;
@@ -364,7 +364,7 @@ bool MXFGroupReader::HaveFixedLeadFillerOffset()
     return true;
 }
 
-int64_t MXFGroupReader::GetFixedLeadFillerOffset()
+int64_t MXFGroupReader::GetFixedLeadFillerOffset() const
 {
     int64_t fixed_offset = -1;
     size_t i;
@@ -402,7 +402,7 @@ bool MXFGroupReader::IsEnabled() const
     return false;
 }
 
-vector<uint32_t> MXFGroupReader::GetSampleSequence(size_t member_index)
+vector<uint32_t> MXFGroupReader::GetSampleSequence(size_t member_index) const
 {
     vector<uint32_t> sample_sequence;
 
@@ -445,9 +445,9 @@ vector<uint32_t> MXFGroupReader::GetSampleSequence(size_t member_index)
     return sample_sequence;
 }
 
-int64_t MXFGroupReader::ConvertGroupDuration(int64_t group_duration, size_t member_index)
+int64_t MXFGroupReader::ConvertGroupDuration(int64_t group_duration, size_t member_index) const
 {
-    vector<uint32_t> &sample_sequence = mSampleSequences[member_index];
+    const vector<uint32_t> &sample_sequence = mSampleSequences[member_index];
 
     int64_t num_sequences = group_duration / sample_sequence.size();
     int64_t sequence_remainder = group_duration % sample_sequence.size();
@@ -460,14 +460,14 @@ int64_t MXFGroupReader::ConvertGroupDuration(int64_t group_duration, size_t memb
     return member_duration;
 }
 
-int64_t MXFGroupReader::ConvertGroupPosition(int64_t group_position, size_t member_index)
+int64_t MXFGroupReader::ConvertGroupPosition(int64_t group_position, size_t member_index) const
 {
     return ConvertGroupDuration(group_position, member_index);
 }
 
-int64_t MXFGroupReader::ConvertMemberDuration(int64_t member_duration, size_t member_index)
+int64_t MXFGroupReader::ConvertMemberDuration(int64_t member_duration, size_t member_index) const 
 {
-    vector<uint32_t> &sample_sequence = mSampleSequences[member_index];
+    const vector<uint32_t> &sample_sequence = mSampleSequences[member_index];
 
     int64_t num_sequences = member_duration / mSampleSequenceSizes[member_index];
     int64_t sequence_remainder = member_duration % mSampleSequenceSizes[member_index];
@@ -485,9 +485,9 @@ int64_t MXFGroupReader::ConvertMemberDuration(int64_t member_duration, size_t me
     return group_duration;
 }
 
-int64_t MXFGroupReader::ConvertMemberPosition(int64_t member_position, size_t member_index)
+int64_t MXFGroupReader::ConvertMemberPosition(int64_t member_position, size_t member_index) const
 {
-    vector<uint32_t> &sample_sequence = mSampleSequences[member_index];
+    const vector<uint32_t> &sample_sequence = mSampleSequences[member_index];
 
     int64_t num_sequences = member_position / mSampleSequenceSizes[member_index];
     int64_t sequence_remainder = member_position % mSampleSequenceSizes[member_index];

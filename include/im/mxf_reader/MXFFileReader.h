@@ -79,21 +79,21 @@ public:
 public:
     virtual void SetReadLimits();
     virtual void SetReadLimits(int64_t start_position, int64_t end_position, bool seek_start_position);
-    virtual int64_t GetReadStartPosition() { return mReadStartPosition; }
-    virtual int64_t GetReadEndPosition() { return mReadEndPosition; }
-    virtual int64_t GetReadDuration() { return mReadEndPosition - mReadStartPosition; }
+    virtual int64_t GetReadStartPosition() const { return mReadStartPosition; }
+    virtual int64_t GetReadEndPosition() const   { return mReadEndPosition; }
+    virtual int64_t GetReadDuration() const      { return mReadEndPosition - mReadStartPosition; }
 
     virtual uint32_t Read(uint32_t num_samples, int64_t frame_position = CURRENT_POSITION_VALUE);
     virtual void Seek(int64_t position);
 
-    virtual int64_t GetPosition();
+    virtual int64_t GetPosition() const;
 
-    virtual int16_t GetMaxPrecharge(int64_t position, bool limit_to_available);
-    virtual int16_t GetMaxRollout(int64_t position, bool limit_to_available);
+    virtual int16_t GetMaxPrecharge(int64_t position, bool limit_to_available) const;
+    virtual int16_t GetMaxRollout(int64_t position, bool limit_to_available) const;
 
 public:
-    virtual bool HaveFixedLeadFillerOffset();
-    virtual int64_t GetFixedLeadFillerOffset();
+    virtual bool HaveFixedLeadFillerOffset() const;
+    virtual int64_t GetFixedLeadFillerOffset() const;
 
     mxfpp::HeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }
 
@@ -146,15 +146,15 @@ private:
 
     void ForceDuration(int64_t duration);
 
-    std::vector<uint32_t> GetSampleSequence(mxfRational clip_sample_rate);
-    uint32_t GetNumExternalSamples(uint32_t num_internal_samples, size_t external_reader_index, int64_t position);
-    uint32_t GetNumInternalSamples(uint32_t num_external_samples, size_t external_reader_index, int64_t position);
-    int64_t GetExternalPosition(int64_t internal_position, size_t external_reader_index);
-    int64_t GetInternalPosition(int64_t external_position, size_t external_reader_index);
+    std::vector<uint32_t> GetSampleSequence(mxfRational clip_sample_rate) const;
+    uint32_t GetNumExternalSamples(uint32_t num_internal_samples, size_t external_reader_index, int64_t position) const;
+    uint32_t GetNumInternalSamples(uint32_t num_external_samples, size_t external_reader_index, int64_t position) const;
+    int64_t GetExternalPosition(int64_t internal_position, size_t external_reader_index) const;
+    int64_t GetInternalPosition(int64_t external_position, size_t external_reader_index) const;
 
-    bool GetInternalIndexEntry(MXFIndexEntryExt *entry, int64_t position);
-    int16_t GetInternalPrecharge(int64_t position, bool limit_to_available);
-    int16_t GetInternalRollout(int64_t position, bool limit_to_available);
+    bool GetInternalIndexEntry(MXFIndexEntryExt *entry, int64_t position) const;
+    int16_t GetInternalPrecharge(int64_t position, bool limit_to_available) const;
+    int16_t GetInternalRollout(int64_t position, bool limit_to_available) const;
 
     bool InternalIsEnabled() const;
 
