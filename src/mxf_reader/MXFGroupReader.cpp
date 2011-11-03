@@ -65,15 +65,12 @@ typedef struct
 
 static bool compare_group_track_reader(const GroupTrackReader &left_reader, const GroupTrackReader &right_reader)
 {
-    // material package
-    if (left_reader.track_reader->GetFileReader()->GetMaterialPackageUID() !=
-            right_reader.track_reader->GetFileReader()->GetMaterialPackageUID())
-    {
-        return left_reader.index < right_reader.index;
-    }
-
     const MXFTrackInfo *left_info = left_reader.track_reader->GetTrackInfo();
     const MXFTrackInfo *right_info = right_reader.track_reader->GetTrackInfo();
+
+    // material package
+    if (left_info->material_package_uid != right_info->material_package_uid)
+        return left_reader.index < right_reader.index;
 
     // data kind
     if (left_info->is_picture != right_info->is_picture)

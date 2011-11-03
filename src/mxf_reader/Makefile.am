@@ -5,14 +5,14 @@ libmxfreader_la_SOURCES = \
 	EssenceReader.cpp \
 	IndexTableHelper.cpp \
 	MXFFileReader.cpp \
+	MXFFileTrackReader.cpp \
 	MXFFrame.cpp \
 	MXFFrameBuffer.cpp \
 	MXFGroupReader.cpp \
 	MXFIndexEntryExt.cpp \
 	MXFPackageResolver.cpp \
 	MXFReader.cpp \
-	MXFTrackInfo.cpp \
-	MXFTrackReader.cpp
+	MXFTrackInfo.cpp
 
 libmxfreader_la_CXXFLAGS = $(BMX_CFLAGS)
 

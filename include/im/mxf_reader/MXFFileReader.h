@@ -31,7 +31,7 @@
 #include <libMXF++/MXF.h>
 
 #include <im/mxf_reader/MXFReader.h>
-#include <im/mxf_reader/MXFTrackReader.h>
+#include <im/mxf_reader/MXFFileTrackReader.h>
 #include <im/mxf_reader/EssenceReader.h>
 #include <im/mxf_reader/MXFPackageResolver.h>
 #include <im/URI.h>
@@ -49,7 +49,7 @@ public:
     friend class EssenceReader;
     friend class IndexTableHelper;
     friend class EssenceChunkHelper;
-    friend class MXFTrackReader;
+    friend class MXFFileTrackReader;
 
 public:
     typedef enum

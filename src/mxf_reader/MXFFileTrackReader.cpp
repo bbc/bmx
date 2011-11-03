@@ -33,7 +33,7 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_reader/MXFTrackReader.h>
+#include <im/mxf_reader/MXFFileTrackReader.h>
 #include <im/mxf_reader/MXFFileReader.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
@@ -44,8 +44,8 @@ using namespace mxfpp;
 
 
 
-MXFTrackReader::MXFTrackReader(MXFFileReader *file_reader, MXFTrackInfo *track_info, FileDescriptor *file_descriptor,
-                               SourcePackage *file_source_package)
+MXFFileTrackReader::MXFFileTrackReader(MXFFileReader *file_reader, MXFTrackInfo *track_info, FileDescriptor *file_descriptor,
+                                       SourcePackage *file_source_package)
 {
     mFileReader = file_reader;
     mTrackInfo = track_info;
@@ -57,19 +57,19 @@ MXFTrackReader::MXFTrackReader(MXFFileReader *file_reader, MXFTrackInfo *track_i
     mOwnFrameBuffer = true;
 }
 
-MXFTrackReader::~MXFTrackReader()
+MXFFileTrackReader::~MXFFileTrackReader()
 {
     delete mTrackInfo;
     if (mOwnFrameBuffer)
         delete mFrameBuffer;
 }
 
-void MXFTrackReader::SetEnable(bool enable)
+void MXFFileTrackReader::SetEnable(bool enable)
 {
     mIsEnabled = enable;
 }
 
-void MXFTrackReader::SetFrameBuffer(MXFFrameBuffer *frame_buffer, bool take_ownership)
+void MXFFileTrackReader::SetFrameBuffer(MXFFrameBuffer *frame_buffer, bool take_ownership)
 {
     if (mOwnFrameBuffer)
         delete mFrameBuffer;
@@ -78,72 +78,72 @@ void MXFTrackReader::SetFrameBuffer(MXFFrameBuffer *frame_buffer, bool take_owne
     mOwnFrameBuffer = take_ownership;
 }
 
-void MXFTrackReader::SetReadLimits()
+void MXFFileTrackReader::SetReadLimits()
 {
     mFileReader->SetReadLimits();
 }
 
-void MXFTrackReader::SetReadLimits(int64_t start_position, int64_t end_position, bool seek_to_start)
+void MXFFileTrackReader::SetReadLimits(int64_t start_position, int64_t end_position, bool seek_to_start)
 {
     mFileReader->SetReadLimits(start_position, end_position, seek_to_start);
 }
 
-int64_t MXFTrackReader::GetReadStartPosition()
+int64_t MXFFileTrackReader::GetReadStartPosition()
 {
     return mFileReader->GetReadStartPosition();
 }
 
-int64_t MXFTrackReader::GetReadEndPosition()
+int64_t MXFFileTrackReader::GetReadEndPosition()
 {
     return mFileReader->GetReadEndPosition();
 }
 
-int64_t MXFTrackReader::GetReadDuration()
+int64_t MXFFileTrackReader::GetReadDuration()
 {
     return mFileReader->GetReadDuration();
 }
 
-uint32_t MXFTrackReader::Read(uint32_t num_samples, int64_t frame_position)
+uint32_t MXFFileTrackReader::Read(uint32_t num_samples, int64_t frame_position)
 {
     return mFileReader->Read(num_samples, frame_position);
 }
 
-void MXFTrackReader::Seek(int64_t position)
+void MXFFileTrackReader::Seek(int64_t position)
 {
     mFileReader->Seek(position);
 }
 
-int64_t MXFTrackReader::GetPosition()
+int64_t MXFFileTrackReader::GetPosition()
 {
     return mFileReader->GetPosition();
 }
 
-mxfRational MXFTrackReader::GetSampleRate()
+mxfRational MXFFileTrackReader::GetSampleRate()
 {
     return mFileReader->GetSampleRate();
 }
 
-int64_t MXFTrackReader::GetDuration()
+int64_t MXFFileTrackReader::GetDuration()
 {
     return mFileReader->GetDuration();
 }
 
-bool MXFTrackReader::GetIndexEntry(MXFIndexEntryExt *entry, int64_t position)
+bool MXFFileTrackReader::GetIndexEntry(MXFIndexEntryExt *entry, int64_t position)
 {
     return mFileReader->GetInternalIndexEntry(entry, position);
 }
 
-int16_t MXFTrackReader::GetPrecharge(int64_t position, bool limit_to_available)
+int16_t MXFFileTrackReader::GetPrecharge(int64_t position, bool limit_to_available)
 {
     return mFileReader->GetInternalPrecharge(position, limit_to_available);
 }
 
-int16_t MXFTrackReader::GetRollout(int64_t position, bool limit_to_available)
+int16_t MXFFileTrackReader::GetRollout(int64_t position, bool limit_to_available)
 {
     return mFileReader->GetInternalRollout(position, limit_to_available);
 }
 
-void MXFTrackReader::Reset(int64_t position)
+void MXFFileTrackReader::Reset(int64_t position)
 {
     mFrameBuffer->ResetFrame(position);
 }
