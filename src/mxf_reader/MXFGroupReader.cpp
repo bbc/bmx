@@ -116,7 +116,7 @@ void MXFGroupReader::AddReader(MXFReader *reader)
 bool MXFGroupReader::Finalize()
 {
     if (mReaders.empty()) {
-        log_warn("Group reader has no members\n");
+        log_error("Group reader has no members\n");
         return false;
     }
 
