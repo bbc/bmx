@@ -95,10 +95,6 @@ public:
     virtual bool HaveFixedLeadFillerOffset();
     virtual int64_t GetFixedLeadFillerOffset();
 
-    std::string GetMaterialPackageName() const { return mMaterialPackageName; }
-    mxfUMID GetMaterialPackageUID() const { return mMaterialPackageUID; }
-    std::string GetPhysicalSourcePackageName() const { return mPhysicalSourcePackageName; }
-
     mxfpp::HeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }
 
     std::string GetFilename() const { return mFilename; }
@@ -172,10 +168,6 @@ private:
 
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;
-
-    std::string mMaterialPackageName;
-    mxfUMID mMaterialPackageUID;
-    std::string mPhysicalSourcePackageName;
 
     bool mIsClipWrapped;
     uint32_t mBodySID;

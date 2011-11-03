@@ -45,8 +45,13 @@ namespace im
 {
 
 
+class MXFGroupReader;
+
 class MXFReader
 {
+public:
+    friend class MXFGroupReader;
+
 public:
     MXFReader();
     virtual ~MXFReader();
@@ -85,6 +90,10 @@ public:
     bool HaveSourceTimecode() const;
     Timecode GetSourceTimecode(int64_t position = CURRENT_POSITION_VALUE);
 
+    std::string GetMaterialPackageName() const       { return mMaterialPackageName; }
+    mxfUMID GetMaterialPackageUID() const            { return mMaterialPackageUID; }
+    std::string GetPhysicalSourcePackageName() const { return mPhysicalSourcePackageName; }
+
 public:
     virtual size_t GetNumTrackReaders() const = 0;
     virtual MXFTrackReader* GetTrackReader(size_t track_index) const = 0;
@@ -98,6 +107,10 @@ protected:
     Timecode *mMaterialStartTimecode;
     Timecode *mFileSourceStartTimecode;
     Timecode *mPhysicalSourceStartTimecode;
+
+    std::string mMaterialPackageName;
+    mxfUMID mMaterialPackageUID;
+    std::string mPhysicalSourcePackageName;
 
 private:
     Timecode CreateTimecode(const Timecode *start_timecode, int64_t position);

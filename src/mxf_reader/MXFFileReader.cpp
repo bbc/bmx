@@ -190,7 +190,6 @@ MXFFileReader::MXFFileReader(string filename, File *file, MXFPackageResolver *re
     mOwnPackageResolver = (resolver ? resolver_take_ownership : false);
     mHeaderMetadata = 0;
     mDataModel = 0;
-    memset(&mMaterialPackageUID, 0, sizeof(mMaterialPackageUID));
     mIsClipWrapped = false;
     mBodySID = 0;
     mIndexSID = 0;

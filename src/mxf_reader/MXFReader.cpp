@@ -53,6 +53,7 @@ MXFReader::MXFReader()
     mMaterialStartTimecode = 0;
     mFileSourceStartTimecode = 0;
     mPhysicalSourceStartTimecode = 0;
+    memset(&mMaterialPackageUID, 0, sizeof(mMaterialPackageUID));
 }
 
 MXFReader::~MXFReader()
