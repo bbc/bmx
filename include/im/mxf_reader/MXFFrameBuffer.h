@@ -49,6 +49,7 @@ public:
     virtual MXFFrame* CreateFrame(int64_t position) = 0;
     virtual MXFFrame* GetFrame(int64_t position) = 0;
     virtual void ResetFrame(int64_t position) = 0;
+    virtual void ExtendFrame(int64_t position, bool enable) = 0;
 };
 
 
@@ -62,9 +63,12 @@ public:
     virtual MXFFrame* CreateFrame(int64_t position);
     virtual MXFFrame* GetFrame(int64_t position);
     virtual void ResetFrame(int64_t position);
+    virtual void ExtendFrame(int64_t position, bool enable);
 
 public:
     MXFDefaultFrame *mFrame;
+    int64_t mExtendFramePosition;
+    bool mExtendFrame;
 };
 
 

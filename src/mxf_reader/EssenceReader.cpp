@@ -314,8 +314,10 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples, int64_t frame_
                     track_reader = mFileReader->GetInternalTrackReaderByNumber(track_number);
                     if (start_position == mPosition && track_reader && track_reader->IsEnabled()) {
                         frame = track_reader->GetFrameBuffer()->CreateFrame(frame_position);
-                        frame->SetCPFilePosition(cp_file_position);
-                        frame->SetFilePosition(cp_file_position + cp_num_read);
+                        if (frame->IsEmpty()) { // frame is not empty if it is being extended
+                            frame->SetCPFilePosition(cp_file_position);
+                            frame->SetFilePosition(cp_file_position + cp_num_read);
+                        }
                         enabled_track_readers[track_number] = track_reader;
                     } else {
                         enabled_track_readers[track_number] = 0;

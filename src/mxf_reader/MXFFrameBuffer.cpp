@@ -45,6 +45,8 @@ using namespace im;
 MXFDefaultFrameBuffer::MXFDefaultFrameBuffer()
 {
     mFrame = new MXFDefaultFrame();
+    mExtendFramePosition = 0;
+    mExtendFrame = false;
 }
 
 MXFDefaultFrameBuffer::~MXFDefaultFrameBuffer()
@@ -54,8 +56,13 @@ MXFDefaultFrameBuffer::~MXFDefaultFrameBuffer()
 
 MXFFrame* MXFDefaultFrameBuffer::CreateFrame(int64_t position)
 {
-    mFrame->Reset();
-    mFrame->SetPosition(position);
+    if (!mExtendFrame || mExtendFramePosition != position) {
+        mFrame->Reset();
+        mFrame->SetPosition(position);
+
+        mExtendFramePosition = 0;
+        mExtendFrame = false;
+    }
 
     return mFrame;
 }
@@ -72,5 +79,16 @@ void MXFDefaultFrameBuffer::ResetFrame(int64_t position)
 {
     if (mFrame->GetPosition() == position)
         mFrame->Reset();
+}
+
+void MXFDefaultFrameBuffer::ExtendFrame(int64_t position, bool enable)
+{
+    if (enable && mFrame->GetPosition() == position) {
+        mExtendFramePosition = position;
+        mExtendFrame = enable;
+    } else {
+        mExtendFramePosition = 0;
+        mExtendFrame = false;
+    }
 }
 
