@@ -68,12 +68,6 @@ public:
     virtual bool IsEnabled() const;
 
 private:
-    int64_t ConvertGroupDuration(int64_t group_duration, size_t member_index) const;
-    int64_t ConvertGroupPosition(int64_t group_position, size_t member_index) const;
-    int64_t ConvertMemberDuration(int64_t track_duration, size_t member_index) const;
-    int64_t ConvertMemberPosition(int64_t track_position, size_t member_index) const;
-
-private:
     std::vector<im::MXFReader*> mReaders;
     std::vector<im::MXFTrackReader*> mTrackReaders;
 

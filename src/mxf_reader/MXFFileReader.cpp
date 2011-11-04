@@ -44,6 +44,10 @@ using namespace mxfpp;
 #define TO_ESS_READER_POS(pos)      (pos + mOrigin)
 #define FROM_ESS_READER_POS(pos)    (pos - mOrigin)
 
+#define CONVERT_EXTERNAL_DUR(dur)   convert_duration_lower(dur, mExternalSampleSequences[i], mExternalSampleSequenceSizes[i])
+#define CONVERT_INTERNAL_POS(pos)   convert_position_higher(pos, mExternalSampleSequences[i], mExternalSampleSequenceSizes[i])
+#define CONVERT_EXTERNAL_POS(pos)   convert_position_lower(pos, mExternalSampleSequences[i], mExternalSampleSequenceSizes[i])
+
 
 
 typedef struct
@@ -323,14 +327,14 @@ MXFFileReader::MXFFileReader(string filename, File *file, MXFPackageResolver *re
                 mDuration = track_duration;
         }
         for (i = 0; i < mExternalReaders.size(); i++) {
-            int64_t internal_duration = GetInternalPosition(mExternalReaders[i]->GetDuration(), i);
+            int64_t internal_duration = CONVERT_EXTERNAL_DUR(mExternalReaders[i]->GetDuration());
             if (mDuration < 0 || internal_duration < mDuration)
                 mDuration = internal_duration;
         }
 
         // force external readers to have the clip's duration
         for (i = 0; i < mExternalReaders.size(); i++)
-            mExternalReaders[i]->ForceDuration(GetExternalPosition(mDuration, i));
+            mExternalReaders[i]->ForceDuration(CONVERT_INTERNAL_POS(mDuration));
 
         // disable unused external tracks
         for (i = 0; i < mExternalReaders.size(); i++) {
@@ -416,8 +420,8 @@ void MXFFileReader::SetReadLimits(int64_t start_position, int64_t end_position, 
         if (!mExternalReaders[i]->IsEnabled())
             continue;
 
-        int64_t external_start_position = GetExternalPosition(start_position, i);
-        int64_t external_end_position = GetExternalPosition(end_position, i);
+        int64_t external_start_position = CONVERT_INTERNAL_POS(start_position);
+        int64_t external_end_position = CONVERT_INTERNAL_POS(end_position);
         mExternalReaders[i]->SetReadLimits(external_start_position, external_end_position, false /* seek done below */);
     }
 
@@ -464,7 +468,7 @@ void MXFFileReader::Seek(int64_t position)
         if (!mExternalReaders[i]->IsEnabled())
             continue;
 
-        mExternalReaders[i]->Seek(GetExternalPosition(position, i));
+        mExternalReaders[i]->Seek(CONVERT_INTERNAL_POS(position));
     }
 }
 
@@ -479,7 +483,7 @@ int64_t MXFFileReader::GetPosition() const
             if (!mExternalReaders[i]->IsEnabled())
                 continue;
 
-            position = GetInternalPosition(mExternalReaders[i]->GetPosition(), i);
+            position = CONVERT_EXTERNAL_DUR(mExternalReaders[i]->GetPosition());
             break;
         }
     }
@@ -502,7 +506,7 @@ int16_t MXFFileReader::GetMaxPrecharge(int64_t position, bool limit_to_available
         if (!mExternalReaders[i]->IsEnabled())
             continue;
 
-        int16_t ext_reader_precharge = mExternalReaders[i]->GetMaxPrecharge(GetExternalPosition(target_position, i),
+        int16_t ext_reader_precharge = mExternalReaders[i]->GetMaxPrecharge(CONVERT_INTERNAL_POS(target_position),
                                                                             limit_to_available);
         if (ext_reader_precharge < precharge) {
             IM_CHECK_M(mExternalReaders[i]->GetSampleRate() == mSampleRate,
@@ -530,7 +534,7 @@ int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available) 
         if (!mExternalReaders[i]->IsEnabled())
             continue;
 
-        int16_t ext_reader_rollout = mExternalReaders[i]->GetMaxRollout(GetExternalPosition(target_position, i),
+        int16_t ext_reader_rollout = mExternalReaders[i]->GetMaxRollout(CONVERT_INTERNAL_POS(target_position),
                                                                         limit_to_available);
         if (ext_reader_rollout > rollout) {
             IM_CHECK_M(mExternalReaders[i]->GetSampleRate() == mSampleRate,
@@ -1217,64 +1221,6 @@ uint32_t MXFFileReader::GetNumInternalSamples(uint32_t num_external_samples, siz
     }
 
     return num_internal_samples;
-}
-
-int64_t MXFFileReader::GetExternalPosition(int64_t internal_position, size_t external_reader_index) const
-{
-    const vector<uint32_t> &sample_sequence = mExternalSampleSequences[external_reader_index];
-    if (sample_sequence.size() == 1)
-        return internal_position * sample_sequence[0];
-
-    int64_t num_sequences = internal_position / sample_sequence.size();
-    int64_t external_position = num_sequences * mExternalSampleSequenceSizes[external_reader_index];
-
-    if (internal_position >= 0) {
-        size_t sequence_remainder = (size_t)(internal_position % sample_sequence.size());
-        size_t i;
-        for (i = 0; i < sequence_remainder; i++)
-            external_position += sample_sequence[i];
-    } else {
-        size_t sequence_remainder = (size_t)(( - internal_position) % sample_sequence.size());
-        size_t i;
-        for (i = 0; i < sequence_remainder; i++)
-            external_position -= sample_sequence[sample_sequence.size() - i - 1];
-    }
-
-    return external_position;
-}
-
-int64_t MXFFileReader::GetInternalPosition(int64_t external_position, size_t external_reader_index) const
-{
-    const vector<uint32_t> &sample_sequence = mExternalSampleSequences[external_reader_index];
-    if (sample_sequence.size() == 1)
-        return external_position / sample_sequence[0];
-
-    int64_t num_sequences = external_position / mExternalSampleSequenceSizes[external_reader_index];
-    int64_t internal_position = num_sequences * sample_sequence.size();
-
-    if (external_position >= 0) {
-        int64_t sequence_remainder = external_position % mExternalSampleSequenceSizes[external_reader_index];
-        size_t sequence_offset = 0;
-        while (sequence_remainder > 0) {
-            sequence_remainder -= sample_sequence[sequence_offset];
-            // rounding down
-            if (sequence_remainder >= 0)
-                internal_position++;
-            sequence_offset = (sequence_offset + 1) % sample_sequence.size();
-        }
-    } else {
-        int64_t sequence_remainder = ( - external_position) % mExternalSampleSequenceSizes[external_reader_index];
-        size_t sequence_offset = 0;
-        while (sequence_remainder > 0) {
-            sequence_remainder -= sample_sequence[sample_sequence.size() - sequence_offset - 1];
-            // rounding down
-            if (sequence_remainder >= 0)
-                internal_position--;
-            sequence_offset = (sequence_offset + 1) % sample_sequence.size();
-        }
-    }
-
-    return internal_position;
 }
 
 bool MXFFileReader::GetInternalIndexEntry(MXFIndexEntryExt *entry, int64_t position) const

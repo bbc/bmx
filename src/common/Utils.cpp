@@ -118,6 +118,87 @@ int64_t im::convert_duration(Rational in_edit_rate, int64_t in_duration, Rationa
                             rounding);
 }
 
+int64_t im::convert_position_lower(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size)
+{
+    int64_t lower_position = position / sequence_size * sequence.size();
+
+    if (position >= 0) {
+        int64_t sequence_remainder = position % sequence_size;
+        size_t sequence_offset = 0;
+        while (sequence_remainder > 0) {
+            sequence_remainder -= sequence[sequence_offset];
+            // rounding up
+            lower_position++;
+            sequence_offset = (sequence_offset + 1) % sequence.size();
+        }
+    } else {
+        int64_t sequence_remainder = ( - position) % sequence_size;
+        size_t sequence_offset = 0;
+        while (sequence_remainder > 0) {
+            sequence_remainder -= sequence[sequence.size() - sequence_offset - 1];
+            // rounding up
+            lower_position--;
+            sequence_offset = (sequence_offset + 1) % sequence.size();
+        }
+    }
+
+    return lower_position;
+}
+
+int64_t im::convert_position_higher(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size)
+{
+    int64_t higher_position = position / sequence.size() * sequence_size;
+
+    if (position >= 0) {
+        size_t sequence_remainder = position % sequence.size();
+        uint32_t i;
+        for (i = 0; i < sequence_remainder; i++)
+            higher_position += sequence[i];
+    } else {
+        size_t sequence_remainder = ( - position) % sequence.size();
+        uint32_t i;
+        for (i = 0; i < sequence_remainder; i++)
+            higher_position -= sequence[sequence.size() - i - 1];
+    }
+
+    return higher_position;
+}
+
+int64_t im::convert_duration_lower(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size)
+{
+    if (duration <= 0)
+        return 0;
+
+    int64_t lower_duration = duration / sequence_size * sequence.size();
+
+    int64_t sequence_remainder = duration % sequence_size;
+    size_t sequence_offset = 0;
+    while (sequence_remainder > 0) {
+        sequence_remainder -= sequence[sequence_offset];
+        // rounding down
+        if (sequence_remainder >= 0)
+            lower_duration++;
+        sequence_offset = (sequence_offset + 1) % sequence.size();
+    }
+
+    return lower_duration;
+}
+
+int64_t im::convert_duration_higher(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size)
+{
+    if (duration <= 0)
+        return 0;
+
+    int64_t higher_duration = duration / sequence.size() * sequence_size;
+
+    size_t sequence_remainder = duration % sequence.size();
+    uint32_t i;
+    for (i = 0; i < sequence_remainder; i++)
+        higher_duration += sequence[i];
+
+    return higher_duration;
+}
+
 string im::strip_path(string filename)
 {
     size_t sep_index;

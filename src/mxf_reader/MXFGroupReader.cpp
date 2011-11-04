@@ -38,6 +38,12 @@ using namespace mxfpp;
 
 
 
+#define CONVERT_GROUP_DUR(dur)   convert_duration_higher(dur, mSampleSequences[i], mSampleSequenceSizes[i])
+#define CONVERT_MEMBER_DUR(dur)  convert_duration_lower(dur, mSampleSequences[i], mSampleSequenceSizes[i])
+#define CONVERT_GROUP_POS(pos)   convert_position_higher(pos, mSampleSequences[i], mSampleSequenceSizes[i])
+#define CONVERT_MEMBER_POS(pos)  convert_position_lower(pos, mSampleSequences[i], mSampleSequenceSizes[i])
+
+
 typedef struct
 {
     mxfRational group_sample_rate;
@@ -177,7 +183,7 @@ bool MXFGroupReader::Finalize()
     // group duration is the minimum member duration
     mDuration = -1;
     for (i = 0; i < mReaders.size(); i++) {
-        int64_t member_duration = ConvertMemberDuration(mReaders[i]->GetDuration(), i);
+        int64_t member_duration = CONVERT_MEMBER_DUR(mReaders[i]->GetDuration());
 
         if (mDuration < 0 || member_duration < mDuration)
             mDuration = member_duration;
@@ -237,8 +243,8 @@ void MXFGroupReader::SetReadLimits(int64_t start_position, int64_t end_position,
         if (!mReaders[i]->IsEnabled())
             continue;
 
-        mReaders[i]->SetReadLimits(ConvertGroupPosition(start_position, i),
-                                   ConvertGroupPosition(end_position, i), false);
+        mReaders[i]->SetReadLimits(CONVERT_GROUP_POS(start_position),
+                                   CONVERT_GROUP_POS(end_position), false);
     }
 
     if (seek_start_position)
@@ -255,8 +261,8 @@ uint32_t MXFGroupReader::Read(uint32_t num_samples, int64_t frame_position_in)
         if (!mReaders[i]->IsEnabled())
             continue;
 
-        if (mReaders[i]->GetPosition() != ConvertGroupPosition(current_position, i))
-            mReaders[i]->Seek(ConvertGroupPosition(current_position, i));
+        if (mReaders[i]->GetPosition() != CONVERT_GROUP_POS(current_position))
+            mReaders[i]->Seek(CONVERT_GROUP_POS(current_position));
     }
 
     int64_t frame_position = frame_position_in;
@@ -268,8 +274,8 @@ uint32_t MXFGroupReader::Read(uint32_t num_samples, int64_t frame_position_in)
         if (!mReaders[i]->IsEnabled())
             continue;
 
-        uint32_t member_num_samples = (uint32_t)ConvertMemberDuration(
-            mReaders[i]->Read((uint32_t)ConvertGroupDuration(num_samples, i), frame_position), i);
+        uint32_t member_num_samples = (uint32_t)CONVERT_MEMBER_DUR(
+            mReaders[i]->Read((uint32_t)CONVERT_GROUP_DUR(num_samples), frame_position));
         if (member_num_samples > max_read_num_samples)
             max_read_num_samples = member_num_samples;
     }
@@ -284,7 +290,7 @@ void MXFGroupReader::Seek(int64_t position)
         if (!mReaders[i]->IsEnabled())
             continue;
 
-        mReaders[i]->Seek(ConvertGroupPosition(position, i));
+        mReaders[i]->Seek(CONVERT_GROUP_POS(position));
     }
 }
 
@@ -295,7 +301,7 @@ int64_t MXFGroupReader::GetPosition() const
         if (!mReaders[i]->IsEnabled())
             continue;
 
-        return ConvertMemberPosition(mReaders[i]->GetPosition(), i);
+        return CONVERT_MEMBER_POS(mReaders[i]->GetPosition());
     }
 
     return 0;
@@ -310,7 +316,7 @@ int16_t MXFGroupReader::GetMaxPrecharge(int64_t position, bool limit_to_availabl
         if (!mReaders[i]->IsEnabled())
             continue;
 
-        int16_t precharge = mReaders[i]->GetMaxPrecharge(ConvertGroupPosition(position, i), limit_to_available);
+        int16_t precharge = mReaders[i]->GetMaxPrecharge(CONVERT_GROUP_POS(position), limit_to_available);
         if (precharge < max_precharge) {
             IM_CHECK_M(mReaders[i]->GetSampleRate() == mSampleRate,
                        ("Currently only support precharge in group members if "
@@ -331,7 +337,7 @@ int16_t MXFGroupReader::GetMaxRollout(int64_t position, bool limit_to_available)
         if (!mReaders[i]->IsEnabled())
             continue;
 
-        int16_t rollout = mReaders[i]->GetMaxRollout(ConvertGroupPosition(position, i), limit_to_available);
+        int16_t rollout = mReaders[i]->GetMaxRollout(CONVERT_GROUP_POS(position), limit_to_available);
         if (rollout > max_rollout) {
             IM_CHECK_M(mReaders[i]->GetSampleRate() == mSampleRate,
                        ("Currently only support rollout in group members if "
@@ -354,7 +360,7 @@ bool MXFGroupReader::HaveFixedLeadFillerOffset() const
         if (!mReaders[i]->HaveFixedLeadFillerOffset())
             return false;
 
-        int64_t reader_fixed_offset = ConvertMemberPosition(mReaders[i]->GetFixedLeadFillerOffset(), i);
+        int64_t reader_fixed_offset = CONVERT_MEMBER_POS(mReaders[i]->GetFixedLeadFillerOffset());
         if (fixed_offset == -1)
             fixed_offset = reader_fixed_offset;
         else if (fixed_offset != reader_fixed_offset)
@@ -375,7 +381,7 @@ int64_t MXFGroupReader::GetFixedLeadFillerOffset() const
         if (!mReaders[i]->HaveFixedLeadFillerOffset())
             return 0;
 
-        int64_t reader_fixed_offset = ConvertMemberPosition(mReaders[i]->GetFixedLeadFillerOffset(), i);
+        int64_t reader_fixed_offset = CONVERT_MEMBER_POS(mReaders[i]->GetFixedLeadFillerOffset());
         if (fixed_offset == -1)
             fixed_offset = reader_fixed_offset;
         else if (fixed_offset != reader_fixed_offset)
@@ -400,94 +406,5 @@ bool MXFGroupReader::IsEnabled() const
     }
 
     return false;
-}
-
-int64_t MXFGroupReader::ConvertGroupDuration(int64_t group_duration, size_t member_index) const
-{
-    const vector<uint32_t> &sample_sequence = mSampleSequences[member_index];
-
-    int64_t num_sequences = group_duration / sample_sequence.size();
-    int64_t member_duration = num_sequences * mSampleSequenceSizes[member_index];
-
-    if (group_duration >= 0) {
-        size_t sequence_remainder = group_duration % sample_sequence.size();
-        uint32_t i;
-        for (i = 0; i < sequence_remainder; i++)
-            member_duration += sample_sequence[i];
-    } else {
-        size_t sequence_remainder = ( - group_duration) % sample_sequence.size();
-        uint32_t i;
-        for (i = 0; i < sequence_remainder; i++)
-            member_duration -= sample_sequence[sample_sequence.size() - i - 1];
-    }
-
-    return member_duration;
-}
-
-int64_t MXFGroupReader::ConvertGroupPosition(int64_t group_position, size_t member_index) const
-{
-    return ConvertGroupDuration(group_position, member_index);
-}
-
-int64_t MXFGroupReader::ConvertMemberDuration(int64_t member_duration, size_t member_index) const 
-{
-    const vector<uint32_t> &sample_sequence = mSampleSequences[member_index];
-
-    int64_t num_sequences = member_duration / mSampleSequenceSizes[member_index];
-    int64_t group_duration = num_sequences * sample_sequence.size();
-
-    if (member_duration >= 0) {
-        int64_t sequence_remainder = member_duration % mSampleSequenceSizes[member_index];
-        size_t sequence_offset = 0;
-        while (sequence_remainder > 0) {
-            sequence_remainder -= sample_sequence[sequence_offset];
-            // rounding down
-            if (sequence_remainder >= 0)
-                group_duration++;
-            sequence_offset = (sequence_offset + 1) % sample_sequence.size();
-        }
-    } else {
-        int64_t sequence_remainder = ( - member_duration) % mSampleSequenceSizes[member_index];
-        size_t sequence_offset = 0;
-        while (sequence_remainder > 0) {
-            sequence_remainder -= sample_sequence[sample_sequence.size() - sequence_offset - 1];
-            // rounding down
-            if (sequence_remainder >= 0)
-                group_duration--;
-            sequence_offset = (sequence_offset + 1) % sample_sequence.size();
-        }
-    }
-
-    return group_duration;
-}
-
-int64_t MXFGroupReader::ConvertMemberPosition(int64_t member_position, size_t member_index) const
-{
-    const vector<uint32_t> &sample_sequence = mSampleSequences[member_index];
-
-    int64_t num_sequences = member_position / mSampleSequenceSizes[member_index];
-    int64_t group_position = num_sequences * sample_sequence.size();
-
-    if (member_position >= 0) {
-        int64_t sequence_remainder = member_position % mSampleSequenceSizes[member_index];
-        size_t sequence_offset = 0;
-        while (sequence_remainder > 0) {
-            sequence_remainder -= sample_sequence[sequence_offset];
-            // rounding up
-            group_position++;
-            sequence_offset = (sequence_offset + 1) % sample_sequence.size();
-        }
-    } else {
-        int64_t sequence_remainder = ( - member_position) % mSampleSequenceSizes[member_index];
-        size_t sequence_offset = 0;
-        while (sequence_remainder > 0) {
-            sequence_remainder -= sample_sequence[sample_sequence.size() - sequence_offset - 1];
-            // rounding up
-            group_position--;
-            sequence_offset = (sequence_offset + 1) % sample_sequence.size();
-        }
-    }
-
-    return group_position;
 }
 
