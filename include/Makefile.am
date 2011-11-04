@@ -96,6 +96,8 @@ nobase_library_include_HEADERS = \
 	im/mxf_reader/MXFIndexEntryExt.h \
 	im/mxf_reader/MXFPackageResolver.h \
 	im/mxf_reader/MXFReader.h \
+	im/mxf_reader/MXFSequenceReader.h \
+	im/mxf_reader/MXFSequenceTrackReader.h \
 	im/mxf_reader/MXFTrackInfo.h \
 	im/mxf_reader/MXFTrackReader.h
 

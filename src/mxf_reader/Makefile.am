@@ -12,6 +12,8 @@ libmxfreader_la_SOURCES = \
 	MXFIndexEntryExt.cpp \
 	MXFPackageResolver.cpp \
 	MXFReader.cpp \
+	MXFSequenceReader.cpp \
+	MXFSequenceTrackReader.cpp \
 	MXFTrackInfo.cpp
 
 libmxfreader_la_CXXFLAGS = $(BMX_CFLAGS)
