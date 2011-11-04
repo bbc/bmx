@@ -220,6 +220,27 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
                 if (seq_track->GetNumSegments() != i)
                     continue; // incomplete track or new segment already appended
 
+                // skip tracks where sequence duration != first appended track's sequence duration
+                if (first_extended_seq_track) {
+                    int64_t seq_track_duration = convert_duration(seq_track->GetSampleRate(),
+                                                                  seq_track->GetDuration(),
+                                                                  mSampleRate,
+                                                                  ROUND_AUTO);
+                    int64_t group_track_duration = convert_duration(group_track->GetSampleRate(),
+                                                                    group_track->GetDuration(),
+                                                                    mSampleRate,
+                                                                    ROUND_AUTO);
+                    int64_t first_seq_track_duration = convert_duration(first_extended_seq_track->GetSampleRate(),
+                                                                        first_extended_seq_track->GetDuration(),
+                                                                        mSampleRate,
+                                                                        ROUND_AUTO);
+                    if (seq_track_duration + group_track_duration != first_seq_track_duration)
+                    {
+                        log_warn("Not appending track segment resulting in different sequence duration\n");
+                        continue;
+                    }
+                }
+
                 // append track segment if compatible
                 if (seq_track->IsCompatible(group_track)) {
                     seq_track->AppendSegment(group_track);
