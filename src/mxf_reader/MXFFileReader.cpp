@@ -483,7 +483,7 @@ int64_t MXFFileReader::GetPosition() const
             if (!mExternalReaders[i]->IsEnabled())
                 continue;
 
-            position = CONVERT_EXTERNAL_DUR(mExternalReaders[i]->GetPosition());
+            position = CONVERT_EXTERNAL_POS(mExternalReaders[i]->GetPosition());
             break;
         }
     }
