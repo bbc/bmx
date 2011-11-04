@@ -282,16 +282,18 @@ MXFFileReader::MXFFileReader(string filename, File *file, MXFPackageResolver *re
         // set clip sample rate if not set (ie. essence is external)
         if (mSampleRate.numerator == 0) {
             IM_ASSERT(mInternalTrackReaders.empty());
-            // try set to a picture track rate
+            // the lowest external sample rate is the clip sample rate
+            float lowest_sample_rate = 1000000.0;
+            size_t i;
             for (i = 0; i < mTrackReaders.size(); i++) {
-                if (mTrackReaders[i]->GetTrackInfo()->is_picture) {
-                    mSampleRate = mTrackReaders[i]->GetTrackInfo()->edit_rate;
-                    break;
+                float member_sample_rate = mTrackReaders[i]->GetSampleRate().numerator /
+                                            (float)mTrackReaders[i]->GetSampleRate().denominator;
+                if (member_sample_rate < lowest_sample_rate) {
+                    mSampleRate = mTrackReaders[i]->GetSampleRate();
+                    lowest_sample_rate = member_sample_rate;
                 }
             }
-            // else set to the first sound track rate
-            if (i >= mTrackReaders.size())
-                mSampleRate = mTrackReaders[0]->GetTrackInfo()->edit_rate;
+            IM_CHECK(mSampleRate.numerator != 0);
         } else {
             IM_ASSERT(!mInternalTrackReaders.empty());
         }
