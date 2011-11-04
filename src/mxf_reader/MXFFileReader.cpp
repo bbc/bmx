@@ -446,10 +446,25 @@ uint32_t MXFFileReader::Read(uint32_t num_samples, int64_t frame_position_in)
         if (!mExternalReaders[i]->IsEnabled())
             continue;
 
-        uint32_t num_external_samples = GetNumExternalSamples(num_samples, i, current_position);
+        int64_t external_current_position = CONVERT_INTERNAL_POS(current_position);
+
+        // ensure external reader is in sync
+        if (mExternalReaders[i]->GetPosition() != external_current_position)
+            mExternalReaders[i]->Seek(external_current_position);
+
+
+        uint32_t num_external_samples = (uint32_t)convert_duration_higher(num_samples,
+                                                                          current_position,
+                                                                          mExternalSampleSequences[i],
+                                                                          mExternalSampleSequenceSizes[i]);
+
         uint32_t external_num_read = mExternalReaders[i]->Read(num_external_samples, frame_position);
 
-        uint32_t internal_num_read = GetNumInternalSamples(external_num_read, i, current_position);
+        uint32_t internal_num_read = (uint32_t)convert_duration_lower(external_num_read,
+                                                                      external_current_position,
+                                                                      mExternalSampleSequences[i],
+                                                                      mExternalSampleSequenceSizes[i]);
+
         if (internal_num_read > max_num_read)
             max_num_read = internal_num_read;
     }
@@ -1183,44 +1198,6 @@ void MXFFileReader::ForceDuration(int64_t duration)
 {
     IM_CHECK(duration <= mDuration);
     mDuration = duration;
-}
-
-uint32_t MXFFileReader::GetNumExternalSamples(uint32_t num_internal_samples, size_t external_reader_index,
-                                              int64_t position) const
-{
-    const vector<uint32_t> &sample_sequence = mExternalSampleSequences[external_reader_index];
-    if (sample_sequence.size() == 1)
-        return num_internal_samples * sample_sequence[0];
-
-    uint32_t num_external_samples = 0;
-    size_t sequence_offset = (size_t)(position % sample_sequence.size());
-    uint32_t j;
-    for (j = 0; j < num_internal_samples; j++) {
-        num_external_samples += sample_sequence[sequence_offset];
-        sequence_offset = (sequence_offset + 1) % sample_sequence.size();
-    }
-
-    return num_external_samples;
-}
-
-uint32_t MXFFileReader::GetNumInternalSamples(uint32_t num_external_samples, size_t external_reader_index,
-                                              int64_t position) const
-{
-    const vector<uint32_t> &sample_sequence = mExternalSampleSequences[external_reader_index];
-    if (sample_sequence.size() == 1)
-        return num_external_samples / sample_sequence[0];
-
-    uint32_t num_internal_samples = 0;
-    size_t sequence_offset = (size_t)(position % sample_sequence.size());
-    int64_t count = (int64_t)num_external_samples;
-    while (count > 0) {
-        count -= sample_sequence[sequence_offset];
-        if (count >= 0)
-            num_internal_samples++;
-        sequence_offset = (sequence_offset + 1) % sample_sequence.size();
-    }
-
-    return num_internal_samples;
 }
 
 bool MXFFileReader::GetInternalIndexEntry(MXFIndexEntryExt *entry, int64_t position) const

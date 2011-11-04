@@ -136,8 +136,9 @@ int64_t im::convert_position_lower(int64_t position, const std::vector<uint32_t>
         size_t sequence_offset = 0;
         while (sequence_remainder > 0) {
             sequence_remainder -= sequence[sequence.size() - sequence_offset - 1];
-            // rounding up
-            lower_position--;
+            // rounding up (positive)
+            if (sequence_remainder >= 0)
+                lower_position--;
             sequence_offset = (sequence_offset + 1) % sequence.size();
         }
     }
@@ -184,6 +185,38 @@ int64_t im::convert_duration_lower(int64_t duration, const std::vector<uint32_t>
     return lower_duration;
 }
 
+int64_t im::convert_duration_lower(int64_t duration, int64_t position, const std::vector<uint32_t> &sequence,
+                                   int64_t sequence_size)
+{
+    if (duration <= 0)
+        return 0;
+
+    int64_t lower_position = convert_position_lower(position, sequence, sequence_size);
+    int64_t round_up_position = convert_position_higher(lower_position, sequence, sequence_size);
+
+    // samples before the rounded position are not considered to be part of the duration
+    int64_t adjusted_duration = duration - (round_up_position - position);
+
+    size_t sequence_offset;
+    if (position >= 0)
+        sequence_offset = lower_position % sequence.size();
+    else
+        sequence_offset = sequence.size() - (( - lower_position) % sequence.size());
+
+    int64_t lower_duration = adjusted_duration / sequence_size * sequence.size();
+
+    int64_t sequence_remainder = adjusted_duration % sequence_size;
+    while (sequence_remainder > 0) {
+        sequence_remainder -= sequence[sequence_offset];
+        // rounding down
+        if (sequence_remainder >= 0)
+            lower_duration++;
+        sequence_offset = (sequence_offset + 1) % sequence.size();
+    }
+
+    return lower_duration;
+}
+
 int64_t im::convert_duration_higher(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size)
 {
     if (duration <= 0)
@@ -195,6 +228,30 @@ int64_t im::convert_duration_higher(int64_t duration, const std::vector<uint32_t
     uint32_t i;
     for (i = 0; i < sequence_remainder; i++)
         higher_duration += sequence[i];
+
+    return higher_duration;
+}
+
+int64_t im::convert_duration_higher(int64_t duration, int64_t position, const std::vector<uint32_t> &sequence,
+                                    int64_t sequence_size)
+{
+    if (duration <= 0)
+        return 0;
+
+    int64_t higher_duration = duration / sequence.size() * sequence_size;
+
+    size_t sequence_remainder = duration % sequence.size();
+    size_t sequence_offset;
+    if (position >= 0)
+        sequence_offset = position % sequence.size();
+    else
+        sequence_offset = sequence.size() - (( - position) % sequence.size());
+
+    while (sequence_remainder > 0) {
+        higher_duration += sequence[sequence_offset];
+        sequence_remainder--;
+        sequence_offset = (sequence_offset + 1) % sequence.size();
+    }
 
     return higher_duration;
 }

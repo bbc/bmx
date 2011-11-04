@@ -146,9 +146,6 @@ private:
 
     void ForceDuration(int64_t duration);
 
-    uint32_t GetNumExternalSamples(uint32_t num_internal_samples, size_t external_reader_index, int64_t position) const;
-    uint32_t GetNumInternalSamples(uint32_t num_external_samples, size_t external_reader_index, int64_t position) const;
-
     bool GetInternalIndexEntry(MXFIndexEntryExt *entry, int64_t position) const;
     int16_t GetInternalPrecharge(int64_t position, bool limit_to_available) const;
     int16_t GetInternalRollout(int64_t position, bool limit_to_available) const;

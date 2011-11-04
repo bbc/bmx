@@ -255,29 +255,37 @@ uint32_t MXFGroupReader::Read(uint32_t num_samples, int64_t frame_position_in)
 {
     int64_t current_position = GetPosition();
 
-    // ensure members are in sync
-    size_t i;
-    for (i = 0; i < mReaders.size(); i++) {
-        if (!mReaders[i]->IsEnabled())
-            continue;
-
-        if (mReaders[i]->GetPosition() != CONVERT_GROUP_POS(current_position))
-            mReaders[i]->Seek(CONVERT_GROUP_POS(current_position));
-    }
-
     int64_t frame_position = frame_position_in;
     if (frame_position_in == CURRENT_POSITION_VALUE)
         frame_position = current_position;
 
     uint32_t max_read_num_samples = 0;
+    size_t i;
     for (i = 0; i < mReaders.size(); i++) {
         if (!mReaders[i]->IsEnabled())
             continue;
 
-        uint32_t member_num_samples = (uint32_t)CONVERT_MEMBER_DUR(
-            mReaders[i]->Read((uint32_t)CONVERT_GROUP_DUR(num_samples), frame_position));
-        if (member_num_samples > max_read_num_samples)
-            max_read_num_samples = member_num_samples;
+        int64_t member_current_position = CONVERT_GROUP_POS(current_position);
+
+        // ensure external reader is in sync
+        if (mReaders[i]->GetPosition() != member_current_position)
+            mReaders[i]->Seek(member_current_position);
+
+
+        uint32_t member_num_samples = (uint32_t)convert_duration_higher(num_samples,
+                                                                        current_position,
+                                                                        mSampleSequences[i],
+                                                                        mSampleSequenceSizes[i]);
+
+        uint32_t member_num_read = mReaders[i]->Read(member_num_samples, frame_position);
+
+        uint32_t group_num_read = (uint32_t)convert_duration_lower(member_num_read,
+                                                                   member_current_position,
+                                                                   mSampleSequences[i],
+                                                                   mSampleSequenceSizes[i]);
+
+        if (group_num_read > max_read_num_samples)
+            max_read_num_samples = group_num_read;
     }
 
     return max_read_num_samples;

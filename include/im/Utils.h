@@ -71,7 +71,11 @@ int64_t convert_duration(Rational in_edit_rate, int64_t in_duration, Rational ou
 int64_t convert_position_lower(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size);
 int64_t convert_position_higher(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size);
 int64_t convert_duration_lower(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size);
+int64_t convert_duration_lower(int64_t duration, int64_t position, const std::vector<uint32_t> &sequence,
+                               int64_t sequence_size);
 int64_t convert_duration_higher(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size);
+int64_t convert_duration_higher(int64_t duration, int64_t position, const std::vector<uint32_t> &sequence,
+                                int64_t sequence_size);
 
 std::string strip_path(std::string filename);
 std::string strip_name(std::string filename);
