@@ -106,6 +106,9 @@ int64_t im::convert_position(Rational in_edit_rate, int64_t in_position, Rationa
 
 int64_t im::convert_duration(int64_t in_duration, int64_t factor_top, int64_t factor_bottom, Rounding rounding)
 {
+    if (in_duration <= 0)
+        return 0;
+
     if (rounding == ROUND_AUTO) {
         return convert_position(in_duration, factor_top, factor_bottom,
                                 (factor_top < factor_bottom ? ROUND_DOWN : ROUND_UP));
@@ -116,6 +119,9 @@ int64_t im::convert_duration(int64_t in_duration, int64_t factor_top, int64_t fa
 
 int64_t im::convert_duration(Rational in_edit_rate, int64_t in_duration, Rational out_edit_rate, Rounding rounding)
 {
+    if (in_duration <= 0)
+        return 0;
+
     return convert_duration(in_duration,
                             (int64_t)out_edit_rate.numerator * in_edit_rate.denominator,
                             (int64_t)out_edit_rate.denominator * in_edit_rate.numerator,
