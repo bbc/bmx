@@ -268,11 +268,11 @@ MXFFileReader::MXFFileReader(string filename, File *file, MXFPackageResolver *re
             float lowest_sample_rate = 1000000.0;
             size_t i;
             for (i = 0; i < mTrackReaders.size(); i++) {
-                float member_sample_rate = mTrackReaders[i]->GetSampleRate().numerator /
+                float track_sample_rate = mTrackReaders[i]->GetSampleRate().numerator /
                                             (float)mTrackReaders[i]->GetSampleRate().denominator;
-                if (member_sample_rate < lowest_sample_rate) {
+                if (track_sample_rate < lowest_sample_rate) {
                     mSampleRate = mTrackReaders[i]->GetSampleRate();
-                    lowest_sample_rate = member_sample_rate;
+                    lowest_sample_rate = track_sample_rate;
                 }
             }
             IM_CHECK(mSampleRate.numerator != 0);
