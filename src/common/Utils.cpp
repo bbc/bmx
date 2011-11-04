@@ -49,6 +49,8 @@
 #include <sys/time.h>
 #endif
 
+#include <algorithm>
+
 #include <im/Utils.h>
 #include <im/URI.h>
 #include <im/IMException.h>
@@ -58,6 +60,23 @@ using namespace std;
 
 
 #define MAX_INT32   2147483647
+
+
+typedef struct
+{
+    mxfRational lower_edit_rate;
+    mxfRational higher_edit_rate;
+    uint32_t sample_sequence[11];
+} SampleSequence;
+
+static const SampleSequence SAMPLE_SEQUENCES[] =
+{
+    {{30000, 1001}, {48000,1}, {1602, 1601, 1602, 1601, 1602, 0,   0,   0,   0,   0,   0}},
+    {{60000, 1001}, {48000,1}, {801,  801,  801,  800,  801,  801, 801, 800, 801, 801, 0}},
+    {{24000, 1001}, {48000,1}, {2002, 0,    0,    0,    0,    0,   0,   0,   0,   0,   0}},
+};
+
+#define SAMPLE_SEQUENCES_SIZE   (sizeof(SAMPLE_SEQUENCES) / sizeof(SampleSequence))
 
 
 
@@ -126,6 +145,49 @@ int64_t im::convert_duration(Rational in_edit_rate, int64_t in_duration, Rationa
                             (int64_t)out_edit_rate.numerator * in_edit_rate.denominator,
                             (int64_t)out_edit_rate.denominator * in_edit_rate.numerator,
                             rounding);
+}
+
+bool im::get_sample_sequence(Rational lower_edit_rate, Rational higher_edit_rate, vector<uint32_t> *sample_sequence)
+{
+    if (lower_edit_rate == higher_edit_rate) {
+        sample_sequence->push_back(1);
+    } else {
+        int64_t num_higher_samples = (int64_t)(higher_edit_rate.numerator * lower_edit_rate.denominator) /
+                                        (int64_t)(higher_edit_rate.denominator * lower_edit_rate.numerator);
+        int64_t remainder = (int64_t)(higher_edit_rate.numerator * lower_edit_rate.denominator) %
+                                    (int64_t)(higher_edit_rate.denominator * lower_edit_rate.numerator);
+        if (num_higher_samples > 0) {
+            if (remainder == 0) {
+                // fixed integer number of reader samples for each clip sample
+                sample_sequence->push_back(num_higher_samples);
+            } else {
+                // try known sample sequences
+                size_t i;
+                for (i = 0; i < SAMPLE_SEQUENCES_SIZE; i++) {
+                    if (lower_edit_rate == SAMPLE_SEQUENCES[i].lower_edit_rate &&
+                        higher_edit_rate == SAMPLE_SEQUENCES[i].higher_edit_rate)
+                    {
+                        size_t j = 0;
+                        while (SAMPLE_SEQUENCES[i].sample_sequence[j] != 0) {
+                            sample_sequence->push_back(SAMPLE_SEQUENCES[i].sample_sequence[j]);
+                            j++;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        // else lower_edit_rate > higher_edit_rate
+    }
+
+    return !sample_sequence->empty();
+}
+
+void im::offset_sample_sequence(vector<uint32_t> &sample_sequence, uint8_t offset)
+{
+    rotate(sample_sequence.begin(),
+           sample_sequence.begin() + (offset % sample_sequence.size()),
+           sample_sequence.end());
 }
 
 int64_t im::convert_position_lower(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size)

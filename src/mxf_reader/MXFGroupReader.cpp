@@ -46,23 +46,6 @@ using namespace mxfpp;
 
 typedef struct
 {
-    mxfRational group_sample_rate;
-    mxfRational member_sample_rate;
-    uint32_t sample_sequence[11];
-} SampleSequence;
-
-static const SampleSequence SAMPLE_SEQUENCES[] =
-{
-    {{30000, 1001}, {48000,1}, {1602, 1601, 1602, 1601, 1602, 0, 0, 0, 0, 0}},
-    {{60000, 1001}, {48000,1}, {801, 801, 801, 800, 801, 801, 801, 800, 801, 801, 0}},
-    {{24000, 1001}, {48000,1}, {2002, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-};
-
-#define SAMPLE_SEQUENCES_SIZE   (sizeof(SAMPLE_SEQUENCES) / sizeof(SampleSequence))
-
-
-typedef struct
-{
     size_t index;
     MXFTrackReader *track_reader;
 } GroupTrackReader;
@@ -161,8 +144,8 @@ bool MXFGroupReader::Finalize()
     // extract the sample sequences for each reader. The samples sequences determine how many member samples
     // are read for each group sample. They are also used for converting position and durations
     for (i = 0; i < mReaders.size(); i++) {
-        vector<uint32_t> sample_sequence = GetSampleSequence(mReaders[i]->GetSampleRate());
-        if (sample_sequence.empty()) {
+        vector<uint32_t> sample_sequence;
+        if (!get_sample_sequence(mSampleRate, mReaders[i]->GetSampleRate(), &sample_sequence)) {
             mxfRational member_sample_rate = mReaders[i]->GetSampleRate();
             log_error("Incompatible group sample rate (%d/%d) and member sample rate (%d/%d)\n",
                       mSampleRate.numerator, mSampleRate.denominator,

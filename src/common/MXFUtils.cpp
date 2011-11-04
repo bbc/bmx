@@ -36,8 +36,6 @@
 #include <cstring>
 #include <cstdio>
 
-#include <algorithm>
-
 #include <mxf/mxf.h>
 
 #include <im/MXFUtils.h>
@@ -46,24 +44,6 @@
 
 using namespace std;
 using namespace im;
-
-
-typedef struct
-{
-    mxfRational frame_rate;
-    mxfRational sampling_rate;
-    uint32_t sequence[11];
-} SampleSequence;
-
-static const SampleSequence SOUND_SAMPLE_SEQUENCES[] =
-{
-    {{25,    1},    {48000,1}, {1920, 0}},
-    {{50,    1},    {48000,1}, {960, 0}},
-    {{30000, 1001}, {48000,1}, {1602, 1601, 1602, 1601, 1602, 0}},
-    {{60000, 1001}, {48000,1}, {801, 801, 800, 801, 801, 0}},
-};
-
-#define SOUND_SAMPLE_SEQUENCES_SIZE   (sizeof(SOUND_SAMPLE_SEQUENCES) / sizeof(SampleSequence))
 
 
 
@@ -99,35 +79,5 @@ string im::get_track_name(bool is_video, uint32_t track_number)
     char buffer[32];
     sprintf(buffer, "%s%d", (is_video ? "V" : "A"), track_number);
     return buffer;
-}
-
-bool im::get_sound_sample_sequence(mxfRational frame_rate, mxfRational sampling_rate,
-                                   vector<uint32_t> *sample_sequence)
-{
-    size_t i;
-    for (i = 0; i < SOUND_SAMPLE_SEQUENCES_SIZE; i++) {
-        if (memcmp(&frame_rate,    &SOUND_SAMPLE_SEQUENCES[i].frame_rate,    sizeof(frame_rate)) == 0 &&
-            memcmp(&sampling_rate, &SOUND_SAMPLE_SEQUENCES[i].sampling_rate, sizeof(sampling_rate)) == 0)
-        {
-            break;
-        }
-    }
-    if (i >= SOUND_SAMPLE_SEQUENCES_SIZE)
-        return false;
-
-    size_t j = 0;
-    while (SOUND_SAMPLE_SEQUENCES[i].sequence[j]) {
-        sample_sequence->push_back(SOUND_SAMPLE_SEQUENCES[i].sequence[j]);
-        j++;
-    }
-
-    return true;
-}
-
-void im::offset_sound_sample_sequence(vector<uint32_t> &sample_sequence, uint8_t offset)
-{
-    rotate(sample_sequence.begin(),
-           sample_sequence.begin() + (offset % sample_sequence.size()),
-           sample_sequence.end());
 }
 

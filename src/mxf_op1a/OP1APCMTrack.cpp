@@ -117,7 +117,7 @@ void OP1APCMTrack::SetSequenceOffset(uint8_t offset)
 vector<uint32_t> OP1APCMTrack::GetShiftedSampleSequence() const
 {
     vector<uint32_t> shifted_sample_sequence = mSampleSequence;
-    offset_sound_sample_sequence(shifted_sample_sequence, mWaveDescriptorHelper->GetSequenceOffset());
+    offset_sample_sequence(shifted_sample_sequence, mWaveDescriptorHelper->GetSequenceOffset());
 
     return shifted_sample_sequence;
 }
@@ -136,6 +136,6 @@ void OP1APCMTrack::PrepareWrite(uint8_t picture_track_count, uint8_t sound_track
 void OP1APCMTrack::SetSampleSequence()
 {
     mSampleSequence.clear();
-    IM_CHECK(get_sound_sample_sequence(mFrameRate, mWaveDescriptorHelper->GetSamplingRate(), &mSampleSequence));
+    IM_CHECK(get_sample_sequence(mFrameRate, mWaveDescriptorHelper->GetSamplingRate(), &mSampleSequence));
 }
 

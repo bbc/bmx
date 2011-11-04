@@ -121,7 +121,7 @@ void AS02PCMTrack::SetSequenceOffset(uint8_t offset)
 vector<uint32_t> AS02PCMTrack::GetShiftedSampleSequence() const
 {
     vector<uint32_t> shifted_sample_sequence = mSampleSequence;
-    offset_sound_sample_sequence(shifted_sample_sequence, mWaveDescriptorHelper->GetSequenceOffset());
+    offset_sample_sequence(shifted_sample_sequence, mWaveDescriptorHelper->GetSequenceOffset());
 
     return shifted_sample_sequence;
 }
@@ -163,7 +163,6 @@ void AS02PCMTrack::PostSampleWriting(Partition *partition)
 void AS02PCMTrack::SetSampleSequence()
 {
     mSampleSequence.clear();
-    IM_CHECK(get_sound_sample_sequence(GetVideoFrameRate(), mWaveDescriptorHelper->GetSamplingRate(),
-                                       &mSampleSequence));
+    IM_CHECK(get_sample_sequence(GetVideoFrameRate(), mWaveDescriptorHelper->GetSamplingRate(), &mSampleSequence));
 }
 

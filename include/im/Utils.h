@@ -68,6 +68,9 @@ int64_t convert_position(Rational in_edit_rate, int64_t in_position, Rational ou
 int64_t convert_duration(int64_t in_duration, int64_t factor_top, int64_t factor_bottom, Rounding rounding);
 int64_t convert_duration(Rational in_edit_rate, int64_t in_duration, Rational out_edit_rate, Rounding rounding);
 
+bool get_sample_sequence(Rational lower_edit_rate, Rational higher_edit_rate, std::vector<uint32_t> *sample_sequence);
+void offset_sample_sequence(std::vector<uint32_t> &sample_sequence, uint8_t offset);
+
 int64_t convert_position_lower(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size);
 int64_t convert_position_higher(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size);
 int64_t convert_duration_lower(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size);

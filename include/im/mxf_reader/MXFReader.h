@@ -101,9 +101,6 @@ public:
     virtual bool IsEnabled() const = 0;
 
 protected:
-    std::vector<uint32_t> GetSampleSequence(mxfRational target_sample_rate) const;
-
-protected:
     mxfRational mSampleRate;
     int64_t mDuration;
 

@@ -131,7 +131,7 @@ uint8_t D10PCMTrack::GetSequenceOffset() const
 vector<uint32_t> D10PCMTrack::GetShiftedSampleSequence() const
 {
     vector<uint32_t> shifted_sample_sequence = mSampleSequence;
-    offset_sound_sample_sequence(shifted_sample_sequence, GetSequenceOffset());
+    offset_sample_sequence(shifted_sample_sequence, GetSequenceOffset());
 
     return shifted_sample_sequence;
 }
@@ -145,6 +145,6 @@ void D10PCMTrack::PrepareWrite()
 void D10PCMTrack::SetSampleSequence()
 {
     mSampleSequence.clear();
-    IM_CHECK(get_sound_sample_sequence(mFrameRate, mSoundDescriptorHelper->GetSamplingRate(), &mSampleSequence));
+    IM_CHECK(get_sample_sequence(mFrameRate, mSoundDescriptorHelper->GetSamplingRate(), &mSampleSequence));
 }
 

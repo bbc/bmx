@@ -275,8 +275,8 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
 
     // extract the sample sequences for each group
     for (i = 0; i < mGroupSegments.size(); i++) {
-        vector<uint32_t> sample_sequence = GetSampleSequence(mGroupSegments[i]->GetSampleRate());
-        if (sample_sequence.empty()) {
+        vector<uint32_t> sample_sequence;
+        if (!get_sample_sequence(mSampleRate, mGroupSegments[i]->GetSampleRate(), &sample_sequence)) {
             mxfRational group_sample_rate = mGroupSegments[i]->GetSampleRate();
             log_error("Incompatible sequence sample rate (%d/%d) and group sample rate (%d/%d)\n",
                       mSampleRate.numerator, mSampleRate.denominator,

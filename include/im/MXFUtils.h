@@ -51,11 +51,6 @@ int64_t convert_tc_offset(mxfRational in_edit_rate, int64_t in_offset, uint16_t 
 
 std::string get_track_name(bool is_video, uint32_t track_number);
 
-bool get_sound_sample_sequence(mxfRational frame_rate, mxfRational sampling_rate,
-                               std::vector<uint32_t> *sample_sequence);
-
-void offset_sound_sample_sequence(std::vector<uint32_t> &sample_sequence, uint8_t offset);
-
 
 };
 

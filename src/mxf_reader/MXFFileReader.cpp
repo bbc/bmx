@@ -48,22 +48,6 @@ using namespace mxfpp;
 
 
 
-typedef struct
-{
-    mxfRational clip_sample_rate;
-    mxfRational reader_sample_rate;
-    uint32_t sample_sequence[11];
-} SampleSequence;
-
-static const SampleSequence SAMPLE_SEQUENCES[] =
-{
-    {{30000, 1001}, {48000,1}, {1602, 1601, 1602, 1601, 1602, 0, 0, 0, 0, 0}},
-    {{60000, 1001}, {48000,1}, {801, 801, 801, 800, 801, 801, 801, 800, 801, 801, 0}},
-};
-
-#define SAMPLE_SEQUENCES_SIZE   (sizeof(SAMPLE_SEQUENCES) / sizeof(SampleSequence))
-
-
 static const char *RESULT_STRINGS[] =
 {
     "success",
@@ -298,8 +282,8 @@ MXFFileReader::MXFFileReader(string filename, File *file, MXFPackageResolver *re
 
         // extract the sample sequences for each external reader
         for (i = 0; i < mExternalReaders.size(); i++) {
-            vector<uint32_t> sample_sequence = GetSampleSequence(mExternalReaders[i]->GetSampleRate());
-            if (sample_sequence.empty()) {
+            vector<uint32_t> sample_sequence;
+            if (!get_sample_sequence(mSampleRate, mExternalReaders[i]->GetSampleRate(), &sample_sequence)) {
                 mxfRational external_sample_rate = mExternalReaders[i]->GetSampleRate();
                 log_error("Incompatible clip sample rate (%d/%d) for referenced file (%d/%d)\n",
                           mSampleRate.numerator, mSampleRate.denominator,
