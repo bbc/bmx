@@ -204,14 +204,17 @@ int64_t im::convert_duration_lower(int64_t duration, int64_t position, const std
     int64_t lower_position = convert_position_lower(position, sequence, sequence_size);
     int64_t round_up_position = convert_position_higher(lower_position, sequence, sequence_size);
 
-    // samples before the rounded position are not considered to be part of the duration
-    int64_t adjusted_duration = duration - (round_up_position - position);
-
+    int64_t adjusted_duration;
     size_t sequence_offset;
-    if (position >= 0)
+    if (position >= 0) {
         sequence_offset = lower_position % sequence.size();
-    else
+        // samples before the rounded position are not considered to be part of the duration
+        adjusted_duration = duration - (round_up_position - position);
+    } else {
         sequence_offset = sequence.size() - (( - lower_position) % sequence.size());
+        // samples before the rounded position are not considered to be part of the duration
+        adjusted_duration = duration - (position - round_up_position);
+    }
 
     int64_t lower_duration = adjusted_duration / sequence_size * sequence.size();
 
