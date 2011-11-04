@@ -33,10 +33,9 @@
 #include "config.h"
 #endif
 
-#include <cstring>
-
 #include <libMXF++/MXF.h>
 
+#include <im/IMTypes.h>
 #include <im/mxf_reader/MXFTrackInfo.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
@@ -53,12 +52,12 @@ MXFTrackInfo::MXFTrackInfo()
     is_sound = false;
 
     essence_type = MXFDescriptorHelper::UNKNOWN_ESSENCE;
-    memset(&essence_container_label, 0, sizeof(essence_container_label));
-    memset(&material_package_uid, 0, sizeof(material_package_uid));
+    essence_container_label = g_Null_UL;
+    material_package_uid = g_Null_UMID;
     material_track_id = 0;
     material_track_number = 0;
-    memset(&file_package_uid, 0, sizeof(file_package_uid));
-    memset(&edit_rate, 0, sizeof(edit_rate));
+    file_package_uid = g_Null_UMID;
+    edit_rate = ZERO_RATIONAL;
     duration = 0;
     lead_filler_offset = 0;
     file_track_id = 0;
@@ -107,7 +106,7 @@ MXFPictureTrackInfo::MXFPictureTrackInfo()
 {
     is_picture = true;
 
-    memset(&picture_essence_coding_label, 0, sizeof(picture_essence_coding_label));
+    picture_essence_coding_label = g_Null_UL;
     signal_standard = 0;
     stored_width = 0;
     stored_height = 0;
@@ -118,7 +117,7 @@ MXFPictureTrackInfo::MXFPictureTrackInfo()
     horiz_subsampling = 0;
     vert_subsampling = 1;
     component_depth = 0;
-    memset(&aspect_ratio, 0, sizeof(aspect_ratio));
+    aspect_ratio = ZERO_RATIONAL;
     frame_layout = 0xff;
     color_siting = MXF_COLOR_SITING_UNKNOWN;
     afd = 0;
@@ -180,7 +179,7 @@ MXFSoundTrackInfo::MXFSoundTrackInfo()
 {
     is_sound = true;
 
-    memset(&sampling_rate, 0, sizeof(sampling_rate));
+    sampling_rate = ZERO_RATIONAL;
     bits_per_sample = 0;
     block_align = 0;
     channel_count = 0;

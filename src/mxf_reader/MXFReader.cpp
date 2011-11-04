@@ -65,12 +65,12 @@ static const SampleSequence SAMPLE_SEQUENCES[] =
 
 MXFReader::MXFReader()
 {
-    memset(&mSampleRate, 0, sizeof(mSampleRate));
+    mSampleRate = ZERO_RATIONAL;
     mDuration = 0;
     mMaterialStartTimecode = 0;
     mFileSourceStartTimecode = 0;
     mPhysicalSourceStartTimecode = 0;
-    memset(&mMaterialPackageUID, 0, sizeof(mMaterialPackageUID));
+    mMaterialPackageUID = g_Null_UMID;
 }
 
 MXFReader::~MXFReader()

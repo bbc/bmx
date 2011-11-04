@@ -26,8 +26,6 @@
 
 #define __STDC_FORMAT_MACROS
 
-#include <cstring>
-
 #include <algorithm>
 
 #include <im/mxf_reader/MXFFileReader.h>
@@ -1062,7 +1060,7 @@ void MXFFileReader::ProcessDescriptor(mxfpp::FileDescriptor *file_descriptor, MX
     track_info->essence_type = MXFDescriptorHelper::IsSupported(file_descriptor, track_info->essence_container_label);
 
     // set essence_container_label if not already set
-    if (memcmp(&track_info->essence_container_label, &g_Null_UL, sizeof(g_Null_UL)) == 0)
+    if (track_info->essence_container_label == g_Null_UL)
         track_info->essence_container_label = file_descriptor->getEssenceContainer();
 }
 
