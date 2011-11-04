@@ -461,7 +461,7 @@ int main(int argc, const char** argv)
     RawInput input;
     Timecode start_timecode;
     const char *start_timecode_str = 0;
-    Rational frame_rate = {25, 1};
+    Rational frame_rate = FRAME_RATE_25;
     bool frame_rate_set = false;
     const char *clip_name = 0;
     const char *partition_interval_str = 0;
