@@ -66,8 +66,12 @@ int64_t im::convert_position(int64_t in_position, int64_t factor_top, int64_t fa
     if (in_position == 0 || factor_top == factor_bottom)
         return in_position;
 
-    if (in_position < 0)
-        return -convert_position(-in_position, factor_top, factor_bottom, rounding);
+    if (in_position < 0) {
+        if (rounding == ROUND_UP || (rounding == ROUND_AUTO && factor_top < factor_bottom))
+            return -convert_position(-in_position, factor_top, factor_bottom, ROUND_DOWN);
+        else
+            return -convert_position(-in_position, factor_top, factor_bottom, ROUND_UP);
+    }
 
     // don't expect factors to be > MAX_INT32. Expect to see numbers such as 25, 48000, 30000 (30000/1001)
     if (factor_top > MAX_INT32 || factor_bottom > MAX_INT32)
