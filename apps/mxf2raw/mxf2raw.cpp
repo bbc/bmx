@@ -40,6 +40,8 @@
 #include <cerrno>
 
 #include <im/mxf_reader/MXFFileReader.h>
+#include <im/mxf_reader/MXFGroupReader.h>
+#include <im/mxf_reader/MXFSequenceReader.h>
 #include <im/essence_parser/SoundConversion.h>
 #include <im/MD5.h>
 #include <im/MXFUtils.h>
@@ -324,7 +326,7 @@ static string get_version_info()
 static void usage(const char* cmd)
 {
     fprintf(stderr, "%s\n", get_version_info().c_str());
-    fprintf(stderr, "Usage: %s <<options>> <filename>\n", cmd);
+    fprintf(stderr, "Usage: %s <<options>> <filename>+\n", cmd);
     fprintf(stderr, "Options:\n");
     fprintf(stderr, " -h | --help           Show usage and exit\n");
     fprintf(stderr, " -v | --version        Print version info\n");
@@ -338,12 +340,17 @@ static void usage(const char* cmd)
     fprintf(stderr, " --nopc                Don't include pre-charge frames\n");
     fprintf(stderr, " --noro                Don't include roll-out frames\n");
     fprintf(stderr, " --md5                 Calculate md5 checksum of essence data\n");
+    fprintf(stderr, " --group               Use the group reader instead of the sequence reader\n");
+    fprintf(stderr, "                       Use this option if the files have different material packages\n");
+    fprintf(stderr, "                       but actually belong to the same virtual package / group\n");
+    fprintf(stderr, " --no-reorder          Don't attempt to order the inputs in a sequence\n");
+    fprintf(stderr, "                       Use this option for files with broken timecode\n");
 }
 
 int main(int argc, const char** argv)
 {
     const char *log_filename = 0;
-    const char *filename = 0;
+    std::vector<const char *> filenames;
     const char *prefix = 0;
     bool do_read = false;
     bool do_print_info = false;
@@ -353,6 +360,8 @@ int main(int argc, const char** argv)
     bool no_precharge = false;
     bool no_rollout = false;
     bool calc_md5 = false;
+    bool use_group_reader = false;
+    bool keep_input_order = false;
     bool do_print_version = false;
     int cmdln_index;
 
@@ -459,6 +468,14 @@ int main(int argc, const char** argv)
             calc_md5 = true;
             do_read = true;
         }
+        else if (strcmp(argv[cmdln_index], "--group") == 0)
+        {
+            use_group_reader = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--no-reorder") == 0)
+        {
+            keep_input_order = true;
+        }
         else
         {
             break;
@@ -469,13 +486,14 @@ int main(int argc, const char** argv)
         usage(argv[0]);
         fprintf(stderr, "Missing parameters\n");
         return 1;
-    } else if (cmdln_index + 1 != argc) {
+    } else if (cmdln_index >= argc) {
         usage(argv[0]);
-        fprintf(stderr, "Unknown option '%s'\n", argv[cmdln_index]);
+        fprintf(stderr, "No <filename> given\n");
         return 1;
     }
 
-    filename = argv[cmdln_index];
+    for (; cmdln_index < argc; cmdln_index++)
+        filenames.push_back(argv[cmdln_index]);
 
 
     if (log_filename) {
@@ -492,18 +510,59 @@ int main(int argc, const char** argv)
     int cmd_result = 0;
     try
     {
-        MXFFileReader *file_reader;
-        MXFFileReader::OpenResult result = MXFFileReader::Open(filename, 0, false, &file_reader);
-        if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-            log_error("Failed to open MXF file: %s\n", MXFFileReader::ResultToString(result).c_str());
-            throw false;
+        MXFReader *reader;
+        MXFFileReader *file_reader = 0;
+        if (use_group_reader) {
+            MXFGroupReader *group_reader = new MXFGroupReader();
+            size_t i;
+            for (i = 0; i < filenames.size(); i++) {
+                MXFFileReader *file_reader;
+                MXFFileReader::OpenResult result = MXFFileReader::Open(filenames[i], 0, false, &file_reader);
+                if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
+                    log_error("Failed to open MXF file '%s': %s\n", filenames[i],
+                              MXFFileReader::ResultToString(result).c_str());
+                    throw false;
+                }
+
+                group_reader->AddReader(file_reader);
+            }
+            group_reader->Finalize();
+
+            reader = group_reader;
+        } else if (filenames.size() > 1) {
+            MXFSequenceReader *seq_reader = new MXFSequenceReader();
+            size_t i;
+            for (i = 0; i < filenames.size(); i++) {
+                MXFFileReader *file_reader;
+                MXFFileReader::OpenResult result = MXFFileReader::Open(filenames[i], 0, false, &file_reader);
+                if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
+                    log_error("Failed to open MXF file '%s': %s\n", filenames[i],
+                              MXFFileReader::ResultToString(result).c_str());
+                    throw false;
+                }
+
+                seq_reader->AddReader(file_reader);
+            }
+            seq_reader->Finalize(false, false);
+
+            reader = seq_reader;
+        } else {
+            MXFFileReader::OpenResult result = MXFFileReader::Open(filenames[0], 0, false, &file_reader);
+            if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
+                log_error("Failed to open MXF file '%s': %s\n", filenames[0],
+                          MXFFileReader::ResultToString(result).c_str());
+                throw false;
+            }
+
+            reader = file_reader;
         }
 
-        mxfRational sample_rate = file_reader->GetSampleRate();
+
+        mxfRational sample_rate = reader->GetSampleRate();
 
 
         // set read limits
-        int64_t input_duration = file_reader->GetDuration();
+        int64_t input_duration = reader->GetDuration();
         if (start > input_duration) {
             log_error("Start position %"PRId64" is beyond available frames %"PRId64"\n", start, input_duration);
             throw false;
@@ -520,56 +579,59 @@ int main(int argc, const char** argv)
 
         int64_t max_precharge = 0;
         if (!no_precharge)
-            max_precharge = file_reader->GetMaxPrecharge(start, true);
+            max_precharge = reader->GetMaxPrecharge(start, true);
         int64_t max_rollout = 0;
         if (!no_rollout)
-            max_rollout = file_reader->GetMaxRollout(start + output_duration - 1, true);
+            max_rollout = reader->GetMaxRollout(start + output_duration - 1, true);
 
-        file_reader->SetReadLimits(start + max_precharge, start + output_duration + max_rollout, true);
+        reader->SetReadLimits(start + max_precharge, start + output_duration + max_rollout, true);
 
         int64_t lead_filler_offset = 0;
-        if (!file_reader->HaveFixedLeadFillerOffset())
+        if (!reader->HaveFixedLeadFillerOffset())
             log_warn("No fixed lead filler offset\n");
         else
-            lead_filler_offset = file_reader->GetFixedLeadFillerOffset();
+            lead_filler_offset = reader->GetFixedLeadFillerOffset();
 
 
         // print info
 
         if (do_print_info) {
-            printf("MXF File Information:\n");
-            printf("  Filename                   : %s\n", filename);
-            printf("  Material package name      : %s\n", file_reader->GetMaterialPackageName().c_str());
-            if (file_reader->HaveMaterialTimecode()) {
-                    printf("  Material start timecode    : %s\n",
-                       timecode_to_string(file_reader->GetMaterialTimecode(0)).c_str());
-                if (lead_filler_offset != 0) {
-                    printf("  Material start timecode including lead filler offset: %s\n",
-                           timecode_to_string(file_reader->GetMaterialTimecode(lead_filler_offset)).c_str());
+            if (file_reader) {
+                printf("MXF File Information:\n");
+                printf("  Filename                   : %s\n", filenames[0]);
+                printf("  Material package name      : %s\n", reader->GetMaterialPackageName().c_str());
+                if (reader->HaveMaterialTimecode()) {
+                        printf("  Material start timecode    : %s\n",
+                           timecode_to_string(reader->GetMaterialTimecode(0)).c_str());
+                    if (lead_filler_offset != 0) {
+                        printf("  Material start timecode including lead filler offset: %s\n",
+                               timecode_to_string(reader->GetMaterialTimecode(lead_filler_offset)).c_str());
+                    }
+                }
+                if (reader->HaveFileSourceTimecode())
+                    printf("  File src start timecode    : %s\n", timecode_to_string(reader->GetFileSourceTimecode(0)).c_str());
+                if (reader->HavePhysicalSourceTimecode()) {
+                    printf("  Physical src start timecode: %s\n",
+                           timecode_to_string(reader->GetPhysicalSourceTimecode(0)).c_str());
+                    printf("  Physical src package name  : %s\n", reader->GetPhysicalSourcePackageName().c_str());
+                }
+                printf("  Precharge                  : %"PRId64"\n", max_precharge);
+                printf("  Duration                   : %"PRId64"\n", output_duration);
+                printf("  Rollout                    : %"PRId64"\n", max_rollout);
+
+                printf("  Identifications            :\n");
+                vector<Identification*> identifications = file_reader->GetHeaderMetadata()->getPreface()->getIdentifications();
+                size_t i;
+                for (i = 0; i < identifications.size(); i++) {
+                    printf("    Identification %zu:\n", i);
+                    print_identification_info(identifications[i]);
                 }
             }
-            if (file_reader->HaveFileSourceTimecode())
-                printf("  File src start timecode    : %s\n", timecode_to_string(file_reader->GetFileSourceTimecode(0)).c_str());
-            if (file_reader->HavePhysicalSourceTimecode()) {
-                printf("  Physical src start timecode: %s\n",
-                       timecode_to_string(file_reader->GetPhysicalSourceTimecode(0)).c_str());
-                printf("  Physical src package name  : %s\n", file_reader->GetPhysicalSourcePackageName().c_str());
-            }
-            printf("  Precharge                  : %"PRId64"\n", max_precharge);
-            printf("  Duration                   : %"PRId64"\n", output_duration);
-            printf("  Rollout                    : %"PRId64"\n", max_rollout);
 
-            printf("  Identifications            :\n");
-            vector<Identification*> identifications = file_reader->GetHeaderMetadata()->getPreface()->getIdentifications();
             size_t i;
-            for (i = 0; i < identifications.size(); i++) {
-                printf("    Identification %zu:\n", i);
-                print_identification_info(identifications[i]);
-            }
-
-            for (i = 0; i < file_reader->GetNumTrackReaders(); i++) {
+            for (i = 0; i < reader->GetNumTrackReaders(); i++) {
                 printf("Track %zu:\n", i);
-                print_track_info(file_reader->GetTrackReader(i)->GetTrackInfo());
+                print_track_info(reader->GetTrackReader(i)->GetTrackInfo());
             }
             printf("\n");
         }
@@ -582,8 +644,10 @@ int main(int argc, const char** argv)
             if (prefix)
                 log_info("Output prefix: %s\n", prefix);
             if (log_filename || !do_print_info) {
-                log_info("Input filename: %s\n", filename);
-                log_info("Material package name: %s\n", file_reader->GetMaterialPackageName().c_str());
+                if (file_reader) {
+                    log_info("Input filename: %s\n", filenames[0]);
+                    log_info("Material package name: %s\n", reader->GetMaterialPackageName().c_str());
+                }
                 log_info("Precharge: %"PRId64"\n", max_precharge);
                 log_info("Duration: %"PRId64"\n", output_duration);
                 log_info("Rollout: %"PRId64"\n", max_rollout);
@@ -593,9 +657,9 @@ int main(int argc, const char** argv)
             // md5 calculation initialization
             vector<MD5Context> md5_contexts;
             if (calc_md5) {
-                md5_contexts.resize(file_reader->GetNumTrackReaders());
+                md5_contexts.resize(reader->GetNumTrackReaders());
                 size_t i;
-                for (i = 0; i < file_reader->GetNumTrackReaders(); i++)
+                for (i = 0; i < reader->GetNumTrackReaders(); i++)
                     md5_init(&md5_contexts[i]);
             }
 
@@ -606,8 +670,8 @@ int main(int argc, const char** argv)
             if (prefix) {
                 int video_count = 0, audio_count = 0;
                 size_t i;
-                for (i = 0; i < file_reader->GetNumTrackReaders(); i++) {
-                    const MXFTrackInfo *track_info = file_reader->GetTrackReader(i)->GetTrackInfo();
+                for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+                    const MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
                     if (track_info->is_picture) {
                         string raw_filename = create_raw_filename(prefix, true, video_count, -1);
                         FILE *raw_file = fopen(raw_filename.c_str(), "wb");
@@ -662,16 +726,16 @@ int main(int argc, const char** argv)
             int64_t frame_position = 0;
             while (true)
             {
-                frame_position = file_reader->GetPosition();
-                uint32_t num_read = file_reader->Read(max_samples_per_read);
+                frame_position = reader->GetPosition();
+                uint32_t num_read = reader->Read(max_samples_per_read);
                 if (num_read == 0)
                     break;
                 total_num_read += num_read;
 
                 int file_count = 0;
                 size_t i;
-                for (i = 0; i < file_reader->GetNumTrackReaders(); i++) {
-                    MXFFrame *frame = file_reader->GetTrackReader(i)->GetFrame(frame_position);
+                for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+                    MXFFrame *frame = reader->GetTrackReader(i)->GetFrame(frame_position);
                     if (frame && !frame->IsEmpty()) {
 
                         if (calc_md5)
@@ -679,7 +743,7 @@ int main(int argc, const char** argv)
 
                         if (prefix) {
                             const MXFSoundTrackInfo *sound_info =
-                                dynamic_cast<const MXFSoundTrackInfo*>(file_reader->GetTrackReader(i)->GetTrackInfo());
+                                dynamic_cast<const MXFSoundTrackInfo*>(reader->GetTrackReader(i)->GetTrackInfo());
                             if (sound_info && deinterleave && sound_info->channel_count > 1) {
                                 sound_buffer.Allocate(frame->GetSize()); // more than enough
                                 uint32_t c;
@@ -717,7 +781,7 @@ int main(int argc, const char** argv)
                             }
                         } else {
                             const MXFSoundTrackInfo *sound_info =
-                                dynamic_cast<const MXFSoundTrackInfo*>(file_reader->GetTrackReader(i)->GetTrackInfo());
+                                dynamic_cast<const MXFSoundTrackInfo*>(reader->GetTrackReader(i)->GetTrackInfo());
                             if (sound_info && deinterleave && sound_info->channel_count > 1)
                                 file_count += sound_info->channel_count;
                             else
@@ -732,7 +796,7 @@ int main(int argc, const char** argv)
             if (calc_md5) {
                 unsigned char digest[16];
                 size_t i;
-                for (i = 0; i < file_reader->GetNumTrackReaders(); i++) {
+                for (i = 0; i < reader->GetNumTrackReaders(); i++) {
                     md5_final(digest, &md5_contexts[i]);
                     log_info("MD5 Track %zu: %s\n", i, md5_digest_str(digest).c_str());
                 }
@@ -747,7 +811,7 @@ int main(int argc, const char** argv)
 
 
         // clean-up
-        delete file_reader;
+        delete reader;
     }
     catch (const MXFException &ex)
     {
