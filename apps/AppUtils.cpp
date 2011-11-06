@@ -56,7 +56,7 @@ bool im::parse_timecode(const char *tc_str, Rational frame_rate, Timecode *timec
     if (sscanf(tc_str, "%d:%d:%d%c%d", &hour, &min, &sec, &c, &frame) != 5)
         return false;
 
-    timecode->Init(get_rounded_tc_base(frame_rate), (c != ':' && frame_rate.numerator == 1001));
+    timecode->Init(get_rounded_tc_base(frame_rate), (c != ':' && frame_rate.denominator == 1001));
     timecode->Init(hour, min, sec, frame);
     return true;
 }
