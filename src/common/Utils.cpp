@@ -463,7 +463,7 @@ im::UMID im::generate_umid()
 
 uint16_t im::get_rounded_tc_base(Rational rate)
 {
-    return (uint16_t)(rate.numerator / (double)rate.denominator + 0.5);
+    return (uint16_t)((rate.numerator + rate.denominator/2) / rate.denominator);
 }
 
 string im::get_generic_duration_string(int64_t count, Rational rate)
