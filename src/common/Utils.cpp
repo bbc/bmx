@@ -73,7 +73,6 @@ static const SampleSequence SAMPLE_SEQUENCES[] =
 {
     {{30000, 1001}, {48000,1}, {1602, 1601, 1602, 1601, 1602, 0,   0,   0,   0,   0,   0}},
     {{60000, 1001}, {48000,1}, {801,  801,  801,  800,  801,  801, 801, 800, 801, 801, 0}},
-    {{24000, 1001}, {48000,1}, {2002, 0,    0,    0,    0,    0,   0,   0,   0,   0,   0}},
 };
 
 #define SAMPLE_SEQUENCES_SIZE   (sizeof(SAMPLE_SEQUENCES) / sizeof(SampleSequence))
