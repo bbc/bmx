@@ -1435,7 +1435,7 @@ int main(int argc, const char** argv)
 
         // complete commandline parsing
 
-        start_timecode.Init(get_rounded_tc_base(frame_rate), false);
+        start_timecode.Init(frame_rate, false);
         if (start_timecode_str && !parse_timecode(start_timecode_str, frame_rate, &start_timecode)) {
             usage(argv[0]);
             log_error("Invalid value '%s' for option '-t'\n", start_timecode_str);
