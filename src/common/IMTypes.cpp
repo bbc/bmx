@@ -86,7 +86,10 @@ void Timecode::SetInvalid()
 void Timecode::Init(uint16_t rounded_rate, bool drop_frame)
 {
     mRoundedTCBase = rounded_rate;
-    mDropFrame = drop_frame;
+    if (rounded_rate == 30 || rounded_rate == 60)
+        mDropFrame = drop_frame;
+    else
+        mDropFrame = false;
     mHour = 0;
     mMin = 0;
     mSec = 0;
@@ -96,8 +99,7 @@ void Timecode::Init(uint16_t rounded_rate, bool drop_frame)
 
 void Timecode::Init(uint16_t rounded_rate, bool drop_frame, int64_t offset)
 {
-    mRoundedTCBase = rounded_rate;
-    mDropFrame = drop_frame;
+    Init(rounded_rate, drop_frame);
     mOffset = offset;
     CleanOffset();
 
@@ -106,7 +108,8 @@ void Timecode::Init(uint16_t rounded_rate, bool drop_frame, int64_t offset)
 
 void Timecode::Init(Rational rate, bool drop_frame)
 {
-    Init((uint16_t)(rate.numerator / (double)rate.denominator + 0.5), drop_frame);
+    Init((uint16_t)(rate.numerator / (double)rate.denominator + 0.5),
+         (rate == FRAME_RATE_2997 || rate == FRAME_RATE_5994) ? drop_frame : false);
 }
 
 void Timecode::Init(int64_t offset)
