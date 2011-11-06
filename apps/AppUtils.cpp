@@ -97,7 +97,7 @@ bool im::parse_partition_interval(const char *partition_interval_str, Rational f
         return false;
 
     if (in_seconds)
-        *partition_interval *= frame_rate.numerator / frame_rate.denominator;
+        *partition_interval = (*partition_interval) * frame_rate.numerator / frame_rate.denominator;
 
     return true;
 }
