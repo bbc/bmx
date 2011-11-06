@@ -417,12 +417,12 @@ im::Timestamp im::generate_timestamp_now()
     IM_CHECK(gmtime_r(&t, &gmt));
 #endif
 
-    now.year = gmt.tm_year + 1900;
+    now.year  = gmt.tm_year + 1900;
     now.month = gmt.tm_mon + 1;
-    now.day = gmt.tm_mday;
-    now.hour = gmt.tm_hour;
-    now.min = gmt.tm_min;
-    now.sec = gmt.tm_sec;
+    now.day   = gmt.tm_mday;
+    now.hour  = gmt.tm_hour;
+    now.min   = gmt.tm_min;
+    now.sec   = gmt.tm_sec;
     now.qmsec = 0;
 
     return now;
