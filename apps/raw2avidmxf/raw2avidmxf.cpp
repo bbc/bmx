@@ -244,7 +244,7 @@ static void usage(const char* cmd)
     fprintf(stderr, "* -p <name>               Output file prefix\n");
     fprintf(stderr, "  -f <rate>               Frame rate: 25, 30 (30000/1001), 50 or 60 (60000/1001). Default parsed or 25\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Start timecode. Is drop frame when c is not ':'. Default 00:00:00:00\n");
-    fprintf(stderr, "  --clip <name>           Set the clip name\n");
+    fprintf(stderr, "  --clip <name>           Set the clip name. Default is the output file prefix\n");
     fprintf(stderr, "  --project <name>        Set the project name\n");
     fprintf(stderr, "  --tape <name>           Source tape name\n");
     fprintf(stderr, "  --comment <string>      Add 'Comments' user comment to the MaterialPackage\n");
@@ -1597,6 +1597,8 @@ int main(int argc, const char** argv)
 
         if (clip_name)
             clip->SetClipName(clip_name);
+        else
+            clip->SetClipName(prefix);
         if (project_name)
             clip->SetProjectName(project_name);
         clip->SetStartTimecode(start_timecode);
