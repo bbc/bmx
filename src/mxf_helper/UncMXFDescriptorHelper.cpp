@@ -52,8 +52,8 @@ typedef struct
     MXFDescriptorHelper::EssenceType essence_type;
     mxfRational sample_rate;
     bool frame_wrapped;
-    uint32_t stored_width;
-    uint32_t stored_height;
+    uint32_t width;
+    uint32_t height;
     int32_t video_line_map[2];
     uint8_t frame_layout;
     uint8_t signal_standard;
@@ -253,12 +253,15 @@ void UncMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setSignalStandard(SUPPORTED_ESSENCE[mEssenceIndex].signal_standard);
     cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0]);
     cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1]);
-    cdci_descriptor->setStoredWidth(SUPPORTED_ESSENCE[mEssenceIndex].stored_width);
-    cdci_descriptor->setStoredHeight(SUPPORTED_ESSENCE[mEssenceIndex].stored_height);
-    cdci_descriptor->setDisplayWidth(cdci_descriptor->getStoredWidth());
-    cdci_descriptor->setDisplayHeight(cdci_descriptor->getStoredHeight());
-    cdci_descriptor->setSampledWidth(cdci_descriptor->getStoredWidth());
-    cdci_descriptor->setSampledHeight(cdci_descriptor->getStoredHeight());
+    if (mComponentDepth == 8)
+        cdci_descriptor->setStoredWidth(SUPPORTED_ESSENCE[mEssenceIndex].width);
+    else
+        cdci_descriptor->setStoredWidth((SUPPORTED_ESSENCE[mEssenceIndex].width + 47) / 48 * 48);
+    cdci_descriptor->setStoredHeight(SUPPORTED_ESSENCE[mEssenceIndex].height);
+    cdci_descriptor->setDisplayWidth(SUPPORTED_ESSENCE[mEssenceIndex].width);
+    cdci_descriptor->setDisplayHeight(SUPPORTED_ESSENCE[mEssenceIndex].height);
+    cdci_descriptor->setSampledWidth(SUPPORTED_ESSENCE[mEssenceIndex].width);
+    cdci_descriptor->setSampledHeight(SUPPORTED_ESSENCE[mEssenceIndex].height);
 }
 
 uint32_t UncMXFDescriptorHelper::GetSampleSize()
