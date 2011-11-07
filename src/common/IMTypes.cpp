@@ -108,8 +108,7 @@ void Timecode::Init(uint16_t rounded_rate, bool drop_frame, int64_t offset)
 
 void Timecode::Init(Rational rate, bool drop_frame)
 {
-    Init((uint16_t)((rate.numerator + rate.denominator/2) / rate.denominator),
-         (rate == FRAME_RATE_2997 || rate == FRAME_RATE_5994) ? drop_frame : false);
+    Init(get_rounded_tc_base(rate), (rate == FRAME_RATE_2997 || rate == FRAME_RATE_5994) ? drop_frame : false);
 }
 
 void Timecode::Init(int64_t offset)
