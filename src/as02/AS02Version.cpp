@@ -212,7 +212,8 @@ void AS02Version::CreateHeaderMetadata()
     mMaterialPackage->setPackageUID(mMaterialPackageUID);
     mMaterialPackage->setPackageCreationDate(mCreationDate);
     mMaterialPackage->setPackageModifiedDate(mCreationDate);
-    mMaterialPackage->setName(mClipName);
+    if (!mClipName.empty())
+        mMaterialPackage->setName(mClipName);
 
     // Preface - ContentStorage - MaterialPackage - Timecode Track
     Track *timecode_track = new Track(mHeaderMetadata);

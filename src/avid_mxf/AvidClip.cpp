@@ -178,7 +178,8 @@ SourcePackage* AvidClip::CreateDefaultTapeSource(string name, uint32_t num_video
     tape_package->setPackageUID(tape_package_uid);
     tape_package->setPackageCreationDate(mCreationDate);
     tape_package->setPackageModifiedDate(mCreationDate);
-    tape_package->setName(name);
+    if (!name.empty())
+        tape_package->setName(name);
     if (!mProjectName.empty())
         tape_package->attachAvidAttribute("_PJ", mProjectName);
 
@@ -268,7 +269,8 @@ SourcePackage* AvidClip::CreateDefaultImportSource(string uri, string name,
     import_package->setPackageUID(import_package_uid);
     import_package->setPackageCreationDate(mCreationDate);
     import_package->setPackageModifiedDate(mCreationDate);
-    import_package->setName(name);
+    if (!name.empty())
+        import_package->setName(name);
     if (!mProjectName.empty())
         import_package->attachAvidAttribute("_PJ", mProjectName);
 
@@ -437,7 +439,8 @@ void AvidClip::CreateMaterialPackage()
     mMaterialPackage->setPackageUID(mMaterialPackageUID);
     mMaterialPackage->setPackageCreationDate(mCreationDate);
     mMaterialPackage->setPackageModifiedDate(mCreationDate);
-    mMaterialPackage->setName(mClipName);
+    if (!mClipName.empty())
+        mMaterialPackage->setName(mClipName);
     mMaterialPackage->setBooleanItem(&MXF_ITEM_K(GenericPackage, ConvertFrameRate), false);
     mMaterialPackage->setInt32Item(&MXF_ITEM_K(GenericPackage, AppCode), 7);
     if (!mProjectName.empty())
