@@ -543,7 +543,7 @@ int main(int argc, const char** argv)
 
                 seq_reader->AddReader(file_reader);
             }
-            seq_reader->Finalize(false, false);
+            seq_reader->Finalize(false, keep_input_order);
 
             reader = seq_reader;
         } else {
