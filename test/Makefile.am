@@ -1,4 +1,4 @@
-SUBDIRS = . as02 mxf_op1a mxf_reader d10_mxf avid_mxf
+SUBDIRS = . as02 as11 mxf_op1a mxf_reader d10_mxf avid_mxf
 # mov_writer mxf_atom wave
 
 check_PROGRAMS = create_test_essence

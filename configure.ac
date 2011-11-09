@@ -206,6 +206,7 @@ AC_CONFIG_FILES([
 	src/as11/Makefile
 	test/Makefile
 	test/as02/Makefile
+	test/as11/Makefile
 	test/mxf_op1a/Makefile
 	test/avid_mxf/Makefile
 	test/mxf_reader/Makefile

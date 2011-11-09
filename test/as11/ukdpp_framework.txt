@@ -1,0 +1,23 @@
+ProductionNumber: LDXA123B/71
+Synopsis: Doctors, nurses, patients etc.
+Originator: Maverick Productions
+CopyrightYear: 2011
+Distributor: Rick Distributors
+PictureRatio: 16/9
+3D: false
+ProductPlacement: true
+FPAPass: 1
+FPAManufacturer: Harding
+FPAVersion: 1.0 alpha
+SecondaryAudioLanguage: eng
+TertiaryAudioLanguage: eng
+AudioLoudnessStandard: 0
+LineUpStart: 0
+IdentClockStart: 5
+AudioDescriptionPresent: false
+OpenCaptionsPresent: false
+SigningPresent: 1
+CompletionDate: 2011-08-01
+ContactEmail: eric@maverick.co.uk
+ContactTelephoneNo: 02074079302
+
