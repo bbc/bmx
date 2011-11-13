@@ -102,22 +102,31 @@ static bool compare_track_reader(const MXFTrackReader *left_reader, const MXFTra
 MXFFileReader::OpenResult MXFFileReader::Open(string filename, MXFPackageResolver *resolver,
                                               bool resolver_take_ownership, MXFFileReader **file_reader)
 {
-    IM_ASSERT(MXF_RESULT_FAIL + 1 == RESULT_STRINGS_SIZE);
-
     File *file = 0;
+    try
+    {
+        file = File::openRead(filename);
+
+        OpenResult result = Open(file, filename, resolver, resolver_take_ownership, file_reader);
+        if (result != MXF_RESULT_SUCCESS)
+            delete file;
+
+        return result;
+    }
+    catch (...)
+    {
+        delete file;
+        return MXF_RESULT_OPEN_FAIL;
+    }
+}
+
+MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename, MXFPackageResolver *resolver,
+                                              bool resolver_take_ownership, MXFFileReader **file_reader)
+{
+    IM_ASSERT(MXF_RESULT_FAIL + 1 == RESULT_STRINGS_SIZE);
 
     try
     {
-        // open the file
-        try
-        {
-            file = File::openRead(filename);
-        }
-        catch (...)
-        {
-            THROW_RESULT(MXF_RESULT_OPEN_FAIL);
-        }
-
         // read the header partition pack and check the operational pattern
         if (!file->readHeaderPartition())
             THROW_RESULT(MXF_RESULT_INVALID_FILE);
@@ -138,7 +147,6 @@ MXFFileReader::OpenResult MXFFileReader::Open(string filename, MXFPackageResolve
     {
         if (resolver_take_ownership)
             delete resolver;
-        delete file;
         return ex;
     }
     catch (const IMException &ex)
@@ -146,14 +154,12 @@ MXFFileReader::OpenResult MXFFileReader::Open(string filename, MXFPackageResolve
         log_error("Exception: %s\n", ex.what());
         if (resolver_take_ownership)
             delete resolver;
-        delete file;
         return MXF_RESULT_FAIL;
     }
     catch (...)
     {
         if (resolver_take_ownership)
             delete resolver;
-        delete file;
         return MXF_RESULT_FAIL;
     }
 }
