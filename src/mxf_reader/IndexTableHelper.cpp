@@ -370,12 +370,16 @@ void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, in
                ("Failed to find edit unit index information for position 0x%"PRIx64, position));
 
     if (size) {
-        if (mDuration == 0 || position + 1 < mDuration)
+        if (mDuration == 0 || position + 1 < mDuration) {
             *size = GetEditUnitOffset(position + 1) - (*offset);
-        else if (mSegments.back()->HaveExtraIndexEntries())
+        } else if (mSegments.back()->HaveExtraIndexEntries()) {
             *size = mSegments.back()->GetIndexEndOffset() - (*offset);
-        else
+        } else {
             *size = mEssenceDataSize - (*offset);
+            /* ignores junk found at the end of Avid clip wrapped essence with fixed edit unit size */
+            if (mHaveFixedEditUnitByteCount && *size > mFixedEditUnitByteCount)
+                *size = mFixedEditUnitByteCount;
+        }
     }
 }
 
