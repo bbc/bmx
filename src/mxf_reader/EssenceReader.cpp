@@ -59,18 +59,26 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
 {
     mFileReader = file_reader;
     mPosition = 0;
+    mImageStartOffset = 0;
 
-    // read Avid first frame offset extension property
+    // read ImageStartOffset used in Avid uncompressed video and the
+    // FirstFrameOffset Avid extension property
     int32_t avid_first_frame_offset = 0;
     if (mFileReader->IsClipWrapped()) {
         IM_ASSERT(mFileReader->GetNumInternalTrackReaders() == 1);
         auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
             mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),
             mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->essence_container_label));
-
         PictureMXFDescriptorHelper *picture_helper = dynamic_cast<PictureMXFDescriptorHelper*>(helper.get());
-        if (picture_helper && picture_helper->HaveAvidFirstFrameOffset())
-            avid_first_frame_offset = picture_helper->GetAvidFirstFrameOffset();
+        if (picture_helper) {
+            if (picture_helper->HaveAvidFirstFrameOffset())
+                avid_first_frame_offset = picture_helper->GetAvidFirstFrameOffset();
+
+            GenericPictureEssenceDescriptor *picture_descriptor =
+                dynamic_cast<GenericPictureEssenceDescriptor*>(picture_helper->GetFileDescriptor());
+            if (picture_descriptor->haveImageStartOffset())
+                mImageStartOffset = picture_descriptor->getImageStartOffset();
+        }
     }
 
     // extract essence container layout
@@ -250,9 +258,15 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples, int64_t frame_p
         // get maximum number of contiguous samples that can be read in one go
         uint32_t num_cont_samples;
         int64_t file_position, size;
-        GetEditUnitGroup(mPosition, num_samples - total_num_samples, &file_position, &size, &num_cont_samples);
+        if (mImageStartOffset)
+            GetEditUnitGroup(mPosition, 1, &file_position, &size, &num_cont_samples);
+        else
+            GetEditUnitGroup(mPosition, num_samples - total_num_samples, &file_position, &size, &num_cont_samples);
 
         if (frame) {
+            file_position += mImageStartOffset;
+            size -= mImageStartOffset;
+
             if (current_file_position != file_position)
                 mxf_file->seek(file_position, SEEK_SET);
             current_file_position = file_position;

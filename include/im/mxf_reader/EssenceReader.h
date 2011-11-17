@@ -83,6 +83,7 @@ private:
     int64_t mReadStartPosition;
     int64_t mReadEndPosition;
     int64_t mPosition;
+    uint32_t mImageStartOffset;
 };
 
 
