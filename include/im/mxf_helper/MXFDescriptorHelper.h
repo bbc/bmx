@@ -73,6 +73,10 @@ public:
         UNC_HD_1080I,
         UNC_HD_1080P,
         UNC_HD_720P,
+        AVID_10BIT_UNC_SD,
+        AVID_10BIT_UNC_HD_1080I,
+        AVID_10BIT_UNC_HD_1080P,
+        AVID_10BIT_UNC_HD_720P,
         // MPEG-2 Long GOP video
         MPEG2LG_422P_HL,
         MPEG2LG_MP_HL,

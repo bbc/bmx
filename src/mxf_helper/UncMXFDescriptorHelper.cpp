@@ -52,8 +52,9 @@ typedef struct
     MXFDescriptorHelper::EssenceType essence_type;
     mxfRational sample_rate;
     bool frame_wrapped;
-    uint32_t width;
-    uint32_t height;
+    uint32_t display_width;
+    uint32_t display_height;
+    int32_t display_y_offset;
     int32_t video_line_map[2];
     uint8_t frame_layout;
     uint8_t signal_standard;
@@ -62,40 +63,48 @@ typedef struct
 
 static const SupportedEssence SUPPORTED_ESSENCE[] =
 {
-    {MXF_EC_L(SD_Unc_625_50i_422_135_FrameWrapped),     MXFDescriptorHelper::UNC_SD,       {25, 1},         true,   720,    576,    {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
-    {MXF_EC_L(SD_Unc_625_50i_422_135_ClipWrapped),      MXFDescriptorHelper::UNC_SD,       {25, 1},         false,  720,    576,    {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
-    {MXF_EC_L(SD_Unc_525_5994i_422_135_FrameWrapped),   MXFDescriptorHelper::UNC_SD,       {30000, 1001},   true,   720,    486,    {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
-    {MXF_EC_L(SD_Unc_525_5994i_422_135_ClipWrapped),    MXFDescriptorHelper::UNC_SD,       {30000, 1001},   false,  720,    486,    {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_50i_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080I, {25, 1},         true,   1920,   1080,   {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_50i_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080I, {25, 1},         false,  1920,   1080,   {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_5994i_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080I, {30000, 1001},   true,   1920,   1080,   {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_5994i_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080I, {30000, 1001},   false,  1920,   1080,   {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_60i_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080I, {30, 1},         true,   1920,   1080,   {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_60i_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080I, {30, 1},         false,  1920,   1080,   {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_25p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, {25, 1},         true,   1920,   1080,   {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_25p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, {25, 1},         false,  1920,   1080,   {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_2997p_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080P, {30000, 1001},   true,   1920,   1080,   {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_2997p_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080P, {30000, 1001},   false,  1920,   1080,   {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_30p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, {30, 1},         true,   1920,   1080,   {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_30p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, {30, 1},         false,  1920,   1080,   {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_50p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, {50, 1},         true,   1920,   1080,   {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_50p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, {50, 1},         false,  1920,   1080,   {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_5994p_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080P, {60000, 1001},   true,   1920,   1080,   {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_5994p_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080P, {60000, 1001},   false,  1920,   1080,   {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_60p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, {60, 1},         true,   1920,   1080,   {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_60p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, {60, 1},         false,  1920,   1080,   {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_25p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  {25, 1},         true,   1280,   720,    {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_25p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  {25, 1},         false,  1280,   720,    {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_2997p_422_FrameWrapped),       MXFDescriptorHelper::UNC_HD_720P,  {30000, 1001},   true,   1280,   720,    {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_2997p_422_ClipWrapped),        MXFDescriptorHelper::UNC_HD_720P,  {30000, 1001},   false,  1280,   720,    {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_30p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  {30, 1},         true,   1280,   720,    {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_30p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  {30, 1},         false,  1280,   720,    {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_50p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  {50, 1},         true,   1280,   720,    {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_50p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  {50, 1},         false,  1280,   720,    {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_5994p_422_FrameWrapped),       MXFDescriptorHelper::UNC_HD_720P,  {60000, 1001},   true,   1280,   720,    {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_5994p_422_ClipWrapped),        MXFDescriptorHelper::UNC_HD_720P,  {60000, 1001},   false,  1280,   720,    {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_60p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  {60, 1},         true,   1280,   720,    {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_60p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  {60, 1},         false,  1280,   720,    {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(SD_Unc_625_50i_422_135_FrameWrapped),     MXFDescriptorHelper::UNC_SD,       {25, 1},         true,   720,    576,    0,  {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
+    {MXF_EC_L(SD_Unc_625_50i_422_135_ClipWrapped),      MXFDescriptorHelper::UNC_SD,       {25, 1},         false,  720,    576,    0,  {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
+    {MXF_EC_L(SD_Unc_525_5994i_422_135_FrameWrapped),   MXFDescriptorHelper::UNC_SD,       {30000, 1001},   true,   720,    486,    0,  {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
+    {MXF_EC_L(SD_Unc_525_5994i_422_135_ClipWrapped),    MXFDescriptorHelper::UNC_SD,       {30000, 1001},   false,  720,    486,    0,  {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_50i_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080I, {25, 1},         true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_50i_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080I, {25, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_5994i_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080I, {30000, 1001},   true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_5994i_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080I, {30000, 1001},   false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_60i_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080I, {30, 1},         true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_60i_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080I, {30, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_25p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, {25, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_25p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, {25, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_2997p_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080P, {30000, 1001},   true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_2997p_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080P, {30000, 1001},   false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_30p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, {30, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_30p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, {30, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_50p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, {50, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_50p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, {50, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_5994p_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080P, {60000, 1001},   true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_5994p_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080P, {60000, 1001},   false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_60p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, {60, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_1080_60p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, {60, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_720_25p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  {25, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_720_25p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  {25, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_720_2997p_422_FrameWrapped),       MXFDescriptorHelper::UNC_HD_720P,  {30000, 1001},   true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_720_2997p_422_ClipWrapped),        MXFDescriptorHelper::UNC_HD_720P,  {30000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_720_30p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  {30, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_720_30p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  {30, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_720_50p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  {50, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_720_50p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  {50, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_720_5994p_422_FrameWrapped),       MXFDescriptorHelper::UNC_HD_720P,  {60000, 1001},   true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_720_5994p_422_ClipWrapped),        MXFDescriptorHelper::UNC_HD_720P,  {60000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_720_60p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  {60, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(HD_Unc_720_60p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  {60, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+
+    // TODO: support writing Avid 8 and 10 bit uncompressed formats
+    {MXF_EC_L(AvidUnc10Bit625ClipWrapped),              MXFDescriptorHelper::AVID_10BIT_UNC_SD,       {25, 1},         false,  720,    576,    16, {15, 328},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
+    {MXF_EC_L(AvidUnc10Bit525ClipWrapped),              MXFDescriptorHelper::AVID_10BIT_UNC_SD,       {30000, 1001},   false,  720,    486,    10, {16, 278},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
+    {MXF_EC_L(AvidUnc10Bit1080iClipWrapped),            MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080I, {25, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(AvidUnc10Bit1080iClipWrapped),            MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080I, {30000, 1001},   false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P,  {50, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P,  {60000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
 };
 
 #define SUPPORTED_ESSENCE_SIZE  (sizeof(SUPPORTED_ESSENCE) / sizeof(SupportedEssence))
@@ -254,14 +263,15 @@ void UncMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0]);
     cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1]);
     if (mComponentDepth == 8)
-        cdci_descriptor->setStoredWidth(SUPPORTED_ESSENCE[mEssenceIndex].width);
+        cdci_descriptor->setStoredWidth(SUPPORTED_ESSENCE[mEssenceIndex].display_width);
     else
-        cdci_descriptor->setStoredWidth((SUPPORTED_ESSENCE[mEssenceIndex].width + 47) / 48 * 48);
-    cdci_descriptor->setStoredHeight(SUPPORTED_ESSENCE[mEssenceIndex].height);
-    cdci_descriptor->setDisplayWidth(SUPPORTED_ESSENCE[mEssenceIndex].width);
-    cdci_descriptor->setDisplayHeight(SUPPORTED_ESSENCE[mEssenceIndex].height);
-    cdci_descriptor->setSampledWidth(SUPPORTED_ESSENCE[mEssenceIndex].width);
-    cdci_descriptor->setSampledHeight(SUPPORTED_ESSENCE[mEssenceIndex].height);
+        cdci_descriptor->setStoredWidth((SUPPORTED_ESSENCE[mEssenceIndex].display_width + 47) / 48 * 48);
+    cdci_descriptor->setStoredHeight(SUPPORTED_ESSENCE[mEssenceIndex].display_height +
+                                        SUPPORTED_ESSENCE[mEssenceIndex].display_y_offset);
+    cdci_descriptor->setDisplayWidth(SUPPORTED_ESSENCE[mEssenceIndex].display_width);
+    cdci_descriptor->setDisplayHeight(SUPPORTED_ESSENCE[mEssenceIndex].display_height);
+    cdci_descriptor->setSampledWidth(SUPPORTED_ESSENCE[mEssenceIndex].display_width);
+    cdci_descriptor->setSampledHeight(SUPPORTED_ESSENCE[mEssenceIndex].display_height);
 }
 
 uint32_t UncMXFDescriptorHelper::GetSampleSize()
