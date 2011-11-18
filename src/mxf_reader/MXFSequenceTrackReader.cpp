@@ -228,7 +228,7 @@ void MXFSequenceTrackReader::SetReadLimits(int64_t start_position, int64_t end_p
 uint32_t MXFSequenceTrackReader::Read(uint32_t num_samples, int64_t frame_position_in)
 {
     if (!mIsEnabled || mPosition >= mReadEndPosition)
-        return false;
+        return 0;
 
     int64_t frame_position = frame_position_in;
     if (frame_position_in == CURRENT_POSITION_VALUE)
