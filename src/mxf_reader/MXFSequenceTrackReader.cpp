@@ -227,7 +227,7 @@ void MXFSequenceTrackReader::SetReadLimits(int64_t start_position, int64_t end_p
 
 uint32_t MXFSequenceTrackReader::Read(uint32_t num_samples, int64_t frame_position_in)
 {
-    if (!mIsEnabled || mPosition >= mReadEndPosition)
+    if (!mIsEnabled)
         return 0;
 
     int64_t frame_position = frame_position_in;
@@ -251,15 +251,18 @@ uint32_t MXFSequenceTrackReader::Read(uint32_t num_samples, int64_t frame_positi
         if (total_num_read == 0 && num_read < num_samples)
             mFrameBuffer->ExtendFrame(frame_position, true);
 
-        mPosition += num_read;
         total_num_read += num_read;
 
         prev_segment = segment;
-        GetSegmentPosition(mPosition, &segment, &segment_position);
+        GetSegmentPosition(mPosition + total_num_read, &segment, &segment_position);
     }
     while (total_num_read < num_samples && segment != prev_segment);
 
     mFrameBuffer->ExtendFrame(frame_position, false);
+
+
+    // always be positioned num_samples after previous position
+    mPosition += num_samples;
 
     return total_num_read;
 }
