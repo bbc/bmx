@@ -42,6 +42,8 @@ public:
     void AddReader(MXFReader *reader);
     bool Finalize(bool check_is_complete, bool keep_input_order);
 
+    void UpdateReadLimits();
+
 public:
     virtual void SetReadLimits();
     virtual void SetReadLimits(int64_t start_position, int64_t end_position, bool seek_start_position);

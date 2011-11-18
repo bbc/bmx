@@ -45,6 +45,8 @@ public:
     size_t GetNumSegments() const { return mTrackSegments.size(); }
     MXFTrackReader* GetSegment(size_t index);
 
+    void UpdateReadLimits();
+
 public:
     virtual void SetEnable(bool enable);
     virtual void SetFrameBuffer(MXFFrameBuffer *frame_buffer, bool take_ownership);
