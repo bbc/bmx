@@ -53,22 +53,22 @@ uint16_t im::get_aes3_sample_count(const unsigned char *aes3_data, uint32_t aes3
     return ((uint16_t)aes3_data[2] << 8) | aes3_data[1];
 }
 
-void im::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size,
-                             uint32_t bits_per_sample, uint8_t channel_num,
-                             unsigned char *pcm_data, uint32_t pcm_data_size)
+uint32_t im::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size,
+                                 uint32_t bits_per_sample, uint8_t channel_num,
+                                 unsigned char *pcm_data, uint32_t pcm_data_size)
 {
-    uint16_t audio_sample_count = get_aes3_sample_count(aes3_data, aes3_data_size);
-    uint8_t valid_flags         = get_aes3_channel_valid_flags(aes3_data, aes3_data_size);
-    uint32_t block_align        = (bits_per_sample + 7) / 8;
+    uint16_t sample_count   = get_aes3_sample_count(aes3_data, aes3_data_size);
+    uint8_t valid_flags     = get_aes3_channel_valid_flags(aes3_data, aes3_data_size);
+    uint32_t block_align    = (bits_per_sample + 7) / 8;
 
-    IM_CHECK(audio_sample_count == (aes3_data_size - 4) / (8 * 4)); // 4 bytes per sample, 8 channels
+    IM_CHECK(sample_count <= (aes3_data_size - 4) / (8 * 4)); // 4 bytes per sample, 8 channels
     IM_CHECK(block_align == 2 || block_align == 3); // only 16-bit to 24-bit sample size allowed
     IM_CHECK(channel_num < 8);
-    IM_CHECK(pcm_data_size >= block_align * audio_sample_count);
+    IM_CHECK(pcm_data_size >= block_align * sample_count);
 
     if (!(valid_flags & (1 << channel_num))) {
-        memset(pcm_data, 0, audio_sample_count * block_align);
-        return;
+        memset(pcm_data, 0, sample_count * block_align);
+        return 4 + sample_count * 4 * 8;
     }
 
     const unsigned char *aes_data_ptr = &aes3_data[4];
@@ -76,7 +76,7 @@ void im::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_
     uint16_t sample_num;
 
     if (block_align == 2) {
-        for (sample_num = 0; sample_num < audio_sample_count; sample_num++) {
+        for (sample_num = 0; sample_num < sample_count; sample_num++) {
             aes_data_ptr += channel_num * 4;
             pcm_data_ptr[0] = (aes_data_ptr[1] >> 4) |
                               (aes_data_ptr[2] << 4);
@@ -86,7 +86,7 @@ void im::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_
             aes_data_ptr += (8 - channel_num) * 4;
         }
     } else {
-        for (sample_num = 0; sample_num < audio_sample_count; sample_num++) {
+        for (sample_num = 0; sample_num < sample_count; sample_num++) {
             aes_data_ptr += channel_num * 4;
             pcm_data_ptr[0] = (aes_data_ptr[0] >> 4) |
                               (aes_data_ptr[1] << 4);
@@ -98,6 +98,8 @@ void im::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_
             aes_data_ptr += (8 - channel_num) * 4;
         }
     }
+
+    return 4 + sample_count * 4 * 8;
 }
 
 uint32_t im::convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size,
