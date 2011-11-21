@@ -82,7 +82,7 @@ void im::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_
                               (aes_data_ptr[2] << 4);
             pcm_data_ptr[1] = (aes_data_ptr[2] >> 4) |
                               (aes_data_ptr[3] << 4);
-            pcm_data_ptr += block_align;
+            pcm_data_ptr += 2;
             aes_data_ptr += (8 - channel_num) * 4;
         }
     } else {
@@ -94,10 +94,69 @@ void im::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_
                               (aes_data_ptr[2] << 4);
             pcm_data_ptr[2] = (aes_data_ptr[2] >> 4) |
                               (aes_data_ptr[3] << 4);
-            pcm_data_ptr += block_align;
+            pcm_data_ptr += 3;
             aes_data_ptr += (8 - channel_num) * 4;
         }
     }
+}
+
+uint32_t im::convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size,
+                                    uint32_t bits_per_sample, uint8_t channel_count,
+                                    unsigned char *pcm_data, uint32_t pcm_data_size)
+{
+    uint16_t sample_count       = get_aes3_sample_count(aes3_data, aes3_data_size);
+    uint8_t valid_flags         = get_aes3_channel_valid_flags(aes3_data, aes3_data_size);
+    uint32_t bytes_per_sample   = (bits_per_sample + 7) / 8;
+
+    IM_CHECK(sample_count <= (aes3_data_size - 4) / (8 * 4)); // 4 bytes per sample, 8 channels
+    IM_CHECK(bytes_per_sample == 2 || bytes_per_sample == 3); // only 16-bit to 24-bit sample size allowed
+    IM_CHECK(channel_count < 8);
+    IM_CHECK(pcm_data_size >= channel_count * bytes_per_sample * sample_count);
+
+    const unsigned char *aes_data_ptr = &aes3_data[4];
+    unsigned char *pcm_data_ptr = &pcm_data[0];
+    uint16_t sample_num, channel_num;
+
+    if (bytes_per_sample == 2) {
+        for (sample_num = 0; sample_num < sample_count; sample_num++) {
+            for (channel_num = 0; channel_num < channel_count; channel_num++) {
+                if (valid_flags & (1 << channel_num)) {
+                    pcm_data_ptr[0] = (aes_data_ptr[1] >> 4) |
+                                      (aes_data_ptr[2] << 4);
+                    pcm_data_ptr[1] = (aes_data_ptr[2] >> 4) |
+                                      (aes_data_ptr[3] << 4);
+                } else {
+                    pcm_data_ptr[0] = 0x00;
+                    pcm_data_ptr[1] = 0x00;
+                }
+                pcm_data_ptr += 2;
+                aes_data_ptr += 4;
+            }
+            aes_data_ptr += (8 - channel_count) * 4;
+        }
+    } else {
+        for (sample_num = 0; sample_num < sample_count; sample_num++) {
+            for (channel_num = 0; channel_num < channel_count; channel_num++) {
+                if (valid_flags & (1 << channel_num)) {
+                    pcm_data_ptr[0] = (aes_data_ptr[0] >> 4) |
+                                      (aes_data_ptr[1] << 4);
+                    pcm_data_ptr[1] = (aes_data_ptr[1] >> 4) |
+                                      (aes_data_ptr[2] << 4);
+                    pcm_data_ptr[2] = (aes_data_ptr[2] >> 4) |
+                                      (aes_data_ptr[3] << 4);
+                } else {
+                    pcm_data_ptr[0] = 0x00;
+                    pcm_data_ptr[1] = 0x00;
+                    pcm_data_ptr[3] = 0x00;
+                }
+                pcm_data_ptr += 3;
+                aes_data_ptr += 4;
+            }
+            aes_data_ptr += (8 - channel_count) * 4;
+        }
+    }
+
+    return 4 + sample_count * 4 * 8;
 }
 
 void im::deinterleave_audio(const unsigned char *input_data, uint32_t input_data_size,
