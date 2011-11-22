@@ -148,6 +148,11 @@ UncMXFDescriptorHelper::UncMXFDescriptorHelper()
     mEssenceIndex = 0;
     mEssenceType = SUPPORTED_ESSENCE[0].essence_type;;
     mComponentDepth = 8;
+    mStoredDimensionsSet = false;
+    mDisplayDimensionsSet = false;
+    mSampledDimensionsSet = false;
+
+    SetDefaultDimensions();
 }
 
 UncMXFDescriptorHelper::~UncMXFDescriptorHelper()
@@ -181,10 +186,62 @@ void UncMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL a
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(file_descriptor);
     IM_ASSERT(cdci_descriptor);
 
-    if (cdci_descriptor->haveComponentDepth())
+    if (cdci_descriptor->haveComponentDepth()) {
         mComponentDepth = cdci_descriptor->getComponentDepth();
-    else
+    } else {
         mComponentDepth = 8;
+        log_warn("Uncompressed picture descriptor is missing ComponentDepth; assuming 8 bits\n");
+    }
+
+    if (cdci_descriptor->haveStoredWidth()) {
+        mStoredWidth = cdci_descriptor->getStoredWidth();
+    } else {
+        mStoredWidth = 0;
+        log_warn("Uncompressed picture descriptor is missing StoredWidth\n");
+    }
+    if (cdci_descriptor->haveStoredHeight()) {
+        mStoredHeight = cdci_descriptor->getStoredHeight();
+    } else {
+        mStoredHeight = 0;
+        log_warn("Uncompressed picture descriptor is missing StoredHeight\n");
+    }
+    mStoredDimensionsSet = true;
+
+    if (cdci_descriptor->haveDisplayWidth())
+        mDisplayWidth = cdci_descriptor->getDisplayWidth();
+    else
+        mDisplayWidth = mStoredWidth;
+    if (cdci_descriptor->haveDisplayHeight())
+        mDisplayHeight = cdci_descriptor->getDisplayHeight();
+    else
+        mDisplayHeight = mStoredHeight;
+    if (cdci_descriptor->haveDisplayXOffset())
+        mDisplayXOffset = cdci_descriptor->getDisplayXOffset();
+    else
+        mDisplayXOffset = 0;
+    if (cdci_descriptor->haveDisplayYOffset())
+        mDisplayYOffset = cdci_descriptor->getDisplayYOffset();
+    else
+        mDisplayYOffset = 0;
+    mDisplayDimensionsSet = true;
+
+    if (cdci_descriptor->haveSampledWidth())
+        mSampledWidth = cdci_descriptor->getSampledWidth();
+    else
+        mSampledWidth = mStoredWidth;
+    if (cdci_descriptor->haveSampledHeight())
+        mSampledHeight = cdci_descriptor->getSampledHeight();
+    else
+        mSampledHeight = mStoredHeight;
+    if (cdci_descriptor->haveSampledXOffset())
+        mSampledXOffset = cdci_descriptor->getSampledXOffset();
+    else
+        mSampledXOffset = 0;
+    if (cdci_descriptor->haveSampledYOffset())
+        mSampledYOffset = cdci_descriptor->getSampledYOffset();
+    else
+        mSampledYOffset = 0;
+    mSampledDimensionsSet = true;
 }
 
 void UncMXFDescriptorHelper::SetComponentDepth(uint32_t depth)
@@ -193,6 +250,34 @@ void UncMXFDescriptorHelper::SetComponentDepth(uint32_t depth)
     IM_CHECK(depth == 8 || depth == 10);
 
     mComponentDepth = depth;
+}
+
+void UncMXFDescriptorHelper::SetStoredDimensions(uint32_t width, uint32_t height)
+{
+    mStoredWidth         = width;
+    mStoredHeight        = height;
+    mStoredDimensionsSet = true;
+    SetDefaultDimensions();
+}
+
+void UncMXFDescriptorHelper::SetDisplayDimensions(uint32_t width, uint32_t height, int32_t x_offset, int32_t y_offset)
+{
+    mDisplayWidth         = width;
+    mDisplayHeight        = height;
+    mDisplayXOffset       = x_offset;
+    mDisplayYOffset       = y_offset;
+    mDisplayDimensionsSet = true;
+    SetDefaultDimensions();
+}
+
+void UncMXFDescriptorHelper::SetSampledDimensions(uint32_t width, uint32_t height, int32_t x_offset, int32_t y_offset)
+{
+    mSampledWidth         = width;
+    mSampledHeight        = height;
+    mSampledXOffset       = x_offset;
+    mSampledYOffset       = y_offset;
+    mSampledDimensionsSet = true;
+    SetDefaultDimensions();
 }
 
 void UncMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
@@ -262,49 +347,28 @@ void UncMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setSignalStandard(SUPPORTED_ESSENCE[mEssenceIndex].signal_standard);
     cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0]);
     cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1]);
-    if (mComponentDepth == 8)
-        cdci_descriptor->setStoredWidth(SUPPORTED_ESSENCE[mEssenceIndex].display_width);
-    else
-        cdci_descriptor->setStoredWidth((SUPPORTED_ESSENCE[mEssenceIndex].display_width + 47) / 48 * 48);
-    cdci_descriptor->setStoredHeight(SUPPORTED_ESSENCE[mEssenceIndex].display_height +
-                                        SUPPORTED_ESSENCE[mEssenceIndex].display_y_offset);
-    cdci_descriptor->setDisplayWidth(SUPPORTED_ESSENCE[mEssenceIndex].display_width);
-    cdci_descriptor->setDisplayHeight(SUPPORTED_ESSENCE[mEssenceIndex].display_height);
-    cdci_descriptor->setSampledWidth(SUPPORTED_ESSENCE[mEssenceIndex].display_width);
-    cdci_descriptor->setSampledHeight(SUPPORTED_ESSENCE[mEssenceIndex].display_height);
+    cdci_descriptor->setStoredWidth(mStoredWidth);
+    cdci_descriptor->setStoredHeight(mStoredHeight);
+    cdci_descriptor->setDisplayWidth(mDisplayWidth);
+    cdci_descriptor->setDisplayHeight(mDisplayHeight);
+    if (mDisplayXOffset != 0)
+        cdci_descriptor->setDisplayXOffset(mDisplayXOffset);
+    if (mDisplayYOffset != 0)
+        cdci_descriptor->setDisplayYOffset(mDisplayYOffset);
+    cdci_descriptor->setSampledWidth(mSampledWidth);
+    cdci_descriptor->setSampledHeight(mSampledHeight);
+    if (mSampledXOffset != 0)
+        cdci_descriptor->setSampledXOffset(mSampledXOffset);
+    if (mSampledYOffset != 0)
+        cdci_descriptor->setSampledYOffset(mSampledYOffset);
 }
 
 uint32_t UncMXFDescriptorHelper::GetSampleSize()
 {
-    uint32_t width = 0;
-    uint32_t height = 0;
-
-    switch (mEssenceType)
-    {
-        case UNC_SD:
-            width = 720;
-            if (mSampleRate.numerator == 25)
-                height = 576;
-            else
-                height = 486;
-            break;
-        case UNC_HD_1080I:
-        case UNC_HD_1080P:
-            width = 1920;
-            height = 1080;
-            break;
-        case UNC_HD_720P:
-            width = 1280;
-            height = 720;
-            break;
-        default:
-            IM_ASSERT(false);
-    }
-
     if (mComponentDepth == 8)
-        return width * height * 2;
+        return mStoredWidth * mStoredHeight * 2;
     else
-        return (width + 47) / 48 * 128 * height;
+        return mStoredWidth / 48 * 128 * mStoredHeight;
 }
 
 mxfUL UncMXFDescriptorHelper::ChooseEssenceContainerUL() const
@@ -321,9 +385,49 @@ void UncMXFDescriptorHelper::UpdateEssenceIndex()
             SUPPORTED_ESSENCE[i].frame_wrapped == mFrameWrapped)
         {
             mEssenceIndex = i;
+            SetDefaultDimensions();
             break;
         }
     }
     IM_CHECK(i < SUPPORTED_ESSENCE_SIZE);
+}
+
+void UncMXFDescriptorHelper::SetDefaultDimensions()
+{
+    if (!mStoredDimensionsSet) {
+        if (mComponentDepth == 8)
+            mStoredWidth = SUPPORTED_ESSENCE[mEssenceIndex].display_width;
+        else
+            mStoredWidth = (SUPPORTED_ESSENCE[mEssenceIndex].display_width + 47) / 48 * 48;
+        mStoredHeight = SUPPORTED_ESSENCE[mEssenceIndex].display_height +
+                            SUPPORTED_ESSENCE[mEssenceIndex].display_y_offset;
+    }
+    if (!mDisplayDimensionsSet) {
+        if (mStoredDimensionsSet) {
+            mDisplayWidth   = mStoredWidth;
+            mDisplayHeight  = mStoredHeight;
+            mDisplayXOffset = 0;
+            mDisplayYOffset = 0;
+        } else {
+            mDisplayWidth   = SUPPORTED_ESSENCE[mEssenceIndex].display_width;
+            mDisplayHeight  = SUPPORTED_ESSENCE[mEssenceIndex].display_height;
+            mDisplayXOffset = 0;
+            mDisplayYOffset = SUPPORTED_ESSENCE[mEssenceIndex].display_y_offset;
+        }
+    }
+    if (!mSampledDimensionsSet) {
+        if (mStoredDimensionsSet) {
+            mSampledWidth   = mStoredWidth;
+            mSampledHeight  = mStoredHeight;
+            mSampledXOffset = 0;
+            mSampledYOffset = 0;
+        } else {
+            mSampledWidth  = SUPPORTED_ESSENCE[mEssenceIndex].display_width;
+            mSampledHeight = SUPPORTED_ESSENCE[mEssenceIndex].display_height +
+                                SUPPORTED_ESSENCE[mEssenceIndex].display_y_offset;
+            mSampledXOffset = 0;
+            mSampledYOffset = 0;
+        }
+    }
 }
 

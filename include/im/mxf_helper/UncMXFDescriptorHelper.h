@@ -58,6 +58,9 @@ public:
 public:
     // configure and create new descriptor
     void SetComponentDepth(uint32_t depth); // default 8; alternative is 10
+    void SetStoredDimensions(uint32_t width, uint32_t height);
+    void SetDisplayDimensions(uint32_t width, uint32_t height, int32_t x_offset, int32_t y_offset);
+    void SetSampledDimensions(uint32_t width, uint32_t height, int32_t x_offset, int32_t y_offset);
     virtual void SetEssenceType(EssenceType essence_type);
     virtual void SetSampleRate(mxfRational sample_rate);
     virtual void SetFrameWrapped(bool frame_wrapped);
@@ -73,10 +76,24 @@ protected:
 
 private:
     void UpdateEssenceIndex();
+    void SetDefaultDimensions();
 
 private:
     size_t mEssenceIndex;
     uint32_t mComponentDepth;
+    bool mStoredDimensionsSet;
+    uint32_t mStoredWidth;
+    uint32_t mStoredHeight;
+    bool mDisplayDimensionsSet;
+    uint32_t mDisplayWidth;
+    uint32_t mDisplayHeight;
+    int32_t mDisplayXOffset;
+    int32_t mDisplayYOffset;
+    bool mSampledDimensionsSet;
+    uint32_t mSampledWidth;
+    uint32_t mSampledHeight;
+    int32_t mSampledXOffset;
+    int32_t mSampledYOffset;
 };
 
 
