@@ -95,16 +95,16 @@ EXTRA_DIST = \
 	mpeg2lg_422p_hl.md5 \
 	mpeg2lg_mp_hl.md5 \
 	mpeg2lg_mp_h14.md5 \
-	vc3_1080p_1235.md5s \
-	vc3_1080p_1237.md5s \
-	vc3_1080p_1238.md5s \
-	vc3_1080i_1241.md5s \
-	vc3_1080i_1242.md5s \
-	vc3_1080i_1243.md5s \
-	vc3_720p_1250.md5s \
-	vc3_720p_1251.md5s \
-	vc3_720p_1252.md5s \
-	vc3_1080p_1253.md5s \
+	vc3_1080p_1235.md5 \
+	vc3_1080p_1237.md5 \
+	vc3_1080p_1238.md5 \
+	vc3_1080i_1241.md5 \
+	vc3_1080i_1242.md5 \
+	vc3_1080i_1243.md5 \
+	vc3_720p_1250.md5 \
+	vc3_720p_1251.md5 \
+	vc3_720p_1252.md5 \
+	vc3_1080p_1253.md5 \
 	check.sh \
 	create.sh \
 	samples.sh
