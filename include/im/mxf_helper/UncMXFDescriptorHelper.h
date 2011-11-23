@@ -47,6 +47,9 @@ public:
     static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
     static bool IsSupported(EssenceType essence_type);
 
+private:
+    static size_t GetEssenceIndex(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
+
 public:
     UncMXFDescriptorHelper();
     virtual ~UncMXFDescriptorHelper();
@@ -61,6 +64,7 @@ public:
     void SetStoredDimensions(uint32_t width, uint32_t height);
     void SetDisplayDimensions(uint32_t width, uint32_t height, int32_t x_offset, int32_t y_offset);
     void SetSampledDimensions(uint32_t width, uint32_t height, int32_t x_offset, int32_t y_offset);
+    void SetVideoLineMap(int32_t field1, int32_t field2);
     virtual void SetEssenceType(EssenceType essence_type);
     virtual void SetSampleRate(mxfRational sample_rate);
     virtual void SetFrameWrapped(bool frame_wrapped);
@@ -69,13 +73,17 @@ public:
     virtual void UpdateFileDescriptor();
 
 public:
+    virtual uint32_t GetImageAlignmentOffset();
+    virtual uint32_t GetImageStartOffset();
     virtual uint32_t GetSampleSize();
+
+    uint32_t GetSampleSize(uint32_t input_height);
 
 protected:
     virtual mxfUL ChooseEssenceContainerUL() const;
 
 private:
-    void UpdateEssenceIndex();
+    bool UpdateEssenceIndex();
     void SetDefaultDimensions();
 
 private:
@@ -94,6 +102,8 @@ private:
     uint32_t mSampledHeight;
     int32_t mSampledXOffset;
     int32_t mSampledYOffset;
+    int32_t mVideoLineMap[2];
+    bool mVideoLineMapSet;
 };
 
 

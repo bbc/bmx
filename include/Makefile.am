@@ -64,6 +64,7 @@ nobase_library_include_HEADERS = \
 	im/avid_mxf/AvidPCMTrack.h \
 	im/avid_mxf/AvidPictureTrack.h \
 	im/avid_mxf/AvidTrack.h \
+	im/avid_mxf/AvidUncTrack.h \
 	im/avid_mxf/AvidVC3Track.h \
 	im/essence_parser/SoundConversion.h \
 	im/essence_parser/AVCIEssenceParser.h \

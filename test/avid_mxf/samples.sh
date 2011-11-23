@@ -4,6 +4,9 @@ BASE_COMMAND="../../apps/raw2avidmxf/raw2avidmxf --regtest -p /tmp/avidmxfsample
 if [ "$3" != "" ]; then
   BASE_COMMAND="$BASE_COMMAND -f $3 "
 fi
+if [ "$2" = "unc" ]; then
+  BASE_COMMAND="$BASE_COMMAND --height 576 "
+fi
 
 
 # create essence data

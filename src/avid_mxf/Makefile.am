@@ -10,6 +10,7 @@ libavidmxf_la_SOURCES = \
 	AvidPCMTrack.cpp \
 	AvidPictureTrack.cpp \
 	AvidTrack.cpp \
+	AvidUncTrack.cpp \
 	AvidVC3Track.cpp
 
 libavidmxf_la_CXXFLAGS = $(BMX_CFLAGS)

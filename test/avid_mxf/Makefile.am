@@ -18,6 +18,10 @@ TESTS = \
 	avci50_1080p.test \
 	avci50_720p25.test \
 	avci50_720p50.test \
+	unc25.test \
+	unc_1080i25.test \
+	unc_1080p25.test \
+	unc_720p50.test \
 	vc3_1080p_1235.test \
 	vc3_1080p_1237.test \
 	vc3_1080p_1238.test \
@@ -50,6 +54,10 @@ EXTRA_DIST = \
 	avci50_1080p.test \
 	avci50_720p25.test \
 	avci50_720p50.test \
+	unc25.test \
+	unc_1080i25.test \
+	unc_1080p25.test \
+	unc_720p50.test \
 	vc3_1080p_1235.test \
 	vc3_1080p_1237.test \
 	vc3_1080p_1238.test \
@@ -79,6 +87,10 @@ EXTRA_DIST = \
 	avci50_1080p.md5s \
 	avci50_720p25.md5s \
 	avci50_720p50.md5s \
+	unc25.md5s \
+	unc_1080i25.md5s \
+	unc_1080p25.md5s \
+	unc_720p50.md5s \
 	vc3_1080p_1235.md5s \
 	vc3_1080p_1237.md5s \
 	vc3_1080p_1238.md5s \
@@ -116,6 +128,10 @@ create-data:
 	${srcdir}/create.sh ${srcdir} 10 avci50_1080p
 	${srcdir}/create.sh ${srcdir} 30 avci50_720p 25
 	${srcdir}/create.sh ${srcdir} 30 avci50_720p 50
+	${srcdir}/create.sh ${srcdir} 17 unc 25
+	${srcdir}/create.sh ${srcdir} 18 unc_1080i 25
+	${srcdir}/create.sh ${srcdir} 19 unc_1080p 25
+	${srcdir}/create.sh ${srcdir} 20 unc_720p 50
 	${srcdir}/create.sh ${srcdir} 31 vc3_1080p_1235
 	${srcdir}/create.sh ${srcdir} 32 vc3_1080p_1237
 	${srcdir}/create.sh ${srcdir} 33 vc3_1080p_1238
@@ -149,6 +165,10 @@ create-samples:
 	${srcdir}/samples.sh 10 avci50_1080p
 	${srcdir}/samples.sh 30 avci50_720p 25
 	${srcdir}/samples.sh 30 avci50_720p 50
+	${srcdir}/samples.sh 17 unc 25
+	${srcdir}/samples.sh 18 unc_1080i 25
+	${srcdir}/samples.sh 19 unc_1080p 25
+	${srcdir}/samples.sh 20 unc_720p 50
 	${srcdir}/samples.sh 31 vc3_1080p_1235
 	${srcdir}/samples.sh 32 vc3_1080p_1237
 	${srcdir}/samples.sh 33 vc3_1080p_1238

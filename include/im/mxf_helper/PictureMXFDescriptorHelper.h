@@ -70,7 +70,9 @@ public:
     virtual void UpdateFileDescriptor();
 
 public:
-    virtual uint32_t GetSampleSize() { return 0; }
+    virtual uint32_t GetImageAlignmentOffset()  { return 0; }
+    virtual uint32_t GetImageStartOffset()      { return 0; }
+    virtual uint32_t GetSampleSize()            { return 0; }
 
 public:
     // Avid extensions

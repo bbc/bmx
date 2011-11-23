@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check.sh 20 unc_720p 50
+

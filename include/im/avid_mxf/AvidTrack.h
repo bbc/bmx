@@ -81,6 +81,14 @@ typedef enum
     AVID_VC3_720P_1251,
     AVID_VC3_720P_1252,
     AVID_VC3_1080P_1253,
+    AVID_UNC_SD,
+    AVID_UNC_HD_1080I,
+    AVID_UNC_HD_1080P,
+    AVID_UNC_HD_720P,
+    AVID_10BIT_UNC_SD,
+    AVID_10BIT_UNC_HD_1080I,
+    AVID_10BIT_UNC_HD_1080P,
+    AVID_10BIT_UNC_HD_720P,
     AVID_PCM,
 } AvidEssenceType;
 
@@ -106,7 +114,7 @@ public:
     void SetOutputEndOffset(int64_t offset);
 
 public:
-    void PrepareWrite();
+    virtual void PrepareWrite();
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
     void CompleteWrite();
 
@@ -136,6 +144,8 @@ public:
 protected:
     AvidTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, mxfpp::File *mxf_file);
 
+    virtual uint32_t GetImageStartOffset() { return 0; }
+
     virtual bool HaveCBEIndexTable() { return mSampleSize > 0; }
     virtual void WriteCBEIndexTable(mxfpp::Partition *partition);
     virtual void WriteVBEIndexTable(mxfpp::Partition *partition) { (void)partition; };
@@ -154,6 +164,7 @@ protected:
 
     mxfUL mEssenceContainerUL;
     uint32_t mSampleSize;
+    uint32_t mImageStartOffset;
     uint32_t mTrackNumber;
     mxfKey mEssenceElementKey;
     uint32_t mIndexSID;

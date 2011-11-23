@@ -43,6 +43,7 @@
 #include <im/avid_mxf/AvidMJPEGTrack.h>
 #include <im/avid_mxf/AvidD10Track.h>
 #include <im/avid_mxf/AvidAVCITrack.h>
+#include <im/avid_mxf/AvidUncTrack.h>
 #include <im/avid_mxf/AvidVC3Track.h>
 #include <im/avid_mxf/AvidPCMTrack.h>
 #include <im/avid_mxf/AvidClip.h>
@@ -78,41 +79,49 @@ typedef struct
 
 static const EssenceTypeMap ESSENCE_TYPE_MAP[] =
 {
-    {AVID_IEC_DV25,         MXFDescriptorHelper::IEC_DV25},
-    {AVID_DVBASED_DV25,     MXFDescriptorHelper::DVBASED_DV25},
-    {AVID_DV50,             MXFDescriptorHelper::DV50},
-    {AVID_DV100_1080I,      MXFDescriptorHelper::DV100_1080I},
-    {AVID_DV100_720P,       MXFDescriptorHelper::DV100_720P},
-    {AVID_MPEG2LG_422P_HL,  MXFDescriptorHelper::MPEG2LG_422P_HL},
-    {AVID_MPEG2LG_MP_HL,    MXFDescriptorHelper::MPEG2LG_MP_HL},
-    {AVID_MPEG2LG_MP_H14,   MXFDescriptorHelper::MPEG2LG_MP_H14},
-    {AVID_MJPEG_2_1,        MXFDescriptorHelper::MJPEG_2_1},
-    {AVID_MJPEG_3_1,        MXFDescriptorHelper::MJPEG_3_1},
-    {AVID_MJPEG_10_1,       MXFDescriptorHelper::MJPEG_10_1},
-    {AVID_MJPEG_20_1,       MXFDescriptorHelper::MJPEG_20_1},
-    {AVID_MJPEG_4_1M,       MXFDescriptorHelper::MJPEG_4_1M},
-    {AVID_MJPEG_10_1M,      MXFDescriptorHelper::MJPEG_10_1M},
-    {AVID_MJPEG_15_1S,      MXFDescriptorHelper::MJPEG_15_1S},
-    {AVID_D10_30,           MXFDescriptorHelper::D10_30},
-    {AVID_D10_40,           MXFDescriptorHelper::D10_40},
-    {AVID_D10_50,           MXFDescriptorHelper::D10_50},
-    {AVID_AVCI100_1080I,    MXFDescriptorHelper::AVCI100_1080I},
-    {AVID_AVCI100_1080P,    MXFDescriptorHelper::AVCI100_1080P},
-    {AVID_AVCI100_720P,     MXFDescriptorHelper::AVCI100_720P},
-    {AVID_AVCI50_1080I,     MXFDescriptorHelper::AVCI50_1080I},
-    {AVID_AVCI50_1080P,     MXFDescriptorHelper::AVCI50_1080P},
-    {AVID_AVCI50_720P,      MXFDescriptorHelper::AVCI50_720P},
-    {AVID_VC3_1080P_1235,   MXFDescriptorHelper::VC3_1080P_1235},
-    {AVID_VC3_1080P_1237,   MXFDescriptorHelper::VC3_1080P_1237},
-    {AVID_VC3_1080P_1238,   MXFDescriptorHelper::VC3_1080P_1238},
-    {AVID_VC3_1080I_1241,   MXFDescriptorHelper::VC3_1080I_1241},
-    {AVID_VC3_1080I_1242,   MXFDescriptorHelper::VC3_1080I_1242},
-    {AVID_VC3_1080I_1243,   MXFDescriptorHelper::VC3_1080I_1243},
-    {AVID_VC3_720P_1250,    MXFDescriptorHelper::VC3_720P_1250},
-    {AVID_VC3_720P_1251,    MXFDescriptorHelper::VC3_720P_1251},
-    {AVID_VC3_720P_1252,    MXFDescriptorHelper::VC3_720P_1252},
-    {AVID_VC3_1080P_1253,   MXFDescriptorHelper::VC3_1080P_1253},
-    {AVID_PCM,              MXFDescriptorHelper::WAVE_PCM},
+    {AVID_IEC_DV25,             MXFDescriptorHelper::IEC_DV25},
+    {AVID_DVBASED_DV25,         MXFDescriptorHelper::DVBASED_DV25},
+    {AVID_DV50,                 MXFDescriptorHelper::DV50},
+    {AVID_DV100_1080I,          MXFDescriptorHelper::DV100_1080I},
+    {AVID_DV100_720P,           MXFDescriptorHelper::DV100_720P},
+    {AVID_MPEG2LG_422P_HL,      MXFDescriptorHelper::MPEG2LG_422P_HL},
+    {AVID_MPEG2LG_MP_HL,        MXFDescriptorHelper::MPEG2LG_MP_HL},
+    {AVID_MPEG2LG_MP_H14,       MXFDescriptorHelper::MPEG2LG_MP_H14},
+    {AVID_MJPEG_2_1,            MXFDescriptorHelper::MJPEG_2_1},
+    {AVID_MJPEG_3_1,            MXFDescriptorHelper::MJPEG_3_1},
+    {AVID_MJPEG_10_1,           MXFDescriptorHelper::MJPEG_10_1},
+    {AVID_MJPEG_20_1,           MXFDescriptorHelper::MJPEG_20_1},
+    {AVID_MJPEG_4_1M,           MXFDescriptorHelper::MJPEG_4_1M},
+    {AVID_MJPEG_10_1M,          MXFDescriptorHelper::MJPEG_10_1M},
+    {AVID_MJPEG_15_1S,          MXFDescriptorHelper::MJPEG_15_1S},
+    {AVID_D10_30,               MXFDescriptorHelper::D10_30},
+    {AVID_D10_40,               MXFDescriptorHelper::D10_40},
+    {AVID_D10_50,               MXFDescriptorHelper::D10_50},
+    {AVID_AVCI100_1080I,        MXFDescriptorHelper::AVCI100_1080I},
+    {AVID_AVCI100_1080P,        MXFDescriptorHelper::AVCI100_1080P},
+    {AVID_AVCI100_720P,         MXFDescriptorHelper::AVCI100_720P},
+    {AVID_AVCI50_1080I,         MXFDescriptorHelper::AVCI50_1080I},
+    {AVID_AVCI50_1080P,         MXFDescriptorHelper::AVCI50_1080P},
+    {AVID_AVCI50_720P,          MXFDescriptorHelper::AVCI50_720P},
+    {AVID_VC3_1080P_1235,       MXFDescriptorHelper::VC3_1080P_1235},
+    {AVID_VC3_1080P_1237,       MXFDescriptorHelper::VC3_1080P_1237},
+    {AVID_VC3_1080P_1238,       MXFDescriptorHelper::VC3_1080P_1238},
+    {AVID_VC3_1080I_1241,       MXFDescriptorHelper::VC3_1080I_1241},
+    {AVID_VC3_1080I_1242,       MXFDescriptorHelper::VC3_1080I_1242},
+    {AVID_VC3_1080I_1243,       MXFDescriptorHelper::VC3_1080I_1243},
+    {AVID_VC3_720P_1250,        MXFDescriptorHelper::VC3_720P_1250},
+    {AVID_VC3_720P_1251,        MXFDescriptorHelper::VC3_720P_1251},
+    {AVID_VC3_720P_1252,        MXFDescriptorHelper::VC3_720P_1252},
+    {AVID_VC3_1080P_1253,       MXFDescriptorHelper::VC3_1080P_1253},
+    {AVID_UNC_SD,               MXFDescriptorHelper::UNC_SD},
+    {AVID_UNC_HD_1080I,         MXFDescriptorHelper::UNC_HD_1080I},
+    {AVID_UNC_HD_1080P,         MXFDescriptorHelper::UNC_HD_1080P},
+    {AVID_UNC_HD_720P,          MXFDescriptorHelper::UNC_HD_720P},
+    {AVID_10BIT_UNC_SD,         MXFDescriptorHelper::AVID_10BIT_UNC_SD},
+    {AVID_10BIT_UNC_HD_1080I,   MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080I},
+    {AVID_10BIT_UNC_HD_1080P,   MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080P},
+    {AVID_10BIT_UNC_HD_720P,    MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P},
+    {AVID_PCM,                  MXFDescriptorHelper::WAVE_PCM},
 };
 
 #define ESSENCE_TYPE_MAP_SIZE   (sizeof(ESSENCE_TYPE_MAP) / sizeof(EssenceTypeMap))
@@ -163,6 +172,14 @@ static const AvidSampleRateSupport AVID_SAMPLE_RATE_SUPPORT[] =
     {AVID_VC3_720P_1251,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
     {AVID_VC3_720P_1252,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
     {AVID_VC3_1080P_1253,     false,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVID_UNC_SD,             false,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVID_UNC_HD_1080I,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVID_UNC_HD_1080P,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVID_UNC_HD_720P,        false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {AVID_10BIT_UNC_SD,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVID_10BIT_UNC_HD_1080I, false,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVID_10BIT_UNC_HD_1080P, false,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVID_10BIT_UNC_HD_720P,  false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {AVID_PCM,                false,    {{48000, 1}, {0, 0}}},
 };
 
@@ -257,6 +274,15 @@ AvidTrack* AvidTrack::OpenNew(AvidClip *clip, string filename, uint32_t track_in
         case AVID_VC3_720P_1252:
         case AVID_VC3_1080P_1253:
             return new AvidVC3Track(clip, track_index, essence_type, file);
+        case AVID_UNC_SD:
+        case AVID_UNC_HD_1080I:
+        case AVID_UNC_HD_1080P:
+        case AVID_UNC_HD_720P:
+        case AVID_10BIT_UNC_SD:
+        case AVID_10BIT_UNC_HD_1080I:
+        case AVID_10BIT_UNC_HD_1080P:
+        case AVID_10BIT_UNC_HD_720P:
+            return new AvidUncTrack(clip, track_index, essence_type, file);
         case AVID_PCM:
             return new AvidPCMTrack(clip, track_index, essence_type, file);
         case AVID_UNKNOWN_ESSENCE:
@@ -274,6 +300,7 @@ AvidTrack::AvidTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essen
     mSourceRefPackageUID = g_Null_UMID;
     mSourceRefTrackId = 0;
     mSampleSize = 0;
+    mImageStartOffset = 0;
     mTrackNumber = 0;
     memset(&mEssenceElementKey, 0, sizeof(mEssenceElementKey));
     mBodySID = 1;
@@ -327,6 +354,7 @@ void AvidTrack::SetOutputEndOffset(int64_t offset)
 void AvidTrack::PrepareWrite()
 {
     mSampleSize = GetSampleSize();
+    mImageStartOffset = GetImageStartOffset();
 
     CreateHeaderMetadata();
     CreateFile();
@@ -339,9 +367,15 @@ void AvidTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t 
     IM_CHECK(size > 0 && num_samples > 0);
     IM_CHECK(size == num_samples * mSampleSize);
 
+    if (mImageStartOffset > 0) {
+        mMXFFile->writeZeros(mImageStartOffset);
+        mContainerSize += mImageStartOffset;
+    }
+
     IM_CHECK(mMXFFile->write(data, size) == size);
-    mContainerDuration += num_samples;
     mContainerSize += size;
+
+    mContainerDuration += num_samples;
 }
 
 void AvidTrack::CompleteWrite()
@@ -485,7 +519,7 @@ void AvidTrack::WriteCBEIndexTable(Partition *partition)
     mCBEIndexSegment->setIndexEditRate(GetSampleRate());
     mCBEIndexSegment->setIndexSID(mIndexSID);
     mCBEIndexSegment->setBodySID(mBodySID);
-    mCBEIndexSegment->setEditUnitByteCount(mSampleSize);
+    mCBEIndexSegment->setEditUnitByteCount(mImageStartOffset + mSampleSize);
     mCBEIndexSegment->setIndexDuration(mContainerDuration);
 
     KAGFillerWriter kag_filler_writer(partition);

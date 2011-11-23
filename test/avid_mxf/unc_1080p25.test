@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check.sh 19 unc_1080p 25
+

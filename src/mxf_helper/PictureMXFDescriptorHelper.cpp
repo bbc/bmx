@@ -215,7 +215,11 @@ void PictureMXFDescriptorHelper::UpdateFileDescriptor()
         picture_descriptor->setActiveFormatDescriptor(mAFD);
 
     if (mFlavour == AVID_FLAVOUR) {
-        SetAvidFrameSampleSize(GetSampleSize());
+        if (GetImageAlignmentOffset() > 0)
+            picture_descriptor->setImageAlignmentOffset(GetImageAlignmentOffset());
+        if (GetImageStartOffset() > 0)
+            picture_descriptor->setImageStartOffset(GetImageStartOffset());
+        SetAvidFrameSampleSize(GetImageStartOffset() + GetSampleSize());
         if (mAvidResolutionId != 0)
             SetAvidResolutionID(mAvidResolutionId);
     }

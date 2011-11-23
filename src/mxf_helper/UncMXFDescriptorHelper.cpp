@@ -45,66 +45,73 @@ using namespace im;
 using namespace mxfpp;
 
 
+#define AVID_IMAGE_ALIGNMENT    8192
+
 
 typedef struct
 {
     mxfUL ec_label;
     MXFDescriptorHelper::EssenceType essence_type;
+    bool is_avid_10bit;
     mxfRational sample_rate;
     bool frame_wrapped;
     uint32_t display_width;
     uint32_t display_height;
-    int32_t display_y_offset;
+    int32_t avid_display_y_offset;
     int32_t video_line_map[2];
     uint8_t frame_layout;
     uint8_t signal_standard;
     mxfUL coding_eq;
+    int32_t avid_resolution_id;
 } SupportedEssence;
 
 static const SupportedEssence SUPPORTED_ESSENCE[] =
 {
-    {MXF_EC_L(SD_Unc_625_50i_422_135_FrameWrapped),     MXFDescriptorHelper::UNC_SD,       {25, 1},         true,   720,    576,    0,  {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
-    {MXF_EC_L(SD_Unc_625_50i_422_135_ClipWrapped),      MXFDescriptorHelper::UNC_SD,       {25, 1},         false,  720,    576,    0,  {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
-    {MXF_EC_L(SD_Unc_525_5994i_422_135_FrameWrapped),   MXFDescriptorHelper::UNC_SD,       {30000, 1001},   true,   720,    486,    0,  {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
-    {MXF_EC_L(SD_Unc_525_5994i_422_135_ClipWrapped),    MXFDescriptorHelper::UNC_SD,       {30000, 1001},   false,  720,    486,    0,  {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_50i_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080I, {25, 1},         true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_50i_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080I, {25, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_5994i_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080I, {30000, 1001},   true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_5994i_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080I, {30000, 1001},   false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_60i_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080I, {30, 1},         true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_60i_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080I, {30, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_25p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, {25, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_25p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, {25, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_2997p_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080P, {30000, 1001},   true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_2997p_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080P, {30000, 1001},   false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_30p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, {30, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_30p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, {30, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_50p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, {50, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_50p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, {50, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_5994p_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080P, {60000, 1001},   true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_5994p_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080P, {60000, 1001},   false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_60p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, {60, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_1080_60p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, {60, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_25p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  {25, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_25p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  {25, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_2997p_422_FrameWrapped),       MXFDescriptorHelper::UNC_HD_720P,  {30000, 1001},   true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_2997p_422_ClipWrapped),        MXFDescriptorHelper::UNC_HD_720P,  {30000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_30p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  {30, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_30p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  {30, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_50p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  {50, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_50p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  {50, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_5994p_422_FrameWrapped),       MXFDescriptorHelper::UNC_HD_720P,  {60000, 1001},   true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_5994p_422_ClipWrapped),        MXFDescriptorHelper::UNC_HD_720P,  {60000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_60p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  {60, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(HD_Unc_720_60p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  {60, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(SD_Unc_625_50i_422_135_FrameWrapped),     MXFDescriptorHelper::UNC_SD,       false,  {25, 1},         true,   720,    576,    16, {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,  0xaa},
+    {MXF_EC_L(SD_Unc_625_50i_422_135_ClipWrapped),      MXFDescriptorHelper::UNC_SD,       false,  {25, 1},         false,  720,    576,    16, {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,  0xaa},
+    {MXF_EC_L(SD_Unc_525_5994i_422_135_FrameWrapped),   MXFDescriptorHelper::UNC_SD,       false,  {30000, 1001},   true,   720,    486,    10, {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,  0xaa},
+    {MXF_EC_L(SD_Unc_525_5994i_422_135_ClipWrapped),    MXFDescriptorHelper::UNC_SD,       false,  {30000, 1001},   false,  720,    486,    10, {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,  0xaa},
+    {MXF_EC_L(HD_Unc_1080_50i_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080I, false,  {25, 1},         true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_50i_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080I, false,  {25, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_5994i_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080I, false,  {30000, 1001},   true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_5994i_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080I, false,  {30000, 1001},   false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_60i_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080I, false,  {30, 1},         true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_60i_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080I, false,  {30, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_25p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, false,  {25, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_25p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, false,  {25, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_2997p_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080P, false,  {30000, 1001},   true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_2997p_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080P, false,  {30000, 1001},   false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_30p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, false,  {30, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_30p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, false,  {30, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_50p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, false,  {50, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_50p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, false,  {50, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_5994p_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080P, false,  {60000, 1001},   true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_5994p_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080P, false,  {60000, 1001},   false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_60p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, false,  {60, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_60p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, false,  {60, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_25p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  false,  {25, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_25p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  false,  {25, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_2997p_422_FrameWrapped),       MXFDescriptorHelper::UNC_HD_720P,  false,  {30000, 1001},   true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_2997p_422_ClipWrapped),        MXFDescriptorHelper::UNC_HD_720P,  false,  {30000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_30p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  false,  {30, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_30p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  false,  {30, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_50p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  false,  {50, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_50p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  false,  {50, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_5994p_422_FrameWrapped),       MXFDescriptorHelper::UNC_HD_720P,  false,  {60000, 1001},   true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_5994p_422_ClipWrapped),        MXFDescriptorHelper::UNC_HD_720P,  false,  {60000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_60p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  false,  {60, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_60p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  false,  {60, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
 
-    // TODO: support writing Avid 8 and 10 bit uncompressed formats
-    {MXF_EC_L(AvidUnc10Bit625ClipWrapped),              MXFDescriptorHelper::AVID_10BIT_UNC_SD,       {25, 1},         false,  720,    576,    16, {15, 328},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
-    {MXF_EC_L(AvidUnc10Bit525ClipWrapped),              MXFDescriptorHelper::AVID_10BIT_UNC_SD,       {30000, 1001},   false,  720,    486,    10, {16, 278},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ},
-    {MXF_EC_L(AvidUnc10Bit1080iClipWrapped),            MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080I, {25, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(AvidUnc10Bit1080iClipWrapped),            MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080I, {30000, 1001},   false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P,  {50, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
-    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P,  {60000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
+    {MXF_EC_L(AvidUnc10Bit625ClipWrapped),              MXFDescriptorHelper::AVID_10BIT_UNC_SD,       true,  {25, 1},         false,  720,    576,    16, {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,   0x07e6},
+    {MXF_EC_L(AvidUnc10Bit525ClipWrapped),              MXFDescriptorHelper::AVID_10BIT_UNC_SD,       true,  {30000, 1001},   false,  720,    486,    10, {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,   0x07e5},
+    {MXF_EC_L(AvidUnc10Bit1080iClipWrapped),            MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080I, true,  {25, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,   0x07d0},
+    {MXF_EC_L(AvidUnc10Bit1080iClipWrapped),            MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080I, true,  {30000, 1001},   false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,   0x07d0},
+    {MXF_EC_L(AvidUnc10Bit1080pClipWrapped),            MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080P, true,  {25, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,   0x07d3},
+    {MXF_EC_L(AvidUnc10Bit1080pClipWrapped),            MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080P, true,  {30000, 1001},   false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,   0x07d3},
+    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P,  true,  {25, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,   0x07d4},
+    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P,  true,  {30000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,   0x07d4},
+    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P,  true,  {50, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,   0x07d4},
+    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P,  true,  {60000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,   0x07d4},
 };
 
 #define SUPPORTED_ESSENCE_SIZE  (sizeof(SUPPORTED_ESSENCE) / sizeof(SupportedEssence))
@@ -114,21 +121,11 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
 MXFDescriptorHelper::EssenceType UncMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
                                                                      mxfUL alternative_ec_label)
 {
-    mxfRational sample_rate = file_descriptor->getSampleRate();
+    size_t essence_index = GetEssenceIndex(file_descriptor, alternative_ec_label);
+    if (essence_index == (size_t)(-1))
+        return MXFDescriptorHelper::UNKNOWN_ESSENCE;
 
-    mxfUL ec_label = file_descriptor->getEssenceContainer();
-    size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
-        if ((mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label) ||
-                (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
-                    mxf_equals_ul_mod_regver(&alternative_ec_label, &SUPPORTED_ESSENCE[i].ec_label))) &&
-            SUPPORTED_ESSENCE[i].sample_rate == sample_rate)
-        {
-            return SUPPORTED_ESSENCE[i].essence_type;
-        }
-    }
-
-    return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+    return SUPPORTED_ESSENCE[essence_index].essence_type;
 }
 
 bool UncMXFDescriptorHelper::IsSupported(EssenceType essence_type)
@@ -142,6 +139,37 @@ bool UncMXFDescriptorHelper::IsSupported(EssenceType essence_type)
     return false;
 }
 
+size_t UncMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
+{
+    mxfRational sample_rate = file_descriptor->getSampleRate();
+    mxfUL ec_label = file_descriptor->getEssenceContainer();
+
+    size_t i;
+    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+        if (SUPPORTED_ESSENCE[i].sample_rate != sample_rate)
+            continue;
+
+        if (mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label)) {
+            return i;
+        } else if (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer))) {
+            if (mxf_equals_ul_mod_regver(&alternative_ec_label, &SUPPORTED_ESSENCE[i].ec_label))
+            {
+                return i;
+            }
+            else if (mxf_equals_ul_mod_regver(&alternative_ec_label, &MXF_EC_L(HD_Unc_720_60p_422_ClipWrapped)) &&
+                     SUPPORTED_ESSENCE[i].essence_type == UNC_HD_720P &&
+                     sample_rate == FRAME_RATE_50)
+            {
+                // Avid 8-bit 720p50 sample file had the wrong label
+                return i;
+            }
+
+        }
+    }
+
+    return (size_t)(-1);
+}
+
 UncMXFDescriptorHelper::UncMXFDescriptorHelper()
 : PictureMXFDescriptorHelper()
 {
@@ -151,6 +179,9 @@ UncMXFDescriptorHelper::UncMXFDescriptorHelper()
     mStoredDimensionsSet = false;
     mDisplayDimensionsSet = false;
     mSampledDimensionsSet = false;
+    mVideoLineMap[0] = SUPPORTED_ESSENCE[0].video_line_map[0];
+    mVideoLineMap[1] = SUPPORTED_ESSENCE[0].video_line_map[1];
+    mVideoLineMapSet = false;
 
     SetDefaultDimensions();
 }
@@ -161,27 +192,13 @@ UncMXFDescriptorHelper::~UncMXFDescriptorHelper()
 
 void UncMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
-    IM_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
-
     PictureMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
 
-    mxfRational sample_rate = file_descriptor->getSampleRate();
-
-    mxfUL ec_label = file_descriptor->getEssenceContainer();
-    size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
-        if ((mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label) ||
-                (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
-                    mxf_equals_ul_mod_regver(&alternative_ec_label, &SUPPORTED_ESSENCE[i].ec_label))) &&
-            SUPPORTED_ESSENCE[i].sample_rate == sample_rate)
-        {
-            mEssenceIndex = i;
-            mEssenceType = SUPPORTED_ESSENCE[i].essence_type;
-            mFrameWrapped = SUPPORTED_ESSENCE[i].frame_wrapped;
-            break;
-        }
-    }
-    IM_ASSERT(i < SUPPORTED_ESSENCE_SIZE);
+    mEssenceIndex = GetEssenceIndex(file_descriptor, alternative_ec_label);
+    IM_ASSERT(mEssenceIndex != (size_t)(-1));
+    mEssenceType = SUPPORTED_ESSENCE[mEssenceIndex].essence_type;
+    mFrameWrapped = SUPPORTED_ESSENCE[mEssenceIndex].frame_wrapped;
+    mAvidResolutionId = SUPPORTED_ESSENCE[mEssenceIndex].avid_resolution_id;
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(file_descriptor);
     IM_ASSERT(cdci_descriptor);
@@ -189,8 +206,11 @@ void UncMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL a
     if (cdci_descriptor->haveComponentDepth()) {
         mComponentDepth = cdci_descriptor->getComponentDepth();
     } else {
-        mComponentDepth = 8;
-        log_warn("Uncompressed picture descriptor is missing ComponentDepth; assuming 8 bits\n");
+        if (SUPPORTED_ESSENCE[mEssenceIndex].is_avid_10bit)
+            mComponentDepth = 10;
+        else
+            mComponentDepth = 8;
+        log_warn("Uncompressed picture descriptor is missing ComponentDepth\n");
     }
 
     if (cdci_descriptor->haveStoredWidth()) {
@@ -242,6 +262,16 @@ void UncMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL a
     else
         mSampledYOffset = 0;
     mSampledDimensionsSet = true;
+
+    mVideoLineMap[0] = 0;
+    mVideoLineMap[1] = 0;
+    if (cdci_descriptor->haveVideoLineMap()) {
+        vector<int32_t> video_line_map = cdci_descriptor->getVideoLineMap();
+        if (video_line_map.size() > 0)
+            mVideoLineMap[0] = video_line_map[0];
+        if (video_line_map.size() > 1)
+            mVideoLineMap[1] = video_line_map[1];
+    }
 }
 
 void UncMXFDescriptorHelper::SetComponentDepth(uint32_t depth)
@@ -280,6 +310,13 @@ void UncMXFDescriptorHelper::SetSampledDimensions(uint32_t width, uint32_t heigh
     SetDefaultDimensions();
 }
 
+void UncMXFDescriptorHelper::SetVideoLineMap(int32_t field1, int32_t field2)
+{
+    mVideoLineMap[0] = field1;
+    mVideoLineMap[1] = field2;
+    mVideoLineMapSet = true;
+}
+
 void UncMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 {
     IM_ASSERT(!mFileDescriptor);
@@ -309,7 +346,7 @@ void UncMXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
 
 FileDescriptor* UncMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata)
 {
-    UpdateEssenceIndex();
+    IM_CHECK(UpdateEssenceIndex());
 
     mFileDescriptor = new CDCIEssenceDescriptor(header_metadata);
     UpdateFileDescriptor();
@@ -328,47 +365,84 @@ void UncMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setVerticalSubsampling(1);
     SetColorSiting(MXF_COLOR_SITING_REC601);
     cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
-    if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_MIXED_FIELDS)
+    if (mFlavour != AVID_FLAVOUR &&
+        SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_MIXED_FIELDS)
+    {
         cdci_descriptor->setFieldDominance(1); // field 1
+    }
 
     if (mComponentDepth == 8) {
-        cdci_descriptor->setPictureEssenceCoding(MXF_CMDEF_L(UNC_8B_422_INTERLEAVED));
+        if (mFlavour != AVID_FLAVOUR)
+            cdci_descriptor->setPictureEssenceCoding(MXF_CMDEF_L(UNC_8B_422_INTERLEAVED));
         cdci_descriptor->setBlackRefLevel(16);
         cdci_descriptor->setWhiteReflevel(235);
         cdci_descriptor->setColorRange(225);
     } else {
-        cdci_descriptor->setPictureEssenceCoding(MXF_CMDEF_L(UNC_10B_422_INTERLEAVED));
+        if (mFlavour == AVID_FLAVOUR) {
+            if (mEssenceType == AVID_10BIT_UNC_SD)
+                cdci_descriptor->setPictureEssenceCoding(MXF_CMDEF_L(AvidUncSD10Bit));
+            else
+                cdci_descriptor->setPictureEssenceCoding(MXF_CMDEF_L(AvidUncHD10Bit));
+        } else {
+            cdci_descriptor->setPictureEssenceCoding(MXF_CMDEF_L(UNC_10B_422_INTERLEAVED));
+        }
         cdci_descriptor->setBlackRefLevel(64);
         cdci_descriptor->setWhiteReflevel(940);
         cdci_descriptor->setColorRange(897);
     }
 
-    SetCodingEquations(SUPPORTED_ESSENCE[mEssenceIndex].coding_eq);
-    cdci_descriptor->setSignalStandard(SUPPORTED_ESSENCE[mEssenceIndex].signal_standard);
-    cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0]);
-    cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1]);
+    if (mFlavour != AVID_FLAVOUR || (mEssenceType != UNC_SD && mEssenceType != AVID_10BIT_UNC_SD))
+        SetCodingEquations(SUPPORTED_ESSENCE[mEssenceIndex].coding_eq);
+    if (mFlavour != AVID_FLAVOUR)
+        cdci_descriptor->setSignalStandard(SUPPORTED_ESSENCE[mEssenceIndex].signal_standard);
+    cdci_descriptor->appendVideoLineMap(mVideoLineMap[0]);
+    cdci_descriptor->appendVideoLineMap(mVideoLineMap[1]);
     cdci_descriptor->setStoredWidth(mStoredWidth);
     cdci_descriptor->setStoredHeight(mStoredHeight);
     cdci_descriptor->setDisplayWidth(mDisplayWidth);
     cdci_descriptor->setDisplayHeight(mDisplayHeight);
-    if (mDisplayXOffset != 0)
+    if (mDisplayXOffset != 0 || mFlavour == AVID_FLAVOUR)
         cdci_descriptor->setDisplayXOffset(mDisplayXOffset);
-    if (mDisplayYOffset != 0)
+    if (mDisplayYOffset != 0 || mFlavour == AVID_FLAVOUR)
         cdci_descriptor->setDisplayYOffset(mDisplayYOffset);
     cdci_descriptor->setSampledWidth(mSampledWidth);
     cdci_descriptor->setSampledHeight(mSampledHeight);
-    if (mSampledXOffset != 0)
+    if (mSampledXOffset != 0 || mFlavour == AVID_FLAVOUR)
         cdci_descriptor->setSampledXOffset(mSampledXOffset);
-    if (mSampledYOffset != 0)
+    if (mSampledYOffset != 0 || mFlavour == AVID_FLAVOUR)
         cdci_descriptor->setSampledYOffset(mSampledYOffset);
+}
+
+uint32_t UncMXFDescriptorHelper::GetImageAlignmentOffset()
+{
+    return (mFlavour == AVID_FLAVOUR ? AVID_IMAGE_ALIGNMENT : 0);
+}
+
+uint32_t UncMXFDescriptorHelper::GetImageStartOffset()
+{
+    if (mFlavour != AVID_FLAVOUR)
+        return 0;
+
+    return (AVID_IMAGE_ALIGNMENT - (GetSampleSize(0) % AVID_IMAGE_ALIGNMENT)) % AVID_IMAGE_ALIGNMENT;
 }
 
 uint32_t UncMXFDescriptorHelper::GetSampleSize()
 {
+    return GetSampleSize(0);
+}
+
+uint32_t UncMXFDescriptorHelper::GetSampleSize(uint32_t input_height)
+{
+    uint32_t height = input_height;
+    if (height == 0)
+        height = mStoredHeight;
+
     if (mComponentDepth == 8)
-        return mStoredWidth * mStoredHeight * 2;
+        return mStoredWidth * height * 2;
+    else if (SUPPORTED_ESSENCE[mEssenceIndex].is_avid_10bit)
+        return mStoredWidth * height * 5 / 2;
     else
-        return mStoredWidth / 48 * 128 * mStoredHeight;
+        return mStoredWidth / 48 * 128 * height;
 }
 
 mxfUL UncMXFDescriptorHelper::ChooseEssenceContainerUL() const
@@ -376,7 +450,7 @@ mxfUL UncMXFDescriptorHelper::ChooseEssenceContainerUL() const
     return SUPPORTED_ESSENCE[mEssenceIndex].ec_label;
 }
 
-void UncMXFDescriptorHelper::UpdateEssenceIndex()
+bool UncMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
     for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
@@ -385,22 +459,29 @@ void UncMXFDescriptorHelper::UpdateEssenceIndex()
             SUPPORTED_ESSENCE[i].frame_wrapped == mFrameWrapped)
         {
             mEssenceIndex = i;
+            mAvidResolutionId = SUPPORTED_ESSENCE[i].avid_resolution_id;
+            if (SUPPORTED_ESSENCE[i].is_avid_10bit)
+                mComponentDepth = 10;
+            else if (mFlavour == AVID_FLAVOUR)
+                mComponentDepth = 8;
             SetDefaultDimensions();
-            break;
+            return true;
         }
     }
-    IM_CHECK(i < SUPPORTED_ESSENCE_SIZE);
+
+    return false;
 }
 
 void UncMXFDescriptorHelper::SetDefaultDimensions()
 {
     if (!mStoredDimensionsSet) {
-        if (mComponentDepth == 8)
+        if (mComponentDepth == 8 || SUPPORTED_ESSENCE[mEssenceIndex].is_avid_10bit)
             mStoredWidth = SUPPORTED_ESSENCE[mEssenceIndex].display_width;
         else
             mStoredWidth = (SUPPORTED_ESSENCE[mEssenceIndex].display_width + 47) / 48 * 48;
-        mStoredHeight = SUPPORTED_ESSENCE[mEssenceIndex].display_height +
-                            SUPPORTED_ESSENCE[mEssenceIndex].display_y_offset;
+        mStoredHeight = SUPPORTED_ESSENCE[mEssenceIndex].display_height;
+        if (mFlavour == AVID_FLAVOUR)
+            mStoredHeight += SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
     }
     if (!mDisplayDimensionsSet) {
         if (mStoredDimensionsSet) {
@@ -412,7 +493,10 @@ void UncMXFDescriptorHelper::SetDefaultDimensions()
             mDisplayWidth   = SUPPORTED_ESSENCE[mEssenceIndex].display_width;
             mDisplayHeight  = SUPPORTED_ESSENCE[mEssenceIndex].display_height;
             mDisplayXOffset = 0;
-            mDisplayYOffset = SUPPORTED_ESSENCE[mEssenceIndex].display_y_offset;
+            if (mFlavour == AVID_FLAVOUR)
+                mDisplayYOffset = SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
+            else
+                mDisplayYOffset = 0;
         }
     }
     if (!mSampledDimensionsSet) {
@@ -423,10 +507,24 @@ void UncMXFDescriptorHelper::SetDefaultDimensions()
             mSampledYOffset = 0;
         } else {
             mSampledWidth  = SUPPORTED_ESSENCE[mEssenceIndex].display_width;
-            mSampledHeight = SUPPORTED_ESSENCE[mEssenceIndex].display_height +
-                                SUPPORTED_ESSENCE[mEssenceIndex].display_y_offset;
+            mSampledHeight = SUPPORTED_ESSENCE[mEssenceIndex].display_height;
+            if (mFlavour == AVID_FLAVOUR)
+                mSampledHeight += SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
             mSampledXOffset = 0;
             mSampledYOffset = 0;
+        }
+    }
+
+    if (!mVideoLineMapSet) {
+        mVideoLineMap[0] = SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0];
+        mVideoLineMap[1] = SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1];
+        if (mFlavour == AVID_FLAVOUR) {
+            if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_MIXED_FIELDS) {
+                mVideoLineMap[0] -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;
+                mVideoLineMap[1] -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;
+            } else {
+                mVideoLineMap[0] -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
+            }
         }
     }
 }

@@ -49,6 +49,7 @@
 #include <im/avid_mxf/AvidD10Track.h>
 #include <im/avid_mxf/AvidAVCITrack.h>
 #include <im/avid_mxf/AvidVC3Track.h>
+#include <im/avid_mxf/AvidUncTrack.h>
 #include <im/avid_mxf/AvidPCMTrack.h>
 #include <im/essence_parser/DVEssenceParser.h>
 #include <im/essence_parser/MPEG2EssenceParser.h>
@@ -108,6 +109,7 @@ typedef struct
     mxfRational aspect_ratio;
     bool aspect_ratio_set;
     uint32_t component_depth;
+    uint32_t input_height;
 
     // sound
     mxfRational sampling_rate;
@@ -257,6 +259,7 @@ static void usage(const char* cmd)
     fprintf(stderr, "Input Options (must precede the input to which it applies):\n");
     fprintf(stderr, "  -a <n:d>                Image aspect ratio. Either 4:3 or 16:9. Default parsed or 16:9\n");
     fprintf(stderr, "  -c <depth>              Component depth for uncompressed/DV100 video. Either 8 or 10. Default parsed or 8\n");
+    fprintf(stderr, "  --height                Height of input uncompressed video data. Default is the production aperture height, except for PAL (592) and NTSC (496)\n");
     fprintf(stderr, "  -q <bps>                Audio quantization bits per sample. Either 16 or 24. Default 16\n");
     fprintf(stderr, "  --locked <bool>         Indicate whether the number of audio samples is locked to the video. Either true or false. Default not set\n");
     fprintf(stderr, "  --audio-ref <level>     Audio reference level, number of dBm for 0VU. Default not set\n");
@@ -294,6 +297,10 @@ static void usage(const char* cmd)
     fprintf(stderr, "  --avci50_1080i <name>   Raw AVC-Intra 50 1080i video input file\n");
     fprintf(stderr, "  --avci50_1080p <name>   Raw AVC-Intra 50 1080p video input file\n");
     fprintf(stderr, "  --avci50_720p <name>    Raw AVC-Intra 50 720p video input file\n");
+    fprintf(stderr, "  --unc <name>            Raw uncompressed SD UYVY 422 video input file\n");
+    fprintf(stderr, "  --unc_1080i <name>      Raw uncompressed HD 1080i UYVY 422 video input file\n");
+    fprintf(stderr, "  --unc_1080p <name>      Raw uncompressed HD 1080p UYVY 422 video input file\n");
+    fprintf(stderr, "  --unc_720p <name>       Raw uncompressed HD 720p UYVY 422 video input file\n");
     fprintf(stderr, "  --vc3 <name>            Raw VC3/DNxHD input file\n");
     fprintf(stderr, "  --vc3_1080p_1235 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps 10bit input file\n");
     fprintf(stderr, "  --vc3_1080p_1237 <name> Raw VC3/DNxHD 1920x1080p 145/120/115 Mbps input file\n");
@@ -585,6 +592,23 @@ int main(int argc, const char** argv)
                 return 1;
             }
             input.component_depth = value;
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--height") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 || value == 0) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            input.input_height = value;
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -1089,6 +1113,58 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--unc") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVID_UNC_SD;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--unc_1080i") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVID_UNC_HD_1080I;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--unc_1080p") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVID_UNC_HD_1080P;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--unc_720p") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVID_UNC_HD_720P;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--vc3") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -1301,8 +1377,31 @@ int main(int argc, const char** argv)
     int cmd_result = 0;
     try
     {
-        // extract essence info
+        // update 10-bit uncompressed essence types
         size_t i;
+        for (i = 0; i < inputs.size(); i++) {
+            if (inputs[i].component_depth == 10) {
+                switch (inputs[i].essence_type)
+                {
+                    case AVID_UNC_SD:
+                        inputs[i].essence_type = AVID_10BIT_UNC_SD;
+                        break;
+                    case AVID_UNC_HD_1080I:
+                        inputs[i].essence_type = AVID_10BIT_UNC_HD_1080I;
+                        break;
+                    case AVID_UNC_HD_1080P:
+                        inputs[i].essence_type = AVID_10BIT_UNC_HD_1080P;
+                        break;
+                    case AVID_UNC_HD_720P:
+                        inputs[i].essence_type = AVID_10BIT_UNC_HD_720P;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        // extract essence info
         for (i = 0; i < inputs.size(); i++) {
             RawInput *input = &inputs[i];
 
@@ -1636,6 +1735,7 @@ int main(int argc, const char** argv)
         AvidMJPEGTrack *mjpeg_track = 0;
         AvidD10Track *d10_track = 0;
         AvidAVCITrack *avci_track = 0;
+        AvidUncTrack *unc_track = 0;
         AvidVC3Track *vc3_track = 0;
         AvidPCMTrack *pcm_track = 0;
         uint32_t video_track_count = 0;
@@ -1738,6 +1838,20 @@ int main(int argc, const char** argv)
                 case AVID_VC3_1080P_1253:
                     vc3_track = dynamic_cast<AvidVC3Track*>(input->track);
                     break;
+                case AVID_UNC_SD:
+                case AVID_UNC_HD_1080I:
+                case AVID_UNC_HD_1080P:
+                case AVID_UNC_HD_720P:
+                case AVID_10BIT_UNC_SD:
+                case AVID_10BIT_UNC_HD_1080I:
+                case AVID_10BIT_UNC_HD_1080P:
+                case AVID_10BIT_UNC_HD_720P:
+                    // TODO: fix HD aspect to 16:9?
+                    unc_track = dynamic_cast<AvidUncTrack*>(input->track);
+                    unc_track->SetAspectRatio(input->aspect_ratio);
+                    if (input->input_height > 0)
+                        unc_track->SetInputHeight(input->input_height);
+                    break;
                 case AVID_PCM:
                     pcm_track = dynamic_cast<AvidPCMTrack*>(input->track);
                     pcm_track->SetSamplingRate(input->sampling_rate);
@@ -1806,6 +1920,19 @@ int main(int argc, const char** argv)
                     input->sample_sequence_size = 1;
                     input->raw_reader->SetEssenceParser(new MJPEGEssenceParser(mjpeg_track->IsSingleField()));
                     input->raw_reader->SetCheckMaxSampleSize(50000000);
+                    break;
+                case AVID_UNC_SD:
+                case AVID_UNC_HD_1080I:
+                case AVID_UNC_HD_1080P:
+                case AVID_UNC_HD_720P:
+                case AVID_10BIT_UNC_SD:
+                case AVID_10BIT_UNC_HD_1080I:
+                case AVID_10BIT_UNC_HD_1080P:
+                case AVID_10BIT_UNC_HD_720P:
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    if (input->raw_reader->GetFixedSampleSize() == 0)
+                        input->raw_reader->SetFixedSampleSize(unc_track->GetInputSampleSize());
                     break;
                 case AVID_PCM:
                     {
