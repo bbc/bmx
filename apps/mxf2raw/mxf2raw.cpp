@@ -300,8 +300,9 @@ static void print_identification_info(Identification *identification)
 static string timecode_to_string(Timecode timecode)
 {
     char buffer[64];
-    sprintf(buffer, "%02d:%02d:%02d:%02d",
-            timecode.GetHour(), timecode.GetMin(), timecode.GetSec(), timecode.GetFrame());
+    sprintf(buffer, "%02d:%02d:%02d%c%02d",
+            timecode.GetHour(), timecode.GetMin(), timecode.GetSec(),
+            timecode.IsDropFrame() ? ';' : ':', timecode.GetFrame());
     return buffer;
 }
 
