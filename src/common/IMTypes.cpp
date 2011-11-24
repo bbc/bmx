@@ -81,6 +81,10 @@ void Timecode::SetInvalid()
     mSec = 0;
     mFrame = 0;
     mOffset = 0;
+    mFramesPerMin = 0;
+    mNDFramesPerMin = 0;
+    mFramesPer10Min = 0;
+    mFramesPerHour = 0;
 }
 
 void Timecode::Init(uint16_t rounded_rate, bool drop_frame)
@@ -90,6 +94,22 @@ void Timecode::Init(uint16_t rounded_rate, bool drop_frame)
         mDropFrame = drop_frame;
     else
         mDropFrame = false;
+
+    if (mDropFrame) {
+        // first 2 frame numbers shall be omitted at the start of each minute,
+        // except minutes 0, 10, 20, 30, 40 and 50
+        mDropCount = 2;
+        if (mRoundedTCBase == 60)
+            mDropCount *= 2;
+        mFramesPerMin = mRoundedTCBase * 60 - mDropCount;
+        mFramesPer10Min = mFramesPerMin * 10 + mDropCount;
+    } else {
+        mFramesPerMin = mRoundedTCBase * 60;
+        mFramesPer10Min = mFramesPerMin * 10;
+    }
+    mFramesPerHour = mFramesPer10Min * 6;
+    mNDFramesPerMin = mRoundedTCBase * 60;
+
     mHour = 0;
     mMin = 0;
     mSec = 0;
@@ -157,15 +177,7 @@ void Timecode::AddOffset(int64_t offset, Rational rate)
 
 int64_t Timecode::GetMaxOffset() const
 {
-    int64_t max_offset = 24 * 60 * 60 * mRoundedTCBase;
-    if (mDropFrame) {
-        // first 2 frame numbers shall be omitted at the start of each minute,
-        //   except minutes 0, 10, 20, 30, 40 and 50
-
-        max_offset -= (60-6) * 2 * 24;   // every whole hour
-    }
-
-    return max_offset;
+    return 24 * mFramesPerHour;
 }
 
 bool Timecode::operator==(const Timecode &right)
@@ -195,7 +207,7 @@ void Timecode::CleanOffset()
         mOffset %= GetMaxOffset();
 
     if (mOffset < 0)
-        mOffset += GetMaxOffset() - 1;
+        mOffset += GetMaxOffset();
 }
 
 void Timecode::CleanTimecode()
@@ -210,6 +222,10 @@ void Timecode::CleanTimecode()
         mMin   %= 60;
         mSec   %= 60;
         mFrame %= mRoundedTCBase;
+
+        // replace invalid drop frame hhmmssff with a valid one after it
+        if (mDropFrame && mSec == 0 && (mMin % 10) && mFrame < mDropCount)
+            mFrame = mDropCount;
     }
 }
 
@@ -220,19 +236,15 @@ void Timecode::UpdateOffset()
         return;
     }
 
-    mOffset = mHour * 60 * 60 * mRoundedTCBase +
-              mMin * 60 * mRoundedTCBase +
-              mSec * mRoundedTCBase +
-              mFrame;
-
+    mOffset = mHour * mFramesPerHour;
     if (mDropFrame) {
-        // first 2 frame numbers shall be omitted at the start of each minute,
-        //   except minutes 0, 10, 20, 30, 40 and 50
-
-        mOffset -= (60-6) * 2 * mHour;   // every whole hour
-        mOffset -= (mMin / 10) * 9 * 2;  // every whole 10 min
-        mOffset -= (mMin % 10) * 2;      // every whole min, except min 0 in 10
+        mOffset += (mMin / 10) * mFramesPer10Min;
+        mOffset += (mMin % 10) * mFramesPerMin;
+    } else {
+        mOffset += mMin * mFramesPerMin;
     }
+    mOffset += mSec * mRoundedTCBase;
+    mOffset += mFrame;
 }
 
 void Timecode::UpdateTimecode()
@@ -245,33 +257,38 @@ void Timecode::UpdateTimecode()
         return;
     }
 
-    int64_t count = mOffset;
+    int64_t offset = mOffset;
+    bool frames_dropped = false;
 
-    if (mDropFrame) {
-        // first 2 frame numbers shall be omitted at the start of each minute,
-        //   except minutes 0, 10, 20, 30, 40 and 50
-
-        int16_t hour, min;
-        int64_t prev_skipped_count = -1;
-        int64_t skipped_count = 0;
-        while (prev_skipped_count != skipped_count) {
-            prev_skipped_count = skipped_count;
-
-            hour = (int16_t)((count + skipped_count) / (60 * 60 * mRoundedTCBase));
-            min = (int16_t)(((count + skipped_count) % (60 * 60 * mRoundedTCBase)) / (60 * mRoundedTCBase));
-
-            // add frames skipped
-            skipped_count = (60-6) * 2 * hour;      // every whole hour
-            skipped_count += (min / 10) * 9 * 2;    // every whole 10 min
-            skipped_count += (min % 10) * 2;        // every whole min, except min 0 in 10
-        }
-
-        count += skipped_count;
+    mHour = (int16_t)(offset / mFramesPerHour);
+    offset = offset % mFramesPerHour;
+    mMin = (int16_t)(offset / mFramesPer10Min * 10);
+    offset = offset % mFramesPer10Min;
+    if (offset >= mNDFramesPerMin) {
+        offset -= mNDFramesPerMin;
+        mMin += (int16_t)((offset / mFramesPerMin) + 1);
+        offset = offset % mFramesPerMin;
+        frames_dropped = mDropFrame;
     }
+    mSec = (int16_t)(offset / mRoundedTCBase);
+    mFrame = (int16_t)(offset % mRoundedTCBase);
 
-    mHour  = (int16_t)(  count / (60 * 60 * mRoundedTCBase));
-    mMin   = (int16_t)(( count % (60 * 60 * mRoundedTCBase)) / (60 * mRoundedTCBase));
-    mSec   = (int16_t)(((count % (60 * 60 * mRoundedTCBase)) % (60 * mRoundedTCBase)) / mRoundedTCBase);
-    mFrame = (int16_t)(((count % (60 * 60 * mRoundedTCBase)) % (60 * mRoundedTCBase)) % mRoundedTCBase);
+    if (frames_dropped) {
+        mFrame += mDropCount;
+        if (mFrame >= mRoundedTCBase) {
+            mFrame -= mRoundedTCBase;
+            mSec++;
+            if (mSec >= 60) {
+                mSec = 0;
+                mMin++;
+                if (mMin >= 60) {
+                    mMin = 0;
+                    mHour++;
+                    if (mHour >= 24)
+                        mHour = 0;
+                }
+            }
+        }
+    }
 }
 

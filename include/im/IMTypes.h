@@ -128,6 +128,12 @@ private:
     int16_t mSec;
     int16_t mFrame;
     int64_t mOffset;
+
+    uint32_t mFramesPerMin;
+    uint32_t mNDFramesPerMin;
+    uint32_t mFramesPer10Min;
+    uint32_t mFramesPerHour;
+    int16_t mDropCount;
 };
 
 
