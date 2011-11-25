@@ -1085,7 +1085,7 @@ void MXFFileReader::ProcessPictureDescriptor(FileDescriptor *file_descriptor, MX
     }
 
     uint32_t frame_height_factor = 1;
-    if (picture_track_info->frame_layout == 1) // 1 == separate fields
+    if (picture_track_info->frame_layout == MXF_SEPARATE_FIELDS)
         frame_height_factor = 2; // double the field height
 
     if (picture_descriptor->haveStoredWidth())
