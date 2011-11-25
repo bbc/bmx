@@ -29,6 +29,7 @@
 #include <algorithm>
 
 #include <im/mxf_reader/MXFFileReader.h>
+#include <im/mxf_helper/PictureMXFDescriptorHelper.h>
 #include <im/MXFUtils.h>
 #include <im/Utils.h>
 #include <im/IMException.h>
@@ -1062,13 +1063,27 @@ void MXFFileReader::ProcessPictureDescriptor(FileDescriptor *file_descriptor, MX
         dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     IM_CHECK(picture_descriptor);
 
+    PictureMXFDescriptorHelper *picture_helper =
+        PictureMXFDescriptorHelper::Create(file_descriptor, picture_track_info->essence_container_label);
+    int32_t avid_resolution_id = 0;
+    if (picture_helper->HaveAvidResolutionID())
+        avid_resolution_id = picture_helper->GetAvidResolutionID();
+    delete picture_helper;
+
     if (picture_descriptor->havePictureEssenceCoding())
         picture_track_info->picture_essence_coding_label = picture_descriptor->getPictureEssenceCoding();
     if (picture_descriptor->haveSignalStandard())
         picture_track_info->signal_standard = picture_descriptor->getSignalStandard();
     if (picture_descriptor->haveFrameLayout())
         picture_track_info->frame_layout = picture_descriptor->getFrameLayout();
-    
+
+    // fix legacy avid frame layout values for IEC DV-25, DVBased DV-25 and DVBased DV-50
+    if ((avid_resolution_id == 0x8c || avid_resolution_id == 0x8d || avid_resolution_id == 0x8e) &&
+        picture_track_info->frame_layout == MXF_MIXED_FIELDS)
+    {
+        picture_track_info->frame_layout = MXF_SEPARATE_FIELDS;
+    }
+
     uint32_t frame_height_factor = 1;
     if (picture_track_info->frame_layout == 1) // 1 == separate fields
         frame_height_factor = 2; // double the field height
@@ -1109,6 +1124,14 @@ void MXFFileReader::ProcessPictureDescriptor(FileDescriptor *file_descriptor, MX
             picture_track_info->vert_subsampling = cdci_descriptor->getVerticalSubsampling();
         if (cdci_descriptor->haveColorSiting())
             picture_track_info->color_siting = cdci_descriptor->getColorSiting();
+
+        // fix legacy avid subsampling values for DVBased DV-25
+        if (avid_resolution_id == 0x8c &&
+            picture_track_info->horiz_subsampling == picture_track_info->vert_subsampling)
+        {
+            picture_track_info->horiz_subsampling = 4;
+            picture_track_info->vert_subsampling = 1;
+        }
     }
 }
 
