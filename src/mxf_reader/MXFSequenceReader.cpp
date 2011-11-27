@@ -99,9 +99,11 @@ void MXFSequenceReader::AddReader(MXFReader *reader)
 
 bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
 {
+    try
+    {
     if (mReaders.empty()) {
         log_error("Sequence reader has no tracks\n");
-        return false;
+        throw false;
     }
 
     // the lowest input sample rate is the sequence reader sample rate
@@ -147,7 +149,7 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
     }
     for (i = 0; i < mGroupSegments.size(); i++) {
         if (!mGroupSegments[i]->Finalize())
-            return false;
+            throw false;
     }
 
 
@@ -166,13 +168,13 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
     for (i = 0; i < mGroupSegments.size(); i++) {
         if (i > 0 && mGroupSegments[i]->GetMaxPrecharge(0, false) > 0) {
             log_error("Non-first group in sequence with precharge is not supported\n");
-            return false;
+            throw false;
         }
         if (i < mGroupSegments.size() - 1 &&
             mGroupSegments[i]->GetMaxRollout(mGroupSegments[i]->GetDuration() - 1, false) > 0)
         {
             log_error("Appending to segment with rollout is not supported\n");
-            return false;
+            throw false;
         }
     }
 
@@ -193,7 +195,7 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
                     break;
                 } else {
                     log_error("Timecode discontinuity between sequence track segments\n");
-                    return false;
+                    throw false;
                 }
             }
         }
@@ -269,7 +271,7 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
         // abort if this group fails to contribute any tracks
         if (!first_extended_seq_track) {
             log_error("No track could be appended from the group to the sequence\n");
-            return false;
+            throw false;
         }
     }
 
@@ -293,7 +295,7 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
     }
     if (mTrackReaders.empty()) {
         log_error("All tracks in sequence are incomplete\n");
-        return false;
+        throw false;
     }
 
 
@@ -313,7 +315,7 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
             log_error("Incompatible sequence sample rate (%d/%d) and group sample rate (%d/%d)\n",
                       mSampleRate.numerator, mSampleRate.denominator,
                       group_sample_rate.numerator, group_sample_rate.denominator);
-            return false;
+            throw false;
         }
 
         mSampleSequences.push_back(sample_sequence);
@@ -336,6 +338,25 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
     SetReadLimits();
 
     return true;
+    }
+    catch (const bool &err)
+    {
+        size_t i;
+        for (i = 0; i < mGroupSegments.size(); i++)
+            delete mGroupSegments[i];
+        mGroupSegments.clear();
+
+        for (i = 0; i < mTrackReaders.size(); i++)
+            delete mTrackReaders[i];
+        mTrackReaders.clear();
+
+        mSampleSequences.clear();
+        mSampleSequenceSizes.clear();
+        mSegmentOffsets.clear();
+        mDuration = 0;
+
+        return false;
+    }
 }
 
 void MXFSequenceReader::UpdateReadLimits()

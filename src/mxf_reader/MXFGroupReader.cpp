@@ -113,9 +113,11 @@ void MXFGroupReader::AddReader(MXFReader *reader)
 
 bool MXFGroupReader::Finalize()
 {
+    try
+    {
     if (mReaders.empty()) {
         log_error("Group reader has no members\n");
-        return false;
+        throw false;
     }
 
     // the lowest input sample rate is the group sample rate
@@ -159,7 +161,7 @@ bool MXFGroupReader::Finalize()
             log_error("Incompatible group sample rate (%d/%d) and member sample rate (%d/%d)\n",
                       mSampleRate.numerator, mSampleRate.denominator,
                       member_sample_rate.numerator, member_sample_rate.denominator);
-            return false;
+            throw false;
         }
 
         mSampleSequences.push_back(sample_sequence);
@@ -218,6 +220,20 @@ bool MXFGroupReader::Finalize()
     SetReadLimits();
 
     return true;
+    }
+    catch (const bool &err)
+    {
+        size_t i;
+        for (i = 0; i < mTrackReaders.size(); i++)
+            delete mTrackReaders[i];
+        mTrackReaders.clear();
+
+        mSampleSequences.clear();
+        mSampleSequenceSizes.clear();
+        mDuration = 0;
+
+        return false;
+    }
 }
 
 void MXFGroupReader::SetReadLimits()
