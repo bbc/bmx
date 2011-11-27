@@ -101,243 +101,243 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
 {
     try
     {
-    if (mReaders.empty()) {
-        log_error("Sequence reader has no tracks\n");
-        throw false;
-    }
-
-    // the lowest input sample rate is the sequence reader sample rate
-    float lowest_sample_rate = 1000000.0;
-    size_t i;
-    for (i = 0; i < mReaders.size(); i++) {
-        float sample_rate = mReaders[i]->GetSampleRate().numerator /
-                                    (float)mReaders[i]->GetSampleRate().denominator;
-        if (sample_rate < lowest_sample_rate) {
-            mSampleRate = mReaders[i]->GetSampleRate();
-            lowest_sample_rate = sample_rate;
+        if (mReaders.empty()) {
+            log_error("Sequence reader has no tracks\n");
+            throw false;
         }
-    }
-    IM_CHECK(mSampleRate.numerator != 0);
+
+        // the lowest input sample rate is the sequence reader sample rate
+        float lowest_sample_rate = 1000000.0;
+        size_t i;
+        for (i = 0; i < mReaders.size(); i++) {
+            float sample_rate = mReaders[i]->GetSampleRate().numerator /
+                                        (float)mReaders[i]->GetSampleRate().denominator;
+            if (sample_rate < lowest_sample_rate) {
+                mSampleRate = mReaders[i]->GetSampleRate();
+                lowest_sample_rate = sample_rate;
+            }
+        }
+        IM_CHECK(mSampleRate.numerator != 0);
 
 
-    // group inputs by material package uid and lead filler offset
-    // need to consider the leading filler offset for spanned P2 files
-    map<pair<mxfUMID, int64_t>, MXFGroupReader*> group_ids;
-    for (i = 0; i < mReaders.size(); i++) {
-        int64_t lead_offset = convert_position(mReaders[i]->GetSampleRate(),
-                                               mReaders[i]->GetFixedLeadFillerOffset(),
-                                               mSampleRate,
-                                               ROUND_UP);
+        // group inputs by material package uid and lead filler offset
+        // need to consider the leading filler offset for spanned P2 files
+        map<pair<mxfUMID, int64_t>, MXFGroupReader*> group_ids;
+        for (i = 0; i < mReaders.size(); i++) {
+            int64_t lead_offset = convert_position(mReaders[i]->GetSampleRate(),
+                                                   mReaders[i]->GetFixedLeadFillerOffset(),
+                                                   mSampleRate,
+                                                   ROUND_UP);
 
-        MXFGroupReader *group_reader;
-        if (mReaders[i]->GetMaterialPackageUID() == g_Null_UMID) {
-            mGroupSegments.push_back(new MXFGroupReader());
-            group_reader = mGroupSegments.back();
-        } else {
-            map<pair<mxfUMID, int64_t>, MXFGroupReader*>::const_iterator group_id =
-                group_ids.find(make_pair(mReaders[i]->GetMaterialPackageUID(), lead_offset));
-            if (group_id == group_ids.end()) {
+            MXFGroupReader *group_reader;
+            if (mReaders[i]->GetMaterialPackageUID() == g_Null_UMID) {
                 mGroupSegments.push_back(new MXFGroupReader());
                 group_reader = mGroupSegments.back();
-                group_ids[make_pair(mReaders[i]->GetMaterialPackageUID(), lead_offset)] = group_reader;
             } else {
-                group_reader = group_id->second;
-            }
-        }
-
-        group_reader->AddReader(mReaders[i]);
-    }
-    for (i = 0; i < mGroupSegments.size(); i++) {
-        if (!mGroupSegments[i]->Finalize())
-            throw false;
-    }
-
-
-    // order groups by playout timecode
-    if (!keep_input_order && mGroupSegments.size() > 1) {
-        stable_sort(mGroupSegments.begin(), mGroupSegments.end(), compare_group_reader);
-
-        // handle case where a sequence of groups passes through (max one) midnight
-        size_t seq_start_index = 0;
-        if (FindSequenceStart(mGroupSegments, &seq_start_index) && seq_start_index > 0)
-            rotate(mGroupSegments.begin(), mGroupSegments.begin() + seq_start_index, mGroupSegments.end());
-    }
-
-
-    // check only the first group has precharge and only the last group has rollout
-    for (i = 0; i < mGroupSegments.size(); i++) {
-        if (i > 0 && mGroupSegments[i]->GetMaxPrecharge(0, false) > 0) {
-            log_error("Non-first group in sequence with precharge is not supported\n");
-            throw false;
-        }
-        if (i < mGroupSegments.size() - 1 &&
-            mGroupSegments[i]->GetMaxRollout(mGroupSegments[i]->GetDuration() - 1, false) > 0)
-        {
-            log_error("Appending to segment with rollout is not supported\n");
-            throw false;
-        }
-    }
-
-
-    // check playout timecode is continuous
-    // log warning and ignore timecode discontinuities if not reordering (keep_input_order is true)
-    Timecode expected_start_tc;
-    for (i = 0; i < mGroupSegments.size(); i++) {
-        if (i == 0) {
-            expected_start_tc = mGroupSegments[i]->GetPlayoutTimecode(- mGroupSegments[i]->GetReadStartPosition());
-        } else {
-            Timecode start_tc = mGroupSegments[i]->GetPlayoutTimecode(- mGroupSegments[i]->GetReadStartPosition());
-            if (mGroupSegments[0]->HavePlayoutTimecode() &&
-                (!mGroupSegments[i]->HavePlayoutTimecode() || start_tc != expected_start_tc))
-            {
-                if (keep_input_order) {
-                    log_warn("Ignoring timecode discontinuity between sequence track segments\n");
-                    break;
+                map<pair<mxfUMID, int64_t>, MXFGroupReader*>::const_iterator group_id =
+                    group_ids.find(make_pair(mReaders[i]->GetMaterialPackageUID(), lead_offset));
+                if (group_id == group_ids.end()) {
+                    mGroupSegments.push_back(new MXFGroupReader());
+                    group_reader = mGroupSegments.back();
+                    group_ids[make_pair(mReaders[i]->GetMaterialPackageUID(), lead_offset)] = group_reader;
                 } else {
-                    log_error("Timecode discontinuity between sequence track segments\n");
-                    throw false;
+                    group_reader = group_id->second;
                 }
             }
+
+            group_reader->AddReader(mReaders[i]);
+        }
+        for (i = 0; i < mGroupSegments.size(); i++) {
+            if (!mGroupSegments[i]->Finalize())
+                throw false;
         }
 
-        expected_start_tc.AddOffset(mGroupSegments[i]->GetDuration(), mGroupSegments[i]->GetSampleRate());
-    }
+
+        // order groups by playout timecode
+        if (!keep_input_order && mGroupSegments.size() > 1) {
+            stable_sort(mGroupSegments.begin(), mGroupSegments.end(), compare_group_reader);
+
+            // handle case where a sequence of groups passes through (max one) midnight
+            size_t seq_start_index = 0;
+            if (FindSequenceStart(mGroupSegments, &seq_start_index) && seq_start_index > 0)
+                rotate(mGroupSegments.begin(), mGroupSegments.begin() + seq_start_index, mGroupSegments.end());
+        }
 
 
-    // create tracks from the first group
-    for (i = 0; i < mGroupSegments[0]->GetNumTrackReaders(); i++) {
-        MXFTrackReader *group_track = mGroupSegments[0]->GetTrackReader(i);
-        if (!group_track->IsEnabled())
-            continue;
+        // check only the first group has precharge and only the last group has rollout
+        for (i = 0; i < mGroupSegments.size(); i++) {
+            if (i > 0 && mGroupSegments[i]->GetMaxPrecharge(0, false) > 0) {
+                log_error("Non-first group in sequence with precharge is not supported\n");
+                throw false;
+            }
+            if (i < mGroupSegments.size() - 1 &&
+                mGroupSegments[i]->GetMaxRollout(mGroupSegments[i]->GetDuration() - 1, false) > 0)
+            {
+                log_error("Appending to segment with rollout is not supported\n");
+                throw false;
+            }
+        }
 
-        MXFSequenceTrackReader *seq_track = new MXFSequenceTrackReader(this, mTrackReaders.size());
-        mTrackReaders.push_back(seq_track);
 
-        seq_track->AppendSegment(group_track);
-    }
+        // check playout timecode is continuous
+        // log warning and ignore timecode discontinuities if not reordering (keep_input_order is true)
+        Timecode expected_start_tc;
+        for (i = 0; i < mGroupSegments.size(); i++) {
+            if (i == 0) {
+                expected_start_tc = mGroupSegments[i]->GetPlayoutTimecode(- mGroupSegments[i]->GetReadStartPosition());
+            } else {
+                Timecode start_tc = mGroupSegments[i]->GetPlayoutTimecode(- mGroupSegments[i]->GetReadStartPosition());
+                if (mGroupSegments[0]->HavePlayoutTimecode() &&
+                    (!mGroupSegments[i]->HavePlayoutTimecode() || start_tc != expected_start_tc))
+                {
+                    if (keep_input_order) {
+                        log_warn("Ignoring timecode discontinuity between sequence track segments\n");
+                        break;
+                    } else {
+                        log_error("Timecode discontinuity between sequence track segments\n");
+                        throw false;
+                    }
+                }
+            }
+
+            expected_start_tc.AddOffset(mGroupSegments[i]->GetDuration(), mGroupSegments[i]->GetSampleRate());
+        }
 
 
-    // add compatible tracks from other groups
-    for (i = 1; i < mGroupSegments.size(); i++) {
-        MXFSequenceTrackReader *first_extended_seq_track = 0;
-        size_t j;
-        for (j = 0; j < mGroupSegments[i]->GetNumTrackReaders(); j++) {
-            MXFTrackReader *group_track = mGroupSegments[i]->GetTrackReader(j);
+        // create tracks from the first group
+        for (i = 0; i < mGroupSegments[0]->GetNumTrackReaders(); i++) {
+            MXFTrackReader *group_track = mGroupSegments[0]->GetTrackReader(i);
             if (!group_track->IsEnabled())
                 continue;
 
-            // append group track to first available and compatible sequence track
-            size_t k;
-            for (k = 0; k < mTrackReaders.size(); k++) {
-                MXFSequenceTrackReader *seq_track = dynamic_cast<MXFSequenceTrackReader*>(mTrackReaders[k]);
-                if (seq_track->GetNumSegments() != i)
-                    continue; // incomplete track or new segment already appended
+            MXFSequenceTrackReader *seq_track = new MXFSequenceTrackReader(this, mTrackReaders.size());
+            mTrackReaders.push_back(seq_track);
 
-                // skip tracks where sequence duration != first appended track's sequence duration
-                if (first_extended_seq_track) {
-                    int64_t seq_track_duration = convert_duration(seq_track->GetSampleRate(),
-                                                                  seq_track->GetDuration(),
-                                                                  mSampleRate,
-                                                                  ROUND_AUTO);
-                    int64_t group_track_duration = convert_duration(group_track->GetSampleRate(),
-                                                                    group_track->GetDuration(),
-                                                                    mSampleRate,
-                                                                    ROUND_AUTO);
-                    int64_t first_seq_track_duration = convert_duration(first_extended_seq_track->GetSampleRate(),
-                                                                        first_extended_seq_track->GetDuration(),
+            seq_track->AppendSegment(group_track);
+        }
+
+
+        // add compatible tracks from other groups
+        for (i = 1; i < mGroupSegments.size(); i++) {
+            MXFSequenceTrackReader *first_extended_seq_track = 0;
+            size_t j;
+            for (j = 0; j < mGroupSegments[i]->GetNumTrackReaders(); j++) {
+                MXFTrackReader *group_track = mGroupSegments[i]->GetTrackReader(j);
+                if (!group_track->IsEnabled())
+                    continue;
+
+                // append group track to first available and compatible sequence track
+                size_t k;
+                for (k = 0; k < mTrackReaders.size(); k++) {
+                    MXFSequenceTrackReader *seq_track = dynamic_cast<MXFSequenceTrackReader*>(mTrackReaders[k]);
+                    if (seq_track->GetNumSegments() != i)
+                        continue; // incomplete track or new segment already appended
+
+                    // skip tracks where sequence duration != first appended track's sequence duration
+                    if (first_extended_seq_track) {
+                        int64_t seq_track_duration = convert_duration(seq_track->GetSampleRate(),
+                                                                      seq_track->GetDuration(),
+                                                                      mSampleRate,
+                                                                      ROUND_AUTO);
+                        int64_t group_track_duration = convert_duration(group_track->GetSampleRate(),
+                                                                        group_track->GetDuration(),
                                                                         mSampleRate,
                                                                         ROUND_AUTO);
-                    if (seq_track_duration + group_track_duration != first_seq_track_duration)
-                    {
-                        log_warn("Not appending track segment resulting in different sequence duration\n");
-                        continue;
+                        int64_t first_seq_track_duration = convert_duration(first_extended_seq_track->GetSampleRate(),
+                                                                            first_extended_seq_track->GetDuration(),
+                                                                            mSampleRate,
+                                                                            ROUND_AUTO);
+                        if (seq_track_duration + group_track_duration != first_seq_track_duration)
+                        {
+                            log_warn("Not appending track segment resulting in different sequence duration\n");
+                            continue;
+                        }
+                    }
+
+                    // append track segment if compatible
+                    if (seq_track->IsCompatible(group_track)) {
+                        seq_track->AppendSegment(group_track);
+                        if (!first_extended_seq_track)
+                            first_extended_seq_track = seq_track;
+                        break;
                     }
                 }
 
-                // append track segment if compatible
-                if (seq_track->IsCompatible(group_track)) {
-                    seq_track->AppendSegment(group_track);
-                    if (!first_extended_seq_track)
-                        first_extended_seq_track = seq_track;
-                    break;
+                // disable group track if it was not added to the sequence
+                if (k >= mTrackReaders.size())
+                    group_track->SetEnable(false);
+            }
+
+            // abort if this group fails to contribute any tracks
+            if (!first_extended_seq_track) {
+                log_error("No track could be appended from the group to the sequence\n");
+                throw false;
+            }
+        }
+
+
+        // delete incomplete tracks
+        for (i = 0; i < mTrackReaders.size(); i++) {
+            MXFSequenceTrackReader *seq_track = dynamic_cast<MXFSequenceTrackReader*>(mTrackReaders[i]);
+            if (seq_track->GetNumSegments() != mGroupSegments.size()) {
+                if (check_is_complete) {
+                    log_error("Incomplete track sequence\n");
+                    return false;
                 }
+
+                // first disable track in groups
+                mTrackReaders[i]->SetEnable(false);
+
+                delete mTrackReaders[i];
+                mTrackReaders.erase(mTrackReaders.begin() + i);
+                i--;
             }
-
-            // disable group track if it was not added to the sequence
-            if (k >= mTrackReaders.size())
-                group_track->SetEnable(false);
         }
-
-        // abort if this group fails to contribute any tracks
-        if (!first_extended_seq_track) {
-            log_error("No track could be appended from the group to the sequence\n");
-            throw false;
-        }
-    }
-
-
-    // delete incomplete tracks
-    for (i = 0; i < mTrackReaders.size(); i++) {
-        MXFSequenceTrackReader *seq_track = dynamic_cast<MXFSequenceTrackReader*>(mTrackReaders[i]);
-        if (seq_track->GetNumSegments() != mGroupSegments.size()) {
-            if (check_is_complete) {
-                log_error("Incomplete track sequence\n");
-                return false;
-            }
-
-            // first disable track in groups
-            mTrackReaders[i]->SetEnable(false);
-
-            delete mTrackReaders[i];
-            mTrackReaders.erase(mTrackReaders.begin() + i);
-            i--;
-        }
-    }
-    if (mTrackReaders.empty()) {
-        log_error("All tracks in sequence are incomplete\n");
-        throw false;
-    }
-
-
-    // get the segment offsets
-    mSegmentOffsets.push_back(0);
-    for (i = 1; i < mGroupSegments.size(); i++) {
-        int64_t offset = mSegmentOffsets[i - 1] + mGroupSegments[i - 1]->GetDuration();
-        mSegmentOffsets.push_back(offset);
-    }
-
-
-    // extract the sample sequences for each group
-    for (i = 0; i < mGroupSegments.size(); i++) {
-        vector<uint32_t> sample_sequence;
-        if (!get_sample_sequence(mSampleRate, mGroupSegments[i]->GetSampleRate(), &sample_sequence)) {
-            mxfRational group_sample_rate = mGroupSegments[i]->GetSampleRate();
-            log_error("Incompatible sequence sample rate (%d/%d) and group sample rate (%d/%d)\n",
-                      mSampleRate.numerator, mSampleRate.denominator,
-                      group_sample_rate.numerator, group_sample_rate.denominator);
+        if (mTrackReaders.empty()) {
+            log_error("All tracks in sequence are incomplete\n");
             throw false;
         }
 
-        mSampleSequences.push_back(sample_sequence);
 
-        int64_t sequence_size = 0;
-        size_t j;
-        for (j = 0; j < sample_sequence.size(); j++)
-            sequence_size += sample_sequence[j];
-        mSampleSequenceSizes.push_back(sequence_size);
-    }
-
-
-    // sequence duration is the sum of segment durations
-    mDuration = 0;
-    for (i = 0; i < mGroupSegments.size(); i++)
-        mDuration += CONVERT_GROUP_DUR(mGroupSegments[i]->GetDuration());
+        // get the segment offsets
+        mSegmentOffsets.push_back(0);
+        for (i = 1; i < mGroupSegments.size(); i++) {
+            int64_t offset = mSegmentOffsets[i - 1] + mGroupSegments[i - 1]->GetDuration();
+            mSegmentOffsets.push_back(offset);
+        }
 
 
-    // set default group sequence read limits
-    SetReadLimits();
+        // extract the sample sequences for each group
+        for (i = 0; i < mGroupSegments.size(); i++) {
+            vector<uint32_t> sample_sequence;
+            if (!get_sample_sequence(mSampleRate, mGroupSegments[i]->GetSampleRate(), &sample_sequence)) {
+                mxfRational group_sample_rate = mGroupSegments[i]->GetSampleRate();
+                log_error("Incompatible sequence sample rate (%d/%d) and group sample rate (%d/%d)\n",
+                          mSampleRate.numerator, mSampleRate.denominator,
+                          group_sample_rate.numerator, group_sample_rate.denominator);
+                throw false;
+            }
 
-    return true;
+            mSampleSequences.push_back(sample_sequence);
+
+            int64_t sequence_size = 0;
+            size_t j;
+            for (j = 0; j < sample_sequence.size(); j++)
+                sequence_size += sample_sequence[j];
+            mSampleSequenceSizes.push_back(sequence_size);
+        }
+
+
+        // sequence duration is the sum of segment durations
+        mDuration = 0;
+        for (i = 0; i < mGroupSegments.size(); i++)
+            mDuration += CONVERT_GROUP_DUR(mGroupSegments[i]->GetDuration());
+
+
+        // set default group sequence read limits
+        SetReadLimits();
+
+        return true;
     }
     catch (const bool &err)
     {

@@ -115,111 +115,111 @@ bool MXFGroupReader::Finalize()
 {
     try
     {
-    if (mReaders.empty()) {
-        log_error("Group reader has no members\n");
-        throw false;
-    }
-
-    // the lowest input sample rate is the group sample rate
-    float lowest_sample_rate = 1000000.0;
-    size_t i;
-    for (i = 0; i < mReaders.size(); i++) {
-        float member_sample_rate = mReaders[i]->GetSampleRate().numerator /
-                                    (float)mReaders[i]->GetSampleRate().denominator;
-        if (member_sample_rate < lowest_sample_rate) {
-            mSampleRate = mReaders[i]->GetSampleRate();
-            lowest_sample_rate = member_sample_rate;
-        }
-    }
-    IM_CHECK(mSampleRate.numerator != 0);
-
-
-    // create temporary group track readers and sort according to material package, data kind, track number and track id
-    vector<GroupTrackReader> group_track_readers;
-    GroupTrackReader group_track_reader;
-    size_t j;
-    for (i = 0; i < mReaders.size(); i++) {
-        for (j = 0; j < mReaders[i]->GetNumTrackReaders(); j++) {
-            group_track_reader.index = i;
-            group_track_reader.track_reader = mReaders[i]->GetTrackReader(j);
-            group_track_readers.push_back(group_track_reader);
-        }
-    }
-    stable_sort(group_track_readers.begin(), group_track_readers.end(), compare_group_track_reader);
-
-    // create track readers from sorted list
-    for (i = 0; i < group_track_readers.size(); i++)
-        mTrackReaders.push_back(group_track_readers[i].track_reader);
-
-
-    // extract the sample sequences for each reader. The samples sequences determine how many member samples
-    // are read for each group sample. They are also used for converting position and durations
-    for (i = 0; i < mReaders.size(); i++) {
-        vector<uint32_t> sample_sequence;
-        if (!get_sample_sequence(mSampleRate, mReaders[i]->GetSampleRate(), &sample_sequence)) {
-            mxfRational member_sample_rate = mReaders[i]->GetSampleRate();
-            log_error("Incompatible group sample rate (%d/%d) and member sample rate (%d/%d)\n",
-                      mSampleRate.numerator, mSampleRate.denominator,
-                      member_sample_rate.numerator, member_sample_rate.denominator);
+        if (mReaders.empty()) {
+            log_error("Group reader has no members\n");
             throw false;
         }
 
-        mSampleSequences.push_back(sample_sequence);
-
-        int64_t sequence_size = 0;
-        size_t j;
-        for (j = 0; j < sample_sequence.size(); j++)
-            sequence_size += sample_sequence[j];
-        mSampleSequenceSizes.push_back(sequence_size);
-    }
-
-
-    // group duration is the minimum member duration
-    mDuration = -1;
-    for (i = 0; i < mReaders.size(); i++) {
-        int64_t member_duration = CONVERT_MEMBER_DUR(mReaders[i]->GetDuration());
-
-        if (mDuration < 0 || member_duration < mDuration)
-            mDuration = member_duration;
-    }
-
-
-    // set group timecodes and package infos if all members have the same values
-    for (i = 0; i < mReaders.size(); i++) {
-        if (i == 0) {
-            if (mReaders[i]->mMaterialStartTimecode)
-                mMaterialStartTimecode = new Timecode(*mReaders[i]->mMaterialStartTimecode);
-            if (mReaders[i]->mFileSourceStartTimecode)
-                mMaterialStartTimecode = new Timecode(*mReaders[i]->mFileSourceStartTimecode);
-            if (mReaders[i]->mPhysicalSourceStartTimecode)
-                mMaterialStartTimecode = new Timecode(*mReaders[i]->mPhysicalSourceStartTimecode);
-            mMaterialPackageName = mReaders[i]->mMaterialPackageName;
-            mMaterialPackageUID = mReaders[i]->mMaterialPackageUID;
-            mPhysicalSourcePackageName = mReaders[i]->mPhysicalSourcePackageName;
-        } else {
-#define CHECK_TIMECODE(tc_var) \
-            if ((tc_var != 0) != (mReaders[i]->tc_var != 0) || \
-                (tc_var && tc_var != mReaders[i]->tc_var)) \
-            { \
-                delete tc_var; \
-                tc_var = 0; \
+        // the lowest input sample rate is the group sample rate
+        float lowest_sample_rate = 1000000.0;
+        size_t i;
+        for (i = 0; i < mReaders.size(); i++) {
+            float member_sample_rate = mReaders[i]->GetSampleRate().numerator /
+                                        (float)mReaders[i]->GetSampleRate().denominator;
+            if (member_sample_rate < lowest_sample_rate) {
+                mSampleRate = mReaders[i]->GetSampleRate();
+                lowest_sample_rate = member_sample_rate;
             }
-            CHECK_TIMECODE(mMaterialStartTimecode)
-            CHECK_TIMECODE(mFileSourceStartTimecode)
-            CHECK_TIMECODE(mPhysicalSourceStartTimecode)
-            if (mMaterialPackageName != mReaders[i]->mMaterialPackageName)
-                mMaterialPackageName.clear();
-            if (mMaterialPackageUID != mReaders[i]->mMaterialPackageUID)
-                mMaterialPackageUID = g_Null_UMID;
-            if (mPhysicalSourcePackageName != mReaders[i]->mPhysicalSourcePackageName)
-                mPhysicalSourcePackageName.clear();
         }
-    }
+        IM_CHECK(mSampleRate.numerator != 0);
 
-    // set default group read limits
-    SetReadLimits();
 
-    return true;
+        // create temporary group track readers and sort according to material package, data kind, track number and track id
+        vector<GroupTrackReader> group_track_readers;
+        GroupTrackReader group_track_reader;
+        size_t j;
+        for (i = 0; i < mReaders.size(); i++) {
+            for (j = 0; j < mReaders[i]->GetNumTrackReaders(); j++) {
+                group_track_reader.index = i;
+                group_track_reader.track_reader = mReaders[i]->GetTrackReader(j);
+                group_track_readers.push_back(group_track_reader);
+            }
+        }
+        stable_sort(group_track_readers.begin(), group_track_readers.end(), compare_group_track_reader);
+
+        // create track readers from sorted list
+        for (i = 0; i < group_track_readers.size(); i++)
+            mTrackReaders.push_back(group_track_readers[i].track_reader);
+
+
+        // extract the sample sequences for each reader. The samples sequences determine how many member samples
+        // are read for each group sample. They are also used for converting position and durations
+        for (i = 0; i < mReaders.size(); i++) {
+            vector<uint32_t> sample_sequence;
+            if (!get_sample_sequence(mSampleRate, mReaders[i]->GetSampleRate(), &sample_sequence)) {
+                mxfRational member_sample_rate = mReaders[i]->GetSampleRate();
+                log_error("Incompatible group sample rate (%d/%d) and member sample rate (%d/%d)\n",
+                          mSampleRate.numerator, mSampleRate.denominator,
+                          member_sample_rate.numerator, member_sample_rate.denominator);
+                throw false;
+            }
+
+            mSampleSequences.push_back(sample_sequence);
+
+            int64_t sequence_size = 0;
+            size_t j;
+            for (j = 0; j < sample_sequence.size(); j++)
+                sequence_size += sample_sequence[j];
+            mSampleSequenceSizes.push_back(sequence_size);
+        }
+
+
+        // group duration is the minimum member duration
+        mDuration = -1;
+        for (i = 0; i < mReaders.size(); i++) {
+            int64_t member_duration = CONVERT_MEMBER_DUR(mReaders[i]->GetDuration());
+
+            if (mDuration < 0 || member_duration < mDuration)
+                mDuration = member_duration;
+        }
+
+
+        // set group timecodes and package infos if all members have the same values
+        for (i = 0; i < mReaders.size(); i++) {
+            if (i == 0) {
+                if (mReaders[i]->mMaterialStartTimecode)
+                    mMaterialStartTimecode = new Timecode(*mReaders[i]->mMaterialStartTimecode);
+                if (mReaders[i]->mFileSourceStartTimecode)
+                    mMaterialStartTimecode = new Timecode(*mReaders[i]->mFileSourceStartTimecode);
+                if (mReaders[i]->mPhysicalSourceStartTimecode)
+                    mMaterialStartTimecode = new Timecode(*mReaders[i]->mPhysicalSourceStartTimecode);
+                mMaterialPackageName = mReaders[i]->mMaterialPackageName;
+                mMaterialPackageUID = mReaders[i]->mMaterialPackageUID;
+                mPhysicalSourcePackageName = mReaders[i]->mPhysicalSourcePackageName;
+            } else {
+    #define CHECK_TIMECODE(tc_var) \
+                if ((tc_var != 0) != (mReaders[i]->tc_var != 0) || \
+                    (tc_var && tc_var != mReaders[i]->tc_var)) \
+                { \
+                    delete tc_var; \
+                    tc_var = 0; \
+                }
+                CHECK_TIMECODE(mMaterialStartTimecode)
+                CHECK_TIMECODE(mFileSourceStartTimecode)
+                CHECK_TIMECODE(mPhysicalSourceStartTimecode)
+                if (mMaterialPackageName != mReaders[i]->mMaterialPackageName)
+                    mMaterialPackageName.clear();
+                if (mMaterialPackageUID != mReaders[i]->mMaterialPackageUID)
+                    mMaterialPackageUID = g_Null_UMID;
+                if (mPhysicalSourcePackageName != mReaders[i]->mPhysicalSourcePackageName)
+                    mPhysicalSourcePackageName.clear();
+            }
+        }
+
+        // set default group read limits
+        SetReadLimits();
+
+        return true;
     }
     catch (const bool &err)
     {
