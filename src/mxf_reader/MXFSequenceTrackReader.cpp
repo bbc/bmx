@@ -350,3 +350,11 @@ void MXFSequenceTrackReader::GetSegmentPosition(int64_t position, MXFTrackReader
     }
 }
 
+void MXFSequenceTrackReader::UpdatePosition(size_t segment_index)
+{
+    IM_ASSERT(!mTrackSegments.empty());
+    IM_ASSERT(segment_index < mTrackSegments.size());
+
+    mPosition = mSegmentOffsets[segment_index] + mTrackSegments[segment_index]->GetPosition();
+}
+

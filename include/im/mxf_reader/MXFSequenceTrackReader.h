@@ -45,6 +45,9 @@ class MXFSequenceReader;
 class MXFSequenceTrackReader : public MXFTrackReader
 {
 public:
+    friend class MXFSequenceReader;
+
+public:
     MXFSequenceTrackReader(MXFSequenceReader *sequence_reader, size_t track_index);
     virtual ~MXFSequenceTrackReader();
 
@@ -94,6 +97,8 @@ public:
 
 private:
     void GetSegmentPosition(int64_t position, MXFTrackReader **segment, int64_t *segment_position) const;
+
+    void UpdatePosition(size_t segment_index);
 
 private:
     MXFSequenceReader *mSequenceReader;

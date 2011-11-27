@@ -463,6 +463,10 @@ uint32_t MXFSequenceReader::Read(uint32_t num_samples, bool is_top)
     // always be positioned num_samples after previous position
     mPosition += num_samples;
 
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++)
+        dynamic_cast<MXFSequenceTrackReader*>(mTrackReaders[i])->UpdatePosition(segment_index);
+
     return total_num_read;
 }
 
