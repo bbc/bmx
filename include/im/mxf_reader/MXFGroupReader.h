@@ -78,6 +78,7 @@ public:
 
 public:
     virtual void SetNextFramePosition(int64_t position);
+    virtual void SetNextFrameTrackPositions();
 
 private:
     std::vector<im::MXFReader*> mReaders;

@@ -37,6 +37,9 @@
 #include <im/ByteArray.h>
 
 
+#define NULL_FRAME_POSITION     (int64_t)(((uint64_t)1)<<63)
+
+
 
 namespace im
 {
@@ -64,6 +67,9 @@ public:
 
 public:
     int64_t position;
+    int64_t track_position;
+    int64_t ec_position;
+
     uint32_t first_sample_offset;
     uint32_t num_samples;
 

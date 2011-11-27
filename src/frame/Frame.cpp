@@ -40,7 +40,9 @@ using namespace im;
 
 Frame::Frame()
 {
-    position = (int64_t)((uint64_t)1<<63);
+    position = NULL_FRAME_POSITION;
+    track_position = NULL_FRAME_POSITION;
+    ec_position = NULL_FRAME_POSITION;
     first_sample_offset = 0;
     num_samples = 0;
     temporal_reordering = false;
@@ -54,6 +56,8 @@ Frame::Frame()
 void Frame::CopyMetadataTo(Frame *to_frame) const
 {
     to_frame->position             = position;
+    to_frame->track_position       = track_position;
+    to_frame->ec_position          = ec_position;
     to_frame->first_sample_offset  = first_sample_offset;
     to_frame->num_samples          = num_samples;
     to_frame->temporal_reordering  = temporal_reordering;

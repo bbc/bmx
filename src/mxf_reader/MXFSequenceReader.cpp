@@ -424,8 +424,10 @@ uint32_t MXFSequenceReader::Read(uint32_t num_samples, bool is_top)
     if (!IsEnabled())
         return 0;
 
-    if (is_top)
+    if (is_top) {
         SetNextFramePosition(mPosition);
+        SetNextFrameTrackPositions();
+    }
 
     MXFGroupReader *segment;
     size_t segment_index;
@@ -524,6 +526,17 @@ void MXFSequenceReader::SetNextFramePosition(int64_t position)
     for (i = 0; i < mTrackReaders.size(); i++) {
         if (mTrackReaders[i]->IsEnabled())
             mTrackReaders[i]->GetFrameBuffer()->SetNextFramePosition(position);
+    }
+}
+
+void MXFSequenceReader::SetNextFrameTrackPositions()
+{
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++) {
+        if (mTrackReaders[i]->IsEnabled()) {
+            mTrackReaders[i]->GetFrameBuffer()->SetNextFrameTrackPosition(
+                mTrackReaders[i]->GetPosition());
+        }
     }
 }
 

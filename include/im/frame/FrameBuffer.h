@@ -61,9 +61,11 @@ public:
     virtual void Clear(bool del_frames) = 0;
 
     void SetNextFramePosition(int64_t position);
+    void SetNextFrameTrackPosition(int64_t position);
 
 protected:
     int64_t mNextFramePosition;
+    int64_t mNextFrameTrackPosition;
 };
 
 

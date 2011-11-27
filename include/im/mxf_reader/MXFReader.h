@@ -102,6 +102,7 @@ public:
 
 public:
     virtual void SetNextFramePosition(int64_t position) = 0;
+    virtual void SetNextFrameTrackPositions() = 0;
 
 protected:
     mxfRational mSampleRate;

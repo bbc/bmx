@@ -40,12 +40,18 @@ using namespace im;
 
 FrameBuffer::FrameBuffer()
 {
-    mNextFramePosition = -1;
+    mNextFramePosition = NULL_FRAME_POSITION;
+    mNextFrameTrackPosition = NULL_FRAME_POSITION;
 }
 
 void FrameBuffer::SetNextFramePosition(int64_t position)
 {
     mNextFramePosition = position;
+}
+
+void FrameBuffer::SetNextFrameTrackPosition(int64_t position)
+{
+    mNextFrameTrackPosition = position;
 }
 
 
@@ -87,6 +93,8 @@ Frame* DefaultFrameBuffer::CreateFrame()
 void DefaultFrameBuffer::PushFrame(Frame *frame)
 {
     frame->position = mNextFramePosition;
+    frame->track_position = mNextFrameTrackPosition;
+
     mFrames.push_back(frame);
 }
 

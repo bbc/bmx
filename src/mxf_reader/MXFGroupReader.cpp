@@ -247,8 +247,10 @@ uint32_t MXFGroupReader::Read(uint32_t num_samples, bool is_top)
 {
     int64_t current_position = GetPosition();
 
-    if (is_top)
+    if (is_top) {
         SetNextFramePosition(current_position);
+        SetNextFrameTrackPositions();
+    }
 
     uint32_t max_read_num_samples = 0;
     size_t i;
@@ -413,6 +415,15 @@ void MXFGroupReader::SetNextFramePosition(int64_t position)
     for (i = 0; i < mReaders.size(); i++) {
         if (mReaders[i]->IsEnabled())
             mReaders[i]->SetNextFramePosition(position);
+    }
+}
+
+void MXFGroupReader::SetNextFrameTrackPositions()
+{
+    size_t i;
+    for (i = 0; i < mReaders.size(); i++) {
+        if (mReaders[i]->IsEnabled())
+            mReaders[i]->SetNextFrameTrackPositions();
     }
 }
 

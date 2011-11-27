@@ -240,8 +240,10 @@ uint32_t MXFSequenceTrackReader::Read(uint32_t num_samples, bool is_top)
     if (!mIsEnabled)
         return 0;
 
-    if (is_top)
-        mFrameBuffer->SetNextFramePosition(mPosition);
+    if (is_top) {
+        mSequenceReader->SetNextFramePosition(mPosition);
+        mSequenceReader->SetNextFrameTrackPositions();
+    }
 
     MXFTrackReader *segment;
     int64_t segment_position;

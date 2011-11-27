@@ -277,6 +277,7 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
             current_file_position = file_position;
 
             if (frame->IsEmpty()) {
+                frame->ec_position         = mPosition;
                 frame->temporal_reordering = mIndexTableHelper.GetTemporalReordering(0);
                 frame->cp_file_position    = current_file_position;
                 frame->file_position       = current_file_position;
@@ -333,6 +334,7 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                         mTrackFrames[track_reader->GetTrackIndex()] = track_reader->GetFrameBuffer()->CreateFrame();
                         frame = mTrackFrames[track_reader->GetTrackIndex()];
 
+                        frame->ec_position         = start_position;
                         frame->temporal_reordering =
                             mIndexTableHelper.GetTemporalReordering(cp_num_read - (mxfKey_extlen + llen));
                         frame->cp_file_position    = cp_file_position;

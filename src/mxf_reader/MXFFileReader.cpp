@@ -433,8 +433,10 @@ uint32_t MXFFileReader::Read(uint32_t num_samples, bool is_top)
 {
     int64_t current_position = GetPosition();
 
-    if (is_top)
+    if (is_top) {
         SetNextFramePosition(current_position);
+        SetNextFrameTrackPositions();
+    }
 
     uint32_t max_num_read = 0;
     if (InternalIsEnabled())
@@ -622,6 +624,17 @@ void MXFFileReader::SetNextFramePosition(int64_t position)
     for (i = 0; i < mTrackReaders.size(); i++) {
         if (mTrackReaders[i]->IsEnabled())
             mTrackReaders[i]->GetFrameBuffer()->SetNextFramePosition(position);
+    }
+}
+
+void MXFFileReader::SetNextFrameTrackPositions()
+{
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++) {
+        if (mTrackReaders[i]->IsEnabled()) {
+            mTrackReaders[i]->GetFrameBuffer()->SetNextFrameTrackPosition(
+                mTrackReaders[i]->GetPosition());
+        }
     }
 }
 
