@@ -149,7 +149,7 @@ uint32_t im::convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes
                 } else {
                     pcm_data_ptr[0] = 0x00;
                     pcm_data_ptr[1] = 0x00;
-                    pcm_data_ptr[3] = 0x00;
+                    pcm_data_ptr[2] = 0x00;
                 }
                 pcm_data_ptr += 3;
                 aes_data_ptr += 4;
