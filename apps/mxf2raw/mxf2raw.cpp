@@ -528,7 +528,8 @@ int main(int argc, const char** argv)
 
                 group_reader->AddReader(file_reader);
             }
-            group_reader->Finalize();
+            if (!group_reader->Finalize())
+                throw false;
 
             reader = group_reader;
         } else if (filenames.size() > 1) {
@@ -545,7 +546,8 @@ int main(int argc, const char** argv)
 
                 seq_reader->AddReader(file_reader);
             }
-            seq_reader->Finalize(false, keep_input_order);
+            if (!seq_reader->Finalize(false, keep_input_order))
+                throw false;
 
             reader = seq_reader;
         } else {
