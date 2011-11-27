@@ -243,13 +243,12 @@ void MXFGroupReader::SetReadLimits(int64_t start_position, int64_t end_position,
         Seek(start_position);
 }
 
-uint32_t MXFGroupReader::Read(uint32_t num_samples, int64_t frame_position_in)
+uint32_t MXFGroupReader::Read(uint32_t num_samples, bool is_top)
 {
     int64_t current_position = GetPosition();
 
-    int64_t frame_position = frame_position_in;
-    if (frame_position_in == CURRENT_POSITION_VALUE)
-        frame_position = current_position;
+    if (is_top)
+        SetNextFramePosition(current_position);
 
     uint32_t max_read_num_samples = 0;
     size_t i;
@@ -269,7 +268,7 @@ uint32_t MXFGroupReader::Read(uint32_t num_samples, int64_t frame_position_in)
                                                                         mSampleSequences[i],
                                                                         mSampleSequenceSizes[i]);
 
-        uint32_t member_num_read = mReaders[i]->Read(member_num_samples, frame_position);
+        uint32_t member_num_read = mReaders[i]->Read(member_num_samples, false);
 
         uint32_t group_num_read = (uint32_t)convert_duration_lower(member_num_read,
                                                                    member_current_position,
@@ -406,5 +405,14 @@ bool MXFGroupReader::IsEnabled() const
     }
 
     return false;
+}
+
+void MXFGroupReader::SetNextFramePosition(int64_t position)
+{
+    size_t i;
+    for (i = 0; i < mReaders.size(); i++) {
+        if (mReaders[i]->IsEnabled())
+            mReaders[i]->SetNextFramePosition(position);
+    }
 }
 

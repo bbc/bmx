@@ -131,7 +131,7 @@ void EssenceReader::SetReadLimits(int64_t start_position, int64_t end_position)
     mReadEndPosition = LegitimisePosition(end_position - 1) + 1;
 }
 
-uint32_t EssenceReader::Read(uint32_t num_samples, int64_t frame_position)
+uint32_t EssenceReader::Read(uint32_t num_samples)
 {
     // init track frames
     size_t i;
@@ -166,9 +166,9 @@ uint32_t EssenceReader::Read(uint32_t num_samples, int64_t frame_position)
     int64_t start_position = mPosition;
 
     if (mFileReader->IsClipWrapped())
-        ReadClipWrappedSamples(read_num_samples, frame_position);
+        ReadClipWrappedSamples(read_num_samples);
     else
-        ReadFrameWrappedSamples(read_num_samples, frame_position);
+        ReadFrameWrappedSamples(read_num_samples);
 
 
     // add information for first sample in frame
@@ -249,14 +249,12 @@ int64_t EssenceReader::LegitimisePosition(int64_t position)
         return position;
 }
 
-void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples, int64_t frame_position)
+void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
 {
     File *mxf_file = mFileReader->mFile;
 
-    if (mFileReader->GetInternalTrackReader(0)->IsEnabled()) {
+    if (mFileReader->GetInternalTrackReader(0)->IsEnabled())
         mTrackFrames[0] = mFileReader->GetInternalTrackReader(0)->GetFrameBuffer()->CreateFrame();
-        mTrackFrames[0]->position = frame_position;
-    }
     Frame *frame = mTrackFrames[0];
 
     int64_t current_file_position = mxf_file->tell();
@@ -300,7 +298,7 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples, int64_t frame_p
     }
 }
 
-void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples, int64_t frame_position)
+void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
 {
     File *mxf_file = mFileReader->mFile;
 
@@ -335,7 +333,6 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples, int64_t frame_
                         mTrackFrames[track_reader->GetTrackIndex()] = track_reader->GetFrameBuffer()->CreateFrame();
                         frame = mTrackFrames[track_reader->GetTrackIndex()];
 
-                        frame->position            = frame_position;
                         frame->temporal_reordering =
                             mIndexTableHelper.GetTemporalReordering(cp_num_read - (mxfKey_extlen + llen));
                         frame->cp_file_position    = cp_file_position;

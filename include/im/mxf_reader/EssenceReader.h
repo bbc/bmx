@@ -56,7 +56,7 @@ public:
 
     void SetReadLimits(int64_t start_position, int64_t end_position);
 
-    uint32_t Read(uint32_t num_samples, int64_t frame_position);
+    uint32_t Read(uint32_t num_samples);
     void Seek(int64_t position);
 
     mxfRational GetEditRate();
@@ -68,8 +68,8 @@ public:
     int64_t LegitimisePosition(int64_t position);
 
 private:
-    void ReadClipWrappedSamples(uint32_t num_samples, int64_t frame_position);
-    void ReadFrameWrappedSamples(uint32_t num_samples, int64_t frame_position);
+    void ReadClipWrappedSamples(uint32_t num_samples);
+    void ReadFrameWrappedSamples(uint32_t num_samples);
 
     void GetEditUnit(int64_t position, int64_t *file_position, int64_t *size);
     void GetEditUnitGroup(int64_t position, uint32_t max_samples, int64_t *file_position, int64_t *size,

@@ -104,9 +104,9 @@ int64_t MXFFileTrackReader::GetReadDuration() const
     return mFileReader->GetReadDuration();
 }
 
-uint32_t MXFFileTrackReader::Read(uint32_t num_samples, int64_t frame_position)
+uint32_t MXFFileTrackReader::Read(uint32_t num_samples, bool is_top)
 {
-    return mFileReader->Read(num_samples, frame_position);
+    return mFileReader->Read(num_samples, is_top);
 }
 
 void MXFFileTrackReader::Seek(int64_t position)
@@ -142,5 +142,10 @@ int16_t MXFFileTrackReader::GetPrecharge(int64_t position, bool limit_to_availab
 int16_t MXFFileTrackReader::GetRollout(int64_t position, bool limit_to_available) const
 {
     return mFileReader->GetInternalRollout(position, limit_to_available);
+}
+
+void MXFFileTrackReader::SetNextFramePosition(int64_t position)
+{
+    mFileReader->SetNextFramePosition(position);
 }
 

@@ -429,17 +429,16 @@ void MXFFileReader::SetReadLimits(int64_t start_position, int64_t end_position, 
         Seek(start_position);
 }
 
-uint32_t MXFFileReader::Read(uint32_t num_samples, int64_t frame_position_in)
+uint32_t MXFFileReader::Read(uint32_t num_samples, bool is_top)
 {
     int64_t current_position = GetPosition();
 
-    int64_t frame_position = frame_position_in;
-    if (frame_position_in == CURRENT_POSITION_VALUE)
-        frame_position = current_position;
+    if (is_top)
+        SetNextFramePosition(current_position);
 
     uint32_t max_num_read = 0;
     if (InternalIsEnabled())
-        max_num_read = mEssenceReader->Read(num_samples, frame_position);
+        max_num_read = mEssenceReader->Read(num_samples);
 
     size_t i;
     for (i = 0; i < mExternalReaders.size(); i++) {
@@ -458,7 +457,7 @@ uint32_t MXFFileReader::Read(uint32_t num_samples, int64_t frame_position_in)
                                                                           mExternalSampleSequences[i],
                                                                           mExternalSampleSequenceSizes[i]);
 
-        uint32_t external_num_read = mExternalReaders[i]->Read(num_external_samples, frame_position);
+        uint32_t external_num_read = mExternalReaders[i]->Read(num_external_samples, false);
 
         uint32_t internal_num_read = (uint32_t)convert_duration_lower(external_num_read,
                                                                       external_current_position,
@@ -615,6 +614,15 @@ bool MXFFileReader::IsEnabled() const
     }
 
     return false;
+}
+
+void MXFFileReader::SetNextFramePosition(int64_t position)
+{
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++) {
+        if (mTrackReaders[i]->IsEnabled())
+            mTrackReaders[i]->GetFrameBuffer()->SetNextFramePosition(position);
+    }
 }
 
 void MXFFileReader::ProcessMetadata(Partition *partition)

@@ -60,7 +60,7 @@ public:
     virtual int64_t GetReadEndPosition() const   { return mReadEndPosition; }
     virtual int64_t GetReadDuration() const      { return mReadEndPosition - mReadStartPosition; }
 
-    virtual uint32_t Read(uint32_t num_samples, int64_t frame_position = CURRENT_POSITION_VALUE);
+    virtual uint32_t Read(uint32_t num_samples, bool is_top = true);
     virtual void Seek(int64_t position);
 
     virtual int64_t GetPosition() const { return mPosition; }
@@ -77,6 +77,9 @@ public:
     virtual MXFTrackReader* GetTrackReader(size_t track_index) const;
 
     virtual bool IsEnabled() const;
+
+public:
+    virtual void SetNextFramePosition(int64_t position);
 
 private:
     bool FindSequenceStart(const std::vector<MXFGroupReader*> &group_readers, size_t *seq_start_index) const;

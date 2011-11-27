@@ -235,14 +235,13 @@ void MXFSequenceTrackReader::SetReadLimits(int64_t start_position, int64_t end_p
         Seek(start_position);
 }
 
-uint32_t MXFSequenceTrackReader::Read(uint32_t num_samples, int64_t frame_position_in)
+uint32_t MXFSequenceTrackReader::Read(uint32_t num_samples, bool is_top)
 {
     if (!mIsEnabled)
         return 0;
 
-    int64_t frame_position = frame_position_in;
-    if (frame_position_in == CURRENT_POSITION_VALUE)
-        frame_position = mPosition;
+    if (is_top)
+        mFrameBuffer->SetNextFramePosition(mPosition);
 
     MXFTrackReader *segment;
     int64_t segment_position;
@@ -255,7 +254,7 @@ uint32_t MXFSequenceTrackReader::Read(uint32_t num_samples, int64_t frame_positi
         if (segment_position != segment->GetPosition())
             segment->Seek(segment_position);
 
-        uint32_t num_read = segment->Read(num_samples - total_num_read, frame_position);
+        uint32_t num_read = segment->Read(num_samples - total_num_read, false);
 
         total_num_read += num_read;
 
@@ -316,6 +315,11 @@ int16_t MXFSequenceTrackReader::GetRollout(int64_t position, bool limit_to_avail
     GetSegmentPosition(position, &segment, &segment_position);
 
     return segment->GetRollout(segment_position, limit_to_available);
+}
+
+void MXFSequenceTrackReader::SetNextFramePosition(int64_t position)
+{
+    mSequenceReader->SetNextFramePosition(position);
 }
 
 SourcePackage* MXFSequenceTrackReader::GetFileSourcePackage() const

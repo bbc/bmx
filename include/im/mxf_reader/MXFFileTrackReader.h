@@ -59,7 +59,7 @@ public:
     virtual int64_t GetReadEndPosition() const;
     virtual int64_t GetReadDuration() const;
 
-    virtual uint32_t Read(uint32_t num_samples, int64_t frame_position = CURRENT_POSITION_VALUE);
+    virtual uint32_t Read(uint32_t num_samples, bool is_top = true);
     virtual void Seek(int64_t position);
 
     virtual int64_t GetPosition() const;
@@ -80,6 +80,9 @@ public:
 public:
     virtual bool IsEnabled() const               { return mIsEnabled; }
     virtual FrameBuffer* GetFrameBuffer() const  { return mFrameBuffer; }
+
+public:
+    virtual void SetNextFramePosition(int64_t position);
 
 private:
     MXFFileReader *mFileReader;

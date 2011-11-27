@@ -419,14 +419,13 @@ void MXFSequenceReader::SetReadLimits(int64_t start_position, int64_t end_positi
         Seek(start_position);
 }
 
-uint32_t MXFSequenceReader::Read(uint32_t num_samples, int64_t frame_position_in)
+uint32_t MXFSequenceReader::Read(uint32_t num_samples, bool is_top)
 {
     if (!IsEnabled())
         return 0;
 
-    int64_t frame_position = frame_position_in;
-    if (frame_position_in == CURRENT_POSITION_VALUE)
-        frame_position = mPosition;
+    if (is_top)
+        SetNextFramePosition(mPosition);
 
     MXFGroupReader *segment;
     size_t segment_index;
@@ -445,7 +444,7 @@ uint32_t MXFSequenceReader::Read(uint32_t num_samples, int64_t frame_position_in
                                                                        mSampleSequences[segment_index],
                                                                        mSampleSequenceSizes[segment_index]);
 
-        uint32_t group_num_read = segment->Read(group_num_samples, frame_position);
+        uint32_t group_num_read = segment->Read(group_num_samples, false);
 
         uint32_t seq_num_read = (uint32_t)convert_duration_lower(group_num_read,
                                                                  segment_position,
@@ -517,6 +516,15 @@ bool MXFSequenceReader::IsEnabled() const
 {
     IM_CHECK(!mGroupSegments.empty());
     return mGroupSegments[0]->IsEnabled();
+}
+
+void MXFSequenceReader::SetNextFramePosition(int64_t position)
+{
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++) {
+        if (mTrackReaders[i]->IsEnabled())
+            mTrackReaders[i]->GetFrameBuffer()->SetNextFramePosition(position);
+    }
 }
 
 bool MXFSequenceReader::FindSequenceStart(const vector<MXFGroupReader*> &group_readers, size_t *seq_start_index_out) const

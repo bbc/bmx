@@ -65,7 +65,7 @@ public:
     virtual int64_t GetReadEndPosition() const = 0;
     virtual int64_t GetReadDuration() const = 0;
 
-    virtual uint32_t Read(uint32_t num_samples, int64_t frame_position = CURRENT_POSITION_VALUE) = 0;
+    virtual uint32_t Read(uint32_t num_samples, bool is_top = true) = 0;
     virtual void Seek(int64_t position) = 0;
 
     virtual int64_t GetPosition() const = 0;
@@ -86,6 +86,9 @@ public:
 public:
     virtual bool IsEnabled() const = 0;
     virtual FrameBuffer* GetFrameBuffer() const = 0;
+
+public:
+    virtual void SetNextFramePosition(int64_t position) = 0;
 };
 
 

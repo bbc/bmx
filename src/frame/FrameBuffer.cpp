@@ -38,6 +38,18 @@ using namespace im;
 
 
 
+FrameBuffer::FrameBuffer()
+{
+    mNextFramePosition = -1;
+}
+
+void FrameBuffer::SetNextFramePosition(int64_t position)
+{
+    mNextFramePosition = position;
+}
+
+
+
 DefaultFrameBuffer::DefaultFrameBuffer()
 {
     mFrameFactory = new DefaultFrameFactory();
@@ -74,6 +86,7 @@ Frame* DefaultFrameBuffer::CreateFrame()
 
 void DefaultFrameBuffer::PushFrame(Frame *frame)
 {
+    frame->position = mNextFramePosition;
     mFrames.push_back(frame);
 }
 
