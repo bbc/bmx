@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2011, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,10 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __IM_MXF_FRAME_H__
-#define __IM_MXF_FRAME_H__
+#ifndef __IM_FRAME_H__
+#define __IM_FRAME_H__
 
 
+#include <im/IMTypes.h>
 #include <im/ByteArray.h>
 
 
@@ -41,99 +42,72 @@ namespace im
 {
 
 
-class MXFFrame
+class Frame
 {
 public:
-    MXFFrame();
-    virtual ~MXFFrame();
-
-public:
-    // read
-
-    bool IsEmpty() const { return mNumSamples == 0; }
+    Frame();
+    virtual ~Frame() {};
 
     virtual uint32_t GetSize() const = 0;
     virtual const unsigned char* GetBytes() const = 0;
-
-    int64_t GetPosition() const { return mPosition; }
-    uint32_t GetFirstSampleOffset() const { return mFirstSampleOffset; }
-    uint32_t GetNumSamples() const { return mNumSamples; }
-
-    bool GetTemporalReordering() const { return mTemporalReordering; }
-    int8_t GetTemporalOffset() const { return mTemporalOffset; }
-    int8_t GetKeyFrameOffset() const { return mKeyFrameOffset; }
-    uint8_t GetFlags() const { return mFlags; }
-
-    int64_t GetCPFilePosition() const { return mCPFilePosition; }
-    int64_t GetFilePosition() const { return mFilePosition; }
-
-public:
-    // write
 
     virtual void Grow(uint32_t min_size) = 0;
     virtual uint32_t GetSizeAvailable() const = 0;
     virtual unsigned char* GetBytesAvailable() const = 0;
     virtual void SetSize(uint32_t size) = 0;
     virtual void IncrementSize(uint32_t inc) = 0;
-    virtual void Complete() = 0;
 
-    virtual void Reset();
+    virtual void CopyMetadataTo(Frame *to_frame) const;
 
-    void SetPosition(int64_t position);
-    void SetFirstSampleOffset(uint32_t offset);
-    void SetNumSamples(uint32_t num_samples);
-    void IncNumSamples(uint32_t num_samples);
+public:
+    bool IsEmpty() const { return num_samples == 0; }
 
-    bool TemporalReorderingWasSet() { return mTemporalReorderingWasSet; }
-    void SetTemporalReordering(bool reorder);
-    void SetTemporalOffset(int8_t offset);
-    void SetKeyFrameOffset(int8_t offset);
-    void SetFlags(uint8_t flags);
+public:
+    int64_t position;
+    uint32_t first_sample_offset;
+    uint32_t num_samples;
 
-    void SetCPFilePosition(int64_t position);
-    void SetFilePosition(int64_t position);
+    bool temporal_reordering;
+    int8_t temporal_offset;
+    int8_t key_frame_offset;
+    uint8_t flags;
 
-    void CopyMetadataTo(MXFFrame *to_frame) const;
-
-private:
-    int64_t mPosition;
-    uint32_t mFirstSampleOffset;
-    uint32_t mNumSamples;
-
-    bool mTemporalReordering;
-    bool mTemporalReorderingWasSet;
-    int8_t mTemporalOffset;
-    int8_t mKeyFrameOffset;
-    uint8_t mFlags;
-
-    int64_t mCPFilePosition;
-    int64_t mFilePosition;
+    int64_t cp_file_position;
+    int64_t file_position;
 };
 
 
-
-class MXFDefaultFrame : public MXFFrame
+class FrameFactory
 {
 public:
-    MXFDefaultFrame();
-    virtual ~MXFDefaultFrame();
+    virtual Frame* CreateFrame() = 0;
+};
 
+
+class DefaultFrame : public Frame
+{
 public:
+    DefaultFrame();
+    virtual ~DefaultFrame();
+
     virtual uint32_t GetSize() const;
     virtual const unsigned char* GetBytes() const;
 
-public:
     virtual void Grow(uint32_t min_size);
     virtual uint32_t GetSizeAvailable() const;
     virtual unsigned char* GetBytesAvailable() const;
     virtual void SetSize(uint32_t size);
     virtual void IncrementSize(uint32_t inc);
-    virtual void Complete() {};
 
-    virtual void Reset();
-
-protected:
+private:
     ByteArray mData;
+};
+
+
+class DefaultFrameFactory : public FrameFactory
+{
+public:
+    virtual Frame* CreateFrame();
 };
 
 

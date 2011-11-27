@@ -35,6 +35,7 @@
 
 #include <vector>
 
+#include <im/frame/Frame.h>
 #include <im/mxf_reader/EssenceChunkHelper.h>
 #include <im/mxf_reader/IndexTableHelper.h>
 
@@ -84,6 +85,8 @@ private:
     int64_t mReadEndPosition;
     int64_t mPosition;
     uint32_t mImageStartOffset;
+
+    std::vector<Frame*> mTrackFrames;
 };
 
 

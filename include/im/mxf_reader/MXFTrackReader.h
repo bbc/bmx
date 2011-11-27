@@ -26,7 +26,7 @@
 
 #include <libMXF++/MXF.h>
 
-#include <im/mxf_reader/MXFFrameBuffer.h>
+#include <im/frame/FrameBuffer.h>
 #include <im/mxf_reader/MXFTrackInfo.h>
 #include <im/mxf_reader/MXFIndexEntryExt.h>
 
@@ -46,7 +46,7 @@ public:
 
     virtual void SetEnable(bool enable) = 0;
 
-    virtual void SetFrameBuffer(MXFFrameBuffer *frame_buffer, bool take_ownership) = 0;
+    virtual void SetFrameBuffer(FrameBuffer *frame_buffer, bool take_ownership) = 0;
 
     virtual void SetReadLimits() = 0;
     virtual void SetReadLimits(int64_t start_position, int64_t end_position, bool seek_start_position) = 0;
@@ -72,13 +72,11 @@ public:
     virtual mxfpp::FileDescriptor* GetFileDescriptor() const = 0;
     virtual mxfpp::SourcePackage* GetFileSourcePackage() const = 0;
 
+    virtual size_t GetTrackIndex() const = 0;
+
 public:
     virtual bool IsEnabled() const = 0;
-
-    virtual MXFFrameBuffer* GetFrameBuffer() = 0;
-    virtual MXFFrame* GetFrame(int64_t position) = 0;
-
-    virtual void Reset(int64_t position) = 0;
+    virtual FrameBuffer* GetFrameBuffer() const = 0;
 };
 
 

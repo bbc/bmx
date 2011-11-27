@@ -199,7 +199,7 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
         if (!group_track->IsEnabled())
             continue;
 
-        MXFSequenceTrackReader *seq_track = new MXFSequenceTrackReader(this);
+        MXFSequenceTrackReader *seq_track = new MXFSequenceTrackReader(this, mTrackReaders.size());
         mTrackReaders.push_back(seq_track);
 
         seq_track->AppendSegment(group_track);
@@ -443,27 +443,12 @@ uint32_t MXFSequenceReader::Read(uint32_t num_samples, int64_t frame_position_in
                                                                  mSampleSequences[segment_index],
                                                                  mSampleSequenceSizes[segment_index]);
 
-        // signal that existing track frames will be extended if this is not the last read
-        if (total_num_read == 0 && seq_num_read < num_samples) {
-            size_t i;
-            for (i = 0; i < mTrackReaders.size(); i++) {
-                if (mTrackReaders[i]->IsEnabled())
-                    mTrackReaders[i]->GetFrameBuffer()->ExtendFrame(frame_position, true);
-            }
-        }
-
         total_num_read += seq_num_read;
 
         prev_segment = segment;
         GetSegmentPosition(mPosition + total_num_read, &segment, &segment_index, &segment_position);
     }
     while (total_num_read < num_samples && segment != prev_segment);
-
-    size_t i;
-    for (i = 0; i < mTrackReaders.size(); i++) {
-        if (mTrackReaders[i]->IsEnabled())
-            mTrackReaders[i]->GetFrameBuffer()->ExtendFrame(frame_position, false);
-    }
 
     // always be positioned num_samples after previous position
     mPosition += num_samples;

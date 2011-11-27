@@ -44,16 +44,17 @@ using namespace mxfpp;
 
 
 
-MXFFileTrackReader::MXFFileTrackReader(MXFFileReader *file_reader, MXFTrackInfo *track_info, FileDescriptor *file_descriptor,
-                                       SourcePackage *file_source_package)
+MXFFileTrackReader::MXFFileTrackReader(MXFFileReader *file_reader, size_t track_index, MXFTrackInfo *track_info,
+                                       FileDescriptor *file_descriptor, SourcePackage *file_source_package)
 {
     mFileReader = file_reader;
+    mTrackIndex = track_index;
     mTrackInfo = track_info;
     mFileDescriptor = file_descriptor;
     mFileSourcePackage = file_source_package;
 
     mIsEnabled = true;
-    mFrameBuffer = new MXFDefaultFrameBuffer();
+    mFrameBuffer = new DefaultFrameBuffer();
     mOwnFrameBuffer = true;
 }
 
@@ -69,7 +70,7 @@ void MXFFileTrackReader::SetEnable(bool enable)
     mIsEnabled = enable;
 }
 
-void MXFFileTrackReader::SetFrameBuffer(MXFFrameBuffer *frame_buffer, bool take_ownership)
+void MXFFileTrackReader::SetFrameBuffer(FrameBuffer *frame_buffer, bool take_ownership)
 {
     if (mOwnFrameBuffer)
         delete mFrameBuffer;
@@ -141,10 +142,5 @@ int16_t MXFFileTrackReader::GetPrecharge(int64_t position, bool limit_to_availab
 int16_t MXFFileTrackReader::GetRollout(int64_t position, bool limit_to_available) const
 {
     return mFileReader->GetInternalRollout(position, limit_to_available);
-}
-
-void MXFFileTrackReader::Reset(int64_t position)
-{
-    mFrameBuffer->ResetFrame(position);
 }
 

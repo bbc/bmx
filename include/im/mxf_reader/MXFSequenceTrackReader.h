@@ -36,7 +36,7 @@ class MXFSequenceReader;
 class MXFSequenceTrackReader : public MXFTrackReader
 {
 public:
-    MXFSequenceTrackReader(MXFSequenceReader *sequence_reader);
+    MXFSequenceTrackReader(MXFSequenceReader *sequence_reader, size_t track_index);
     virtual ~MXFSequenceTrackReader();
 
     bool IsCompatible(MXFTrackReader *segment) const;
@@ -49,7 +49,7 @@ public:
 
 public:
     virtual void SetEnable(bool enable);
-    virtual void SetFrameBuffer(MXFFrameBuffer *frame_buffer, bool take_ownership);
+    virtual void SetFrameBuffer(FrameBuffer *frame_buffer, bool take_ownership);
 
 public:
     virtual void SetReadLimits();
@@ -74,18 +74,18 @@ public:
     virtual mxfpp::FileDescriptor* GetFileDescriptor() const   { return mFileDescriptor; }
     virtual mxfpp::SourcePackage* GetFileSourcePackage() const;
 
+    virtual size_t GetTrackIndex() const { return mTrackIndex; }
+
 public:
     virtual bool IsEnabled() const               { return mIsEnabled; }
-    virtual MXFFrameBuffer* GetFrameBuffer()     { return mFrameBuffer; }
-    virtual MXFFrame* GetFrame(int64_t position) { return mFrameBuffer->GetFrame(position); }
-
-    virtual void Reset(int64_t position);
+    virtual FrameBuffer* GetFrameBuffer() const  { return mFrameBuffer; }
 
 private:
     void GetSegmentPosition(int64_t position, MXFTrackReader **segment, int64_t *segment_position) const;
 
 private:
     MXFSequenceReader *mSequenceReader;
+    size_t mTrackIndex;
     MXFTrackInfo *mTrackInfo;
     mxfpp::FileDescriptor *mFileDescriptor;
     mxfpp::SourcePackage *mFileSourcePackage;
@@ -102,7 +102,7 @@ private:
     std::vector<MXFTrackReader*> mTrackSegments;
     std::vector<int64_t> mSegmentOffsets;
 
-    MXFFrameBuffer *mFrameBuffer;
+    FrameBuffer *mFrameBuffer;
     bool mOwnFrameBuffer;
 };
 

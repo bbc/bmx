@@ -737,8 +737,14 @@ int main(int argc, const char** argv)
                 int file_count = 0;
                 size_t i;
                 for (i = 0; i < reader->GetNumTrackReaders(); i++) {
-                    MXFFrame *frame = reader->GetTrackReader(i)->GetFrame(frame_position);
-                    if (frame && !frame->IsEmpty()) {
+                    while (true) {
+                        Frame *frame = reader->GetTrackReader(i)->GetFrameBuffer()->GetLastFrame(true);
+                        if (!frame)
+                            break;
+                        if (frame->IsEmpty()) {
+                            delete frame;
+                            continue;
+                        }
 
                         if (calc_md5)
                             md5_update(&md5_contexts[i], frame->GetBytes(), frame->GetSize());
@@ -789,6 +795,8 @@ int main(int argc, const char** argv)
                             else
                                 file_count++;
                         }
+
+                        delete frame;
                     }
                 }
             }

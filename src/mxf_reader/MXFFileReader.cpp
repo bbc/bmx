@@ -849,9 +849,10 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
         ProcessSoundDescriptor(file_desc, sound_track_info);
 
 
-    mInternalTrackReaders.push_back(new MXFFileTrackReader(this, track_info, file_desc, file_source_package));
-    mInternalTrackReaderNumberMap[mInternalTrackReaders.back()->GetTrackInfo()->file_track_number] =
-        mInternalTrackReaders.back();
+    MXFFileTrackReader *track_reader = new MXFFileTrackReader(this, mInternalTrackReaders.size(), track_info,
+                                                              file_desc, file_source_package);
+    mInternalTrackReaders.push_back(track_reader);
+    mInternalTrackReaderNumberMap[mInternalTrackReaders.back()->GetTrackInfo()->file_track_number] = track_reader;
 
     return mInternalTrackReaders.back();
 }

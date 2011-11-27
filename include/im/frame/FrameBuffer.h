@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2011, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,11 +29,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __IM_MXF_FRAME_BUFFER_H__
-#define __IM_MXF_FRAME_BUFFER_H__
+#ifndef __IM_FRAME_BUFFER_H__
+#define __IM_FRAME_BUFFER_H__
 
+#include <deque>
 
-#include <im/mxf_reader/MXFFrame.h>
+#include <im/frame/Frame.h>
 
 
 
@@ -41,34 +42,48 @@ namespace im
 {
 
 
-class MXFFrameBuffer
+class FrameBuffer
 {
 public:
-    virtual ~MXFFrameBuffer() {};
+    virtual ~FrameBuffer() {};
 
-    virtual MXFFrame* CreateFrame(int64_t position) = 0;
-    virtual MXFFrame* GetFrame(int64_t position) = 0;
-    virtual void ResetFrame(int64_t position) = 0;
-    virtual void ExtendFrame(int64_t position, bool enable) = 0;
+    virtual void SetFrameFactory(FrameFactory *frame_factory, bool take_ownership) = 0;
+
+    virtual Frame* CreateFrame() = 0;
+
+    virtual void PushFrame(Frame *frame) = 0;
+    virtual void PopFrame(bool del_frame) = 0;
+
+    virtual Frame* GetLastFrame(bool pop) = 0;
+    virtual size_t GetNumFrames() const = 0;
+
+    virtual void Clear(bool del_frames) = 0;
 };
 
 
-
-class MXFDefaultFrameBuffer : public MXFFrameBuffer
+class DefaultFrameBuffer : public FrameBuffer
 {
 public:
-    MXFDefaultFrameBuffer();
-    virtual ~MXFDefaultFrameBuffer();
+    DefaultFrameBuffer();
+    DefaultFrameBuffer(FrameFactory *frame_factory, bool take_ownership);
+    virtual ~DefaultFrameBuffer();
 
-    virtual MXFFrame* CreateFrame(int64_t position);
-    virtual MXFFrame* GetFrame(int64_t position);
-    virtual void ResetFrame(int64_t position);
-    virtual void ExtendFrame(int64_t position, bool enable);
+    virtual void SetFrameFactory(FrameFactory *frame_factory, bool take_ownership);
 
-public:
-    MXFDefaultFrame *mFrame;
-    int64_t mExtendFramePosition;
-    bool mExtendFrame;
+    virtual Frame* CreateFrame();
+
+    virtual void PushFrame(Frame *frame);
+    virtual void PopFrame(bool del_frame);
+
+    virtual Frame* GetLastFrame(bool pop);
+    virtual size_t GetNumFrames() const;
+
+    virtual void Clear(bool del_frames);
+
+private:
+    FrameFactory *mFrameFactory;
+    bool mOwnFrameFactory;
+    std::deque<Frame*> mFrames;
 };
 
 

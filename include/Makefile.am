@@ -14,6 +14,8 @@ nobase_library_include_HEADERS = \
 	im/XMLUtils.h \
 	im/Version.h \
 	im/frame/DataBufferArray.h \
+	im/frame/Frame.h \
+	im/frame/FrameBuffer.h \
 	im/writer_helper/AVCIWriterHelper.h \
 	im/writer_helper/MPEG2LGWriterHelper.h \
 	im/as02/AS02AVCITrack.h \
@@ -91,8 +93,6 @@ nobase_library_include_HEADERS = \
 	im/mxf_reader/IndexTableHelper.h \
 	im/mxf_reader/MXFFileReader.h \
 	im/mxf_reader/MXFFileTrackReader.h \
-	im/mxf_reader/MXFFrame.h \
-	im/mxf_reader/MXFFrameBuffer.h \
 	im/mxf_reader/MXFGroupReader.h \
 	im/mxf_reader/MXFIndexEntryExt.h \
 	im/mxf_reader/MXFPackageResolver.h \

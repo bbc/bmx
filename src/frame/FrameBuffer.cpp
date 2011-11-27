@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2011, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,11 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include <im/mxf_reader/MXFFrameBuffer.h>
+#include <im/frame/FrameBuffer.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
 
@@ -42,53 +38,78 @@ using namespace im;
 
 
 
-MXFDefaultFrameBuffer::MXFDefaultFrameBuffer()
+DefaultFrameBuffer::DefaultFrameBuffer()
 {
-    mFrame = new MXFDefaultFrame();
-    mExtendFramePosition = 0;
-    mExtendFrame = false;
+    mFrameFactory = new DefaultFrameFactory();
+    mOwnFrameFactory = true;
 }
 
-MXFDefaultFrameBuffer::~MXFDefaultFrameBuffer()
+DefaultFrameBuffer::DefaultFrameBuffer(FrameFactory *frame_factory, bool take_ownership)
 {
-    delete mFrame;
+    mFrameFactory = frame_factory;
+    mOwnFrameFactory = take_ownership;
 }
 
-MXFFrame* MXFDefaultFrameBuffer::CreateFrame(int64_t position)
+DefaultFrameBuffer::~DefaultFrameBuffer()
 {
-    if (!mExtendFrame || mExtendFramePosition != position) {
-        mFrame->Reset();
-        mFrame->SetPosition(position);
+    if (mOwnFrameFactory)
+        delete mFrameFactory;
 
-        mExtendFramePosition = 0;
-        mExtendFrame = false;
+    Clear(true);
+}
+
+void DefaultFrameBuffer::SetFrameFactory(FrameFactory *frame_factory, bool take_ownership)
+{
+    if (mOwnFrameFactory)
+        delete mFrameFactory;
+
+    mFrameFactory = frame_factory;
+    mOwnFrameFactory = take_ownership;
+}
+
+Frame* DefaultFrameBuffer::CreateFrame()
+{
+    return mFrameFactory->CreateFrame();
+}
+
+void DefaultFrameBuffer::PushFrame(Frame *frame)
+{
+    mFrames.push_back(frame);
+}
+
+void DefaultFrameBuffer::PopFrame(bool del_frame)
+{
+    if (del_frame && mFrames.front())
+        delete mFrames.front();
+
+    mFrames.pop_front();
+}
+
+Frame* DefaultFrameBuffer::GetLastFrame(bool pop)
+{
+    if (mFrames.empty())
+        return 0;
+
+    Frame *frame = mFrames.front();
+    if (pop)
+        mFrames.pop_front();
+
+    return frame;
+}
+
+size_t DefaultFrameBuffer::GetNumFrames() const
+{
+    return mFrames.size();
+}
+
+void DefaultFrameBuffer::Clear(bool del_frames)
+{
+    if (del_frames) {
+        size_t i;
+        for (i = 0; i < mFrames.size(); i++)
+            delete mFrames[i];
     }
 
-    return mFrame;
-}
-
-MXFFrame* MXFDefaultFrameBuffer::GetFrame(int64_t position)
-{
-    if (mFrame->GetPosition() == position)
-        return mFrame;
-
-    return 0;
-}
-
-void MXFDefaultFrameBuffer::ResetFrame(int64_t position)
-{
-    if (mFrame->GetPosition() == position)
-        mFrame->Reset();
-}
-
-void MXFDefaultFrameBuffer::ExtendFrame(int64_t position, bool enable)
-{
-    if (enable && mFrame->GetPosition() == position) {
-        mExtendFramePosition = position;
-        mExtendFrame = enable;
-    } else {
-        mExtendFramePosition = 0;
-        mExtendFrame = false;
-    }
+    mFrames.clear();
 }
 

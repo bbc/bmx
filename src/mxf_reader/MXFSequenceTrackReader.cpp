@@ -38,9 +38,10 @@ using namespace mxfpp;
 
 
 
-MXFSequenceTrackReader::MXFSequenceTrackReader(MXFSequenceReader *sequence_reader)
+MXFSequenceTrackReader::MXFSequenceTrackReader(MXFSequenceReader *sequence_reader, size_t track_index)
 {
     mSequenceReader = sequence_reader;
+    mTrackIndex = track_index;
     mTrackInfo = 0;
     mFileDescriptor = 0;
     mFileSourcePackage = 0;
@@ -50,7 +51,7 @@ MXFSequenceTrackReader::MXFSequenceTrackReader(MXFSequenceReader *sequence_reade
     mSampleRate = ZERO_RATIONAL;
     mPosition = 0;
     mDuration = 0;
-    mFrameBuffer = new MXFDefaultFrameBuffer();
+    mFrameBuffer = new DefaultFrameBuffer();
     mOwnFrameBuffer = true;
 }
 
@@ -171,7 +172,7 @@ void MXFSequenceTrackReader::SetEnable(bool enable)
         mTrackSegments[i]->SetEnable(enable);
 }
 
-void MXFSequenceTrackReader::SetFrameBuffer(MXFFrameBuffer *frame_buffer, bool take_ownership)
+void MXFSequenceTrackReader::SetFrameBuffer(FrameBuffer *frame_buffer, bool take_ownership)
 {
     if (mOwnFrameBuffer)
         delete mFrameBuffer;
@@ -247,18 +248,12 @@ uint32_t MXFSequenceTrackReader::Read(uint32_t num_samples, int64_t frame_positi
 
         uint32_t num_read = segment->Read(num_samples - total_num_read, frame_position);
 
-        // signal that existing frame will be extended if this is not the last read
-        if (total_num_read == 0 && num_read < num_samples)
-            mFrameBuffer->ExtendFrame(frame_position, true);
-
         total_num_read += num_read;
 
         prev_segment = segment;
         GetSegmentPosition(mPosition + total_num_read, &segment, &segment_position);
     }
     while (total_num_read < num_samples && segment != prev_segment);
-
-    mFrameBuffer->ExtendFrame(frame_position, false);
 
 
     // always be positioned num_samples after previous position
@@ -318,11 +313,6 @@ SourcePackage* MXFSequenceTrackReader::GetFileSourcePackage() const
 {
     IM_CHECK(mFileSourcePackage);
     return mFileSourcePackage;
-}
-
-void MXFSequenceTrackReader::Reset(int64_t position)
-{
-    mFrameBuffer->ResetFrame(position);
 }
 
 void MXFSequenceTrackReader::GetSegmentPosition(int64_t position, MXFTrackReader **segment,

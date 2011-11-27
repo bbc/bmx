@@ -118,6 +118,9 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
 
 EssenceReader::~EssenceReader()
 {
+    size_t i;
+    for (i = 0; i < mTrackFrames.size(); i++)
+        delete mTrackFrames[i];
 }
 
 void EssenceReader::SetReadLimits(int64_t start_position, int64_t end_position)
@@ -130,6 +133,13 @@ void EssenceReader::SetReadLimits(int64_t start_position, int64_t end_position)
 
 uint32_t EssenceReader::Read(uint32_t num_samples, int64_t frame_position)
 {
+    // init track frames
+    size_t i;
+    for (i = 0; i < mTrackFrames.size(); i++)
+        delete mTrackFrames[i];
+    mTrackFrames.clear();
+    mTrackFrames.assign(mFileReader->GetNumInternalTrackReaders(), 0);
+
     // check read limits
     if (mReadStartPosition == mReadEndPosition ||
         mPosition >= mReadEndPosition ||
@@ -153,11 +163,6 @@ uint32_t EssenceReader::Read(uint32_t num_samples, int64_t frame_position)
     IM_ASSERT(read_num_samples > 0);
 
 
-    size_t i;
-    for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++)
-        mFileReader->GetInternalTrackReader(i)->Reset(frame_position);
-
-
     int64_t start_position = mPosition;
 
     if (mFileReader->IsClipWrapped())
@@ -176,27 +181,23 @@ uint32_t EssenceReader::Read(uint32_t num_samples, int64_t frame_position)
     mIndexTableHelper.GetEditUnit(start_position, &temporal_offset, &key_frame_offset,
                                   &flags, &index_offset, &index_size);
 
-    MXFFrame *frame;
+    Frame *frame;
     for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
-        if (mFileReader->GetInternalTrackReader(i)->IsEnabled()) {
-            frame = mFileReader->GetInternalTrackReader(i)->GetFrameBuffer()->GetFrame(frame_position);
-            if (frame) {
-                frame->SetFirstSampleOffset(first_sample_offset);
-                frame->SetTemporalOffset(temporal_offset);
-                frame->SetKeyFrameOffset(key_frame_offset);
-                frame->SetFlags(flags);
-            }
+        frame = mTrackFrames[i];
+        if (frame) {
+            frame->first_sample_offset = first_sample_offset;
+            frame->temporal_offset     = temporal_offset;
+            frame->key_frame_offset    = key_frame_offset;
+            frame->flags               = flags;
         }
     }
 
 
-    // signal that frame is complete
-
+    // complete and push frames
     for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
-        if (mFileReader->GetInternalTrackReader(i)->IsEnabled()) {
-            frame = mFileReader->GetInternalTrackReader(i)->GetFrameBuffer()->GetFrame(frame_position);
-            if (frame)
-                frame->Complete();
+        if (mTrackFrames[i]) {
+            mFileReader->GetInternalTrackReader(i)->GetFrameBuffer()->PushFrame(mTrackFrames[i]);
+            mTrackFrames[i] = 0;
         }
     }
 
@@ -215,6 +216,10 @@ void EssenceReader::Seek(int64_t position)
         GetEditUnit(position, &file_position, &size);
         mFileReader->mFile->seek(file_position, SEEK_SET);
     }
+
+    size_t i;
+    for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++)
+        mFileReader->GetInternalTrackReader(i)->GetFrameBuffer()->Clear(true);
 
     mPosition = position;
 }
@@ -248,9 +253,11 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples, int64_t frame_p
 {
     File *mxf_file = mFileReader->mFile;
 
-    MXFFrame *frame = 0;
-    if (mFileReader->GetInternalTrackReader(0)->IsEnabled())
-        frame = mFileReader->GetInternalTrackReader(0)->GetFrameBuffer()->CreateFrame(frame_position);
+    if (mFileReader->GetInternalTrackReader(0)->IsEnabled()) {
+        mTrackFrames[0] = mFileReader->GetInternalTrackReader(0)->GetFrameBuffer()->CreateFrame();
+        mTrackFrames[0]->position = frame_position;
+    }
+    Frame *frame = mTrackFrames[0];
 
     int64_t current_file_position = mxf_file->tell();
     uint32_t total_num_samples = 0;
@@ -272,11 +279,9 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples, int64_t frame_p
             current_file_position = file_position;
 
             if (frame->IsEmpty()) {
-                frame->SetCPFilePosition(current_file_position);
-                frame->SetFilePosition(current_file_position);
-
-                if (!frame->TemporalReorderingWasSet())
-                    frame->SetTemporalReordering(mIndexTableHelper.GetTemporalReordering(0));
+                frame->temporal_reordering = mIndexTableHelper.GetTemporalReordering(0);
+                frame->cp_file_position    = current_file_position;
+                frame->file_position       = current_file_position;
             }
 
             frame->Grow(size);
@@ -284,7 +289,7 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples, int64_t frame_p
             current_file_position += num_read;
             IM_CHECK(num_read == size);
             frame->IncrementSize(size);
-            frame->IncNumSamples(num_cont_samples);
+            frame->num_samples += num_cont_samples;
         } else {
             mxf_file->seek(file_position + size, SEEK_SET);
             current_file_position = file_position + size;
@@ -322,16 +327,20 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples, int64_t frame_
             if (mxf_is_gc_essence_element(&key) || mxf_avid_is_essence_element(&key)) {
                 uint32_t track_number = mxf_get_track_number(&key);
                 MXFTrackReader *track_reader = 0;
-                MXFFrame *frame = 0;
+                Frame *frame = 0;
                 if (enabled_track_readers.find(track_number) == enabled_track_readers.end()) {
                     // frame does not yet exist - create it if track is enabled
                     track_reader = mFileReader->GetInternalTrackReaderByNumber(track_number);
                     if (start_position == mPosition && track_reader && track_reader->IsEnabled()) {
-                        frame = track_reader->GetFrameBuffer()->CreateFrame(frame_position);
-                        if (frame->IsEmpty()) { // frame is not empty if it is being extended
-                            frame->SetCPFilePosition(cp_file_position);
-                            frame->SetFilePosition(cp_file_position + cp_num_read);
-                        }
+                        mTrackFrames[track_reader->GetTrackIndex()] = track_reader->GetFrameBuffer()->CreateFrame();
+                        frame = mTrackFrames[track_reader->GetTrackIndex()];
+
+                        frame->position            = frame_position;
+                        frame->temporal_reordering =
+                            mIndexTableHelper.GetTemporalReordering(cp_num_read - (mxfKey_extlen + llen));
+                        frame->cp_file_position    = cp_file_position;
+                        frame->file_position       = cp_file_position + cp_num_read;
+
                         enabled_track_readers[track_number] = track_reader;
                     } else {
                         enabled_track_readers[track_number] = 0;
@@ -340,20 +349,15 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples, int64_t frame_
                     // frame exists if track is enabled - get it
                     track_reader = enabled_track_readers[track_number];
                     if (track_reader)
-                        frame = track_reader->GetFrame(frame_position);
+                        frame = mTrackFrames[track_reader->GetTrackIndex()];
                 }
 
                 if (frame) {
-                    if (!frame->TemporalReorderingWasSet()) {
-                        frame->SetTemporalReordering(
-                            mIndexTableHelper.GetTemporalReordering(cp_num_read - (mxfKey_extlen + llen)));
-                    }
-
                     frame->Grow(len);
                     uint32_t num_read = mxf_file->read(frame->GetBytesAvailable(), len);
                     IM_CHECK(num_read == len);
                     frame->IncrementSize(len);
-                    frame->IncNumSamples(1);
+                    frame->num_samples++;
                 } else {
                     mxf_file->skip(len);
                 }

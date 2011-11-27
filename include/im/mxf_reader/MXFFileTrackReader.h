@@ -36,12 +36,12 @@ class MXFFileReader;
 class MXFFileTrackReader : public MXFTrackReader
 {
 public:
-    MXFFileTrackReader(MXFFileReader *file_reader, MXFTrackInfo *track_info, mxfpp::FileDescriptor *file_descriptor,
-                       mxfpp::SourcePackage *file_source_package);
+    MXFFileTrackReader(MXFFileReader *file_reader, size_t track_index, MXFTrackInfo *track_info,
+                       mxfpp::FileDescriptor *file_descriptor, mxfpp::SourcePackage *file_source_package);
     virtual ~MXFFileTrackReader();
 
     virtual void SetEnable(bool enable);
-    virtual void SetFrameBuffer(MXFFrameBuffer *frame_buffer, bool take_ownership);
+    virtual void SetFrameBuffer(FrameBuffer *frame_buffer, bool take_ownership);
 
 public:
     virtual void SetReadLimits();
@@ -66,22 +66,22 @@ public:
     virtual mxfpp::FileDescriptor* GetFileDescriptor() const { return mFileDescriptor; }
     virtual mxfpp::SourcePackage* GetFileSourcePackage() const { return mFileSourcePackage; }
 
-public:
-    virtual bool IsEnabled() const { return mIsEnabled; }
-    virtual MXFFrameBuffer* GetFrameBuffer() { return mFrameBuffer; }
-    virtual MXFFrame* GetFrame(int64_t position) { return mFrameBuffer->GetFrame(position); }
+    virtual size_t GetTrackIndex() const { return mTrackIndex; }
 
-    virtual void Reset(int64_t position);
+public:
+    virtual bool IsEnabled() const               { return mIsEnabled; }
+    virtual FrameBuffer* GetFrameBuffer() const  { return mFrameBuffer; }
 
 private:
     MXFFileReader *mFileReader;
+    size_t mTrackIndex;
     MXFTrackInfo *mTrackInfo;
     mxfpp::FileDescriptor *mFileDescriptor;
     mxfpp::SourcePackage *mFileSourcePackage;
 
     bool mIsEnabled;
 
-    MXFFrameBuffer *mFrameBuffer;
+    FrameBuffer *mFrameBuffer;
     bool mOwnFrameBuffer;
 };
 
