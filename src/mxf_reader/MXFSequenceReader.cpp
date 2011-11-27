@@ -503,6 +503,10 @@ void MXFSequenceReader::Seek(int64_t position)
     segment->Seek(segment_position);
 
     mPosition = position;
+
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++)
+        dynamic_cast<MXFSequenceTrackReader*>(mTrackReaders[i])->UpdatePosition(segment_index);
 }
 
 int16_t MXFSequenceReader::GetMaxPrecharge(int64_t position, bool limit_to_available) const
