@@ -725,10 +725,8 @@ int main(int argc, const char** argv)
             // read data
             im::ByteArray sound_buffer;
             int64_t total_num_read = 0;
-            int64_t frame_position = 0;
             while (true)
             {
-                frame_position = reader->GetPosition();
                 uint32_t num_read = reader->Read(max_samples_per_read);
                 if (num_read == 0)
                     break;
