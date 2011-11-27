@@ -112,7 +112,7 @@ uint32_t im::convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes
 
     IM_CHECK(sample_count <= (aes3_data_size - 4) / (8 * 4)); // 4 bytes per sample, 8 channels
     IM_CHECK(bytes_per_sample == 2 || bytes_per_sample == 3); // only 16-bit to 24-bit sample size allowed
-    IM_CHECK(channel_count < 8);
+    IM_CHECK(channel_count <= 8);
     IM_CHECK(pcm_data_size >= channel_count * bytes_per_sample * sample_count);
 
     const unsigned char *aes_data_ptr = &aes3_data[4];
