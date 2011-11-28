@@ -229,7 +229,7 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
                 // append group track to first available and compatible sequence track
                 size_t k;
                 for (k = 0; k < mTrackReaders.size(); k++) {
-                    MXFSequenceTrackReader *seq_track = dynamic_cast<MXFSequenceTrackReader*>(mTrackReaders[k]);
+                    MXFSequenceTrackReader *seq_track = mTrackReaders[k];
                     if (seq_track->GetNumSegments() != i)
                         continue; // incomplete track or new segment already appended
 
@@ -278,7 +278,7 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
 
         // delete incomplete tracks
         for (i = 0; i < mTrackReaders.size(); i++) {
-            MXFSequenceTrackReader *seq_track = dynamic_cast<MXFSequenceTrackReader*>(mTrackReaders[i]);
+            MXFSequenceTrackReader *seq_track = mTrackReaders[i];
             if (seq_track->GetNumSegments() != mGroupSegments.size()) {
                 if (check_is_complete) {
                     log_error("Incomplete track sequence\n");
@@ -286,9 +286,9 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
                 }
 
                 // first disable track in groups
-                mTrackReaders[i]->SetEnable(false);
+                seq_track->SetEnable(false);
 
-                delete mTrackReaders[i];
+                delete seq_track;
                 mTrackReaders.erase(mTrackReaders.begin() + i);
                 i--;
             }
@@ -433,7 +433,7 @@ void MXFSequenceReader::SetReadLimits(int64_t start_position, int64_t end_positi
 
     UpdateReadLimits();
     for (i = 0; i < mTrackReaders.size(); i++)
-        dynamic_cast<MXFSequenceTrackReader*>(mTrackReaders[i])->UpdateReadLimits();
+        mTrackReaders[i]->UpdateReadLimits();
 
 
     if (seek_start_position)
@@ -486,7 +486,7 @@ uint32_t MXFSequenceReader::Read(uint32_t num_samples, bool is_top)
 
     size_t i;
     for (i = 0; i < mTrackReaders.size(); i++)
-        dynamic_cast<MXFSequenceTrackReader*>(mTrackReaders[i])->UpdatePosition(segment_index);
+        mTrackReaders[i]->UpdatePosition(segment_index);
 
     return total_num_read;
 }
@@ -506,7 +506,7 @@ void MXFSequenceReader::Seek(int64_t position)
 
     size_t i;
     for (i = 0; i < mTrackReaders.size(); i++)
-        dynamic_cast<MXFSequenceTrackReader*>(mTrackReaders[i])->UpdatePosition(segment_index);
+        mTrackReaders[i]->UpdatePosition(segment_index);
 }
 
 int16_t MXFSequenceReader::GetMaxPrecharge(int64_t position, bool limit_to_available) const

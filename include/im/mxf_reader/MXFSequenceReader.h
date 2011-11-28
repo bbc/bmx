@@ -35,6 +35,7 @@
 #include <vector>
 
 #include <im/mxf_reader/MXFReader.h>
+#include <im/mxf_reader/MXFSequenceTrackReader.h>
 
 
 
@@ -92,7 +93,7 @@ private:
     std::vector<im::MXFReader*> mReaders;
     std::vector<im::MXFGroupReader*> mGroupSegments;
 
-    std::vector<im::MXFTrackReader*> mTrackReaders;
+    std::vector<im::MXFSequenceTrackReader*> mTrackReaders;
 
     int64_t mReadStartPosition;
     int64_t mReadEndPosition;
