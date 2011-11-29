@@ -204,6 +204,7 @@ AC_CONFIG_FILES([
 	src/avid_mxf/Makefile
 	src/d10_mxf/Makefile
 	src/as11/Makefile
+	src/clip_writer/Makefile
 	test/Makefile
 	test/as02/Makefile
 	test/as11/Makefile
@@ -218,6 +219,7 @@ AC_CONFIG_FILES([
 	apps/raw2avidmxf/Makefile
 	apps/raw2d10mxf/Makefile
 	apps/raw2as11/Makefile
+	apps/raw2bmx/Makefile
     libbmx.pc])
 
 AC_OUTPUT

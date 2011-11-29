@@ -29,13 +29,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __FRAMEWORK_HELPER_H__
-#define __FRAMEWORK_HELPER_H__
+#ifndef __AS11_HELPER_H__
+#define __AS11_HELPER_H__
 
 #include <string>
 
 #include <libMXF++/MXF.h>
 
+#include <im/as11/AS11Clip.h>
+
+
+
+namespace im
+{
+
+
+typedef enum
+{
+    AS11_CORE_FRAMEWORK_TYPE,
+    DPP_FRAMEWORK_TYPE,
+} FrameworkType;
 
 
 typedef struct
@@ -50,6 +63,14 @@ typedef struct
     mxfKey set_key;
     const PropertyInfo *property_info;
 } FrameworkInfo;
+
+typedef struct
+{
+    FrameworkType type;
+    std::string name;
+    std::string value;
+} FrameworkProperty;
+
 
 
 class FrameworkHelper
@@ -68,6 +89,15 @@ private:
     const FrameworkInfo *mFrameworkInfo;
 };
 
+
+
+bool parse_framework_type(const char *fwork_str, FrameworkType *type);
+bool parse_framework_file(const char *filename, FrameworkType type, std::vector<FrameworkProperty> *properties);
+bool parse_segmentation_file(const char *filename, Rational frame_rate, std::vector<AS11TCSegment> *segments,
+                             bool *filler_complete_segments);
+
+
+};
 
 
 #endif

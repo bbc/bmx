@@ -45,13 +45,13 @@
 #include <libMXF++/MXFException.h>
 
 #include <im/as11/AS11Clip.h>
-#include "FrameworkHelper.h"
 #include <im/essence_parser/DVEssenceParser.h>
 #include <im/essence_parser/MPEG2EssenceParser.h>
 #include <im/essence_parser/AVCIRawEssenceReader.h>
 #include <im/essence_parser/RawEssenceReader.h>
 #include <im/MXFUtils.h>
 #include "../AppUtils.h"
+#include "../AS11Helper.h"
 #include <im/IMException.h>
 #include <im/Logging.h>
 
@@ -60,19 +60,6 @@ using namespace im;
 using namespace mxfpp;
 
 
-
-typedef enum
-{
-    AS11_CORE_FRAMEWORK_TYPE,
-    DPP_FRAMEWORK_TYPE,
-} FrameworkType;
-
-typedef struct
-{
-    FrameworkType type;
-    string name;
-    string value;
-} FrameworkProperty;
 
 typedef enum
 {
@@ -188,26 +175,6 @@ static void clear_input(RawInput *input)
     delete input->raw_reader;
 }
 
-static string trim_string(string value)
-{
-    size_t start;
-    size_t len;
-
-    // trim spaces from the start
-    start = 0;
-    while (start < value.size() && isspace(value[start]))
-        start++;
-    if (start >= value.size())
-        return "";
-
-    // trim spaces from the end by reducing the length
-    len = value.size() - start;
-    while (len > 0 && isspace(value[start + len - 1]))
-        len--;
-
-    return value.substr(start, len);
-}
-
 static bool parse_clip_type(const char *clip_type_str, AS11ClipType *clip_type)
 {
     if (strcmp(clip_type_str, "op1a") == 0)
@@ -216,169 +183,6 @@ static bool parse_clip_type(const char *clip_type_str, AS11ClipType *clip_type)
         *clip_type = AS11_D10_CLIP_TYPE;
     else
         return false;
-
-    return true;
-}
-
-static bool parse_framework_type(const char *fwork_str, FrameworkType *type)
-{
-    if (strcmp(fwork_str, "as11") == 0)
-        *type = AS11_CORE_FRAMEWORK_TYPE;
-    else if (strcmp(fwork_str, "dpp") == 0)
-        *type = DPP_FRAMEWORK_TYPE;
-    else
-        return false;
-
-    return true;
-}
-
-static bool parse_framework_file(const char *filename, FrameworkType type, vector<FrameworkProperty> *properties)
-{
-    FILE *file = fopen(filename, "rb");
-    if (!file) {
-        fprintf(stderr, "Failed to open file '%s': %s\n", filename, strerror(errno));
-        return false;
-    }
-
-    int line_num = 0;
-    int c = '1';
-    while (c != EOF) {
-        // move file pointer past the newline characters
-        while ((c = fgetc(file)) != EOF && (c == '\r' || c == '\n')) {
-            if (c == '\n')
-                line_num++;
-        }
-
-        FrameworkProperty property;
-        property.type = type;
-        bool parse_name = true;
-        while (c != EOF && (c != '\r' && c != '\n')) {
-            if (c == ':' && parse_name) {
-                parse_name = false;
-            } else {
-                if (parse_name)
-                    property.name += c;
-                else
-                    property.value += c;
-            }
-
-            c = fgetc(file);
-        }
-        if (!property.name.empty()) {
-            if (parse_name) {
-                fprintf(stderr, "Failed to parse line %d\n", line_num);
-                fclose(file);
-                return false;
-            }
-
-            property.name = trim_string(property.name);
-            property.value = trim_string(property.value);
-            properties->push_back(property);
-        }
-
-        if (c == '\n')
-            line_num++;
-    }
-
-    fclose(file);
-
-    return true;
-}
-
-static bool parse_segmentation_file(const char *filename, Rational frame_rate, vector<AS11TCSegment> *segments,
-                                    bool *filler_complete_segments)
-{
-    FILE *file = fopen(filename, "rb");
-    if (!file) {
-        fprintf(stderr, "Failed to open file '%s': %s\n", filename, strerror(errno));
-        return false;
-    }
-
-    bool last_tc_xx = false;
-    int line_num = 0;
-    int c = '1';
-    while (c != EOF) {
-        // move file pointer past the newline characters
-        while ((c = fgetc(file)) != EOF && (c == '\r' || c == '\n')) {
-            if (c == '\n')
-                line_num++;
-        }
-
-        AS11TCSegment segment;
-        segment.start.Init(frame_rate, false);
-
-        string part_number_string;
-        string tc_pair_string;
-        int space_count = 0;
-        size_t second_tc_start = 0;
-        while (c != EOF && (c != '\r' && c != '\n')) {
-            if (space_count < 2) {
-                tc_pair_string += c;
-                if (c == ' ') {
-                    if (space_count == 0)
-                        second_tc_start = tc_pair_string.size();
-                    space_count++;
-                }
-                if (space_count == 2) {
-                    last_tc_xx = false;
-
-                    Timecode end;
-                    if (!parse_timecode(tc_pair_string.c_str(), frame_rate, &segment.start)) {
-                        fprintf(stderr, "Failed to parse 1st timecode on line %d\n", line_num);
-                        fclose(file);
-                        return false;
-                    }
-                    if (!parse_timecode(&tc_pair_string[second_tc_start], frame_rate, &end)) {
-                        if (trim_string(&tc_pair_string[second_tc_start]) != "xx:xx:xx:xx") {
-                            fprintf(stderr, "Failed to parse 2nd timecode on line %d\n", line_num);
-                            fclose(file);
-                            return false;
-                        }
-
-                        // segment extends to package duration
-                        last_tc_xx = true;
-                        segment.duration = 0;
-                    } else {
-                        segment.duration = end.GetOffset() - segment.start.GetOffset() + 1;
-                        if (segment.duration < 0) // assume crossed midnight
-                            segment.duration += end.GetMaxOffset();
-                    }
-                }
-            } else {
-                part_number_string += c;
-            }
-
-            c = fgetc(file);
-        }
-        if (!tc_pair_string.empty()) {
-            if (space_count != 2) {
-                fprintf(stderr, "Failed to parse line %d\n", line_num);
-                fclose(file);
-                return false;
-            }
-
-            int pnum, ptotal;
-            if (sscanf(part_number_string.c_str(), "%d/%d", &pnum, &ptotal) != 2 ||
-                pnum < 0 || ptotal <= 0)
-            {
-                fprintf(stderr, "Failed to parse valid part number on line %d\n", line_num);
-                fclose(file);
-                return false;
-            }
-            segment.part_number = pnum;
-            segment.part_total = ptotal;
-
-            segments->push_back(segment);
-        }
-
-        if (c == '\n')
-            line_num++;
-    }
-
-    *filler_complete_segments = !last_tc_xx;
-
-
-    fclose(file);
 
     return true;
 }

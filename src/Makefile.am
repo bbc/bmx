@@ -1,6 +1,6 @@
 SUBDIRS = common frame essence_parser writer_helper mxf_helper \
-	mxf_reader as02 mxf_op1a d10_mxf as11 avid_mxf
-# mov_writer mov_reader mxf_atom wave clip_writer
+	mxf_reader as02 mxf_op1a d10_mxf as11 avid_mxf clip_writer
+# mov_writer mov_reader mxf_atom wave
 
 
 lib_LTLIBRARIES = libbmx-@BMX_MAJORMINOR@.la
@@ -20,6 +20,7 @@ libbmx_@BMX_MAJORMINOR@_la_LIBADD = \
 	avid_mxf/libavidmxf.la \
 	d10_mxf/libd10mxf.la \
 	as11/libas11.la \
+	clip_writer/libclipwriter.la \
 	$(BMX_LIBADDLIBS)
 
 
