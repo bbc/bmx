@@ -174,6 +174,23 @@ void AS11Clip::SetPartitionInterval(int64_t frame_count)
     }
 }
 
+void AS11Clip::SetProductInfo(string company_name, string product_name, mxfProductVersion product_version,
+                              string version, mxfUUID product_uid)
+{
+    switch (mType)
+    {
+        case AS11_OP1A_CLIP_TYPE:
+            mOP1AClip->SetProductInfo(company_name, product_name, product_version, version, product_uid);
+            break;
+        case AS11_D10_CLIP_TYPE:
+            mD10Clip->SetProductInfo(company_name, product_name, product_version, version, product_uid);
+            break;
+        case AS11_UNKNOWN_CLIP_TYPE:
+            IM_ASSERT(false);
+            break;
+    }
+}
+
 void AS11Clip::SetOutputStartOffset(int64_t offset)
 {
     switch (mType)

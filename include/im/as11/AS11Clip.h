@@ -79,6 +79,8 @@ public:
     void SetClipName(std::string name);                // default ""
     void SetStartTimecode(Timecode start_timecode);    // default 00:00:00:00 non-drop
     void SetPartitionInterval(int64_t frame_count);    // default 0 (single partition)
+    void SetProductInfo(std::string company_name, std::string product_name, mxfProductVersion product_version,
+                        std::string version, mxfUUID product_uid);
 
     void SetOutputStartOffset(int64_t offset);
     void SetOutputEndOffset(int64_t offset);
