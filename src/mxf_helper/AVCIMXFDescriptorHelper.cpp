@@ -75,8 +75,6 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
     {MXF_CMDEF_L(AVCI_50_720_60_P),     MXFDescriptorHelper::AVCI50_720P,     {30000, 1001},  116736,  0x0},
 };
 
-#define SUPPORTED_ESSENCE_SIZE  (sizeof(SUPPORTED_ESSENCE) / sizeof(SupportedEssence))
-
 
 
 MXFDescriptorHelper::EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
@@ -99,7 +97,7 @@ MXFDescriptorHelper::EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescri
 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
             SUPPORTED_ESSENCE[i].sample_rate == sample_rate)
         {
@@ -113,7 +111,7 @@ MXFDescriptorHelper::EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescri
 bool AVCIMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -146,7 +144,7 @@ void AVCIMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL 
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
             SUPPORTED_ESSENCE[i].sample_rate == sample_rate)
         {
@@ -304,7 +302,7 @@ mxfUL AVCIMXFDescriptorHelper::ChooseEssenceContainerUL() const
 void AVCIMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate)
         {
@@ -313,6 +311,6 @@ void AVCIMXFDescriptorHelper::UpdateEssenceIndex()
             break;
         }
     }
-    IM_CHECK(i < SUPPORTED_ESSENCE_SIZE);
+    IM_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 

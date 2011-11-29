@@ -66,8 +66,6 @@ static const EssenceTypeMap ESSENCE_TYPE_MAP[] =
     {D10_PCM,              MXFDescriptorHelper::WAVE_PCM},
 };
 
-#define ESSENCE_TYPE_MAP_SIZE   (sizeof(ESSENCE_TYPE_MAP) / sizeof(EssenceTypeMap))
-
 
 typedef struct
 {
@@ -83,14 +81,12 @@ static const D10SampleRateSupport D10_SAMPLE_RATE_SUPPORT[] =
     {D10_PCM,        {{48000, 1}, {0, 0}}},
 };
 
-#define D10_SAMPLE_RATE_SUPPORT_SIZE     (sizeof(D10_SAMPLE_RATE_SUPPORT) / sizeof(D10SampleRateSupport))
-
 
 
 bool D10Track::IsSupported(D10EssenceType essence_type, mxfRational sample_rate)
 {
     size_t i;
-    for (i = 0; i < D10_SAMPLE_RATE_SUPPORT_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(D10_SAMPLE_RATE_SUPPORT); i++) {
         if (essence_type == D10_SAMPLE_RATE_SUPPORT[i].essence_type) {
             size_t j = 0;
             while (D10_SAMPLE_RATE_SUPPORT[i].sample_rate[j].numerator) {
@@ -107,7 +103,7 @@ bool D10Track::IsSupported(D10EssenceType essence_type, mxfRational sample_rate)
 MXFDescriptorHelper::EssenceType D10Track::ConvertEssenceType(D10EssenceType d10_essence_type)
 {
     size_t i;
-    for (i = 0; i < ESSENCE_TYPE_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
         if (ESSENCE_TYPE_MAP[i].d10_essence_type == d10_essence_type)
             return ESSENCE_TYPE_MAP[i].mh_essence_type;
     }
@@ -118,7 +114,7 @@ MXFDescriptorHelper::EssenceType D10Track::ConvertEssenceType(D10EssenceType d10
 D10EssenceType D10Track::ConvertEssenceType(MXFDescriptorHelper::EssenceType mh_essence_type)
 {
     size_t i;
-    for (i = 0; i < ESSENCE_TYPE_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
         if (ESSENCE_TYPE_MAP[i].mh_essence_type == mh_essence_type)
             return ESSENCE_TYPE_MAP[i].d10_essence_type;
     }

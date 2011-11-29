@@ -34,6 +34,7 @@
 #endif
 
 #include <im/mxf_helper/WaveMXFDescriptorHelper.h>
+#include <im/Utils.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
 
@@ -60,8 +61,6 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
     {MXF_EC_L(AES3ClipWrapped),     MXFDescriptorHelper::WAVE_PCM,     false},
 };
 
-#define SUPPORTED_ESSENCE_SIZE  (sizeof(SUPPORTED_ESSENCE) / sizeof(SupportedEssence))
-
 
 
 MXFDescriptorHelper::EssenceType WaveMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
@@ -69,7 +68,7 @@ MXFDescriptorHelper::EssenceType WaveMXFDescriptorHelper::IsSupported(FileDescri
 {
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label) ||
             (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
                 mxf_equals_ul_mod_regver(&alternative_ec_label, &SUPPORTED_ESSENCE[i].ec_label)))
@@ -84,7 +83,7 @@ MXFDescriptorHelper::EssenceType WaveMXFDescriptorHelper::IsSupported(FileDescri
 bool WaveMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -111,7 +110,7 @@ void WaveMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL 
 
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label) ||
             (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
                 mxf_equals_ul_mod_regver(&alternative_ec_label, &SUPPORTED_ESSENCE[i].ec_label)))
@@ -121,7 +120,7 @@ void WaveMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL 
             break;
         }
     }
-    IM_ASSERT(i < SUPPORTED_ESSENCE_SIZE);
+    IM_ASSERT(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 
 void WaveMXFDescriptorHelper::SetSequenceOffset(uint8_t offset)

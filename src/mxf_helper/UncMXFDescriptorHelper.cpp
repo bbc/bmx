@@ -114,8 +114,6 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
     {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P,  true,  {60000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,   0x07d4},
 };
 
-#define SUPPORTED_ESSENCE_SIZE  (sizeof(SUPPORTED_ESSENCE) / sizeof(SupportedEssence))
-
 
 
 MXFDescriptorHelper::EssenceType UncMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
@@ -131,7 +129,7 @@ MXFDescriptorHelper::EssenceType UncMXFDescriptorHelper::IsSupported(FileDescrip
 bool UncMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -145,7 +143,7 @@ size_t UncMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descriptor, 
     mxfUL ec_label = file_descriptor->getEssenceContainer();
 
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].sample_rate != sample_rate)
             continue;
 
@@ -453,7 +451,7 @@ mxfUL UncMXFDescriptorHelper::ChooseEssenceContainerUL() const
 bool UncMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate &&
             SUPPORTED_ESSENCE[i].frame_wrapped == mFrameWrapped)

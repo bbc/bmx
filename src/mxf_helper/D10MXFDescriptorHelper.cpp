@@ -83,8 +83,6 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
     {MXF_CMDEF_L(D10_50_525_60),    MXF_EC_L(AvidIMX50_525_60),                MXFDescriptorHelper::D10_50,   {30000, 1001},   false,   0xa0,   208896, 720,    256,    13, {7, 270}},
 };
 
-#define SUPPORTED_ESSENCE_SIZE  (sizeof(SUPPORTED_ESSENCE) / sizeof(SupportedEssence))
-
 
 
 MXFDescriptorHelper::EssenceType D10MXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
@@ -99,7 +97,7 @@ MXFDescriptorHelper::EssenceType D10MXFDescriptorHelper::IsSupported(FileDescrip
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
             (mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label) ||
                 (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
@@ -116,7 +114,7 @@ MXFDescriptorHelper::EssenceType D10MXFDescriptorHelper::IsSupported(FileDescrip
 bool D10MXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -149,7 +147,7 @@ void D10MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL a
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
             (mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label) ||
                 (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
@@ -276,7 +274,7 @@ mxfUL D10MXFDescriptorHelper::ChooseEssenceContainerUL() const
 void D10MXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate &&
             SUPPORTED_ESSENCE[i].frame_wrapped == mFrameWrapped &&
@@ -287,6 +285,6 @@ void D10MXFDescriptorHelper::UpdateEssenceIndex()
             break;
         }
     }
-    IM_CHECK(i < SUPPORTED_ESSENCE_SIZE);
+    IM_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 

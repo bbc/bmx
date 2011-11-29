@@ -35,6 +35,7 @@
 
 #include <im/essence_parser/MPEG2EssenceParser.h>
 #include "EssenceParserUtils.h"
+#include <im/Utils.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
 
@@ -60,8 +61,6 @@ static const AspectRatioMap ASPECT_RATIO_MAP[] =
     {0x03,  {16, 9}},
 };
 
-#define ASPECT_RATIO_MAP_SIZE   (sizeof(ASPECT_RATIO_MAP) / sizeof(AspectRatioMap))
-
 
 typedef struct
 {
@@ -80,8 +79,6 @@ static const FrameRateMap FRAME_RATE_MAP[] =
     {0x07,  {60000, 1001}},
     {0x08,  {60,    1}},
 };
-
-#define FRAME_RATE_MAP_SIZE   (sizeof(FRAME_RATE_MAP) / sizeof(FrameRateMap))
 
 
 
@@ -176,7 +173,7 @@ void MPEG2EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data
             uint8_t aspect_ratio_info = get_bits(data, data_size, (offset - 3) * 8 + 56, 4);
             mHaveKnownAspectRatio = false;
             mAspectRatio = ZERO_RATIONAL;
-            for (i = 0; i < ASPECT_RATIO_MAP_SIZE; i++) {
+            for (i = 0; i < ARRAY_SIZE(ASPECT_RATIO_MAP); i++) {
                 if (aspect_ratio_info == ASPECT_RATIO_MAP[i].info) {
                     mHaveKnownAspectRatio = true;
                     mAspectRatio = ASPECT_RATIO_MAP[i].aspect_ratio;
@@ -186,7 +183,7 @@ void MPEG2EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data
 
             uint8_t frame_rate_code = get_bits(data, data_size, (offset - 3) * 8 + 60, 4);
             mFrameRate = ZERO_RATIONAL;
-            for (i = 0; i < FRAME_RATE_MAP_SIZE; i++) {
+            for (i = 0; i < ARRAY_SIZE(FRAME_RATE_MAP); i++) {
                 if (frame_rate_code == FRAME_RATE_MAP[i].code) {
                     mFrameRate = FRAME_RATE_MAP[i].frame_rate;
                     break;

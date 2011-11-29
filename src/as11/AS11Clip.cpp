@@ -63,8 +63,6 @@ static const AS11ClipTypeStringMap AS11_CLIP_TYPE_STRING_MAP[] =
     {AS11_D10_CLIP_TYPE,      "D10"},
 };
 
-#define AS11_CLIP_TYPE_STRING_MAP_SIZE    (sizeof(AS11_CLIP_TYPE_STRING_MAP) / sizeof(AS11ClipTypeStringMap))
-
 
 
 static int64_t get_offset(uint16_t to_tc_base, uint16_t from_tc_base, int64_t from_offset)
@@ -87,7 +85,7 @@ AS11Clip* AS11Clip::OpenNewD10Clip(string filename, Rational frame_rate)
 string AS11Clip::AS11ClipTypeToString(AS11ClipType clip_type)
 {
     size_t i;
-    for (i = 0; i < AS11_CLIP_TYPE_STRING_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(AS11_CLIP_TYPE_STRING_MAP); i++) {
         if (clip_type == AS11_CLIP_TYPE_STRING_MAP[i].type)
             return AS11_CLIP_TYPE_STRING_MAP[i].str;
     }

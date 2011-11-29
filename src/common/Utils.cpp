@@ -75,8 +75,6 @@ static const SampleSequence SAMPLE_SEQUENCES[] =
     {{60000, 1001}, {48000,1}, {801,  801,  801,  800,  801,  801, 801, 800, 801, 801, 0}},
 };
 
-#define SAMPLE_SEQUENCES_SIZE   (sizeof(SAMPLE_SEQUENCES) / sizeof(SampleSequence))
-
 
 
 int64_t im::convert_position(int64_t in_position, int64_t factor_top, int64_t factor_bottom, Rounding rounding)
@@ -162,7 +160,7 @@ bool im::get_sample_sequence(Rational lower_edit_rate, Rational higher_edit_rate
             } else {
                 // try known sample sequences
                 size_t i;
-                for (i = 0; i < SAMPLE_SEQUENCES_SIZE; i++) {
+                for (i = 0; i < ARRAY_SIZE(SAMPLE_SEQUENCES); i++) {
                     if (lower_edit_rate == SAMPLE_SEQUENCES[i].lower_edit_rate &&
                         higher_edit_rate == SAMPLE_SEQUENCES[i].higher_edit_rate)
                     {

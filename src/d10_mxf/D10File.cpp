@@ -77,14 +77,12 @@ static const EssenceContainerULTable ESS_CONTAINER_UL_TABLE[] =
     {D10_MPEG_50,   {30000, 1001},  MXF_EC_L(D10_50_525_60_defined_template)},
 };
 
-#define ESS_CONTAINER_UL_TABLE_SIZE (sizeof(ESS_CONTAINER_UL_TABLE) / sizeof(EssenceContainerULTable))
-
 
 
 static mxfUL get_essence_container_ul(D10EssenceType essence_type, mxfRational frame_rate)
 {
     size_t i;
-    for (i = 0; i < ESS_CONTAINER_UL_TABLE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(ESS_CONTAINER_UL_TABLE); i++) {
         if (ESS_CONTAINER_UL_TABLE[i].essence_type == essence_type &&
             ESS_CONTAINER_UL_TABLE[i].frame_rate == frame_rate)
         {

@@ -124,8 +124,6 @@ static const EssenceTypeMap ESSENCE_TYPE_MAP[] =
     {AVID_PCM,                  MXFDescriptorHelper::WAVE_PCM},
 };
 
-#define ESSENCE_TYPE_MAP_SIZE   (sizeof(ESSENCE_TYPE_MAP) / sizeof(EssenceTypeMap))
-
 
 typedef struct
 {
@@ -183,14 +181,12 @@ static const AvidSampleRateSupport AVID_SAMPLE_RATE_SUPPORT[] =
     {AVID_PCM,                false,    {{48000, 1}, {0, 0}}},
 };
 
-#define AVID_SAMPLE_RATE_SUPPORT_SIZE     (sizeof(AVID_SAMPLE_RATE_SUPPORT) / sizeof(AvidSampleRateSupport))
-
 
 
 bool AvidTrack::IsSupported(AvidEssenceType essence_type, bool is_mpeg2lg_720p, mxfRational sample_rate)
 {
     size_t i;
-    for (i = 0; i < AVID_SAMPLE_RATE_SUPPORT_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(AVID_SAMPLE_RATE_SUPPORT); i++) {
         if (essence_type == AVID_SAMPLE_RATE_SUPPORT[i].essence_type &&
             is_mpeg2lg_720p == AVID_SAMPLE_RATE_SUPPORT[i].is_mpeg2lg_720p)
         {
@@ -209,7 +205,7 @@ bool AvidTrack::IsSupported(AvidEssenceType essence_type, bool is_mpeg2lg_720p, 
 MXFDescriptorHelper::EssenceType AvidTrack::ConvertEssenceType(AvidEssenceType avid_essence_type)
 {
     size_t i;
-    for (i = 0; i < ESSENCE_TYPE_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
         if (ESSENCE_TYPE_MAP[i].avid_essence_type == avid_essence_type)
             return ESSENCE_TYPE_MAP[i].mh_essence_type;
     }
@@ -220,7 +216,7 @@ MXFDescriptorHelper::EssenceType AvidTrack::ConvertEssenceType(AvidEssenceType a
 AvidEssenceType AvidTrack::ConvertEssenceType(MXFDescriptorHelper::EssenceType mh_essence_type)
 {
     size_t i;
-    for (i = 0; i < ESSENCE_TYPE_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
         if (ESSENCE_TYPE_MAP[i].mh_essence_type == mh_essence_type)
             return ESSENCE_TYPE_MAP[i].avid_essence_type;
     }

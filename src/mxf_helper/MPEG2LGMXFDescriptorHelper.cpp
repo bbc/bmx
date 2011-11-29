@@ -70,8 +70,6 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
     {MXF_CMDEF_L(MPEG2_MP_H14_LONGGOP),     MXFDescriptorHelper::MPEG2LG_MP_H14,    {60000, 1001},  0x00},
 };
 
-#define SUPPORTED_ESSENCE_SIZE  (sizeof(SUPPORTED_ESSENCE) / sizeof(SupportedEssence))
-
 
 
 MXFDescriptorHelper::EssenceType MPEG2LGMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
@@ -94,7 +92,7 @@ MXFDescriptorHelper::EssenceType MPEG2LGMXFDescriptorHelper::IsSupported(FileDes
 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
             SUPPORTED_ESSENCE[i].sample_rate == sample_rate)
         {
@@ -108,7 +106,7 @@ MXFDescriptorHelper::EssenceType MPEG2LGMXFDescriptorHelper::IsSupported(FileDes
 bool MPEG2LGMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -141,7 +139,7 @@ void MPEG2LGMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxf
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate)
         {
@@ -319,7 +317,7 @@ mxfUL MPEG2LGMXFDescriptorHelper::ChooseEssenceContainerUL() const
 void MPEG2LGMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate)
         {
@@ -328,6 +326,6 @@ void MPEG2LGMXFDescriptorHelper::UpdateEssenceIndex()
             break;
         }
     }
-    IM_CHECK(i < SUPPORTED_ESSENCE_SIZE);
+    IM_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 

@@ -72,8 +72,6 @@ static const char *RESULT_STRINGS[] =
     "general error",
 };
 
-#define RESULT_STRINGS_SIZE     (sizeof(RESULT_STRINGS) / sizeof(char*))
-
 #define THROW_RESULT(result) \
 { \
     log_warn("Open error '%s' near %s:%d\n", #result, __FILE__, __LINE__); \
@@ -133,7 +131,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(string filename, MXFPackageResolve
 MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename, MXFPackageResolver *resolver,
                                               bool resolver_take_ownership, MXFFileReader **file_reader)
 {
-    IM_ASSERT(MXF_RESULT_FAIL + 1 == RESULT_STRINGS_SIZE);
+    IM_ASSERT(MXF_RESULT_FAIL + 1 == ARRAY_SIZE(RESULT_STRINGS));
 
     try
     {
@@ -177,7 +175,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename, MXFPa
 string MXFFileReader::ResultToString(OpenResult result)
 {
     size_t index = (size_t)(result);
-    IM_ASSERT(index < RESULT_STRINGS_SIZE);
+    IM_ASSERT(index < ARRAY_SIZE(RESULT_STRINGS));
 
     return RESULT_STRINGS[index];
 }

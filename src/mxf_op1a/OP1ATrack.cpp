@@ -99,8 +99,6 @@ static const EssenceTypeMap ESSENCE_TYPE_MAP[] =
     {OP1A_PCM,              MXFDescriptorHelper::WAVE_PCM},
 };
 
-#define ESSENCE_TYPE_MAP_SIZE   (sizeof(ESSENCE_TYPE_MAP) / sizeof(EssenceTypeMap))
-
 
 typedef struct
 {
@@ -147,14 +145,12 @@ static const OP1ASampleRateSupport OP1A_SAMPLE_RATE_SUPPORT[] =
     {OP1A_PCM,                false,    {{48000, 1}, {0, 0}}},
 };
 
-#define OP1A_SAMPLE_RATE_SUPPORT_SIZE     (sizeof(OP1A_SAMPLE_RATE_SUPPORT) / sizeof(OP1ASampleRateSupport))
-
 
 
 bool OP1ATrack::IsSupported(OP1AEssenceType essence_type, bool is_mpeg2lg_720p, mxfRational sample_rate)
 {
     size_t i;
-    for (i = 0; i < OP1A_SAMPLE_RATE_SUPPORT_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(OP1A_SAMPLE_RATE_SUPPORT); i++) {
         if (essence_type == OP1A_SAMPLE_RATE_SUPPORT[i].essence_type &&
             is_mpeg2lg_720p == OP1A_SAMPLE_RATE_SUPPORT[i].is_mpeg2lg_720p)
         {
@@ -173,7 +169,7 @@ bool OP1ATrack::IsSupported(OP1AEssenceType essence_type, bool is_mpeg2lg_720p, 
 MXFDescriptorHelper::EssenceType OP1ATrack::ConvertEssenceType(OP1AEssenceType op1a_essence_type)
 {
     size_t i;
-    for (i = 0; i < ESSENCE_TYPE_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
         if (ESSENCE_TYPE_MAP[i].op1a_essence_type == op1a_essence_type)
             return ESSENCE_TYPE_MAP[i].mh_essence_type;
     }
@@ -184,7 +180,7 @@ MXFDescriptorHelper::EssenceType OP1ATrack::ConvertEssenceType(OP1AEssenceType o
 OP1AEssenceType OP1ATrack::ConvertEssenceType(MXFDescriptorHelper::EssenceType mh_essence_type)
 {
     size_t i;
-    for (i = 0; i < ESSENCE_TYPE_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
         if (ESSENCE_TYPE_MAP[i].mh_essence_type == mh_essence_type)
             return ESSENCE_TYPE_MAP[i].op1a_essence_type;
     }

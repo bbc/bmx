@@ -99,8 +99,6 @@ static const EssenceTypeMap ESSENCE_TYPE_MAP[] =
     {AS02_PCM,              MXFDescriptorHelper::WAVE_PCM},
 };
 
-#define ESSENCE_TYPE_MAP_SIZE   (sizeof(ESSENCE_TYPE_MAP) / sizeof(EssenceTypeMap))
-
 
 typedef struct
 {
@@ -137,8 +135,6 @@ static const AS02SampleRateSupport AS02_SAMPLE_RATE_SUPPORT[] =
     {AS02_PCM,                false,    {{48000,1}, {0, 0}}},
 };
 
-#define AS02_SAMPLE_RATE_SUPPORT_SIZE     (sizeof(AS02_SAMPLE_RATE_SUPPORT) / sizeof(AS02SampleRateSupport))
-
 
 
 static string get_track_clip_name(string &clip_name, bool is_video, uint32_t track_number)
@@ -154,7 +150,7 @@ static string get_track_clip_name(string &clip_name, bool is_video, uint32_t tra
 bool AS02Track::IsSupported(AS02EssenceType essence_type, bool is_mpeg2lg_720p, mxfRational sample_rate)
 {
     size_t i;
-    for (i = 0; i < AS02_SAMPLE_RATE_SUPPORT_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(AS02_SAMPLE_RATE_SUPPORT); i++) {
         if (essence_type == AS02_SAMPLE_RATE_SUPPORT[i].essence_type &&
             is_mpeg2lg_720p == AS02_SAMPLE_RATE_SUPPORT[i].is_mpeg2lg_720p)
         {
@@ -173,7 +169,7 @@ bool AS02Track::IsSupported(AS02EssenceType essence_type, bool is_mpeg2lg_720p, 
 MXFDescriptorHelper::EssenceType AS02Track::ConvertEssenceType(AS02EssenceType as02_essence_type)
 {
     size_t i;
-    for (i = 0; i < ESSENCE_TYPE_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
         if (ESSENCE_TYPE_MAP[i].as02_essence_type == as02_essence_type)
             return ESSENCE_TYPE_MAP[i].mh_essence_type;
     }
@@ -184,7 +180,7 @@ MXFDescriptorHelper::EssenceType AS02Track::ConvertEssenceType(AS02EssenceType a
 AS02EssenceType AS02Track::ConvertEssenceType(MXFDescriptorHelper::EssenceType mh_essence_type)
 {
     size_t i;
-    for (i = 0; i < ESSENCE_TYPE_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
         if (ESSENCE_TYPE_MAP[i].mh_essence_type == mh_essence_type)
             return ESSENCE_TYPE_MAP[i].as02_essence_type;
     }

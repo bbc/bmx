@@ -36,6 +36,7 @@
 #include <cstring>
 
 #include <im/mxf_helper/VC3MXFDescriptorHelper.h>
+#include <im/Utils.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
 
@@ -77,8 +78,6 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
     {MXF_CMDEF_L(VC3_1080P_1253),  MXFDescriptorHelper::VC3_1080P_1253, 1253,   8,  188416, 1920,   1080,   {42, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080p1253ClipWrapped)},
 };
 
-#define SUPPORTED_ESSENCE_SIZE  (sizeof(SUPPORTED_ESSENCE) / sizeof(SupportedEssence))
-
 
 
 MXFDescriptorHelper::EssenceType VC3MXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
@@ -101,7 +100,7 @@ MXFDescriptorHelper::EssenceType VC3MXFDescriptorHelper::IsSupported(FileDescrip
 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label))
             return SUPPORTED_ESSENCE[i].essence_type;
     }
@@ -112,7 +111,7 @@ MXFDescriptorHelper::EssenceType VC3MXFDescriptorHelper::IsSupported(FileDescrip
 bool VC3MXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -123,11 +122,11 @@ bool VC3MXFDescriptorHelper::IsSupported(EssenceType essence_type)
 bool VC3MXFDescriptorHelper::IsAvidDNxHD(FileDescriptor *file_descriptor, mxfUL alternative_ec_label, size_t *index)
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&alternative_ec_label, &SUPPORTED_ESSENCE[i].avid_ec_label))
             break;
     }
-    if (i >= SUPPORTED_ESSENCE_SIZE)
+    if (i >= ARRAY_SIZE(SUPPORTED_ESSENCE))
         return false;
 
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
@@ -170,7 +169,7 @@ void VC3MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL a
         GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
         mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
         size_t i;
-        for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+        for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
             if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label)) {
                 mEssenceIndex = i;
                 mEssenceType = SUPPORTED_ESSENCE[i].essence_type;
@@ -186,14 +185,14 @@ void VC3MXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
     IM_ASSERT(!mFileDescriptor);
 
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == essence_type) {
             mEssenceIndex = i;
             mAvidResolutionId = SUPPORTED_ESSENCE[i].resolution_id;
             break;
         }
     }
-    IM_CHECK(i < SUPPORTED_ESSENCE_SIZE);
+    IM_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 
     PictureMXFDescriptorHelper::SetEssenceType(essence_type);
 }

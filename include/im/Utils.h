@@ -39,6 +39,9 @@
 #include <im/IMTypes.h>
 
 
+#define ARRAY_SIZE(array)   (sizeof(array) / sizeof((array)[0]))
+
+
 
 namespace im
 {

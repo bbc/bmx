@@ -95,8 +95,6 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
     {MXF_CMDEF_L(DVBased_100_720_60_P),     MXF_EC_L(DVBased_100_720_60_P_ClipWrapped),    MXFDescriptorHelper::DV100_720P,       {30000, 1001},   false,   0x00,  240000,  2,  1,  1280,   720,    960,    {26, 0},    MXF_COLOR_SITING_REC601,        MXF_FULL_FRAME,        MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ},
 };
 
-#define SUPPORTED_ESSENCE_SIZE  (sizeof(SUPPORTED_ESSENCE) / sizeof(SupportedEssence))
-
 
 
 MXFDescriptorHelper::EssenceType DVMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
@@ -113,7 +111,7 @@ MXFDescriptorHelper::EssenceType DVMXFDescriptorHelper::IsSupported(FileDescript
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)))
         {
             // legacy Avid files use the wrong essence container label
@@ -140,7 +138,7 @@ MXFDescriptorHelper::EssenceType DVMXFDescriptorHelper::IsSupported(FileDescript
 bool DVMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -173,7 +171,7 @@ void DVMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL al
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)))
         {
             // legacy Avid files use the wrong essence container label
@@ -193,7 +191,7 @@ void DVMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL al
             break;
         }
     }
-    if (i < SUPPORTED_ESSENCE_SIZE) {
+    if (i < ARRAY_SIZE(SUPPORTED_ESSENCE)) {
         mEssenceIndex = i;
         mEssenceType = SUPPORTED_ESSENCE[i].essence_type;
         mFrameWrapped = SUPPORTED_ESSENCE[i].frame_wrapped;
@@ -291,7 +289,7 @@ mxfUL DVMXFDescriptorHelper::ChooseEssenceContainerUL() const
 void DVMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate &&
             SUPPORTED_ESSENCE[i].frame_wrapped == mFrameWrapped)
@@ -301,6 +299,6 @@ void DVMXFDescriptorHelper::UpdateEssenceIndex()
             break;
         }
     }
-    IM_CHECK(i < SUPPORTED_ESSENCE_SIZE);
+    IM_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 

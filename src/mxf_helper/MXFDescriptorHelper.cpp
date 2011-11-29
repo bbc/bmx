@@ -36,6 +36,7 @@
 #include <im/mxf_helper/MXFDescriptorHelper.h>
 #include <im/mxf_helper/PictureMXFDescriptorHelper.h>
 #include <im/mxf_helper/SoundMXFDescriptorHelper.h>
+#include <im/Utils.h>
 #include <im/IMTypes.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
@@ -102,8 +103,6 @@ static const EssenceTypeStringMap ESSENCE_TYPE_STRING_MAP[] =
     {MXFDescriptorHelper::WAVE_PCM,                 "WAVE PCM"},
 };
 
-#define ESSENCE_TYPE_STRING_MAP_SIZE    (sizeof(ESSENCE_TYPE_STRING_MAP) / sizeof(EssenceTypeStringMap))
-
 
 
 MXFDescriptorHelper::EssenceType MXFDescriptorHelper::IsSupported(mxfpp::FileDescriptor *file_descriptor,
@@ -141,7 +140,7 @@ MXFDescriptorHelper* MXFDescriptorHelper::Create(EssenceType essence_type)
 
 string MXFDescriptorHelper::EssenceTypeToString(EssenceType essence_type)
 {
-    IM_ASSERT((size_t)essence_type < ESSENCE_TYPE_STRING_MAP_SIZE);
+    IM_ASSERT((size_t)essence_type < ARRAY_SIZE(ESSENCE_TYPE_STRING_MAP));
     IM_ASSERT(ESSENCE_TYPE_STRING_MAP[essence_type].essence_type == essence_type);
 
     return ESSENCE_TYPE_STRING_MAP[essence_type].str;
@@ -149,7 +148,7 @@ string MXFDescriptorHelper::EssenceTypeToString(EssenceType essence_type)
 
 MXFDescriptorHelper::MXFDescriptorHelper()
 {
-    IM_ASSERT(ESSENCE_TYPE_STRING_MAP_SIZE - 1 == WAVE_PCM);
+    IM_ASSERT(ARRAY_SIZE(ESSENCE_TYPE_STRING_MAP) - 1 == WAVE_PCM);
 
     mSampleRate = FRAME_RATE_25;
     mFrameWrapped = true;

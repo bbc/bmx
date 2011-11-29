@@ -79,8 +79,6 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
     {MXF_CMDEF_L(AvidMJPEG151s_NTSC),   MXFDescriptorHelper::MJPEG_15_1S,   {30000, 1001},  g_AvidMJPEG151s_ResolutionID,   {16, 0},    352, 248, 5, MXF_SINGLE_FIELD},
 };
 
-#define SUPPORTED_ESSENCE_SIZE  (sizeof(SUPPORTED_ESSENCE) / sizeof(SupportedEssence))
-
 
 
 MXFDescriptorHelper::EssenceType MJPEGMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
@@ -102,7 +100,7 @@ MXFDescriptorHelper::EssenceType MJPEGMXFDescriptorHelper::IsSupported(FileDescr
 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label)) {
             IM_CHECK(SUPPORTED_ESSENCE[i].sample_rate == sample_rate);
             return SUPPORTED_ESSENCE[i].essence_type;
@@ -115,7 +113,7 @@ MXFDescriptorHelper::EssenceType MJPEGMXFDescriptorHelper::IsSupported(FileDescr
 bool MJPEGMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -145,7 +143,7 @@ void MJPEGMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label)) {
             mEssenceIndex = i;
             mEssenceType = SUPPORTED_ESSENCE[i].essence_type;
@@ -238,7 +236,7 @@ mxfUL MJPEGMXFDescriptorHelper::ChooseEssenceContainerUL() const
 void MJPEGMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
-    for (i = 0; i < SUPPORTED_ESSENCE_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate)
         {
@@ -247,6 +245,6 @@ void MJPEGMXFDescriptorHelper::UpdateEssenceIndex()
             break;
         }
     }
-    IM_CHECK(i < SUPPORTED_ESSENCE_SIZE);
+    IM_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 

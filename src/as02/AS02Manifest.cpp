@@ -74,8 +74,6 @@ static const FileRoleNameMap FILE_ROLE_NAME_MAP[] =
     {CAPTION_FILE_ROLE,             "caption"},
 };
 
-#define FILE_ROLE_NAME_MAP_SIZE     (sizeof(FILE_ROLE_NAME_MAP) / sizeof(FileRoleNameMap))
-
 
 typedef struct
 {
@@ -91,8 +89,6 @@ static const MICTypeNameMap MIC_TYPE_NAME_MAP[] =
     {HMAC_SHA1_MIC_TYPE,    "hmac-sha1"},
 };
 
-#define MIC_TYPE_NAME_MAP_SIZE      (sizeof(MIC_TYPE_NAME_MAP) / sizeof(MICTypeNameMap))
-
 
 typedef struct
 {
@@ -106,14 +102,12 @@ static const MICScopeNameMap MIC_SCOPE_NAME_MAP[] =
     {ENTIRE_FILE_MIC_SCOPE,    "entire_file"},
 };
 
-#define MIC_SCOPE_NAME_MAP_SIZE    (sizeof(MIC_SCOPE_NAME_MAP) / sizeof(MICScopeNameMap))
-
 
 
 static string get_xml_file_role_name(FileRole role)
 {
     size_t i;
-    for (i = 0; i < FILE_ROLE_NAME_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(FILE_ROLE_NAME_MAP); i++) {
         if (FILE_ROLE_NAME_MAP[i].role == role)
             return FILE_ROLE_NAME_MAP[i].name;
     }
@@ -125,7 +119,7 @@ static string get_xml_file_role_name(FileRole role)
 static string get_xml_mic_type_name(MICType type)
 {
     size_t i;
-    for (i = 0; i < MIC_TYPE_NAME_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(MIC_TYPE_NAME_MAP); i++) {
         if (MIC_TYPE_NAME_MAP[i].type == type)
             return MIC_TYPE_NAME_MAP[i].name;
     }
@@ -137,7 +131,7 @@ static string get_xml_mic_type_name(MICType type)
 static string get_xml_mic_scope_name(MICScope scope)
 {
     size_t i;
-    for (i = 0; i < MIC_SCOPE_NAME_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(MIC_SCOPE_NAME_MAP); i++) {
         if (MIC_SCOPE_NAME_MAP[i].scope == scope)
             return MIC_SCOPE_NAME_MAP[i].name;
     }

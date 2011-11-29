@@ -35,6 +35,7 @@
 
 #include <im/essence_parser/VC3EssenceParser.h>
 #include "EssenceParserUtils.h"
+#include <im/Utils.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
 
@@ -69,8 +70,6 @@ static const CompressionParameters COMPRESSION_PARAMETERS[] =
     {1252,  true,   1280,   720,    8,   303104},
     {1253,  true,   1920,   1080,   8,   188416},
 };
-
-#define COMPRESSION_PARAMETERS_SIZE     (sizeof(COMPRESSION_PARAMETERS) / sizeof(CompressionParameters))
 
 
 
@@ -148,7 +147,7 @@ uint32_t VC3EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
     uint32_t compression_id = get_uint32(data + 40);
 
     size_t i;
-    for (i = 0; i < COMPRESSION_PARAMETERS_SIZE; i++)
+    for (i = 0; i < ARRAY_SIZE(COMPRESSION_PARAMETERS); i++)
     {
         if (compression_id == COMPRESSION_PARAMETERS[i].compression_id) {
             if (data_size >= COMPRESSION_PARAMETERS[i].frame_size)
@@ -173,12 +172,12 @@ void VC3EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
     // compression id
     mCompressionId = get_uint32(data + 40);
     size_t param_index;
-    for (param_index = 0; param_index < COMPRESSION_PARAMETERS_SIZE; param_index++)
+    for (param_index = 0; param_index < ARRAY_SIZE(COMPRESSION_PARAMETERS); param_index++)
     {
         if (mCompressionId == COMPRESSION_PARAMETERS[param_index].compression_id)
             break;
     }
-    IM_CHECK(param_index < COMPRESSION_PARAMETERS_SIZE);
+    IM_CHECK(param_index < ARRAY_SIZE(COMPRESSION_PARAMETERS));
 
     // coding control A
     uint32_t ffc_bits = get_bits(data, data_size, 5 * 8 + 6, 2);

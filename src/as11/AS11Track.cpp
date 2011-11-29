@@ -86,8 +86,6 @@ static const EssenceTypeMap ESSENCE_TYPE_MAP[] =
     {AS11_PCM,                    OP1A_PCM,                  D10_PCM},
 };
 
-#define ESSENCE_TYPE_MAP_SIZE   (sizeof(ESSENCE_TYPE_MAP) / sizeof(EssenceTypeMap))
-
 
 typedef struct
 {
@@ -123,14 +121,12 @@ static const EssenceTypeStringMap ESSENCE_TYPE_STRING_MAP[] =
     {AS11_PCM,                        "WAVE PCM"},
 };
 
-#define ESSENCE_TYPE_STRING_MAP_SIZE    (sizeof(ESSENCE_TYPE_STRING_MAP) / sizeof(EssenceTypeStringMap))
-
 
 
 size_t get_essence_type_index(AS11EssenceType type)
 {
     size_t i;
-    for (i = 0; i < ESSENCE_TYPE_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
         if (type == ESSENCE_TYPE_MAP[i].type)
             return i;
     }
@@ -179,7 +175,7 @@ int AS11Track::ConvertEssenceType(AS11ClipType clip_type, AS11EssenceType essenc
 string AS11Track::EssenceTypeToString(AS11EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < ESSENCE_TYPE_STRING_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_STRING_MAP); i++) {
         if (essence_type == ESSENCE_TYPE_STRING_MAP[i].type)
             return ESSENCE_TYPE_STRING_MAP[i].str;
     }

@@ -148,8 +148,6 @@ static ColorMap COLOR_MAP[] =
     {"black",   AVID_BLACK},
 };
 
-#define COLOR_MAP_SIZE (sizeof(COLOR_MAP) / sizeof(ColorMap))
-
 
 extern bool IM_REGRESSION_TEST;
 
@@ -218,7 +216,7 @@ static void clear_input(RawInput *input)
 static bool parse_color(const char *color_str, AvidRGBColor *color)
 {
     size_t i;
-    for (i = 0; i < COLOR_MAP_SIZE; i++) {
+    for (i = 0; i < ARRAY_SIZE(COLOR_MAP); i++) {
         if (strcmp(COLOR_MAP[i].color_str, color_str) == 0) {
             *color = COLOR_MAP[i].color;
             return true;
