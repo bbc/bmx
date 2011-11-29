@@ -119,9 +119,9 @@ typedef struct
 } RawInput;
 
 
-static const char DEFAULT_INGEX_SHIM_NAME[] = "Sample File";
-static const char DEFAULT_INGEX_SHIM_ID[] = "http://bbc.co.uk/rd/as02/default-shim.txt";
-static const char DEFAULT_INGEX_SHIM_ANNOTATION[] = "Default AS-02 shim";
+static const char DEFAULT_SHIM_NAME[]       = "Sample File";
+static const char DEFAULT_SHIM_ID[]         = "http://bbc.co.uk/rd/as02/default-shim.txt";
+static const char DEFAULT_SHIM_ANNOTATION[] = "Default AS-02 shim";
 
 extern bool IM_REGRESSION_TEST;
 
@@ -222,9 +222,9 @@ static void usage(const char* cmd)
     fprintf(stderr, "  --mic-type <type>       Media integrity check type: 'md5' or 'none'. Default 'md5'\n");
     fprintf(stderr, "  --mic-file              Calculate checksum for entire essence component file. Default is essence only\n");
     fprintf(stderr, "  --part <interval>       Video essence partition interval in frames, or seconds with 's' suffix. Default single partition\n");
-    fprintf(stderr, "  --shim-name <name>      Set ShimName element value in shim.xml file to <name>. Default is '%s'\n", DEFAULT_INGEX_SHIM_NAME);
-    fprintf(stderr, "  --shim-id <id>          Set ShimID element value in shim.xml file to <id>. Default is '%s'\n", DEFAULT_INGEX_SHIM_ID);
-    fprintf(stderr, "  --shim-annot <str>      Set AnnotationText element value in shim.xml file to <str>. Default is '%s'\n", DEFAULT_INGEX_SHIM_ANNOTATION);
+    fprintf(stderr, "  --shim-name <name>      Set ShimName element value in shim.xml file to <name>. Default is '%s'\n", DEFAULT_SHIM_NAME);
+    fprintf(stderr, "  --shim-id <id>          Set ShimID element value in shim.xml file to <id>. Default is '%s'\n", DEFAULT_SHIM_ID);
+    fprintf(stderr, "  --shim-annot <str>      Set AnnotationText element value in shim.xml file to <str>. Default is '%s'\n", DEFAULT_SHIM_ANNOTATION);
     fprintf(stderr, "  --dur <frame>           Set the duration in frames. Default is minimum available duration\n");
     fprintf(stderr, "  --single-avci-header    Only write an AVCI header for the first frame. Default is to include a header on all frames\n");
     fprintf(stderr, "Input Options (must precede the input to which it applies):\n");
@@ -1353,15 +1353,15 @@ int main(int argc, const char** argv)
         if (shim_name)
             bundle->GetShim()->SetName(shim_name);
         else
-            bundle->GetShim()->SetName(DEFAULT_INGEX_SHIM_NAME);
+            bundle->GetShim()->SetName(DEFAULT_SHIM_NAME);
         if (shim_id)
             bundle->GetShim()->SetId(shim_id);
         else
-            bundle->GetShim()->SetId(DEFAULT_INGEX_SHIM_ID);
+            bundle->GetShim()->SetId(DEFAULT_SHIM_ID);
         if (shim_annot)
             bundle->GetShim()->AppendAnnotation(shim_annot);
         else if (!shim_id)
-            bundle->GetShim()->AppendAnnotation(DEFAULT_INGEX_SHIM_ANNOTATION);
+            bundle->GetShim()->AppendAnnotation(DEFAULT_SHIM_ANNOTATION);
 
         AS02Version *version = AS02Version::OpenNewPrimary(bundle, frame_rate);
 
