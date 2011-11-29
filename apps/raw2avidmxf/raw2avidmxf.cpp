@@ -1758,8 +1758,8 @@ int main(int argc, const char** argv)
                     input->track->SetSourceRef(tape_package_video_refs[video_track_count].first,
                                                tape_package_video_refs[video_track_count].second);
                 } else {
-                    input->track->SetSourceRef(tape_package_video_refs[audio_track_count].first,
-                                               tape_package_video_refs[audio_track_count].second);
+                    input->track->SetSourceRef(tape_package_audio_refs[audio_track_count].first,
+                                               tape_package_audio_refs[audio_track_count].second);
                 }
             } else {
                 vector<pair<mxfUMID, uint32_t> > source_refs;
