@@ -214,11 +214,6 @@ AC_CONFIG_FILES([
 	test/d10_mxf/Makefile
 	apps/Makefile
 	apps/mxf2raw/Makefile
-	apps/raw2as02/Makefile
-	apps/raw2mxfop1a/Makefile
-	apps/raw2avidmxf/Makefile
-	apps/raw2d10mxf/Makefile
-	apps/raw2as11/Makefile
 	apps/raw2bmx/Makefile
     libbmx.pc])
 

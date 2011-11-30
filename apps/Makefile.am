@@ -1,4 +1,4 @@
-SUBDIRS = . raw2as02 raw2mxfop1a mxf2raw raw2d10mxf raw2as11 raw2avidmxf raw2bmx
+SUBDIRS = . mxf2raw raw2bmx
 # mxfcheck raw2mov raw2mxfatom raw2wav wav2raw
 
 
