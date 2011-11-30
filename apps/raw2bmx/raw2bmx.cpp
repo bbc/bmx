@@ -42,10 +42,10 @@
 #include <string>
 #include <vector>
 
-#include <libMXF++/MXFException.h>
-
 #include <im/clip_writer/ClipWriter.h>
 #include <im/as02/AS02PictureTrack.h>
+#include <im/as02/AS02PCMTrack.h>
+#include <im/avid_mxf/AvidPCMTrack.h>
 #include <im/mxf_op1a/OP1APCMTrack.h>
 #include <im/essence_parser/DVEssenceParser.h>
 #include <im/essence_parser/MPEG2EssenceParser.h>
@@ -290,7 +290,7 @@ static void usage(const char* cmd)
     fprintf(stderr, "  -f <rate>               Frame rate: 25, 30 (30000/1001), 50 or 60 (60000/1001). Default parsed or 25\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Start timecode. Is drop frame when c is not ':'. Default 00:00:00:00\n");
     fprintf(stderr, "  --clip <name>           Set the clip name\n");
-    fprintf(stderr, "  --dur <frame>           Set the duration in frames. Default is minimum available duration\n");
+    fprintf(stderr, "  --dur <frame>           Set the duration in frames. Default is minimum input duration\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02:\n");
     fprintf(stderr, "    --mic-type <type>       Media integrity check type: 'md5' or 'none'. Default 'md5'\n");
@@ -299,7 +299,7 @@ static void usage(const char* cmd)
     fprintf(stderr, "    --shim-id <id>          Set ShimID element value in shim.xml file to <id>. Default is '%s'\n", DEFAULT_SHIM_ID);
     fprintf(stderr, "    --shim-annot <str>      Set AnnotationText element value in shim.xml file to <str>. Default is '%s'\n", DEFAULT_SHIM_ANNOTATION);
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as02/as11op1a:\n");
+    fprintf(stderr, "  as02/as11op1a/op1a:\n");
     fprintf(stderr, "    --part <interval>       Video essence partition interval in frames, or seconds with 's' suffix. Default single partition\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/as11d10:\n");
@@ -345,7 +345,7 @@ static void usage(const char* cmd)
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/as11d10/op1a:\n");
     fprintf(stderr, "    --track-num <num>          Set the track number. Default starts at 1 or equals last track of same picture/sound type + 1\n");
-    fprintf(stderr, "                               The channel index equals track number - 1 for the as11d10 clip type\n");
+    fprintf(stderr, "                               For as11d10/d10 the track number determines the channel index, which equals track number - 1\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Inputs:\n");
@@ -2173,12 +2173,9 @@ int main(int argc, const char** argv)
         } else if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE) {
             AS11Clip *as11_clip = clip->GetAS11Clip();
 
-            if (partition_interval > 0)
-                as11_clip->SetPartitionInterval(partition_interval);
-            if (output_start_offset < 0)
-                as11_clip->SetOutputStartOffset(output_start_offset);
-            if (output_end_offset < 0)
-                as11_clip->SetOutputEndOffset(- output_end_offset);
+            as11_clip->SetPartitionInterval(partition_interval);
+            as11_clip->SetOutputStartOffset(output_start_offset);
+            as11_clip->SetOutputEndOffset(- output_end_offset);
 
             if (!clip_name) {
                 for (i = 0; i < framework_properties.size(); i++) {
@@ -2199,6 +2196,9 @@ int main(int argc, const char** argv)
         } else if (clip_type == CW_AVID_CLIP_TYPE) {
             AvidClip *avid_clip = clip->GetAvidClip();
 
+            if (!clip_name)
+                avid_clip->SetClipName(output_name);
+
             if (project_name)
                 avid_clip->SetProjectName(project_name);
 
@@ -2218,7 +2218,6 @@ int main(int argc, const char** argv)
                     else
                         num_picture_tracks++;
                 }
-
                 tape_package = avid_clip->CreateDefaultTapeSource(tape_name, num_picture_tracks, num_sound_tracks);
 
                 tape_package_picture_refs = avid_clip->GetPictureSourceReferences(tape_package);
@@ -2273,11 +2272,15 @@ int main(int argc, const char** argv)
                 AS02PictureTrack *as02_pict_track = dynamic_cast<AS02PictureTrack*>(input->track->GetAS02Track());
                 if (as02_pict_track)
                     as02_pict_track->SetPartitionInterval(partition_interval);
-            } else if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_OP1A_CLIP_TYPE) {
+
+                AS02PCMTrack *as02_pcm_track = dynamic_cast<AS02PCMTrack*>(input->track->GetAS02Track());
+                if (as02_pcm_track && sequence_offset_set)
+                    as02_pcm_track->SetSequenceOffset(sequence_offset);
+            } else if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE) {
                 AS11Track *as11_track = input->track->GetAS11Track();
                 if (input->track_number_set)
                     as11_track->SetTrackNumber(input->track_number);
-                if (sequence_offset_set)
+                if (sequence_offset_set || CW_AS11_D10_CLIP_TYPE)
                     as11_track->SetSequenceOffset(sequence_offset);
             } else if (clip_type == CW_OP1A_CLIP_TYPE) {
                 OP1ATrack *op1a_track = input->track->GetOP1ATrack();
@@ -2316,6 +2319,10 @@ int main(int argc, const char** argv)
                     IM_ASSERT(source_refs.size() == 1);
                     avid_track->SetSourceRef(source_refs[0].first, source_refs[0].second);
                 }
+
+                AvidPCMTrack *avid_pcm_track = dynamic_cast<AvidPCMTrack*>(avid_track);
+                if (avid_pcm_track && sequence_offset_set)
+                    avid_pcm_track->SetSequenceOffset(sequence_offset);
             } else if (clip_type == CW_D10_CLIP_TYPE) {
                 D10PCMTrack *d10_pcm_track = dynamic_cast<D10PCMTrack*>(input->track->GetD10Track());
                 if (d10_pcm_track) {
@@ -2522,7 +2529,7 @@ int main(int argc, const char** argv)
         bool have_dpp_total_programme_duration = false;
         FrameworkHelper *dpp_framework_h = 0;
 
-        if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_OP1A_CLIP_TYPE) {
+        if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE) {
             AS11Clip *as11_clip = clip->GetAS11Clip();
 
             as11_clip->PrepareHeaderMetadata();
