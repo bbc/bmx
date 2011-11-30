@@ -620,6 +620,15 @@ int main(int argc, const char** argv)
         for (i = 0; i < inputs.size(); i++) {
             RawInput *input = &inputs[i];
 
+            // TODO: require create_test_essence to create MPEG essence for all rates
+            if (IM_REGRESSION_TEST) {
+                if (input->essence_type == D10_UNKNOWN_ESSENCE) {
+                    log_error("Regression test requires specific input format type, eg. --d10_50 rather than --d10\n");
+                    throw false;
+                }
+                continue;
+            }
+
             if (!open_raw_reader(input))
                 throw false;
 
