@@ -36,10 +36,8 @@
 #include <vector>
 #include <map>
 
-#include <xercesc/dom/DOMDocument.hpp>
-#include <xercesc/dom/DOMElement.hpp>
-
 #include <im/IMTypes.h>
+#include <im/XMLWriter.h>
 
 
 
@@ -115,7 +113,7 @@ public:
 public:
     void CompleteInfo(AS02Bundle *bundle);
 
-    void Write(xercesc::DOMDocument *doc, xercesc::DOMElement *parent_ele);
+    void Write(XMLWriter *xml_writer);
 
 private:
     size_t mIndex;

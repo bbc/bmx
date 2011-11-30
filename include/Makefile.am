@@ -12,6 +12,7 @@ nobase_library_include_HEADERS = \
 	im/URI.h \
 	im/Utils.h \
 	im/XMLUtils.h \
+	im/XMLWriter.h \
 	im/Version.h \
 	im/frame/DataBufferArray.h \
 	im/frame/Frame.h \

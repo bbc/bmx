@@ -13,6 +13,7 @@ libcommon_la_SOURCES = \
 	URI.cpp \
 	Utils.cpp \
 	XMLUtils.cpp \
+	XMLWriter.cpp \
 	Version.cpp
 
 libcommon_la_CXXFLAGS = $(BMX_CFLAGS)

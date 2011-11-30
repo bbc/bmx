@@ -64,13 +64,6 @@ dnl-----------------------------------------------------------------------------
 dnl -- Checks for libraries.
 dnl-----------------------------------------------------------------------------
 
-AC_CHECK_LIB(xerces-c,main,
-	[LIBXERCES_CFLAGS="" LIBXERCES_LIBS="-lxerces-c"],
-	[AC_MSG_ERROR([xerces-c not found])])
-AC_SUBST(LIBXERCES_CFLAGS)
-AC_SUBST(LIBXERCES_LIBS)
-
-
 AC_CHECK_LIB(uriparser,uriParseUriA,
 	[LIBURIPARSER_CFLAGS="" LIBURIPARSER_LIBS="-luriparser"],
 	[AC_MSG_ERROR([liburiparser not found])])
@@ -154,11 +147,10 @@ fi
 AC_SUBST(WARN_CFLAGS)
 
 BMX_CFLAGS="${WARN_CFLAGS} ${LIBMXF_CFLAGS} ${LIBMXFPP_CFLAGS} \
-	${LIBXERCES_CFLAGS} ${LIBURIPARSER_CFLAGS} -I\$(top_srcdir)/include"
+	${LIBURIPARSER_CFLAGS} -I\$(top_srcdir)/include"
 AC_SUBST(BMX_CFLAGS)
 
-BMX_LIBADDLIBS="${LIBXERCES_LIBS} ${LIBURIPARSER_LIBS} \
-	${LIBMXF_LIBS} ${LIBMXFPP_LIBS}"
+BMX_LIBADDLIBS="${LIBURIPARSER_LIBS} ${LIBMXF_LIBS} ${LIBMXFPP_LIBS}"
 AC_SUBST(BMX_LIBADDLIBS)
 
 BMX_LDADDLIBS="${BMX_LIBADDLIBS} \
@@ -176,9 +168,9 @@ AC_SUBST(pkgconfigdir)
 dnl add libraries to pkg config "Libs:" for static-only builds
 if test x"$enable_shared" = xyes; then
 	PC_ADD_LIBS=
-	PC_ADD_PRIVATE_LIBS="${LIBXERCES_LIBS} ${LIBURIPARSER_LIBS}"
+	PC_ADD_PRIVATE_LIBS="${LIBURIPARSER_LIBS}"
 else
-	PC_ADD_LIBS="${LIBXERCES_LIBS} ${LIBURIPARSER_LIBS}"
+	PC_ADD_LIBS="${LIBURIPARSER_LIBS}"
 	PC_ADD_PRIVATE_LIBS=
 fi
 AC_SUBST(PC_ADD_LIBS)

@@ -34,13 +34,12 @@
 #endif
 
 #include <im/as02/AS02Shim.h>
-#include <im/XMLUtils.h>
+#include <im/XMLWriter.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
 
 using namespace std;
 using namespace im;
-using namespace xercesc;
 
 
 static const char AS02_V10_NAMESPACE[] = "http://www.amwa.tv/as-02/1.0/shim";
@@ -49,7 +48,6 @@ static const char AS02_V10_NAMESPACE[] = "http://www.amwa.tv/as-02/1.0/shim";
 
 AS02Shim::AS02Shim()
 {
-    XMLInitializer::Initialize();
 }
 
 AS02Shim::~AS02Shim()
@@ -78,57 +76,35 @@ void AS02Shim::AppendAnnotation(string annotation)
 
 void AS02Shim::Write(string filename)
 {
-    DOMDocument *doc = 0;
+    XMLWriter *xml_writer = XMLWriter::Open(filename);
+    IM_CHECK(xml_writer);
 
     try
     {
-        DOMImplementation *impl = DOMImplementationRegistry::getDOMImplementation(XStr("Core"));
-        DOMDocument *doc = impl->createDocument(XStr(AS02_V10_NAMESPACE),
-                                                XStr("Shim"),
-                                                0);
+        xml_writer->WriteDocumentStart();
+        xml_writer->WriteElementStart(AS02_V10_NAMESPACE, "Shim");
+        xml_writer->DeclareNamespace(AS02_V10_NAMESPACE, "");
 
-        DOMElement *root = doc->getDocumentElement();
+        xml_writer->WriteElement(AS02_V10_NAMESPACE, "ShimName", mName);
 
-        DOMElement *ele;
+        if (!mId.empty())
+            xml_writer->WriteElement(AS02_V10_NAMESPACE, "ShimID", mId);
 
-        ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("ShimName"));
-        root->appendChild(ele);
-        ele->appendChild(doc->createTextNode(XStr(mName)));
-
-        if (!mId.empty()) {
-            ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("ShimID"));
-            root->appendChild(ele);
-            ele->appendChild(doc->createTextNode(XStr(mId)));
-        }
-
-        if (!mApplicationSpec.empty()) {
-            ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("ApplicationSpec"));
-            root->appendChild(ele);
-            ele->appendChild(doc->createTextNode(XStr(mApplicationSpec)));
-        }
+        if (!mApplicationSpec.empty())
+            xml_writer->WriteElement(AS02_V10_NAMESPACE, "ApplicationSpec", mApplicationSpec);
 
         size_t i;
-        for (i = 0; i < mAnnotations.size(); i++) {
-            ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("AnnotationText"));
-            root->appendChild(ele);
-            ele->appendChild(doc->createTextNode(XStr(mAnnotations[i])));
-        }
+        for (i = 0; i < mAnnotations.size(); i++)
+            xml_writer->WriteElement(AS02_V10_NAMESPACE, "AnnotationText", mAnnotations[i]);
 
+        xml_writer->WriteElementEnd();
+        xml_writer->WriteDocumentEnd();
 
-        IM_CHECK_M(write_dom_to_file(doc, filename),
-                   ("Failed to write shim file '%s'", filename.c_str()));
-
-
-        delete doc;
-    }
-    catch (const xercesc::XMLException &ex)
-    {
-        delete doc;
-        throw new IMException("XML Exception: ", StrX(ex.getMessage()));
+        delete xml_writer;
     }
     catch (...)
     {
-        delete doc;
+        delete xml_writer;
         throw;
     }
 }

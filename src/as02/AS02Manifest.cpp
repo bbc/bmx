@@ -49,7 +49,6 @@
 
 using namespace std;
 using namespace im;
-using namespace xercesc;
 
 
 static const char AS02_V10_NAMESPACE[] = "http://www.amwa.tv/as-02/1.0/manifest";
@@ -144,8 +143,6 @@ static string get_xml_mic_scope_name(MICScope scope)
 
 AS02ManifestFile::AS02ManifestFile()
 {
-    XMLInitializer::Initialize();
-
     mIndex = 0;
     mRole = FILE_FILE_ROLE;
     mSize = 0;
@@ -265,40 +262,24 @@ void AS02ManifestFile::CompleteInfo(AS02Bundle *bundle)
     }
 }
 
-void AS02ManifestFile::Write(DOMDocument *doc, DOMElement *parent_ele)
+void AS02ManifestFile::Write(XMLWriter *xml_writer)
 {
-    DOMElement *ele;
-
-    ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("FileID"));
-    parent_ele->appendChild(ele);
-    ele->appendChild(doc->createTextNode(XStr(mId)));
-
-    ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("Role"));
-    parent_ele->appendChild(ele);
-    ele->appendChild(doc->createTextNode(XStr(get_xml_file_role_name(mRole))));
-
-    ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("Size"));
-    parent_ele->appendChild(ele);
-    ele->appendChild(doc->createTextNode(XStr(get_xml_uint64_str(mSize))));
-
-    ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("Path"));
-    parent_ele->appendChild(ele);
-    ele->appendChild(doc->createTextNode(XStr(mPath)));
+    xml_writer->WriteElement(AS02_V10_NAMESPACE, "FileID", mId);
+    xml_writer->WriteElement(AS02_V10_NAMESPACE, "Role",   get_xml_file_role_name(mRole));
+    xml_writer->WriteElement(AS02_V10_NAMESPACE, "Size",   get_xml_uint64_str(mSize));
+    xml_writer->WriteElement(AS02_V10_NAMESPACE, "Path",   mPath);
 
     if (!mMIC.empty()) {
-        ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("MIC"));
-        parent_ele->appendChild(ele);
-        ele->setAttributeNS(XStr(AS02_V10_NAMESPACE), XStr("type"), XStr(get_xml_mic_type_name(mMICType)));
-        ele->setAttributeNS(XStr(AS02_V10_NAMESPACE), XStr("scope"), XStr(get_xml_mic_scope_name(mMICScope)));
-        ele->appendChild(doc->createTextNode(XStr(mMIC)));
+        xml_writer->WriteElementStart(AS02_V10_NAMESPACE, "MIC");
+        xml_writer->WriteAttribute(AS02_V10_NAMESPACE, "type",  get_xml_mic_type_name(mMICType));
+        xml_writer->WriteAttribute(AS02_V10_NAMESPACE, "scope", get_xml_mic_scope_name(mMICScope));
+        xml_writer->WriteElementContent(mMIC);
+        xml_writer->WriteElementEnd();
     }
 
     size_t i;
-    for (i = 0; i < mAnnotations.size(); i++) {
-        ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("AnnotationText"));
-        parent_ele->appendChild(ele);
-        ele->appendChild(doc->createTextNode(XStr(mAnnotations[i])));
-    }
+    for (i = 0; i < mAnnotations.size(); i++)
+        xml_writer->WriteElement(AS02_V10_NAMESPACE, "AnnotationText", mAnnotations[i]);
 }
 
 
@@ -372,78 +353,52 @@ AS02ManifestFile* AS02Manifest::RegisterFile(string path, FileRole role)
 
 void AS02Manifest::Write(AS02Bundle *bundle, string filename)
 {
-    DOMDocument *doc = 0;
-
-    vector<AS02ManifestFile> ordered_files;
-    map<std::string, AS02ManifestFile>::const_iterator iter;
-    for (iter = mFiles.begin(); iter != mFiles.end(); iter++)
-        ordered_files.push_back(iter->second);
-    sort(ordered_files.begin(), ordered_files.end());
-
-    size_t i;
-    for (i = 0; i < ordered_files.size(); i++)
-        ordered_files[i].CompleteInfo(bundle);
-
-
-    mCreationDate = generate_timestamp_now();
+    XMLWriter *xml_writer = XMLWriter::Open(filename);
+    IM_CHECK(xml_writer);
 
     try
     {
-        DOMImplementation *impl = DOMImplementationRegistry::getDOMImplementation(XStr("Core"));
-        DOMDocument *doc = impl->createDocument(XStr(AS02_V10_NAMESPACE),
-                                                XStr("Manifest"),
-                                                0);
-
-        DOMElement *root = doc->getDocumentElement();
-
-        DOMElement *ele;
-
-        ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("BundleName"));
-        root->appendChild(ele);
-        ele->appendChild(doc->createTextNode(XStr(mBundleName)));
-
-        ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("BundleID"));
-        root->appendChild(ele);
-        ele->appendChild(doc->createTextNode(XStr(mBundleId)));
-
-        ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("Creator"));
-        root->appendChild(ele);
-        ele->appendChild(doc->createTextNode(XStr(mCreator)));
-
-        ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("CreationDate"));
-        root->appendChild(ele);
-        ele->appendChild(doc->createTextNode(XStr(get_xml_timestamp_str(mCreationDate))));
+        vector<AS02ManifestFile> ordered_files;
+        map<std::string, AS02ManifestFile>::const_iterator iter;
+        for (iter = mFiles.begin(); iter != mFiles.end(); iter++)
+            ordered_files.push_back(iter->second);
+        sort(ordered_files.begin(), ordered_files.end());
 
         size_t i;
-        for (i = 0; i < mAnnotations.size(); i++) {
-            ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("AnnotationText"));
-            root->appendChild(ele);
-            ele->appendChild(doc->createTextNode(XStr(mAnnotations[i])));
-        }
+        for (i = 0; i < ordered_files.size(); i++)
+            ordered_files[i].CompleteInfo(bundle);
 
-        DOMElement *file_list_ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("FileList"));
-        root->appendChild(file_list_ele);
+        mCreationDate = generate_timestamp_now();
+
+
+        xml_writer->WriteDocumentStart();
+        xml_writer->WriteElementStart(AS02_V10_NAMESPACE, "Manifest");
+        xml_writer->DeclareNamespace(AS02_V10_NAMESPACE, "");
+
+        xml_writer->WriteElement(AS02_V10_NAMESPACE, "BundleName",   mBundleName);
+        xml_writer->WriteElement(AS02_V10_NAMESPACE, "BundleID",     mBundleId);
+        xml_writer->WriteElement(AS02_V10_NAMESPACE, "Creator",      mCreator);
+        xml_writer->WriteElement(AS02_V10_NAMESPACE, "CreationDate", get_xml_timestamp_str(mCreationDate));
+
+        for (i = 0; i < mAnnotations.size(); i++)
+            xml_writer->WriteElement(AS02_V10_NAMESPACE, "AnnotationText", mAnnotations[i]);
+
+        xml_writer->WriteElementStart(AS02_V10_NAMESPACE, "FileList");
         for (i = 0; i < ordered_files.size(); i++) {
-            ele = doc->createElementNS(XStr(AS02_V10_NAMESPACE), XStr("File"));
-            file_list_ele->appendChild(ele);
-            ordered_files[i].Write(doc, ele);
+            xml_writer->WriteElementStart(AS02_V10_NAMESPACE, "File");
+            ordered_files[i].Write(xml_writer);
+            xml_writer->WriteElementEnd();
         }
+        xml_writer->WriteElementEnd();
 
+        xml_writer->WriteElementEnd();
+        xml_writer->WriteDocumentEnd();
 
-        IM_CHECK_M(write_dom_to_file(doc, filename),
-                   ("Failed to write manifest file '%s'", filename.c_str()));
-
-
-        delete doc;
-    }
-    catch (const xercesc::XMLException &ex)
-    {
-        delete doc;
-        throw new IMException("XML Exception: ", StrX(ex.getMessage()));
+        delete xml_writer;
     }
     catch (...)
     {
-        delete doc;
+        delete xml_writer;
         throw;
     }
 }

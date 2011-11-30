@@ -55,7 +55,6 @@
 #include <im/essence_parser/RawEssenceReader.h>
 #include <im/URI.h>
 #include <im/MXFUtils.h>
-#include <im/XMLUtils.h>
 #include "../AppUtils.h"
 #include "../AS11Helper.h"
 #include <im/IMException.h>
@@ -1750,10 +1749,6 @@ int main(int argc, const char** argv)
     int cmd_result = 0;
     try
     {
-        // TODO: move to AS02 classes and remove XMLUtils include
-        XMLInitializer xml_initializer;
-
-
         // update Avid uncompressed essence types if component depth equals 10
         if (clip_type == CW_AVID_CLIP_TYPE) {
             size_t i;

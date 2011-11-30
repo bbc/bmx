@@ -35,9 +35,6 @@
 
 #include <string>
 
-#include <xercesc/dom/DOM.hpp>
-#include <xercesc/util/XMLString.hpp>
-
 #include <im/IMTypes.h>
 
 
@@ -45,20 +42,6 @@
 namespace im
 {
 
-
-class XMLInitializer
-{
-public:
-    static void Initialize();
-
-public:
-    XMLInitializer();
-    ~XMLInitializer();
-};
-
-
-
-bool write_dom_to_file(xercesc::DOMDocument *doc, std::string filename);
 
 std::string get_xml_bool_str(bool value);
 std::string get_xml_uint64_str(uint64_t value);
@@ -68,68 +51,8 @@ std::string get_xml_umid_str(UMID value);
 
 bool parse_xml_umid_str(std::string umid_str, UMID *umid);
 
+
 };
-
-
-
-// Following code was copied from Xerces code samples
-
-class XmlStr
-{
-public:
-    XmlStr(const char* const toTranscode)
-    {
-        fUnicodeForm = xercesc::XMLString::transcode(toTranscode);
-    }
-    XmlStr(std::string toTranscode)
-    {
-        fUnicodeForm = xercesc::XMLString::transcode(toTranscode.c_str());
-    }
-    ~XmlStr()
-    {
-        xercesc::XMLString::release(&fUnicodeForm);
-    }
-
-
-    const XMLCh* unicodeForm() const
-    {
-        return fUnicodeForm;
-    }
-
-private:
-    XMLCh *fUnicodeForm;
-};
-
-#define XStr(str) XmlStr(str).unicodeForm()
-
-
-class StrXml
-{
-public :
-    StrXml(const XMLCh* const toTranscode)
-    {
-        fLocalForm = xercesc::XMLString::transcode(toTranscode);
-    }
-    ~StrXml()
-    {
-        xercesc::XMLString::release(&fLocalForm);
-    }
-
-
-    const char* localForm() const
-    {
-        return fLocalForm;
-    }
-
-private:
-    char *fLocalForm;
-};
-
-#define StrX(xmlstr) StrXml(xmlstr).localForm()
-
-
-
-// End of code copied from Xerces code samples
 
 
 
