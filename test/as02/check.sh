@@ -10,7 +10,7 @@ else
 fi
 
 
-BASE_COMMAND="../../apps/raw2as02/raw2as02 --regtest -r /tmp/as02test -y 10:11:12:13 --clip test "
+BASE_COMMAND="../../apps/raw2bmx/raw2bmx --regtest -t as02 -o /tmp/as02test -y 10:11:12:13 --clip test "
 if [ "$3" != "" ]; then
   BASE_COMMAND="$BASE_COMMAND -f $3 "
 fi
