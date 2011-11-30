@@ -1,6 +1,6 @@
 #!/bin/sh
 
-AS02_BASE_COMMAND="../../apps/raw2as02/raw2as02 --regtest --mic-type md5 -r /tmp/sample_$2$3 -y 10:11:12:13 --clip test "
+AS02_BASE_COMMAND="../../apps/raw2bmx/raw2bmx --regtest -t as02 --mic-type md5 -o /tmp/sample_$2$3 -y 10:11:12:13 --clip test "
 if [ "$3" != "" ]; then
   AS02_BASE_COMMAND="$AS02_BASE_COMMAND -f $3 "
 else
