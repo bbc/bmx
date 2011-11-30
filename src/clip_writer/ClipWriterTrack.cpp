@@ -938,6 +938,47 @@ void ClipWriterTrack::SetDialNorm(int8_t dial_norm)
     }
 }
 
+void ClipWriterTrack::SetSequenceOffset(uint8_t offset)
+{
+    switch (mClipType)
+    {
+        case CW_AS02_CLIP_TYPE:
+        {
+            AS02PCMTrack *pcm_track = dynamic_cast<AS02PCMTrack*>(mAS02Track);
+            if (pcm_track)
+                pcm_track->SetSequenceOffset(offset);
+            break;
+        }
+        case CW_AS11_OP1A_CLIP_TYPE:
+        case CW_AS11_D10_CLIP_TYPE:
+            mAS11Track->SetSequenceOffset(offset);
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
+            if (pcm_track)
+                pcm_track->SetSequenceOffset(offset);
+            break;
+        }
+        case CW_AVID_CLIP_TYPE:
+        {
+            AvidPCMTrack *pcm_track = dynamic_cast<AvidPCMTrack*>(mAvidTrack);
+            if (pcm_track)
+                pcm_track->SetSequenceOffset(offset);
+            break;
+        }
+        case CW_D10_CLIP_TYPE:
+        {
+            D10PCMTrack *pcm_track = dynamic_cast<D10PCMTrack*>(mD10Track);
+            if (pcm_track)
+                pcm_track->SetSequenceOffset(offset);
+            break;
+        }
+        case CW_UNKNOWN_CLIP_TYPE:
+            IM_ASSERT(false);
+            break;
+    }
+}
+
 void ClipWriterTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
     switch (mClipType)

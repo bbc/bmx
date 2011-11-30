@@ -2225,11 +2225,6 @@ int main(int argc, const char** argv)
                 tape_package_sound_refs = avid_clip->GetSoundSourceReferences(tape_package);
                 IM_ASSERT(tape_package_sound_refs.size() == num_sound_tracks);
             }
-        } else if (clip_type == CW_AVID_CLIP_TYPE) {
-            D10File *d10_clip = clip->GetD10Clip();
-
-            if (sequence_offset_set)
-                d10_clip->SetSoundSequenceOffset(sequence_offset);
         }
 
 
@@ -2272,24 +2267,14 @@ int main(int argc, const char** argv)
                 AS02PictureTrack *as02_pict_track = dynamic_cast<AS02PictureTrack*>(input->track->GetAS02Track());
                 if (as02_pict_track)
                     as02_pict_track->SetPartitionInterval(partition_interval);
-
-                AS02PCMTrack *as02_pcm_track = dynamic_cast<AS02PCMTrack*>(input->track->GetAS02Track());
-                if (as02_pcm_track && sequence_offset_set)
-                    as02_pcm_track->SetSequenceOffset(sequence_offset);
             } else if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE) {
                 AS11Track *as11_track = input->track->GetAS11Track();
                 if (input->track_number_set)
                     as11_track->SetTrackNumber(input->track_number);
-                if (sequence_offset_set || CW_AS11_D10_CLIP_TYPE)
-                    as11_track->SetSequenceOffset(sequence_offset);
             } else if (clip_type == CW_OP1A_CLIP_TYPE) {
                 OP1ATrack *op1a_track = input->track->GetOP1ATrack();
                 if (input->track_number_set)
                     op1a_track->SetMaterialTrackNumber(input->track_number);
-
-                OP1APCMTrack *op1a_pcm_track = dynamic_cast<OP1APCMTrack*>(input->track->GetOP1ATrack());
-                if (op1a_pcm_track && sequence_offset_set)
-                    op1a_pcm_track->SetSequenceOffset(sequence_offset);
             } else if (clip_type == CW_AVID_CLIP_TYPE) {
                 AvidTrack *avid_track = input->track->GetAvidTrack();
                 AvidClip *avid_clip = clip->GetAvidClip();
@@ -2319,18 +2304,10 @@ int main(int argc, const char** argv)
                     IM_ASSERT(source_refs.size() == 1);
                     avid_track->SetSourceRef(source_refs[0].first, source_refs[0].second);
                 }
-
-                AvidPCMTrack *avid_pcm_track = dynamic_cast<AvidPCMTrack*>(avid_track);
-                if (avid_pcm_track && sequence_offset_set)
-                    avid_pcm_track->SetSequenceOffset(sequence_offset);
             } else if (clip_type == CW_D10_CLIP_TYPE) {
                 D10PCMTrack *d10_pcm_track = dynamic_cast<D10PCMTrack*>(input->track->GetD10Track());
-                if (d10_pcm_track) {
-                    // TODO: always setting this because else GetShiftedSampleSequence throws exception
-                    d10_pcm_track->SetSequenceOffset(sequence_offset);
-                    if (input->track_number_set)
-                        d10_pcm_track->SetOutputChannelIndex(input->track_number_set);
-                }
+                if (d10_pcm_track && input->track_number_set)
+                    d10_pcm_track->SetOutputChannelIndex(input->track_number_set);
             }
 
             switch (input->essence_type)
@@ -2428,6 +2405,9 @@ int main(int argc, const char** argv)
                         input->track->SetAudioRefLevel(input->audio_ref_level);
                     if (input->dial_norm_set)
                         input->track->SetDialNorm(input->dial_norm);
+                    // force D10 sequence offset to 0 and default to 0 for other clip types
+                    if (clip_type == CW_D10_CLIP_TYPE || sequence_offset_set)
+                        input->track->SetSequenceOffset(sequence_offset);
                     break;
                 case CW_UNKNOWN_ESSENCE:
                     IM_ASSERT(false);

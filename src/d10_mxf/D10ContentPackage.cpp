@@ -45,8 +45,6 @@ using namespace im;
 using namespace mxfpp;
 
 
-#define UNKNOWN_AUDIO_SEQUENCE_OFFSET       255
-
 // some number > max content packages to buffer
 #define MAX_CONTENT_PACKAGES    250
 
@@ -88,6 +86,7 @@ D10ContentPackageInfo::D10ContentPackageInfo()
     have_input_user_timecode = false;
     picture_track_index = (uint32_t)(-1);
     picture_sample_size = 0;
+    sound_sequence_offset_set = false;
     sound_sequence_offset = 0;
     max_sound_sample_count = 0;
     sound_sample_size = 0;
@@ -117,7 +116,7 @@ void D10ContentPackage::Reset(int64_t position)
 {
     mUserTimecodeSet = false;
     mPictureData.SetSize(0);
-    if (mInfo->sound_sequence_offset == UNKNOWN_AUDIO_SEQUENCE_OFFSET) {
+    if (!mInfo->sound_sequence_offset_set) {
         mSoundSequenceIndex = 0;
         mSoundSampleCount = 0;
     } else {
@@ -188,7 +187,7 @@ uint32_t D10ContentPackage::WriteSamples(uint32_t track_index, const unsigned ch
     } else {
         IM_ASSERT(mSoundChannelSampleCount.find(track_index) != mSoundChannelSampleCount.end());
 
-        if (mInfo->sound_sequence_offset == UNKNOWN_AUDIO_SEQUENCE_OFFSET) {
+        if (!mInfo->sound_sequence_offset_set) {
             // this call's num_samples equals content package sound sample count
             if (mSoundSampleCount == 0)
                 mSoundSampleCount = num_samples;
@@ -237,7 +236,7 @@ void D10ContentPackage::Write(File *mxf_file)
 
     // finalize data
 
-    IM_ASSERT(mInfo->sound_sequence_offset != UNKNOWN_AUDIO_SEQUENCE_OFFSET);
+    IM_ASSERT(mInfo->sound_sequence_offset_set);
 
     mSoundSequenceIndex = (size_t)((mPosition + mInfo->sound_sequence_offset) % mInfo->sound_sample_sequence.size());
     IM_ASSERT(mSoundSampleCount == mInfo->sound_sample_sequence[mSoundSequenceIndex]);
@@ -366,8 +365,6 @@ D10ContentPackageManager::D10ContentPackageManager(mxfRational frame_rate)
         mInfo.sound_sample_sequence.push_back(1602);
         mInfo.max_sound_sample_count = 1602;
     }
-
-    mInfo.sound_sequence_offset = UNKNOWN_AUDIO_SEQUENCE_OFFSET;
 }
 
 D10ContentPackageManager::~D10ContentPackageManager()
@@ -391,10 +388,10 @@ void D10ContentPackageManager::SetHaveInputUserTimecode(bool enable)
 
 void D10ContentPackageManager::SetSoundSequenceOffset(uint8_t offset)
 {
-    IM_CHECK(mInfo.sound_sequence_offset == UNKNOWN_AUDIO_SEQUENCE_OFFSET ||
-             offset == mInfo.sound_sequence_offset);
+    IM_CHECK(!mInfo.sound_sequence_offset_set || offset == mInfo.sound_sequence_offset);
 
     mInfo.sound_sequence_offset = offset;
+    mInfo.sound_sequence_offset_set = true;
 }
 
 void D10ContentPackageManager::RegisterMPEGTrackElement(uint32_t track_index, uint32_t sample_size)
@@ -451,10 +448,12 @@ void D10ContentPackageManager::PrepareWrite()
     mExtDeltaEntryArray.push_back(mExtDeltaEntryArray[2] + mInfo.sound_item_size);
 
 
-    if (mInfo.sound_sample_sequence.size() == 1 || mInfo.sound_channels.empty())
+    if (mInfo.sound_sample_sequence.size() == 1 || mInfo.sound_channels.empty()) {
         mInfo.sound_sequence_offset = 0;
-    else if (mInfo.sound_sequence_offset != UNKNOWN_AUDIO_SEQUENCE_OFFSET)
+        mInfo.sound_sequence_offset_set = true;
+    } else if (mInfo.sound_sequence_offset_set) {
         mInfo.sound_sequence_offset %= mInfo.sound_sample_sequence.size();
+    }
 }
 
 void D10ContentPackageManager::WriteUserTimecode(Timecode user_timecode)
@@ -519,7 +518,7 @@ int64_t D10ContentPackageManager::GetDuration() const
 bool D10ContentPackageManager::HaveContentPackage() const
 {
     return !mContentPackages.empty() && mContentPackages.front()->IsComplete() &&
-           (mInfo.sound_channels.empty() || mInfo.sound_sequence_offset != UNKNOWN_AUDIO_SEQUENCE_OFFSET);
+           (mInfo.sound_channels.empty() || mInfo.sound_sequence_offset_set);
 }
 
 void D10ContentPackageManager::WriteNextContentPackage(File *mxf_file)
@@ -536,8 +535,8 @@ void D10ContentPackageManager::WriteNextContentPackage(File *mxf_file)
 
 void D10ContentPackageManager::FinalWrite(mxfpp::File *mxf_file)
 {
-    if (mInfo.sound_sequence_offset == UNKNOWN_AUDIO_SEQUENCE_OFFSET)
-        mInfo.sound_sequence_offset = CalcSoundSequenceOffset(true);
+    if (!mInfo.sound_sequence_offset_set)
+        CalcSoundSequenceOffset(true);
 
     while (HaveContentPackage())
         WriteNextContentPackage(mxf_file);
@@ -545,8 +544,8 @@ void D10ContentPackageManager::FinalWrite(mxfpp::File *mxf_file)
 
 void D10ContentPackageManager::CreateContentPackage()
 {
-    if (mInfo.sound_sequence_offset == UNKNOWN_AUDIO_SEQUENCE_OFFSET)
-        mInfo.sound_sequence_offset = CalcSoundSequenceOffset(false);
+    if (!mInfo.sound_sequence_offset_set)
+        CalcSoundSequenceOffset(false);
 
     if (mFreeContentPackages.empty()) {
         IM_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
@@ -559,11 +558,8 @@ void D10ContentPackageManager::CreateContentPackage()
     mContentPackages.back()->Reset(mPosition + mContentPackages.size() - 1);
 }
 
-uint8_t D10ContentPackageManager::CalcSoundSequenceOffset(bool final_write)
+void D10ContentPackageManager::CalcSoundSequenceOffset(bool final_write)
 {
-    if (mInfo.sound_sequence_offset != UNKNOWN_AUDIO_SEQUENCE_OFFSET)
-        return mInfo.sound_sequence_offset;
-
     vector<uint32_t> input_sequence;
     size_t i;
     for (i = 0; i < mContentPackages.size(); i++) {
@@ -586,9 +582,12 @@ uint8_t D10ContentPackageManager::CalcSoundSequenceOffset(bool final_write)
     }
     IM_CHECK_M(offset < mInfo.sound_sample_sequence.size(), ("Invalid D10 sound sample sequence"));
 
-    if (final_write || input_sequence.size() >= mInfo.sound_sample_sequence.size())
-        return offset;
-    else
-        return UNKNOWN_AUDIO_SEQUENCE_OFFSET;
+    if (final_write || input_sequence.size() >= mInfo.sound_sample_sequence.size()) {
+        mInfo.sound_sequence_offset = offset;
+        mInfo.sound_sequence_offset_set = true;
+    } else {
+        mInfo.sound_sequence_offset = 0;
+        mInfo.sound_sequence_offset_set = false;
+    }
 }
 

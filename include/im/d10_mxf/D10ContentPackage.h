@@ -60,6 +60,7 @@ public:
     uint32_t picture_sample_size;
     std::map<uint32_t, uint8_t> sound_channels;
     std::vector<uint32_t> sound_sample_sequence;
+    bool sound_sequence_offset_set;
     uint8_t sound_sequence_offset;
     uint32_t max_sound_sample_count;
     uint32_t sound_sample_size;
@@ -128,7 +129,7 @@ public:
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
 
 public:
-    bool HaveSoundSequenceOffset() const { return mInfo.sound_sequence_offset != 255; }
+    bool HaveSoundSequenceOffset() const   { return mInfo.sound_sequence_offset_set; }
     uint8_t GetSoundSequenceOffset() const { return mInfo.sound_sequence_offset; }
 
     int64_t GetDuration() const;
@@ -142,7 +143,7 @@ public:
 private:
     void CreateContentPackage();
 
-    uint8_t CalcSoundSequenceOffset(bool final_write);
+    void CalcSoundSequenceOffset(bool final_write);
 
 private:
     D10ContentPackageInfo mInfo;

@@ -147,6 +147,7 @@ public:
     void SetLocked(bool locked);                    // default not set
     void SetAudioRefLevel(int8_t level);            // default not set
     void SetDialNorm(int8_t dial_norm);             // default not set
+    void SetSequenceOffset(uint8_t offset);         // default D10 determined from input or not set
 
 public:
     void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
