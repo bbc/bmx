@@ -60,15 +60,13 @@ MXFSequenceTrackReader::MXFSequenceTrackReader(MXFSequenceReader *sequence_reade
     mSampleRate = ZERO_RATIONAL;
     mPosition = 0;
     mDuration = 0;
-    mFrameBuffer = new DefaultFrameBuffer();
-    mOwnFrameBuffer = true;
+
+    mFrameBuffer.SetTargetBuffer(new DefaultFrameBuffer(), true);
 }
 
 MXFSequenceTrackReader::~MXFSequenceTrackReader()
 {
     delete mTrackInfo;
-    if (mOwnFrameBuffer)
-        delete mFrameBuffer;
 }
 
 bool MXFSequenceTrackReader::IsCompatible(MXFTrackReader *segment) const
@@ -92,7 +90,7 @@ void MXFSequenceTrackReader::AppendSegment(MXFTrackReader *segment)
 {
     mSegmentOffsets.push_back(GetDuration());
 
-    segment->SetFrameBuffer(mFrameBuffer, false);
+    segment->SetFrameBuffer(&mFrameBuffer, false);
 
     if (mTrackSegments.empty()) {
         mTrackInfo = segment->GetTrackInfo()->Clone();
@@ -183,11 +181,7 @@ void MXFSequenceTrackReader::SetEnable(bool enable)
 
 void MXFSequenceTrackReader::SetFrameBuffer(FrameBuffer *frame_buffer, bool take_ownership)
 {
-    if (mOwnFrameBuffer)
-        delete mFrameBuffer;
-
-    mFrameBuffer = frame_buffer;
-    mOwnFrameBuffer = take_ownership;
+    mFrameBuffer.SetTargetBuffer(frame_buffer, take_ownership);
 }
 
 void MXFSequenceTrackReader::SetReadLimits()

@@ -45,7 +45,6 @@ namespace im
 class FrameBuffer
 {
 public:
-    FrameBuffer();
     virtual ~FrameBuffer() {};
 
     virtual void SetFrameFactory(FrameFactory *frame_factory, bool take_ownership) = 0;
@@ -59,13 +58,6 @@ public:
     virtual size_t GetNumFrames() const = 0;
 
     virtual void Clear(bool del_frames) = 0;
-
-    void SetNextFramePosition(int64_t position);
-    void SetNextFrameTrackPosition(int64_t position);
-
-protected:
-    int64_t mNextFramePosition;
-    int64_t mNextFrameTrackPosition;
 };
 
 

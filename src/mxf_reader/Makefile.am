@@ -6,6 +6,7 @@ libmxfreader_la_SOURCES = \
 	IndexTableHelper.cpp \
 	MXFFileReader.cpp \
 	MXFFileTrackReader.cpp \
+	MXFFrameBuffer.cpp \
 	MXFGroupReader.cpp \
 	MXFIndexEntryExt.cpp \
 	MXFPackageResolver.cpp \

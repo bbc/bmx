@@ -89,10 +89,11 @@ public:
     virtual size_t GetTrackIndex() const { return mTrackIndex; }
 
 public:
-    virtual bool IsEnabled() const               { return mIsEnabled; }
-    virtual FrameBuffer* GetFrameBuffer() const  { return mFrameBuffer; }
+    virtual bool IsEnabled() const        { return mIsEnabled; }
+    virtual FrameBuffer* GetFrameBuffer() { return &mFrameBuffer; }
 
 public:
+    virtual MXFFrameBuffer* GetMXFFrameBuffer() { return &mFrameBuffer; }
     virtual void SetNextFramePosition(int64_t position);
 
 private:
@@ -119,8 +120,7 @@ private:
     std::vector<MXFTrackReader*> mTrackSegments;
     std::vector<int64_t> mSegmentOffsets;
 
-    FrameBuffer *mFrameBuffer;
-    bool mOwnFrameBuffer;
+    MXFFrameBuffer mFrameBuffer;
 };
 
 

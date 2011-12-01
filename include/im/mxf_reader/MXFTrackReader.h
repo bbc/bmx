@@ -35,7 +35,7 @@
 
 #include <libMXF++/MXF.h>
 
-#include <im/frame/FrameBuffer.h>
+#include <im/mxf_reader/MXFFrameBuffer.h>
 #include <im/mxf_reader/MXFTrackInfo.h>
 #include <im/mxf_reader/MXFIndexEntryExt.h>
 
@@ -85,9 +85,10 @@ public:
 
 public:
     virtual bool IsEnabled() const = 0;
-    virtual FrameBuffer* GetFrameBuffer() const = 0;
+    virtual FrameBuffer* GetFrameBuffer() = 0;
 
 public:
+    virtual MXFFrameBuffer* GetMXFFrameBuffer() = 0;
     virtual void SetNextFramePosition(int64_t position) = 0;
 };
 

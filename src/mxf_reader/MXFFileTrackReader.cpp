@@ -54,15 +54,12 @@ MXFFileTrackReader::MXFFileTrackReader(MXFFileReader *file_reader, size_t track_
     mFileSourcePackage = file_source_package;
 
     mIsEnabled = true;
-    mFrameBuffer = new DefaultFrameBuffer();
-    mOwnFrameBuffer = true;
+    mFrameBuffer.SetTargetBuffer(new DefaultFrameBuffer(), true);
 }
 
 MXFFileTrackReader::~MXFFileTrackReader()
 {
     delete mTrackInfo;
-    if (mOwnFrameBuffer)
-        delete mFrameBuffer;
 }
 
 void MXFFileTrackReader::SetEnable(bool enable)
@@ -72,11 +69,7 @@ void MXFFileTrackReader::SetEnable(bool enable)
 
 void MXFFileTrackReader::SetFrameBuffer(FrameBuffer *frame_buffer, bool take_ownership)
 {
-    if (mOwnFrameBuffer)
-        delete mFrameBuffer;
-
-    mFrameBuffer = frame_buffer;
-    mOwnFrameBuffer = take_ownership;
+    mFrameBuffer.SetTargetBuffer(frame_buffer, take_ownership);
 }
 
 void MXFFileTrackReader::SetReadLimits()

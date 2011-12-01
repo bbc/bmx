@@ -29,87 +29,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __IM_MXF_FRAME_BUFFER_H__
+#define __IM_MXF_FRAME_BUFFER_H__
+
 #include <im/frame/FrameBuffer.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
-
-using namespace std;
-using namespace im;
 
 
 
-DefaultFrameBuffer::DefaultFrameBuffer()
+namespace im
 {
-    mFrameFactory = new DefaultFrameFactory();
-    mOwnFrameFactory = true;
-}
 
-DefaultFrameBuffer::DefaultFrameBuffer(FrameFactory *frame_factory, bool take_ownership)
+
+class MXFFrameBuffer : public FrameBuffer
 {
-    mFrameFactory = frame_factory;
-    mOwnFrameFactory = take_ownership;
-}
+public:
+    MXFFrameBuffer();
+    virtual ~MXFFrameBuffer();
 
-DefaultFrameBuffer::~DefaultFrameBuffer()
-{
-    if (mOwnFrameFactory)
-        delete mFrameFactory;
+    void SetTargetBuffer(FrameBuffer *target_buffer, bool take_ownership);
 
-    Clear(true);
-}
+    void SetNextFramePosition(int64_t position);
+    void SetNextFrameTrackPosition(int64_t position);
 
-void DefaultFrameBuffer::SetFrameFactory(FrameFactory *frame_factory, bool take_ownership)
-{
-    if (mOwnFrameFactory)
-        delete mFrameFactory;
+public:
+    virtual void SetFrameFactory(FrameFactory *frame_factory, bool take_ownership);
+    virtual Frame* CreateFrame();
+    virtual void PushFrame(Frame *frame);
+    virtual void PopFrame(bool del_frame);
+    virtual Frame* GetLastFrame(bool pop);
+    virtual size_t GetNumFrames() const;
+    virtual void Clear(bool del_frames);
 
-    mFrameFactory = frame_factory;
-    mOwnFrameFactory = take_ownership;
-}
+private:
+    FrameBuffer *mTargetBuffer;
+    bool mOwnTargetBuffer;
+    int64_t mNextFramePosition;
+    int64_t mNextFrameTrackPosition;
+};
 
-Frame* DefaultFrameBuffer::CreateFrame()
-{
-    return mFrameFactory->CreateFrame();
-}
 
-void DefaultFrameBuffer::PushFrame(Frame *frame)
-{
-    mFrames.push_back(frame);
-}
+};
 
-void DefaultFrameBuffer::PopFrame(bool del_frame)
-{
-    if (del_frame && mFrames.front())
-        delete mFrames.front();
 
-    mFrames.pop_front();
-}
 
-Frame* DefaultFrameBuffer::GetLastFrame(bool pop)
-{
-    if (mFrames.empty())
-        return 0;
-
-    Frame *frame = mFrames.front();
-    if (pop)
-        mFrames.pop_front();
-
-    return frame;
-}
-
-size_t DefaultFrameBuffer::GetNumFrames() const
-{
-    return mFrames.size();
-}
-
-void DefaultFrameBuffer::Clear(bool del_frames)
-{
-    if (del_frames) {
-        size_t i;
-        for (i = 0; i < mFrames.size(); i++)
-            delete mFrames[i];
-    }
-
-    mFrames.clear();
-}
+#endif
 

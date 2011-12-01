@@ -96,6 +96,7 @@ nobase_library_include_HEADERS = \
 	im/mxf_reader/IndexTableHelper.h \
 	im/mxf_reader/MXFFileReader.h \
 	im/mxf_reader/MXFFileTrackReader.h \
+	im/mxf_reader/MXFFrameBuffer.h \
 	im/mxf_reader/MXFGroupReader.h \
 	im/mxf_reader/MXFIndexEntryExt.h \
 	im/mxf_reader/MXFPackageResolver.h \
