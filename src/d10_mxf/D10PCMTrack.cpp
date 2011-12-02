@@ -58,13 +58,23 @@ D10PCMTrack::D10PCMTrack(D10File *file, uint32_t track_index, mxfRational frame_
     mSoundDescriptorHelper->SetQuantizationBits(16);
     mSoundDescriptorHelper->SetChannelCount(1);
 
-    mOutputChannelIndex = (uint8_t)(-1);
+    mOutputTrackNumber = 1; // overrides init in D10Track
 
     SetSampleSequence();
 }
 
 D10PCMTrack::~D10PCMTrack()
 {
+}
+
+void D10PCMTrack::SetOutputTrackNumber(uint32_t track_number)
+{
+    IM_CHECK_M(track_number > 0,
+               ("A zero D-10 AES-3 track number is not allowed. "
+                "The AES-3 sound channel index is calculated as track number - 1"));
+    IM_CHECK(track_number <= 8);
+
+    D10Track::SetOutputTrackNumber(track_number);
 }
 
 void D10PCMTrack::SetSamplingRate(mxfRational sampling_rate)
@@ -110,13 +120,6 @@ void D10PCMTrack::SetSequenceOffset(uint8_t offset)
     mCPManager->SetSoundSequenceOffset(offset);
 }
 
-void D10PCMTrack::SetOutputChannelIndex(uint8_t track_index)
-{
-    IM_CHECK(track_index < 8);
-
-    mOutputChannelIndex = track_index;
-}
-
 bool D10PCMTrack::HaveSequenceOffset() const
 {
     return mCPManager->HaveSoundSequenceOffset();
@@ -138,7 +141,7 @@ vector<uint32_t> D10PCMTrack::GetShiftedSampleSequence() const
 
 void D10PCMTrack::PrepareWrite()
 {
-    mCPManager->RegisterPCMTrackElement(mTrackIndex, mOutputChannelIndex, mSampleSequence,
+    mCPManager->RegisterPCMTrackElement(mTrackIndex, mOutputTrackNumber - 1, mSampleSequence,
                                         mSoundDescriptorHelper->GetSampleSize());
 }
 

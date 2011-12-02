@@ -47,6 +47,9 @@ public:
     D10MPEGTrack(D10File *file, uint32_t track_index, mxfRational frame_rate, D10EssenceType essence_type);
     virtual ~D10MPEGTrack();
 
+    virtual void SetOutputTrackNumber(uint32_t track_number);
+
+public:
     void SetAspectRatio(mxfRational aspect_ratio);  // default 16/9
     void SetSampleSize(uint32_t size);
     void SetAFD(uint8_t afd);                       // default not set

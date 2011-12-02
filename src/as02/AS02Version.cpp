@@ -250,7 +250,7 @@ void AS02Version::CreateHeaderMetadata()
         track->setTrackID(mTracks[i]->IsPicture() ?
                             FIRST_VIDEO_TRACK_ID + video_count :
                             FIRST_AUDIO_TRACK_ID + audio_count);
-        track->setTrackNumber(mTracks[i]->GetClipTrackNumber());
+        track->setTrackNumber(mTracks[i]->GetOutputTrackNumber());
         track->setEditRate(mTracks[i]->GetSampleRate());
         track->setOrigin(0);
 

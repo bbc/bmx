@@ -335,16 +335,14 @@ static void usage(const char* cmd)
     fprintf(stderr, "  --dial-norm <value>     Gain to be applied to normalize perceived loudness of the clip. Default not set\n");
     fprintf(stderr, "  --off <bytes>           Skip bytes at start of the next input/track's file\n");
     fprintf(stderr, "  --maxlen <bytes>        Maximum number of bytes to read from next input/track's file\n");
+    fprintf(stderr, "  --track-num <num>       Set the output track number. Default track number equals last track number of same picture/sound type + 1\n");
+    fprintf(stderr, "                          For as11d10/d10 the track number must be > 0 and <= 8 because the AES-3 channel index equals track number - 1\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02:\n");
     fprintf(stderr, "    --trk-out-start <offset>   Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02/avid:\n");
     fprintf(stderr, "    --trk-out-end <offset>     Offset (positive value) from last frame to last output frame, eg. rollout in MPEG-2 Long GOP\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/as11d10/op1a:\n");
-    fprintf(stderr, "    --track-num <num>          Set the track number. Default starts at 1 or equals last track of same picture/sound type + 1\n");
-    fprintf(stderr, "                               For as11d10/d10 the track number determines the channel index, which equals track number - 1\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Inputs:\n");
@@ -1011,6 +1009,25 @@ int main(int argc, const char** argv)
             cmdln_index++;
             continue; // skip input reset at the end
         }
+        else if (strcmp(argv[cmdln_index], "--track-num") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            input.track_number = uvalue;
+            input.track_number_set = true;
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
         else if (strcmp(argv[cmdln_index], "--trk-out-start") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -1044,25 +1061,6 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
-            cmdln_index++;
-            continue; // skip input reset at the end
-        }
-        else if (strcmp(argv[cmdln_index], "--track-num") == 0)
-        {
-            if (cmdln_index + 1 >= argc)
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
-                return 1;
-            }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
-                return 1;
-            }
-            input.track_number = uvalue;
-            input.track_number_set = true;
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -2252,6 +2250,9 @@ int main(int argc, const char** argv)
 
             // initialize track
 
+            if (input->track_number_set)
+                input->track->SetOutputTrackNumber(input->track_number);
+
             if (clip_type == CW_AS02_CLIP_TYPE) {
                 AS02Track *as02_track = input->track->GetAS02Track();
                 as02_track->SetMICType(mic_type);
@@ -2262,14 +2263,6 @@ int main(int argc, const char** argv)
                 AS02PictureTrack *as02_pict_track = dynamic_cast<AS02PictureTrack*>(input->track->GetAS02Track());
                 if (as02_pict_track)
                     as02_pict_track->SetPartitionInterval(partition_interval);
-            } else if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE) {
-                AS11Track *as11_track = input->track->GetAS11Track();
-                if (input->track_number_set)
-                    as11_track->SetTrackNumber(input->track_number);
-            } else if (clip_type == CW_OP1A_CLIP_TYPE) {
-                OP1ATrack *op1a_track = input->track->GetOP1ATrack();
-                if (input->track_number_set)
-                    op1a_track->SetMaterialTrackNumber(input->track_number);
             } else if (clip_type == CW_AVID_CLIP_TYPE) {
                 AvidTrack *avid_track = input->track->GetAvidTrack();
                 AvidClip *avid_clip = clip->GetAvidClip();
@@ -2299,10 +2292,6 @@ int main(int argc, const char** argv)
                     IM_ASSERT(source_refs.size() == 1);
                     avid_track->SetSourceRef(source_refs[0].first, source_refs[0].second);
                 }
-            } else if (clip_type == CW_D10_CLIP_TYPE) {
-                D10PCMTrack *d10_pcm_track = dynamic_cast<D10PCMTrack*>(input->track->GetD10Track());
-                if (d10_pcm_track && input->track_number_set)
-                    d10_pcm_track->SetOutputChannelIndex(input->track_number_set);
             }
 
             switch (input->essence_type)

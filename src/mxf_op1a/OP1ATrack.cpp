@@ -247,8 +247,8 @@ OP1ATrack::OP1ATrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, ui
     mIndexTable = file->GetIndexTable();
     mTrackIndex = track_index;
     mTrackId = track_id;
-    mMaterialTrackNumber = 0;
-    mMaterialTrackNumberSet = false;
+    mOutputTrackNumber = 0;
+    mOutputTrackNumberSet = false;
     mTrackTypeNumber = track_type_number;
     mIsPicture = true;
     mFrameRate = frame_rate;
@@ -270,10 +270,10 @@ OP1ATrack::~OP1ATrack()
     delete mDescriptorHelper;
 }
 
-void OP1ATrack::SetMaterialTrackNumber(uint32_t track_number)
+void OP1ATrack::SetOutputTrackNumber(uint32_t track_number)
 {
-    mMaterialTrackNumber = track_number;
-    mMaterialTrackNumberSet = true;
+    mOutputTrackNumber = track_number;
+    mOutputTrackNumberSet = true;
 }
 
 void OP1ATrack::SetLowerLevelSourcePackage(SourcePackage *package, uint32_t track_id, string uri)
@@ -325,9 +325,9 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     // Preface - ContentStorage - MaterialPackage - Timeline Track
     Track *track = new Track(header_metadata);
     material_package->appendTracks(track);
-    track->setTrackName(get_track_name(mIsPicture, mMaterialTrackNumber));
+    track->setTrackName(get_track_name(mIsPicture, mOutputTrackNumber));
     track->setTrackID(mTrackId);
-    track->setTrackNumber(mMaterialTrackNumber);
+    track->setTrackNumber(mOutputTrackNumber);
     track->setEditRate(mFrameRate);
     track->setOrigin(0);
 
@@ -350,7 +350,7 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     // Preface - ContentStorage - SourcePackage - Timeline Track
     track = new Track(header_metadata);
     file_source_package->appendTracks(track);
-    track->setTrackName(get_track_name(mIsPicture, mMaterialTrackNumber));
+    track->setTrackName(get_track_name(mIsPicture, mOutputTrackNumber));
     track->setTrackID(mTrackId);
     track->setTrackNumber(mTrackNumber);
     track->setEditRate(mFrameRate);

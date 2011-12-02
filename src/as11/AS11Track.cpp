@@ -204,24 +204,16 @@ AS11Track::~AS11Track()
 {
 }
 
-void AS11Track::SetTrackNumber(uint32_t track_number)
+void AS11Track::SetOutputTrackNumber(uint32_t track_number)
 {
     switch (mClipType)
     {
         case AS11_OP1A_CLIP_TYPE:
-            mOP1ATrack->SetMaterialTrackNumber(track_number);
+            mOP1ATrack->SetOutputTrackNumber(track_number);
             break;
         case AS11_D10_CLIP_TYPE:
-        {
-            D10PCMTrack *pcm_track = dynamic_cast<D10PCMTrack*>(mD10Track);
-            if (pcm_track) {
-                IM_CHECK_M(track_number > 0,
-                           ("Zero D10 track number is not supported. "
-                            "Sound channel index is calculated as track number - 1"));
-                pcm_track->SetOutputChannelIndex(track_number - 1);
-            }
+            mD10Track->SetOutputTrackNumber(track_number);
             break;
-        }
         case AS11_UNKNOWN_CLIP_TYPE:
             IM_ASSERT(false);
             break;

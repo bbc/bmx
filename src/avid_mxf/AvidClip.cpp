@@ -381,9 +381,23 @@ void AvidClip::PrepareWrite()
     // sort tracks, video followed by audio
     stable_sort(mTracks.begin(), mTracks.end(), compare_track);
 
+    uint32_t last_picture_track_number = 0;
+    uint32_t last_sound_track_number = 0;
+    size_t i;
+    for (i = 0; i < mTracks.size(); i++) {
+        if (mTracks[i]->IsPicture()) {
+            if (!mTracks[i]->IsOutputTrackNumberSet())
+                mTracks[i]->SetOutputTrackNumber(last_picture_track_number + 1);
+            last_picture_track_number = mTracks[i]->GetOutputTrackNumber();
+        } else {
+            if (!mTracks[i]->IsOutputTrackNumberSet())
+                mTracks[i]->SetOutputTrackNumber(last_sound_track_number + 1);
+            last_sound_track_number = mTracks[i]->GetOutputTrackNumber();
+        }
+    }
+
     CreateMaterialPackage();
 
-    size_t i;
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite();
 
@@ -449,7 +463,6 @@ void AvidClip::CreateMaterialPackage()
 
     bool have_described_track_id = false;
     uint32_t track_id = 1;
-    uint32_t video_track_number = 1, audio_track_number = 1;
     size_t i;
     for (i = 0; i < mTracks.size(); i++) {
 
@@ -465,9 +478,8 @@ void AvidClip::CreateMaterialPackage()
         Track *track = new Track(mHeaderMetadata);
         mMaterialPackage->appendTracks(track);
         track->setTrackID(track_id);
-        track->setTrackName(get_track_name(mTracks[i]->IsPicture(),
-                                           (mTracks[i]->IsPicture() ? video_track_number : audio_track_number)));
-        track->setTrackNumber(mTracks[i]->IsPicture() ? video_track_number : audio_track_number);
+        track->setTrackName(get_track_name(mTracks[i]->IsPicture(), mTracks[i]->GetOutputTrackNumber()));
+        track->setTrackNumber(mTracks[i]->GetOutputTrackNumber());
         track->setEditRate(mTracks[i]->GetSampleRate());
         track->setOrigin(0);
 
@@ -488,11 +500,6 @@ void AvidClip::CreateMaterialPackage()
         pair<mxfUMID, uint32_t> source_ref = mTracks[i]->GetSourceReference();
         source_clip->setSourcePackageID(source_ref.first);
         source_clip->setSourceTrackID(source_ref.second);
-
-        if (mTracks[i]->IsPicture())
-            video_track_number++;
-        else
-            audio_track_number++;
 
         track_id++;
     }

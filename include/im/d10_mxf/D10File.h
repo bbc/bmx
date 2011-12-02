@@ -126,7 +126,7 @@ private:
     D10MPEGTrack *mPictureTrack;
     D10PCMTrack *mFirstSoundTrack;
     uint8_t mSoundTrackCount;
-    uint32_t mMaxSoundOutputChannelIndex;
+    uint32_t mMaxSoundOutputTrackNumber;
 
     mxfUL mEssenceContainerUL;
 

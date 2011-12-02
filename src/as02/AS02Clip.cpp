@@ -135,7 +135,6 @@ AS02Track* AS02Clip::CreateTrack(AS02EssenceType essence_type)
 
     mTracks.push_back(AS02Track::OpenNew(this, filepath, rel_uri, mTracks.size(), essence_type));
     mTrackMap[mTracks.back()->GetTrackIndex()] = mTracks.back();
-    mTracks.back()->SetMaterialTrackNumber(track_number);
 
     return mTracks.back();
 }
@@ -145,7 +144,21 @@ void AS02Clip::PrepareWrite()
     // sort tracks, picture followed by sound
     stable_sort(mTracks.begin(), mTracks.end(), compare_track);
 
+    uint32_t last_picture_track_number = 0;
+    uint32_t last_sound_track_number = 0;
     size_t i;
+    for (i = 0; i < mTracks.size(); i++) {
+        if (mTracks[i]->IsPicture()) {
+            if (!mTracks[i]->IsOutputTrackNumberSet())
+                mTracks[i]->SetOutputTrackNumber(last_picture_track_number + 1);
+            last_picture_track_number = mTracks[i]->GetOutputTrackNumber();
+        } else {
+            if (!mTracks[i]->IsOutputTrackNumberSet())
+                mTracks[i]->SetOutputTrackNumber(last_sound_track_number + 1);
+            last_sound_track_number = mTracks[i]->GetOutputTrackNumber();
+        }
+    }
+
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite();
 }

@@ -122,7 +122,7 @@ D10File::D10File(mxfpp::File *mxf_file, mxfRational frame_rate)
     mPictureTrack = 0;
     mFirstSoundTrack = 0;
     mSoundTrackCount = 0;
-    mMaxSoundOutputChannelIndex = 0;
+    mMaxSoundOutputTrackNumber = 0;
     memset(&mEssenceContainerUL, 0, sizeof(mEssenceContainerUL));
     mDataModel = 0;
     mHeaderMetadata = 0;
@@ -228,18 +228,16 @@ void D10File::PrepareHeaderMetadata()
 
     mEssenceContainerUL = get_essence_container_ul(mPictureTrack->GetEssenceType(), mFrameRate);
 
-    uint8_t sound_output_channel_index = 0;
+    uint32_t last_sound_track_number = 0;
     size_t i;
     for (i = 0; i < mTracks.size(); i++) {
         if (!mTracks[i]->IsPicture()) {
-            D10PCMTrack *pcm_track = dynamic_cast<D10PCMTrack*>(mTracks[i]);
-            if (!pcm_track->IsOutputChannelIndexSet())
-                pcm_track->SetOutputChannelIndex(sound_output_channel_index);
+            if (!mTracks[i]->IsOutputTrackNumberSet())
+                mTracks[i]->SetOutputTrackNumber(last_sound_track_number + 1);
+            last_sound_track_number = mTracks[i]->GetOutputTrackNumber();
 
-            if (pcm_track->GetOutputChannelIndex() > mMaxSoundOutputChannelIndex)
-                mMaxSoundOutputChannelIndex = pcm_track->GetOutputChannelIndex();
-
-            sound_output_channel_index = pcm_track->GetOutputChannelIndex() + 1;
+            if (mTracks[i]->GetOutputTrackNumber() > mMaxSoundOutputTrackNumber)
+                mMaxSoundOutputTrackNumber = mTracks[i]->GetOutputTrackNumber();
         }
     }
 
@@ -515,7 +513,7 @@ void D10File::CreateHeaderMetadata()
     sound_descriptor->setEssenceContainer(mEssenceContainerUL);
     if (mFirstSoundTrack) {
         sound_descriptor->setAudioSamplingRate(mFirstSoundTrack->GetSamplingRate());
-        sound_descriptor->setChannelCount(mMaxSoundOutputChannelIndex + 1);
+        sound_descriptor->setChannelCount(mMaxSoundOutputTrackNumber);
         sound_descriptor->setQuantizationBits(mFirstSoundTrack->GetQuantizationBits());
         if (mFirstSoundTrack->HaveSetLocked())
             sound_descriptor->setLocked(mFirstSoundTrack->GetLocked());

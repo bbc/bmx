@@ -303,6 +303,8 @@ AvidTrack::AvidTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essen
     mIndexSID = 2;
     mxf_generate_aafsdk_umid(&mFileSourcePackageUID);
     mMaterialTrackId = 0;
+    mOutputTrackNumber = 0;
+    mOutputTrackNumberSet = false;
     mDataModel = 0;
     mHeaderMetadata = 0;
     mHeaderMetadataStartPos = 0;
@@ -328,6 +330,12 @@ AvidTrack::~AvidTrack()
     delete mDataModel;
     delete mHeaderMetadata;
     delete mCBEIndexSegment;
+}
+
+void AvidTrack::SetOutputTrackNumber(uint32_t track_number)
+{
+    mOutputTrackNumber = track_number;
+    mOutputTrackNumberSet = true;
 }
 
 void AvidTrack::SetFileSourcePackageUID(mxfUMID package_uid)

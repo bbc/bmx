@@ -72,6 +72,8 @@ public:
 public:
     virtual ~D10Track();
 
+    virtual void SetOutputTrackNumber(uint32_t track_number);
+
 public:
     void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
 
@@ -83,6 +85,9 @@ public:
 
     uint32_t GetSampleSize();
 
+    bool IsOutputTrackNumberSet() const   { return mOutputTrackNumberSet; }
+    uint32_t GetOutputTrackNumber() const { return mOutputTrackNumber; }
+
 protected:
     D10Track(D10File *file, uint32_t track_index, mxfRational frame_rate, D10EssenceType essence_type);
 
@@ -93,6 +98,8 @@ protected:
 protected:
     D10File *mD10File;
     uint32_t mTrackIndex;
+    uint32_t mOutputTrackNumber;
+    bool mOutputTrackNumberSet;
     mxfRational mFrameRate;
     D10ContentPackageManager *mCPManager;
     bool mIsPicture;

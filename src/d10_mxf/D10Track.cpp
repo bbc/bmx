@@ -143,6 +143,8 @@ D10Track::D10Track(D10File *file, uint32_t track_index, mxfRational frame_rate, 
 {
     mD10File = file;
     mTrackIndex = track_index;
+    mOutputTrackNumber = 0;
+    mOutputTrackNumberSet = false;
     mFrameRate = frame_rate;
     mCPManager = file->GetContentPackageManager();
     mIsPicture = true;
@@ -157,6 +159,12 @@ D10Track::D10Track(D10File *file, uint32_t track_index, mxfRational frame_rate, 
 D10Track::~D10Track()
 {
     delete mDescriptorHelper;
+}
+
+void D10Track::SetOutputTrackNumber(uint32_t track_number)
+{
+    mOutputTrackNumber = track_number;
+    mOutputTrackNumberSet = true;
 }
 
 void D10Track::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)

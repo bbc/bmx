@@ -102,7 +102,7 @@ public:
 public:
     virtual ~OP1ATrack();
 
-    void SetMaterialTrackNumber(uint32_t track_number);
+    void SetOutputTrackNumber(uint32_t track_number);
 
     void SetLowerLevelSourcePackage(mxfpp::SourcePackage *package, uint32_t track_id, std::string uri);
     void SetLowerLevelSourcePackage(mxfUMID package_uid, uint32_t track_id);
@@ -132,8 +132,8 @@ protected:
 
     void CompleteEssenceKeyAndTrackNum(uint8_t track_count);
 
-    bool IsMaterialTrackNumberSet() const { return mMaterialTrackNumberSet; }
-    uint32_t GetMaterialTrackNumber() const { return mMaterialTrackNumber; }
+    bool IsOutputTrackNumberSet() const { return mOutputTrackNumberSet; }
+    uint32_t GetOutputTrackNumber() const { return mOutputTrackNumber; }
 
 protected:
     OP1AFile *mOP1AFile;
@@ -141,8 +141,8 @@ protected:
     OP1AIndexTable *mIndexTable;
     uint32_t mTrackIndex;
     uint32_t mTrackId;
-    uint32_t mMaterialTrackNumber;
-    bool mMaterialTrackNumberSet;
+    uint32_t mOutputTrackNumber;
+    bool mOutputTrackNumberSet;
     bool mIsPicture;
     mxfRational mFrameRate;
     uint32_t mTrackNumber;

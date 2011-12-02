@@ -88,7 +88,7 @@ public:
     virtual ~AS02Track();
 
     void SetFileSourcePackageUID(mxfUMID package_uid);
-    void SetMaterialTrackNumber(uint32_t track_number);
+    void SetOutputTrackNumber(uint32_t track_number);
     void SetMICType(MICType type);
     void SetMICScope(MICScope scope);
 
@@ -107,7 +107,8 @@ public:
 
 public:
     uint32_t GetTrackIndex() const { return mTrackIndex; }
-    uint32_t GetClipTrackNumber() const { return mClipTrackNumber; }
+    bool IsOutputTrackNumberSet() const { return mOutputTrackNumberSet; }
+    uint32_t GetOutputTrackNumber() const { return mOutputTrackNumber; }
     std::string GetRelativeURL() const { return mRelativeURL; }
     AS02EssenceType GetEssenceType() const { return mEssenceType; }
     virtual mxfUL GetEssenceContainerUL() const;
@@ -173,7 +174,8 @@ private:
     AS02ManifestFile *mManifestFile;
     AS02Clip *mClip;
     uint32_t mTrackIndex;
-    uint32_t mClipTrackNumber;
+    uint32_t mOutputTrackNumber;
+    bool mOutputTrackNumberSet;
     std::string mRelativeURL;
 
     mxfpp::DataModel *mDataModel;

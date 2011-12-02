@@ -56,6 +56,13 @@ D10MPEGTrack::~D10MPEGTrack()
 {
 }
 
+void D10MPEGTrack::SetOutputTrackNumber(uint32_t track_number)
+{
+    (void)track_number;
+
+    log_warn("Ignoring attempt to set D10 MPEG output track number\n");
+}
+
 void D10MPEGTrack::SetAspectRatio(mxfRational aspect_ratio)
 {
     mD10DescriptorHelper->SetAspectRatio(aspect_ratio);

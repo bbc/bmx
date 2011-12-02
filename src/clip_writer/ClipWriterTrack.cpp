@@ -377,6 +377,32 @@ ClipWriterTrack::~ClipWriterTrack()
 {
 }
 
+void ClipWriterTrack::SetOutputTrackNumber(uint32_t track_number)
+{
+    switch (mClipType)
+    {
+        case CW_AS02_CLIP_TYPE:
+            mAS02Track->SetOutputTrackNumber(track_number);
+            break;
+        case CW_AS11_OP1A_CLIP_TYPE:
+        case CW_AS11_D10_CLIP_TYPE:
+            mAS11Track->SetOutputTrackNumber(track_number);
+            break;
+        case CW_OP1A_CLIP_TYPE:
+            mOP1ATrack->SetOutputTrackNumber(track_number);
+            break;
+        case CW_AVID_CLIP_TYPE:
+            mAvidTrack->SetOutputTrackNumber(track_number);
+            break;
+        case CW_D10_CLIP_TYPE:
+            mD10Track->SetOutputTrackNumber(track_number);
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            IM_ASSERT(false);
+            break;
+    }
+}
+
 void ClipWriterTrack::SetAspectRatio(Rational aspect_ratio)
 {
     switch (mClipType)

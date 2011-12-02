@@ -236,7 +236,8 @@ AS02Track::AS02Track(AS02Clip *clip, uint32_t track_index, AS02EssenceType essen
     mClip = clip;
     mTrackIndex = track_index;
     mSampleSize = 0;
-    mClipTrackNumber = 0;
+    mOutputTrackNumber = 0;
+    mOutputTrackNumberSet = false;
     mContainerDuration = 0;
     mContainerSize = 0;
     mOutputStartOffset = 0;
@@ -294,9 +295,10 @@ void AS02Track::SetFileSourcePackageUID(mxfUMID package_uid)
     mManifestFile->SetId(mFileSourcePackageUID);
 }
 
-void AS02Track::SetMaterialTrackNumber(uint32_t track_number)
+void AS02Track::SetOutputTrackNumber(uint32_t track_number)
 {
-    mClipTrackNumber = track_number;
+    mOutputTrackNumber = track_number;
+    mOutputTrackNumberSet = true;
 }
 
 void AS02Track::SetMICType(MICType type)
@@ -620,7 +622,7 @@ void AS02Track::CreateHeaderMetadata()
     mMaterialPackage->setPackageCreationDate(mClip->mCreationDate);
     mMaterialPackage->setPackageModifiedDate(mClip->mCreationDate);
     if (!mClip->mClipName.empty())
-        mMaterialPackage->setName(get_track_clip_name(mClip->mClipName, mIsPicture, mClipTrackNumber));
+        mMaterialPackage->setName(get_track_clip_name(mClip->mClipName, mIsPicture, mOutputTrackNumber));
 
     // Preface - ContentStorage - MaterialPackage - Timecode Track
     Track *timecode_track = new Track(mHeaderMetadata);

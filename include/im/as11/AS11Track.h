@@ -98,7 +98,7 @@ public:
 
 public:
     // General properties
-    void SetTrackNumber(uint32_t track_number);     // default is number of previous track of same type + 1
+    void SetOutputTrackNumber(uint32_t track_number);
 
     // Picture properties
     void SetAspectRatio(Rational aspect_ratio);             // default 16/9

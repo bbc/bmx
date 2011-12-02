@@ -407,6 +407,13 @@ void D10ContentPackageManager::RegisterPCMTrackElement(uint32_t track_index, uin
     IM_CHECK((mInfo.is_25hz && sample_sequence.size() == 1) || (!mInfo.is_25hz && sample_sequence.size() == 5));
     IM_CHECK(sample_size == 2 || sample_size == 3);
 
+    map<uint32_t, uint8_t>::const_iterator iter;
+    for (iter = mInfo.sound_channels.begin(); iter != mInfo.sound_channels.end(); iter++) {
+        IM_CHECK_M(iter->second != output_channel_index,
+                   ("Duplicate AES-3 channel indexes %d (track number %d)",
+                     output_channel_index, output_channel_index + 1));
+    }
+
     // set or check sample sequence and size
     if (mInfo.sound_channels.empty()) {
         mInfo.sound_sample_sequence = sample_sequence;

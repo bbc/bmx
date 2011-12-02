@@ -108,6 +108,8 @@ public:
 public:
     virtual ~AvidTrack();
 
+    void SetOutputTrackNumber(uint32_t track_number);
+
     void SetFileSourcePackageUID(mxfUMID package_uid);
     void SetSourceRef(mxfUMID ref_package_uid, uint32_t ref_track_id);
 
@@ -134,6 +136,9 @@ public:
     uint32_t GetTrackIndex() const { return mTrackIndex; }
     std::pair<mxfUMID, uint32_t> GetSourceReference() const;
     mxfUL GetEssenceContainerUL() const;
+
+    bool IsOutputTrackNumberSet() const   { return mOutputTrackNumberSet; }
+    uint32_t GetOutputTrackNumber() const { return mOutputTrackNumber; }
 
     mxfpp::MaterialPackage* GetMaterialPackage() const { return mMaterialPackage; }
     mxfpp::SourcePackage* GetFileSourcePackage() const { return mFileSourcePackage; }
@@ -175,6 +180,8 @@ protected:
 
     mxfUMID mFileSourcePackageUID;
     uint32_t mMaterialTrackId;
+    uint32_t mOutputTrackNumber;
+    bool mOutputTrackNumberSet;
 
     mxfpp::DataModel *mDataModel;
     mxfpp::AvidHeaderMetadata *mHeaderMetadata;

@@ -233,13 +233,13 @@ void OP1AFile::PrepareHeaderMetadata()
     size_t i;
     for (i = 0; i < mTracks.size(); i++) {
         if (mTracks[i]->IsPicture()) {
-            if (!mTracks[i]->IsMaterialTrackNumberSet())
-                mTracks[i]->SetMaterialTrackNumber(last_picture_track_number + 1);
-            last_picture_track_number = mTracks[i]->GetMaterialTrackNumber();
+            if (!mTracks[i]->IsOutputTrackNumberSet())
+                mTracks[i]->SetOutputTrackNumber(last_picture_track_number + 1);
+            last_picture_track_number = mTracks[i]->GetOutputTrackNumber();
         } else {
-            if (!mTracks[i]->IsMaterialTrackNumberSet())
-                mTracks[i]->SetMaterialTrackNumber(last_sound_track_number + 1);
-            last_sound_track_number = mTracks[i]->GetMaterialTrackNumber();
+            if (!mTracks[i]->IsOutputTrackNumberSet())
+                mTracks[i]->SetOutputTrackNumber(last_sound_track_number + 1);
+            last_sound_track_number = mTracks[i]->GetOutputTrackNumber();
         }
     }
 

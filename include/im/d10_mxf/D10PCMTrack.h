@@ -47,6 +47,9 @@ public:
     D10PCMTrack(D10File *file, uint32_t track_index, mxfRational frame_rate, D10EssenceType essence_type);
     virtual ~D10PCMTrack();
 
+    virtual void SetOutputTrackNumber(uint32_t track_number);
+
+public:
     void SetSamplingRate(mxfRational sampling_rate);    // 48000/1
     void SetQuantizationBits(uint32_t bits);            // default 16, alternative is 24
     void SetChannelCount(uint32_t count);               // default 1
@@ -54,8 +57,6 @@ public:
     void SetAudioRefLevel(int8_t level);                // default not set
     void SetDialNorm(int8_t dial_norm);                 // default not set
     void SetSequenceOffset(uint8_t offset);             // default determined from input
-
-    void SetOutputChannelIndex(uint8_t track_index);    // default track_index
 
 public:
     mxfRational GetSamplingRate() const  { return mSoundDescriptorHelper->GetSamplingRate(); }
@@ -71,9 +72,6 @@ public:
     bool HaveSequenceOffset() const;
     uint8_t GetSequenceOffset() const;
 
-    bool IsOutputChannelIndexSet() const  { return mOutputChannelIndex != (uint8_t)(-1); }
-    uint8_t GetOutputChannelIndex() const { return mOutputChannelIndex; }
-
     const std::vector<uint32_t>& GetSampleSequence() const { return mSampleSequence; }
     std::vector<uint32_t> GetShiftedSampleSequence() const;
 
@@ -85,7 +83,6 @@ private:
 
 private:
     SoundMXFDescriptorHelper *mSoundDescriptorHelper;
-    uint8_t mOutputChannelIndex;
     std::vector<uint32_t> mSampleSequence;
 };
 

@@ -132,6 +132,9 @@ public:
     virtual ~ClipWriterTrack();
 
 public:
+    // General properties
+    void SetOutputTrackNumber(uint32_t track_number);
+
     // Picture properties
     void SetAspectRatio(Rational aspect_ratio);     // default 16/9
     void SetComponentDepth(uint32_t depth);         // default 8; alternative is 10
