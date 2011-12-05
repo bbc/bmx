@@ -463,11 +463,15 @@ mxfRational AvidTrack::GetSampleRate() const
     return mDescriptorHelper->GetSampleRate();
 }
 
+bool AvidTrack::HasValidDuration() const
+{
+    return mContainerDuration + mOutputEndOffset >= 0;
+}
+
 int64_t AvidTrack::GetOutputDuration(bool clip_frame_rate) const
 {
-    IM_CHECK_M(mContainerDuration + mOutputEndOffset >= 0,
-               ("Invalid output end %"PRId64" offset. Output duration %"PRId64" is negative",
-                mOutputEndOffset, mContainerDuration + mOutputEndOffset));
+    if (mContainerDuration + mOutputEndOffset <= 0)
+        return 0;
 
     if (clip_frame_rate) {
         return convert_duration(GetSampleRate(), mContainerDuration + mOutputEndOffset,
@@ -479,9 +483,8 @@ int64_t AvidTrack::GetOutputDuration(bool clip_frame_rate) const
 
 int64_t AvidTrack::GetDuration() const
 {
-    IM_CHECK_M(mContainerDuration + mOutputEndOffset >= 0,
-               ("Invalid output end %"PRId64" offset. File package track duration %"PRId64" is negative",
-                mOutputEndOffset, mContainerDuration + mOutputEndOffset));
+    if (mContainerDuration + mOutputEndOffset <= 0)
+        return 0;
 
     return mContainerDuration + mOutputEndOffset;
 }

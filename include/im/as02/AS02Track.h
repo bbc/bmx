@@ -119,6 +119,7 @@ public:
 
     uint32_t GetSampleSize();
 
+    bool HasValidDuration() const;
     int64_t GetOutputDuration(bool clip_frame_rate) const;
     int64_t GetDuration() const;
     int64_t GetContainerDuration() const;

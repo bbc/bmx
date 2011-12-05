@@ -513,11 +513,15 @@ uint32_t AS02Track::GetSampleSize()
     return mDescriptorHelper->GetSampleSize();
 }
 
+bool AS02Track::HasValidDuration() const
+{
+    return mContainerDuration - mOutputStartOffset + mOutputEndOffset >= 0;
+}
+
 int64_t AS02Track::GetOutputDuration(bool clip_frame_rate) const
 {
-    IM_CHECK_M(mContainerDuration - mOutputStartOffset + mOutputEndOffset >= 0,
-               ("Invalid output start %"PRId64" / end %"PRId64" offsets. Output duration %"PRId64" is negative",
-                mOutputStartOffset, mOutputEndOffset, mContainerDuration - mOutputStartOffset + mOutputEndOffset));
+    if (mContainerDuration - mOutputStartOffset + mOutputEndOffset <= 0)
+        return 0;
 
     if (clip_frame_rate)
         return ContainerDurationToClipFrameRate(mContainerDuration - mOutputStartOffset + mOutputEndOffset);
@@ -527,9 +531,8 @@ int64_t AS02Track::GetOutputDuration(bool clip_frame_rate) const
 
 int64_t AS02Track::GetDuration() const
 {
-    IM_CHECK_M(mContainerDuration + mOutputEndOffset >= 0,
-               ("Invalid output end %"PRId64" offset. File package track duration %"PRId64" is negative",
-                mOutputEndOffset, mContainerDuration + mOutputEndOffset));
+    if (mContainerDuration + mOutputEndOffset <= 0)
+        return 0;
 
     return mContainerDuration + mOutputEndOffset;
 }

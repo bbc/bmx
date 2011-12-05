@@ -173,6 +173,11 @@ void AS02Clip::WriteSamples(uint32_t track_index, const unsigned char *data, uin
 void AS02Clip::CompleteWrite()
 {
     size_t i;
+    for (i = 0; i < mTracks.size(); i++) {
+        IM_CHECK_M(mTracks[i]->HasValidDuration(),
+                   ("Invalid start/end offsets. Track %zu has duration that is too small"));
+    }
+
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->CompleteWrite();
 }

@@ -285,6 +285,13 @@ void OP1AFile::CompleteWrite()
     WriteContentPackages(true);
 
 
+    // check that the duration is valid
+
+    IM_CHECK_M(mIndexTable->GetDuration() - mOutputStartOffset + mOutputEndOffset >= 0,
+               ("Invalid output start %"PRId64" / end %"PRId64" offsets. Output duration %"PRId64" is negative",
+                mOutputStartOffset, mOutputEndOffset, mIndexTable->GetDuration() - mOutputStartOffset + mOutputEndOffset));
+
+
     // complete write for tracks
 
     size_t i;
@@ -379,9 +386,9 @@ void OP1AFile::CompleteWrite()
 int64_t OP1AFile::GetDuration()
 {
     int64_t container_duration = GetContainerDuration();
-    IM_CHECK_M(container_duration - mOutputStartOffset + mOutputEndOffset >= 0,
-               ("Invalid output start %"PRId64" / end %"PRId64" offsets. Output duration %"PRId64" is negative",
-                mOutputStartOffset, mOutputEndOffset, container_duration - mOutputStartOffset + mOutputEndOffset));
+
+    if (container_duration - mOutputStartOffset + mOutputEndOffset <= 0)
+        return 0;
 
     return container_duration - mOutputStartOffset + mOutputEndOffset;
 }
