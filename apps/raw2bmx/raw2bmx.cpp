@@ -2241,7 +2241,7 @@ int main(int argc, const char** argv)
                 as02_track->SetOutputStartOffset(input->output_start_offset);
                 as02_track->SetOutputEndOffset(- input->output_end_offset);
 
-                AS02PictureTrack *as02_pict_track = dynamic_cast<AS02PictureTrack*>(input->track->GetAS02Track());
+                AS02PictureTrack *as02_pict_track = dynamic_cast<AS02PictureTrack*>(as02_track);
                 if (as02_pict_track)
                     as02_pict_track->SetPartitionInterval(partition_interval);
             } else if (clip_type == CW_AVID_CLIP_TYPE) {
