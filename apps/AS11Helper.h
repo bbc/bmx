@@ -33,6 +33,7 @@
 #define __AS11_HELPER_H__
 
 #include <string>
+#include <vector>
 
 #include <libMXF++/MXF.h>
 
@@ -90,14 +91,42 @@ private:
 };
 
 
+class AS11Helper
+{
+public:
+    AS11Helper();
+    ~AS11Helper();
 
-bool parse_framework_type(const char *fwork_str, FrameworkType *type);
-bool parse_framework_file(const char *filename, FrameworkType type, std::vector<FrameworkProperty> *properties);
-bool parse_segmentation_file(const char *filename, Rational frame_rate, std::vector<AS11TCSegment> *segments,
-                             bool *filler_complete_segments);
+    bool ParseFrameworkFile(const char *type_str, const char *filename);
+    bool ParseSegmentationFile(const char *filename, Rational frame_rate);
+    bool SetFrameworkProperty(const char *type_str, const char *name, const char *value);
+
+    bool HaveProgrammeTitle() const;
+    std::string GetProgrammeTitle() const;
+
+public:
+    void InsertFrameworks(AS11Clip *clip);
+    void Complete();
+
+private:
+    bool ParseFrameworkType(const char *type_str, FrameworkType *type) const;
+    void SetFrameworkProperty(FrameworkType type, std::string name, std::string value);
+
+private:
+    std::vector<FrameworkProperty> mFrameworkProperties;
+    std::vector<AS11TCSegment> mSegments;
+    bool mFillerCompleteSegments;
+
+    AS11Clip *mClip;
+    FrameworkHelper *mAS11FrameworkHelper;
+    FrameworkHelper *mUKDPPFrameworkHelper;
+    bool mHaveUKDPPTotalNumberOfParts;
+    bool mHaveUKDPPTotalProgrammeDuration;
+};
 
 
 };
+
 
 
 #endif

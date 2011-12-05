@@ -423,20 +423,28 @@ bool FrameworkHelper::SetProperty(string name, string value)
 
 
 
-bool im::parse_framework_type(const char *fwork_str, FrameworkType *type)
+AS11Helper::AS11Helper()
 {
-    if (strcmp(fwork_str, "as11") == 0)
-        *type = AS11_CORE_FRAMEWORK_TYPE;
-    else if (strcmp(fwork_str, "dpp") == 0)
-        *type = DPP_FRAMEWORK_TYPE;
-    else
-        return false;
-
-    return true;
+    mFillerCompleteSegments = false;
+    mClip = 0;
+    mAS11FrameworkHelper = 0;
+    mUKDPPFrameworkHelper = 0;
+    mHaveUKDPPTotalNumberOfParts = false;
+    mHaveUKDPPTotalProgrammeDuration = false;
 }
 
-bool im::parse_framework_file(const char *filename, FrameworkType type, vector<FrameworkProperty> *properties)
+AS11Helper::~AS11Helper()
 {
+    delete mAS11FrameworkHelper;
+    delete mUKDPPFrameworkHelper;
+}
+
+bool AS11Helper::ParseFrameworkFile(const char *type_str, const char *filename)
+{
+    FrameworkType type;
+    if (!ParseFrameworkType(type_str, &type))
+        return false;
+
     FILE *file = fopen(filename, "rb");
     if (!file) {
         fprintf(stderr, "Failed to open file '%s': %s\n", filename, strerror(errno));
@@ -452,31 +460,28 @@ bool im::parse_framework_file(const char *filename, FrameworkType type, vector<F
                 line_num++;
         }
 
-        FrameworkProperty property;
-        property.type = type;
+        string name, value;
         bool parse_name = true;
         while (c != EOF && (c != '\r' && c != '\n')) {
             if (c == ':' && parse_name) {
                 parse_name = false;
             } else {
                 if (parse_name)
-                    property.name += c;
+                    name += c;
                 else
-                    property.value += c;
+                    value += c;
             }
 
             c = fgetc(file);
         }
-        if (!property.name.empty()) {
+        if (!name.empty()) {
             if (parse_name) {
                 fprintf(stderr, "Failed to parse line %d\n", line_num);
                 fclose(file);
                 return false;
             }
 
-            property.name = trim_string(property.name);
-            property.value = trim_string(property.value);
-            properties->push_back(property);
+            SetFrameworkProperty(type, trim_string(name), trim_string(value));
         }
 
         if (c == '\n')
@@ -488,9 +493,11 @@ bool im::parse_framework_file(const char *filename, FrameworkType type, vector<F
     return true;
 }
 
-bool im::parse_segmentation_file(const char *filename, Rational frame_rate, vector<AS11TCSegment> *segments,
-                                 bool *filler_complete_segments)
+bool AS11Helper::ParseSegmentationFile(const char *filename, Rational frame_rate)
 {
+    mSegments.clear();
+    mFillerCompleteSegments = false;
+
     FILE *file = fopen(filename, "rb");
     if (!file) {
         fprintf(stderr, "Failed to open file '%s': %s\n", filename, strerror(errno));
@@ -529,12 +536,14 @@ bool im::parse_segmentation_file(const char *filename, Rational frame_rate, vect
                     if (!parse_timecode(tc_pair_string.c_str(), frame_rate, &segment.start)) {
                         fprintf(stderr, "Failed to parse 1st timecode on line %d\n", line_num);
                         fclose(file);
+                        mSegments.clear();
                         return false;
                     }
                     if (!parse_timecode(&tc_pair_string[second_tc_start], frame_rate, &end)) {
                         if (trim_string(&tc_pair_string[second_tc_start]) != "xx:xx:xx:xx") {
                             fprintf(stderr, "Failed to parse 2nd timecode on line %d\n", line_num);
                             fclose(file);
+                            mSegments.clear();
                             return false;
                         }
 
@@ -557,6 +566,7 @@ bool im::parse_segmentation_file(const char *filename, Rational frame_rate, vect
             if (space_count != 2) {
                 fprintf(stderr, "Failed to parse line %d\n", line_num);
                 fclose(file);
+                mSegments.clear();
                 return false;
             }
 
@@ -566,23 +576,169 @@ bool im::parse_segmentation_file(const char *filename, Rational frame_rate, vect
             {
                 fprintf(stderr, "Failed to parse valid part number on line %d\n", line_num);
                 fclose(file);
+                mSegments.clear();
                 return false;
             }
             segment.part_number = pnum;
             segment.part_total = ptotal;
 
-            segments->push_back(segment);
+            mSegments.push_back(segment);
         }
 
         if (c == '\n')
             line_num++;
     }
 
-    *filler_complete_segments = !last_tc_xx;
+    mFillerCompleteSegments = !last_tc_xx;
 
 
     fclose(file);
 
     return true;
+}
+
+bool AS11Helper::SetFrameworkProperty(const char *type_str, const char *name, const char *value)
+{
+    FrameworkType type;
+    if (!ParseFrameworkType(type_str, &type))
+        return false;
+
+    SetFrameworkProperty(type, name, value);
+    return true;
+}
+
+bool AS11Helper::HaveProgrammeTitle() const
+{
+    size_t i;
+    for (i = 0; i < mFrameworkProperties.size(); i++) {
+        if (mFrameworkProperties[i].type == AS11_CORE_FRAMEWORK_TYPE &&
+            mFrameworkProperties[i].name == "ProgrammeTitle")
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+string AS11Helper::GetProgrammeTitle() const
+{
+    size_t i;
+    for (i = 0; i < mFrameworkProperties.size(); i++) {
+        if (mFrameworkProperties[i].type == AS11_CORE_FRAMEWORK_TYPE &&
+            mFrameworkProperties[i].name == "ProgrammeTitle")
+        {
+            return mFrameworkProperties[i].value;
+        }
+    }
+
+    return "";
+}
+
+void AS11Helper::InsertFrameworks(AS11Clip *as11_clip)
+{
+    mClip = as11_clip;
+    AS11DMS::RegisterExtensions(mClip->GetDataModel());
+    UKDPPDMS::RegisterExtensions(mClip->GetDataModel());
+
+    size_t i;
+    for (i = 0; i < mFrameworkProperties.size(); i++) {
+        if (mFrameworkProperties[i].type == AS11_CORE_FRAMEWORK_TYPE) {
+            if (!mAS11FrameworkHelper) {
+                mAS11FrameworkHelper = new FrameworkHelper(mClip->GetDataModel(),
+                                                           new AS11CoreFramework(mClip->GetHeaderMetadata()));
+            }
+            if (!mAS11FrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value)) {
+                log_warn("Failed to set AS11CoreFramework property '%s' to '%s'\n",
+                         mFrameworkProperties[i].name.c_str(), mFrameworkProperties[i].value.c_str());
+            }
+        } else {
+            if (!mUKDPPFrameworkHelper) {
+                mUKDPPFrameworkHelper = new FrameworkHelper(mClip->GetDataModel(),
+                                                            new UKDPPFramework(mClip->GetHeaderMetadata()));
+            }
+            if (!mUKDPPFrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value)) {
+                log_warn("Failed to set UKDPPCoreFramework property '%s' to '%s'\n",
+                         mFrameworkProperties[i].name.c_str(), mFrameworkProperties[i].value.c_str());
+            }
+        }
+    }
+
+
+    if (mAS11FrameworkHelper) {
+        mClip->InsertAS11CoreFramework(dynamic_cast<AS11CoreFramework*>(mAS11FrameworkHelper->GetFramework()));
+        IM_CHECK_M(mAS11FrameworkHelper->GetFramework()->validate(true), ("AS11 Framework validation failed"));
+    }
+
+    if (!mSegments.empty())
+        mClip->InsertTCSegmentation(mSegments);
+
+    if (mUKDPPFrameworkHelper) {
+        mClip->InsertUKDPPFramework(dynamic_cast<UKDPPFramework*>(mUKDPPFrameworkHelper->GetFramework()));
+
+        // make sure UKDPPTotalNumberOfParts and UKDPPTotalProgrammeDuration are set (default 0) for validation
+        UKDPPFramework *dpp_framework = dynamic_cast<UKDPPFramework*>(mUKDPPFrameworkHelper->GetFramework());
+        if (dpp_framework->haveItem(&MXF_ITEM_K(UKDPPFramework, UKDPPTotalNumberOfParts)))
+            mHaveUKDPPTotalNumberOfParts = true;
+        else
+            dpp_framework->SetTotalNumberOfParts(0);
+        if (dpp_framework->haveItem(&MXF_ITEM_K(UKDPPFramework, UKDPPTotalProgrammeDuration)))
+            mHaveUKDPPTotalProgrammeDuration = true;
+        else
+            dpp_framework->SetTotalProgrammeDuration(0);
+
+        IM_CHECK_M(dpp_framework->validate(true), ("UK DPP Framework validation failed"));
+    }
+}
+
+void AS11Helper::Complete()
+{
+    if (!mSegments.empty())
+        mClip->CompleteSegmentation(mFillerCompleteSegments);
+
+    if (mUKDPPFrameworkHelper) {
+        // calculate or check total number of parts and programme duration
+        UKDPPFramework *dpp_framework = dynamic_cast<UKDPPFramework*>(mUKDPPFrameworkHelper->GetFramework());
+        if (mHaveUKDPPTotalNumberOfParts) {
+            if (mClip->GetTotalSegments() != dpp_framework->GetTotalNumberOfParts()) {
+                log_warn("UKDPPTotalNumberOfParts value %u does not equal actual total part count %u\n",
+                         dpp_framework->GetTotalNumberOfParts(), mClip->GetTotalSegments());
+            }
+        } else {
+            dpp_framework->SetTotalNumberOfParts(mClip->GetTotalSegments());
+        }
+        if (mHaveUKDPPTotalProgrammeDuration) {
+            if (mClip->GetTotalSegmentDuration() != dpp_framework->GetTotalProgrammeDuration()) {
+                log_warn("UKDPPTotalProgrammeDuration value %u does not equal actual total part duration %u\n",
+                         dpp_framework->GetTotalProgrammeDuration(), mClip->GetTotalSegmentDuration());
+            }
+        } else {
+            dpp_framework->SetTotalProgrammeDuration(mClip->GetTotalSegmentDuration());
+        }
+    }
+}
+
+bool AS11Helper::ParseFrameworkType(const char *type_str, FrameworkType *type) const
+{
+    if (strcmp(type_str, "as11") == 0) {
+        *type = AS11_CORE_FRAMEWORK_TYPE;
+        return true;
+    } else if (strcmp(type_str, "dpp") == 0) {
+        *type = DPP_FRAMEWORK_TYPE;
+        return true;
+    }
+
+    log_warn("Unknown framework type '%s'\n", type_str);
+    return false;
+}
+
+void AS11Helper::SetFrameworkProperty(FrameworkType type, std::string name, std::string value)
+{
+    FrameworkProperty framework_property;
+    framework_property.type  = type;
+    framework_property.name  = name;
+    framework_property.value = value;
+
+    mFrameworkProperties.push_back(framework_property);
 }
 

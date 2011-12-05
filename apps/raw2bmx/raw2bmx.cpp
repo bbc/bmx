@@ -423,10 +423,8 @@ int main(int argc, const char** argv)
     const char *tape_name = 0;
     map<string, string> user_comments;
     vector<LocatorOption> locators;
-    vector<FrameworkProperty> framework_properties;
+    AS11Helper as11_helper;
     const char *segmentation_filename = 0;
-    vector<AS11TCSegment> segments;
-    bool filler_complete_segments = false;
     bool sequence_offset_set = false;
     uint8_t sequence_offset = 0;
     bool do_print_version = false;
@@ -633,16 +631,13 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            FrameworkProperty framework_property;
-            if (!parse_framework_type(argv[cmdln_index + 1], &framework_property.type))
+            if (!as11_helper.SetFrameworkProperty(argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3]))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Failed to set '%s' framework property '%s' to '%s'\n",
+                        argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3]);
                 return 1;
             }
-            framework_property.name = argv[cmdln_index + 2];
-            framework_property.value = argv[cmdln_index + 3];
-            framework_properties.push_back(framework_property);
             cmdln_index += 3;
         }
         else if (strcmp(argv[cmdln_index], "--dm-file") == 0)
@@ -653,15 +648,11 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            FrameworkType framework_type;
-            if (!parse_framework_type(argv[cmdln_index + 1], &framework_type))
+            if (!as11_helper.ParseFrameworkFile(argv[cmdln_index + 1], argv[cmdln_index + 2]))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
-                return 1;
-            }
-            if (!parse_framework_file(argv[cmdln_index + 2], framework_type, &framework_properties)) {
-                fprintf(stderr, "Failed to parse framework file '%s'\n", argv[cmdln_index + 2]);
+                fprintf(stderr, "Failed to parse '%s' framework file '%s'\n",
+                        argv[cmdln_index + 1], argv[cmdln_index + 2]);
                 return 1;
             }
             cmdln_index += 2;
@@ -2063,7 +2054,7 @@ int main(int argc, const char** argv)
         }
 
         if (segmentation_filename &&
-            !parse_segmentation_file(segmentation_filename, frame_rate, &segments, &filler_complete_segments))
+            !as11_helper.ParseSegmentationFile(segmentation_filename, frame_rate))
         {
             log_error("Failed to parse segmentation file '%s'\n", segmentation_filename);
             throw false;
@@ -2170,16 +2161,8 @@ int main(int argc, const char** argv)
             as11_clip->SetOutputStartOffset(output_start_offset);
             as11_clip->SetOutputEndOffset(- output_end_offset);
 
-            if (!clip_name) {
-                for (i = 0; i < framework_properties.size(); i++) {
-                    if (framework_properties[i].type == AS11_CORE_FRAMEWORK_TYPE &&
-                        framework_properties[i].name == "ProgrammeTitle")
-                    {
-                        as11_clip->SetClipName(framework_properties[i].value);
-                        break;
-                    }
-                }
-            }
+            if (!clip_name && as11_helper.HaveProgrammeTitle())
+                as11_clip->SetClipName(as11_helper.GetProgrammeTitle());
         } else if (clip_type == CW_OP1A_CLIP_TYPE) {
             OP1AFile *op1a_clip = clip->GetOP1AClip();
 
@@ -2488,66 +2471,10 @@ int main(int argc, const char** argv)
 
         // add AS-11 descriptive metadata
 
-        bool have_dpp_properties = false;
-        bool have_dpp_total_number_of_parts = false;
-        bool have_dpp_total_programme_duration = false;
-        FrameworkHelper *dpp_framework_h = 0;
-
         if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE) {
             AS11Clip *as11_clip = clip->GetAS11Clip();
-
             as11_clip->PrepareHeaderMetadata();
-            AS11DMS::RegisterExtensions(as11_clip->GetDataModel());
-            UKDPPDMS::RegisterExtensions(as11_clip->GetDataModel());
-
-            FrameworkHelper as11_framework_h(as11_clip->GetDataModel(), new AS11CoreFramework(as11_clip->GetHeaderMetadata()));
-            dpp_framework_h = new FrameworkHelper(as11_clip->GetDataModel(), new UKDPPFramework(as11_clip->GetHeaderMetadata()));
-
-            for (i = 0; i < framework_properties.size(); i++) {
-                switch (framework_properties[i].type)
-                {
-                    case AS11_CORE_FRAMEWORK_TYPE:
-                        if (!as11_framework_h.SetProperty(framework_properties[i].name, framework_properties[i].value)) {
-                            log_warn("Failed to set AS11CoreFramework property '%s' to '%s'\n",
-                                     framework_properties[i].name.c_str(), framework_properties[i].value.c_str());
-                        }
-                        break;
-                    case DPP_FRAMEWORK_TYPE:
-                        if (!dpp_framework_h->SetProperty(framework_properties[i].name, framework_properties[i].value)) {
-                            log_warn("Failed to set UKDPPFramework property '%s' to '%s'\n",
-                                     framework_properties[i].name.c_str(), framework_properties[i].value.c_str());
-                        } else {
-                            have_dpp_properties = true;
-                        }
-                        break;
-                }
-            }
-
-            as11_clip->InsertAS11CoreFramework(dynamic_cast<AS11CoreFramework*>(as11_framework_h.GetFramework()));
-            IM_CHECK_M(as11_framework_h.GetFramework()->validate(true), ("AS11 Framework validation failed"));
-
-            if (!segments.empty())
-                as11_clip->InsertTCSegmentation(segments);
-
-            if (have_dpp_properties) {
-                as11_clip->InsertUKDPPFramework(dynamic_cast<UKDPPFramework*>(dpp_framework_h->GetFramework()));
-
-                // make sure UKDPPTotalNumberOfParts and UKDPPTotalProgrammeDuration are set (default 0) for validation
-                UKDPPFramework *dpp_framework = dynamic_cast<UKDPPFramework*>(dpp_framework_h->GetFramework());
-                if (dpp_framework->haveItem(&MXF_ITEM_K(UKDPPFramework, UKDPPTotalNumberOfParts)))
-                    have_dpp_total_number_of_parts = true;
-                else
-                    dpp_framework->SetTotalNumberOfParts(0);
-                if (dpp_framework->haveItem(&MXF_ITEM_K(UKDPPFramework, UKDPPTotalProgrammeDuration)))
-                    have_dpp_total_programme_duration = true;
-                else
-                    dpp_framework->SetTotalProgrammeDuration(0);
-
-                IM_CHECK_M(dpp_framework->validate(true), ("UK DPP Framework validation failed"));
-            } else {
-                IM_CHECK(mxf_remove_set(as11_clip->GetHeaderMetadata()->getCHeaderMetadata(),
-                                        dpp_framework_h->GetFramework()->getCMetadataSet()));
-            }
+            as11_helper.InsertFrameworks(as11_clip);
         }
 
 
@@ -2578,33 +2505,8 @@ int main(int argc, const char** argv)
 
         // complete AS-11 descriptive metadata
 
-        if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE) {
-            AS11Clip *as11_clip = clip->GetAS11Clip();
-
-            if (!segments.empty())
-                as11_clip->CompleteSegmentation(filler_complete_segments);
-
-            if (have_dpp_properties) {
-                // calculate or check total number of parts and programme duration
-                UKDPPFramework *dpp_framework = dynamic_cast<UKDPPFramework*>(dpp_framework_h->GetFramework());
-                if (have_dpp_total_number_of_parts) {
-                    if (as11_clip->GetTotalSegments() != dpp_framework->GetTotalNumberOfParts()) {
-                        log_warn("UKDPPTotalNumberOfParts value %u does not equal actual total part count %u\n",
-                                 dpp_framework->GetTotalNumberOfParts(), as11_clip->GetTotalSegments());
-                    }
-                } else {
-                    dpp_framework->SetTotalNumberOfParts(as11_clip->GetTotalSegments());
-                }
-                if (have_dpp_total_programme_duration) {
-                    if (as11_clip->GetTotalSegmentDuration() != dpp_framework->GetTotalProgrammeDuration()) {
-                        log_warn("UKDPPTotalProgrammeDuration value %u does not equal actual total part duration %u\n",
-                                 dpp_framework->GetTotalProgrammeDuration(), as11_clip->GetTotalSegmentDuration());
-                    }
-                } else {
-                    dpp_framework->SetTotalProgrammeDuration(as11_clip->GetTotalSegmentDuration());
-                }
-            }
-        }
+        if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE)
+            as11_helper.Complete();
 
 
         // complete writing
@@ -2620,7 +2522,6 @@ int main(int argc, const char** argv)
         for (i = 0; i < inputs.size(); i++)
             clear_input(&inputs[i]);
         delete clip;
-        delete dpp_framework_h;
     }
     catch (const MXFException &ex)
     {
