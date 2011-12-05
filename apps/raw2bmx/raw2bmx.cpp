@@ -2155,9 +2155,11 @@ int main(int argc, const char** argv)
         } else if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE) {
             AS11Clip *as11_clip = clip->GetAS11Clip();
 
-            as11_clip->SetPartitionInterval(partition_interval);
-            as11_clip->SetOutputStartOffset(output_start_offset);
-            as11_clip->SetOutputEndOffset(- output_end_offset);
+            if (clip_type == CW_AS11_OP1A_CLIP_TYPE) {
+                as11_clip->SetPartitionInterval(partition_interval);
+                as11_clip->SetOutputStartOffset(output_start_offset);
+                as11_clip->SetOutputEndOffset(- output_end_offset);
+            }
 
             if (!clip_name && as11_helper.HaveProgrammeTitle())
                 as11_clip->SetClipName(as11_helper.GetProgrammeTitle());
