@@ -274,7 +274,7 @@ static string get_version_info()
     return buffer;
 }
 
-static void usage(const char* cmd)
+static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_version_info().c_str());
     fprintf(stderr, "Usage: %s <<options>> [<<input options>> <input>]+\n", cmd);
