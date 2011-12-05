@@ -211,10 +211,8 @@ static void clear_input(RawInput *input)
     delete input->raw_reader;
 }
 
-static string create_track_filename(const char *prefix, uint32_t track_number, ClipWriterEssenceType essence_type)
+static string create_track_filename(const char *prefix, uint32_t track_number, bool is_picture)
 {
-    bool is_picture = (essence_type != CW_PCM);
-
     char buffer[16];
     sprintf(buffer, "_%s%u.mxf", (is_picture ? "v" : "a"), track_number);
 
@@ -2224,7 +2222,7 @@ int main(int argc, const char** argv)
             if (clip_type == CW_AVID_CLIP_TYPE) {
                 string track_name = create_track_filename(output_name,
                                                           is_picture ? picture_track_count + 1 : sound_track_count + 1,
-                                                          input->essence_type);
+                                                          is_picture);
                 input->track = clip->CreateTrack(input->essence_type, track_name.c_str());
             } else {
                 input->track = clip->CreateTrack(input->essence_type);
