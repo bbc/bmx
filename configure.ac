@@ -207,6 +207,7 @@ AC_CONFIG_FILES([
 	apps/Makefile
 	apps/mxf2raw/Makefile
 	apps/raw2bmx/Makefile
+	apps/bmxtranswrap/Makefile
     libbmx.pc])
 
 AC_OUTPUT

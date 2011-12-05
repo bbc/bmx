@@ -1,5 +1,4 @@
-SUBDIRS = . mxf2raw raw2bmx
-# mxfcheck raw2mov raw2mxfatom raw2wav wav2raw
+SUBDIRS = . mxf2raw raw2bmx bmxtranswrap
 
 
 noinst_LTLIBRARIES = libapp.la

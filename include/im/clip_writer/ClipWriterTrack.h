@@ -120,6 +120,8 @@ public:
                             Rational sample_rate);
 
     static int ConvertEssenceType(ClipWriterType clip_type, ClipWriterEssenceType essence_type);
+    static MXFDescriptorHelper::EssenceType ConvertEssenceType(ClipWriterEssenceType essence_type);
+    static ClipWriterEssenceType ConvertEssenceType(MXFDescriptorHelper::EssenceType essence_type);
 
     static std::string EssenceTypeToString(ClipWriterEssenceType essence_type);
 
