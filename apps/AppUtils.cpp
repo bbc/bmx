@@ -48,6 +48,27 @@ using namespace im;
 
 
 
+typedef struct
+{
+    const char *color_str;
+    Color color;
+} ColorMap;
+
+
+static const ColorMap COLOR_MAP[] =
+{
+    {"white",   COLOR_WHITE},
+    {"red",     COLOR_RED},
+    {"yellow",  COLOR_YELLOW},
+    {"green",   COLOR_GREEN},
+    {"cyan",    COLOR_CYAN},
+    {"blue",    COLOR_BLUE},
+    {"magenta", COLOR_MAGENTA},
+    {"black",   COLOR_BLACK},
+};
+
+
+
 bool im::parse_timecode(const char *tc_str, Rational frame_rate, Timecode *timecode)
 {
     int hour, min, sec, frame;
@@ -131,4 +152,18 @@ bool im::parse_bool(const char *bool_str, bool *value)
 
     return true;
 }
+
+bool im::parse_color(const char *color_str, Color *color)
+{
+    size_t i;
+    for (i = 0; i < ARRAY_SIZE(COLOR_MAP); i++) {
+        if (strcmp(COLOR_MAP[i].color_str, color_str) == 0) {
+            *color = COLOR_MAP[i].color;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 

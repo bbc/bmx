@@ -84,24 +84,6 @@ typedef struct
     AvidLocator locator;
 } LocatorOption;
 
-typedef struct
-{
-    const char *color_str;
-    Color color;
-} ColorMap;
-
-
-static const ColorMap COLOR_MAP[] =
-{
-    {"white",   COLOR_WHITE},
-    {"red",     COLOR_RED},
-    {"yellow",  COLOR_YELLOW},
-    {"green",   COLOR_GREEN},
-    {"cyan",    COLOR_CYAN},
-    {"blue",    COLOR_BLUE},
-    {"magenta", COLOR_MAGENTA},
-    {"black",   COLOR_BLACK},
-};
 
 static const char DEFAULT_SHIM_NAME[]       = "Sample File";
 static const char DEFAULT_SHIM_ID[]         = "http://bbc.co.uk/rd/as02/default-shim.txt";
@@ -175,19 +157,6 @@ static string create_track_filename(const char *prefix, uint32_t track_number, b
 
     string filename = prefix;
     return filename.append(buffer);
-}
-
-static bool parse_color(const char *color_str, Color *color)
-{
-    size_t i;
-    for (i = 0; i < ARRAY_SIZE(COLOR_MAP); i++) {
-        if (strcmp(COLOR_MAP[i].color_str, color_str) == 0) {
-            *color = COLOR_MAP[i].color;
-            return true;
-        }
-    }
-
-    return false;
 }
 
 static bool parse_mic_type(const char *mic_type_str, MICType *mic_type)

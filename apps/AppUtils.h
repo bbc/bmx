@@ -50,6 +50,8 @@ bool parse_image_type(const char *image_type_str, uint8_t *signal_standard, uint
 
 bool parse_bool(const char *bool_str, bool *value);
 
+bool parse_color(const char *color_str, Color *color);
+
 
 
 };
