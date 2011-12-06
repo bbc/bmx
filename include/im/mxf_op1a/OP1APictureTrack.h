@@ -45,7 +45,7 @@ class OP1APictureTrack : public OP1ATrack
 {
 public:
     OP1APictureTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                     mxfRational frame_rate, OP1AEssenceType essence_type);
+                     mxfRational frame_rate, EssenceType essence_type);
     virtual ~OP1APictureTrack();
 
     void SetAspectRatio(mxfRational aspect_ratio);      // default 16/9

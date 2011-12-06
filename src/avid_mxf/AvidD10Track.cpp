@@ -46,7 +46,7 @@ using namespace mxfpp;
 static const mxfKey VIDEO_ELEMENT_KEY = MXF_D10_PICTURE_EE_K(0x01);
 
 
-AvidD10Track::AvidD10Track(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, File *file)
+AvidD10Track::AvidD10Track(AvidClip *clip, uint32_t track_index, EssenceType essence_type, File *file)
 : AvidPictureTrack(clip, track_index, essence_type, file)
 {
     mD10DescriptorHelper = dynamic_cast<D10MXFDescriptorHelper*>(mDescriptorHelper);

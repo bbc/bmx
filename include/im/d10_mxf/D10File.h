@@ -71,7 +71,7 @@ public:
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);                // default 8192
 
 public:
-    D10Track* CreateTrack(D10EssenceType essence_type);
+    D10Track* CreateTrack(EssenceType essence_type);
 
 public:
     void PrepareHeaderMetadata();

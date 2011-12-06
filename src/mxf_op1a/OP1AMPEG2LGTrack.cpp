@@ -48,31 +48,15 @@ static const mxfKey VIDEO_ELEMENT_KEY = MXF_MPEG_PICT_EE_K(0x01, MXF_MPEG_PICT_F
 
 
 OP1AMPEG2LGTrack::OP1AMPEG2LGTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                                   mxfRational frame_rate, OP1AEssenceType essence_type)
+                                   mxfRational frame_rate, EssenceType essence_type)
 : OP1APictureTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
 {
-    mMPEG2LGDescriptorHelper = dynamic_cast<MPEG2LGMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mMPEG2LGDescriptorHelper);
-
-    mMPEG2LGDescriptorHelper->SetSignalStandard(0x04); // SMPTE 274
-    mMPEG2LGDescriptorHelper->SetFrameLayout(0x01); // SeparateField (interlaced)
-
     mTrackNumber = MXF_MPEG_PICT_TRACK_NUM(0x01, MXF_MPEG_PICT_FRAME_WRAPPED_EE_TYPE, 0x00);
     mEssenceElementKey = VIDEO_ELEMENT_KEY;
 }
 
 OP1AMPEG2LGTrack::~OP1AMPEG2LGTrack()
 {
-}
-
-void OP1AMPEG2LGTrack::SetSignalStandard(uint8_t signal_standard)
-{
-    mMPEG2LGDescriptorHelper->SetSignalStandard(signal_standard);
-}
-
-void OP1AMPEG2LGTrack::SetFrameLayout(uint8_t frame_layout)
-{
-    mMPEG2LGDescriptorHelper->SetFrameLayout(frame_layout);
 }
 
 void OP1AMPEG2LGTrack::PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count)

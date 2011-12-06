@@ -51,7 +51,7 @@ static const mxfKey VIDEO_ELEMENT_KEY = MXF_MPEG_PICT_EE_K(0x01, MXF_MPEG_PICT_C
 
 
 
-AvidAVCITrack::AvidAVCITrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, File *file)
+AvidAVCITrack::AvidAVCITrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, File *file)
 : AvidPictureTrack(clip, track_index, essence_type, file)
 {
     mAVCIDescriptorHelper = dynamic_cast<AVCIMXFDescriptorHelper*>(mDescriptorHelper);

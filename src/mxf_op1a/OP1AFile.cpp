@@ -198,11 +198,11 @@ void OP1AFile::SetOutputEndOffset(int64_t offset)
     mOutputEndOffset = offset;
 }
 
-OP1ATrack* OP1AFile::CreateTrack(OP1AEssenceType essence_type)
+OP1ATrack* OP1AFile::CreateTrack(EssenceType essence_type)
 {
     uint32_t track_id;
     uint8_t track_type_number;
-    if ((essence_type == OP1A_PCM)) {
+    if ((essence_type == WAVE_PCM)) {
         track_id = FIRST_SOUND_TRACK_ID + mSoundTrackCount;
         track_type_number = mSoundTrackCount;
         mSoundTrackCount++;

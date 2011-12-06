@@ -48,7 +48,7 @@ static const mxfKey VIDEO_ELEMENT_KEY = MXF_DV_EE_K(0x01, MXF_DV_FRAME_WRAPPED_E
 
 
 OP1ADVTrack::OP1ADVTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                         mxfRational frame_rate, OP1AEssenceType essence_type)
+                         mxfRational frame_rate, EssenceType essence_type)
 : OP1APictureTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
 {
     mDVDescriptorHelper = dynamic_cast<DVMXFDescriptorHelper*>(mDescriptorHelper);

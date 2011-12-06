@@ -43,46 +43,15 @@ namespace im
 {
 
 
-typedef enum
-{
-    AS02_UNKNOWN_ESSENCE = 0,
-    AS02_IEC_DV25,
-    AS02_DVBASED_DV25,
-    AS02_DV50,
-    AS02_DV100_1080I,
-    AS02_DV100_720P,
-    AS02_D10_30,
-    AS02_D10_40,
-    AS02_D10_50,
-    AS02_AVCI100_1080I,
-    AS02_AVCI100_1080P,
-    AS02_AVCI100_720P,
-    AS02_AVCI50_1080I,
-    AS02_AVCI50_1080P,
-    AS02_AVCI50_720P,
-    AS02_UNC_SD,
-    AS02_UNC_HD_1080I,
-    AS02_UNC_HD_1080P,
-    AS02_UNC_HD_720P,
-    AS02_MPEG2LG_422P_HL,
-    AS02_MPEG2LG_MP_HL,
-    AS02_MPEG2LG_MP_H14,
-    AS02_PCM
-} AS02EssenceType;
-
-
 class AS02Clip;
 
 class AS02Track
 {
 public:
-    static bool IsSupported(AS02EssenceType essence_type, bool is_mpeg2lg_720p, mxfRational sample_rate);
-
-    static MXFDescriptorHelper::EssenceType ConvertEssenceType(AS02EssenceType as02_essence_type);
-    static AS02EssenceType ConvertEssenceType(MXFDescriptorHelper::EssenceType mh_essence_type);
+    static bool IsSupported(EssenceType essence_type, mxfRational sample_rate);
 
     static AS02Track* OpenNew(AS02Clip *clip, std::string filepath, std::string rel_uri, uint32_t track_index,
-                              AS02EssenceType essence_type);
+                              EssenceType essence_type);
 
 public:
     virtual ~AS02Track();
@@ -110,7 +79,7 @@ public:
     bool IsOutputTrackNumberSet() const { return mOutputTrackNumberSet; }
     uint32_t GetOutputTrackNumber() const { return mOutputTrackNumber; }
     std::string GetRelativeURL() const { return mRelativeURL; }
-    AS02EssenceType GetEssenceType() const { return mEssenceType; }
+    EssenceType GetEssenceType() const { return mEssenceType; }
     virtual mxfUL GetEssenceContainerUL() const;
     mxfpp::SourcePackage* GetFileSourcePackage() const { return mFileSourcePackage; }
     bool IsPicture() const { return mIsPicture; }
@@ -125,7 +94,7 @@ public:
     int64_t GetContainerDuration() const;
 
 protected:
-    AS02Track(AS02Clip *clip, uint32_t track_index, AS02EssenceType essence_type, mxfpp::File *mxf_file,
+    AS02Track(AS02Clip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *mxf_file,
               std::string rel_uri);
 
     virtual bool HaveCBEIndexTable() { return mSampleSize > 0; }
@@ -152,7 +121,7 @@ protected:
     uint32_t mKAGSize;
     mxfKey mEssenceElementKey;
 
-    AS02EssenceType mEssenceType;
+    EssenceType mEssenceType;
     MXFDescriptorHelper *mDescriptorHelper;
 
     uint32_t mSampleSize;

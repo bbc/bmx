@@ -47,7 +47,7 @@ static const mxfKey VIDEO_ELEMENT_KEY = MXF_D10_PICTURE_EE_K(0x00);
 
 
 
-AS02D10Track::AS02D10Track(AS02Clip *clip, uint32_t track_index, AS02EssenceType essence_type, File *file,
+AS02D10Track::AS02D10Track(AS02Clip *clip, uint32_t track_index, EssenceType essence_type, File *file,
                            string rel_uri)
 : AS02PictureTrack(clip, track_index, essence_type, file, rel_uri)
 {

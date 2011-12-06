@@ -44,16 +44,6 @@ namespace im
 {
 
 
-typedef enum
-{
-    D10_UNKNOWN_ESSENCE = 0,
-    D10_MPEG_30,
-    D10_MPEG_40,
-    D10_MPEG_50,
-    D10_PCM
-} D10EssenceType;
-
-
 class D10File;
 
 class D10Track
@@ -62,12 +52,9 @@ public:
     friend class D10File;
 
 public:
-    static bool IsSupported(D10EssenceType essence_type, mxfRational sample_rate);
+    static bool IsSupported(EssenceType essence_type, mxfRational sample_rate);
 
-    static MXFDescriptorHelper::EssenceType ConvertEssenceType(D10EssenceType d10_essence_type);
-    static D10EssenceType ConvertEssenceType(MXFDescriptorHelper::EssenceType mh_essence_type);
-
-    static D10Track* Create(D10File *file, uint32_t track_index, mxfRational frame_rate, D10EssenceType essence_type);
+    static D10Track* Create(D10File *file, uint32_t track_index, mxfRational frame_rate, EssenceType essence_type);
 
 public:
     virtual ~D10Track();
@@ -81,7 +68,7 @@ public:
     uint32_t GetTrackIndex() const { return mTrackIndex; }
 
     bool IsPicture() const { return mIsPicture; }
-    D10EssenceType GetEssenceType() const { return mEssenceType; }
+    EssenceType GetEssenceType() const { return mEssenceType; }
 
     uint32_t GetSampleSize();
 
@@ -89,7 +76,7 @@ public:
     uint32_t GetOutputTrackNumber() const { return mOutputTrackNumber; }
 
 protected:
-    D10Track(D10File *file, uint32_t track_index, mxfRational frame_rate, D10EssenceType essence_type);
+    D10Track(D10File *file, uint32_t track_index, mxfRational frame_rate, EssenceType essence_type);
 
 protected:
     virtual void PrepareWrite() = 0;
@@ -104,7 +91,7 @@ protected:
     D10ContentPackageManager *mCPManager;
     bool mIsPicture;
 
-    D10EssenceType mEssenceType;
+    EssenceType mEssenceType;
     MXFDescriptorHelper *mDescriptorHelper;
 };
 

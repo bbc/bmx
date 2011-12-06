@@ -45,7 +45,7 @@ class OP1AUncTrack : public OP1APictureTrack
 {
 public:
     OP1AUncTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                 mxfRational frame_rate, OP1AEssenceType essence_type);
+                 mxfRational frame_rate, EssenceType essence_type);
     virtual ~OP1AUncTrack();
 
     void SetComponentDepth(uint32_t depth);             // default 8; alternative is 10

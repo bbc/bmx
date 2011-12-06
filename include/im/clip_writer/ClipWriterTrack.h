@@ -47,61 +47,6 @@ namespace im
 
 typedef enum
 {
-    CW_UNKNOWN_ESSENCE = 0,
-    CW_IEC_DV25,
-    CW_DVBASED_DV25,
-    CW_DV50,
-    CW_DV100_1080I,
-    CW_DV100_1080P,
-    CW_DV100_720P,
-    CW_D10_30,
-    CW_D10_40,
-    CW_D10_50,
-    CW_AVCI100_1080I,
-    CW_AVCI100_1080P,
-    CW_AVCI100_720P,
-    CW_AVCI50_1080I,
-    CW_AVCI50_1080P,
-    CW_AVCI50_720P,
-    CW_UNC_SD,
-    CW_UNC_HD_1080I,
-    CW_UNC_HD_1080P,
-    CW_UNC_HD_720P,
-    CW_AVID_10BIT_UNC_SD,
-    CW_AVID_10BIT_UNC_HD_1080I,
-    CW_AVID_10BIT_UNC_HD_1080P,
-    CW_AVID_10BIT_UNC_HD_720P,
-    CW_MPEG2LG_422P_HL_1080I,
-    CW_MPEG2LG_422P_HL_1080P,
-    CW_MPEG2LG_422P_HL_720P,
-    CW_MPEG2LG_MP_HL_1080I,
-    CW_MPEG2LG_MP_HL_1080P,
-    CW_MPEG2LG_MP_HL_720P,
-    CW_MPEG2LG_MP_H14_1080I,
-    CW_MPEG2LG_MP_H14_1080P,
-    CW_MJPEG_2_1,
-    CW_MJPEG_3_1,
-    CW_MJPEG_10_1,
-    CW_MJPEG_20_1,
-    CW_MJPEG_4_1M,
-    CW_MJPEG_10_1M,
-    CW_MJPEG_15_1S,
-    CW_VC3_1080P_1235,
-    CW_VC3_1080P_1237,
-    CW_VC3_1080P_1238,
-    CW_VC3_1080I_1241,
-    CW_VC3_1080I_1242,
-    CW_VC3_1080I_1243,
-    CW_VC3_720P_1250,
-    CW_VC3_720P_1251,
-    CW_VC3_720P_1252,
-    CW_VC3_1080P_1253,
-    CW_PCM
-} ClipWriterEssenceType;
-
-
-typedef enum
-{
     CW_UNKNOWN_CLIP_TYPE = 0,
     CW_AS02_CLIP_TYPE,
     CW_AS11_OP1A_CLIP_TYPE,
@@ -116,21 +61,14 @@ typedef enum
 class ClipWriterTrack
 {
 public:
-    static bool IsSupported(ClipWriterType clip_type, ClipWriterEssenceType essence_type, bool is_mpeg2lg_720p,
-                            Rational sample_rate);
-
-    static int ConvertEssenceType(ClipWriterType clip_type, ClipWriterEssenceType essence_type);
-    static MXFDescriptorHelper::EssenceType ConvertEssenceType(ClipWriterEssenceType essence_type);
-    static ClipWriterEssenceType ConvertEssenceType(MXFDescriptorHelper::EssenceType essence_type);
-
-    static std::string EssenceTypeToString(ClipWriterEssenceType essence_type);
+    static bool IsSupported(ClipWriterType clip_type, EssenceType essence_type, Rational sample_rate);
 
 public:
-    ClipWriterTrack(ClipWriterEssenceType essence_type, AS02Track *track);
-    ClipWriterTrack(ClipWriterEssenceType essence_type, AS11Track *track);
-    ClipWriterTrack(ClipWriterEssenceType essence_type, OP1ATrack *track);
-    ClipWriterTrack(ClipWriterEssenceType essence_type, AvidTrack *track);
-    ClipWriterTrack(ClipWriterEssenceType essence_type, D10Track *track);
+    ClipWriterTrack(EssenceType essence_type, AS02Track *track);
+    ClipWriterTrack(EssenceType essence_type, AS11Track *track);
+    ClipWriterTrack(EssenceType essence_type, OP1ATrack *track);
+    ClipWriterTrack(EssenceType essence_type, AvidTrack *track);
+    ClipWriterTrack(EssenceType essence_type, D10Track *track);
     virtual ~ClipWriterTrack();
 
 public:
@@ -168,8 +106,8 @@ public:
     std::vector<uint32_t> GetShiftedSampleSequence() const;
 
 public:
-    ClipWriterType GetClipType() const            { return mClipType; }
-    ClipWriterEssenceType GetEssenceType() const  { return mEssenceType; }
+    ClipWriterType GetClipType() const { return mClipType; }
+    EssenceType GetEssenceType() const { return mEssenceType; }
 
     AS02Track* GetAS02Track() const { return mAS02Track; }
     AS11Track* GetAS11Track() const { return mAS11Track; }
@@ -179,7 +117,7 @@ public:
 
 private:
     ClipWriterType mClipType;
-    ClipWriterEssenceType mEssenceType;
+    EssenceType mEssenceType;
     AS02Track *mAS02Track;
     AS11Track *mAS11Track;
     OP1ATrack *mOP1ATrack;

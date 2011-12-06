@@ -223,18 +223,16 @@ void AS11Clip::SetOutputEndOffset(int64_t offset)
     }
 }
 
-AS11Track* AS11Clip::CreateTrack(AS11EssenceType essence_type)
+AS11Track* AS11Clip::CreateTrack(EssenceType essence_type)
 {
     AS11Track *track = 0;
     switch (mType)
     {
         case AS11_OP1A_CLIP_TYPE:
-            track = new AS11Track(essence_type, mOP1AClip->CreateTrack(
-                (OP1AEssenceType)AS11Track::ConvertEssenceType(mType, essence_type)));
+            track = new AS11Track(essence_type, mOP1AClip->CreateTrack(essence_type));
             break;
         case AS11_D10_CLIP_TYPE:
-            track = new AS11Track(essence_type, mD10Clip->CreateTrack(
-                (D10EssenceType)AS11Track::ConvertEssenceType(mType, essence_type)));
+            track = new AS11Track(essence_type, mD10Clip->CreateTrack(essence_type));
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
             IM_ASSERT(false);

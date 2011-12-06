@@ -34,7 +34,6 @@
 
 #include <im/avid_mxf/AvidPictureTrack.h>
 #include <im/writer_helper/MPEG2LGWriterHelper.h>
-#include <im/mxf_helper/MPEG2LGMXFDescriptorHelper.h>
 #include <im/ByteArray.h>
 
 
@@ -46,11 +45,8 @@ namespace im
 class AvidMPEG2LGTrack : public AvidPictureTrack
 {
 public:
-    AvidMPEG2LGTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, mxfpp::File *file);
+    AvidMPEG2LGTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file);
     virtual ~AvidMPEG2LGTrack();
-
-    void SetSignalStandard(uint8_t signal_standard);    // 0x04=SMPTE274, 0x05=SMPTE-296; default=0x04
-    void SetFrameLayout(uint8_t frame_layout);          // 0x00=FullFrame (progressive), 0x01=SeparateFields (interlaced), default=0x01
 
 public:
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
@@ -61,7 +57,6 @@ protected:
     virtual void PostSampleWriting(mxfpp::Partition *partition);
 
 private:
-    MPEG2LGMXFDescriptorHelper *mMPEG2LGDescriptorHelper;
     MPEG2LGWriterHelper mWriterHelper;
 
     ByteArray mIndexSegment;

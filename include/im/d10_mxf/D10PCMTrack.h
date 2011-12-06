@@ -44,7 +44,7 @@ namespace im
 class D10PCMTrack : public D10Track
 {
 public:
-    D10PCMTrack(D10File *file, uint32_t track_index, mxfRational frame_rate, D10EssenceType essence_type);
+    D10PCMTrack(D10File *file, uint32_t track_index, mxfRational frame_rate, EssenceType essence_type);
     virtual ~D10PCMTrack();
 
     virtual void SetOutputTrackNumber(uint32_t track_number);

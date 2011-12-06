@@ -49,22 +49,21 @@ using namespace mxfpp;
 typedef struct
 {
     mxfUL ec_label;
-    MXFDescriptorHelper::EssenceType essence_type;
+    EssenceType essence_type;
     bool frame_wrapped;
 } SupportedEssence;
 
 static const SupportedEssence SUPPORTED_ESSENCE[] =
 {
-    {MXF_EC_L(BWFFrameWrapped),     MXFDescriptorHelper::WAVE_PCM,     true},
-    {MXF_EC_L(BWFClipWrapped),      MXFDescriptorHelper::WAVE_PCM,     false},
-    {MXF_EC_L(AES3FrameWrapped),    MXFDescriptorHelper::WAVE_PCM,     true},
-    {MXF_EC_L(AES3ClipWrapped),     MXFDescriptorHelper::WAVE_PCM,     false},
+    {MXF_EC_L(BWFFrameWrapped),     WAVE_PCM,     true},
+    {MXF_EC_L(BWFClipWrapped),      WAVE_PCM,     false},
+    {MXF_EC_L(AES3FrameWrapped),    WAVE_PCM,     true},
+    {MXF_EC_L(AES3ClipWrapped),     WAVE_PCM,     false},
 };
 
 
 
-MXFDescriptorHelper::EssenceType WaveMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
-                                                                      mxfUL alternative_ec_label)
+EssenceType WaveMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
@@ -77,7 +76,7 @@ MXFDescriptorHelper::EssenceType WaveMXFDescriptorHelper::IsSupported(FileDescri
         }
     }
 
-    return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+    return UNKNOWN_ESSENCE_TYPE;
 }
 
 bool WaveMXFDescriptorHelper::IsSupported(EssenceType essence_type)

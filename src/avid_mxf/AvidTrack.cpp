@@ -70,126 +70,71 @@ static const char AUDIO_TRACK_NAME[]        = "A1";
 static const uint8_t LLEN                   = 9;
 
 
-
 typedef struct
 {
-    AvidEssenceType avid_essence_type;
-    MXFDescriptorHelper::EssenceType mh_essence_type;
-} EssenceTypeMap;
-
-static const EssenceTypeMap ESSENCE_TYPE_MAP[] =
-{
-    {AVID_IEC_DV25,             MXFDescriptorHelper::IEC_DV25},
-    {AVID_DVBASED_DV25,         MXFDescriptorHelper::DVBASED_DV25},
-    {AVID_DV50,                 MXFDescriptorHelper::DV50},
-    {AVID_DV100_1080I,          MXFDescriptorHelper::DV100_1080I},
-    {AVID_DV100_720P,           MXFDescriptorHelper::DV100_720P},
-    {AVID_MPEG2LG_422P_HL,      MXFDescriptorHelper::MPEG2LG_422P_HL},
-    {AVID_MPEG2LG_MP_HL,        MXFDescriptorHelper::MPEG2LG_MP_HL},
-    {AVID_MPEG2LG_MP_H14,       MXFDescriptorHelper::MPEG2LG_MP_H14},
-    {AVID_MJPEG_2_1,            MXFDescriptorHelper::MJPEG_2_1},
-    {AVID_MJPEG_3_1,            MXFDescriptorHelper::MJPEG_3_1},
-    {AVID_MJPEG_10_1,           MXFDescriptorHelper::MJPEG_10_1},
-    {AVID_MJPEG_20_1,           MXFDescriptorHelper::MJPEG_20_1},
-    {AVID_MJPEG_4_1M,           MXFDescriptorHelper::MJPEG_4_1M},
-    {AVID_MJPEG_10_1M,          MXFDescriptorHelper::MJPEG_10_1M},
-    {AVID_MJPEG_15_1S,          MXFDescriptorHelper::MJPEG_15_1S},
-    {AVID_D10_30,               MXFDescriptorHelper::D10_30},
-    {AVID_D10_40,               MXFDescriptorHelper::D10_40},
-    {AVID_D10_50,               MXFDescriptorHelper::D10_50},
-    {AVID_AVCI100_1080I,        MXFDescriptorHelper::AVCI100_1080I},
-    {AVID_AVCI100_1080P,        MXFDescriptorHelper::AVCI100_1080P},
-    {AVID_AVCI100_720P,         MXFDescriptorHelper::AVCI100_720P},
-    {AVID_AVCI50_1080I,         MXFDescriptorHelper::AVCI50_1080I},
-    {AVID_AVCI50_1080P,         MXFDescriptorHelper::AVCI50_1080P},
-    {AVID_AVCI50_720P,          MXFDescriptorHelper::AVCI50_720P},
-    {AVID_VC3_1080P_1235,       MXFDescriptorHelper::VC3_1080P_1235},
-    {AVID_VC3_1080P_1237,       MXFDescriptorHelper::VC3_1080P_1237},
-    {AVID_VC3_1080P_1238,       MXFDescriptorHelper::VC3_1080P_1238},
-    {AVID_VC3_1080I_1241,       MXFDescriptorHelper::VC3_1080I_1241},
-    {AVID_VC3_1080I_1242,       MXFDescriptorHelper::VC3_1080I_1242},
-    {AVID_VC3_1080I_1243,       MXFDescriptorHelper::VC3_1080I_1243},
-    {AVID_VC3_720P_1250,        MXFDescriptorHelper::VC3_720P_1250},
-    {AVID_VC3_720P_1251,        MXFDescriptorHelper::VC3_720P_1251},
-    {AVID_VC3_720P_1252,        MXFDescriptorHelper::VC3_720P_1252},
-    {AVID_VC3_1080P_1253,       MXFDescriptorHelper::VC3_1080P_1253},
-    {AVID_UNC_SD,               MXFDescriptorHelper::UNC_SD},
-    {AVID_UNC_HD_1080I,         MXFDescriptorHelper::UNC_HD_1080I},
-    {AVID_UNC_HD_1080P,         MXFDescriptorHelper::UNC_HD_1080P},
-    {AVID_UNC_HD_720P,          MXFDescriptorHelper::UNC_HD_720P},
-    {AVID_10BIT_UNC_SD,         MXFDescriptorHelper::AVID_10BIT_UNC_SD},
-    {AVID_10BIT_UNC_HD_1080I,   MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080I},
-    {AVID_10BIT_UNC_HD_1080P,   MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080P},
-    {AVID_10BIT_UNC_HD_720P,    MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P},
-    {AVID_PCM,                  MXFDescriptorHelper::WAVE_PCM},
-};
-
-
-typedef struct
-{
-    AvidEssenceType essence_type;
-    bool is_mpeg2lg_720p;
+    EssenceType essence_type;
     mxfRational sample_rate[10];
 } AvidSampleRateSupport;
 
 static const AvidSampleRateSupport AVID_SAMPLE_RATE_SUPPORT[] =
 {
-    {AVID_IEC_DV25,           false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_DVBASED_DV25,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_DV50,               false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_DV100_1080I,        false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_DV100_720P,         false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AVID_MPEG2LG_422P_HL,    false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_MPEG2LG_422P_HL,    true,     {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AVID_MPEG2LG_MP_HL,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_MPEG2LG_MP_HL,      true,     {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AVID_MPEG2LG_MP_H14,     false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_D10_30,             false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_D10_40,             false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_D10_50,             false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_AVCI100_1080I,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_AVCI100_1080P,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_AVCI100_720P,       false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AVID_AVCI50_1080I,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_AVCI50_1080P,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_AVCI50_720P,        false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AVID_MJPEG_2_1,          false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_MJPEG_3_1,          false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_MJPEG_10_1,         false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_MJPEG_20_1,         false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_MJPEG_4_1M,         false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_MJPEG_10_1M,        false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_MJPEG_15_1S,        false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_VC3_1080P_1235,     false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_VC3_1080P_1237,     false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_VC3_1080P_1238,     false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_VC3_1080I_1241,     false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_VC3_1080I_1242,     false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_VC3_1080I_1243,     false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_VC3_720P_1250,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_VC3_720P_1251,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_VC3_720P_1252,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_VC3_1080P_1253,     false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_UNC_SD,             false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_UNC_HD_1080I,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_UNC_HD_1080P,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_UNC_HD_720P,        false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AVID_10BIT_UNC_SD,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_10BIT_UNC_HD_1080I, false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_10BIT_UNC_HD_1080P, false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AVID_10BIT_UNC_HD_720P,  false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AVID_PCM,                false,    {{48000, 1}, {0, 0}}},
+    {IEC_DV25,                 {{25, 1}, {30000, 1001}, {0, 0}}},
+    {DVBASED_DV25,             {{25, 1}, {30000, 1001}, {0, 0}}},
+    {DV50,                     {{25, 1}, {30000, 1001}, {0, 0}}},
+    {DV100_1080I,              {{25, 1}, {30000, 1001}, {0, 0}}},
+    {DV100_720P,               {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {MPEG2LG_422P_HL_1080I,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_422P_HL_1080P,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_422P_HL_720P,     {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_HL_1080I,      {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_HL_1080P,      {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_HL_720P,       {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_H14_1080I,     {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_H14_1080P,     {{25, 1}, {30000, 1001}, {0, 0}}},
+    {D10_30,                   {{25, 1}, {30000, 1001}, {0, 0}}},
+    {D10_40,                   {{25, 1}, {30000, 1001}, {0, 0}}},
+    {D10_50,                   {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI100_1080I,            {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI100_1080P,            {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI100_720P,             {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {AVCI50_1080I,             {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI50_1080P,             {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI50_720P,              {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {MJPEG_2_1,                {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MJPEG_3_1,                {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MJPEG_10_1,               {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MJPEG_20_1,               {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MJPEG_4_1M,               {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MJPEG_10_1M,              {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MJPEG_15_1S,              {{25, 1}, {30000, 1001}, {0, 0}}},
+    {VC3_1080P_1235,           {{25, 1}, {30000, 1001}, {0, 0}}},
+    {VC3_1080P_1237,           {{25, 1}, {30000, 1001}, {0, 0}}},
+    {VC3_1080P_1238,           {{25, 1}, {30000, 1001}, {0, 0}}},
+    {VC3_1080I_1241,           {{25, 1}, {30000, 1001}, {0, 0}}},
+    {VC3_1080I_1242,           {{25, 1}, {30000, 1001}, {0, 0}}},
+    {VC3_1080I_1243,           {{25, 1}, {30000, 1001}, {0, 0}}},
+    {VC3_720P_1250,            {{25, 1}, {30000, 1001}, {0, 0}}},
+    {VC3_720P_1251,            {{25, 1}, {30000, 1001}, {0, 0}}},
+    {VC3_720P_1252,            {{25, 1}, {30000, 1001}, {0, 0}}},
+    {VC3_1080P_1253,           {{25, 1}, {30000, 1001}, {0, 0}}},
+    {UNC_SD,                   {{25, 1}, {30000, 1001}, {0, 0}}},
+    {UNC_HD_1080I,             {{25, 1}, {30000, 1001}, {0, 0}}},
+    {UNC_HD_1080P,             {{25, 1}, {30000, 1001}, {0, 0}}},
+    {UNC_HD_720P,              {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {AVID_10BIT_UNC_SD,        {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVID_10BIT_UNC_HD_1080I,  {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVID_10BIT_UNC_HD_1080P,  {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVID_10BIT_UNC_HD_720P,   {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {WAVE_PCM,                 {{48000, 1}, {0, 0}}},
 };
 
 
 
-bool AvidTrack::IsSupported(AvidEssenceType essence_type, bool is_mpeg2lg_720p, mxfRational sample_rate)
+bool AvidTrack::IsSupported(EssenceType essence_type, mxfRational sample_rate)
 {
     size_t i;
     for (i = 0; i < ARRAY_SIZE(AVID_SAMPLE_RATE_SUPPORT); i++) {
-        if (essence_type == AVID_SAMPLE_RATE_SUPPORT[i].essence_type &&
-            is_mpeg2lg_720p == AVID_SAMPLE_RATE_SUPPORT[i].is_mpeg2lg_720p)
-        {
+        if (essence_type == AVID_SAMPLE_RATE_SUPPORT[i].essence_type) {
             size_t j = 0;
             while (AVID_SAMPLE_RATE_SUPPORT[i].sample_rate[j].numerator) {
                 if (sample_rate == AVID_SAMPLE_RATE_SUPPORT[i].sample_rate[j])
@@ -202,93 +147,76 @@ bool AvidTrack::IsSupported(AvidEssenceType essence_type, bool is_mpeg2lg_720p, 
     return false;
 }
 
-MXFDescriptorHelper::EssenceType AvidTrack::ConvertEssenceType(AvidEssenceType avid_essence_type)
-{
-    size_t i;
-    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
-        if (ESSENCE_TYPE_MAP[i].avid_essence_type == avid_essence_type)
-            return ESSENCE_TYPE_MAP[i].mh_essence_type;
-    }
-
-    return MXFDescriptorHelper::UNKNOWN_ESSENCE;
-}
-
-AvidEssenceType AvidTrack::ConvertEssenceType(MXFDescriptorHelper::EssenceType mh_essence_type)
-{
-    size_t i;
-    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
-        if (ESSENCE_TYPE_MAP[i].mh_essence_type == mh_essence_type)
-            return ESSENCE_TYPE_MAP[i].avid_essence_type;
-    }
-
-    return AVID_UNKNOWN_ESSENCE;
-}
-
-AvidTrack* AvidTrack::OpenNew(AvidClip *clip, string filename, uint32_t track_index, AvidEssenceType essence_type)
+AvidTrack* AvidTrack::OpenNew(AvidClip *clip, string filename, uint32_t track_index, EssenceType essence_type)
 {
     File *file = File::openNew(filename);
 
     switch (essence_type)
     {
-        case AVID_IEC_DV25:
-        case AVID_DVBASED_DV25:
-        case AVID_DV50:
-        case AVID_DV100_1080I:
-        case AVID_DV100_720P:
+        case IEC_DV25:
+        case DVBASED_DV25:
+        case DV50:
+        case DV100_1080I:
+        case DV100_720P:
             return new AvidDVTrack(clip, track_index, essence_type, file);
-        case AVID_MPEG2LG_422P_HL:
-        case AVID_MPEG2LG_MP_HL:
-        case AVID_MPEG2LG_MP_H14:
+        case MPEG2LG_422P_HL_1080I:
+        case MPEG2LG_422P_HL_1080P:
+        case MPEG2LG_422P_HL_720P:
+        case MPEG2LG_MP_HL_1080I:
+        case MPEG2LG_MP_HL_1080P:
+        case MPEG2LG_MP_HL_720P:
+        case MPEG2LG_MP_H14_1080I:
+        case MPEG2LG_MP_H14_1080P:
             return new AvidMPEG2LGTrack(clip, track_index, essence_type, file);
-        case AVID_MJPEG_2_1:
-        case AVID_MJPEG_3_1:
-        case AVID_MJPEG_10_1:
-        case AVID_MJPEG_20_1:
-        case AVID_MJPEG_4_1M:
-        case AVID_MJPEG_10_1M:
-        case AVID_MJPEG_15_1S:
+        case MJPEG_2_1:
+        case MJPEG_3_1:
+        case MJPEG_10_1:
+        case MJPEG_20_1:
+        case MJPEG_4_1M:
+        case MJPEG_10_1M:
+        case MJPEG_15_1S:
             return new AvidMJPEGTrack(clip, track_index, essence_type, file);
-        case AVID_D10_30:
-        case AVID_D10_40:
-        case AVID_D10_50:
+        case D10_30:
+        case D10_40:
+        case D10_50:
             return new AvidD10Track(clip, track_index, essence_type, file);
-        case AVID_AVCI100_1080I:
-        case AVID_AVCI100_1080P:
-        case AVID_AVCI100_720P:
-        case AVID_AVCI50_1080I:
-        case AVID_AVCI50_1080P:
-        case AVID_AVCI50_720P:
+        case AVCI100_1080I:
+        case AVCI100_1080P:
+        case AVCI100_720P:
+        case AVCI50_1080I:
+        case AVCI50_1080P:
+        case AVCI50_720P:
             return new AvidAVCITrack(clip, track_index, essence_type, file);
-        case AVID_VC3_1080P_1235:
-        case AVID_VC3_1080P_1237:
-        case AVID_VC3_1080P_1238:
-        case AVID_VC3_1080I_1241:
-        case AVID_VC3_1080I_1242:
-        case AVID_VC3_1080I_1243:
-        case AVID_VC3_720P_1250:
-        case AVID_VC3_720P_1251:
-        case AVID_VC3_720P_1252:
-        case AVID_VC3_1080P_1253:
+        case VC3_1080P_1235:
+        case VC3_1080P_1237:
+        case VC3_1080P_1238:
+        case VC3_1080I_1241:
+        case VC3_1080I_1242:
+        case VC3_1080I_1243:
+        case VC3_720P_1250:
+        case VC3_720P_1251:
+        case VC3_720P_1252:
+        case VC3_1080P_1253:
             return new AvidVC3Track(clip, track_index, essence_type, file);
-        case AVID_UNC_SD:
-        case AVID_UNC_HD_1080I:
-        case AVID_UNC_HD_1080P:
-        case AVID_UNC_HD_720P:
+        case UNC_SD:
+        case UNC_HD_1080I:
+        case UNC_HD_1080P:
+        case UNC_HD_720P:
         case AVID_10BIT_UNC_SD:
         case AVID_10BIT_UNC_HD_1080I:
         case AVID_10BIT_UNC_HD_1080P:
         case AVID_10BIT_UNC_HD_720P:
             return new AvidUncTrack(clip, track_index, essence_type, file);
-        case AVID_PCM:
+        case WAVE_PCM:
             return new AvidPCMTrack(clip, track_index, essence_type, file);
-        case AVID_UNKNOWN_ESSENCE:
+        default:
             IM_ASSERT(false);
     }
 
     return 0;
 }
 
-AvidTrack::AvidTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, File *mxf_file)
+AvidTrack::AvidTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, File *mxf_file)
 {
     mClip = clip;
     mTrackIndex = track_index;
@@ -319,7 +247,7 @@ AvidTrack::AvidTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essen
     memset(&mEssenceContainerUL, 0, sizeof(mEssenceContainerUL));
 
     mEssenceType = essence_type;
-    mDescriptorHelper = MXFDescriptorHelper::Create(ConvertEssenceType(essence_type));
+    mDescriptorHelper = MXFDescriptorHelper::Create(essence_type);
     mDescriptorHelper->SetFlavour(MXFDescriptorHelper::AVID_FLAVOUR);
 }
 

@@ -57,16 +57,10 @@ static const mxfKey VIDEO_ELEMENT_KEY = MXF_MPEG_PICT_EE_K(0x01, MXF_MPEG_PICT_F
 
 
 
-AS02MPEG2LGTrack::AS02MPEG2LGTrack(AS02Clip *clip, uint32_t track_index, AS02EssenceType essence_type, File *file,
+AS02MPEG2LGTrack::AS02MPEG2LGTrack(AS02Clip *clip, uint32_t track_index, EssenceType essence_type, File *file,
                                    string rel_uri)
 : AS02PictureTrack(clip, track_index, essence_type, file, rel_uri)
 {
-    mMPEG2LGDescriptorHelper = dynamic_cast<MPEG2LGMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mMPEG2LGDescriptorHelper);
-
-    mMPEG2LGDescriptorHelper->SetSignalStandard(0x04); // SMPTE 274
-    mMPEG2LGDescriptorHelper->SetFrameLayout(0x01); // SeparateField (interlaced)
-
     mTrackNumber = MXF_MPEG_PICT_TRACK_NUM(0x01, MXF_MPEG_PICT_FRAME_WRAPPED_EE_TYPE, 0x00);
     mEssenceElementKey = VIDEO_ELEMENT_KEY;
 
@@ -78,16 +72,6 @@ AS02MPEG2LGTrack::~AS02MPEG2LGTrack()
     size_t i;
     for (i = 0; i < mIndexSegments.size(); i++)
         delete mIndexSegments[i];
-}
-
-void AS02MPEG2LGTrack::SetSignalStandard(uint8_t signal_standard)
-{
-    mMPEG2LGDescriptorHelper->SetSignalStandard(signal_standard);
-}
-
-void AS02MPEG2LGTrack::SetFrameLayout(uint8_t frame_layout)
-{
-    mMPEG2LGDescriptorHelper->SetFrameLayout(frame_layout);
 }
 
 void AS02MPEG2LGTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)

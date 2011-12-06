@@ -69,70 +69,39 @@ static const char AUDIO_TRACK_NAME[]    = "Audio";
 
 typedef struct
 {
-    AS02EssenceType as02_essence_type;
-    MXFDescriptorHelper::EssenceType mh_essence_type;
-} EssenceTypeMap;
-
-static const EssenceTypeMap ESSENCE_TYPE_MAP[] =
-{
-    {AS02_IEC_DV25,         MXFDescriptorHelper::IEC_DV25},
-    {AS02_DVBASED_DV25,     MXFDescriptorHelper::DVBASED_DV25},
-    {AS02_DV50,             MXFDescriptorHelper::DV50},
-    {AS02_DV100_1080I,      MXFDescriptorHelper::DV100_1080I},
-    {AS02_DV100_720P,       MXFDescriptorHelper::DV100_720P},
-    {AS02_D10_30,           MXFDescriptorHelper::D10_30},
-    {AS02_D10_40,           MXFDescriptorHelper::D10_40},
-    {AS02_D10_50,           MXFDescriptorHelper::D10_50},
-    {AS02_AVCI100_1080I,    MXFDescriptorHelper::AVCI100_1080I},
-    {AS02_AVCI100_1080P,    MXFDescriptorHelper::AVCI100_1080P},
-    {AS02_AVCI100_720P,     MXFDescriptorHelper::AVCI100_720P},
-    {AS02_AVCI50_1080I,     MXFDescriptorHelper::AVCI50_1080I},
-    {AS02_AVCI50_1080P,     MXFDescriptorHelper::AVCI50_1080P},
-    {AS02_AVCI50_720P,      MXFDescriptorHelper::AVCI50_720P},
-    {AS02_UNC_SD,           MXFDescriptorHelper::UNC_SD},
-    {AS02_UNC_HD_1080I,     MXFDescriptorHelper::UNC_HD_1080I},
-    {AS02_UNC_HD_1080P,     MXFDescriptorHelper::UNC_HD_1080P},
-    {AS02_UNC_HD_720P,      MXFDescriptorHelper::UNC_HD_720P},
-    {AS02_MPEG2LG_422P_HL,  MXFDescriptorHelper::MPEG2LG_422P_HL},
-    {AS02_MPEG2LG_MP_HL,    MXFDescriptorHelper::MPEG2LG_MP_HL},
-    {AS02_MPEG2LG_MP_H14,   MXFDescriptorHelper::MPEG2LG_MP_H14},
-    {AS02_PCM,              MXFDescriptorHelper::WAVE_PCM},
-};
-
-
-typedef struct
-{
-    AS02EssenceType essence_type;
-    bool is_mpeg2lg_720p;
+    EssenceType essence_type;
     mxfRational sample_rate[10];
 } AS02SampleRateSupport;
 
 static const AS02SampleRateSupport AS02_SAMPLE_RATE_SUPPORT[] =
 {
-    {AS02_IEC_DV25,           false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_DVBASED_DV25,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_DV50,               false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_DV100_1080I,        false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_DV100_720P,         false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AS02_D10_30,             false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_D10_40,             false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_D10_50,             false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_AVCI100_1080I,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_AVCI100_1080P,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_AVCI100_720P,       false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AS02_AVCI50_1080I,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_AVCI50_1080P,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_AVCI50_720P,        false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AS02_UNC_SD,             false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AS02_UNC_HD_1080I,       false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AS02_UNC_HD_1080P,       false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AS02_UNC_HD_720P,        false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AS02_MPEG2LG_422P_HL,    false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_MPEG2LG_422P_HL,    true,     {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AS02_MPEG2LG_MP_HL,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_MPEG2LG_MP_HL,      true,     {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {AS02_MPEG2LG_MP_H14,     false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {AS02_PCM,                false,    {{48000,1}, {0, 0}}},
+    {IEC_DV25,               {{25, 1}, {30000, 1001}, {0, 0}}},
+    {DVBASED_DV25,           {{25, 1}, {30000, 1001}, {0, 0}}},
+    {DV50,                   {{25, 1}, {30000, 1001}, {0, 0}}},
+    {DV100_1080I,            {{25, 1}, {30000, 1001}, {0, 0}}},
+    {DV100_720P,             {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {D10_30,                 {{25, 1}, {30000, 1001}, {0, 0}}},
+    {D10_40,                 {{25, 1}, {30000, 1001}, {0, 0}}},
+    {D10_50,                 {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI100_1080I,          {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI100_1080P,          {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI100_720P,           {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {AVCI50_1080I,           {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI50_1080P,           {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI50_720P,            {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {UNC_SD,                 {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {UNC_HD_1080I,           {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {UNC_HD_1080P,           {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {UNC_HD_720P,            {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {MPEG2LG_422P_HL_1080I,  {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_422P_HL_1080P,  {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_422P_HL_720P,   {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_HL_1080I,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_HL_1080P,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_HL_720P,     {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_H14_1080I,   {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_H14_1080P,   {{25, 1}, {30000, 1001}, {0, 0}}},
+    {WAVE_PCM,               {{48000,1}, {0, 0}}},
 };
 
 
@@ -147,13 +116,11 @@ static string get_track_clip_name(string &clip_name, bool is_video, uint32_t tra
 
 
 
-bool AS02Track::IsSupported(AS02EssenceType essence_type, bool is_mpeg2lg_720p, mxfRational sample_rate)
+bool AS02Track::IsSupported(EssenceType essence_type, mxfRational sample_rate)
 {
     size_t i;
     for (i = 0; i < ARRAY_SIZE(AS02_SAMPLE_RATE_SUPPORT); i++) {
-        if (essence_type == AS02_SAMPLE_RATE_SUPPORT[i].essence_type &&
-            is_mpeg2lg_720p == AS02_SAMPLE_RATE_SUPPORT[i].is_mpeg2lg_720p)
-        {
+        if (essence_type == AS02_SAMPLE_RATE_SUPPORT[i].essence_type) {
             size_t j = 0;
             while (AS02_SAMPLE_RATE_SUPPORT[i].sample_rate[j].numerator) {
                 if (sample_rate == AS02_SAMPLE_RATE_SUPPORT[i].sample_rate[j])
@@ -166,71 +133,54 @@ bool AS02Track::IsSupported(AS02EssenceType essence_type, bool is_mpeg2lg_720p, 
     return false;
 }
 
-MXFDescriptorHelper::EssenceType AS02Track::ConvertEssenceType(AS02EssenceType as02_essence_type)
-{
-    size_t i;
-    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
-        if (ESSENCE_TYPE_MAP[i].as02_essence_type == as02_essence_type)
-            return ESSENCE_TYPE_MAP[i].mh_essence_type;
-    }
-
-    return MXFDescriptorHelper::UNKNOWN_ESSENCE;
-}
-
-AS02EssenceType AS02Track::ConvertEssenceType(MXFDescriptorHelper::EssenceType mh_essence_type)
-{
-    size_t i;
-    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
-        if (ESSENCE_TYPE_MAP[i].mh_essence_type == mh_essence_type)
-            return ESSENCE_TYPE_MAP[i].as02_essence_type;
-    }
-
-    return AS02_UNKNOWN_ESSENCE;
-}
-
-AS02Track* AS02Track::OpenNew(AS02Clip *clip, string filepath, string rel_uri, uint32_t track_index, 
-                              AS02EssenceType essence_type)
+AS02Track* AS02Track::OpenNew(AS02Clip *clip, string filepath, string rel_uri, uint32_t track_index,
+                              EssenceType essence_type)
 {
     File *file = File::openNew(filepath);
 
     switch (essence_type)
     {
-        case AS02_IEC_DV25:
-        case AS02_DVBASED_DV25:
-        case AS02_DV50:
-        case AS02_DV100_1080I:
-        case AS02_DV100_720P:
+        case IEC_DV25:
+        case DVBASED_DV25:
+        case DV50:
+        case DV100_1080I:
+        case DV100_720P:
             return new AS02DVTrack(clip, track_index, essence_type, file, rel_uri);
-        case AS02_D10_30:
-        case AS02_D10_40:
-        case AS02_D10_50:
+        case D10_30:
+        case D10_40:
+        case D10_50:
             return new AS02D10Track(clip, track_index, essence_type, file, rel_uri);
-        case AS02_AVCI100_1080I:
-        case AS02_AVCI100_1080P:
-        case AS02_AVCI100_720P:
-        case AS02_AVCI50_1080I:
-        case AS02_AVCI50_1080P:
-        case AS02_AVCI50_720P:
+        case AVCI100_1080I:
+        case AVCI100_1080P:
+        case AVCI100_720P:
+        case AVCI50_1080I:
+        case AVCI50_1080P:
+        case AVCI50_720P:
             return new AS02AVCITrack(clip, track_index, essence_type, file, rel_uri);
-        case AS02_UNC_SD:
-        case AS02_UNC_HD_1080I:
-        case AS02_UNC_HD_1080P:
-        case AS02_UNC_HD_720P:
+        case UNC_SD:
+        case UNC_HD_1080I:
+        case UNC_HD_1080P:
+        case UNC_HD_720P:
             return new AS02UncTrack(clip, track_index, essence_type, file, rel_uri);
-        case AS02_MPEG2LG_422P_HL:
-        case AS02_MPEG2LG_MP_HL:
-        case AS02_MPEG2LG_MP_H14:
+        case MPEG2LG_422P_HL_1080I:
+        case MPEG2LG_422P_HL_1080P:
+        case MPEG2LG_422P_HL_720P:
+        case MPEG2LG_MP_HL_1080I:
+        case MPEG2LG_MP_HL_1080P:
+        case MPEG2LG_MP_HL_720P:
+        case MPEG2LG_MP_H14_1080I:
+        case MPEG2LG_MP_H14_1080P:
             return new AS02MPEG2LGTrack(clip, track_index, essence_type, file, rel_uri);
-        case AS02_PCM:
+        case WAVE_PCM:
             return new AS02PCMTrack(clip, track_index, file, rel_uri);
-        case AS02_UNKNOWN_ESSENCE:
+        default:
             IM_ASSERT(false);
     }
 
     return 0;
 }
 
-AS02Track::AS02Track(AS02Clip *clip, uint32_t track_index, AS02EssenceType essence_type,
+AS02Track::AS02Track(AS02Clip *clip, uint32_t track_index, EssenceType essence_type,
                      File *mxf_file, string rel_uri)
 {
     mClip = clip;
@@ -264,7 +214,7 @@ AS02Track::AS02Track(AS02Clip *clip, uint32_t track_index, AS02EssenceType essen
     mLowerLevelTrackId = 0;
 
     mEssenceType = essence_type;
-    mDescriptorHelper = MXFDescriptorHelper::Create(ConvertEssenceType(essence_type));
+    mDescriptorHelper = MXFDescriptorHelper::Create(essence_type);
     mDescriptorHelper->SetFlavour(MXFDescriptorHelper::SMPTE_377_1_FLAVOUR);
 
     mManifestFile = clip->GetBundle()->GetManifest()->RegisterFile(rel_uri, ESSENCE_COMPONENT_FILE_ROLE);

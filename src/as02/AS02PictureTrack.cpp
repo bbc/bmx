@@ -43,7 +43,7 @@ using namespace mxfpp;
 
 
 
-AS02PictureTrack::AS02PictureTrack(AS02Clip *clip, uint32_t track_index, AS02EssenceType essence_type, File *file,
+AS02PictureTrack::AS02PictureTrack(AS02Clip *clip, uint32_t track_index, EssenceType essence_type, File *file,
                                    string rel_uri)
 : AS02Track(clip, track_index, essence_type, file, rel_uri)
 {

@@ -47,6 +47,9 @@ public:
     static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
     static bool IsSupported(EssenceType essence_type);
 
+private:
+    static size_t GetEssenceIndex(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
+
 public:
     MPEG2LGMXFDescriptorHelper();
     virtual ~MPEG2LGMXFDescriptorHelper();
@@ -57,8 +60,6 @@ public:
 
 public:
     // configure and create new descriptor
-    void SetSignalStandard(uint8_t signal_standard);    // 0x04=SMPTE274, 0x05=SMPTE-296; default=0x04
-    void SetFrameLayout(uint8_t frame_layout);          // 0x00=FullFrame (progressive), 0x01=SeparateFields (interlaced), default=0x01
     virtual void SetEssenceType(EssenceType essence_type);
     virtual void SetSampleRate(mxfRational sample_rate);
     virtual void SetFrameWrapped(bool frame_wrapped);
@@ -73,8 +74,6 @@ private:
     void UpdateEssenceIndex();
 
 private:
-    uint8_t mSignalStandard;
-    uint8_t mFrameLayout;
     size_t mEssenceIndex;
 };
 

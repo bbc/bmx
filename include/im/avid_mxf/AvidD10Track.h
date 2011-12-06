@@ -44,7 +44,7 @@ namespace im
 class AvidD10Track : public AvidPictureTrack
 {
 public:
-    AvidD10Track(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, mxfpp::File *file);
+    AvidD10Track(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file);
     virtual ~AvidD10Track();
 
     void SetSampleSize(uint32_t size);

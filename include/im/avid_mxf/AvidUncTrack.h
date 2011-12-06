@@ -44,7 +44,7 @@ namespace im
 class AvidUncTrack : public AvidPictureTrack
 {
 public:
-    AvidUncTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, mxfpp::File *file);
+    AvidUncTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file);
     virtual ~AvidUncTrack();
 
     void SetInputHeight(uint32_t height);   // default stored height

@@ -54,7 +54,7 @@ class OP1AAVCITrack : public OP1APictureTrack
 {
 public:
     OP1AAVCITrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                  mxfRational frame_rate, OP1AEssenceType essence_type);
+                  mxfRational frame_rate, EssenceType essence_type);
     virtual ~OP1AAVCITrack();
 
     void SetMode(OP1AAVCIMode mode);                            // default OP1A_AVCI_ALL_FRAME_HEADER_MODE

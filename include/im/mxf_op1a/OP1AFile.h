@@ -81,7 +81,7 @@ public:
     void SetOutputStartOffset(int64_t offset);
     void SetOutputEndOffset(int64_t offset);
 
-    OP1ATrack* CreateTrack(OP1AEssenceType essence_type);
+    OP1ATrack* CreateTrack(EssenceType essence_type);
 
 public:
     void PrepareHeaderMetadata();

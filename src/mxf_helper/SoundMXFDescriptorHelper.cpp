@@ -45,15 +45,14 @@ using namespace mxfpp;
 
 
 
-MXFDescriptorHelper::EssenceType SoundMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
-                                                                       mxfUL alternative_ec_label)
+EssenceType SoundMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     GenericSoundEssenceDescriptor *sound_descriptor =
         dynamic_cast<GenericSoundEssenceDescriptor*>(file_descriptor);
     if (!sound_descriptor)
-        return UNKNOWN_ESSENCE;
+        return UNKNOWN_ESSENCE_TYPE;
 
-    MXFDescriptorHelper::EssenceType essence_type =
+    EssenceType essence_type =
         WaveMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)
         return essence_type;

@@ -3,6 +3,7 @@ noinst_LTLIBRARIES = libcommon.la
 libcommon_la_SOURCES = \
 	ByteArray.cpp \
 	CRC32.cpp \
+	EssenceType.cpp \
 	IMException.cpp \
 	IMTypes.cpp \
 	KLVParser.cpp \

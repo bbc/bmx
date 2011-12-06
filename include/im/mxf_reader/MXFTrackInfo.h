@@ -33,7 +33,8 @@
 #define __IM_MXF_TRACK_INFO__
 
 
-#include <im/mxf_helper/MXFDescriptorHelper.h>
+#include <im/IMTypes.h>
+#include <im/EssenceType.h>
 
 
 
@@ -57,7 +58,7 @@ public:
     bool is_picture;
     bool is_sound;
 
-    MXFDescriptorHelper::EssenceType essence_type;
+    EssenceType essence_type;
     mxfUL essence_container_label;
     mxfUMID material_package_uid;
     uint32_t material_track_id;

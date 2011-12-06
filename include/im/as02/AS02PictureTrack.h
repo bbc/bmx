@@ -44,7 +44,7 @@ namespace im
 class AS02PictureTrack : public AS02Track
 {
 public:
-    AS02PictureTrack(AS02Clip *clip, uint32_t track_index, AS02EssenceType essence_type, mxfpp::File *file,
+    AS02PictureTrack(AS02Clip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file,
                      std::string rel_uri);
     virtual ~AS02PictureTrack();
 

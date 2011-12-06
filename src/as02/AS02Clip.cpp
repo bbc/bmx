@@ -119,9 +119,9 @@ void AS02Clip::ReserveHeaderMetadataSpace(uint32_t min_bytes)
     mReserveMinBytes = min_bytes;
 }
 
-AS02Track* AS02Clip::CreateTrack(AS02EssenceType essence_type)
+AS02Track* AS02Clip::CreateTrack(EssenceType essence_type)
 {
-    bool is_video = (essence_type != AS02_PCM);
+    bool is_video = (essence_type != WAVE_PCM);
     string filepath, rel_uri;
     uint32_t track_number;
     if (is_video) {

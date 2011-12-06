@@ -29,12 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __IM_OP1A_MPEG2LG_TRACK_H__
-#define __IM_OP1A_MPEG2LG_TRACK_H__
-
-#include <im/mxf_op1a/OP1APictureTrack.h>
-#include <im/writer_helper/MPEG2LGWriterHelper.h>
-#include <im/ByteArray.h>
+#ifndef __IM_ESSENCE_TYPE_H__
+#define __IM_ESSENCE_TYPE_H__
 
 
 
@@ -42,25 +38,75 @@ namespace im
 {
 
 
-class OP1AMPEG2LGTrack : public OP1APictureTrack
+typedef enum
 {
-public:
-    OP1AMPEG2LGTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                     mxfRational frame_rate, EssenceType essence_type);
-    virtual ~OP1AMPEG2LGTrack();
+    UNKNOWN_ESSENCE_TYPE,
+    // generic
+    PICTURE_ESSENCE,
+    SOUND_ESSENCE,
+    // D-10 video
+    D10_30,
+    D10_40,
+    D10_50,
+    // DV
+    IEC_DV25,
+    DVBASED_DV25,
+    DV50,
+    DV100_1080I,
+    DV100_720P,
+    // AVC-Intra
+    AVCI100_1080I,
+    AVCI100_1080P,
+    AVCI100_720P,
+    AVCI50_1080I,
+    AVCI50_1080P,
+    AVCI50_720P,
+    // Uncompressed video
+    UNC_SD,
+    UNC_HD_1080I,
+    UNC_HD_1080P,
+    UNC_HD_720P,
+    AVID_10BIT_UNC_SD,
+    AVID_10BIT_UNC_HD_1080I,
+    AVID_10BIT_UNC_HD_1080P,
+    AVID_10BIT_UNC_HD_720P,
+    // MPEG-2 Long GOP HD
+    MPEG2LG_422P_HL_1080I,
+    MPEG2LG_422P_HL_1080P,
+    MPEG2LG_422P_HL_720P,
+    MPEG2LG_MP_HL_1080I,
+    MPEG2LG_MP_HL_1080P,
+    MPEG2LG_MP_HL_720P,
+    MPEG2LG_MP_H14_1080I,
+    MPEG2LG_MP_H14_1080P,
+    // VC-3
+    VC3_1080P_1235,
+    VC3_1080P_1237,
+    VC3_1080P_1238,
+    VC3_1080I_1241,
+    VC3_1080I_1242,
+    VC3_1080I_1243,
+    VC3_720P_1250,
+    VC3_720P_1251,
+    VC3_720P_1252,
+    VC3_1080P_1253,
+    // Avid MJPEG
+    MJPEG_2_1,
+    MJPEG_3_1,
+    MJPEG_10_1,
+    MJPEG_20_1,
+    MJPEG_4_1M,
+    MJPEG_10_1M,
+    MJPEG_15_1S,
+    // WAVE PCM
+    WAVE_PCM,
+} EssenceType;
 
-protected:
-    virtual void PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count);
-    virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
-    virtual void CompleteWrite();
 
-private:
-    MPEG2LGWriterHelper mWriterHelper;
+const char* essence_type_to_string(EssenceType essence_type);
+
+
 };
-
-
-};
-
 
 
 #endif

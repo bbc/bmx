@@ -44,10 +44,10 @@ using namespace mxfpp;
 
 
 
-D10PCMTrack::D10PCMTrack(D10File *file, uint32_t track_index, mxfRational frame_rate, D10EssenceType essence_type)
+D10PCMTrack::D10PCMTrack(D10File *file, uint32_t track_index, mxfRational frame_rate, EssenceType essence_type)
 : D10Track(file, track_index, frame_rate, essence_type)
 {
-    IM_ASSERT(essence_type == D10_PCM);
+    IM_ASSERT(essence_type == WAVE_PCM);
 
     mIsPicture = false;
 

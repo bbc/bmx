@@ -49,7 +49,7 @@ using namespace mxfpp;
 typedef struct
 {
     mxfUL pc_label;
-    MXFDescriptorHelper::EssenceType essence_type;
+    EssenceType essence_type;
     mxfRational sample_rate;
     uint32_t frame_size; // includes size of sequence and picture parameter sets (512 bytes)
     int32_t avid_resolution_id;
@@ -57,28 +57,27 @@ typedef struct
 
 static const SupportedEssence SUPPORTED_ESSENCE[] =
 {
-    {MXF_CMDEF_L(AVCI_100_1080_50_I),   MXFDescriptorHelper::AVCI100_1080I,   {25, 1},        568832,  0x0d58},
-    {MXF_CMDEF_L(AVCI_100_1080_60_I),   MXFDescriptorHelper::AVCI100_1080I,   {30000, 1001},  472576,  0x0},
-    {MXF_CMDEF_L(AVCI_100_1080_25_P),   MXFDescriptorHelper::AVCI100_1080P,   {25, 1},        568832,  0x0d59},
-    {MXF_CMDEF_L(AVCI_100_1080_30_P),   MXFDescriptorHelper::AVCI100_1080P,   {30000, 1001},  472576,  0x0},
-    {MXF_CMDEF_L(AVCI_100_720_50_P),    MXFDescriptorHelper::AVCI100_720P,    {50, 1},        284672,  0x0d52},
-    {MXF_CMDEF_L(AVCI_100_720_50_P),    MXFDescriptorHelper::AVCI100_720P,    {25, 1},        284672,  0x0d54},
-    {MXF_CMDEF_L(AVCI_100_720_60_P),    MXFDescriptorHelper::AVCI100_720P,    {60000, 1001},  236544,  0x0},
-    {MXF_CMDEF_L(AVCI_100_720_60_P),    MXFDescriptorHelper::AVCI100_720P,    {30000, 1001},  236544,  0x0},
-    {MXF_CMDEF_L(AVCI_50_1080_50_I),    MXFDescriptorHelper::AVCI50_1080I,    {25, 1},        281088,  0x0d4e},
-    {MXF_CMDEF_L(AVCI_50_1080_60_I),    MXFDescriptorHelper::AVCI50_1080I,    {30000, 1001},  232960,  0x0},
-    {MXF_CMDEF_L(AVCI_50_1080_25_P),    MXFDescriptorHelper::AVCI50_1080P,    {25, 1},        281088,  0x0d4f},
-    {MXF_CMDEF_L(AVCI_50_1080_30_P),    MXFDescriptorHelper::AVCI50_1080P,    {30000, 1001},  232960,  0x0},
-    {MXF_CMDEF_L(AVCI_50_720_50_P),     MXFDescriptorHelper::AVCI50_720P,     {50, 1},        140800,  0x0d48},
-    {MXF_CMDEF_L(AVCI_50_720_50_P),     MXFDescriptorHelper::AVCI50_720P,     {25, 1},        140800,  0x0d4a},
-    {MXF_CMDEF_L(AVCI_50_720_60_P),     MXFDescriptorHelper::AVCI50_720P,     {60000, 1001},  116736,  0x0},
-    {MXF_CMDEF_L(AVCI_50_720_60_P),     MXFDescriptorHelper::AVCI50_720P,     {30000, 1001},  116736,  0x0},
+    {MXF_CMDEF_L(AVCI_100_1080_50_I),   AVCI100_1080I,   {25, 1},        568832,  0x0d58},
+    {MXF_CMDEF_L(AVCI_100_1080_60_I),   AVCI100_1080I,   {30000, 1001},  472576,  0x0},
+    {MXF_CMDEF_L(AVCI_100_1080_25_P),   AVCI100_1080P,   {25, 1},        568832,  0x0d59},
+    {MXF_CMDEF_L(AVCI_100_1080_30_P),   AVCI100_1080P,   {30000, 1001},  472576,  0x0},
+    {MXF_CMDEF_L(AVCI_100_720_50_P),    AVCI100_720P,    {50, 1},        284672,  0x0d52},
+    {MXF_CMDEF_L(AVCI_100_720_50_P),    AVCI100_720P,    {25, 1},        284672,  0x0d54},
+    {MXF_CMDEF_L(AVCI_100_720_60_P),    AVCI100_720P,    {60000, 1001},  236544,  0x0},
+    {MXF_CMDEF_L(AVCI_100_720_60_P),    AVCI100_720P,    {30000, 1001},  236544,  0x0},
+    {MXF_CMDEF_L(AVCI_50_1080_50_I),    AVCI50_1080I,    {25, 1},        281088,  0x0d4e},
+    {MXF_CMDEF_L(AVCI_50_1080_60_I),    AVCI50_1080I,    {30000, 1001},  232960,  0x0},
+    {MXF_CMDEF_L(AVCI_50_1080_25_P),    AVCI50_1080P,    {25, 1},        281088,  0x0d4f},
+    {MXF_CMDEF_L(AVCI_50_1080_30_P),    AVCI50_1080P,    {30000, 1001},  232960,  0x0},
+    {MXF_CMDEF_L(AVCI_50_720_50_P),     AVCI50_720P,     {50, 1},        140800,  0x0d48},
+    {MXF_CMDEF_L(AVCI_50_720_50_P),     AVCI50_720P,     {25, 1},        140800,  0x0d4a},
+    {MXF_CMDEF_L(AVCI_50_720_60_P),     AVCI50_720P,     {60000, 1001},  116736,  0x0},
+    {MXF_CMDEF_L(AVCI_50_720_60_P),     AVCI50_720P,     {30000, 1001},  116736,  0x0},
 };
 
 
 
-MXFDescriptorHelper::EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
-                                                                      mxfUL alternative_ec_label)
+EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     if (!mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AVCIFrameWrapped)) &&
@@ -86,14 +85,14 @@ MXFDescriptorHelper::EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescri
         !(mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
             mxf_equals_ul_mod_regver(&alternative_ec_label, &MXF_EC_L(AVCIClipWrapped))))
     {
-        return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+        return UNKNOWN_ESSENCE_TYPE;
     }
 
     mxfRational sample_rate = file_descriptor->getSampleRate();
 
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     if (!pic_descriptor || !pic_descriptor->havePictureEssenceCoding())
-        return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+        return UNKNOWN_ESSENCE_TYPE;
 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
@@ -105,7 +104,7 @@ MXFDescriptorHelper::EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescri
         }
     }
 
-    return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+    return UNKNOWN_ESSENCE_TYPE;
 }
 
 bool AVCIMXFDescriptorHelper::IsSupported(EssenceType essence_type)

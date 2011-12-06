@@ -43,7 +43,7 @@ namespace im
 class AvidVC3Track : public AvidPictureTrack
 {
 public:
-    AvidVC3Track(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, mxfpp::File *file);
+    AvidVC3Track(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file);
     virtual ~AvidVC3Track();
 };
 

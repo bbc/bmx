@@ -45,7 +45,7 @@ class OP1APCMTrack : public OP1ATrack
 {
 public:
     OP1APCMTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                 mxfRational frame_rate, OP1AEssenceType essence_type);
+                 mxfRational frame_rate, EssenceType essence_type);
     virtual ~OP1APCMTrack();
 
     void SetSamplingRate(mxfRational sampling_rate);    // default 48000/1

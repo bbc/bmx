@@ -44,66 +44,14 @@ namespace im
 {
 
 
-typedef enum
-{
-    AVID_UNKNOWN_ESSENCE = 0,
-    AVID_IEC_DV25,
-    AVID_DVBASED_DV25,
-    AVID_DV50,
-    AVID_DV100_1080I,
-    AVID_DV100_720P,
-    AVID_MPEG2LG_422P_HL,
-    AVID_MPEG2LG_MP_HL,
-    AVID_MPEG2LG_MP_H14,
-    AVID_MJPEG_2_1,
-    AVID_MJPEG_3_1,
-    AVID_MJPEG_10_1,
-    AVID_MJPEG_20_1,
-    AVID_MJPEG_4_1M,
-    AVID_MJPEG_10_1M,
-    AVID_MJPEG_15_1S,
-    AVID_D10_30,
-    AVID_D10_40,
-    AVID_D10_50,
-    AVID_AVCI100_1080I,
-    AVID_AVCI100_1080P,
-    AVID_AVCI100_720P,
-    AVID_AVCI50_1080I,
-    AVID_AVCI50_1080P,
-    AVID_AVCI50_720P,
-    AVID_VC3_1080P_1235,
-    AVID_VC3_1080P_1237,
-    AVID_VC3_1080P_1238,
-    AVID_VC3_1080I_1241,
-    AVID_VC3_1080I_1242,
-    AVID_VC3_1080I_1243,
-    AVID_VC3_720P_1250,
-    AVID_VC3_720P_1251,
-    AVID_VC3_720P_1252,
-    AVID_VC3_1080P_1253,
-    AVID_UNC_SD,
-    AVID_UNC_HD_1080I,
-    AVID_UNC_HD_1080P,
-    AVID_UNC_HD_720P,
-    AVID_10BIT_UNC_SD,
-    AVID_10BIT_UNC_HD_1080I,
-    AVID_10BIT_UNC_HD_1080P,
-    AVID_10BIT_UNC_HD_720P,
-    AVID_PCM,
-} AvidEssenceType;
-
-
 class AvidClip;
 
 class AvidTrack
 {
 public:
-    static bool IsSupported(AvidEssenceType essence_type, bool is_mpeg2lg_720p, mxfRational sample_rate);
+    static bool IsSupported(EssenceType essence_type, mxfRational sample_rate);
 
-    static MXFDescriptorHelper::EssenceType ConvertEssenceType(AvidEssenceType avid_essence_type);
-    static AvidEssenceType ConvertEssenceType(MXFDescriptorHelper::EssenceType mh_essence_type);
-
-    static AvidTrack* OpenNew(AvidClip *clip, std::string filename, uint32_t track_index, AvidEssenceType essence_type);
+    static AvidTrack* OpenNew(AvidClip *clip, std::string filename, uint32_t track_index, EssenceType essence_type);
 
 public:
     virtual ~AvidTrack();
@@ -149,7 +97,7 @@ public:
     mxfpp::DataModel* GetDataModel() const { return mDataModel; }
 
 protected:
-    AvidTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, mxfpp::File *mxf_file);
+    AvidTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *mxf_file);
 
     virtual uint32_t GetImageStartOffset() { return 0; }
 
@@ -177,7 +125,7 @@ protected:
     uint32_t mIndexSID;
     uint32_t mBodySID;
 
-    AvidEssenceType mEssenceType;
+    EssenceType mEssenceType;
     MXFDescriptorHelper *mDescriptorHelper;
 
     mxfUMID mFileSourcePackageUID;

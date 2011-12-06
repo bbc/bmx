@@ -44,7 +44,7 @@ namespace im
 class AvidPCMTrack : public AvidTrack
 {
 public:
-    AvidPCMTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, mxfpp::File *file);
+    AvidPCMTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file);
     virtual ~AvidPCMTrack();
 
     void SetSamplingRate(mxfRational sampling_rate);    // default 48000/1

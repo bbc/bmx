@@ -62,24 +62,24 @@ static const mxfRational AUDIO_SAMPLING_RATE = {48000, 1};
 
 typedef struct
 {
-    D10EssenceType essence_type;
+    EssenceType essence_type;
     mxfRational frame_rate;
     mxfUL ec_label;
 } EssenceContainerULTable;
 
 static const EssenceContainerULTable ESS_CONTAINER_UL_TABLE[] =
 {
-    {D10_MPEG_30,   {25, 1},        MXF_EC_L(D10_30_625_50_defined_template)},
-    {D10_MPEG_30,   {30000, 1001},  MXF_EC_L(D10_30_525_60_defined_template)},
-    {D10_MPEG_40,   {25, 1},        MXF_EC_L(D10_40_625_50_defined_template)},
-    {D10_MPEG_40,   {30000, 1001},  MXF_EC_L(D10_40_525_60_defined_template)},
-    {D10_MPEG_50,   {25, 1},        MXF_EC_L(D10_50_625_50_defined_template)},
-    {D10_MPEG_50,   {30000, 1001},  MXF_EC_L(D10_50_525_60_defined_template)},
+    {D10_30,   {25, 1},        MXF_EC_L(D10_30_625_50_defined_template)},
+    {D10_30,   {30000, 1001},  MXF_EC_L(D10_30_525_60_defined_template)},
+    {D10_40,   {25, 1},        MXF_EC_L(D10_40_625_50_defined_template)},
+    {D10_40,   {30000, 1001},  MXF_EC_L(D10_40_525_60_defined_template)},
+    {D10_50,   {25, 1},        MXF_EC_L(D10_50_625_50_defined_template)},
+    {D10_50,   {30000, 1001},  MXF_EC_L(D10_50_525_60_defined_template)},
 };
 
 
 
-static mxfUL get_essence_container_ul(D10EssenceType essence_type, mxfRational frame_rate)
+static mxfUL get_essence_container_ul(EssenceType essence_type, mxfRational frame_rate)
 {
     size_t i;
     for (i = 0; i < ARRAY_SIZE(ESS_CONTAINER_UL_TABLE); i++) {
@@ -203,7 +203,7 @@ void D10File::ReserveHeaderMetadataSpace(uint32_t min_bytes)
     mReserveMinBytes = min_bytes;
 }
 
-D10Track* D10File::CreateTrack(D10EssenceType essence_type)
+D10Track* D10File::CreateTrack(EssenceType essence_type)
 {
     uint32_t track_index = mTracks.size();
     mTracks.push_back(D10Track::Create(this, track_index, mFrameRate, essence_type));

@@ -93,8 +93,8 @@ public:
     void RegisterImportSource(mxfpp::SourcePackage *source_package);
 
 public:
-    AvidTrack* CreateTrack(AvidEssenceType essence_type);
-    AvidTrack* CreateTrack(AvidEssenceType essence_type, std::string filename);
+    AvidTrack* CreateTrack(EssenceType essence_type);
+    AvidTrack* CreateTrack(EssenceType essence_type, std::string filename);
 
 public:
     void PrepareWrite();

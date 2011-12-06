@@ -45,7 +45,7 @@ using namespace mxfpp;
 
 
 
-AvidUncTrack::AvidUncTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, File *file)
+AvidUncTrack::AvidUncTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, File *file)
 : AvidPictureTrack(clip, track_index, essence_type, file)
 {
     mUncDescriptorHelper = dynamic_cast<UncMXFDescriptorHelper*>(mDescriptorHelper);

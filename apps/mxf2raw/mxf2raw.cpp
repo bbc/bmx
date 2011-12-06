@@ -220,7 +220,7 @@ static void print_track_info(const MXFTrackInfo *track_info)
     const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
 
     printf("  Essence kind         : %s\n", (picture_info ? "Picture" : (sound_info ? "Sound" : "Unknown")));
-    printf("  Essence type         : %s\n", MXFDescriptorHelper::EssenceTypeToString(track_info->essence_type).c_str());
+    printf("  Essence type         : %s\n", essence_type_to_string(track_info->essence_type));
     printf("  Essence label        : %s\n", get_label_string(track_info->essence_container_label, string_buffer));
     printf("  Material package uid : %s\n", get_umid_string(track_info->material_package_uid, string_buffer));
     printf("  Material track id    : %u\n", track_info->material_track_id);

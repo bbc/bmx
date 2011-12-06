@@ -59,101 +59,58 @@ using namespace mxfpp;
 
 typedef struct
 {
-    OP1AEssenceType op1a_essence_type;
-    MXFDescriptorHelper::EssenceType mh_essence_type;
-} EssenceTypeMap;
-
-static const EssenceTypeMap ESSENCE_TYPE_MAP[] =
-{
-    {OP1A_IEC_DV25,         MXFDescriptorHelper::IEC_DV25},
-    {OP1A_DVBASED_DV25,     MXFDescriptorHelper::DVBASED_DV25},
-    {OP1A_DV50,             MXFDescriptorHelper::DV50},
-    {OP1A_DV100_1080I,      MXFDescriptorHelper::DV100_1080I},
-    {OP1A_DV100_720P,       MXFDescriptorHelper::DV100_720P},
-    {OP1A_D10_30,           MXFDescriptorHelper::D10_30},
-    {OP1A_D10_40,           MXFDescriptorHelper::D10_40},
-    {OP1A_D10_50,           MXFDescriptorHelper::D10_50},
-    {OP1A_AVCI100_1080I,    MXFDescriptorHelper::AVCI100_1080I},
-    {OP1A_AVCI100_1080P,    MXFDescriptorHelper::AVCI100_1080P},
-    {OP1A_AVCI100_720P,     MXFDescriptorHelper::AVCI100_720P},
-    {OP1A_AVCI50_1080I,     MXFDescriptorHelper::AVCI50_1080I},
-    {OP1A_AVCI50_1080P,     MXFDescriptorHelper::AVCI50_1080P},
-    {OP1A_AVCI50_720P,      MXFDescriptorHelper::AVCI50_720P},
-    {OP1A_UNC_SD,           MXFDescriptorHelper::UNC_SD},
-    {OP1A_UNC_HD_1080I,     MXFDescriptorHelper::UNC_HD_1080I},
-    {OP1A_UNC_HD_1080P,     MXFDescriptorHelper::UNC_HD_1080P},
-    {OP1A_UNC_HD_720P,      MXFDescriptorHelper::UNC_HD_720P},
-    {OP1A_MPEG2LG_422P_HL,  MXFDescriptorHelper::MPEG2LG_422P_HL},
-    {OP1A_MPEG2LG_MP_HL,    MXFDescriptorHelper::MPEG2LG_MP_HL},
-    {OP1A_MPEG2LG_MP_H14,   MXFDescriptorHelper::MPEG2LG_MP_H14},
-    {OP1A_VC3_1080P_1235,   MXFDescriptorHelper::VC3_1080P_1235},
-    {OP1A_VC3_1080P_1237,   MXFDescriptorHelper::VC3_1080P_1237},
-    {OP1A_VC3_1080P_1238,   MXFDescriptorHelper::VC3_1080P_1238},
-    {OP1A_VC3_1080I_1241,   MXFDescriptorHelper::VC3_1080I_1241},
-    {OP1A_VC3_1080I_1242,   MXFDescriptorHelper::VC3_1080I_1242},
-    {OP1A_VC3_1080I_1243,   MXFDescriptorHelper::VC3_1080I_1243},
-    {OP1A_VC3_720P_1250,    MXFDescriptorHelper::VC3_720P_1250},
-    {OP1A_VC3_720P_1251,    MXFDescriptorHelper::VC3_720P_1251},
-    {OP1A_VC3_720P_1252,    MXFDescriptorHelper::VC3_720P_1252},
-    {OP1A_VC3_1080P_1253,   MXFDescriptorHelper::VC3_1080P_1253},
-    {OP1A_PCM,              MXFDescriptorHelper::WAVE_PCM},
-};
-
-
-typedef struct
-{
-    OP1AEssenceType essence_type;
-    bool is_mpeg2lg_720p;
+    EssenceType essence_type;
     mxfRational sample_rate[10];
 } OP1ASampleRateSupport;
 
 static const OP1ASampleRateSupport OP1A_SAMPLE_RATE_SUPPORT[] =
 {
-    {OP1A_IEC_DV25,           false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_DVBASED_DV25,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_DV50,               false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_DV100_1080I,        false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_DV100_720P,         false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_D10_30,             false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_D10_40,             false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_D10_50,             false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_AVCI100_1080I,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_AVCI100_1080P,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_AVCI100_720P,       false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_AVCI50_1080I,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_AVCI50_1080P,       false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_AVCI50_720P,        false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_UNC_SD,             false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_UNC_HD_1080I,       false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_UNC_HD_1080P,       false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_UNC_HD_720P,        false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_MPEG2LG_422P_HL,    false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_MPEG2LG_422P_HL,    true,     {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_MPEG2LG_MP_HL,      false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_MPEG2LG_MP_HL,      true,     {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_MPEG2LG_MP_H14,     false,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {OP1A_VC3_1080P_1235,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_VC3_1080P_1237,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_VC3_1080P_1238,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_VC3_1080I_1241,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_VC3_1080I_1242,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_VC3_1080I_1243,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_VC3_720P_1250,      false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_VC3_720P_1251,      false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_VC3_720P_1252,      false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_VC3_1080P_1253,     false,    {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {OP1A_PCM,                false,    {{48000, 1}, {0, 0}}},
+    {IEC_DV25,               {{25, 1}, {30000, 1001}, {0, 0}}},
+    {DVBASED_DV25,           {{25, 1}, {30000, 1001}, {0, 0}}},
+    {DV50,                   {{25, 1}, {30000, 1001}, {0, 0}}},
+    {DV100_1080I,            {{25, 1}, {30000, 1001}, {0, 0}}},
+    {DV100_720P,             {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {D10_30,                 {{25, 1}, {30000, 1001}, {0, 0}}},
+    {D10_40,                 {{25, 1}, {30000, 1001}, {0, 0}}},
+    {D10_50,                 {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI100_1080I,          {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI100_1080P,          {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI100_720P,           {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {AVCI50_1080I,           {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI50_1080P,           {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI50_720P,            {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {UNC_SD,                 {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {UNC_HD_1080I,           {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {UNC_HD_1080P,           {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {UNC_HD_720P,            {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {MPEG2LG_422P_HL_1080I,  {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_422P_HL_1080P,  {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_422P_HL_720P,   {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_HL_1080I,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_HL_1080P,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_HL_720P,     {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_H14_1080I,   {{25, 1}, {30000, 1001}, {0, 0}}},
+    {MPEG2LG_MP_H14_1080P,   {{25, 1}, {30000, 1001}, {0, 0}}},
+    {VC3_1080P_1235,         {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {VC3_1080P_1237,         {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {VC3_1080P_1238,         {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {VC3_1080I_1241,         {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {VC3_1080I_1242,         {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {VC3_1080I_1243,         {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {VC3_720P_1250,          {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {VC3_720P_1251,          {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {VC3_720P_1252,          {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {VC3_1080P_1253,         {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {WAVE_PCM,                    {{48000, 1}, {0, 0}}},
 };
 
 
 
-bool OP1ATrack::IsSupported(OP1AEssenceType essence_type, bool is_mpeg2lg_720p, mxfRational sample_rate)
+bool OP1ATrack::IsSupported(EssenceType essence_type, mxfRational sample_rate)
 {
     size_t i;
     for (i = 0; i < ARRAY_SIZE(OP1A_SAMPLE_RATE_SUPPORT); i++) {
-        if (essence_type == OP1A_SAMPLE_RATE_SUPPORT[i].essence_type &&
-            is_mpeg2lg_720p == OP1A_SAMPLE_RATE_SUPPORT[i].is_mpeg2lg_720p)
-        {
+        if (essence_type == OP1A_SAMPLE_RATE_SUPPORT[i].essence_type) {
             size_t j = 0;
             while (OP1A_SAMPLE_RATE_SUPPORT[i].sample_rate[j].numerator) {
                 if (sample_rate == OP1A_SAMPLE_RATE_SUPPORT[i].sample_rate[j])
@@ -166,73 +123,56 @@ bool OP1ATrack::IsSupported(OP1AEssenceType essence_type, bool is_mpeg2lg_720p, 
     return false;
 }
 
-MXFDescriptorHelper::EssenceType OP1ATrack::ConvertEssenceType(OP1AEssenceType op1a_essence_type)
-{
-    size_t i;
-    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
-        if (ESSENCE_TYPE_MAP[i].op1a_essence_type == op1a_essence_type)
-            return ESSENCE_TYPE_MAP[i].mh_essence_type;
-    }
-
-    return MXFDescriptorHelper::UNKNOWN_ESSENCE;
-}
-
-OP1AEssenceType OP1ATrack::ConvertEssenceType(MXFDescriptorHelper::EssenceType mh_essence_type)
-{
-    size_t i;
-    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
-        if (ESSENCE_TYPE_MAP[i].mh_essence_type == mh_essence_type)
-            return ESSENCE_TYPE_MAP[i].op1a_essence_type;
-    }
-
-    return OP1A_UNKNOWN_ESSENCE;
-}
-
 OP1ATrack* OP1ATrack::Create(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                             mxfRational frame_rate, OP1AEssenceType essence_type)
+                             mxfRational frame_rate, EssenceType essence_type)
 {
     switch (essence_type)
     {
-        case OP1A_IEC_DV25:
-        case OP1A_DVBASED_DV25:
-        case OP1A_DV50:
-        case OP1A_DV100_1080I:
-        case OP1A_DV100_720P:
+        case IEC_DV25:
+        case DVBASED_DV25:
+        case DV50:
+        case DV100_1080I:
+        case DV100_720P:
             return new OP1ADVTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
-        case OP1A_D10_30:
-        case OP1A_D10_40:
-        case OP1A_D10_50:
+        case D10_30:
+        case D10_40:
+        case D10_50:
             return new OP1AD10Track(file, track_index, track_id, track_type_number, frame_rate, essence_type);
-        case OP1A_AVCI100_1080I:
-        case OP1A_AVCI100_1080P:
-        case OP1A_AVCI100_720P:
-        case OP1A_AVCI50_1080I:
-        case OP1A_AVCI50_1080P:
-        case OP1A_AVCI50_720P:
+        case AVCI100_1080I:
+        case AVCI100_1080P:
+        case AVCI100_720P:
+        case AVCI50_1080I:
+        case AVCI50_1080P:
+        case AVCI50_720P:
             return new OP1AAVCITrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
-        case OP1A_UNC_SD:
-        case OP1A_UNC_HD_1080I:
-        case OP1A_UNC_HD_1080P:
-        case OP1A_UNC_HD_720P:
+        case UNC_SD:
+        case UNC_HD_1080I:
+        case UNC_HD_1080P:
+        case UNC_HD_720P:
             return new OP1AUncTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
-        case OP1A_MPEG2LG_422P_HL:
-        case OP1A_MPEG2LG_MP_HL:
-        case OP1A_MPEG2LG_MP_H14:
+        case MPEG2LG_422P_HL_1080I:
+        case MPEG2LG_422P_HL_1080P:
+        case MPEG2LG_422P_HL_720P:
+        case MPEG2LG_MP_HL_1080I:
+        case MPEG2LG_MP_HL_1080P:
+        case MPEG2LG_MP_HL_720P:
+        case MPEG2LG_MP_H14_1080I:
+        case MPEG2LG_MP_H14_1080P:
             return new OP1AMPEG2LGTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
-        case OP1A_VC3_1080P_1235:
-        case OP1A_VC3_1080P_1237:
-        case OP1A_VC3_1080P_1238:
-        case OP1A_VC3_1080I_1241:
-        case OP1A_VC3_1080I_1242:
-        case OP1A_VC3_1080I_1243:
-        case OP1A_VC3_720P_1250:
-        case OP1A_VC3_720P_1251:
-        case OP1A_VC3_720P_1252:
-        case OP1A_VC3_1080P_1253:
+        case VC3_1080P_1235:
+        case VC3_1080P_1237:
+        case VC3_1080P_1238:
+        case VC3_1080I_1241:
+        case VC3_1080I_1242:
+        case VC3_1080I_1243:
+        case VC3_720P_1250:
+        case VC3_720P_1251:
+        case VC3_720P_1252:
+        case VC3_1080P_1253:
             return new OP1AVC3Track(file, track_index, track_id, track_type_number, frame_rate, essence_type);
-        case OP1A_PCM:
+        case WAVE_PCM:
             return new OP1APCMTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
-        case OP1A_UNKNOWN_ESSENCE:
+        default:
             IM_ASSERT(false);
     }
 
@@ -240,7 +180,7 @@ OP1ATrack* OP1ATrack::Create(OP1AFile *file, uint32_t track_index, uint32_t trac
 }
 
 OP1ATrack::OP1ATrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                     mxfRational frame_rate, OP1AEssenceType essence_type)
+                     mxfRational frame_rate, EssenceType essence_type)
 {
     mOP1AFile = file;
     mCPManager = file->GetContentPackageManager();
@@ -259,7 +199,7 @@ OP1ATrack::OP1ATrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, ui
     mLowerLevelTrackId = 0;
 
     mEssenceType = essence_type;
-    mDescriptorHelper = MXFDescriptorHelper::Create(ConvertEssenceType(essence_type));
+    mDescriptorHelper = MXFDescriptorHelper::Create(essence_type);
     mDescriptorHelper->SetFlavour(MXFDescriptorHelper::SMPTE_377_1_FLAVOUR);
     mDescriptorHelper->SetFrameWrapped(true);
     mDescriptorHelper->SetSampleRate(frame_rate);

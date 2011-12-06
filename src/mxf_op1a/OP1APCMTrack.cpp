@@ -48,10 +48,10 @@ static const mxfKey AUDIO_ELEMENT_KEY = MXF_AES3BWF_EE_K(0x01, MXF_BWF_FRAME_WRA
 
 
 OP1APCMTrack::OP1APCMTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                           mxfRational frame_rate, OP1AEssenceType essence_type)
+                           mxfRational frame_rate, EssenceType essence_type)
 : OP1ATrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
 {
-    IM_ASSERT(essence_type == OP1A_PCM);
+    IM_ASSERT(essence_type == WAVE_PCM);
 
     mWaveDescriptorHelper = dynamic_cast<WaveMXFDescriptorHelper*>(mDescriptorHelper);
     IM_ASSERT(mWaveDescriptorHelper);

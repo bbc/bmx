@@ -50,7 +50,7 @@ typedef struct
 {
     mxfUL pc_label;
     mxfUL ec_label;
-    MXFDescriptorHelper::EssenceType essence_type;
+    EssenceType essence_type;
     mxfRational sample_rate;
     bool frame_wrapped;
     int32_t avid_resolution_id;
@@ -63,36 +63,35 @@ typedef struct
 
 static const SupportedEssence SUPPORTED_ESSENCE[] =
 {
-    {MXF_CMDEF_L(D10_30_625_50),    MXF_EC_L(D10_30_625_50_picture_only),      MXFDescriptorHelper::D10_30,   {25, 1},         true,    0x00,   150000, 720,    304,    16, {7, 320}},
-    {MXF_CMDEF_L(D10_30_625_50),    MXF_EC_L(D10_30_625_50_defined_template),  MXFDescriptorHelper::D10_30,   {25, 1},         true,    0x00,   150000, 720,    304,    16, {7, 320}},
-    {MXF_CMDEF_L(D10_30_625_50),    MXF_EC_L(AvidIMX30_625_50),                MXFDescriptorHelper::D10_30,   {25, 1},         false,   0xa2,   150000, 720,    304,    16, {7, 320}},
-    {MXF_CMDEF_L(D10_30_525_60),    MXF_EC_L(D10_30_525_60_picture_only),      MXFDescriptorHelper::D10_30,   {30000, 1001},   true,    0x00,   126976, 720,    256,    13, {7, 270}},
-    {MXF_CMDEF_L(D10_30_525_60),    MXF_EC_L(D10_30_525_60_defined_template),  MXFDescriptorHelper::D10_30,   {30000, 1001},   true,    0x00,   126976, 720,    256,    13, {7, 270}},
-    {MXF_CMDEF_L(D10_30_525_60),    MXF_EC_L(AvidIMX30_525_60),                MXFDescriptorHelper::D10_30,   {30000, 1001},   false,   0xa2,   126976, 720,    256,    13, {7, 270}},
-    {MXF_CMDEF_L(D10_40_625_50),    MXF_EC_L(D10_40_625_50_picture_only),      MXFDescriptorHelper::D10_40,   {25, 1},         true,    0x00,   200000, 720,    304,    16, {7, 320}},
-    {MXF_CMDEF_L(D10_40_625_50),    MXF_EC_L(D10_40_625_50_defined_template),  MXFDescriptorHelper::D10_40,   {25, 1},         true,    0x00,   200000, 720,    304,    16, {7, 320}},
-    {MXF_CMDEF_L(D10_40_625_50),    MXF_EC_L(AvidIMX40_625_50),                MXFDescriptorHelper::D10_40,   {25, 1},         false,   0xa1,   200000, 720,    304,    16, {7, 320}},
-    {MXF_CMDEF_L(D10_40_525_60),    MXF_EC_L(D10_40_525_60_picture_only),      MXFDescriptorHelper::D10_40,   {30000, 1001},   true,    0x00,   167936, 720,    256,    13, {7, 270}},
-    {MXF_CMDEF_L(D10_40_525_60),    MXF_EC_L(D10_40_525_60_defined_template),  MXFDescriptorHelper::D10_40,   {30000, 1001},   true,    0x00,   167936, 720,    256,    13, {7, 270}},
-    {MXF_CMDEF_L(D10_40_525_60),    MXF_EC_L(AvidIMX40_525_60),                MXFDescriptorHelper::D10_40,   {30000, 1001},   false,   0xa1,   167936, 720,    256,    13, {7, 270}},
-    {MXF_CMDEF_L(D10_50_625_50),    MXF_EC_L(D10_50_625_50_picture_only),      MXFDescriptorHelper::D10_50,   {25, 1},         true,    0x00,   250000, 720,    304,    16, {7, 320}},
-    {MXF_CMDEF_L(D10_50_625_50),    MXF_EC_L(D10_50_625_50_defined_template),  MXFDescriptorHelper::D10_50,   {25, 1},         true,    0x00,   250000, 720,    304,    16, {7, 320}},
-    {MXF_CMDEF_L(D10_50_625_50),    MXF_EC_L(AvidIMX50_625_50),                MXFDescriptorHelper::D10_50,   {25, 1},         false,   0xa0,   250000, 720,    304,    16, {7, 320}},
-    {MXF_CMDEF_L(D10_50_525_60),    MXF_EC_L(D10_50_525_60_picture_only),      MXFDescriptorHelper::D10_50,   {30000, 1001},   true,    0x00,   208896, 720,    256,    13, {7, 270}},
-    {MXF_CMDEF_L(D10_50_525_60),    MXF_EC_L(D10_50_525_60_defined_template),  MXFDescriptorHelper::D10_50,   {30000, 1001},   true,    0x00,   208896, 720,    256,    13, {7, 270}},
-    {MXF_CMDEF_L(D10_50_525_60),    MXF_EC_L(AvidIMX50_525_60),                MXFDescriptorHelper::D10_50,   {30000, 1001},   false,   0xa0,   208896, 720,    256,    13, {7, 270}},
+    {MXF_CMDEF_L(D10_30_625_50),    MXF_EC_L(D10_30_625_50_picture_only),      D10_30,   {25, 1},         true,    0x00,   150000, 720,    304,    16, {7, 320}},
+    {MXF_CMDEF_L(D10_30_625_50),    MXF_EC_L(D10_30_625_50_defined_template),  D10_30,   {25, 1},         true,    0x00,   150000, 720,    304,    16, {7, 320}},
+    {MXF_CMDEF_L(D10_30_625_50),    MXF_EC_L(AvidIMX30_625_50),                D10_30,   {25, 1},         false,   0xa2,   150000, 720,    304,    16, {7, 320}},
+    {MXF_CMDEF_L(D10_30_525_60),    MXF_EC_L(D10_30_525_60_picture_only),      D10_30,   {30000, 1001},   true,    0x00,   126976, 720,    256,    13, {7, 270}},
+    {MXF_CMDEF_L(D10_30_525_60),    MXF_EC_L(D10_30_525_60_defined_template),  D10_30,   {30000, 1001},   true,    0x00,   126976, 720,    256,    13, {7, 270}},
+    {MXF_CMDEF_L(D10_30_525_60),    MXF_EC_L(AvidIMX30_525_60),                D10_30,   {30000, 1001},   false,   0xa2,   126976, 720,    256,    13, {7, 270}},
+    {MXF_CMDEF_L(D10_40_625_50),    MXF_EC_L(D10_40_625_50_picture_only),      D10_40,   {25, 1},         true,    0x00,   200000, 720,    304,    16, {7, 320}},
+    {MXF_CMDEF_L(D10_40_625_50),    MXF_EC_L(D10_40_625_50_defined_template),  D10_40,   {25, 1},         true,    0x00,   200000, 720,    304,    16, {7, 320}},
+    {MXF_CMDEF_L(D10_40_625_50),    MXF_EC_L(AvidIMX40_625_50),                D10_40,   {25, 1},         false,   0xa1,   200000, 720,    304,    16, {7, 320}},
+    {MXF_CMDEF_L(D10_40_525_60),    MXF_EC_L(D10_40_525_60_picture_only),      D10_40,   {30000, 1001},   true,    0x00,   167936, 720,    256,    13, {7, 270}},
+    {MXF_CMDEF_L(D10_40_525_60),    MXF_EC_L(D10_40_525_60_defined_template),  D10_40,   {30000, 1001},   true,    0x00,   167936, 720,    256,    13, {7, 270}},
+    {MXF_CMDEF_L(D10_40_525_60),    MXF_EC_L(AvidIMX40_525_60),                D10_40,   {30000, 1001},   false,   0xa1,   167936, 720,    256,    13, {7, 270}},
+    {MXF_CMDEF_L(D10_50_625_50),    MXF_EC_L(D10_50_625_50_picture_only),      D10_50,   {25, 1},         true,    0x00,   250000, 720,    304,    16, {7, 320}},
+    {MXF_CMDEF_L(D10_50_625_50),    MXF_EC_L(D10_50_625_50_defined_template),  D10_50,   {25, 1},         true,    0x00,   250000, 720,    304,    16, {7, 320}},
+    {MXF_CMDEF_L(D10_50_625_50),    MXF_EC_L(AvidIMX50_625_50),                D10_50,   {25, 1},         false,   0xa0,   250000, 720,    304,    16, {7, 320}},
+    {MXF_CMDEF_L(D10_50_525_60),    MXF_EC_L(D10_50_525_60_picture_only),      D10_50,   {30000, 1001},   true,    0x00,   208896, 720,    256,    13, {7, 270}},
+    {MXF_CMDEF_L(D10_50_525_60),    MXF_EC_L(D10_50_525_60_defined_template),  D10_50,   {30000, 1001},   true,    0x00,   208896, 720,    256,    13, {7, 270}},
+    {MXF_CMDEF_L(D10_50_525_60),    MXF_EC_L(AvidIMX50_525_60),                D10_50,   {30000, 1001},   false,   0xa0,   208896, 720,    256,    13, {7, 270}},
 };
 
 
 
-MXFDescriptorHelper::EssenceType D10MXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
-                                                                     mxfUL alternative_ec_label)
+EssenceType D10MXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     mxfRational sample_rate = file_descriptor->getSampleRate();
 
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     if (!pic_descriptor || !pic_descriptor->havePictureEssenceCoding())
-        return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+        return UNKNOWN_ESSENCE_TYPE;
 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     mxfUL ec_label = file_descriptor->getEssenceContainer();
@@ -108,7 +107,7 @@ MXFDescriptorHelper::EssenceType D10MXFDescriptorHelper::IsSupported(FileDescrip
         }
     }
 
-    return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+    return UNKNOWN_ESSENCE_TYPE;
 }
 
 bool D10MXFDescriptorHelper::IsSupported(EssenceType essence_type)

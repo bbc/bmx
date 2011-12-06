@@ -94,62 +94,6 @@ extern bool IM_REGRESSION_TEST;
 
 
 
-ClipWriterEssenceType convert_essence_type(const MXFTrackInfo *track_info)
-{
-
-    ClipWriterEssenceType cw_essence_type = ClipWriterTrack::ConvertEssenceType(track_info->essence_type);
-
-    // refine MPEG2LG HD essence type to include signal standard and frame layout
-    if (track_info->essence_type == MXFDescriptorHelper::MPEG2LG_422P_HL ||
-        track_info->essence_type == MXFDescriptorHelper::MPEG2LG_MP_HL ||
-        track_info->essence_type == MXFDescriptorHelper::MPEG2LG_MP_H14)
-    {
-        const MXFPictureTrackInfo *picture_track_info = dynamic_cast<const MXFPictureTrackInfo*>(track_info);
-
-        if (picture_track_info->signal_standard == MXF_SIGNAL_STANDARD_SMPTE296M) {
-            if (track_info->essence_type == MXFDescriptorHelper::MPEG2LG_422P_HL) {
-                cw_essence_type = CW_MPEG2LG_422P_HL_720P;
-            } else {
-                IM_CHECK_M(track_info->essence_type == MXFDescriptorHelper::MPEG2LG_MP_HL,
-                           ("Invalid signal standard 'SMPTE 296M' for MPEG-2 MP@H14"));
-                cw_essence_type = CW_MPEG2LG_MP_HL_720P;
-            }
-        } else {
-            if (picture_track_info->signal_standard != MXF_SIGNAL_STANDARD_SMPTE274M) {
-                log_warn("Input MPEG-2 Long GOP signal standard %d is not SMPTE 296M %d or "
-                         "SMPTE 274M %d. Assuming SMPTE 274M\n",
-                         picture_track_info->signal_standard,
-                         MXF_SIGNAL_STANDARD_SMPTE296M, MXF_SIGNAL_STANDARD_SMPTE274M);
-            }
-
-            if (picture_track_info->frame_layout == MXF_FULL_FRAME) {
-                if (track_info->essence_type == MXFDescriptorHelper::MPEG2LG_422P_HL)
-                    cw_essence_type = CW_MPEG2LG_422P_HL_1080P;
-                else if (track_info->essence_type == MXFDescriptorHelper::MPEG2LG_MP_HL)
-                    cw_essence_type = CW_MPEG2LG_MP_HL_1080P;
-                else
-                    cw_essence_type = CW_MPEG2LG_MP_H14_1080P;
-            } else {
-                if (picture_track_info->frame_layout != MXF_SEPARATE_FIELDS) {
-                    log_warn("Input MPEG-2 Long GOP frame layout %d is not 'full frame' %d (progressive) or "
-                             "'separate fields' %d (interlaced). Assuming 'separate fields'\n",
-                             picture_track_info->frame_layout,
-                             MXF_FULL_FRAME, MXF_SEPARATE_FIELDS);
-                }
-
-                if (track_info->essence_type == MXFDescriptorHelper::MPEG2LG_422P_HL)
-                    cw_essence_type = CW_MPEG2LG_422P_HL_1080I;
-                else if (track_info->essence_type == MXFDescriptorHelper::MPEG2LG_MP_HL)
-                    cw_essence_type = CW_MPEG2LG_MP_HL_1080I;
-                else
-                    cw_essence_type = CW_MPEG2LG_MP_H14_1080I;
-            }
-        }
-    }
-
-    return cw_essence_type;
-}
-
 static bool parse_mic_type(const char *mic_type_str, MICType *mic_type)
 {
     if (strcmp(mic_type_str, "md5") == 0)
@@ -753,29 +697,34 @@ int main(int argc, const char** argv)
 
             const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
 
-            ClipWriterEssenceType cw_essence_type = convert_essence_type(input_track_info);
-
             bool is_supported = true;
-            if (cw_essence_type == CW_UNKNOWN_ESSENCE) {
+            if (input_track_info->essence_type == UNKNOWN_ESSENCE_TYPE ||
+                input_track_info->essence_type == PICTURE_ESSENCE ||
+                input_track_info->essence_type == SOUND_ESSENCE)
+            {
                 log_warn("Track %zu has unknown essence type\n", i);
                 is_supported = false;
-            } else if (cw_essence_type == CW_PCM) {
+            }
+            else if (input_track_info->essence_type == WAVE_PCM)
+            {
                 Rational sampling_rate = input_sound_info->sampling_rate;
-                if (!ClipWriterTrack::IsSupported(clip_type, CW_PCM, false, sampling_rate)) {
+                if (!ClipWriterTrack::IsSupported(clip_type, WAVE_PCM, sampling_rate)) {
                     log_warn("Track %zu essence type '%s' @%d/%d sps not supported by clip type '%s'\n",
                              i,
-                             ClipWriterTrack::EssenceTypeToString(cw_essence_type).c_str(),
+                             essence_type_to_string(input_track_info->essence_type),
                              sampling_rate.numerator, sampling_rate.denominator,
                              ClipWriter::ClipWriterTypeToString(clip_type).c_str());
                     is_supported = false;
                 } else if (input_sound_info->bits_per_sample == 0 || input_sound_info->bits_per_sample > 32) {
                     log_warn("Track %zu (%s) bits per sample %u not supported\n",
                              i,
-                             ClipWriterTrack::EssenceTypeToString(cw_essence_type).c_str(),
+                             essence_type_to_string(input_track_info->essence_type),
                              input_sound_info->bits_per_sample);
                     is_supported = false;
                 }
-            } else if (input_track_info->IsD10Audio()) {
+            }
+            else if (input_track_info->IsD10Audio())
+            {
                 if (input_sound_info->sampling_rate.numerator != 48000 ||
                     input_sound_info->sampling_rate.denominator != 1)
                 {
@@ -791,26 +740,21 @@ int main(int argc, const char** argv)
                              input_sound_info->bits_per_sample);
                     is_supported = false;
                 }
-            } else {
-                bool is_mpeg2lg_720p = false;
-                if (cw_essence_type == CW_MPEG2LG_422P_HL_720P ||
-                    cw_essence_type == CW_MPEG2LG_MP_HL_720P)
-                {
-                    is_mpeg2lg_720p = true;
-                }
-
+            }
+            else
+            {
                 if (input_track_info->edit_rate != frame_rate) {
                     log_warn("Track %zu (essence type '%s') edit rate %d/%d does not equals clip edit rate %d/%d\n",
                              i,
-                             ClipWriterTrack::EssenceTypeToString(cw_essence_type).c_str(),
+                             essence_type_to_string(input_track_info->essence_type),
                              input_track_info->edit_rate.numerator, input_track_info->edit_rate.denominator,
                              frame_rate.numerator, frame_rate.denominator,
                              ClipWriter::ClipWriterTypeToString(clip_type).c_str());
                     is_supported = false;
-                } else if (!ClipWriterTrack::IsSupported(clip_type, cw_essence_type, is_mpeg2lg_720p, frame_rate)) {
+                } else if (!ClipWriterTrack::IsSupported(clip_type, input_track_info->essence_type, frame_rate)) {
                     log_warn("Track %zu essence type '%s' @%d/%d fps not supported by clip type '%s'\n",
                              i,
-                             ClipWriterTrack::EssenceTypeToString(cw_essence_type).c_str(),
+                             essence_type_to_string(input_track_info->essence_type),
                              frame_rate.numerator, frame_rate.denominator,
                              ClipWriter::ClipWriterTypeToString(clip_type).c_str());
                     is_supported = false;
@@ -1018,8 +962,6 @@ int main(int argc, const char** argv)
             const MXFPictureTrackInfo *input_picture_info = dynamic_cast<const MXFPictureTrackInfo*>(input_track_info);
             const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
 
-            ClipWriterEssenceType cw_essence_type = convert_essence_type(input_track_info);
-
 
             // create track(s)
 
@@ -1050,9 +992,9 @@ int main(int argc, const char** argv)
                                             input_track_info->is_picture ? picture_track_count + 1 :
                                                                            sound_track_count + 1,
                                             input_track_info->is_picture);
-                    output_track.track = clip->CreateTrack(cw_essence_type, track_name.c_str());
+                    output_track.track = clip->CreateTrack(input_track_info->essence_type, track_name.c_str());
                 } else {
-                    output_track.track = clip->CreateTrack(cw_essence_type);
+                    output_track.track = clip->CreateTrack(input_track_info->essence_type);
                 }
 
 
@@ -1099,26 +1041,25 @@ int main(int argc, const char** argv)
                 }
 
                 Frame *frame;
-                switch (cw_essence_type)
+                switch (input_track_info->essence_type)
                 {
-                    case CW_IEC_DV25:
-                    case CW_DVBASED_DV25:
-                    case CW_DV50:
+                    case IEC_DV25:
+                    case DVBASED_DV25:
+                    case DV50:
                         output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
                         if (input_picture_info->afd)
                             output_track.track->SetAFD(input_picture_info->afd);
                         break;
-                    case CW_DV100_1080I:
-                    case CW_DV100_1080P: // TODO: commandline option to specify 1080p?
-                    case CW_DV100_720P:
+                    case DV100_1080I:
+                    case DV100_720P:
                         output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
                         if (input_picture_info->afd)
                             output_track.track->SetAFD(input_picture_info->afd);
                         output_track.track->SetComponentDepth(input_picture_info->component_depth);
                         break;
-                    case CW_D10_30:
-                    case CW_D10_40:
-                    case CW_D10_50:
+                    case D10_30:
+                    case D10_40:
+                    case D10_50:
                         output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
                         if (input_picture_info->afd)
                             output_track.track->SetAFD(input_picture_info->afd);
@@ -1126,66 +1067,66 @@ int main(int argc, const char** argv)
                         if (frame)
                             output_track.track->SetSampleSize(frame->GetSize());
                         break;
-                    case CW_AVCI100_1080I:
-                    case CW_AVCI100_1080P:
-                    case CW_AVCI100_720P:
-                    case CW_AVCI50_1080I:
-                    case CW_AVCI50_1080P:
-                    case CW_AVCI50_720P:
+                    case AVCI100_1080I:
+                    case AVCI100_1080P:
+                    case AVCI100_720P:
+                    case AVCI50_1080I:
+                    case AVCI50_1080P:
+                    case AVCI50_720P:
                         if (input_picture_info->afd)
                             output_track.track->SetAFD(input_picture_info->afd);
                         output_track.track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
                         break;
-                    case CW_UNC_SD:
-                    case CW_UNC_HD_1080I:
-                    case CW_UNC_HD_1080P:
-                    case CW_UNC_HD_720P:
-                    case CW_AVID_10BIT_UNC_SD:
-                    case CW_AVID_10BIT_UNC_HD_1080I:
-                    case CW_AVID_10BIT_UNC_HD_1080P:
-                    case CW_AVID_10BIT_UNC_HD_720P:
+                    case UNC_SD:
+                    case UNC_HD_1080I:
+                    case UNC_HD_1080P:
+                    case UNC_HD_720P:
+                    case AVID_10BIT_UNC_SD:
+                    case AVID_10BIT_UNC_HD_1080I:
+                    case AVID_10BIT_UNC_HD_1080P:
+                    case AVID_10BIT_UNC_HD_720P:
                         output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
                         if (input_picture_info->afd)
                             output_track.track->SetAFD(input_picture_info->afd);
                         output_track.track->SetComponentDepth(input_picture_info->component_depth);
                         output_track.track->SetInputHeight(input_picture_info->stored_height);
                         break;
-                    case CW_MPEG2LG_422P_HL_1080I:
-                    case CW_MPEG2LG_422P_HL_1080P:
-                    case CW_MPEG2LG_422P_HL_720P:
-                    case CW_MPEG2LG_MP_HL_1080I:
-                    case CW_MPEG2LG_MP_HL_1080P:
-                    case CW_MPEG2LG_MP_HL_720P:
-                    case CW_MPEG2LG_MP_H14_1080I:
-                    case CW_MPEG2LG_MP_H14_1080P:
+                    case MPEG2LG_422P_HL_1080I:
+                    case MPEG2LG_422P_HL_1080P:
+                    case MPEG2LG_422P_HL_720P:
+                    case MPEG2LG_MP_HL_1080I:
+                    case MPEG2LG_MP_HL_1080P:
+                    case MPEG2LG_MP_HL_720P:
+                    case MPEG2LG_MP_H14_1080I:
+                    case MPEG2LG_MP_H14_1080P:
                         if (input_picture_info->afd)
                             output_track.track->SetAFD(input_picture_info->afd);
                         break;
-                    case CW_MJPEG_2_1:
-                    case CW_MJPEG_3_1:
-                    case CW_MJPEG_10_1:
-                    case CW_MJPEG_20_1:
-                    case CW_MJPEG_4_1M:
-                    case CW_MJPEG_10_1M:
-                    case CW_MJPEG_15_1S:
+                    case MJPEG_2_1:
+                    case MJPEG_3_1:
+                    case MJPEG_10_1:
+                    case MJPEG_20_1:
+                    case MJPEG_4_1M:
+                    case MJPEG_10_1M:
+                    case MJPEG_15_1S:
                         if (input_picture_info->afd)
                             output_track.track->SetAFD(input_picture_info->afd);
                         output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
                         break;
-                    case CW_VC3_1080P_1235:
-                    case CW_VC3_1080P_1237:
-                    case CW_VC3_1080P_1238:
-                    case CW_VC3_1080I_1241:
-                    case CW_VC3_1080I_1242:
-                    case CW_VC3_1080I_1243:
-                    case CW_VC3_720P_1250:
-                    case CW_VC3_720P_1251:
-                    case CW_VC3_720P_1252:
-                    case CW_VC3_1080P_1253:
+                    case VC3_1080P_1235:
+                    case VC3_1080P_1237:
+                    case VC3_1080P_1238:
+                    case VC3_1080I_1241:
+                    case VC3_1080I_1242:
+                    case VC3_1080I_1243:
+                    case VC3_720P_1250:
+                    case VC3_720P_1251:
+                    case VC3_720P_1252:
+                    case VC3_1080P_1253:
                         if (input_picture_info->afd)
                             output_track.track->SetAFD(input_picture_info->afd);
                         break;
-                    case CW_PCM:
+                    case WAVE_PCM:
                         output_track.track->SetSamplingRate(input_sound_info->sampling_rate);
                         output_track.track->SetQuantizationBits(input_sound_info->bits_per_sample);
                         output_track.track->SetChannelCount(1);
@@ -1198,7 +1139,9 @@ int main(int argc, const char** argv)
                         if (clip_type == CW_D10_CLIP_TYPE || input_sound_info->sequence_offset)
                             output_track.track->SetSequenceOffset(input_sound_info->sequence_offset);
                         break;
-                    case CW_UNKNOWN_ESSENCE:
+                    case PICTURE_ESSENCE:
+                    case SOUND_ESSENCE:
+                    case UNKNOWN_ESSENCE_TYPE:
                         IM_ASSERT(false);
                 }
 

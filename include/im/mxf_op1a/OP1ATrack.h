@@ -45,44 +45,6 @@ namespace im
 {
 
 
-typedef enum
-{
-    OP1A_UNKNOWN_ESSENCE = 0,
-    OP1A_IEC_DV25,
-    OP1A_DVBASED_DV25,
-    OP1A_DV50,
-    OP1A_DV100_1080I,
-    OP1A_DV100_720P,
-    OP1A_D10_30,
-    OP1A_D10_40,
-    OP1A_D10_50,
-    OP1A_AVCI100_1080I,
-    OP1A_AVCI100_1080P,
-    OP1A_AVCI100_720P,
-    OP1A_AVCI50_1080I,
-    OP1A_AVCI50_1080P,
-    OP1A_AVCI50_720P,
-    OP1A_UNC_SD,
-    OP1A_UNC_HD_1080I,
-    OP1A_UNC_HD_1080P,
-    OP1A_UNC_HD_720P,
-    OP1A_MPEG2LG_422P_HL,
-    OP1A_MPEG2LG_MP_HL,
-    OP1A_MPEG2LG_MP_H14,
-    OP1A_VC3_1080P_1235,
-    OP1A_VC3_1080P_1237,
-    OP1A_VC3_1080P_1238,
-    OP1A_VC3_1080I_1241,
-    OP1A_VC3_1080I_1242,
-    OP1A_VC3_1080I_1243,
-    OP1A_VC3_720P_1250,
-    OP1A_VC3_720P_1251,
-    OP1A_VC3_720P_1252,
-    OP1A_VC3_1080P_1253,
-    OP1A_PCM
-} OP1AEssenceType;
-
-
 class OP1AFile;
 
 class OP1ATrack
@@ -91,13 +53,10 @@ public:
     friend class OP1AFile;
 
 public:
-    static bool IsSupported(OP1AEssenceType essence_type, bool is_mpeg2lg_720p, mxfRational sample_rate);
-
-    static MXFDescriptorHelper::EssenceType ConvertEssenceType(OP1AEssenceType op1a_essence_type);
-    static OP1AEssenceType ConvertEssenceType(MXFDescriptorHelper::EssenceType mh_essence_type);
+    static bool IsSupported(EssenceType essence_type, mxfRational sample_rate);
 
     static OP1ATrack* Create(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                             mxfRational frame_rate, OP1AEssenceType essence_type);
+                             mxfRational frame_rate, EssenceType essence_type);
 
 public:
     virtual ~OP1ATrack();
@@ -120,7 +79,7 @@ public:
 
 protected:
     OP1ATrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-              mxfRational frame_rate, OP1AEssenceType essence_type);
+              mxfRational frame_rate, EssenceType essence_type);
 
     void AddHeaderMetadata(mxfpp::HeaderMetadata *header_metadata, mxfpp::MaterialPackage *material_package,
                            mxfpp::SourcePackage *file_source_package);
@@ -149,7 +108,7 @@ protected:
     mxfKey mEssenceElementKey;
     uint8_t mTrackTypeNumber;
 
-    OP1AEssenceType mEssenceType;
+    EssenceType mEssenceType;
     MXFDescriptorHelper *mDescriptorHelper;
 
 private:

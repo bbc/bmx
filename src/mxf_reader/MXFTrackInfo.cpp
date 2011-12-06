@@ -51,7 +51,7 @@ MXFTrackInfo::MXFTrackInfo()
     is_picture = false;
     is_sound = false;
 
-    essence_type = MXFDescriptorHelper::UNKNOWN_ESSENCE;
+    essence_type = UNKNOWN_ESSENCE_TYPE;
     essence_container_label = g_Null_UL;
     material_package_uid = g_Null_UMID;
     material_track_id = 0;

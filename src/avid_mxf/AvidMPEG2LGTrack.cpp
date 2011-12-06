@@ -50,15 +50,9 @@ using namespace mxfpp;
 
 
 
-AvidMPEG2LGTrack::AvidMPEG2LGTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, File *file)
+AvidMPEG2LGTrack::AvidMPEG2LGTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, File *file)
 : AvidPictureTrack(clip, track_index, essence_type, file)
 {
-    mMPEG2LGDescriptorHelper = dynamic_cast<MPEG2LGMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mMPEG2LGDescriptorHelper);
-
-    mMPEG2LGDescriptorHelper->SetSignalStandard(0x04); // SMPTE 274
-    mMPEG2LGDescriptorHelper->SetFrameLayout(0x01); // SeparateField (interlaced)
-
     mTrackNumber = MXF_AVID_MPEG_PICT_TRACK_NUM;
     mEssenceElementKey = MXF_EE_K(AvidMPEGClipWrapped);
 
@@ -67,16 +61,6 @@ AvidMPEG2LGTrack::AvidMPEG2LGTrack(AvidClip *clip, uint32_t track_index, AvidEss
 
 AvidMPEG2LGTrack::~AvidMPEG2LGTrack()
 {
-}
-
-void AvidMPEG2LGTrack::SetSignalStandard(uint8_t signal_standard)
-{
-    mMPEG2LGDescriptorHelper->SetSignalStandard(signal_standard);
-}
-
-void AvidMPEG2LGTrack::SetFrameLayout(uint8_t frame_layout)
-{
-    mMPEG2LGDescriptorHelper->SetFrameLayout(frame_layout);
 }
 
 void AvidMPEG2LGTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)

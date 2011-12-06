@@ -68,7 +68,7 @@ public:
                         std::string version, mxfUUID product_uid);
 
 public:
-    ClipWriterTrack* CreateTrack(ClipWriterEssenceType essence_type, std::string track_filename = "");
+    ClipWriterTrack* CreateTrack(EssenceType essence_type, std::string track_filename = "");
 
 public:
     void PrepareWrite();

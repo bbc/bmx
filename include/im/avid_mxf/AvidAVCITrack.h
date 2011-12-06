@@ -53,7 +53,7 @@ typedef enum
 class AvidAVCITrack : public AvidPictureTrack
 {
 public:
-    AvidAVCITrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, mxfpp::File *file);
+    AvidAVCITrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file);
     virtual ~AvidAVCITrack();
 
     void SetMode(AvidAVCIMode mode);                            // default AVID_AVCI_NO_OR_ALL_FRAME_HEADER_MODE

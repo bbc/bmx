@@ -47,7 +47,7 @@ static const mxfKey VIDEO_ELEMENT_KEY = MXF_UNC_EE_K(0x01, MXF_UNC_FRAME_WRAPPED
 
 
 
-AS02UncTrack::AS02UncTrack(AS02Clip *clip, uint32_t track_index, AS02EssenceType essence_type, File *file,
+AS02UncTrack::AS02UncTrack(AS02Clip *clip, uint32_t track_index, EssenceType essence_type, File *file,
                            string rel_uri)
 : AS02PictureTrack(clip, track_index, essence_type, file, rel_uri)
 {

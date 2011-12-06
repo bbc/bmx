@@ -45,7 +45,7 @@ using namespace mxfpp;
 
 
 OP1APictureTrack::OP1APictureTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                                   mxfRational frame_rate, OP1AEssenceType essence_type)
+                                   mxfRational frame_rate, EssenceType essence_type)
 : OP1ATrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
 {
     mPictureDescriptorHelper = dynamic_cast<PictureMXFDescriptorHelper*>(mDescriptorHelper);

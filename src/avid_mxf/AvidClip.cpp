@@ -349,11 +349,11 @@ void AvidClip::RegisterImportSource(SourcePackage *source_package)
     mImportSourcePackages.push_back(source_package);
 }
 
-AvidTrack* AvidClip::CreateTrack(AvidEssenceType essence_type)
+AvidTrack* AvidClip::CreateTrack(EssenceType essence_type)
 {
     IM_CHECK(!mFilenamePrefix.empty());
 
-    bool is_picture = (essence_type != AVID_PCM);
+    bool is_picture = (essence_type != WAVE_PCM);
     uint32_t track_number = 1;
     size_t i;
     for (i = 0; i < mTracks.size(); i++) {
@@ -370,7 +370,7 @@ AvidTrack* AvidClip::CreateTrack(AvidEssenceType essence_type)
     return CreateTrack(essence_type, filename);
 }
 
-AvidTrack* AvidClip::CreateTrack(AvidEssenceType essence_type, string filename)
+AvidTrack* AvidClip::CreateTrack(EssenceType essence_type, string filename)
 {
     mTracks.push_back(AvidTrack::OpenNew(this, filename, mTracks.size(), essence_type));
     return mTracks.back();

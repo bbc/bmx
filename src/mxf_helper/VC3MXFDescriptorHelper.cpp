@@ -51,7 +51,7 @@ using namespace mxfpp;
 typedef struct
 {
     mxfUL pc_label;
-    MXFDescriptorHelper::EssenceType essence_type;
+    EssenceType essence_type;
     int32_t resolution_id;
     uint32_t component_depth;
     uint32_t frame_size;
@@ -66,22 +66,21 @@ typedef struct
 
 static const SupportedEssence SUPPORTED_ESSENCE[] =
 {
-    {MXF_CMDEF_L(VC3_1080P_1235),  MXFDescriptorHelper::VC3_1080P_1235, 1235,   10, 917504, 1920,   1080,   {42, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080p1235ClipWrapped)},
-    {MXF_CMDEF_L(VC3_1080P_1237),  MXFDescriptorHelper::VC3_1080P_1237, 1237,   8,  606208, 1920,   1080,   {42, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080p1237ClipWrapped)},
-    {MXF_CMDEF_L(VC3_1080P_1238),  MXFDescriptorHelper::VC3_1080P_1238, 1238,   8,  917504, 1920,   1080,   {42, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080p1238ClipWrapped)},
-    {MXF_CMDEF_L(VC3_1080I_1241),  MXFDescriptorHelper::VC3_1080I_1241, 1241,   10, 917504, 1920,   540,    {21, 584},  MXF_SEPARATE_FIELDS,  MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080i1241ClipWrapped)},
-    {MXF_CMDEF_L(VC3_1080I_1242),  MXFDescriptorHelper::VC3_1080I_1242, 1242,   8,  606208, 1920,   540,    {21, 584},  MXF_SEPARATE_FIELDS,  MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080i1242ClipWrapped)},
-    {MXF_CMDEF_L(VC3_1080I_1243),  MXFDescriptorHelper::VC3_1080I_1243, 1243,   8,  917504, 1920,   540,    {21, 584},  MXF_SEPARATE_FIELDS,  MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080i1243ClipWrapped)},
-    {MXF_CMDEF_L(VC3_720P_1250),   MXFDescriptorHelper::VC3_720P_1250,  1250,   10, 458752, 1280,   720,    {26, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE296M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD720p1250ClipWrapped)},
-    {MXF_CMDEF_L(VC3_720P_1251),   MXFDescriptorHelper::VC3_720P_1251,  1251,   8,  458752, 1280,   720,    {26, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE296M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD720p1251ClipWrapped)},
-    {MXF_CMDEF_L(VC3_720P_1252),   MXFDescriptorHelper::VC3_720P_1252,  1252,   8,  303104, 1280,   720,    {26, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE296M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD720p1252ClipWrapped)},
-    {MXF_CMDEF_L(VC3_1080P_1253),  MXFDescriptorHelper::VC3_1080P_1253, 1253,   8,  188416, 1920,   1080,   {42, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080p1253ClipWrapped)},
+    {MXF_CMDEF_L(VC3_1080P_1235),  VC3_1080P_1235, 1235,   10, 917504, 1920,   1080,   {42, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080p1235ClipWrapped)},
+    {MXF_CMDEF_L(VC3_1080P_1237),  VC3_1080P_1237, 1237,   8,  606208, 1920,   1080,   {42, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080p1237ClipWrapped)},
+    {MXF_CMDEF_L(VC3_1080P_1238),  VC3_1080P_1238, 1238,   8,  917504, 1920,   1080,   {42, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080p1238ClipWrapped)},
+    {MXF_CMDEF_L(VC3_1080I_1241),  VC3_1080I_1241, 1241,   10, 917504, 1920,   540,    {21, 584},  MXF_SEPARATE_FIELDS,  MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080i1241ClipWrapped)},
+    {MXF_CMDEF_L(VC3_1080I_1242),  VC3_1080I_1242, 1242,   8,  606208, 1920,   540,    {21, 584},  MXF_SEPARATE_FIELDS,  MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080i1242ClipWrapped)},
+    {MXF_CMDEF_L(VC3_1080I_1243),  VC3_1080I_1243, 1243,   8,  917504, 1920,   540,    {21, 584},  MXF_SEPARATE_FIELDS,  MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080i1243ClipWrapped)},
+    {MXF_CMDEF_L(VC3_720P_1250),   VC3_720P_1250,  1250,   10, 458752, 1280,   720,    {26, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE296M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD720p1250ClipWrapped)},
+    {MXF_CMDEF_L(VC3_720P_1251),   VC3_720P_1251,  1251,   8,  458752, 1280,   720,    {26, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE296M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD720p1251ClipWrapped)},
+    {MXF_CMDEF_L(VC3_720P_1252),   VC3_720P_1252,  1252,   8,  303104, 1280,   720,    {26, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE296M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD720p1252ClipWrapped)},
+    {MXF_CMDEF_L(VC3_1080P_1253),  VC3_1080P_1253, 1253,   8,  188416, 1920,   1080,   {42, 0},    MXF_FULL_FRAME,       MXF_SIGNAL_STANDARD_SMPTE274M,    MXF_CMDEF_L(DNxHD), MXF_EC_L(DNxHD1080p1253ClipWrapped)},
 };
 
 
 
-MXFDescriptorHelper::EssenceType VC3MXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
-                                                                     mxfUL alternative_ec_label)
+EssenceType VC3MXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     if (!mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(VC3FrameWrapped)) &&
@@ -91,12 +90,12 @@ MXFDescriptorHelper::EssenceType VC3MXFDescriptorHelper::IsSupported(FileDescrip
         if (IsAvidDNxHD(file_descriptor, alternative_ec_label, &index))
             return SUPPORTED_ESSENCE[index].essence_type;
 
-        return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+        return UNKNOWN_ESSENCE_TYPE;
     }
 
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     if (!pic_descriptor || !pic_descriptor->havePictureEssenceCoding())
-        return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+        return UNKNOWN_ESSENCE_TYPE;
 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
@@ -105,7 +104,7 @@ MXFDescriptorHelper::EssenceType VC3MXFDescriptorHelper::IsSupported(FileDescrip
             return SUPPORTED_ESSENCE[i].essence_type;
     }
 
-    return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+    return UNKNOWN_ESSENCE_TYPE;
 }
 
 bool VC3MXFDescriptorHelper::IsSupported(EssenceType essence_type)

@@ -44,7 +44,7 @@ namespace im
 class AvidDVTrack : public AvidPictureTrack
 {
 public:
-    AvidDVTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, mxfpp::File *file);
+    AvidDVTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file);
     virtual ~AvidDVTrack();
 
     void SetComponentDepth(uint32_t depth);  // default 8; alternative is 10 for DV 100 only

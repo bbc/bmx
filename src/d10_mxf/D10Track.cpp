@@ -54,36 +54,21 @@ using namespace mxfpp;
 
 typedef struct
 {
-    D10EssenceType d10_essence_type;
-    MXFDescriptorHelper::EssenceType mh_essence_type;
-} EssenceTypeMap;
-
-static const EssenceTypeMap ESSENCE_TYPE_MAP[] =
-{
-    {D10_MPEG_30,          MXFDescriptorHelper::D10_30},
-    {D10_MPEG_40,          MXFDescriptorHelper::D10_40},
-    {D10_MPEG_50,          MXFDescriptorHelper::D10_50},
-    {D10_PCM,              MXFDescriptorHelper::WAVE_PCM},
-};
-
-
-typedef struct
-{
-    D10EssenceType essence_type;
+    EssenceType essence_type;
     mxfRational sample_rate[10];
 } D10SampleRateSupport;
 
 static const D10SampleRateSupport D10_SAMPLE_RATE_SUPPORT[] =
 {
-    {D10_MPEG_30,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {D10_MPEG_40,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {D10_MPEG_50,    {{25, 1}, {30000, 1001}, {0, 0}}},
-    {D10_PCM,        {{48000, 1}, {0, 0}}},
+    {D10_30,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {D10_40,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {D10_50,    {{25, 1}, {30000, 1001}, {0, 0}}},
+    {WAVE_PCM,  {{48000, 1}, {0, 0}}},
 };
 
 
 
-bool D10Track::IsSupported(D10EssenceType essence_type, mxfRational sample_rate)
+bool D10Track::IsSupported(EssenceType essence_type, mxfRational sample_rate)
 {
     size_t i;
     for (i = 0; i < ARRAY_SIZE(D10_SAMPLE_RATE_SUPPORT); i++) {
@@ -100,46 +85,24 @@ bool D10Track::IsSupported(D10EssenceType essence_type, mxfRational sample_rate)
     return false;
 }
 
-MXFDescriptorHelper::EssenceType D10Track::ConvertEssenceType(D10EssenceType d10_essence_type)
-{
-    size_t i;
-    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
-        if (ESSENCE_TYPE_MAP[i].d10_essence_type == d10_essence_type)
-            return ESSENCE_TYPE_MAP[i].mh_essence_type;
-    }
-
-    return MXFDescriptorHelper::UNKNOWN_ESSENCE;
-}
-
-D10EssenceType D10Track::ConvertEssenceType(MXFDescriptorHelper::EssenceType mh_essence_type)
-{
-    size_t i;
-    for (i = 0; i < ARRAY_SIZE(ESSENCE_TYPE_MAP); i++) {
-        if (ESSENCE_TYPE_MAP[i].mh_essence_type == mh_essence_type)
-            return ESSENCE_TYPE_MAP[i].d10_essence_type;
-    }
-
-    return D10_UNKNOWN_ESSENCE;
-}
-
-D10Track* D10Track::Create(D10File *file, uint32_t track_index, mxfRational frame_rate, D10EssenceType essence_type)
+D10Track* D10Track::Create(D10File *file, uint32_t track_index, mxfRational frame_rate, EssenceType essence_type)
 {
     switch (essence_type)
     {
-        case D10_MPEG_30:
-        case D10_MPEG_40:
-        case D10_MPEG_50:
+        case D10_30:
+        case D10_40:
+        case D10_50:
             return new D10MPEGTrack(file, track_index, frame_rate, essence_type);
-        case D10_PCM:
+        case WAVE_PCM:
             return new D10PCMTrack(file, track_index, frame_rate, essence_type);
-        case D10_UNKNOWN_ESSENCE:
+        default:
             IM_ASSERT(false);
     }
 
     return 0;
 }
 
-D10Track::D10Track(D10File *file, uint32_t track_index, mxfRational frame_rate, D10EssenceType essence_type)
+D10Track::D10Track(D10File *file, uint32_t track_index, mxfRational frame_rate, EssenceType essence_type)
 {
     mD10File = file;
     mTrackIndex = track_index;
@@ -150,7 +113,7 @@ D10Track::D10Track(D10File *file, uint32_t track_index, mxfRational frame_rate, 
     mIsPicture = true;
 
     mEssenceType = essence_type;
-    mDescriptorHelper = MXFDescriptorHelper::Create(ConvertEssenceType(essence_type));
+    mDescriptorHelper = MXFDescriptorHelper::Create(essence_type);
     mDescriptorHelper->SetFlavour(MXFDescriptorHelper::SMPTE_377_2004_FLAVOUR);
     mDescriptorHelper->SetFrameWrapped(true);
     mDescriptorHelper->SetSampleRate(frame_rate);

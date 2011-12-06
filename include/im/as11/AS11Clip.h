@@ -85,7 +85,7 @@ public:
     void SetOutputStartOffset(int64_t offset);
     void SetOutputEndOffset(int64_t offset);
 
-    AS11Track* CreateTrack(AS11EssenceType essence_type);
+    AS11Track* CreateTrack(EssenceType essence_type);
 
 public:
     void PrepareHeaderMetadata();

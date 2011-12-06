@@ -45,55 +45,20 @@ namespace im
 
 typedef enum
 {
-    AS11_UNKNOWN_ESSENCE = 0,
-    AS11_IEC_DV25,
-    AS11_DVBASED_DV25,
-    AS11_DV50,
-    AS11_DV100_1080I,
-    AS11_DV100_1080P,
-    AS11_DV100_720P,
-    AS11_D10_30,
-    AS11_D10_40,
-    AS11_D10_50,
-    AS11_AVCI100_1080I,
-    AS11_AVCI100_1080P,
-    AS11_AVCI100_720P,
-    AS11_AVCI50_1080I,
-    AS11_AVCI50_1080P,
-    AS11_AVCI50_720P,
-    AS11_UNC_SD,
-    AS11_UNC_HD_1080I,
-    AS11_UNC_HD_1080P,
-    AS11_UNC_HD_720P,
-    AS11_MPEG2LG_422P_HL,
-    AS11_MPEG2LG_MP_HL,
-    AS11_MPEG2LG_MP_H14,
-    AS11_PCM
-} AS11EssenceType;
-
-
-typedef enum
-{
     AS11_UNKNOWN_CLIP_TYPE = 0,
     AS11_OP1A_CLIP_TYPE,
     AS11_D10_CLIP_TYPE,
 } AS11ClipType;
 
 
-
 class AS11Track
 {
 public:
-    static bool IsSupported(AS11ClipType clip_type, AS11EssenceType essence_type, bool is_mpeg2lg_720p,
-                            Rational sample_rate);
-
-    static int ConvertEssenceType(AS11ClipType clip_type, AS11EssenceType essence_type);
-
-    static std::string EssenceTypeToString(AS11EssenceType essence_type);
+    static bool IsSupported(AS11ClipType clip_type, EssenceType essence_type, Rational sample_rate);
 
 public:
-    AS11Track(AS11EssenceType essence_type, OP1ATrack *track);
-    AS11Track(AS11EssenceType essence_type, D10Track *track);
+    AS11Track(EssenceType essence_type, OP1ATrack *track);
+    AS11Track(EssenceType essence_type, D10Track *track);
     virtual ~AS11Track();
 
 public:
@@ -105,9 +70,6 @@ public:
     void SetComponentDepth(uint32_t depth);                 // default 8; alternative is 10
     void SetSampleSize(uint32_t size);                      // D10 sample size
     void SetAVCIMode(OP1AAVCIMode mode);                    // default OP1A_AVCI_ALL_FRAME_HEADER_MODE
-    void SetMPEG2LGSignalStandard(uint8_t signal_standard); // 0x04=SMPTE274, 0x05=SMPTE-296; default=0x04
-    void SetMPEG2LGFrameLayout(uint8_t frame_layout);       // 0x00=FullFrame (progressive), 0x01=SeparateFields
-                                                            // (interlaced), default=0x01
     void SetAFD(uint8_t afd);                               // default not set
 
     // Sound properties
@@ -135,14 +97,15 @@ public:
     uint32_t GetAVCISampleWithoutHeaderSize();
 
 public:
-    AS11ClipType GetClipType() const { return mClipType; }
-    AS11EssenceType GetEssenceType() const { return mEssenceType; }
+    AS11ClipType GetClipType() const   { return mClipType; }
+    EssenceType GetEssenceType() const { return mEssenceType; }
+
     OP1ATrack* GetOP1ATrack() const { return mOP1ATrack; }
-    D10Track* GetD10Track() const { return mD10Track; }
+    D10Track* GetD10Track() const   { return mD10Track; }
 
 private:
     AS11ClipType mClipType;
-    AS11EssenceType mEssenceType;
+    EssenceType mEssenceType;
     OP1ATrack *mOP1ATrack;
     D10Track *mD10Track;
 };

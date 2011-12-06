@@ -49,58 +49,32 @@ using namespace mxfpp;
 typedef struct
 {
     mxfUL pc_label;
-    MXFDescriptorHelper::EssenceType essence_type;
-    mxfRational sample_rate;
-    int32_t avid_resolution_id;
+    EssenceType essence_type;
+    uint8_t signal_standard;
+    uint8_t frame_layout;
 } SupportedEssence;
 
 static const SupportedEssence SUPPORTED_ESSENCE[] =
 {
-    {MXF_CMDEF_L(MPEG2_422P_HL_LONGGOP),    MXFDescriptorHelper::MPEG2LG_422P_HL,   {25, 1},        0x0fea},
-    {MXF_CMDEF_L(MPEG2_422P_HL_LONGGOP),    MXFDescriptorHelper::MPEG2LG_422P_HL,   {30000, 1001},  0x00},
-    {MXF_CMDEF_L(MPEG2_422P_HL_LONGGOP),    MXFDescriptorHelper::MPEG2LG_422P_HL,   {50, 1},        0x00},
-    {MXF_CMDEF_L(MPEG2_422P_HL_LONGGOP),    MXFDescriptorHelper::MPEG2LG_422P_HL,   {60000, 1001},  0x00},
-    {MXF_CMDEF_L(MPEG2_MP_HL_LONGGOP),      MXFDescriptorHelper::MPEG2LG_MP_HL,     {25, 1},        0x00},
-    {MXF_CMDEF_L(MPEG2_MP_HL_LONGGOP),      MXFDescriptorHelper::MPEG2LG_MP_HL,     {30000, 1001},  0x00},
-    {MXF_CMDEF_L(MPEG2_MP_HL_LONGGOP),      MXFDescriptorHelper::MPEG2LG_MP_HL,     {50, 1},        0x00},
-    {MXF_CMDEF_L(MPEG2_MP_HL_LONGGOP),      MXFDescriptorHelper::MPEG2LG_MP_HL,     {60000, 1001},  0x00},
-    {MXF_CMDEF_L(MPEG2_MP_H14_LONGGOP),     MXFDescriptorHelper::MPEG2LG_MP_H14,    {25, 1},        0x00},
-    {MXF_CMDEF_L(MPEG2_MP_H14_LONGGOP),     MXFDescriptorHelper::MPEG2LG_MP_H14,    {30000, 1001},  0x00},
-    {MXF_CMDEF_L(MPEG2_MP_H14_LONGGOP),     MXFDescriptorHelper::MPEG2LG_MP_H14,    {50, 1},        0x00},
-    {MXF_CMDEF_L(MPEG2_MP_H14_LONGGOP),     MXFDescriptorHelper::MPEG2LG_MP_H14,    {60000, 1001},  0x00},
+    {MXF_CMDEF_L(MPEG2_422P_HL_LONGGOP),  MPEG2LG_422P_HL_1080I,  MXF_SIGNAL_STANDARD_SMPTE274M,  MXF_SEPARATE_FIELDS},
+    {MXF_CMDEF_L(MPEG2_422P_HL_LONGGOP),  MPEG2LG_422P_HL_1080P,  MXF_SIGNAL_STANDARD_SMPTE274M,  MXF_FULL_FRAME},
+    {MXF_CMDEF_L(MPEG2_422P_HL_LONGGOP),  MPEG2LG_422P_HL_720P,   MXF_SIGNAL_STANDARD_SMPTE296M,  MXF_FULL_FRAME},
+    {MXF_CMDEF_L(MPEG2_MP_HL_LONGGOP),    MPEG2LG_MP_HL_1080I,    MXF_SIGNAL_STANDARD_SMPTE274M,  MXF_SEPARATE_FIELDS},
+    {MXF_CMDEF_L(MPEG2_MP_HL_LONGGOP),    MPEG2LG_MP_HL_1080P,    MXF_SIGNAL_STANDARD_SMPTE274M,  MXF_FULL_FRAME},
+    {MXF_CMDEF_L(MPEG2_MP_HL_LONGGOP),    MPEG2LG_MP_HL_720P,     MXF_SIGNAL_STANDARD_SMPTE296M,  MXF_FULL_FRAME},
+    {MXF_CMDEF_L(MPEG2_MP_H14_LONGGOP),   MPEG2LG_MP_H14_1080I,   MXF_SIGNAL_STANDARD_SMPTE274M,  MXF_SEPARATE_FIELDS},
+    {MXF_CMDEF_L(MPEG2_MP_H14_LONGGOP),   MPEG2LG_MP_H14_1080P,   MXF_SIGNAL_STANDARD_SMPTE274M,  MXF_FULL_FRAME},
 };
 
 
 
-MXFDescriptorHelper::EssenceType MPEG2LGMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
-                                                                         mxfUL alternative_ec_label)
+EssenceType MPEG2LGMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
-    mxfUL ec_label = file_descriptor->getEssenceContainer();
-    if (!mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(MPEGES0FrameWrapped)) &&
-        !mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(MPEGES0ClipWrapped)) &&
-        !(mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
-            mxf_equals_ul_mod_regver(&alternative_ec_label, &MXF_EC_L(AvidMPEGClipWrapped))))
-    {
-        return MXFDescriptorHelper::UNKNOWN_ESSENCE;
-    }
+    size_t essence_index = GetEssenceIndex(file_descriptor, alternative_ec_label);
+    if (essence_index == (size_t)(-1))
+        return UNKNOWN_ESSENCE_TYPE;
 
-    mxfRational sample_rate = file_descriptor->getSampleRate();
-
-    GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
-    if (!pic_descriptor || !pic_descriptor->havePictureEssenceCoding())
-        return MXFDescriptorHelper::UNKNOWN_ESSENCE;
-
-    mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
-    size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
-        if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
-            SUPPORTED_ESSENCE[i].sample_rate == sample_rate)
-        {
-            return SUPPORTED_ESSENCE[i].essence_type;
-        }
-    }
-
-    return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+    return SUPPORTED_ESSENCE[essence_index].essence_type;
 }
 
 bool MPEG2LGMXFDescriptorHelper::IsSupported(EssenceType essence_type)
@@ -114,11 +88,57 @@ bool MPEG2LGMXFDescriptorHelper::IsSupported(EssenceType essence_type)
     return false;
 }
 
+size_t MPEG2LGMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
+{
+    mxfUL ec_label = file_descriptor->getEssenceContainer();
+    if (!mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(MPEGES0FrameWrapped)) &&
+        !mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(MPEGES0ClipWrapped)) &&
+        !(mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
+            mxf_equals_ul_mod_regver(&alternative_ec_label, &MXF_EC_L(AvidMPEGClipWrapped))))
+    {
+        return (size_t)(-1);
+    }
+
+    GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
+    if (!pic_descriptor || !pic_descriptor->havePictureEssenceCoding())
+        return (size_t)(-1);
+
+    uint32_t stored_width = 0;
+    if (pic_descriptor->haveStoredWidth())
+        stored_width = pic_descriptor->getStoredWidth();
+
+    uint8_t signal_standard = 255;
+    uint8_t frame_layout = 255;
+    if (pic_descriptor->haveSignalStandard()) {
+        signal_standard = pic_descriptor->getSignalStandard();
+    } else {
+        if (stored_width == 1920 || stored_width == 1440)
+            signal_standard = MXF_SIGNAL_STANDARD_SMPTE274M;
+        else if (stored_width == 1280)
+            signal_standard = MXF_SIGNAL_STANDARD_SMPTE296M;
+    }
+    if (pic_descriptor->haveFrameLayout())
+        frame_layout = pic_descriptor->getFrameLayout();
+    else
+        frame_layout = MXF_SEPARATE_FIELDS;
+
+    mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
+    size_t i;
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+        if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
+            SUPPORTED_ESSENCE[i].signal_standard == signal_standard &&
+            SUPPORTED_ESSENCE[i].frame_layout == frame_layout)
+        {
+            return i;
+        }
+    }
+
+    return (size_t)(-1);
+}
+
 MPEG2LGMXFDescriptorHelper::MPEG2LGMXFDescriptorHelper()
 : PictureMXFDescriptorHelper()
 {
-    mSignalStandard = MXF_SIGNAL_STANDARD_SMPTE274M;
-    mFrameLayout = MXF_SEPARATE_FIELDS;
     mEssenceIndex = 0;
     mEssenceType = SUPPORTED_ESSENCE[0].essence_type;
 }
@@ -129,42 +149,24 @@ MPEG2LGMXFDescriptorHelper::~MPEG2LGMXFDescriptorHelper()
 
 void MPEG2LGMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
-    IM_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
-
     PictureMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
+
+    mxfRational sample_rate = file_descriptor->getSampleRate();
 
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     mFrameWrapped = mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(MPEGES0FrameWrapped));
 
-    GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
-    mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
-    size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
-        if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
-            SUPPORTED_ESSENCE[i].sample_rate == mSampleRate)
-        {
-            mEssenceIndex = i;
-            mEssenceType = SUPPORTED_ESSENCE[i].essence_type;
-            mAvidResolutionId = SUPPORTED_ESSENCE[i].avid_resolution_id;
-            break;
-        }
+    size_t mEssenceIndex = GetEssenceIndex(file_descriptor, alternative_ec_label);
+    IM_ASSERT(mEssenceIndex != (size_t)(-1));
+    mEssenceType = SUPPORTED_ESSENCE[mEssenceIndex].essence_type;
+
+    // TODO: get other avid resolution ids
+    if (mEssenceType == MPEG2LG_422P_HL_1080I) {
+        if (sample_rate == FRAME_RATE_25)
+            mAvidResolutionId = 0x0fea;
+        else if (sample_rate == FRAME_RATE_2997)
+            mAvidResolutionId = 0x0fe9;
     }
-}
-
-void MPEG2LGMXFDescriptorHelper::SetSignalStandard(uint8_t signal_standard)
-{
-    IM_CHECK(signal_standard == MXF_SIGNAL_STANDARD_SMPTE274M ||
-             signal_standard == MXF_SIGNAL_STANDARD_SMPTE296M);
-
-    mSignalStandard = signal_standard;
-}
-
-void MPEG2LGMXFDescriptorHelper::SetFrameLayout(uint8_t frame_layout)
-{
-    IM_CHECK(frame_layout == MXF_FULL_FRAME ||
-             frame_layout == MXF_SEPARATE_FIELDS);
-
-    mFrameLayout = frame_layout;
 }
 
 void MPEG2LGMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
@@ -218,59 +220,91 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
 
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
     SetCodingEquations(ITUR_BT709_CODING_EQ);
-    cdci_descriptor->setSignalStandard(mSignalStandard);
-    cdci_descriptor->setFrameLayout(mFrameLayout);
-    if (mEssenceType == MPEG2LG_422P_HL) {
+    cdci_descriptor->setSignalStandard(SUPPORTED_ESSENCE[mEssenceIndex].signal_standard);
+    cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
+    if (mEssenceType == MPEG2LG_422P_HL_1080I ||
+        mEssenceType == MPEG2LG_422P_HL_1080P ||
+        mEssenceType == MPEG2LG_422P_HL_720P)
+    {
         // 4:2:2
         SetColorSiting(MXF_COLOR_SITING_COSITING);
-    } else {
+    }
+    else
+    {
         // 4:2:0
         SetColorSiting(MXF_COLOR_SITING_VERT_MIDPOINT);
     }
-    if (mSignalStandard == MXF_SIGNAL_STANDARD_SMPTE274M) {
-        if (mFrameLayout == MXF_FULL_FRAME) {
-            cdci_descriptor->setSampledWidth(mEssenceType == MPEG2LG_MP_H14 ? 1440 : 1920);
-            cdci_descriptor->setSampledHeight(1080);
-            cdci_descriptor->setStoredWidth(mEssenceType == MPEG2LG_MP_H14 ? 1440 : 1920);
-            cdci_descriptor->setStoredHeight(1088);
-            cdci_descriptor->setDisplayWidth(mEssenceType == MPEG2LG_MP_H14 ? 1440 : 1920);
-            cdci_descriptor->setDisplayHeight(1080);
-        } else {
-            cdci_descriptor->setSampledWidth(mEssenceType == MPEG2LG_MP_H14 ? 1440 : 1920);
+    switch (mEssenceType)
+    {
+        case MPEG2LG_422P_HL_1080I:
+        case MPEG2LG_MP_HL_1080I:
+            cdci_descriptor->setSampledWidth(1920);
             cdci_descriptor->setSampledHeight(540);
-            cdci_descriptor->setStoredWidth(mEssenceType == MPEG2LG_MP_H14 ? 1440 : 1920);
+            cdci_descriptor->setStoredWidth(1920);
             cdci_descriptor->setStoredHeight(544);
-            cdci_descriptor->setDisplayWidth(mEssenceType == MPEG2LG_MP_H14 ? 1440 : 1920);
+            cdci_descriptor->setDisplayWidth(1920);
             cdci_descriptor->setDisplayHeight(540);
-        }
-
-        if (mFrameLayout == MXF_FULL_FRAME) {
-            cdci_descriptor->appendVideoLineMap(42);
-            cdci_descriptor->appendVideoLineMap(0);
-        } else {
             cdci_descriptor->appendVideoLineMap(21);
             cdci_descriptor->appendVideoLineMap(584);
-        }
-    } else { // MXF_SIGNAL_STANDARD_SMPTE296M
-        IM_CHECK(mFrameLayout == MXF_FULL_FRAME);
-        IM_CHECK(mEssenceType != MPEG2LG_MP_H14);
-        cdci_descriptor->setSampledWidth(1280);
-        cdci_descriptor->setSampledHeight(720);
-        cdci_descriptor->setStoredWidth(1280);
-        cdci_descriptor->setStoredHeight(720);
-        cdci_descriptor->setDisplayWidth(1280);
-        cdci_descriptor->setDisplayHeight(720);
-        cdci_descriptor->appendVideoLineMap(26);
-        cdci_descriptor->appendVideoLineMap(0);
+            break;
+        case MPEG2LG_422P_HL_1080P:
+        case MPEG2LG_MP_HL_1080P:
+            cdci_descriptor->setSampledWidth(1920);
+            cdci_descriptor->setSampledHeight(1080);
+            cdci_descriptor->setStoredWidth(1920);
+            cdci_descriptor->setStoredHeight(1088);
+            cdci_descriptor->setDisplayWidth(1920);
+            cdci_descriptor->setDisplayHeight(1080);
+            cdci_descriptor->appendVideoLineMap(42);
+            cdci_descriptor->appendVideoLineMap(0);
+            break;
+        case MPEG2LG_422P_HL_720P:
+        case MPEG2LG_MP_HL_720P:
+            cdci_descriptor->setSampledWidth(1280);
+            cdci_descriptor->setSampledHeight(720);
+            cdci_descriptor->setStoredWidth(1280);
+            cdci_descriptor->setStoredHeight(720);
+            cdci_descriptor->setDisplayWidth(1280);
+            cdci_descriptor->setDisplayHeight(720);
+            cdci_descriptor->appendVideoLineMap(26);
+            cdci_descriptor->appendVideoLineMap(0);
+            break;
+        case MPEG2LG_MP_H14_1080I:
+            cdci_descriptor->setSampledWidth(1440);
+            cdci_descriptor->setSampledHeight(540);
+            cdci_descriptor->setStoredWidth(1440);
+            cdci_descriptor->setStoredHeight(544);
+            cdci_descriptor->setDisplayWidth(1440);
+            cdci_descriptor->setDisplayHeight(540);
+            cdci_descriptor->appendVideoLineMap(21);
+            cdci_descriptor->appendVideoLineMap(584);
+            break;
+        case MPEG2LG_MP_H14_1080P:
+            cdci_descriptor->setSampledWidth(1440);
+            cdci_descriptor->setSampledHeight(1080);
+            cdci_descriptor->setStoredWidth(1440);
+            cdci_descriptor->setStoredHeight(1088);
+            cdci_descriptor->setDisplayWidth(1440);
+            cdci_descriptor->setDisplayHeight(1080);
+            cdci_descriptor->appendVideoLineMap(42);
+            cdci_descriptor->appendVideoLineMap(0);
+            break;
+        default:
+            IM_ASSERT(false);
+            break;
     }
-
     cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
     cdci_descriptor->setComponentDepth(8);
-    if (mEssenceType == MPEG2LG_422P_HL) {
+    if (mEssenceType == MPEG2LG_422P_HL_1080I ||
+        mEssenceType == MPEG2LG_422P_HL_1080P ||
+        mEssenceType == MPEG2LG_422P_HL_720P)
+    {
         // 4:2:2
         cdci_descriptor->setHorizontalSubsampling(2);
         cdci_descriptor->setVerticalSubsampling(1);
-    } else {
+    }
+    else
+    {
         // 4:2:0
         cdci_descriptor->setHorizontalSubsampling(2);
         cdci_descriptor->setVerticalSubsampling(2);
@@ -281,17 +315,22 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
 
     if (mpeg_descriptor) {
         mpeg_descriptor->setSingleSequence(true);
-        mpeg_descriptor->setCodedContentType(mFrameLayout == MXF_FULL_FRAME ? 1 : 2);
+        mpeg_descriptor->setCodedContentType(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_FULL_FRAME ? 1 : 2);
         mpeg_descriptor->setBPictureCount(2);
         switch (mEssenceType)
         {
-            case MPEG2LG_422P_HL:
+            case MPEG2LG_422P_HL_1080I:
+            case MPEG2LG_422P_HL_1080P:
+            case MPEG2LG_422P_HL_720P:
                 mpeg_descriptor->setProfileAndLevel(0x82); // 4:2:2 Profile @ High level
                 break;
-            case MPEG2LG_MP_HL:
+            case MPEG2LG_MP_HL_1080I:
+            case MPEG2LG_MP_HL_1080P:
+            case MPEG2LG_MP_HL_720P:
                 mpeg_descriptor->setProfileAndLevel(0x44); // Main Profile @ High level
                 break;
-            case MPEG2LG_MP_H14:
+            case MPEG2LG_MP_H14_1080I:
+            case MPEG2LG_MP_H14_1080P:
                 mpeg_descriptor->setProfileAndLevel(0x46); // Main Profile @ High 1440 level
                 break;
             default:
@@ -318,14 +357,19 @@ void MPEG2LGMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
     for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
-        if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
-            SUPPORTED_ESSENCE[i].sample_rate == mSampleRate)
-        {
+        if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType) {
             mEssenceIndex = i;
-            mAvidResolutionId = SUPPORTED_ESSENCE[i].avid_resolution_id;
             break;
         }
     }
     IM_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+
+    // TODO: get other avid resolution ids
+    if (mEssenceType == MPEG2LG_422P_HL_1080I) {
+        if (mSampleRate == FRAME_RATE_25)
+            mAvidResolutionId = 0x0fea;
+        else if (mSampleRate == FRAME_RATE_2997)
+            mAvidResolutionId = 0x0fe9;
+    }
 }
 

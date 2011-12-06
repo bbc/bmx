@@ -49,7 +49,7 @@ using namespace mxfpp;
 typedef struct
 {
     mxfUL pc_label;
-    MXFDescriptorHelper::EssenceType essence_type;
+    EssenceType essence_type;
     mxfRational sample_rate;
     int32_t avid_resolution_id;
     int32_t video_line_map[2];
@@ -62,41 +62,40 @@ typedef struct
 
 static const SupportedEssence SUPPORTED_ESSENCE[] =
 {
-    {MXF_CMDEF_L(AvidMJPEG21_PAL),      MXFDescriptorHelper::MJPEG_2_1,     {25, 1},        g_AvidMJPEG21_ResolutionID,     {15, 328},  720, 296, 8, MXF_SEPARATE_FIELDS},
-    {MXF_CMDEF_L(AvidMJPEG31_PAL),      MXFDescriptorHelper::MJPEG_3_1,     {25, 1},        g_AvidMJPEG31_ResolutionID,     {15, 328},  720, 296, 8, MXF_SEPARATE_FIELDS},
-    {MXF_CMDEF_L(AvidMJPEG101_PAL),     MXFDescriptorHelper::MJPEG_10_1,    {25, 1},        g_AvidMJPEG101_ResolutionID,    {15, 328},  720, 296, 8, MXF_SEPARATE_FIELDS},
-    {MXF_CMDEF_L(AvidMJPEG201_PAL),     MXFDescriptorHelper::MJPEG_20_1,    {25, 1},        g_AvidMJPEG201_ResolutionID,    {15, 328},  720, 296, 8, MXF_SEPARATE_FIELDS},
-    {MXF_CMDEF_L(AvidMJPEG41m_PAL),     MXFDescriptorHelper::MJPEG_4_1M,    {25, 1},        g_AvidMJPEG41m_ResolutionID,    {15, 0},    288, 296, 8, MXF_SINGLE_FIELD},
-    {MXF_CMDEF_L(AvidMJPEG101m_PAL),    MXFDescriptorHelper::MJPEG_10_1M,   {25, 1},        g_AvidMJPEG101m_ResolutionID,   {15, 0},    288, 296, 8, MXF_SINGLE_FIELD},
-    {MXF_CMDEF_L(AvidMJPEG151s_PAL),    MXFDescriptorHelper::MJPEG_15_1S,   {25, 1},        g_AvidMJPEG151s_ResolutionID,   {15, 0},    352, 296, 8, MXF_SINGLE_FIELD},
+    {MXF_CMDEF_L(AvidMJPEG21_PAL),      MJPEG_2_1,     {25, 1},        g_AvidMJPEG21_ResolutionID,     {15, 328},  720, 296, 8, MXF_SEPARATE_FIELDS},
+    {MXF_CMDEF_L(AvidMJPEG31_PAL),      MJPEG_3_1,     {25, 1},        g_AvidMJPEG31_ResolutionID,     {15, 328},  720, 296, 8, MXF_SEPARATE_FIELDS},
+    {MXF_CMDEF_L(AvidMJPEG101_PAL),     MJPEG_10_1,    {25, 1},        g_AvidMJPEG101_ResolutionID,    {15, 328},  720, 296, 8, MXF_SEPARATE_FIELDS},
+    {MXF_CMDEF_L(AvidMJPEG201_PAL),     MJPEG_20_1,    {25, 1},        g_AvidMJPEG201_ResolutionID,    {15, 328},  720, 296, 8, MXF_SEPARATE_FIELDS},
+    {MXF_CMDEF_L(AvidMJPEG41m_PAL),     MJPEG_4_1M,    {25, 1},        g_AvidMJPEG41m_ResolutionID,    {15, 0},    288, 296, 8, MXF_SINGLE_FIELD},
+    {MXF_CMDEF_L(AvidMJPEG101m_PAL),    MJPEG_10_1M,   {25, 1},        g_AvidMJPEG101m_ResolutionID,   {15, 0},    288, 296, 8, MXF_SINGLE_FIELD},
+    {MXF_CMDEF_L(AvidMJPEG151s_PAL),    MJPEG_15_1S,   {25, 1},        g_AvidMJPEG151s_ResolutionID,   {15, 0},    352, 296, 8, MXF_SINGLE_FIELD},
 
-    {MXF_CMDEF_L(AvidMJPEG21_NTSC),     MXFDescriptorHelper::MJPEG_2_1,     {30000, 1001},  g_AvidMJPEG21_ResolutionID,     {16, 278},  720, 248, 5, MXF_SEPARATE_FIELDS},
-    {MXF_CMDEF_L(AvidMJPEG31_NTSC),     MXFDescriptorHelper::MJPEG_3_1,     {30000, 1001},  g_AvidMJPEG31_ResolutionID,     {16, 278},  720, 248, 5, MXF_SEPARATE_FIELDS},
-    {MXF_CMDEF_L(AvidMJPEG101_NTSC),    MXFDescriptorHelper::MJPEG_10_1,    {30000, 1001},  g_AvidMJPEG101_ResolutionID,    {16, 278},  720, 248, 5, MXF_SEPARATE_FIELDS},
-    {MXF_CMDEF_L(AvidMJPEG201_NTSC),    MXFDescriptorHelper::MJPEG_20_1,    {30000, 1001},  g_AvidMJPEG201_ResolutionID,    {16, 278},  720, 248, 5, MXF_SEPARATE_FIELDS},
-    {MXF_CMDEF_L(AvidMJPEG41m_NTSC),    MXFDescriptorHelper::MJPEG_4_1M,    {30000, 1001},  g_AvidMJPEG41m_ResolutionID,    {16, 0},    288, 248, 5, MXF_SINGLE_FIELD},
-    {MXF_CMDEF_L(AvidMJPEG101m_NTSC),   MXFDescriptorHelper::MJPEG_10_1M,   {30000, 1001},  g_AvidMJPEG101m_ResolutionID,   {16, 0},    288, 248, 5, MXF_SINGLE_FIELD},
-    {MXF_CMDEF_L(AvidMJPEG151s_NTSC),   MXFDescriptorHelper::MJPEG_15_1S,   {30000, 1001},  g_AvidMJPEG151s_ResolutionID,   {16, 0},    352, 248, 5, MXF_SINGLE_FIELD},
+    {MXF_CMDEF_L(AvidMJPEG21_NTSC),     MJPEG_2_1,     {30000, 1001},  g_AvidMJPEG21_ResolutionID,     {16, 278},  720, 248, 5, MXF_SEPARATE_FIELDS},
+    {MXF_CMDEF_L(AvidMJPEG31_NTSC),     MJPEG_3_1,     {30000, 1001},  g_AvidMJPEG31_ResolutionID,     {16, 278},  720, 248, 5, MXF_SEPARATE_FIELDS},
+    {MXF_CMDEF_L(AvidMJPEG101_NTSC),    MJPEG_10_1,    {30000, 1001},  g_AvidMJPEG101_ResolutionID,    {16, 278},  720, 248, 5, MXF_SEPARATE_FIELDS},
+    {MXF_CMDEF_L(AvidMJPEG201_NTSC),    MJPEG_20_1,    {30000, 1001},  g_AvidMJPEG201_ResolutionID,    {16, 278},  720, 248, 5, MXF_SEPARATE_FIELDS},
+    {MXF_CMDEF_L(AvidMJPEG41m_NTSC),    MJPEG_4_1M,    {30000, 1001},  g_AvidMJPEG41m_ResolutionID,    {16, 0},    288, 248, 5, MXF_SINGLE_FIELD},
+    {MXF_CMDEF_L(AvidMJPEG101m_NTSC),   MJPEG_10_1M,   {30000, 1001},  g_AvidMJPEG101m_ResolutionID,   {16, 0},    288, 248, 5, MXF_SINGLE_FIELD},
+    {MXF_CMDEF_L(AvidMJPEG151s_NTSC),   MJPEG_15_1S,   {30000, 1001},  g_AvidMJPEG151s_ResolutionID,   {16, 0},    352, 248, 5, MXF_SINGLE_FIELD},
 };
 
 
 
-MXFDescriptorHelper::EssenceType MJPEGMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
-                                                                       mxfUL alternative_ec_label)
+EssenceType MJPEGMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     if (!mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidMJPEGClipWrapped)) &&
         !(mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
             mxf_equals_ul_mod_regver(&alternative_ec_label, &MXF_EC_L(AvidMJPEGClipWrapped))))
     {
-        return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+        return UNKNOWN_ESSENCE_TYPE;
     }
 
     mxfRational sample_rate = file_descriptor->getSampleRate();
 
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     if (!pic_descriptor || !pic_descriptor->havePictureEssenceCoding())
-        return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+        return UNKNOWN_ESSENCE_TYPE;
 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
@@ -107,7 +106,7 @@ MXFDescriptorHelper::EssenceType MJPEGMXFDescriptorHelper::IsSupported(FileDescr
         }
     }
 
-    return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+    return UNKNOWN_ESSENCE_TYPE;
 }
 
 bool MJPEGMXFDescriptorHelper::IsSupported(EssenceType essence_type)

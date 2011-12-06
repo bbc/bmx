@@ -2,6 +2,7 @@ library_includedir = $(includedir)/libbmx-@BMX_MAJORMINOR@
 nobase_library_include_HEADERS = \
 	im/ByteArray.h \
 	im/CRC32.h \
+	im/EssenceType.h \
 	im/IMException.h \
 	im/IMTypes.h \
 	im/KLVParser.h \

@@ -62,7 +62,7 @@ public:
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);                // default 8192
 
 public:
-    AS02Track* CreateTrack(AS02EssenceType essence_type);
+    AS02Track* CreateTrack(EssenceType essence_type);
 
     virtual void PrepareWrite();
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);

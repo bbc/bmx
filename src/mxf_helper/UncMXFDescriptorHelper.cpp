@@ -51,7 +51,7 @@ using namespace mxfpp;
 typedef struct
 {
     mxfUL ec_label;
-    MXFDescriptorHelper::EssenceType essence_type;
+    EssenceType essence_type;
     bool is_avid_10bit;
     mxfRational sample_rate;
     bool frame_wrapped;
@@ -67,61 +67,60 @@ typedef struct
 
 static const SupportedEssence SUPPORTED_ESSENCE[] =
 {
-    {MXF_EC_L(SD_Unc_625_50i_422_135_FrameWrapped),     MXFDescriptorHelper::UNC_SD,       false,  {25, 1},         true,   720,    576,    16, {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,  0xaa},
-    {MXF_EC_L(SD_Unc_625_50i_422_135_ClipWrapped),      MXFDescriptorHelper::UNC_SD,       false,  {25, 1},         false,  720,    576,    16, {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,  0xaa},
-    {MXF_EC_L(SD_Unc_525_5994i_422_135_FrameWrapped),   MXFDescriptorHelper::UNC_SD,       false,  {30000, 1001},   true,   720,    486,    10, {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,  0xaa},
-    {MXF_EC_L(SD_Unc_525_5994i_422_135_ClipWrapped),    MXFDescriptorHelper::UNC_SD,       false,  {30000, 1001},   false,  720,    486,    10, {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,  0xaa},
-    {MXF_EC_L(HD_Unc_1080_50i_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080I, false,  {25, 1},         true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_50i_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080I, false,  {25, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_5994i_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080I, false,  {30000, 1001},   true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_5994i_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080I, false,  {30000, 1001},   false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_60i_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080I, false,  {30, 1},         true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_60i_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080I, false,  {30, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_25p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, false,  {25, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_25p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, false,  {25, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_2997p_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080P, false,  {30000, 1001},   true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_2997p_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080P, false,  {30000, 1001},   false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_30p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, false,  {30, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_30p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, false,  {30, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_50p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, false,  {50, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_50p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, false,  {50, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_5994p_422_FrameWrapped),      MXFDescriptorHelper::UNC_HD_1080P, false,  {60000, 1001},   true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_5994p_422_ClipWrapped),       MXFDescriptorHelper::UNC_HD_1080P, false,  {60000, 1001},   false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_60p_422_FrameWrapped),        MXFDescriptorHelper::UNC_HD_1080P, false,  {60, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_1080_60p_422_ClipWrapped),         MXFDescriptorHelper::UNC_HD_1080P, false,  {60, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_720_25p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  false,  {25, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_720_25p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  false,  {25, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_720_2997p_422_FrameWrapped),       MXFDescriptorHelper::UNC_HD_720P,  false,  {30000, 1001},   true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_720_2997p_422_ClipWrapped),        MXFDescriptorHelper::UNC_HD_720P,  false,  {30000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_720_30p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  false,  {30, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_720_30p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  false,  {30, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_720_50p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  false,  {50, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_720_50p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  false,  {50, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_720_5994p_422_FrameWrapped),       MXFDescriptorHelper::UNC_HD_720P,  false,  {60000, 1001},   true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_720_5994p_422_ClipWrapped),        MXFDescriptorHelper::UNC_HD_720P,  false,  {60000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_720_60p_422_FrameWrapped),         MXFDescriptorHelper::UNC_HD_720P,  false,  {60, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
-    {MXF_EC_L(HD_Unc_720_60p_422_ClipWrapped),          MXFDescriptorHelper::UNC_HD_720P,  false,  {60, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(SD_Unc_625_50i_422_135_FrameWrapped),     UNC_SD,       false,  {25, 1},         true,   720,    576,    16, {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,  0xaa},
+    {MXF_EC_L(SD_Unc_625_50i_422_135_ClipWrapped),      UNC_SD,       false,  {25, 1},         false,  720,    576,    16, {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,  0xaa},
+    {MXF_EC_L(SD_Unc_525_5994i_422_135_FrameWrapped),   UNC_SD,       false,  {30000, 1001},   true,   720,    486,    10, {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,  0xaa},
+    {MXF_EC_L(SD_Unc_525_5994i_422_135_ClipWrapped),    UNC_SD,       false,  {30000, 1001},   false,  720,    486,    10, {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,  0xaa},
+    {MXF_EC_L(HD_Unc_1080_50i_422_FrameWrapped),        UNC_HD_1080I, false,  {25, 1},         true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_50i_422_ClipWrapped),         UNC_HD_1080I, false,  {25, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_5994i_422_FrameWrapped),      UNC_HD_1080I, false,  {30000, 1001},   true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_5994i_422_ClipWrapped),       UNC_HD_1080I, false,  {30000, 1001},   false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_60i_422_FrameWrapped),        UNC_HD_1080I, false,  {30, 1},         true,   1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_60i_422_ClipWrapped),         UNC_HD_1080I, false,  {30, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_25p_422_FrameWrapped),        UNC_HD_1080P, false,  {25, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_25p_422_ClipWrapped),         UNC_HD_1080P, false,  {25, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_2997p_422_FrameWrapped),      UNC_HD_1080P, false,  {30000, 1001},   true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_2997p_422_ClipWrapped),       UNC_HD_1080P, false,  {30000, 1001},   false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_30p_422_FrameWrapped),        UNC_HD_1080P, false,  {30, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_30p_422_ClipWrapped),         UNC_HD_1080P, false,  {30, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_50p_422_FrameWrapped),        UNC_HD_1080P, false,  {50, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_50p_422_ClipWrapped),         UNC_HD_1080P, false,  {50, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_5994p_422_FrameWrapped),      UNC_HD_1080P, false,  {60000, 1001},   true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_5994p_422_ClipWrapped),       UNC_HD_1080P, false,  {60000, 1001},   false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_60p_422_FrameWrapped),        UNC_HD_1080P, false,  {60, 1},         true,   1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_1080_60p_422_ClipWrapped),         UNC_HD_1080P, false,  {60, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_25p_422_FrameWrapped),         UNC_HD_720P,  false,  {25, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_25p_422_ClipWrapped),          UNC_HD_720P,  false,  {25, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_2997p_422_FrameWrapped),       UNC_HD_720P,  false,  {30000, 1001},   true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_2997p_422_ClipWrapped),        UNC_HD_720P,  false,  {30000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_30p_422_FrameWrapped),         UNC_HD_720P,  false,  {30, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_30p_422_ClipWrapped),          UNC_HD_720P,  false,  {30, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_50p_422_FrameWrapped),         UNC_HD_720P,  false,  {50, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_50p_422_ClipWrapped),          UNC_HD_720P,  false,  {50, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_5994p_422_FrameWrapped),       UNC_HD_720P,  false,  {60000, 1001},   true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_5994p_422_ClipWrapped),        UNC_HD_720P,  false,  {60000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_60p_422_FrameWrapped),         UNC_HD_720P,  false,  {60, 1},         true,   1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
+    {MXF_EC_L(HD_Unc_720_60p_422_ClipWrapped),          UNC_HD_720P,  false,  {60, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,  0x00},
 
-    {MXF_EC_L(AvidUnc10Bit625ClipWrapped),              MXFDescriptorHelper::AVID_10BIT_UNC_SD,       true,  {25, 1},         false,  720,    576,    16, {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,   0x07e6},
-    {MXF_EC_L(AvidUnc10Bit525ClipWrapped),              MXFDescriptorHelper::AVID_10BIT_UNC_SD,       true,  {30000, 1001},   false,  720,    486,    10, {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,   0x07e5},
-    {MXF_EC_L(AvidUnc10Bit1080iClipWrapped),            MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080I, true,  {25, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,   0x07d0},
-    {MXF_EC_L(AvidUnc10Bit1080iClipWrapped),            MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080I, true,  {30000, 1001},   false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,   0x07d0},
-    {MXF_EC_L(AvidUnc10Bit1080pClipWrapped),            MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080P, true,  {25, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,   0x07d3},
-    {MXF_EC_L(AvidUnc10Bit1080pClipWrapped),            MXFDescriptorHelper::AVID_10BIT_UNC_HD_1080P, true,  {30000, 1001},   false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,   0x07d3},
-    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P,  true,  {25, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,   0x07d4},
-    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P,  true,  {30000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,   0x07d4},
-    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P,  true,  {50, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,   0x07d4},
-    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             MXFDescriptorHelper::AVID_10BIT_UNC_HD_720P,  true,  {60000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,   0x07d4},
+    {MXF_EC_L(AvidUnc10Bit625ClipWrapped),              AVID_10BIT_UNC_SD,       true,  {25, 1},         false,  720,    576,    16, {23, 336},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,   0x07e6},
+    {MXF_EC_L(AvidUnc10Bit525ClipWrapped),              AVID_10BIT_UNC_SD,       true,  {30000, 1001},   false,  720,    486,    10, {21, 283},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_ITU601,      ITUR_BT601_CODING_EQ,   0x07e5},
+    {MXF_EC_L(AvidUnc10Bit1080iClipWrapped),            AVID_10BIT_UNC_HD_1080I, true,  {25, 1},         false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,   0x07d0},
+    {MXF_EC_L(AvidUnc10Bit1080iClipWrapped),            AVID_10BIT_UNC_HD_1080I, true,  {30000, 1001},   false,  1920,   1080,   0,  {21, 584},  MXF_MIXED_FIELDS,   MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,   0x07d0},
+    {MXF_EC_L(AvidUnc10Bit1080pClipWrapped),            AVID_10BIT_UNC_HD_1080P, true,  {25, 1},         false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,   0x07d3},
+    {MXF_EC_L(AvidUnc10Bit1080pClipWrapped),            AVID_10BIT_UNC_HD_1080P, true,  {30000, 1001},   false,  1920,   1080,   0,  {42, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE274M,   ITUR_BT709_CODING_EQ,   0x07d3},
+    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             AVID_10BIT_UNC_HD_720P,  true,  {25, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,   0x07d4},
+    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             AVID_10BIT_UNC_HD_720P,  true,  {30000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,   0x07d4},
+    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             AVID_10BIT_UNC_HD_720P,  true,  {50, 1},         false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,   0x07d4},
+    {MXF_EC_L(AvidUnc10Bit720pClipWrapped),             AVID_10BIT_UNC_HD_720P,  true,  {60000, 1001},   false,  1280,   720,    0,  {26, 0},    MXF_FULL_FRAME,     MXF_SIGNAL_STANDARD_SMPTE296M,   ITUR_BT709_CODING_EQ,   0x07d4},
 };
 
 
 
-MXFDescriptorHelper::EssenceType UncMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
-                                                                     mxfUL alternative_ec_label)
+EssenceType UncMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     size_t essence_index = GetEssenceIndex(file_descriptor, alternative_ec_label);
     if (essence_index == (size_t)(-1))
-        return MXFDescriptorHelper::UNKNOWN_ESSENCE;
+        return UNKNOWN_ESSENCE_TYPE;
 
     return SUPPORTED_ESSENCE[essence_index].essence_type;
 }

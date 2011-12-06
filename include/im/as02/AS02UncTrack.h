@@ -44,8 +44,8 @@ namespace im
 class AS02UncTrack : public AS02PictureTrack
 {
 public:
-    AS02UncTrack(AS02Clip *clip, uint32_t track_index, AS02EssenceType essence_type, mxfpp::File *file,
-                std::string rel_uri);
+    AS02UncTrack(AS02Clip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file,
+                 std::string rel_uri);
     virtual ~AS02UncTrack();
 
     void SetComponentDepth(uint32_t depth);             // default 8; alternative is 10

@@ -88,7 +88,7 @@ typedef struct
 {
     ClipWriterType clip_type;
     EssenceTypeGroup essence_type_group;
-    ClipWriterEssenceType essence_type;
+    EssenceType essence_type;
 
     ClipWriterTrack *track;
 
@@ -157,12 +157,12 @@ static bool open_raw_reader(RawInput *input)
         return false;
     }
 
-    if (input->essence_type == CW_AVCI100_1080I ||
-        input->essence_type == CW_AVCI100_1080P ||
-        input->essence_type == CW_AVCI100_720P ||
-        input->essence_type == CW_AVCI50_1080I ||
-        input->essence_type == CW_AVCI50_1080P ||
-        input->essence_type == CW_AVCI50_720P)
+    if (input->essence_type == AVCI100_1080I ||
+        input->essence_type == AVCI100_1080P ||
+        input->essence_type == AVCI100_720P ||
+        input->essence_type == AVCI50_1080I ||
+        input->essence_type == AVCI50_1080P ||
+        input->essence_type == AVCI50_720P)
     {
         input->raw_reader = new AVCIRawEssenceReader(raw_file);
     }
@@ -1034,7 +1034,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_IEC_DV25;
+            input.essence_type = IEC_DV25;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1047,7 +1047,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_DVBASED_DV25;
+            input.essence_type = DVBASED_DV25;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1060,7 +1060,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_DV50;
+            input.essence_type = DV50;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1073,20 +1073,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_DV100_1080I;
-            input.filename = argv[cmdln_index + 1];
-            inputs.push_back(input);
-            cmdln_index++;
-        }
-        else if (strcmp(argv[cmdln_index], "--dv100_1080p") == 0)
-        {
-            if (cmdln_index + 1 >= argc)
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
-                return 1;
-            }
-            input.essence_type = CW_DV100_1080P;
+            input.essence_type = DV100_1080I;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1099,7 +1086,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_DV100_720P;
+            input.essence_type = DV100_720P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1125,7 +1112,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_D10_30;
+            input.essence_type = D10_30;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1138,7 +1125,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_D10_40;
+            input.essence_type = D10_40;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1151,7 +1138,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_D10_50;
+            input.essence_type = D10_50;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1164,7 +1151,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_AVCI100_1080I;
+            input.essence_type = AVCI100_1080I;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1177,7 +1164,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_AVCI100_1080P;
+            input.essence_type = AVCI100_1080P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1190,7 +1177,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_AVCI100_720P;
+            input.essence_type = AVCI100_720P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1203,7 +1190,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_AVCI50_1080I;
+            input.essence_type = AVCI50_1080I;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1216,7 +1203,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_AVCI50_1080P;
+            input.essence_type = AVCI50_1080P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1229,7 +1216,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_AVCI50_720P;
+            input.essence_type = AVCI50_720P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1242,7 +1229,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_UNC_SD;
+            input.essence_type = UNC_SD;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1255,7 +1242,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_UNC_HD_1080I;
+            input.essence_type = UNC_HD_1080I;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1268,7 +1255,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_UNC_HD_1080P;
+            input.essence_type = UNC_HD_1080P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1281,7 +1268,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_UNC_HD_720P;
+            input.essence_type = UNC_HD_720P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1307,7 +1294,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MPEG2LG_422P_HL_1080I;
+            input.essence_type = MPEG2LG_422P_HL_1080I;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1320,7 +1307,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MPEG2LG_422P_HL_1080P;
+            input.essence_type = MPEG2LG_422P_HL_1080P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1333,7 +1320,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MPEG2LG_422P_HL_720P;
+            input.essence_type = MPEG2LG_422P_HL_720P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1346,7 +1333,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MPEG2LG_MP_HL_1080I;
+            input.essence_type = MPEG2LG_MP_HL_1080I;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1359,7 +1346,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MPEG2LG_MP_HL_1080P;
+            input.essence_type = MPEG2LG_MP_HL_1080P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1372,7 +1359,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MPEG2LG_MP_HL_720P;
+            input.essence_type = MPEG2LG_MP_HL_720P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1385,7 +1372,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MPEG2LG_MP_H14_1080I;
+            input.essence_type = MPEG2LG_MP_H14_1080I;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1398,7 +1385,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MPEG2LG_MP_H14_1080P;
+            input.essence_type = MPEG2LG_MP_H14_1080P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1411,7 +1398,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MJPEG_2_1;
+            input.essence_type = MJPEG_2_1;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1424,7 +1411,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MJPEG_3_1;
+            input.essence_type = MJPEG_3_1;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1437,7 +1424,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MJPEG_10_1;
+            input.essence_type = MJPEG_10_1;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1450,7 +1437,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MJPEG_20_1;
+            input.essence_type = MJPEG_20_1;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1463,7 +1450,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MJPEG_4_1M;
+            input.essence_type = MJPEG_4_1M;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1476,7 +1463,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MJPEG_10_1M;
+            input.essence_type = MJPEG_10_1M;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1489,7 +1476,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_MJPEG_15_1S;
+            input.essence_type = MJPEG_15_1S;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1515,7 +1502,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_VC3_1080P_1235;
+            input.essence_type = VC3_1080P_1235;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1528,7 +1515,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_VC3_1080P_1237;
+            input.essence_type = VC3_1080P_1237;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1541,7 +1528,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_VC3_1080P_1238;
+            input.essence_type = VC3_1080P_1238;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1554,7 +1541,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_VC3_1080I_1241;
+            input.essence_type = VC3_1080I_1241;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1567,7 +1554,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_VC3_1080I_1242;
+            input.essence_type = VC3_1080I_1242;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1580,7 +1567,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_VC3_1080I_1243;
+            input.essence_type = VC3_1080I_1243;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1593,7 +1580,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_VC3_720P_1250;
+            input.essence_type = VC3_720P_1250;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1606,7 +1593,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_VC3_720P_1251;
+            input.essence_type = VC3_720P_1251;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1619,7 +1606,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_VC3_720P_1252;
+            input.essence_type = VC3_720P_1252;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1632,7 +1619,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_VC3_1080P_1253;
+            input.essence_type = VC3_1080P_1253;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1645,7 +1632,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = CW_PCM;
+            input.essence_type = WAVE_PCM;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -1703,17 +1690,17 @@ int main(int argc, const char** argv)
                 if (inputs[i].component_depth == 10) {
                     switch (inputs[i].essence_type)
                     {
-                        case CW_UNC_SD:
-                            inputs[i].essence_type = CW_AVID_10BIT_UNC_SD;
+                        case UNC_SD:
+                            inputs[i].essence_type = AVID_10BIT_UNC_SD;
                             break;
-                        case CW_UNC_HD_1080I:
-                            inputs[i].essence_type = CW_AVID_10BIT_UNC_HD_1080I;
+                        case UNC_HD_1080I:
+                            inputs[i].essence_type = AVID_10BIT_UNC_HD_1080I;
                             break;
-                        case CW_UNC_HD_1080P:
-                            inputs[i].essence_type = CW_AVID_10BIT_UNC_HD_1080P;
+                        case UNC_HD_1080P:
+                            inputs[i].essence_type = AVID_10BIT_UNC_HD_1080P;
                             break;
-                        case CW_UNC_HD_720P:
-                            inputs[i].essence_type = CW_AVID_10BIT_UNC_HD_720P;
+                        case UNC_HD_720P:
+                            inputs[i].essence_type = AVID_10BIT_UNC_HD_720P;
                             break;
                         default:
                             break;
@@ -1743,12 +1730,11 @@ int main(int argc, const char** argv)
                 throw false;
 
             if (input->essence_type_group == DV_ESSENCE_GROUP ||
-                input->essence_type == CW_IEC_DV25 ||
-                input->essence_type == CW_DVBASED_DV25 ||
-                input->essence_type == CW_DV50 ||
-                input->essence_type == CW_DV100_1080I ||
-                input->essence_type == CW_DV100_1080P ||
-                input->essence_type == CW_DV100_720P)
+                input->essence_type == IEC_DV25 ||
+                input->essence_type == DVBASED_DV25 ||
+                input->essence_type == DV50 ||
+                input->essence_type == DV100_1080I ||
+                input->essence_type == DV100_720P)
             {
                 DVEssenceParser *dv_parser = new DVEssenceParser();
                 input->raw_reader->SetEssenceParser(dv_parser);
@@ -1757,7 +1743,7 @@ int main(int argc, const char** argv)
                 if (input->raw_reader->GetNumSamples() == 0) {
                     // default to IEC DV-25 if no essence samples
                     if (input->essence_type_group == DV_ESSENCE_GROUP)
-                        input->essence_type = CW_IEC_DV25;
+                        input->essence_type = IEC_DV25;
                 } else {
                     dv_parser->ParseFrameInfo(input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
 
@@ -1765,19 +1751,19 @@ int main(int argc, const char** argv)
                         switch (dv_parser->GetEssenceType())
                         {
                             case DVEssenceParser::IEC_DV25:
-                                input->essence_type = CW_IEC_DV25;
+                                input->essence_type = IEC_DV25;
                                 break;
                             case DVEssenceParser::DVBASED_DV25:
-                                input->essence_type = CW_DVBASED_DV25;
+                                input->essence_type = DVBASED_DV25;
                                 break;
                             case DVEssenceParser::DV50:
-                                input->essence_type = CW_DV50;
+                                input->essence_type = DV50;
                                 break;
                             case DVEssenceParser::DV100_1080I:
-                                input->essence_type = CW_DV100_1080I;
+                                input->essence_type = DV100_1080I;
                                 break;
                             case DVEssenceParser::DV100_720P:
-                                input->essence_type = CW_DV100_720P;
+                                input->essence_type = DV100_720P;
                                 break;
                             case DVEssenceParser::UNKNOWN_DV:
                                 log_error("Unknown DV essence type\n");
@@ -1789,12 +1775,12 @@ int main(int argc, const char** argv)
 
                     if (!frame_rate_set) {
                         if (dv_parser->Is50Hz()) {
-                            if (input->essence_type == CW_DV100_720P)
+                            if (input->essence_type == DV100_720P)
                                 frame_rate = FRAME_RATE_50;
                             else
                                 frame_rate = FRAME_RATE_25;
                         } else {
-                            if (input->essence_type == CW_DV100_720P)
+                            if (input->essence_type == DV100_720P)
                                 frame_rate = FRAME_RATE_5994;
                             else
                                 frame_rate = FRAME_RATE_2997;
@@ -1812,42 +1798,42 @@ int main(int argc, const char** argv)
 
                 input->raw_reader->ReadSamples(1);
                 if (input->raw_reader->GetNumSamples() == 0) {
-                    // default to CW_VC3_1080I_1242 if no essence samples
-                    input->essence_type = CW_VC3_1080I_1242;
+                    // default to VC3_1080I_1242 if no essence samples
+                    input->essence_type = VC3_1080I_1242;
                 } else {
                     vc3_parser->ParseFrameInfo(input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
 
                     switch (vc3_parser->GetCompressionId())
                     {
                         case 1235:
-                            input->essence_type = CW_VC3_1080P_1235;
+                            input->essence_type = VC3_1080P_1235;
                             break;
                         case 1237:
-                            input->essence_type = CW_VC3_1080P_1237;
+                            input->essence_type = VC3_1080P_1237;
                             break;
                         case 1238:
-                            input->essence_type = CW_VC3_1080P_1238;
+                            input->essence_type = VC3_1080P_1238;
                             break;
                         case 1241:
-                            input->essence_type = CW_VC3_1080I_1241;
+                            input->essence_type = VC3_1080I_1241;
                             break;
                         case 1242:
-                            input->essence_type = CW_VC3_1080I_1242;
+                            input->essence_type = VC3_1080I_1242;
                             break;
                         case 1243:
-                            input->essence_type = CW_VC3_1080I_1243;
+                            input->essence_type = VC3_1080I_1243;
                             break;
                         case 1250:
-                            input->essence_type = CW_VC3_720P_1250;
+                            input->essence_type = VC3_720P_1250;
                             break;
                         case 1251:
-                            input->essence_type = CW_VC3_720P_1251;
+                            input->essence_type = VC3_720P_1251;
                             break;
                         case 1252:
-                            input->essence_type = CW_VC3_720P_1252;
+                            input->essence_type = VC3_720P_1252;
                             break;
                         case 1253:
-                            input->essence_type = CW_VC3_1080P_1253;
+                            input->essence_type = VC3_1080P_1253;
                             break;
                         default:
                             log_error("Unknown VC3 essence type\n");
@@ -1856,9 +1842,9 @@ int main(int argc, const char** argv)
                 }
             }
             else if (input->essence_type_group == D10_ESSENCE_GROUP ||
-                     input->essence_type == CW_D10_30 ||
-                     input->essence_type == CW_D10_40 ||
-                     input->essence_type == CW_D10_50)
+                     input->essence_type == D10_30 ||
+                     input->essence_type == D10_40 ||
+                     input->essence_type == D10_50)
             {
                 MPEG2EssenceParser *mpeg2_parser = new MPEG2EssenceParser();
                 input->raw_reader->SetEssenceParser(mpeg2_parser);
@@ -1867,7 +1853,7 @@ int main(int argc, const char** argv)
                 if (input->raw_reader->GetNumSamples() == 0) {
                     // default to D10 50Mbps if no essence samples
                     if (input->essence_type_group == MPEG2LG_ESSENCE_GROUP)
-                        input->essence_type = CW_D10_50;
+                        input->essence_type = D10_50;
                 } else {
                     input->raw_reader->SetFixedSampleSize(input->raw_reader->GetSampleDataSize());
 
@@ -1878,13 +1864,13 @@ int main(int argc, const char** argv)
                         switch (mpeg2_parser->GetBitRate())
                         {
                             case 75000:
-                                input->essence_type = CW_D10_30;
+                                input->essence_type = D10_30;
                                 break;
                             case 100000:
-                                input->essence_type = CW_D10_40;
+                                input->essence_type = D10_40;
                                 break;
                             case 125000:
-                                input->essence_type = CW_D10_50;
+                                input->essence_type = D10_50;
                                 break;
                             default:
                                 log_error("Unknown D10 bit rate %u\n", mpeg2_parser->GetBitRate());
@@ -1900,14 +1886,14 @@ int main(int argc, const char** argv)
                 }
             }
             else if (input->essence_type_group == MPEG2LG_ESSENCE_GROUP ||
-                     input->essence_type == CW_MPEG2LG_422P_HL_1080I ||
-                     input->essence_type == CW_MPEG2LG_422P_HL_1080P ||
-                     input->essence_type == CW_MPEG2LG_422P_HL_720P ||
-                     input->essence_type == CW_MPEG2LG_MP_HL_1080I ||
-                     input->essence_type == CW_MPEG2LG_MP_HL_1080P ||
-                     input->essence_type == CW_MPEG2LG_MP_HL_720P ||
-                     input->essence_type == CW_MPEG2LG_MP_H14_1080I ||
-                     input->essence_type == CW_MPEG2LG_MP_H14_1080P)
+                     input->essence_type == MPEG2LG_422P_HL_1080I ||
+                     input->essence_type == MPEG2LG_422P_HL_1080P ||
+                     input->essence_type == MPEG2LG_422P_HL_720P ||
+                     input->essence_type == MPEG2LG_MP_HL_1080I ||
+                     input->essence_type == MPEG2LG_MP_HL_1080P ||
+                     input->essence_type == MPEG2LG_MP_HL_720P ||
+                     input->essence_type == MPEG2LG_MP_H14_1080I ||
+                     input->essence_type == MPEG2LG_MP_H14_1080P)
             {
                 MPEG2EssenceParser *mpeg2_parser = new MPEG2EssenceParser();
                 input->raw_reader->SetEssenceParser(mpeg2_parser);
@@ -1916,7 +1902,7 @@ int main(int argc, const char** argv)
                 if (input->raw_reader->GetNumSamples() == 0) {
                     // default to 422P@HL 1080i if no essence samples
                     if (input->essence_type_group == MPEG2LG_ESSENCE_GROUP)
-                        input->essence_type = CW_MPEG2LG_422P_HL_1080I;
+                        input->essence_type = MPEG2LG_422P_HL_1080I;
                 } else {
                     mpeg2_parser->ParseFrameInfo(input->raw_reader->GetSampleData(),
                                                  input->raw_reader->GetSampleDataSize());
@@ -1927,13 +1913,13 @@ int main(int argc, const char** argv)
                                 switch (mpeg2_parser->GetProfileAndLevel())
                                 {
                                     case 0x82:
-                                        input->essence_type = CW_MPEG2LG_422P_HL_1080P;
+                                        input->essence_type = MPEG2LG_422P_HL_1080P;
                                         break;
                                     case 0x44:
-                                        input->essence_type = CW_MPEG2LG_MP_HL_1080P;
+                                        input->essence_type = MPEG2LG_MP_HL_1080P;
                                         break;
                                     case 0x46:
-                                        input->essence_type = CW_MPEG2LG_MP_H14_1080P;
+                                        input->essence_type = MPEG2LG_MP_H14_1080P;
                                         break;
                                     default:
                                         log_error("Unexpected MPEG-2 Long GOP profile and level %u\n",
@@ -1944,10 +1930,10 @@ int main(int argc, const char** argv)
                                 switch (mpeg2_parser->GetProfileAndLevel())
                                 {
                                     case 0x82:
-                                        input->essence_type = CW_MPEG2LG_422P_HL_720P;
+                                        input->essence_type = MPEG2LG_422P_HL_720P;
                                         break;
                                     case 0x44:
-                                        input->essence_type = CW_MPEG2LG_MP_HL_720P;
+                                        input->essence_type = MPEG2LG_MP_HL_720P;
                                         break;
                                     default:
                                         log_error("Unexpected MPEG-2 Long GOP profile and level %u\n",
@@ -1968,13 +1954,13 @@ int main(int argc, const char** argv)
                             switch (mpeg2_parser->GetProfileAndLevel())
                             {
                                 case 0x82:
-                                    input->essence_type = CW_MPEG2LG_422P_HL_1080I;
+                                    input->essence_type = MPEG2LG_422P_HL_1080I;
                                     break;
                                 case 0x44:
-                                    input->essence_type = CW_MPEG2LG_MP_HL_1080I;
+                                    input->essence_type = MPEG2LG_MP_HL_1080I;
                                     break;
                                 case 0x46:
-                                    input->essence_type = CW_MPEG2LG_MP_H14_1080I;
+                                    input->essence_type = MPEG2LG_MP_H14_1080I;
                                     break;
                                 default:
                                     log_error("Unknown MPEG-2 Long GOP profile and level %u\n",
@@ -2030,23 +2016,16 @@ int main(int argc, const char** argv)
         // check support for essence type and frame/sampling rates
         for (i = 0; i < inputs.size(); i++) {
             RawInput *input = &inputs[i];
-            if (input->essence_type == CW_PCM) {
-                if (!ClipWriterTrack::IsSupported(clip_type, input->essence_type, false, input->sampling_rate)) {
+            if (input->essence_type == WAVE_PCM) {
+                if (!ClipWriterTrack::IsSupported(clip_type, input->essence_type, input->sampling_rate)) {
                     log_error("PCM sampling rate %d/%d not supported\n",
                               input->sampling_rate.numerator, input->sampling_rate.denominator);
                     throw false;
                 }
             } else {
-                bool is_mpeg2lg_720p = false;
-                if (input->essence_type == CW_MPEG2LG_422P_HL_720P ||
-                    input->essence_type == CW_MPEG2LG_MP_HL_720P)
-                {
-                    is_mpeg2lg_720p = true;
-                }
-
-                if (!ClipWriterTrack::IsSupported(clip_type, input->essence_type, is_mpeg2lg_720p, frame_rate)) {
+                if (!ClipWriterTrack::IsSupported(clip_type, input->essence_type, frame_rate)) {
                     log_error("Essence type '%s' @%d/%d fps not supported for clip type '%s'\n",
-                              ClipWriterTrack::EssenceTypeToString(input->essence_type).c_str(),
+                              essence_type_to_string(input->essence_type),
                               frame_rate.numerator, frame_rate.denominator,
                               ClipWriter::ClipWriterTypeToString(input->clip_type).c_str());
                     throw false;
@@ -2149,7 +2128,7 @@ int main(int argc, const char** argv)
                 uint32_t num_picture_tracks = 0;
                 uint32_t num_sound_tracks = 0;
                 for (i = 0; i < inputs.size(); i++) {
-                    if (inputs[i].essence_type == CW_PCM)
+                    if (inputs[i].essence_type == WAVE_PCM)
                         num_sound_tracks++;
                     else
                         num_picture_tracks++;
@@ -2176,7 +2155,7 @@ int main(int argc, const char** argv)
             if (!open_raw_reader(input))
                 throw false;
 
-            bool is_picture = (input->essence_type != CW_PCM);
+            bool is_picture = (input->essence_type != WAVE_PCM);
 
 
             // create track
@@ -2240,48 +2219,47 @@ int main(int argc, const char** argv)
 
             switch (input->essence_type)
             {
-                case CW_IEC_DV25:
-                case CW_DVBASED_DV25:
-                case CW_DV50:
+                case IEC_DV25:
+                case DVBASED_DV25:
+                case DV50:
                     input->track->SetAspectRatio(input->aspect_ratio);
                     if (input->afd)
                         input->track->SetAFD(input->afd);
                     break;
-                case CW_DV100_1080I:
-                case CW_DV100_1080P:
-                case CW_DV100_720P:
+                case DV100_1080I:
+                case DV100_720P:
                     input->track->SetAspectRatio(input->aspect_ratio);
                     if (input->afd)
                         input->track->SetAFD(input->afd);
                     input->track->SetComponentDepth(input->component_depth);
                     break;
-                case CW_D10_30:
-                case CW_D10_40:
-                case CW_D10_50:
+                case D10_30:
+                case D10_40:
+                case D10_50:
                     input->track->SetAspectRatio(input->aspect_ratio);
                     if (input->afd)
                         input->track->SetAFD(input->afd);
                     if (input->raw_reader->GetFixedSampleSize() != 0)
                         input->track->SetSampleSize(input->raw_reader->GetFixedSampleSize());
                     break;
-                case CW_AVCI100_1080I:
-                case CW_AVCI100_1080P:
-                case CW_AVCI100_720P:
-                case CW_AVCI50_1080I:
-                case CW_AVCI50_1080P:
-                case CW_AVCI50_720P:
+                case AVCI100_1080I:
+                case AVCI100_1080P:
+                case AVCI100_720P:
+                case AVCI50_1080I:
+                case AVCI50_1080P:
+                case AVCI50_720P:
                     if (input->afd)
                         input->track->SetAFD(input->afd);
                     input->track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
                     break;
-                case CW_UNC_SD:
-                case CW_UNC_HD_1080I:
-                case CW_UNC_HD_1080P:
-                case CW_UNC_HD_720P:
-                case CW_AVID_10BIT_UNC_SD:
-                case CW_AVID_10BIT_UNC_HD_1080I:
-                case CW_AVID_10BIT_UNC_HD_1080P:
-                case CW_AVID_10BIT_UNC_HD_720P:
+                case UNC_SD:
+                case UNC_HD_1080I:
+                case UNC_HD_1080P:
+                case UNC_HD_720P:
+                case AVID_10BIT_UNC_SD:
+                case AVID_10BIT_UNC_HD_1080I:
+                case AVID_10BIT_UNC_HD_1080P:
+                case AVID_10BIT_UNC_HD_720P:
                     input->track->SetAspectRatio(input->aspect_ratio);
                     if (input->afd)
                         input->track->SetAFD(input->afd);
@@ -2289,42 +2267,42 @@ int main(int argc, const char** argv)
                     if (input->input_height > 0)
                         input->track->SetInputHeight(input->input_height);
                     break;
-                case CW_MPEG2LG_422P_HL_1080I:
-                case CW_MPEG2LG_422P_HL_1080P:
-                case CW_MPEG2LG_422P_HL_720P:
-                case CW_MPEG2LG_MP_HL_1080I:
-                case CW_MPEG2LG_MP_HL_1080P:
-                case CW_MPEG2LG_MP_HL_720P:
-                case CW_MPEG2LG_MP_H14_1080I:
-                case CW_MPEG2LG_MP_H14_1080P:
+                case MPEG2LG_422P_HL_1080I:
+                case MPEG2LG_422P_HL_1080P:
+                case MPEG2LG_422P_HL_720P:
+                case MPEG2LG_MP_HL_1080I:
+                case MPEG2LG_MP_HL_1080P:
+                case MPEG2LG_MP_HL_720P:
+                case MPEG2LG_MP_H14_1080I:
+                case MPEG2LG_MP_H14_1080P:
                     if (input->afd)
                         input->track->SetAFD(input->afd);
                     break;
-                case CW_MJPEG_2_1:
-                case CW_MJPEG_3_1:
-                case CW_MJPEG_10_1:
-                case CW_MJPEG_20_1:
-                case CW_MJPEG_4_1M:
-                case CW_MJPEG_10_1M:
-                case CW_MJPEG_15_1S:
+                case MJPEG_2_1:
+                case MJPEG_3_1:
+                case MJPEG_10_1:
+                case MJPEG_20_1:
+                case MJPEG_4_1M:
+                case MJPEG_10_1M:
+                case MJPEG_15_1S:
                     if (input->afd)
                         input->track->SetAFD(input->afd);
                     input->track->SetAspectRatio(input->aspect_ratio);
                     break;
-                case CW_VC3_1080P_1235:
-                case CW_VC3_1080P_1237:
-                case CW_VC3_1080P_1238:
-                case CW_VC3_1080I_1241:
-                case CW_VC3_1080I_1242:
-                case CW_VC3_1080I_1243:
-                case CW_VC3_720P_1250:
-                case CW_VC3_720P_1251:
-                case CW_VC3_720P_1252:
-                case CW_VC3_1080P_1253:
+                case VC3_1080P_1235:
+                case VC3_1080P_1237:
+                case VC3_1080P_1238:
+                case VC3_1080I_1241:
+                case VC3_1080I_1242:
+                case VC3_1080I_1243:
+                case VC3_720P_1250:
+                case VC3_720P_1251:
+                case VC3_720P_1252:
+                case VC3_1080P_1253:
                     if (input->afd)
                         input->track->SetAFD(input->afd);
                     break;
-                case CW_PCM:
+                case WAVE_PCM:
                     input->track->SetSamplingRate(input->sampling_rate);
                     input->track->SetQuantizationBits(input->audio_quant_bits);
                     if (input->locked_set)
@@ -2337,7 +2315,9 @@ int main(int argc, const char** argv)
                     if (clip_type == CW_D10_CLIP_TYPE || sequence_offset_set)
                         input->track->SetSequenceOffset(sequence_offset);
                     break;
-                case CW_UNKNOWN_ESSENCE:
+                case PICTURE_ESSENCE:
+                case SOUND_ESSENCE:
+                case UNKNOWN_ESSENCE_TYPE:
                     IM_ASSERT(false);
             }
 
@@ -2346,70 +2326,69 @@ int main(int argc, const char** argv)
 
             switch (input->essence_type)
             {
-                case CW_IEC_DV25:
-                case CW_DVBASED_DV25:
-                case CW_DV50:
-                case CW_DV100_1080I:
-                case CW_DV100_1080P:
-                case CW_DV100_720P:
-                case CW_D10_30:
-                case CW_D10_40:
-                case CW_D10_50:
-                case CW_AVCI100_1080I:
-                case CW_AVCI100_1080P:
-                case CW_AVCI100_720P:
-                case CW_AVCI50_1080I:
-                case CW_AVCI50_1080P:
-                case CW_AVCI50_720P:
-                case CW_VC3_1080P_1235:
-                case CW_VC3_1080P_1237:
-                case CW_VC3_1080P_1238:
-                case CW_VC3_1080I_1241:
-                case CW_VC3_1080I_1242:
-                case CW_VC3_1080I_1243:
-                case CW_VC3_720P_1250:
-                case CW_VC3_720P_1251:
-                case CW_VC3_720P_1252:
-                case CW_VC3_1080P_1253:
-                case CW_UNC_SD:
-                case CW_UNC_HD_1080I:
-                case CW_UNC_HD_1080P:
-                case CW_UNC_HD_720P:
-                case CW_AVID_10BIT_UNC_SD:
-                case CW_AVID_10BIT_UNC_HD_1080I:
-                case CW_AVID_10BIT_UNC_HD_1080P:
-                case CW_AVID_10BIT_UNC_HD_720P:
+                case IEC_DV25:
+                case DVBASED_DV25:
+                case DV50:
+                case DV100_1080I:
+                case DV100_720P:
+                case D10_30:
+                case D10_40:
+                case D10_50:
+                case AVCI100_1080I:
+                case AVCI100_1080P:
+                case AVCI100_720P:
+                case AVCI50_1080I:
+                case AVCI50_1080P:
+                case AVCI50_720P:
+                case VC3_1080P_1235:
+                case VC3_1080P_1237:
+                case VC3_1080P_1238:
+                case VC3_1080I_1241:
+                case VC3_1080I_1242:
+                case VC3_1080I_1243:
+                case VC3_720P_1250:
+                case VC3_720P_1251:
+                case VC3_720P_1252:
+                case VC3_1080P_1253:
+                case UNC_SD:
+                case UNC_HD_1080I:
+                case UNC_HD_1080P:
+                case UNC_HD_720P:
+                case AVID_10BIT_UNC_SD:
+                case AVID_10BIT_UNC_HD_1080I:
+                case AVID_10BIT_UNC_HD_1080P:
+                case AVID_10BIT_UNC_HD_720P:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
                     if (input->raw_reader->GetFixedSampleSize() == 0)
                         input->raw_reader->SetFixedSampleSize(input->track->GetInputSampleSize());
                     break;
-                case CW_MPEG2LG_422P_HL_1080I:
-                case CW_MPEG2LG_422P_HL_1080P:
-                case CW_MPEG2LG_422P_HL_720P:
-                case CW_MPEG2LG_MP_HL_1080I:
-                case CW_MPEG2LG_MP_HL_1080P:
-                case CW_MPEG2LG_MP_HL_720P:
-                case CW_MPEG2LG_MP_H14_1080I:
-                case CW_MPEG2LG_MP_H14_1080P:
+                case MPEG2LG_422P_HL_1080I:
+                case MPEG2LG_422P_HL_1080P:
+                case MPEG2LG_422P_HL_720P:
+                case MPEG2LG_MP_HL_1080I:
+                case MPEG2LG_MP_HL_1080P:
+                case MPEG2LG_MP_HL_720P:
+                case MPEG2LG_MP_H14_1080I:
+                case MPEG2LG_MP_H14_1080P:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
                     input->raw_reader->SetEssenceParser(new MPEG2EssenceParser());
                     input->raw_reader->SetCheckMaxSampleSize(50000000);
                     break;
-                case CW_MJPEG_2_1:
-                case CW_MJPEG_3_1:
-                case CW_MJPEG_10_1:
-                case CW_MJPEG_20_1:
-                case CW_MJPEG_4_1M:
-                case CW_MJPEG_10_1M:
-                case CW_MJPEG_15_1S:
+                case MJPEG_2_1:
+                case MJPEG_3_1:
+                case MJPEG_10_1:
+                case MJPEG_20_1:
+                case MJPEG_4_1M:
+                case MJPEG_10_1M:
+                case MJPEG_15_1S:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
                     input->raw_reader->SetEssenceParser(new MJPEGEssenceParser(input->track->IsSingleField()));
                     input->raw_reader->SetCheckMaxSampleSize(50000000);
                     break;
-                case CW_PCM:
+                case WAVE_PCM:
                 {
                     vector<uint32_t> shifted_sample_sequence = input->track->GetShiftedSampleSequence();
                     IM_ASSERT(shifted_sample_sequence.size() < sizeof(input->sample_sequence) / sizeof(uint32_t));
@@ -2419,7 +2398,9 @@ int main(int argc, const char** argv)
                     input->raw_reader->SetFixedSampleSize(input->track->GetSampleSize());
                     break;
                 }
-                case CW_UNKNOWN_ESSENCE:
+                case PICTURE_ESSENCE:
+                case SOUND_ESSENCE:
+                case UNKNOWN_ESSENCE_TYPE:
                     IM_ASSERT(false);
             }
 

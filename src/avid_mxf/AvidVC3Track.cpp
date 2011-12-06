@@ -45,7 +45,7 @@ using namespace mxfpp;
 
 
 
-AvidVC3Track::AvidVC3Track(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, File *file)
+AvidVC3Track::AvidVC3Track(AvidClip *clip, uint32_t track_index, EssenceType essence_type, File *file)
 : AvidPictureTrack(clip, track_index, essence_type, file)
 {
     mTrackNumber = MXF_DNXHD_PICT_TRACK_NUM;

@@ -44,7 +44,7 @@ class OP1AVC3Track : public OP1APictureTrack
 {
 public:
     OP1AVC3Track(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                 mxfRational frame_rate, OP1AEssenceType essence_type);
+                 mxfRational frame_rate, EssenceType essence_type);
     virtual ~OP1AVC3Track();
 };
 

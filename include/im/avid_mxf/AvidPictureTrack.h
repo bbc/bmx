@@ -44,7 +44,7 @@ namespace im
 class AvidPictureTrack : public AvidTrack
 {
 public:
-    AvidPictureTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, mxfpp::File *file);
+    AvidPictureTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file);
     virtual ~AvidPictureTrack();
 
     void SetAspectRatio(mxfRational aspect_ratio);     // default 16/9

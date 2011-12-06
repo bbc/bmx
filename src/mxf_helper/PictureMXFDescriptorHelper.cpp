@@ -55,13 +55,13 @@ using namespace mxfpp;
 
 
 
-MXFDescriptorHelper::EssenceType PictureMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
+EssenceType PictureMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
                                                                          mxfUL alternative_ec_label)
 {
     GenericPictureEssenceDescriptor *picture_descriptor =
         dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     if (!picture_descriptor)
-        return UNKNOWN_ESSENCE;
+        return UNKNOWN_ESSENCE_TYPE;
 
     EssenceType essence_type = D10MXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)

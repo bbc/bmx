@@ -44,7 +44,7 @@ using namespace mxfpp;
 
 
 
-AvidPictureTrack::AvidPictureTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, File *file)
+AvidPictureTrack::AvidPictureTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, File *file)
 : AvidTrack(clip, track_index, essence_type, file)
 {
     mPictureDescriptorHelper = dynamic_cast<PictureMXFDescriptorHelper*>(mDescriptorHelper);

@@ -253,37 +253,29 @@ void ClipWriter::SetProductInfo(string company_name, string product_name, mxfPro
     }
 }
 
-ClipWriterTrack* ClipWriter::CreateTrack(ClipWriterEssenceType essence_type, string track_filename)
+ClipWriterTrack* ClipWriter::CreateTrack(EssenceType essence_type, string track_filename)
 {
     ClipWriterTrack *track = 0;
     switch (mType)
     {
         case CW_AS02_CLIP_TYPE:
-            track = new ClipWriterTrack(essence_type, mAS02Clip->CreateTrack(
-                (AS02EssenceType)ClipWriterTrack::ConvertEssenceType(mType, essence_type)));
+            track = new ClipWriterTrack(essence_type, mAS02Clip->CreateTrack(essence_type));
             break;
         case CW_AS11_OP1A_CLIP_TYPE:
         case CW_AS11_D10_CLIP_TYPE:
-            track = new ClipWriterTrack(essence_type, mAS11Clip->CreateTrack(
-                (AS11EssenceType)ClipWriterTrack::ConvertEssenceType(mType, essence_type)));
+            track = new ClipWriterTrack(essence_type, mAS11Clip->CreateTrack(essence_type));
             break;
         case CW_OP1A_CLIP_TYPE:
-            track = new ClipWriterTrack(essence_type, mOP1AClip->CreateTrack(
-                (OP1AEssenceType)ClipWriterTrack::ConvertEssenceType(mType, essence_type)));
+            track = new ClipWriterTrack(essence_type, mOP1AClip->CreateTrack(essence_type));
             break;
         case CW_AVID_CLIP_TYPE:
-            if (track_filename.empty()) {
-                track = new ClipWriterTrack(essence_type, mAvidClip->CreateTrack(
-                    (AvidEssenceType)ClipWriterTrack::ConvertEssenceType(mType, essence_type)));
-            } else {
-                track = new ClipWriterTrack(essence_type, mAvidClip->CreateTrack(
-                    (AvidEssenceType)ClipWriterTrack::ConvertEssenceType(mType, essence_type),
-                    track_filename));
-            }
+            if (track_filename.empty())
+                track = new ClipWriterTrack(essence_type, mAvidClip->CreateTrack(essence_type));
+            else
+                track = new ClipWriterTrack(essence_type, mAvidClip->CreateTrack(essence_type, track_filename));
             break;
         case CW_D10_CLIP_TYPE:
-            track = new ClipWriterTrack(essence_type, mD10Clip->CreateTrack(
-                (D10EssenceType)ClipWriterTrack::ConvertEssenceType(mType, essence_type)));
+            track = new ClipWriterTrack(essence_type, mD10Clip->CreateTrack(essence_type));
             break;
         case CW_UNKNOWN_CLIP_TYPE:
             IM_ASSERT(false);

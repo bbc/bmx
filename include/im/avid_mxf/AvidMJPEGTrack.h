@@ -45,7 +45,7 @@ namespace im
 class AvidMJPEGTrack : public AvidPictureTrack
 {
 public:
-    AvidMJPEGTrack(AvidClip *clip, uint32_t track_index, AvidEssenceType essence_type, mxfpp::File *file);
+    AvidMJPEGTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file);
     virtual ~AvidMJPEGTrack();
 
     bool IsSingleField() const;
