@@ -32,6 +32,8 @@
 #ifndef __IM_APP_UTILS_H__
 #define __IM_APP_UTILS_H__
 
+#include <string>
+
 #include <im/IMTypes.h>
 
 
@@ -51,6 +53,9 @@ bool parse_image_type(const char *image_type_str, uint8_t *signal_standard, uint
 bool parse_bool(const char *bool_str, bool *value);
 
 bool parse_color(const char *color_str, Color *color);
+
+
+std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture);
 
 
 

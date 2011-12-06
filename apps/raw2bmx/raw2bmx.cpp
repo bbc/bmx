@@ -193,15 +193,6 @@ static void clear_input(RawInput *input)
     delete input->raw_reader;
 }
 
-static string create_track_filename(const char *prefix, uint32_t track_number, bool is_picture)
-{
-    char buffer[16];
-    sprintf(buffer, "_%s%u.mxf", (is_picture ? "v" : "a"), track_number);
-
-    string filename = prefix;
-    return filename.append(buffer);
-}
-
 static bool parse_mic_type(const char *mic_type_str, MICType *mic_type)
 {
     if (strcmp(mic_type_str, "md5") == 0)
@@ -2191,9 +2182,10 @@ int main(int argc, const char** argv)
             // create track
 
             if (clip_type == CW_AVID_CLIP_TYPE) {
-                string track_name = create_track_filename(output_name,
-                                                          is_picture ? picture_track_count + 1 : sound_track_count + 1,
-                                                          is_picture);
+                string track_name = create_mxf_track_filename(
+                                            output_name,
+                                            is_picture ? picture_track_count + 1 : sound_track_count + 1,
+                                            is_picture);
                 input->track = clip->CreateTrack(input->essence_type, track_name.c_str());
             } else {
                 input->track = clip->CreateTrack(input->essence_type);

@@ -166,4 +166,12 @@ bool im::parse_color(const char *color_str, Color *color)
     return false;
 }
 
+string im::create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture)
+{
+    char buffer[16];
+    sprintf(buffer, "_%s%u.mxf", (is_picture ? "v" : "a"), track_number);
+
+    string filename = prefix;
+    return filename.append(buffer);
+}
 

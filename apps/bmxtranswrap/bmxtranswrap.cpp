@@ -150,15 +150,6 @@ ClipWriterEssenceType convert_essence_type(const MXFTrackInfo *track_info)
     return cw_essence_type;
 }
 
-static string create_track_filename(const char *prefix, uint32_t track_number, bool is_picture)
-{
-    char buffer[16];
-    sprintf(buffer, "_%s%u.mxf", (is_picture ? "v" : "a"), track_number);
-
-    string filename = prefix;
-    return filename.append(buffer);
-}
-
 static bool parse_mic_type(const char *mic_type_str, MICType *mic_type)
 {
     if (strcmp(mic_type_str, "md5") == 0)
@@ -808,7 +799,15 @@ int main(int argc, const char** argv)
                     is_mpeg2lg_720p = true;
                 }
 
-                if (!ClipWriterTrack::IsSupported(clip_type, cw_essence_type, is_mpeg2lg_720p, frame_rate)) {
+                if (input_track_info->edit_rate != frame_rate) {
+                    log_warn("Track %zu (essence type '%s') edit rate %d/%d does not equals clip edit rate %d/%d\n",
+                             i,
+                             ClipWriterTrack::EssenceTypeToString(cw_essence_type).c_str(),
+                             input_track_info->edit_rate.numerator, input_track_info->edit_rate.denominator,
+                             frame_rate.numerator, frame_rate.denominator,
+                             ClipWriter::ClipWriterTypeToString(clip_type).c_str());
+                    is_supported = false;
+                } else if (!ClipWriterTrack::IsSupported(clip_type, cw_essence_type, is_mpeg2lg_720p, frame_rate)) {
                     log_warn("Track %zu essence type '%s' @%d/%d fps not supported by clip type '%s'\n",
                              i,
                              ClipWriterTrack::EssenceTypeToString(cw_essence_type).c_str(),
@@ -869,7 +868,7 @@ int main(int argc, const char** argv)
         int16_t precharge = reader->GetMaxPrecharge(read_start, true);
         int16_t rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
 
-        // TODO: add all framebuffer clear method to mxf reader
+        // TODO: add mxf reader clear method for all framebuffers
         //       also, don't clear framebuffers when seeking
         reader->SetReadLimits(read_start + precharge, read_start + output_duration + rollout, false);
 
@@ -1046,10 +1045,11 @@ int main(int argc, const char** argv)
                 }
 
                 if (clip_type == CW_AVID_CLIP_TYPE) {
-                    string track_name = create_track_filename(output_name,
-                                                              input_track_info->is_picture ? picture_track_count + 1 :
-                                                                                             sound_track_count + 1,
-                                                              input_track_info->is_picture);
+                    string track_name = create_mxf_track_filename(
+                                            output_name,
+                                            input_track_info->is_picture ? picture_track_count + 1 :
+                                                                           sound_track_count + 1,
+                                            input_track_info->is_picture);
                     output_track.track = clip->CreateTrack(cw_essence_type, track_name.c_str());
                 } else {
                     output_track.track = clip->CreateTrack(cw_essence_type);
@@ -1065,9 +1065,14 @@ int main(int argc, const char** argv)
                     as02_track->SetMICType(mic_type);
                     as02_track->SetMICScope(ess_component_mic_scope);
 
-                    // TODO: need track precharge/rollout!
-                    as02_track->SetOutputStartOffset(- precharge);
-                    as02_track->SetOutputEndOffset(- rollout);
+                    // TODO: need precharge/rollout at track rates
+                    // TODO: check whether precharge/rollout is available on all tracks etc.
+                    if (precharge != 0)
+                        log_warn("TODO: precharge in AS-02 track\n");
+                    //as02_track->SetOutputStartOffset(- precharge);
+                    if (rollout != 0)
+                        log_warn("TODO: rollout in AS-02 track\n");
+                    //as02_track->SetOutputEndOffset(- rollout);
 
                     AS02PictureTrack *as02_pict_track = dynamic_cast<AS02PictureTrack*>(as02_track);
                     if (as02_pict_track)
@@ -1075,8 +1080,11 @@ int main(int argc, const char** argv)
                 } else if (clip_type == CW_AVID_CLIP_TYPE) {
                     AvidTrack *avid_track = output_track.track->GetAvidTrack();
 
-                    // TODO: need track rollout!
-                    avid_track->SetOutputEndOffset(- rollout);
+                    // TODO: need precharge/rollout at track rates
+                    // TODO: check whether precharge/rollout is available on all tracks etc.
+                    if (rollout != 0)
+                        log_warn("TODO: rollout in Avid track\n");
+                    //avid_track->SetOutputEndOffset(- rollout);
 
                     if (tape_package) {
                         if (input_track_info->is_picture) {
@@ -1268,7 +1276,7 @@ int main(int argc, const char** argv)
                                                      num_samples);
                 } else {
                     if (output_track.is_picture)
-                        num_samples = 1;
+                        num_samples = frame->num_samples;
                     else
                         num_samples = frame->GetSize() / output_track.block_align;
                     output_track.track->WriteSamples(frame->GetBytes(), frame->GetSize(), num_samples);
