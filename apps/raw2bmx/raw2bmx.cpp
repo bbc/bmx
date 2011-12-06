@@ -104,7 +104,6 @@ typedef struct
     size_t sample_sequence_size;
     size_t sample_sequence_offset;
 
-    // AS11
     uint32_t track_number;
     bool track_number_set;
 
