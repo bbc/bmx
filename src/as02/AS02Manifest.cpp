@@ -159,7 +159,9 @@ AS02ManifestFile::AS02ManifestFile(size_t index, string path, FileRole role)
     mSize = 0;
     mId = get_xml_uuid_str(generate_uuid());
     mMICType = MD5_MIC_TYPE;
+    mMICTypeSet = false;
     mMICScope = ESSENCE_ONLY_MIC_SCOPE;
+    mMICScopeSet = false;
 }
 
 AS02ManifestFile::~AS02ManifestFile()
@@ -208,22 +210,28 @@ void AS02ManifestFile::SetMIC(MICType type, MICScope scope, string mic)
 {
     mMIC = mic;
     mMICType = type;
+    mMICTypeSet = true;
     mMICScope = scope;
+    mMICScopeSet = true;
 }
 
 void AS02ManifestFile::SetMICType(MICType type)
 {
     mMICType = type;
+    mMICTypeSet = true;
 }
 
 void AS02ManifestFile::SetMICScope(MICScope scope)
 {
     mMICScope = scope;
+    mMICScopeSet = true;
 }
 
 void AS02ManifestFile::SetMIC(string mic)
 {
     mMIC = mic;
+    mMICTypeSet = true;
+    mMICScopeSet = true;
 }
 
 void AS02ManifestFile::AppendAnnotation(string annotation)
@@ -236,7 +244,7 @@ bool AS02ManifestFile::operator<(const AS02ManifestFile &right) const
     return mIndex < right.mIndex;
 }
 
-void AS02ManifestFile::CompleteInfo(AS02Bundle *bundle)
+void AS02ManifestFile::CompleteInfo(AS02Bundle *bundle, MICType default_mic_type, MICScope default_mic_scope)
 {
     if (mRole != MANIFEST_FILE_ROLE) {
         string complete_path = bundle->CompleteFilepath(mPath);
@@ -252,9 +260,12 @@ void AS02ManifestFile::CompleteInfo(AS02Bundle *bundle)
 
         // calculate checksum for entire files if not done so already
 
-        if (mMIC.empty() && mMICScope == ENTIRE_FILE_MIC_SCOPE && mRole != FOLDER_FILE_ROLE) {
-            if (mMICType == MD5_MIC_TYPE) {
-                mMIC = md5_calc_file(complete_path);
+        MICType mic_type   = (mMICTypeSet  ? mMICType  : default_mic_type);
+        MICScope mic_scope = (mMICScopeSet ? mMICScope : default_mic_scope);
+
+        if (mMIC.empty() && mic_scope == ENTIRE_FILE_MIC_SCOPE && mRole != FOLDER_FILE_ROLE) {
+            if (mic_type == MD5_MIC_TYPE) {
+                SetMIC(mic_type, mic_scope, md5_calc_file(complete_path));
                 if (mMIC.empty())
                     log_warn("Failed to calc MD5 for '%s'\n", complete_path.c_str());
             }
@@ -339,8 +350,6 @@ AS02ManifestFile* AS02Manifest::RegisterFile(string path, FileRole role)
 
 
     AS02ManifestFile manifest_file(mFiles.size(), path, role);
-    manifest_file.SetMICType(mDefaultMICType);
-    manifest_file.SetMICScope(mDefaultMICScope);
     mFiles[path] = manifest_file;
 
     // recursively register folders in path
@@ -366,7 +375,7 @@ void AS02Manifest::Write(AS02Bundle *bundle, string filename)
 
         size_t i;
         for (i = 0; i < ordered_files.size(); i++)
-            ordered_files[i].CompleteInfo(bundle);
+            ordered_files[i].CompleteInfo(bundle, mDefaultMICType, mDefaultMICScope);
 
         mCreationDate = generate_timestamp_now();
 

@@ -111,7 +111,7 @@ public:
     bool operator<(const AS02ManifestFile &right) const;
 
 public:
-    void CompleteInfo(AS02Bundle *bundle);
+    void CompleteInfo(AS02Bundle *bundle, MICType default_mic_type, MICScope default_mic_scope);
 
     void Write(XMLWriter *xml_writer);
 
@@ -123,7 +123,9 @@ private:
     std::string mPath;
     std::string mMIC;
     MICType mMICType;
+    bool mMICTypeSet;
     MICScope mMICScope;
+    bool mMICScopeSet;
     std::vector<std::string> mAnnotations;
 };
 
