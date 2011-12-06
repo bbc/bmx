@@ -58,7 +58,7 @@ static uint32_t DM_TRACK_ID     = 1000;
 static uint32_t DM_TRACK_NUMBER = 1;
 
 
-// AVID RGB values matching color names defined in enum AvidRGBColor
+// AVID RGB values matching color names defined in enum Color
 static const RGBColor AVID_RGB_COLORS[] =
 {
     {65534, 65535, 65535}, // white
@@ -640,9 +640,9 @@ void AvidClip::UpdateHeaderMetadata()
                 segment->setDataDefinition(MXF_DDEF_L(DescriptiveMetadata));
                 segment->setEventStartPosition(mLocators[j].position);
                 segment->setAvidRGBColor(&MXF_ITEM_K(DMSegment, CommentMarkerColor),
-                                         AVID_RGB_COLORS[mLocators[j].color - AVID_WHITE].red,
-                                         AVID_RGB_COLORS[mLocators[j].color - AVID_WHITE].green,
-                                         AVID_RGB_COLORS[mLocators[j].color - AVID_WHITE].blue);
+                                         AVID_RGB_COLORS[mLocators[j].color - COLOR_WHITE].red,
+                                         AVID_RGB_COLORS[mLocators[j].color - COLOR_WHITE].green,
+                                         AVID_RGB_COLORS[mLocators[j].color - COLOR_WHITE].blue);
                 if (!mLocators[j].comment.empty())
                     segment->setEventComment(mLocators[j].comment);
                 if (mLocatorDescribedTrackId > 0)

@@ -87,20 +87,20 @@ typedef struct
 typedef struct
 {
     const char *color_str;
-    AvidRGBColor color;
+    Color color;
 } ColorMap;
 
 
 static const ColorMap COLOR_MAP[] =
 {
-    {"white",   AVID_WHITE},
-    {"red",     AVID_RED},
-    {"yellow",  AVID_YELLOW},
-    {"green",   AVID_GREEN},
-    {"cyan",    AVID_CYAN},
-    {"blue",    AVID_BLUE},
-    {"magenta", AVID_MAGENTA},
-    {"black",   AVID_BLACK},
+    {"white",   COLOR_WHITE},
+    {"red",     COLOR_RED},
+    {"yellow",  COLOR_YELLOW},
+    {"green",   COLOR_GREEN},
+    {"cyan",    COLOR_CYAN},
+    {"blue",    COLOR_BLUE},
+    {"magenta", COLOR_MAGENTA},
+    {"black",   COLOR_BLACK},
 };
 
 static const char DEFAULT_SHIM_NAME[]       = "Sample File";
@@ -177,7 +177,7 @@ static string create_track_filename(const char *prefix, uint32_t track_number, b
     return filename.append(buffer);
 }
 
-static bool parse_color(const char *color_str, AvidRGBColor *color)
+static bool parse_color(const char *color_str, Color *color)
 {
     size_t i;
     for (i = 0; i < ARRAY_SIZE(COLOR_MAP); i++) {

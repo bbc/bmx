@@ -48,22 +48,10 @@ namespace im
 {
 
 
-typedef enum
-{
-    AVID_WHITE = 0,
-    AVID_RED,
-    AVID_YELLOW,
-    AVID_GREEN,
-    AVID_CYAN,
-    AVID_BLUE,
-    AVID_MAGENTA,
-    AVID_BLACK
-} AvidRGBColor;
-
 typedef struct
 {
     int64_t position;
-    AvidRGBColor color;
+    Color color;
     std::string comment;
 } AvidLocator;
 

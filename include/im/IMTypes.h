@@ -56,6 +56,18 @@ typedef enum
     B_FRAME
 } MPEG2FrameType;
 
+typedef enum
+{
+    COLOR_WHITE,
+    COLOR_RED,
+    COLOR_YELLOW,
+    COLOR_GREEN,
+    COLOR_CYAN,
+    COLOR_BLUE,
+    COLOR_MAGENTA,
+    COLOR_BLACK
+} Color;
+
 
 typedef mxfRational   Rational;
 typedef mxfTimestamp  Timestamp;
