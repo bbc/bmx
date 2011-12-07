@@ -696,6 +696,7 @@ int main(int argc, const char** argv)
             const MXFTrackInfo *input_track_info = track_reader->GetTrackInfo();
 
             const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
+            const MXFPictureTrackInfo *input_picture_info = dynamic_cast<const MXFPictureTrackInfo*>(input_track_info);
 
             bool is_supported = true;
             if (input_track_info->essence_type == UNKNOWN_ESSENCE_TYPE ||
@@ -759,6 +760,30 @@ int main(int argc, const char** argv)
                              ClipWriter::ClipWriterTypeToString(clip_type).c_str());
                     is_supported = false;
                 }
+
+                if ((input_track_info->essence_type == D10_30 ||
+                        input_track_info->essence_type == D10_40 ||
+                        input_track_info->essence_type == D10_50) &&
+                    input_picture_info->d10_frame_size == 0)
+                {
+                    log_warn("Track %zu (essence type '%s') has zero frame size\n",
+                             i,
+                             essence_type_to_string(input_track_info->essence_type));
+                    is_supported = false;
+                }
+                else if ((input_track_info->essence_type == AVCI100_1080I ||
+                               input_track_info->essence_type == AVCI100_1080P ||
+                               input_track_info->essence_type == AVCI100_720P ||
+                               input_track_info->essence_type == AVCI50_1080I ||
+                               input_track_info->essence_type == AVCI50_1080P ||
+                               input_track_info->essence_type == AVCI50_720P) &&
+                         !track_reader->HaveAVCIHeader())
+                {
+                    log_warn("Track %zu (essence type '%s') does not have sequence and picture parameter sets\n",
+                             i,
+                             essence_type_to_string(input_track_info->essence_type));
+                    is_supported = false;
+                }
             }
 
             track_reader->SetEnable(is_supported);
@@ -782,11 +807,6 @@ int main(int argc, const char** argv)
                 break;
             }
         }
-
-
-        // read first frame so that info (e.g. D-10 sample size) can be extracted if required
-
-        reader->Read(max_samples_per_read);
 
 
         // set read limits
@@ -1040,7 +1060,6 @@ int main(int argc, const char** argv)
                     // TODO: Import source package
                 }
 
-                Frame *frame;
                 switch (input_track_info->essence_type)
                 {
                     case IEC_DV25:
@@ -1063,9 +1082,8 @@ int main(int argc, const char** argv)
                         output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
                         if (input_picture_info->afd)
                             output_track.track->SetAFD(input_picture_info->afd);
-                        frame = input_track_reader->GetMXFFrameBuffer()->GetLastFrame(false);
-                        if (frame)
-                            output_track.track->SetSampleSize(frame->GetSize());
+                        IM_ASSERT(input_picture_info->d10_frame_size != 0);
+                        output_track.track->SetSampleSize(input_picture_info->d10_frame_size);
                         break;
                     case AVCI100_1080I:
                     case AVCI100_1080P:
@@ -1076,6 +1094,8 @@ int main(int argc, const char** argv)
                         if (input_picture_info->afd)
                             output_track.track->SetAFD(input_picture_info->afd);
                         output_track.track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
+                        IM_ASSERT(input_track_reader->HaveAVCIHeader());
+                        output_track.track->SetAVCIHeader(input_track_reader->GetAVCIHeader(), AVCI_HEADER_SIZE);
                         break;
                     case UNC_SD:
                     case UNC_HD_1080I:
@@ -1167,7 +1187,6 @@ int main(int argc, const char** argv)
 
 
         // seek to start
-        // TODO: have read first frame if read_start = 0
         // TODO: assuming seek will clear the frame buffers
 
         reader->Seek(read_start);

@@ -80,6 +80,7 @@ public:
     void SetComponentDepth(uint32_t depth);         // default 8; alternative is 10
     void SetSampleSize(uint32_t size);              // D10 sample size
     void SetAVCIMode(AVCIMode mode);                // default depends on track type
+    void SetAVCIHeader(const unsigned char *data, uint32_t size);
     void SetAFD(uint8_t afd);                       // default not set
     void SetInputHeight(uint32_t height);           // uncompressed; default 0
 
