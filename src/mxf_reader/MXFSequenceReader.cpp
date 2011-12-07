@@ -62,8 +62,8 @@ static bool compare_group_reader(const MXFGroupReader *left, const MXFGroupReade
     string left_source_name, right_source_name;
 
     // playout timecode at origin position
-    left_tc = left->GetPlayoutTimecode(-left->GetReadStartPosition());
-    right_tc = right->GetPlayoutTimecode(-right->GetReadStartPosition());
+    left_tc = left->GetPlayoutTimecode(left->GetFixedLeadFillerOffset());
+    right_tc = right->GetPlayoutTimecode(right->GetFixedLeadFillerOffset());
 
     return left_tc < right_tc;
 }
@@ -184,9 +184,9 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
         Timecode expected_start_tc;
         for (i = 0; i < mGroupSegments.size(); i++) {
             if (i == 0) {
-                expected_start_tc = mGroupSegments[i]->GetPlayoutTimecode(- mGroupSegments[i]->GetReadStartPosition());
+                expected_start_tc = mGroupSegments[i]->GetPlayoutTimecode(mGroupSegments[i]->GetFixedLeadFillerOffset());
             } else {
-                Timecode start_tc = mGroupSegments[i]->GetPlayoutTimecode(- mGroupSegments[i]->GetReadStartPosition());
+                Timecode start_tc = mGroupSegments[i]->GetPlayoutTimecode(mGroupSegments[i]->GetFixedLeadFillerOffset());
                 if (mGroupSegments[0]->HavePlayoutTimecode() &&
                     (!mGroupSegments[i]->HavePlayoutTimecode() || start_tc != expected_start_tc))
                 {
@@ -580,7 +580,8 @@ bool MXFSequenceReader::FindSequenceStart(const vector<MXFGroupReader*> &group_r
         if (!group_readers[index]->HavePlayoutTimecode())
             return false;
 
-        Timecode start_timecode = group_readers[index]->GetPlayoutTimecode(- group_readers[index]->GetReadStartPosition());
+        Timecode start_timecode = group_readers[index]->GetPlayoutTimecode(
+            group_readers[index]->GetFixedLeadFillerOffset());
 
         if (i > 0 && start_timecode != expected_start_timecode) {
             if (seq_start_index == (size_t)(-1))
