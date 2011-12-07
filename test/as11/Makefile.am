@@ -10,7 +10,10 @@ EXTRA_DIST = \
 	d10_50.md5 \
 	check.sh \
 	create.sh \
-	samples.sh
+	samples.sh \
+	as11_core_framework.txt \
+	as11_segmentation_framework.txt \
+	ukdpp_framework.txt
 
 
 .PHONY: create-data
