@@ -328,6 +328,56 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
         }
 
 
+        // extract the sequence timecodes if present and continuous
+        Timecode mat_expected_start_tc, fs_expected_start_tc, ps_expected_start_tc;
+        bool mat_valid = false, fs_valid = false, ps_valid = false;
+        for (i = 0; i < mGroupSegments.size(); i++) {
+            if (i == 0) {
+                mat_expected_start_tc = mGroupSegments[i]->GetMaterialTimecode(
+                                            mGroupSegments[i]->GetFixedLeadFillerOffset());
+                mat_valid = mGroupSegments[i]->HaveMaterialTimecode();
+                fs_expected_start_tc = mGroupSegments[i]->GetFileSourceTimecode(0);
+                fs_valid = mGroupSegments[i]->HaveFileSourceTimecode();
+                ps_expected_start_tc = mGroupSegments[i]->GetPhysicalSourceTimecode(0);
+                ps_valid = mGroupSegments[i]->HavePhysicalSourceTimecode();
+            } else {
+                Timecode mat_start_tc = mGroupSegments[i]->GetMaterialTimecode(
+                                            mGroupSegments[i]->GetFixedLeadFillerOffset());
+                if (mGroupSegments[0]->HaveMaterialTimecode() &&
+                    (!mGroupSegments[i]->HaveMaterialTimecode() || mat_start_tc != mat_expected_start_tc))
+                {
+                    mat_valid = false;
+                }
+                Timecode fs_start_tc = mGroupSegments[i]->GetFileSourceTimecode(0);
+                if (mGroupSegments[0]->HaveFileSourceTimecode() &&
+                    (!mGroupSegments[i]->HaveFileSourceTimecode() || fs_start_tc != fs_expected_start_tc))
+                {
+                    fs_valid = false;
+                }
+                Timecode ps_start_tc = mGroupSegments[i]->GetPhysicalSourceTimecode(0);
+                if (mGroupSegments[0]->HavePhysicalSourceTimecode() &&
+                    (!mGroupSegments[i]->HavePhysicalSourceTimecode() || ps_start_tc != ps_expected_start_tc))
+                {
+                    ps_valid = false;
+                }
+            }
+
+            mat_expected_start_tc.AddOffset(mGroupSegments[i]->GetDuration(), mGroupSegments[i]->GetSampleRate());
+            fs_expected_start_tc.AddOffset(mGroupSegments[i]->GetDuration(), mGroupSegments[i]->GetSampleRate());
+            ps_expected_start_tc.AddOffset(mGroupSegments[i]->GetDuration(), mGroupSegments[i]->GetSampleRate());
+        }
+        if (mat_valid) {
+            mMaterialStartTimecode = new Timecode(mGroupSegments[0]->GetMaterialTimecode(
+                                                            mGroupSegments[0]->GetFixedLeadFillerOffset()));
+        }
+        if (fs_valid) {
+            mFileSourceStartTimecode = new Timecode(mGroupSegments[0]->GetFileSourceTimecode(0));
+        }
+        if (ps_valid) {
+            mPhysicalSourceStartTimecode = new Timecode(mGroupSegments[0]->GetPhysicalSourceTimecode(0));;
+        }
+
+
         // sequence duration is the sum of segment durations
         mDuration = 0;
         for (i = 0; i < mGroupSegments.size(); i++)
