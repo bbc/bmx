@@ -43,9 +43,6 @@ using namespace std;
 using namespace im;
 
 
-#define HEADER_SIZE     512
-
-
 
 AVCIRawEssenceReader::AVCIRawEssenceReader(FILE *raw_input)
 : RawEssenceReader(raw_input)
@@ -81,7 +78,7 @@ uint32_t AVCIRawEssenceReader::ReadSamples(uint32_t num_samples)
 
     uint32_t num_read;
     if (!ReadBytes(read_size, &num_read) ||
-        mSampleData.GetSize() < mFixedSampleSize - HEADER_SIZE)
+        mSampleData.GetSize() < mFixedSampleSize - AVCI_HEADER_SIZE)
     {
         mLastSampleRead = true;
         return 0;
@@ -93,14 +90,14 @@ uint32_t AVCIRawEssenceReader::ReadSamples(uint32_t num_samples)
     if (mAVCIParser->HaveSequenceParameterSet()) {
         if (mSampleData.GetSize() < mFixedSampleSize) {
             uint32_t num_extra_read = 0;
-            if (!ReadBytes(HEADER_SIZE, &num_extra_read) || num_extra_read != HEADER_SIZE) {
+            if (!ReadBytes(AVCI_HEADER_SIZE, &num_extra_read) || num_extra_read != AVCI_HEADER_SIZE) {
                 mLastSampleRead = true;
                 return 0;
             }
         }
         mSampleDataSize = mFixedSampleSize;
     } else {
-        mSampleDataSize = mFixedSampleSize - HEADER_SIZE;
+        mSampleDataSize = mFixedSampleSize - AVCI_HEADER_SIZE;
     }
     mNumSamples = 1;
 

@@ -77,6 +77,11 @@ public:
 
     virtual size_t GetTrackIndex() const { return mTrackIndex; }
 
+    virtual bool HaveAVCIHeader() const                { return mAVCIHeader != 0; }
+    virtual const unsigned char* GetAVCIHeader() const { return mAVCIHeader; }
+
+    void SetAVCIHeader(const unsigned char *frame_data, uint32_t frame_data_size);
+
 public:
     virtual bool IsEnabled() const        { return mIsEnabled; }
     virtual FrameBuffer* GetFrameBuffer() { return &mFrameBuffer; }
@@ -95,6 +100,8 @@ private:
     bool mIsEnabled;
 
     MXFFrameBuffer mFrameBuffer;
+
+    unsigned char *mAVCIHeader;
 };
 
 

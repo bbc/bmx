@@ -83,6 +83,9 @@ public:
 
     virtual size_t GetTrackIndex() const = 0;
 
+    virtual bool HaveAVCIHeader() const = 0;
+    virtual const unsigned char* GetAVCIHeader() const = 0;
+
 public:
     virtual bool IsEnabled() const = 0;
     virtual FrameBuffer* GetFrameBuffer() = 0;

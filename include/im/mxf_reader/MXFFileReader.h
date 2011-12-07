@@ -167,6 +167,8 @@ private:
 
     bool InternalIsEnabled() const;
 
+    void ExtractInfoFromFirstFrame();
+
 private:
     std::string mFilename;
     URI mAbsoluteURI;

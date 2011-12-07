@@ -43,9 +43,6 @@ using namespace std;
 using namespace im;
 
 
-#define HEADER_SIZE     512
-
-
 
 AVCIWriterHelper::AVCIWriterHelper()
 {
@@ -70,12 +67,12 @@ void AVCIWriterHelper::SetMode(AVCIMode mode)
 
 void AVCIWriterHelper::SetHeader(const unsigned char *data, uint32_t size)
 {
-    IM_CHECK(size == HEADER_SIZE);
+    IM_CHECK(size == AVCI_HEADER_SIZE);
 
     if (!mHeader)
-        mHeader = new unsigned char[HEADER_SIZE];
+        mHeader = new unsigned char[AVCI_HEADER_SIZE];
 
-    memcpy(mHeader, data, HEADER_SIZE);
+    memcpy(mHeader, data, AVCI_HEADER_SIZE);
 }
 
 uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size,
@@ -100,7 +97,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             if (have_header) {
                 if (mSampleCount == 0) {
                     mFirstFrameHeader = true;
-                    SetHeader(data, HEADER_SIZE);
+                    SetHeader(data, AVCI_HEADER_SIZE);
                 }
 
                 if (mFirstFrameHeader)
@@ -118,7 +115,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             if (have_header) {
                 if (mSampleCount == 0) {
                     output_frame_size = PassFrame(data, size, array_size);
-                    SetHeader(data, HEADER_SIZE);
+                    SetHeader(data, AVCI_HEADER_SIZE);
                 } else {
                     output_frame_size = StripFrameHeader(data, size, array_size);
                 }
@@ -137,7 +134,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             if (have_header) {
                 if (mSampleCount == 0) {
                     output_frame_size = PassFrame(data, size, array_size);
-                    SetHeader(data, HEADER_SIZE);
+                    SetHeader(data, AVCI_HEADER_SIZE);
                 } else if (mSampleCount == 1) {
                     mSecondFrameHeader = true;
                     output_frame_size = PassFrame(data, size, array_size);
@@ -166,7 +163,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
         case AVCI_ALL_FRAME_HEADER_MODE:
             if (have_header) {
                 if (mSampleCount == 0)
-                    SetHeader(data, HEADER_SIZE);
+                    SetHeader(data, AVCI_HEADER_SIZE);
                 output_frame_size = PassFrame(data, size, array_size);
             } else {
                 if (!mHeader) {
@@ -206,22 +203,22 @@ uint32_t AVCIWriterHelper::PassFrame(const unsigned char *data, uint32_t size, u
 uint32_t AVCIWriterHelper::StripFrameHeader(const unsigned char *data, uint32_t size, uint32_t *array_size)
 {
     // strip header and ensure frame starts with access unit delimiter
-    if (memcmp(data + HEADER_SIZE, AVCI_ACCESS_UNIT_DELIMITER, sizeof(AVCI_ACCESS_UNIT_DELIMITER)) == 0) {
-        mDataArray[0].data = (unsigned char*)(data + HEADER_SIZE);
-        mDataArray[0].size = size - HEADER_SIZE;
+    if (memcmp(data + AVCI_HEADER_SIZE, AVCI_ACCESS_UNIT_DELIMITER, sizeof(AVCI_ACCESS_UNIT_DELIMITER)) == 0) {
+        mDataArray[0].data = (unsigned char*)(data + AVCI_HEADER_SIZE);
+        mDataArray[0].size = size - AVCI_HEADER_SIZE;
         *array_size = 1;
-    } else if (memcmp(data + HEADER_SIZE, AVCI_FILLER, sizeof(AVCI_FILLER)) == 0) {
+    } else if (memcmp(data + AVCI_HEADER_SIZE, AVCI_FILLER, sizeof(AVCI_FILLER)) == 0) {
         mDataArray[0].data = (unsigned char*)AVCI_ACCESS_UNIT_DELIMITER;
         mDataArray[0].size = sizeof(AVCI_ACCESS_UNIT_DELIMITER);
-        mDataArray[1].data = (unsigned char*)(data + HEADER_SIZE + sizeof(AVCI_ACCESS_UNIT_DELIMITER));
-        mDataArray[1].size = size - HEADER_SIZE - sizeof(AVCI_ACCESS_UNIT_DELIMITER);
+        mDataArray[1].data = (unsigned char*)(data + AVCI_HEADER_SIZE + sizeof(AVCI_ACCESS_UNIT_DELIMITER));
+        mDataArray[1].size = size - AVCI_HEADER_SIZE - sizeof(AVCI_ACCESS_UNIT_DELIMITER);
         *array_size = 2;
     } else {
         IM_EXCEPTION(("Failed to strip AVCI header because filler or access unit delimiter "
-                      "not found at offset 512"));
+                      "not found at offset %u", AVCI_HEADER_SIZE));
     }
 
-    return size - HEADER_SIZE;
+    return size - AVCI_HEADER_SIZE;
 }
 
 uint32_t AVCIWriterHelper::PrependFrameHeader(const unsigned char *data, uint32_t size, uint32_t *array_size)
@@ -230,7 +227,7 @@ uint32_t AVCIWriterHelper::PrependFrameHeader(const unsigned char *data, uint32_
     IM_ASSERT(mHeader);
     if (memcmp(data, AVCI_ACCESS_UNIT_DELIMITER, sizeof(AVCI_ACCESS_UNIT_DELIMITER)) == 0) {
         mDataArray[0].data = mHeader;
-        mDataArray[0].size = HEADER_SIZE;
+        mDataArray[0].size = AVCI_HEADER_SIZE;
         mDataArray[1].data = (unsigned char*)AVCI_FILLER;
         mDataArray[1].size = sizeof(AVCI_FILLER);
         mDataArray[2].data = (unsigned char*)(data + sizeof(AVCI_FILLER));
@@ -238,11 +235,11 @@ uint32_t AVCIWriterHelper::PrependFrameHeader(const unsigned char *data, uint32_
         *array_size = 3;
     } else {
         mDataArray[0].data = mHeader;
-        mDataArray[0].size = HEADER_SIZE;
+        mDataArray[0].size = AVCI_HEADER_SIZE;
         mDataArray[1].data = (unsigned char*)data;
         mDataArray[1].size = size;
         *array_size = 2;
     }
 
-    return size + HEADER_SIZE;
+    return size + AVCI_HEADER_SIZE;
 }

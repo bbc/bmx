@@ -35,6 +35,7 @@
 
 #include <im/mxf_reader/MXFFileTrackReader.h>
 #include <im/mxf_reader/MXFFileReader.h>
+#include <im/essence_parser/AVCIEssenceParser.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
 
@@ -55,11 +56,14 @@ MXFFileTrackReader::MXFFileTrackReader(MXFFileReader *file_reader, size_t track_
 
     mIsEnabled = true;
     mFrameBuffer.SetTargetBuffer(new DefaultFrameBuffer(), true);
+
+    mAVCIHeader = 0;
 }
 
 MXFFileTrackReader::~MXFFileTrackReader()
 {
     delete mTrackInfo;
+    delete [] mAVCIHeader;
 }
 
 void MXFFileTrackReader::SetEnable(bool enable)
@@ -140,5 +144,15 @@ int16_t MXFFileTrackReader::GetRollout(int64_t position, bool limit_to_available
 void MXFFileTrackReader::SetNextFramePosition(int64_t position)
 {
     mFileReader->SetNextFramePosition(position);
+}
+
+void MXFFileTrackReader::SetAVCIHeader(const unsigned char *frame_data, uint32_t frame_data_size)
+{
+    IM_CHECK(frame_data_size >= AVCI_HEADER_SIZE);
+
+    delete [] mAVCIHeader;
+
+    mAVCIHeader = new unsigned char[AVCI_HEADER_SIZE];
+    memcpy(mAVCIHeader, frame_data, AVCI_HEADER_SIZE);
 }
 

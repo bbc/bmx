@@ -39,6 +39,7 @@
 
 #include <im/mxf_reader/MXFFileReader.h>
 #include <im/mxf_helper/PictureMXFDescriptorHelper.h>
+#include <im/essence_parser/AVCIEssenceParser.h>
 #include <im/MXFUtils.h>
 #include <im/Utils.h>
 #include <im/IMException.h>
@@ -353,6 +354,10 @@ MXFFileReader::MXFFileReader(string filename, File *file, MXFPackageResolver *re
             mEssenceReader = new EssenceReader(this);
             IM_CHECK(mEssenceReader->GetEditRate() == mSampleRate);
         }
+
+        // extract info from first frame if required
+        if (!mInternalTrackReaders.empty())
+            ExtractInfoFromFirstFrame();
 
         // do some checks, set read limits to [0+precharge, duration+rollout) and seek to start (0+precharge)
         if (mEssenceReader && mEssenceReader->GetIndexedDuration() < mDuration) {
@@ -1317,5 +1322,78 @@ bool MXFFileReader::InternalIsEnabled() const
     }
 
     return false;
+}
+
+void MXFFileReader::ExtractInfoFromFirstFrame()
+{
+    bool require_first_frame = false;
+    size_t i;
+    for (i = 0; i < mInternalTrackReaders.size(); i++) {
+        MXFTrackInfo *track_info = mInternalTrackReaders[i]->GetTrackInfo();
+        MXFPictureTrackInfo *picture_info = dynamic_cast<MXFPictureTrackInfo*>(track_info);
+
+        if (track_info->essence_type == D10_30 ||
+            track_info->essence_type == D10_40 ||
+            track_info->essence_type == D10_50)
+        {
+            if (mIsClipWrapped) {
+                MXFIndexEntryExt index_entry;
+                if (mEssenceReader->GetIndexEntry(&index_entry, 0))
+                    picture_info->d10_frame_size = index_entry.edit_unit_size;
+            } else {
+                require_first_frame = true;
+            }
+        }
+        else if (track_info->essence_type == AVCI100_1080I ||
+                 track_info->essence_type == AVCI100_1080P ||
+                 track_info->essence_type == AVCI100_720P ||
+                 track_info->essence_type == AVCI50_1080I ||
+                 track_info->essence_type == AVCI50_1080P ||
+                 track_info->essence_type == AVCI50_720P)
+        {
+            require_first_frame = true;
+        }
+    }
+    if (!require_first_frame)
+        return;
+
+    mEssenceReader->Read(1);
+
+    AVCIEssenceParser avci_parser;
+    for (i = 0; i < mInternalTrackReaders.size(); i++) {
+        Frame *frame = mInternalTrackReaders[i]->GetFrameBuffer()->GetLastFrame(true);
+        if (!frame || frame->IsEmpty()) {
+            delete frame;
+            continue;
+        }
+
+        MXFTrackInfo *track_info = mInternalTrackReaders[i]->GetTrackInfo();
+        MXFPictureTrackInfo *picture_info = dynamic_cast<MXFPictureTrackInfo*>(track_info);
+
+        if (track_info->essence_type == D10_30 ||
+            track_info->essence_type == D10_40 ||
+            track_info->essence_type == D10_50)
+        {
+            if (!mIsClipWrapped)
+                picture_info->d10_frame_size = frame->GetSize();
+        }
+        else if (track_info->essence_type == AVCI100_1080I ||
+                 track_info->essence_type == AVCI100_1080P ||
+                 track_info->essence_type == AVCI100_720P ||
+                 track_info->essence_type == AVCI50_1080I ||
+                 track_info->essence_type == AVCI50_1080P ||
+                 track_info->essence_type == AVCI50_720P)
+        {
+            avci_parser.ParseFrameInfo(frame->GetBytes(), frame->GetSize());
+            if (avci_parser.HaveSequenceParameterSet()) {
+                dynamic_cast<MXFFileTrackReader*>(mInternalTrackReaders[i])->SetAVCIHeader(
+                    frame->GetBytes(), frame->GetSize());
+            } else {
+                log_warn("First frame in AVC-Intra track does not have sequence and picture parameter sets\n");
+            }
+        }
+
+        delete frame;
+    }
 }
 

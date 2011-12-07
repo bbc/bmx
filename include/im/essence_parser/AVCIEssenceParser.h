@@ -36,6 +36,8 @@
 #include <im/essence_parser/EssenceParser.h>
 
 
+#define AVCI_HEADER_SIZE    512
+
 
 namespace im
 {

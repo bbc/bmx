@@ -33,8 +33,11 @@
 #include "config.h"
 #endif
 
+#include <cstring>
+
 #include <im/mxf_reader/MXFSequenceTrackReader.h>
 #include <im/mxf_reader/MXFSequenceReader.h>
+#include <im/essence_parser/AVCIEssenceParser.h>
 #include <im/IMException.h>
 #include <im/Logging.h>
 
@@ -81,6 +84,15 @@ bool MXFSequenceTrackReader::IsCompatible(MXFTrackReader *segment) const
         mTrackSegments[0]->GetTrackInfo()->material_track_number != segment->GetTrackInfo()->material_track_number)
     {
         return false;
+    }
+
+    if (mTrackSegments[0]->HaveAVCIHeader() != mTrackSegments[0]->HaveAVCIHeader())
+        return false;
+    if (mTrackSegments[0]->HaveAVCIHeader() &&
+        memcmp(mTrackSegments[0]->GetAVCIHeader(), segment->GetAVCIHeader(), AVCI_HEADER_SIZE) != 0)
+    {
+        // TODO: not sure whether they need to be identical
+        log_warn("Sequence segment's AVC-Intra header data are not identical\n");
     }
 
     return true;
@@ -322,6 +334,20 @@ SourcePackage* MXFSequenceTrackReader::GetFileSourcePackage() const
 {
     IM_CHECK(mFileSourcePackage);
     return mFileSourcePackage;
+}
+
+bool MXFSequenceTrackReader::HaveAVCIHeader() const
+{
+    IM_CHECK(!mTrackSegments.empty());
+
+    return mTrackSegments.front()->HaveAVCIHeader();
+}
+
+const unsigned char* MXFSequenceTrackReader::GetAVCIHeader() const
+{
+    IM_CHECK(!mTrackSegments.empty());
+
+    return mTrackSegments.front()->GetAVCIHeader();
 }
 
 void MXFSequenceTrackReader::GetSegmentPosition(int64_t position, MXFTrackReader **segment,

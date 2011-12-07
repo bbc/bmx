@@ -250,6 +250,12 @@ static void print_track_info(const MXFTrackInfo *track_info)
             printf("%u\n", picture_info->afd);
         else
             printf("(not set)\n");
+        if (track_info->essence_type == D10_30 ||
+            track_info->essence_type == D10_40 ||
+            track_info->essence_type == D10_50)
+        {
+            printf("  Frame size           : %u\n", picture_info->d10_frame_size);
+        }
     } else if (sound_info) {
         printf("  Sampling rate        : %s\n", get_rational_string(sound_info->sampling_rate, string_buffer));
         printf("  Bits per sample      : %u\n", sound_info->bits_per_sample);
