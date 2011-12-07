@@ -190,9 +190,9 @@ bool MXFGroupReader::Finalize()
                 if (mReaders[i]->mMaterialStartTimecode)
                     mMaterialStartTimecode = new Timecode(*mReaders[i]->mMaterialStartTimecode);
                 if (mReaders[i]->mFileSourceStartTimecode)
-                    mMaterialStartTimecode = new Timecode(*mReaders[i]->mFileSourceStartTimecode);
+                    mFileSourceStartTimecode = new Timecode(*mReaders[i]->mFileSourceStartTimecode);
                 if (mReaders[i]->mPhysicalSourceStartTimecode)
-                    mMaterialStartTimecode = new Timecode(*mReaders[i]->mPhysicalSourceStartTimecode);
+                    mPhysicalSourceStartTimecode = new Timecode(*mReaders[i]->mPhysicalSourceStartTimecode);
                 mMaterialPackageName = mReaders[i]->mMaterialPackageName;
                 mMaterialPackageUID = mReaders[i]->mMaterialPackageUID;
                 mPhysicalSourcePackageName = mReaders[i]->mPhysicalSourcePackageName;
