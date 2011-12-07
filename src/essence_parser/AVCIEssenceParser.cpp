@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/essence_parser/AVCIEssenceParser.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/essence_parser/AVCIEssenceParser.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
@@ -53,7 +53,7 @@ AVCIEssenceParser::~AVCIEssenceParser()
 
 uint32_t AVCIEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
 {
-    IM_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
+    BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
     uint32_t offset = 0;
     if (!NextStartPrefix(data, data_size, &offset))
@@ -71,7 +71,7 @@ uint32_t AVCIEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
     (void)data;
     (void)data_size;
 
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return 0;
 }
 
@@ -80,13 +80,13 @@ void AVCIEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_
     uint32_t offset = 0;
 
     // start NAL and check whether it is an access unit delimiter
-    IM_CHECK(NextStartPrefix(data, data_size, &offset));
-    IM_CHECK(offset == 0 || (offset == 1 && data[0] == 0x00));
+    BMX_CHECK(NextStartPrefix(data, data_size, &offset));
+    BMX_CHECK(offset == 0 || (offset == 1 && data[0] == 0x00));
     mHaveAccessUnitDelimiter = ((data[offset + 3] & 0x1f) != 9);
 
     // check whether the next NAL is a sequence parameter set
     offset += 3;
-    IM_CHECK(NextStartPrefix(data, data_size, &offset));
+    BMX_CHECK(NextStartPrefix(data, data_size, &offset));
     mHaveSequenceParameterSet = ((data[offset + 3] & 0x1f) == 7);
 }
 

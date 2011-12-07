@@ -38,9 +38,9 @@
 #include <cstdio>
 #include <cerrno>
 
-#include <im/essence_parser/MPEG2EssenceParser.h>
+#include <bmx/essence_parser/MPEG2EssenceParser.h>
 
-using namespace im;
+using namespace bmx;
 
 
 #define MAX_FRAME_SIZE      5000000

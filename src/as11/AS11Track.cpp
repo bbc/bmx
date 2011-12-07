@@ -33,22 +33,22 @@
 #include "config.h"
 #endif
 
-#include <im/as11/AS11Track.h>
-#include <im/mxf_op1a/OP1APictureTrack.h>
-#include <im/mxf_op1a/OP1ADVTrack.h>
-#include <im/mxf_op1a/OP1AUncTrack.h>
-#include <im/mxf_op1a/OP1AD10Track.h>
-#include <im/mxf_op1a/OP1AMPEG2LGTrack.h>
-#include <im/mxf_op1a/OP1AAVCITrack.h>
-#include <im/mxf_op1a/OP1APCMTrack.h>
-#include <im/d10_mxf/D10MPEGTrack.h>
-#include <im/d10_mxf/D10PCMTrack.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as11/AS11Track.h>
+#include <bmx/mxf_op1a/OP1APictureTrack.h>
+#include <bmx/mxf_op1a/OP1ADVTrack.h>
+#include <bmx/mxf_op1a/OP1AUncTrack.h>
+#include <bmx/mxf_op1a/OP1AD10Track.h>
+#include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
+#include <bmx/mxf_op1a/OP1AAVCITrack.h>
+#include <bmx/mxf_op1a/OP1APCMTrack.h>
+#include <bmx/d10_mxf/D10MPEGTrack.h>
+#include <bmx/d10_mxf/D10PCMTrack.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
@@ -98,7 +98,7 @@ void AS11Track::SetOutputTrackNumber(uint32_t track_number)
             mD10Track->SetOutputTrackNumber(track_number);
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -122,7 +122,7 @@ void AS11Track::SetAspectRatio(Rational aspect_ratio)
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -145,7 +145,7 @@ void AS11Track::SetComponentDepth(uint32_t depth)
             log_warn("Setting component depth not supported in D10 clip\n");
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -169,7 +169,7 @@ void AS11Track::SetSampleSize(uint32_t size)
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -188,7 +188,7 @@ void AS11Track::SetAVCIMode(OP1AAVCIMode mode)
         case AS11_D10_CLIP_TYPE:
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -207,7 +207,7 @@ void AS11Track::SetAVCIHeader(const unsigned char *data, uint32_t size)
         case AS11_D10_CLIP_TYPE:
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -231,7 +231,7 @@ void AS11Track::SetAFD(uint8_t afd)
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -255,7 +255,7 @@ void AS11Track::SetSamplingRate(Rational sampling_rate)
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -279,7 +279,7 @@ void AS11Track::SetQuantizationBits(uint32_t bits)
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -303,7 +303,7 @@ void AS11Track::SetChannelCount(uint32_t count)
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -327,7 +327,7 @@ void AS11Track::SetLocked(bool locked)
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -351,7 +351,7 @@ void AS11Track::SetAudioRefLevel(int8_t level)
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -375,7 +375,7 @@ void AS11Track::SetDialNorm(int8_t dial_norm)
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -399,7 +399,7 @@ void AS11Track::SetSequenceOffset(uint8_t offset)
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -423,7 +423,7 @@ vector<uint32_t> AS11Track::GetSampleSequence() const
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -449,7 +449,7 @@ uint8_t AS11Track::GetSequenceOffset() const
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -475,7 +475,7 @@ vector<uint32_t> AS11Track::GetShiftedSampleSequence() const
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -493,7 +493,7 @@ void AS11Track::WriteSamples(const unsigned char *data, uint32_t size, uint32_t 
             mD10Track->WriteSamples(data, size, num_samples);
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -507,7 +507,7 @@ bool AS11Track::IsPicture() const
         case AS11_D10_CLIP_TYPE:
             return mD10Track->IsPicture();
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -523,7 +523,7 @@ uint32_t AS11Track::GetSampleSize()
         case AS11_D10_CLIP_TYPE:
             return mD10Track->GetSampleSize();
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -544,7 +544,7 @@ uint32_t AS11Track::GetAVCISampleWithoutHeaderSize()
         case AS11_D10_CLIP_TYPE:
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 

@@ -35,13 +35,13 @@
 
 #include <cstring>
 
-#include <im/mxf_reader/MXFReader.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_reader/MXFReader.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 

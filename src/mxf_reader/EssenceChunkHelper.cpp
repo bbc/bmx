@@ -37,15 +37,15 @@
 
 #include <libMXF++/MXF.h>
 
-#include <im/mxf_reader/EssenceChunkHelper.h>
-#include <im/mxf_reader/MXFFileReader.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_reader/EssenceChunkHelper.h>
+#include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -139,7 +139,7 @@ void EssenceChunkHelper::ExtractEssenceChunkIndex(uint32_t avid_first_frame_offs
                         essence_chunk.size -= avid_first_frame_offset;
                     }
                 }
-                IM_CHECK(essence_chunk.size >= 0);
+                BMX_CHECK(essence_chunk.size >= 0);
                 if (essence_chunk.size > 0)
                     mEssenceChunks.push_back(essence_chunk);
 
@@ -185,7 +185,7 @@ int64_t EssenceChunkHelper::GetEssenceDataSize()
 
 void EssenceChunkHelper::GetEditUnit(int64_t index_offset, int64_t index_size, int64_t *file_position)
 {
-    IM_CHECK(!mEssenceChunks.empty());
+    BMX_CHECK(!mEssenceChunks.empty());
 
     // TODO: use binary search
     if (mEssenceChunks[mLastEssenceChunk].offset > index_offset) {
@@ -208,7 +208,7 @@ void EssenceChunkHelper::GetEditUnit(int64_t index_offset, int64_t index_size, i
         }
     }
 
-    IM_CHECK_M(mEssenceChunks[mLastEssenceChunk].offset <= index_offset &&
+    BMX_CHECK_M(mEssenceChunks[mLastEssenceChunk].offset <= index_offset &&
                mEssenceChunks[mLastEssenceChunk].offset + mEssenceChunks[mLastEssenceChunk].size >= index_offset + index_size,
                ("Failed to find indexed edit unit (off=0x%"PRIx64",size=0x%"PRIx64") in essence data",
                    index_offset, index_size));

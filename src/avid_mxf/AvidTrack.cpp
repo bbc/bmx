@@ -37,24 +37,24 @@
 
 #include <cstring>
 
-#include <im/avid_mxf/AvidTrack.h>
-#include <im/avid_mxf/AvidDVTrack.h>
-#include <im/avid_mxf/AvidMPEG2LGTrack.h>
-#include <im/avid_mxf/AvidMJPEGTrack.h>
-#include <im/avid_mxf/AvidD10Track.h>
-#include <im/avid_mxf/AvidAVCITrack.h>
-#include <im/avid_mxf/AvidUncTrack.h>
-#include <im/avid_mxf/AvidVC3Track.h>
-#include <im/avid_mxf/AvidPCMTrack.h>
-#include <im/avid_mxf/AvidClip.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/avid_mxf/AvidTrack.h>
+#include <bmx/avid_mxf/AvidDVTrack.h>
+#include <bmx/avid_mxf/AvidMPEG2LGTrack.h>
+#include <bmx/avid_mxf/AvidMJPEGTrack.h>
+#include <bmx/avid_mxf/AvidD10Track.h>
+#include <bmx/avid_mxf/AvidAVCITrack.h>
+#include <bmx/avid_mxf/AvidUncTrack.h>
+#include <bmx/avid_mxf/AvidVC3Track.h>
+#include <bmx/avid_mxf/AvidPCMTrack.h>
+#include <bmx/avid_mxf/AvidClip.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -210,7 +210,7 @@ AvidTrack* AvidTrack::OpenNew(AvidClip *clip, string filename, uint32_t track_in
         case WAVE_PCM:
             return new AvidPCMTrack(clip, track_index, essence_type, file);
         default:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
     }
 
     return 0;
@@ -279,7 +279,7 @@ void AvidTrack::SetSourceRef(mxfUMID ref_package_uid, uint32_t ref_track_id)
 
 void AvidTrack::SetOutputEndOffset(int64_t offset)
 {
-    IM_CHECK(offset <= 0);
+    BMX_CHECK(offset <= 0);
     mOutputEndOffset = offset;
 }
 
@@ -294,17 +294,17 @@ void AvidTrack::PrepareWrite()
 
 void AvidTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_ASSERT(mMXFFile);
-    IM_CHECK(mSampleSize > 0);
-    IM_CHECK(size > 0 && num_samples > 0);
-    IM_CHECK(size == num_samples * mSampleSize);
+    BMX_ASSERT(mMXFFile);
+    BMX_CHECK(mSampleSize > 0);
+    BMX_CHECK(size > 0 && num_samples > 0);
+    BMX_CHECK(size == num_samples * mSampleSize);
 
     if (mImageStartOffset > 0) {
         mMXFFile->writeZeros(mImageStartOffset);
         mContainerSize += mImageStartOffset;
     }
 
-    IM_CHECK(mMXFFile->write(data, size) == size);
+    BMX_CHECK(mMXFFile->write(data, size) == size);
     mContainerSize += size;
 
     mContainerDuration += num_samples;
@@ -312,7 +312,7 @@ void AvidTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t 
 
 void AvidTrack::CompleteWrite()
 {
-    IM_ASSERT(mMXFFile);
+    BMX_ASSERT(mMXFFile);
 
 
     // complete writing of samples
@@ -336,8 +336,8 @@ void AvidTrack::CompleteWrite()
     footer_partition.setBodySID(0);
     // sample files have index table positioned 199 bytes after start of partition
     // 57 = 0x20 + 16 + 9
-    IM_ASSERT(mMXFFile->getMinLLen() == 9);
-    IM_CHECK(mxf_write_partition(mMXFFile->getCFile(), footer_partition.getCPartition()));
+    BMX_ASSERT(mMXFFile->getMinLLen() == 9);
+    BMX_CHECK(mxf_write_partition(mMXFFile->getCFile(), footer_partition.getCPartition()));
     mMXFFile->fillToPosition(file_pos + footer_partition.getKagSize() - 57);
 
 
@@ -443,8 +443,8 @@ pair<mxfUMID, uint32_t> AvidTrack::GetSourceReference() const
 
 void AvidTrack::WriteCBEIndexTable(Partition *partition)
 {
-    IM_ASSERT(mSampleSize > 0);
-    IM_ASSERT(!mCBEIndexSegment);
+    BMX_ASSERT(mSampleSize > 0);
+    BMX_ASSERT(!mCBEIndexSegment);
 
     mxfUUID uuid;
     mxf_generate_uuid(&uuid);
@@ -463,7 +463,7 @@ void AvidTrack::WriteCBEIndexTable(Partition *partition)
 
 void AvidTrack::CreateHeaderMetadata()
 {
-    IM_ASSERT(!mHeaderMetadata);
+    BMX_ASSERT(!mHeaderMetadata);
 
     // descriptor's essence container label will be replaced by the generic AAF-KLV (aka MXF) label
     mEssenceContainerUL = mDescriptorHelper->GetEssenceContainerUL();
@@ -583,7 +583,7 @@ void AvidTrack::CreateHeaderMetadata()
 
 void AvidTrack::CreateFile()
 {
-    IM_ASSERT(mHeaderMetadata);
+    BMX_ASSERT(mHeaderMetadata);
 
 
     // set the minimum llen
@@ -618,8 +618,8 @@ void AvidTrack::CreateFile()
     // place the first byte of the essence data at the KAG boundary taking into account that the body
     // partition offset (FIXED_BODY_PP_OFFSET) is 0x20 bytes (why?) beyond where it would be expected to be.
     // 57 = 0x20 + 16 + 9
-    IM_ASSERT(mMXFFile->getMinLLen() == 9);
-    IM_CHECK(mxf_write_partition(mMXFFile->getCFile(), ess_partition.getCPartition()));
+    BMX_ASSERT(mMXFFile->getMinLLen() == 9);
+    BMX_CHECK(mxf_write_partition(mMXFFile->getCFile(), ess_partition.getCPartition()));
     mMXFFile->fillToPosition(file_pos + ess_partition.getKagSize() - 57);
 
 

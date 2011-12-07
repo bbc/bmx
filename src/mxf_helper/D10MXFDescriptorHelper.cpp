@@ -33,15 +33,15 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_helper/D10MXFDescriptorHelper.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_helper/D10MXFDescriptorHelper.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid_labels_and_keys.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -135,7 +135,7 @@ D10MXFDescriptorHelper::~D10MXFDescriptorHelper()
 
 void D10MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
-    IM_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
+    BMX_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
 
     PictureMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
 
@@ -166,7 +166,7 @@ void D10MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL a
 
 void D10MXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetEssenceType(essence_type);
 
@@ -175,7 +175,7 @@ void D10MXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 
 void D10MXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetSampleRate(sample_rate);
 
@@ -184,7 +184,7 @@ void D10MXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 
 void D10MXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetFrameWrapped(frame_wrapped);
 
@@ -193,7 +193,7 @@ void D10MXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
 
 void D10MXFDescriptorHelper::SetFlavour(DescriptorFlavour flavour)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetFlavour(flavour);
 
@@ -202,7 +202,7 @@ void D10MXFDescriptorHelper::SetFlavour(DescriptorFlavour flavour)
 
 void D10MXFDescriptorHelper::SetSampleSize(uint32_t size)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     mSampleSize = size;
 }
@@ -221,7 +221,7 @@ void D10MXFDescriptorHelper::UpdateFileDescriptor()
     PictureMXFDescriptorHelper::UpdateFileDescriptor();
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
-    IM_ASSERT(cdci_descriptor);
+    BMX_ASSERT(cdci_descriptor);
 
     cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_ITU601);
     cdci_descriptor->setFrameLayout(MXF_SEPARATE_FIELDS);
@@ -284,6 +284,6 @@ void D10MXFDescriptorHelper::UpdateEssenceIndex()
             break;
         }
     }
-    IM_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+    BMX_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 

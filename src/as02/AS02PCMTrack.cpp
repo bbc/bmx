@@ -33,14 +33,14 @@
 #include "config.h"
 #endif
 
-#include <im/as02/AS02PCMTrack.h>
-#include <im/as02/AS02Clip.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as02/AS02PCMTrack.h>
+#include <bmx/as02/AS02Clip.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -54,7 +54,7 @@ AS02PCMTrack::AS02PCMTrack(AS02Clip *clip, uint32_t track_index, mxfpp::File *fi
 : AS02Track(clip, track_index, WAVE_PCM, file, rel_uri)
 {
     mWaveDescriptorHelper = dynamic_cast<WaveMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mWaveDescriptorHelper);
+    BMX_ASSERT(mWaveDescriptorHelper);
     mEssenceDataStartPos = 0;
 
     mWaveDescriptorHelper->SetFrameWrapped(false);
@@ -76,7 +76,7 @@ AS02PCMTrack::~AS02PCMTrack()
 
 void AS02PCMTrack::SetSamplingRate(mxfRational sampling_rate)
 {
-    IM_CHECK(sampling_rate.numerator == 48000 && sampling_rate.denominator == 1);
+    BMX_CHECK(sampling_rate.numerator == 48000 && sampling_rate.denominator == 1);
 
     mWaveDescriptorHelper->SetSamplingRate(sampling_rate);
     mWaveDescriptorHelper->SetSampleRate(mWaveDescriptorHelper->GetSamplingRate());
@@ -86,7 +86,7 @@ void AS02PCMTrack::SetSamplingRate(mxfRational sampling_rate)
 
 void AS02PCMTrack::SetQuantizationBits(uint32_t bits)
 {
-    IM_CHECK(bits > 0 && bits <= 32);
+    BMX_CHECK(bits > 0 && bits <= 32);
 
     mWaveDescriptorHelper->SetQuantizationBits(bits);
 }
@@ -128,12 +128,12 @@ vector<uint32_t> AS02PCMTrack::GetShiftedSampleSequence() const
 
 void AS02PCMTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_ASSERT(mMXFFile);
-    IM_CHECK(mSampleSize > 0);
-    IM_CHECK(size > 0 && num_samples > 0);
-    IM_CHECK(size == num_samples * mSampleSize);
+    BMX_ASSERT(mMXFFile);
+    BMX_CHECK(mSampleSize > 0);
+    BMX_CHECK(size > 0 && num_samples > 0);
+    BMX_CHECK(size == num_samples * mSampleSize);
 
-    IM_CHECK(mMXFFile->write(data, size) == size);
+    BMX_CHECK(mMXFFile->write(data, size) == size);
 
     UpdateEssenceOnlyChecksum(data, size);
 
@@ -163,6 +163,6 @@ void AS02PCMTrack::PostSampleWriting(Partition *partition)
 void AS02PCMTrack::SetSampleSequence()
 {
     mSampleSequence.clear();
-    IM_CHECK(get_sample_sequence(GetVideoFrameRate(), mWaveDescriptorHelper->GetSamplingRate(), &mSampleSequence));
+    BMX_CHECK(get_sample_sequence(GetVideoFrameRate(), mWaveDescriptorHelper->GetSamplingRate(), &mSampleSequence));
 }
 

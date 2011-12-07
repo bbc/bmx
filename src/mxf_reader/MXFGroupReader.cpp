@@ -35,14 +35,14 @@
 
 #include <algorithm>
 
-#include <im/mxf_reader/MXFGroupReader.h>
-#include <im/mxf_reader/MXFFileReader.h>
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_reader/MXFGroupReader.h>
+#include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -131,7 +131,7 @@ bool MXFGroupReader::Finalize()
                 lowest_sample_rate = member_sample_rate;
             }
         }
-        IM_CHECK(mSampleRate.numerator != 0);
+        BMX_CHECK(mSampleRate.numerator != 0);
 
 
         // create temporary group track readers and sort according to material package, data kind, track number and track id
@@ -335,7 +335,7 @@ int16_t MXFGroupReader::GetMaxPrecharge(int64_t position, bool limit_to_availabl
 
         int16_t precharge = mReaders[i]->GetMaxPrecharge(CONVERT_GROUP_POS(position), limit_to_available);
         if (precharge < max_precharge) {
-            IM_CHECK_M(mReaders[i]->GetSampleRate() == mSampleRate,
+            BMX_CHECK_M(mReaders[i]->GetSampleRate() == mSampleRate,
                        ("Currently only support precharge in group members if "
                         "member sample rate equals group sample rate"));
             max_precharge = precharge;
@@ -356,7 +356,7 @@ int16_t MXFGroupReader::GetMaxRollout(int64_t position, bool limit_to_available)
 
         int16_t rollout = mReaders[i]->GetMaxRollout(CONVERT_GROUP_POS(position), limit_to_available);
         if (rollout > max_rollout) {
-            IM_CHECK_M(mReaders[i]->GetSampleRate() == mSampleRate,
+            BMX_CHECK_M(mReaders[i]->GetSampleRate() == mSampleRate,
                        ("Currently only support rollout in group members if "
                         "member sample rate equals group sample rate"));
             max_rollout = rollout;
@@ -410,7 +410,7 @@ int64_t MXFGroupReader::GetFixedLeadFillerOffset() const
 
 MXFTrackReader* MXFGroupReader::GetTrackReader(size_t track_index) const
 {
-    IM_CHECK(track_index < mTrackReaders.size());
+    BMX_CHECK(track_index < mTrackReaders.size());
     return mTrackReaders[track_index];
 }
 

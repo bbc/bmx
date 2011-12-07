@@ -35,15 +35,15 @@
 
 #include <algorithm>
 
-#include <im/as02/AS02Clip.h>
-#include <im/MXFUtils.h>
-#include <im/Utils.h>
-#include <im/Version.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as02/AS02Clip.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
+#include <bmx/Version.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -56,20 +56,20 @@ static bool compare_track(AS02Track *left, AS02Track *right)
 
 AS02Clip::AS02Clip(AS02Bundle *bundle, string filepath, mxfRational frame_rate)
 {
-    IM_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
-             (frame_rate.numerator == 50    && frame_rate.denominator == 1) ||
-             (frame_rate.numerator == 30000 && frame_rate.denominator == 1001) ||
-             (frame_rate.numerator == 60000 && frame_rate.denominator == 1001));
+    BMX_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
+              (frame_rate.numerator == 50    && frame_rate.denominator == 1) ||
+              (frame_rate.numerator == 30000 && frame_rate.denominator == 1001) ||
+              (frame_rate.numerator == 60000 && frame_rate.denominator == 1001));
 
     mBundle = bundle;
     mClipFilename = strip_path(filepath);
     mClipFrameRate = frame_rate;
     mStartTimecode = Timecode(frame_rate, false);
-    mCompanyName = get_im_company_name();
-    mProductName = get_im_library_name();
-    mProductVersion = get_im_mxf_product_version();
-    mVersionString = get_im_version_string();
-    mProductUID = get_im_product_uid();
+    mCompanyName = get_bmx_company_name();
+    mProductName = get_bmx_library_name();
+    mProductVersion = get_bmx_mxf_product_version();
+    mVersionString = get_bmx_version_string();
+    mProductUID = get_bmx_product_uid();
     mReserveMinBytes = 8192;
     mxf_get_timestamp_now(&mCreationDate);
     mxf_generate_uuid(&mGenerationUID);
@@ -165,7 +165,7 @@ void AS02Clip::PrepareWrite()
 
 void AS02Clip::WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_CHECK(track_index < mTracks.size());
+    BMX_CHECK(track_index < mTracks.size());
 
     mTrackMap[track_index]->WriteSamples(data, size, num_samples);
 }
@@ -174,7 +174,7 @@ void AS02Clip::CompleteWrite()
 {
     size_t i;
     for (i = 0; i < mTracks.size(); i++) {
-        IM_CHECK_M(mTracks[i]->HasValidDuration(),
+        BMX_CHECK_M(mTracks[i]->HasValidDuration(),
                    ("Invalid start/end offsets. Track %zu has duration that is too small"));
     }
 
@@ -196,7 +196,7 @@ int64_t AS02Clip::GetDuration()
 
 AS02Track* AS02Clip::GetTrack(uint32_t track_index)
 {
-    IM_ASSERT(track_index < mTracks.size());
+    BMX_ASSERT(track_index < mTracks.size());
 
     return mTrackMap[track_index];
 }

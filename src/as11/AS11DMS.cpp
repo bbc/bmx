@@ -35,12 +35,12 @@
 
 #include <libMXF++/MXF.h>
 
-#include <im/as11/AS11DMS.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as11/AS11DMS.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -58,7 +58,7 @@ void AS11DMS::RegisterExtensions(DataModel *data_model)
 #define MXF_ITEM_DEFINITION(set_name, name, label, tag, type_id, is_required) \
     data_model->registerItemDef(#name, &MXF_SET_K(set_name), &MXF_ITEM_K(set_name, name), tag, type_id, is_required);
 
-#include <im/as11/as11_extensions_data_model.h>
+#include <bmx/as11/as11_extensions_data_model.h>
 
     data_model->finalise();
 }

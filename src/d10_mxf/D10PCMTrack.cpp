@@ -33,13 +33,13 @@
 #include "config.h"
 #endif
 
-#include <im/d10_mxf/D10PCMTrack.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/d10_mxf/D10PCMTrack.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -47,12 +47,12 @@ using namespace mxfpp;
 D10PCMTrack::D10PCMTrack(D10File *file, uint32_t track_index, mxfRational frame_rate, EssenceType essence_type)
 : D10Track(file, track_index, frame_rate, essence_type)
 {
-    IM_ASSERT(essence_type == WAVE_PCM);
+    BMX_ASSERT(essence_type == WAVE_PCM);
 
     mIsPicture = false;
 
     mSoundDescriptorHelper = dynamic_cast<SoundMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mSoundDescriptorHelper);
+    BMX_ASSERT(mSoundDescriptorHelper);
 
     mSoundDescriptorHelper->SetSamplingRate(SAMPLING_RATE_48K);
     mSoundDescriptorHelper->SetQuantizationBits(16);
@@ -69,17 +69,17 @@ D10PCMTrack::~D10PCMTrack()
 
 void D10PCMTrack::SetOutputTrackNumber(uint32_t track_number)
 {
-    IM_CHECK_M(track_number > 0,
+    BMX_CHECK_M(track_number > 0,
                ("A zero D-10 AES-3 track number is not allowed. "
                 "The AES-3 sound channel index is calculated as track number - 1"));
-    IM_CHECK(track_number <= 8);
+    BMX_CHECK(track_number <= 8);
 
     D10Track::SetOutputTrackNumber(track_number);
 }
 
 void D10PCMTrack::SetSamplingRate(mxfRational sampling_rate)
 {
-    IM_CHECK(sampling_rate.numerator == 48000 && sampling_rate.denominator == 1);
+    BMX_CHECK(sampling_rate.numerator == 48000 && sampling_rate.denominator == 1);
 
     mSoundDescriptorHelper->SetSamplingRate(sampling_rate);
 
@@ -88,14 +88,14 @@ void D10PCMTrack::SetSamplingRate(mxfRational sampling_rate)
 
 void D10PCMTrack::SetQuantizationBits(uint32_t bits)
 {
-    IM_CHECK(bits == 16 || bits == 24);
+    BMX_CHECK(bits == 16 || bits == 24);
 
     mSoundDescriptorHelper->SetQuantizationBits(bits);
 }
 
 void D10PCMTrack::SetChannelCount(uint32_t count)
 {
-    IM_CHECK(count == 1); // currently support one channel per track only
+    BMX_CHECK(count == 1); // currently support one channel per track only
 
     mSoundDescriptorHelper->SetChannelCount(count);
 }
@@ -127,7 +127,7 @@ bool D10PCMTrack::HaveSequenceOffset() const
 
 uint8_t D10PCMTrack::GetSequenceOffset() const
 {
-    IM_CHECK(mCPManager->HaveSoundSequenceOffset());
+    BMX_CHECK(mCPManager->HaveSoundSequenceOffset());
     return mCPManager->GetSoundSequenceOffset();
 }
 
@@ -148,6 +148,6 @@ void D10PCMTrack::PrepareWrite()
 void D10PCMTrack::SetSampleSequence()
 {
     mSampleSequence.clear();
-    IM_CHECK(get_sample_sequence(mFrameRate, mSoundDescriptorHelper->GetSamplingRate(), &mSampleSequence));
+    BMX_CHECK(get_sample_sequence(mFrameRate, mSoundDescriptorHelper->GetSamplingRate(), &mSampleSequence));
 }
 

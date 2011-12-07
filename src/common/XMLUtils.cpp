@@ -35,16 +35,16 @@
 
 #define __STDC_FORMAT_MACROS
 
-#include <im/XMLUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/XMLUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
-string im::get_xml_bool_str(bool value)
+string bmx::get_xml_bool_str(bool value)
 {
     if (value)
         return "true";
@@ -52,7 +52,7 @@ string im::get_xml_bool_str(bool value)
         return "false";
 }
 
-string im::get_xml_uint64_str(uint64_t value)
+string bmx::get_xml_uint64_str(uint64_t value)
 {
     char buf[32];
     sprintf(buf, "%"PRIu64"", value);
@@ -60,7 +60,7 @@ string im::get_xml_uint64_str(uint64_t value)
     return buf;
 }
 
-string im::get_xml_timestamp_str(Timestamp timestamp)
+string bmx::get_xml_timestamp_str(Timestamp timestamp)
 {
     char buf[64];
     sprintf(buf, "%04d-%02u-%02uT%02u:%02u:%02uZ",
@@ -70,7 +70,7 @@ string im::get_xml_timestamp_str(Timestamp timestamp)
     return buf;
 }
 
-string im::get_xml_uuid_str(UUID value)
+string bmx::get_xml_uuid_str(UUID value)
 {
     char buf[64];
     sprintf(buf, "urn:uuid:%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
@@ -83,7 +83,7 @@ string im::get_xml_uuid_str(UUID value)
     return buf;
 }
 
-string im::get_xml_umid_str(UMID value)
+string bmx::get_xml_umid_str(UMID value)
 {
     static const char hex_chars[] = "0123456789abcdef";
     char buf[128];
@@ -103,7 +103,7 @@ string im::get_xml_umid_str(UMID value)
     return buf;
 }
 
-bool im::parse_xml_umid_str(string umid_str, UMID *umid)
+bool bmx::parse_xml_umid_str(string umid_str, UMID *umid)
 {
     unsigned int bytes[32];
     int result = sscanf(umid_str.c_str(),

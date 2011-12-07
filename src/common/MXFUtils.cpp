@@ -38,12 +38,12 @@
 
 #include <mxf/mxf.h>
 
-#include <im/MXFUtils.h>
-#include <im/Logging.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/Logging.h>
 
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
@@ -62,19 +62,19 @@ static void connect_mxf_log(MXFLogLevel level, const char *format, ...)
 
 
 
-void im::connect_libmxf_logging()
+void bmx::connect_libmxf_logging()
 {
     g_mxfLogLevel = (MXFLogLevel)LOG_LEVEL;
     mxf_vlog = connect_mxf_vlog;
     mxf_log = connect_mxf_log;
 }
 
-int64_t im::convert_tc_offset(mxfRational in_edit_rate, int64_t in_offset, uint16_t out_tc_base)
+int64_t bmx::convert_tc_offset(mxfRational in_edit_rate, int64_t in_offset, uint16_t out_tc_base)
 {
     return convert_position(in_offset, out_tc_base, get_rounded_tc_base(in_edit_rate), ROUND_AUTO);
 }
 
-string im::get_track_name(bool is_video, uint32_t track_number)
+string bmx::get_track_name(bool is_video, uint32_t track_number)
 {
     char buffer[32];
     sprintf(buffer, "%s%d", (is_video ? "V" : "A"), track_number);

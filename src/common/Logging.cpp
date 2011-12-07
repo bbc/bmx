@@ -40,10 +40,10 @@
 #include <ctime>
 #include <cerrno>
 
-#include <im/Logging.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
@@ -51,10 +51,10 @@ void stdio_vlog2(LogLevel level, const char *source, const char *format, va_list
 void stdio_vlog(LogLevel level, const char *format, va_list p_arg);
 void stdio_log(LogLevel level, const char *format, ...);
 
-log_func im::log = stdio_log;
-vlog_func im::vlog = stdio_vlog;
-vlog2_func im::vlog2 = stdio_vlog2;
-LogLevel im::LOG_LEVEL = INFO_LOG;
+log_func bmx::log = stdio_log;
+vlog_func bmx::vlog = stdio_vlog;
+vlog2_func bmx::vlog2 = stdio_vlog2;
+LogLevel bmx::LOG_LEVEL = INFO_LOG;
 
 static FILE *LOG_FILE = 0;
 
@@ -146,7 +146,7 @@ static void file_log(LogLevel level, const char* format, ...)
 
 
 
-bool im::open_log_file(string filename)
+bool bmx::open_log_file(string filename)
 {
     if (LOG_FILE) {
         fclose(LOG_FILE);
@@ -165,7 +165,7 @@ bool im::open_log_file(string filename)
     return true;
 }
 
-void im::close_log_file()
+void bmx::close_log_file()
 {
     if (LOG_FILE) {
         fclose(LOG_FILE);
@@ -173,7 +173,7 @@ void im::close_log_file()
     }
 }
 
-void im::flush_log()
+void bmx::flush_log()
 {
     if (LOG_FILE) {
         fflush(LOG_FILE);
@@ -183,7 +183,7 @@ void im::flush_log()
     }
 }
 
-void im::log_debug(const char *format, ...)
+void bmx::log_debug(const char *format, ...)
 {
     va_list p_arg;
 
@@ -192,7 +192,7 @@ void im::log_debug(const char *format, ...)
     va_end(p_arg);
 }
 
-void im::log_info(const char *format, ...)
+void bmx::log_info(const char *format, ...)
 {
     va_list p_arg;
 
@@ -201,7 +201,7 @@ void im::log_info(const char *format, ...)
     va_end(p_arg);
 }
 
-void im::log_warn(const char *format, ...)
+void bmx::log_warn(const char *format, ...)
 {
     va_list p_arg;
 
@@ -210,7 +210,7 @@ void im::log_warn(const char *format, ...)
     va_end(p_arg);
 }
 
-void im::log_error(const char *format, ...)
+void bmx::log_error(const char *format, ...)
 {
     va_list p_arg;
 
@@ -219,7 +219,7 @@ void im::log_error(const char *format, ...)
     va_end(p_arg);
 }
 
-void im::log_error_nl(const char *format, ...)
+void bmx::log_error_nl(const char *format, ...)
 {
     va_list p_arg;
 

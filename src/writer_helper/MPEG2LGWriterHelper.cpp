@@ -35,12 +35,12 @@
 
 #include <cstring>
 
-#include <im/writer_helper/MPEG2LGWriterHelper.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/writer_helper/MPEG2LGWriterHelper.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 #define NULL_TEMPORAL_OFFSET        127
@@ -85,8 +85,8 @@ void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
     mEssenceParser.ParseFrameInfo(data, size);
 
     MPEG2FrameType frame_type = mEssenceParser.GetFrameType();
-    IM_CHECK(frame_type != UNKNOWN_FRAME_TYPE);
-    IM_CHECK(mPosition > 0 || frame_type == I_FRAME); // require first frame to be an I-frame
+    BMX_CHECK(frame_type != UNKNOWN_FRAME_TYPE);
+    BMX_CHECK(mPosition > 0 || frame_type == I_FRAME); // require first frame to be an I-frame
 
 
     mHaveGOPHeader = mEssenceParser.HaveGOPHeader();
@@ -161,7 +161,7 @@ void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
     mTemporalReference = mEssenceParser.GetTemporalReference();
 
     // temporal offset = offset to frame data required for displaying at the current position
-    IM_CHECK(mTemporalReference < sizeof(mGOPTemporalOffsets));
+    BMX_CHECK(mTemporalReference < sizeof(mGOPTemporalOffsets));
     mGOPTemporalOffsets[mTemporalReference] = gop_start_offset - mTemporalReference;
 
     mHaveTemporalOffset = (mGOPTemporalOffsets[gop_start_offset] != NULL_TEMPORAL_OFFSET);

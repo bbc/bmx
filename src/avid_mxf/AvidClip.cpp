@@ -37,16 +37,16 @@
 
 #include <algorithm>
 
-#include <im/avid_mxf/AvidClip.h>
-#include <im/MXFUtils.h>
-#include <im/Version.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/avid_mxf/AvidClip.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/Version.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -83,20 +83,20 @@ static bool compare_track(const AvidTrack *left, const AvidTrack *right)
 
 AvidClip::AvidClip(mxfRational frame_rate, string filename_prefix)
 {
-    IM_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
-             (frame_rate.numerator == 50    && frame_rate.denominator == 1) ||
-             (frame_rate.numerator == 30000 && frame_rate.denominator == 1001) ||
-             (frame_rate.numerator == 60000 && frame_rate.denominator == 1001));
+    BMX_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
+              (frame_rate.numerator == 50    && frame_rate.denominator == 1) ||
+              (frame_rate.numerator == 30000 && frame_rate.denominator == 1001) ||
+              (frame_rate.numerator == 60000 && frame_rate.denominator == 1001));
 
     mClipFrameRate = frame_rate;
     mFilenamePrefix = filename_prefix;
     mStartTimecode = Timecode(frame_rate, false);
     mStartTimecodeSet = false;
-    mCompanyName = get_im_company_name();
-    mProductName = get_im_library_name();
-    mProductVersion = get_im_mxf_product_version();
-    mVersionString = get_im_version_string();
-    mProductUID = get_im_product_uid();
+    mCompanyName = get_bmx_company_name();
+    mProductName = get_bmx_library_name();
+    mProductVersion = get_bmx_mxf_product_version();
+    mVersionString = get_bmx_version_string();
+    mProductUID = get_bmx_product_uid();
     mxf_get_timestamp_now(&mCreationDate);
     mxf_generate_uuid(&mGenerationUID);
     mxf_generate_aafsdk_umid(&mMaterialPackageUID);
@@ -351,7 +351,7 @@ void AvidClip::RegisterImportSource(SourcePackage *source_package)
 
 AvidTrack* AvidClip::CreateTrack(EssenceType essence_type)
 {
-    IM_CHECK(!mFilenamePrefix.empty());
+    BMX_CHECK(!mFilenamePrefix.empty());
 
     bool is_picture = (essence_type != WAVE_PCM);
     uint32_t track_number = 1;
@@ -406,7 +406,7 @@ void AvidClip::PrepareWrite()
 
 void AvidClip::WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_CHECK(track_index < mTracks.size());
+    BMX_CHECK(track_index < mTracks.size());
 
     mTracks[track_index]->WriteSamples(data, size, num_samples);
 }
@@ -417,7 +417,7 @@ void AvidClip::CompleteWrite()
 
     size_t i;
     for (i = 0; i < mTracks.size(); i++) {
-        IM_CHECK_M(mTracks[i]->HasValidDuration(),
+        BMX_CHECK_M(mTracks[i]->HasValidDuration(),
                    ("Invalid end offsets. Track %zu has duration that is too small"));
     }
 
@@ -589,11 +589,11 @@ void AvidClip::SetTapeStartTimecode()
                 continue;
 
             Sequence *sequence = dynamic_cast<Sequence*>(track_sequence);
-            IM_ASSERT(sequence);
+            BMX_ASSERT(sequence);
             vector<StructuralComponent*> components = sequence->getStructuralComponents();
-            IM_ASSERT(components.size() == 1);
+            BMX_ASSERT(components.size() == 1);
             SourceClip *source_clip = dynamic_cast<SourceClip*>(components[0]);
-            IM_ASSERT(source_clip);
+            BMX_ASSERT(source_clip);
 
             source_clip->setStartPosition(convert_position(mClipFrameRate, start_position, track->getEditRate(), ROUND_AUTO));
             break;
@@ -659,11 +659,11 @@ void AvidClip::UpdateHeaderMetadata()
         size_t j;
         for (j = 0; j < mTracks.size(); j++) {
             GenericTrack *gen_track = mTracks[j]->GetMaterialPackage()->findTrack(mTracks[i]->GetMaterialTrackId());
-            IM_ASSERT(gen_track);
+            BMX_ASSERT(gen_track);
             Track *track = dynamic_cast<Track*>(gen_track);
-            IM_ASSERT(track);
+            BMX_ASSERT(track);
 
-            IM_ASSERT(track->getEditRate() == mTracks[i]->GetSampleRate());
+            BMX_ASSERT(track->getEditRate() == mTracks[i]->GetSampleRate());
             UpdateTrackDurations(mTracks[i], track, mTracks[i]->GetSampleRate(), track_duration);
         }
     }
@@ -690,7 +690,7 @@ void AvidClip::UpdateTrackDurations(AvidTrack *avid_track, Track *track, mxfRati
     int64_t track_duration = convert_duration(edit_rate, duration, track->getEditRate(), ROUND_AUTO);
 
     Sequence *sequence = dynamic_cast<Sequence*>(track->getSequence());
-    IM_ASSERT(sequence);
+    BMX_ASSERT(sequence);
     if (sequence->getDuration() >= 0) {
         if (sequence->getDuration() < track_duration)
             log_warn("Existing track duration is less than the essence duration\n");
@@ -700,7 +700,7 @@ void AvidClip::UpdateTrackDurations(AvidTrack *avid_track, Track *track, mxfRati
 
     Preface *preface = avid_track->GetHeaderMetadata()->getPreface();
     vector<StructuralComponent*> components = sequence->getStructuralComponents();
-    IM_CHECK(components.size() == 1);
+    BMX_CHECK(components.size() == 1);
     components[0]->setDuration(track_duration);
     
     // update duration further down the reference chain
@@ -713,7 +713,7 @@ void AvidClip::UpdateTrackDurations(AvidTrack *avid_track, Track *track, mxfRati
                 GenericTrack *ref_gen_track = ref_package->findTrack(source_clip->getSourceTrackID());
                 if (ref_gen_track) {
                     Track *ref_track = dynamic_cast<Track*>(ref_gen_track);
-                    IM_CHECK(ref_track);
+                    BMX_CHECK(ref_track);
                     UpdateTrackDurations(avid_track, ref_track, track->getEditRate(),
                                          source_clip->getStartPosition() + track_duration);
                 }

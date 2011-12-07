@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/as02/AS02D10Track.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as02/AS02D10Track.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -52,7 +52,7 @@ AS02D10Track::AS02D10Track(AS02Clip *clip, uint32_t track_index, EssenceType ess
 : AS02PictureTrack(clip, track_index, essence_type, file, rel_uri)
 {
     mD10DescriptorHelper = dynamic_cast<D10MXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mD10DescriptorHelper);
+    BMX_ASSERT(mD10DescriptorHelper);
 
     mTrackNumber = MXF_D10_PICTURE_TRACK_NUM(0x00);
     mEssenceElementKey = VIDEO_ELEMENT_KEY;

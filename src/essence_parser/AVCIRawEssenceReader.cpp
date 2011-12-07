@@ -35,12 +35,12 @@
 
 #define __STDC_FORMAT_MACROS
 
-#include <im/essence_parser/AVCIRawEssenceReader.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/essence_parser/AVCIRawEssenceReader.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
@@ -57,8 +57,8 @@ AVCIRawEssenceReader::~AVCIRawEssenceReader()
 
 uint32_t AVCIRawEssenceReader::ReadSamples(uint32_t num_samples)
 {
-    IM_ASSERT(num_samples == 1);
-    IM_ASSERT(mFixedSampleSize != 0);
+    BMX_ASSERT(num_samples == 1);
+    BMX_ASSERT(mFixedSampleSize != 0);
 
     if (mLastSampleRead)
         return 0;
@@ -108,7 +108,7 @@ uint32_t AVCIRawEssenceReader::ReadSamples(uint32_t num_samples)
 
 void AVCIRawEssenceReader::SetEssenceParser(EssenceParser *essence_parser)
 {
-    IM_CHECK(dynamic_cast<AVCIEssenceParser*>(essence_parser));
+    BMX_CHECK(dynamic_cast<AVCIEssenceParser*>(essence_parser));
 
     if (mEssenceParser) {
         delete mEssenceParser;

@@ -33,13 +33,13 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_op1a/OP1AMPEG2LGTrack.h>
-#include <im/mxf_op1a/OP1AFile.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
+#include <bmx/mxf_op1a/OP1AFile.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -71,8 +71,8 @@ void OP1AMPEG2LGTrack::PrepareWrite(uint8_t picture_track_count, uint8_t sound_t
 
 void OP1AMPEG2LGTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_CHECK(num_samples == 1);
-    IM_CHECK(data && size);
+    BMX_CHECK(num_samples == 1);
+    BMX_CHECK(data && size);
 
     mWriterHelper.ProcessFrame(data, size);
 
@@ -105,7 +105,7 @@ void OP1AMPEG2LGTrack::CompleteWrite()
 
     // update the file descriptor with info extracted from the essence data
     MPEGVideoDescriptor *mpeg_descriptor = dynamic_cast<MPEGVideoDescriptor*>(mDescriptorHelper->GetFileDescriptor());
-    IM_ASSERT(mpeg_descriptor);
+    BMX_ASSERT(mpeg_descriptor);
     mpeg_descriptor->setSingleSequence(mWriterHelper.GetSingleSequence());
     mpeg_descriptor->setConstantBFrames(mWriterHelper.GetConstantBFrames());
     mpeg_descriptor->setLowDelay(mWriterHelper.GetLowDelay());

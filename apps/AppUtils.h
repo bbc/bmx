@@ -29,16 +29,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __IM_APP_UTILS_H__
-#define __IM_APP_UTILS_H__
+#ifndef __BMX_APP_UTILS_H__
+#define __BMX_APP_UTILS_H__
 
 #include <string>
 
-#include <im/IMTypes.h>
+#include <bmx/BMXTypes.h>
 
 
 
-namespace im
+namespace bmx
 {
 
 

@@ -35,25 +35,25 @@
 
 #include <cstring>
 
-#include <im/essence_parser/SoundConversion.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/essence_parser/SoundConversion.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 
 
-uint8_t im::get_aes3_channel_valid_flags(const unsigned char *aes3_data, uint32_t aes3_data_size)
+uint8_t bmx::get_aes3_channel_valid_flags(const unsigned char *aes3_data, uint32_t aes3_data_size)
 {
-    IM_CHECK(aes3_data_size >= 3);
+    BMX_CHECK(aes3_data_size >= 3);
     return aes3_data[3];
 }
 
-uint16_t im::get_aes3_sample_count(const unsigned char *aes3_data, uint32_t aes3_data_size)
+uint16_t bmx::get_aes3_sample_count(const unsigned char *aes3_data, uint32_t aes3_data_size)
 {
-    IM_CHECK(aes3_data_size >= 2);
+    BMX_CHECK(aes3_data_size >= 2);
     return ((uint16_t)aes3_data[2] << 8) | aes3_data[1];
 }
 
-uint32_t im::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size,
+uint32_t bmx::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size,
                                  uint32_t bits_per_sample, uint8_t channel_num,
                                  unsigned char *pcm_data, uint32_t pcm_data_size)
 {
@@ -61,10 +61,10 @@ uint32_t im::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_d
     uint8_t valid_flags     = get_aes3_channel_valid_flags(aes3_data, aes3_data_size);
     uint32_t block_align    = (bits_per_sample + 7) / 8;
 
-    IM_CHECK(sample_count <= (aes3_data_size - 4) / (8 * 4)); // 4 bytes per sample, 8 channels
-    IM_CHECK(block_align == 2 || block_align == 3); // only 16-bit to 24-bit sample size allowed
-    IM_CHECK(channel_num < 8);
-    IM_CHECK(pcm_data_size >= block_align * sample_count);
+    BMX_CHECK(sample_count <= (aes3_data_size - 4) / (8 * 4)); // 4 bytes per sample, 8 channels
+    BMX_CHECK(block_align == 2 || block_align == 3); // only 16-bit to 24-bit sample size allowed
+    BMX_CHECK(channel_num < 8);
+    BMX_CHECK(pcm_data_size >= block_align * sample_count);
 
     if (!(valid_flags & (1 << channel_num))) {
         memset(pcm_data, 0, sample_count * block_align);
@@ -102,7 +102,7 @@ uint32_t im::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_d
     return 4 + sample_count * 4 * 8;
 }
 
-uint32_t im::convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size,
+uint32_t bmx::convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size,
                                     uint32_t bits_per_sample, uint8_t channel_count,
                                     unsigned char *pcm_data, uint32_t pcm_data_size)
 {
@@ -110,10 +110,10 @@ uint32_t im::convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes
     uint8_t valid_flags         = get_aes3_channel_valid_flags(aes3_data, aes3_data_size);
     uint32_t bytes_per_sample   = (bits_per_sample + 7) / 8;
 
-    IM_CHECK(sample_count <= (aes3_data_size - 4) / (8 * 4)); // 4 bytes per sample, 8 channels
-    IM_CHECK(bytes_per_sample == 2 || bytes_per_sample == 3); // only 16-bit to 24-bit sample size allowed
-    IM_CHECK(channel_count <= 8);
-    IM_CHECK(pcm_data_size >= channel_count * bytes_per_sample * sample_count);
+    BMX_CHECK(sample_count <= (aes3_data_size - 4) / (8 * 4)); // 4 bytes per sample, 8 channels
+    BMX_CHECK(bytes_per_sample == 2 || bytes_per_sample == 3); // only 16-bit to 24-bit sample size allowed
+    BMX_CHECK(channel_count <= 8);
+    BMX_CHECK(pcm_data_size >= channel_count * bytes_per_sample * sample_count);
 
     const unsigned char *aes_data_ptr = &aes3_data[4];
     unsigned char *pcm_data_ptr = &pcm_data[0];
@@ -161,7 +161,7 @@ uint32_t im::convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes
     return 4 + sample_count * 4 * 8;
 }
 
-void im::deinterleave_audio(const unsigned char *input_data, uint32_t input_data_size,
+void bmx::deinterleave_audio(const unsigned char *input_data, uint32_t input_data_size,
                             uint32_t bits_per_sample, uint8_t channel_count, uint8_t channel_num,
                             unsigned char *output_data, uint32_t output_data_size)
 {
@@ -171,7 +171,7 @@ void im::deinterleave_audio(const unsigned char *input_data, uint32_t input_data
     uint32_t sample_count = input_data_size / input_block_align;
     uint32_t i, j;
 
-    IM_CHECK(output_data_size >= sample_count * output_block_align);
+    BMX_CHECK(output_data_size >= sample_count * output_block_align);
 
     for (i = 0; i < sample_count; i++) {
         for (j = 0; j < output_block_align; j++)

@@ -35,15 +35,15 @@
 
 #include <algorithm>
 
-#include <im/mxf_reader/MXFSequenceReader.h>
-#include <im/mxf_reader/MXFSequenceTrackReader.h>
-#include <im/mxf_reader/MXFGroupReader.h>
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_reader/MXFSequenceReader.h>
+#include <bmx/mxf_reader/MXFSequenceTrackReader.h>
+#include <bmx/mxf_reader/MXFGroupReader.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -117,7 +117,7 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
                 lowest_sample_rate = sample_rate;
             }
         }
-        IM_CHECK(mSampleRate.numerator != 0);
+        BMX_CHECK(mSampleRate.numerator != 0);
 
 
         // group inputs by material package uid and lead filler offset
@@ -543,7 +543,7 @@ uint32_t MXFSequenceReader::Read(uint32_t num_samples, bool is_top)
 
 void MXFSequenceReader::Seek(int64_t position)
 {
-    IM_CHECK(!mGroupSegments.empty());
+    BMX_CHECK(!mGroupSegments.empty());
 
     MXFGroupReader *segment;
     size_t segment_index;
@@ -561,7 +561,7 @@ void MXFSequenceReader::Seek(int64_t position)
 
 int16_t MXFSequenceReader::GetMaxPrecharge(int64_t position, bool limit_to_available) const
 {
-    IM_CHECK(!mGroupSegments.empty());
+    BMX_CHECK(!mGroupSegments.empty());
 
     size_t i = 0;
     return mGroupSegments[i]->GetMaxPrecharge(CONVERT_SEQ_POS(position), limit_to_available);
@@ -569,7 +569,7 @@ int16_t MXFSequenceReader::GetMaxPrecharge(int64_t position, bool limit_to_avail
 
 int16_t MXFSequenceReader::GetMaxRollout(int64_t position, bool limit_to_available) const
 {
-    IM_CHECK(!mGroupSegments.empty());
+    BMX_CHECK(!mGroupSegments.empty());
 
     size_t i = mGroupSegments.size() - 1;
     return mGroupSegments[i]->GetMaxRollout(CONVERT_SEQ_POS(position), limit_to_available);
@@ -577,25 +577,25 @@ int16_t MXFSequenceReader::GetMaxRollout(int64_t position, bool limit_to_availab
 
 bool MXFSequenceReader::HaveFixedLeadFillerOffset() const
 {
-    IM_CHECK(!mGroupSegments.empty());
+    BMX_CHECK(!mGroupSegments.empty());
     return mGroupSegments[0]->HaveFixedLeadFillerOffset();
 }
 
 int64_t MXFSequenceReader::GetFixedLeadFillerOffset() const
 {
-    IM_CHECK(!mGroupSegments.empty());
+    BMX_CHECK(!mGroupSegments.empty());
     return mGroupSegments[0]->GetFixedLeadFillerOffset();
 }
 
 MXFTrackReader* MXFSequenceReader::GetTrackReader(size_t track_index) const
 {
-    IM_CHECK(track_index < mTrackReaders.size());
+    BMX_CHECK(track_index < mTrackReaders.size());
     return mTrackReaders[track_index];
 }
 
 bool MXFSequenceReader::IsEnabled() const
 {
-    IM_CHECK(!mGroupSegments.empty());
+    BMX_CHECK(!mGroupSegments.empty());
     return mGroupSegments[0]->IsEnabled();
 }
 
@@ -651,7 +651,7 @@ bool MXFSequenceReader::FindSequenceStart(const vector<MXFGroupReader*> &group_r
 void MXFSequenceReader::GetSegmentPosition(int64_t position, MXFGroupReader **segment, size_t *segment_index,
                                            int64_t *segment_position) const
 {
-    IM_CHECK(!mGroupSegments.empty());
+    BMX_CHECK(!mGroupSegments.empty());
 
     size_t i;
     for (i = 0; i < mSegmentOffsets.size(); i++) {

@@ -42,26 +42,26 @@
 #include <string>
 #include <vector>
 
-#include <im/mxf_reader/MXFFileReader.h>
-#include <im/mxf_reader/MXFGroupReader.h>
-#include <im/mxf_reader/MXFSequenceReader.h>
-#include <im/essence_parser/SoundConversion.h>
-#include <im/clip_writer/ClipWriter.h>
-#include <im/as02/AS02PictureTrack.h>
-#include <im/as02/AS02PCMTrack.h>
-#include <im/avid_mxf/AvidPCMTrack.h>
-#include <im/mxf_op1a/OP1APCMTrack.h>
-#include <im/URI.h>
-#include <im/MXFUtils.h>
+#include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/mxf_reader/MXFGroupReader.h>
+#include <bmx/mxf_reader/MXFSequenceReader.h>
+#include <bmx/essence_parser/SoundConversion.h>
+#include <bmx/clip_writer/ClipWriter.h>
+#include <bmx/as02/AS02PictureTrack.h>
+#include <bmx/as02/AS02PCMTrack.h>
+#include <bmx/avid_mxf/AvidPCMTrack.h>
+#include <bmx/mxf_op1a/OP1APCMTrack.h>
+#include <bmx/URI.h>
+#include <bmx/MXFUtils.h>
 #include "../AppUtils.h"
 #include "../AS11Helper.h"
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -90,7 +90,7 @@ static const char DEFAULT_SHIM_ID[]         = "http://bbc.co.uk/rd/as02/default-
 static const char DEFAULT_SHIM_ANNOTATION[] = "Default AS-02 shim";
 
 
-extern bool IM_REGRESSION_TEST;
+extern bool BMX_REGRESSION_TEST;
 
 
 
@@ -549,7 +549,7 @@ int main(int argc, const char** argv)
         }
         else if (strcmp(argv[cmdln_index], "--regtest") == 0)
         {
-            IM_REGRESSION_TEST = true;
+            BMX_REGRESSION_TEST = true;
         }
         else
         {
@@ -574,7 +574,7 @@ int main(int argc, const char** argv)
 
     connect_libmxf_logging();
 
-    if (IM_REGRESSION_TEST) {
+    if (BMX_REGRESSION_TEST) {
         mxf_set_regtest_funcs();
         mxf_avid_set_regtest_funcs();
     }
@@ -861,7 +861,7 @@ int main(int argc, const char** argv)
                 clip = ClipWriter::OpenNewD10Clip(output_name, frame_rate);
                 break;
             case CW_UNKNOWN_CLIP_TYPE:
-                IM_ASSERT(false);
+                BMX_ASSERT(false);
                 break;
         }
 
@@ -960,9 +960,9 @@ int main(int argc, const char** argv)
                 tape_package = avid_clip->CreateDefaultTapeSource(tape_name, num_picture_tracks, num_sound_tracks);
 
                 tape_package_picture_refs = avid_clip->GetPictureSourceReferences(tape_package);
-                IM_ASSERT(tape_package_picture_refs.size() == num_picture_tracks);
+                BMX_ASSERT(tape_package_picture_refs.size() == num_picture_tracks);
                 tape_package_sound_refs = avid_clip->GetSoundSourceReferences(tape_package);
-                IM_ASSERT(tape_package_sound_refs.size() == num_sound_tracks);
+                BMX_ASSERT(tape_package_sound_refs.size() == num_sound_tracks);
             }
         }
 
@@ -988,7 +988,7 @@ int main(int argc, const char** argv)
             uint32_t output_track_count = 1;
             if (input_sound_info)
                 output_track_count = input_sound_info->channel_count;
-            IM_CHECK(output_track_count > 0);
+            BMX_CHECK(output_track_count > 0);
 
             uint32_t c;
             for (c = 0; c < output_track_count; c++) {
@@ -1082,7 +1082,7 @@ int main(int argc, const char** argv)
                         output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
                         if (input_picture_info->afd)
                             output_track.track->SetAFD(input_picture_info->afd);
-                        IM_ASSERT(input_picture_info->d10_frame_size != 0);
+                        BMX_ASSERT(input_picture_info->d10_frame_size != 0);
                         output_track.track->SetSampleSize(input_picture_info->d10_frame_size);
                         break;
                     case AVCI100_1080I:
@@ -1094,7 +1094,7 @@ int main(int argc, const char** argv)
                         if (input_picture_info->afd)
                             output_track.track->SetAFD(input_picture_info->afd);
                         output_track.track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
-                        IM_ASSERT(input_track_reader->HaveAVCIHeader());
+                        BMX_ASSERT(input_track_reader->HaveAVCIHeader());
                         output_track.track->SetAVCIHeader(input_track_reader->GetAVCIHeader(), AVCI_HEADER_SIZE);
                         break;
                     case UNC_SD:
@@ -1162,7 +1162,7 @@ int main(int argc, const char** argv)
                     case PICTURE_ESSENCE:
                     case SOUND_ESSENCE:
                     case UNKNOWN_ESSENCE_TYPE:
-                        IM_ASSERT(false);
+                        BMX_ASSERT(false);
                 }
 
                 output_tracks.push_back(output_track);
@@ -1196,7 +1196,7 @@ int main(int argc, const char** argv)
 
         clip->PrepareWrite();
 
-        im::ByteArray sound_buffer;
+        bmx::ByteArray sound_buffer;
         while (output_duration < 0 || clip->GetDuration() < output_duration) {
             uint32_t num_read = reader->Read(max_samples_per_read);
             if (num_read == 0)
@@ -1280,9 +1280,9 @@ int main(int argc, const char** argv)
         log_error("MXF exception caught: %s\n", ex.getMessage().c_str());
         cmd_result = 1;
     }
-    catch (const IMException &ex)
+    catch (const BMXException &ex)
     {
-        log_error("Ingex Media exception caught: %s\n", ex.what());
+        log_error("BMX exception caught: %s\n", ex.what());
         cmd_result = 1;
     }
     catch (const bool &ex)

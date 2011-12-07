@@ -29,23 +29,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <im/frame/DataBufferArray.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/frame/DataBufferArray.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
-uint32_t im::dba_get_total_size(const CDataBuffer *data_array, uint32_t array_size)
+uint32_t bmx::dba_get_total_size(const CDataBuffer *data_array, uint32_t array_size)
 {
     uint64_t total_size = 0;
     uint32_t i;
     for (i = 0; i < array_size; i++)
         total_size += data_array[i].size;
 
-    IM_CHECK(total_size <= 0xffffffff);
+    BMX_CHECK(total_size <= 0xffffffff);
 
     return (uint32_t)total_size;
 }

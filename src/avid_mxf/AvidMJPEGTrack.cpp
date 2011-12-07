@@ -35,14 +35,14 @@
 
 #include <cstring>
 
-#include <im/avid_mxf/AvidMJPEGTrack.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/avid_mxf/AvidMJPEGTrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -56,7 +56,7 @@ AvidMJPEGTrack::AvidMJPEGTrack(AvidClip *clip, uint32_t track_index, EssenceType
 : AvidPictureTrack(clip, track_index, essence_type, file)
 {
     mMJPEGDescriptorHelper = dynamic_cast<MJPEGMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mMJPEGDescriptorHelper);
+    BMX_ASSERT(mMJPEGDescriptorHelper);
 
     mTrackNumber = MXF_AVID_MJPEG_PICT_TRACK_NUM;
     mEssenceElementKey = MXF_EE_K(AvidMJPEGClipWrapped);
@@ -75,11 +75,11 @@ bool AvidMJPEGTrack::IsSingleField() const
 
 void AvidMJPEGTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_ASSERT(mMXFFile);
-    IM_CHECK(num_samples == 1);
-    IM_CHECK(size > 0);
+    BMX_ASSERT(mMXFFile);
+    BMX_CHECK(num_samples == 1);
+    BMX_CHECK(size > 0);
 
-    IM_CHECK(mMXFFile->write(data, size) == size);
+    BMX_CHECK(mMXFFile->write(data, size) == size);
 
     unsigned char entry[INDEX_ENTRY_SIZE];
     mxf_set_int8(0, &entry[0]);
@@ -104,7 +104,7 @@ void AvidMJPEGTrack::WriteVBEIndexTable(Partition *partition)
     segment.setEditUnitByteCount(0);
 
     uint32_t num_index_entries = mIndexSegment.GetSize() / INDEX_ENTRY_SIZE;
-    IM_ASSERT(num_index_entries >= 1);
+    BMX_ASSERT(num_index_entries >= 1);
     int64_t index_duration = num_index_entries - 1;
 
     mxfUUID uuid;

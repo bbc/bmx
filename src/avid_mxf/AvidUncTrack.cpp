@@ -33,14 +33,14 @@
 #include "config.h"
 #endif
 
-#include <im/avid_mxf/AvidUncTrack.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/avid_mxf/AvidUncTrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -49,7 +49,7 @@ AvidUncTrack::AvidUncTrack(AvidClip *clip, uint32_t track_index, EssenceType ess
 : AvidPictureTrack(clip, track_index, essence_type, file)
 {
     mUncDescriptorHelper = dynamic_cast<UncMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mUncDescriptorHelper);
+    BMX_ASSERT(mUncDescriptorHelper);
 
     if (essence_type == AVID_10BIT_UNC_SD ||
         essence_type == AVID_10BIT_UNC_HD_1080I ||
@@ -129,11 +129,11 @@ void AvidUncTrack::PrepareWrite()
 
 void AvidUncTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_ASSERT(mMXFFile);
-    IM_CHECK(data && size && num_samples);
+    BMX_ASSERT(mMXFFile);
+    BMX_CHECK(data && size && num_samples);
 
     // if multiple samples are passed in then they must all be the same size
-    IM_CHECK(mInputSampleSize * num_samples == size);
+    BMX_CHECK(mInputSampleSize * num_samples == size);
 
     if (mIsAvid10Bit) {
         const unsigned char *sample_data = data;
@@ -151,16 +151,16 @@ void AvidUncTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32
                 mContainerSize += mLSBPaddingSize;
             }
 
-            IM_CHECK(mMXFFile->write(sample_data + mLSBSkipSize, lsb_input_size) == lsb_input_size);
+            BMX_CHECK(mMXFFile->write(sample_data + mLSBSkipSize, lsb_input_size) == lsb_input_size);
             mContainerSize += lsb_input_size;
             sample_data += mLSBSkipSize + lsb_input_size;
 
             if (mPaddingSize > 0) {
-                IM_CHECK(mMXFFile->write(mPadding, mPaddingSize) == mPaddingSize);
+                BMX_CHECK(mMXFFile->write(mPadding, mPaddingSize) == mPaddingSize);
                 mContainerSize += mPaddingSize;
             }
 
-            IM_CHECK(mMXFFile->write(sample_data + mSkipSize, msb_input_size) == msb_input_size);
+            BMX_CHECK(mMXFFile->write(sample_data + mSkipSize, msb_input_size) == msb_input_size);
             mContainerSize += msb_input_size;
             sample_data += mSkipSize + msb_input_size;
 
@@ -177,11 +177,11 @@ void AvidUncTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32
             }
 
             if (mPaddingSize > 0) {
-                IM_CHECK(mMXFFile->write(mPadding, mPaddingSize) == mPaddingSize);
+                BMX_CHECK(mMXFFile->write(mPadding, mPaddingSize) == mPaddingSize);
                 mContainerSize += mPaddingSize;
             }
 
-            IM_CHECK(mMXFFile->write(sample_data + mSkipSize, sample_input_size) == sample_input_size);
+            BMX_CHECK(mMXFFile->write(sample_data + mSkipSize, sample_input_size) == sample_input_size);
             mContainerSize += sample_input_size;
             sample_data += mSkipSize + sample_input_size;
 

@@ -42,28 +42,28 @@
 #include <string>
 #include <vector>
 
-#include <im/clip_writer/ClipWriter.h>
-#include <im/as02/AS02PictureTrack.h>
-#include <im/as02/AS02PCMTrack.h>
-#include <im/avid_mxf/AvidPCMTrack.h>
-#include <im/mxf_op1a/OP1APCMTrack.h>
-#include <im/essence_parser/DVEssenceParser.h>
-#include <im/essence_parser/MPEG2EssenceParser.h>
-#include <im/essence_parser/AVCIRawEssenceReader.h>
-#include <im/essence_parser/MJPEGEssenceParser.h>
-#include <im/essence_parser/VC3EssenceParser.h>
-#include <im/essence_parser/RawEssenceReader.h>
-#include <im/URI.h>
-#include <im/MXFUtils.h>
+#include <bmx/clip_writer/ClipWriter.h>
+#include <bmx/as02/AS02PictureTrack.h>
+#include <bmx/as02/AS02PCMTrack.h>
+#include <bmx/avid_mxf/AvidPCMTrack.h>
+#include <bmx/mxf_op1a/OP1APCMTrack.h>
+#include <bmx/essence_parser/DVEssenceParser.h>
+#include <bmx/essence_parser/MPEG2EssenceParser.h>
+#include <bmx/essence_parser/AVCIRawEssenceReader.h>
+#include <bmx/essence_parser/MJPEGEssenceParser.h>
+#include <bmx/essence_parser/VC3EssenceParser.h>
+#include <bmx/essence_parser/RawEssenceReader.h>
+#include <bmx/URI.h>
+#include <bmx/MXFUtils.h>
 #include "../AppUtils.h"
 #include "../AS11Helper.h"
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -131,7 +131,7 @@ static const char DEFAULT_SHIM_ID[]         = "http://bbc.co.uk/rd/as02/default-
 static const char DEFAULT_SHIM_ANNOTATION[] = "Default AS-02 shim";
 
 
-extern bool IM_REGRESSION_TEST;
+extern bool BMX_REGRESSION_TEST;
 
 
 
@@ -755,7 +755,7 @@ int main(int argc, const char** argv)
         }
         else if (strcmp(argv[cmdln_index], "--regtest") == 0)
         {
-            IM_REGRESSION_TEST = true;
+            BMX_REGRESSION_TEST = true;
         }
         else
         {
@@ -1670,7 +1670,7 @@ int main(int argc, const char** argv)
 
     connect_libmxf_logging();
 
-    if (IM_REGRESSION_TEST) {
+    if (BMX_REGRESSION_TEST) {
         mxf_set_regtest_funcs();
         mxf_avid_set_regtest_funcs();
     }
@@ -1717,7 +1717,7 @@ int main(int argc, const char** argv)
             input->clip_type = clip_type;
 
             // TODO: require parse friendly essence data in regression test for all formats
-            if (IM_REGRESSION_TEST) {
+            if (BMX_REGRESSION_TEST) {
                 if (input->essence_type_group != NO_ESSENCE_GROUP) {
                     log_error("Regression test requires specific input format type, eg. --iecdv25 rather than --dv\n");
                     throw false;
@@ -2056,7 +2056,7 @@ int main(int argc, const char** argv)
                 clip = ClipWriter::OpenNewD10Clip(output_name, frame_rate);
                 break;
             case CW_UNKNOWN_CLIP_TYPE:
-                IM_ASSERT(false);
+                BMX_ASSERT(false);
                 break;
         }
 
@@ -2135,9 +2135,9 @@ int main(int argc, const char** argv)
                 tape_package = avid_clip->CreateDefaultTapeSource(tape_name, num_picture_tracks, num_sound_tracks);
 
                 tape_package_picture_refs = avid_clip->GetPictureSourceReferences(tape_package);
-                IM_ASSERT(tape_package_picture_refs.size() == num_picture_tracks);
+                BMX_ASSERT(tape_package_picture_refs.size() == num_picture_tracks);
                 tape_package_sound_refs = avid_clip->GetSoundSourceReferences(tape_package);
-                IM_ASSERT(tape_package_sound_refs.size() == num_sound_tracks);
+                BMX_ASSERT(tape_package_sound_refs.size() == num_sound_tracks);
             }
         }
 
@@ -2211,7 +2211,7 @@ int main(int argc, const char** argv)
                         SourcePackage *import_package = avid_clip->CreateDefaultImportSource(uri.ToString(), name, 0, 1);
                         source_refs = avid_clip->GetSoundSourceReferences(import_package);
                     }
-                    IM_ASSERT(source_refs.size() == 1);
+                    BMX_ASSERT(source_refs.size() == 1);
                     avid_track->SetSourceRef(source_refs[0].first, source_refs[0].second);
                 }
             }
@@ -2317,7 +2317,7 @@ int main(int argc, const char** argv)
                 case PICTURE_ESSENCE:
                 case SOUND_ESSENCE:
                 case UNKNOWN_ESSENCE_TYPE:
-                    IM_ASSERT(false);
+                    BMX_ASSERT(false);
             }
 
 
@@ -2390,7 +2390,7 @@ int main(int argc, const char** argv)
                 case WAVE_PCM:
                 {
                     vector<uint32_t> shifted_sample_sequence = input->track->GetShiftedSampleSequence();
-                    IM_ASSERT(shifted_sample_sequence.size() < sizeof(input->sample_sequence) / sizeof(uint32_t));
+                    BMX_ASSERT(shifted_sample_sequence.size() < sizeof(input->sample_sequence) / sizeof(uint32_t));
                     memcpy(input->sample_sequence, &shifted_sample_sequence[0],
                            shifted_sample_sequence.size() * sizeof(uint32_t));
                     input->sample_sequence_size = shifted_sample_sequence.size();
@@ -2400,7 +2400,7 @@ int main(int argc, const char** argv)
                 case PICTURE_ESSENCE:
                 case SOUND_ESSENCE:
                 case UNKNOWN_ESSENCE_TYPE:
-                    IM_ASSERT(false);
+                    BMX_ASSERT(false);
             }
 
             if (is_picture)
@@ -2469,9 +2469,9 @@ int main(int argc, const char** argv)
         log_error("MXF exception caught: %s\n", ex.getMessage().c_str());
         cmd_result = 1;
     }
-    catch (const IMException &ex)
+    catch (const BMXException &ex)
     {
-        log_error("Ingex Media exception caught: %s\n", ex.what());
+        log_error("BMX exception caught: %s\n", ex.what());
         cmd_result = 1;
     }
     catch (const bool &ex)

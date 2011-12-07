@@ -41,13 +41,13 @@
 
 #include <mxf/mxf_avid.h>
 
-#include <im/mxf_reader/IndexTableHelper.h>
-#include <im/mxf_reader/MXFFileReader.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_reader/IndexTableHelper.h>
+#include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -101,14 +101,14 @@ void IndexTableHelperSegment::ParseIndexTableSegment(File *file, uint64_t segmen
     mxf_free_index_table_segment(&_cSegment);
 
     // use Avid function to support non-standard Avid index table segments
-    IM_CHECK(mxf_avid_read_index_table_segment_2(file->getCFile(), segment_len,
+    BMX_CHECK(mxf_avid_read_index_table_segment_2(file->getCFile(), segment_len,
                                                  mxf_default_add_delta_entry, 0,
                                                  add_frame_offset_index_entry, this,
                                                  &_cSegment));
 
-    IM_CHECK((mNumIndexEntries == 0 && getEditUnitByteCount() > 0) ||
+    BMX_CHECK((mNumIndexEntries == 0 && getEditUnitByteCount() > 0) ||
              ((int64_t)mNumIndexEntries >= getIndexDuration()));
-    IM_CHECK(getIndexDuration() > 0 || mNumIndexEntries == 0);
+    BMX_CHECK(getIndexDuration() > 0 || mNumIndexEntries == 0);
 
     if (mNumIndexEntries > 1 && mNumIndexEntries > getIndexDuration()) {
         // Avid adds an extra entry which provides the end offset or size for the last frame
@@ -162,10 +162,10 @@ void IndexTableHelperSegment::AppendIndexEntry(uint32_t num_entries, int8_t temp
         mAllocIndexEntries = num_entries;
         mNumIndexEntries = 0;
     }
-    IM_ASSERT(mNumIndexEntries < mAllocIndexEntries);
+    BMX_ASSERT(mNumIndexEntries < mAllocIndexEntries);
 
     // file offsets use int64_t whilst the index segment stream offset is uint64_t
-    IM_CHECK((stream_offset & 0x8000000000000000LL) == 0);
+    BMX_CHECK((stream_offset & 0x8000000000000000LL) == 0);
 
     GET_TEMPORAL_OFFSET(mNumIndexEntries) = temporal_offset;
     GET_KEY_FRAME_OFFSET(mNumIndexEntries) = key_frame_offset;
@@ -187,13 +187,13 @@ uint32_t IndexTableHelperSegment::GetFixedEditUnitByteCount()
 
 void IndexTableHelperSegment::SetEssenceStartOffset(int64_t offset)
 {
-    IM_ASSERT(mNumIndexEntries == 0);
+    BMX_ASSERT(mNumIndexEntries == 0);
     mEssenceStartOffset = offset;
 }
 
 int64_t IndexTableHelperSegment::GetEssenceEndOffset()
 {
-    IM_ASSERT(mNumIndexEntries == 0 && getIndexDuration() > 0);
+    BMX_ASSERT(mNumIndexEntries == 0 && getIndexDuration() > 0);
     return mEssenceStartOffset + getEditUnitByteCount() * getIndexDuration();
 }
 
@@ -260,7 +260,7 @@ void IndexTableHelper::ExtractIndexTable()
             for (j = 0; j < mSegments.size(); j++) {
                 if (segment->getIndexStartPosition() <= mSegments[j]->getIndexStartPosition()) {
                     // segment has been replaced
-                    IM_CHECK(segment->getIndexStartPosition() == mSegments[j]->getIndexStartPosition());
+                    BMX_CHECK(segment->getIndexStartPosition() == mSegments[j]->getIndexStartPosition());
                     break;
                 }
             }
@@ -271,9 +271,9 @@ void IndexTableHelper::ExtractIndexTable()
 
             if (!mSegments.empty()) {
                 // only support all index segments with fixed edit unit byte count or all variable edit units
-                IM_CHECK(segment->HaveFixedEditUnitByteCount() == mSegments.back()->HaveFixedEditUnitByteCount());
+                BMX_CHECK(segment->HaveFixedEditUnitByteCount() == mSegments.back()->HaveFixedEditUnitByteCount());
                 // only support contiguous index segments
-                IM_CHECK(segment->getIndexStartPosition() == mSegments.back()->getIndexStartPosition() +
+                BMX_CHECK(segment->getIndexStartPosition() == mSegments.back()->getIndexStartPosition() +
                                                                     mSegments.back()->getIndexDuration());
 
                 if (segment->HaveFixedEditUnitByteCount())
@@ -288,14 +288,14 @@ void IndexTableHelper::ExtractIndexTable()
         }
     }
 
-    IM_CHECK(!mSegments.empty());
+    BMX_CHECK(!mSegments.empty());
 
     // calc total duration and determine fixed edit unit byte count
     mDuration = 0;
     mHaveFixedEditUnitByteCount = true;
     mFixedEditUnitByteCount = 0;
     for (i = 0; i < mSegments.size(); i++) {
-        IM_CHECK(mSegments[i]->getIndexDuration() > 0 || mSegments[i]->HaveFixedEditUnitByteCount());
+        BMX_CHECK(mSegments[i]->getIndexDuration() > 0 || mSegments[i]->HaveFixedEditUnitByteCount());
         mDuration += mSegments[i]->getIndexDuration();
 
         if (mHaveFixedEditUnitByteCount) {
@@ -325,14 +325,14 @@ void IndexTableHelper::SetEssenceDataSize(int64_t size)
 
 mxfRational IndexTableHelper::GetEditRate()
 {
-    IM_ASSERT(!mSegments.empty());
+    BMX_ASSERT(!mSegments.empty());
     return mSegments[0]->getIndexEditRate();
 }
 
 void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, int8_t *key_frame_offset, uint8_t *flags,
                                    int64_t *offset, int64_t *size)
 {
-    IM_CHECK(mDuration == 0 || position < mDuration);
+    BMX_CHECK(mDuration == 0 || position < mDuration);
 
     int result = mSegments[mLastEditUnitSegment]->GetEditUnit(position, temporal_offset, key_frame_offset, flags,
                                                               offset);
@@ -366,7 +366,7 @@ void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, in
             }
         }
     }
-    IM_CHECK_M(result == 0,
+    BMX_CHECK_M(result == 0,
                ("Failed to find edit unit index information for position 0x%"PRIx64, position));
 
     if (size) {
@@ -404,7 +404,7 @@ int64_t IndexTableHelper::GetEditUnitOffset(int64_t position)
 
 bool IndexTableHelper::GetTemporalReordering(uint32_t delta)
 {
-    IM_ASSERT(!mSegments.empty());
+    BMX_ASSERT(!mSegments.empty());
 
     // TODO: is it possible to identify an element within the delta entry array with certainty when slice > 0?
     return mSegments[0]->haveDeltaEntryAtDelta(delta, 0) &&

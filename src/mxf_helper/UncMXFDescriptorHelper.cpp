@@ -33,15 +33,15 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_helper/UncMXFDescriptorHelper.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_helper/UncMXFDescriptorHelper.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid_labels_and_keys.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -192,13 +192,13 @@ void UncMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL a
     PictureMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
 
     mEssenceIndex = GetEssenceIndex(file_descriptor, alternative_ec_label);
-    IM_ASSERT(mEssenceIndex != (size_t)(-1));
+    BMX_ASSERT(mEssenceIndex != (size_t)(-1));
     mEssenceType = SUPPORTED_ESSENCE[mEssenceIndex].essence_type;
     mFrameWrapped = SUPPORTED_ESSENCE[mEssenceIndex].frame_wrapped;
     mAvidResolutionId = SUPPORTED_ESSENCE[mEssenceIndex].avid_resolution_id;
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(file_descriptor);
-    IM_ASSERT(cdci_descriptor);
+    BMX_ASSERT(cdci_descriptor);
 
     if (cdci_descriptor->haveComponentDepth()) {
         mComponentDepth = cdci_descriptor->getComponentDepth();
@@ -273,8 +273,8 @@ void UncMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL a
 
 void UncMXFDescriptorHelper::SetComponentDepth(uint32_t depth)
 {
-    IM_ASSERT(!mFileDescriptor);
-    IM_CHECK(depth == 8 || depth == 10);
+    BMX_ASSERT(!mFileDescriptor);
+    BMX_CHECK(depth == 8 || depth == 10);
 
     mComponentDepth = depth;
 }
@@ -316,7 +316,7 @@ void UncMXFDescriptorHelper::SetVideoLineMap(int32_t field1, int32_t field2)
 
 void UncMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetEssenceType(essence_type);
 
@@ -325,7 +325,7 @@ void UncMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 
 void UncMXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetSampleRate(sample_rate);
 
@@ -334,7 +334,7 @@ void UncMXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 
 void UncMXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetFrameWrapped(frame_wrapped);
 
@@ -343,7 +343,7 @@ void UncMXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
 
 FileDescriptor* UncMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata)
 {
-    IM_CHECK(UpdateEssenceIndex());
+    BMX_CHECK(UpdateEssenceIndex());
 
     mFileDescriptor = new CDCIEssenceDescriptor(header_metadata);
     UpdateFileDescriptor();
@@ -355,7 +355,7 @@ void UncMXFDescriptorHelper::UpdateFileDescriptor()
     PictureMXFDescriptorHelper::UpdateFileDescriptor();
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
-    IM_ASSERT(cdci_descriptor);
+    BMX_ASSERT(cdci_descriptor);
 
     cdci_descriptor->setComponentDepth(mComponentDepth);
     cdci_descriptor->setHorizontalSubsampling(2);

@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_op1a/OP1AAVCITrack.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_op1a/OP1AAVCITrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -52,7 +52,7 @@ OP1AAVCITrack::OP1AAVCITrack(OP1AFile *file, uint32_t track_index, uint32_t trac
 : OP1APictureTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
 {
     mAVCIDescriptorHelper = dynamic_cast<AVCIMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mAVCIDescriptorHelper);
+    BMX_ASSERT(mAVCIDescriptorHelper);
 
     mTrackNumber = MXF_MPEG_PICT_TRACK_NUM(0x01, MXF_MPEG_PICT_FRAME_WRAPPED_EE_TYPE, 0x00);
     mEssenceElementKey = VIDEO_ELEMENT_KEY;
@@ -104,12 +104,12 @@ void OP1AAVCITrack::PrepareWrite(uint8_t picture_track_count, uint8_t sound_trac
 
 void OP1AAVCITrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_CHECK(data && size && num_samples);
+    BMX_CHECK(data && size && num_samples);
 
     // if multiple samples are passed in then they must all be the same size
     uint32_t sample_size = size / num_samples;
-    IM_CHECK(sample_size * num_samples == size);
-    IM_CHECK(sample_size == GetSampleSize() || sample_size == GetSampleWithoutHeaderSize());
+    BMX_CHECK(sample_size * num_samples == size);
+    BMX_CHECK(sample_size == GetSampleSize() || sample_size == GetSampleWithoutHeaderSize());
 
     const unsigned char *sample_data = data;
     const CDataBuffer *data_array;

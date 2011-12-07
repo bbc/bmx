@@ -35,12 +35,12 @@
 
 #include <cstring>
 
-#include <im/writer_helper/AVCIWriterHelper.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/writer_helper/AVCIWriterHelper.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
@@ -52,7 +52,7 @@ AVCIWriterHelper::AVCIWriterHelper()
     mFirstFrameHeader = false;
     mSecondFrameHeader = false;
 
-    IM_ASSERT(sizeof(AVCI_FILLER) == sizeof(AVCI_ACCESS_UNIT_DELIMITER));
+    BMX_ASSERT(sizeof(AVCI_FILLER) == sizeof(AVCI_ACCESS_UNIT_DELIMITER));
 }
 
 AVCIWriterHelper::~AVCIWriterHelper()
@@ -67,7 +67,7 @@ void AVCIWriterHelper::SetMode(AVCIMode mode)
 
 void AVCIWriterHelper::SetHeader(const unsigned char *data, uint32_t size)
 {
-    IM_CHECK(size == AVCI_HEADER_SIZE);
+    BMX_CHECK(size == AVCI_HEADER_SIZE);
 
     if (!mHeader)
         mHeader = new unsigned char[AVCI_HEADER_SIZE];
@@ -122,7 +122,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             } else {
                 if (mSampleCount == 0) {
                     if (!mHeader) {
-                        IM_EXCEPTION(("Missing AVCI header sets in first frame"));
+                        BMX_EXCEPTION(("Missing AVCI header sets in first frame"));
                     }
                     output_frame_size = PrependFrameHeader(data, size, array_size);
                 } else {
@@ -147,7 +147,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             } else {
                 if (mSampleCount == 0) {
                     if (!mHeader) {
-                        IM_EXCEPTION(("Missing AVCI header sets in first frame"));
+                        BMX_EXCEPTION(("Missing AVCI header sets in first frame"));
                     }
                     output_frame_size = PrependFrameHeader(data, size, array_size);
                 } else if (mSampleCount == 1) {
@@ -167,7 +167,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
                 output_frame_size = PassFrame(data, size, array_size);
             } else {
                 if (!mHeader) {
-                    IM_EXCEPTION(("Missing AVCI header sets in first frame"));
+                    BMX_EXCEPTION(("Missing AVCI header sets in first frame"));
                 }
                 output_frame_size = PrependFrameHeader(data, size, array_size);
             }
@@ -194,7 +194,7 @@ uint32_t AVCIWriterHelper::PassFrame(const unsigned char *data, uint32_t size, u
         mDataArray[1].size = size - sizeof(AVCI_ACCESS_UNIT_DELIMITER);
         *array_size = 2;
     } else {
-        IM_EXCEPTION(("AVCI frame does not start with access unit delimiter or filler"));
+        BMX_EXCEPTION(("AVCI frame does not start with access unit delimiter or filler"));
     }
 
     return size;
@@ -214,7 +214,7 @@ uint32_t AVCIWriterHelper::StripFrameHeader(const unsigned char *data, uint32_t 
         mDataArray[1].size = size - AVCI_HEADER_SIZE - sizeof(AVCI_ACCESS_UNIT_DELIMITER);
         *array_size = 2;
     } else {
-        IM_EXCEPTION(("Failed to strip AVCI header because filler or access unit delimiter "
+        BMX_EXCEPTION(("Failed to strip AVCI header because filler or access unit delimiter "
                       "not found at offset %u", AVCI_HEADER_SIZE));
     }
 
@@ -224,7 +224,7 @@ uint32_t AVCIWriterHelper::StripFrameHeader(const unsigned char *data, uint32_t 
 uint32_t AVCIWriterHelper::PrependFrameHeader(const unsigned char *data, uint32_t size, uint32_t *array_size)
 {
     // prepend header and replace access unit delimiter with filler
-    IM_ASSERT(mHeader);
+    BMX_ASSERT(mHeader);
     if (memcmp(data, AVCI_ACCESS_UNIT_DELIMITER, sizeof(AVCI_ACCESS_UNIT_DELIMITER)) == 0) {
         mDataArray[0].data = mHeader;
         mDataArray[0].size = AVCI_HEADER_SIZE;

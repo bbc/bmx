@@ -29,15 +29,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <im/clip_writer/ClipWriter.h>
-#include <im/as02/AS02Version.h>
-#include <im/Utils.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/clip_writer/ClipWriter.h>
+#include <bmx/as02/AS02Version.h>
+#include <bmx/Utils.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 typedef struct
@@ -98,7 +98,7 @@ string ClipWriter::ClipWriterTypeToString(ClipWriterType clip_type)
             return CLIP_WRITER_TYPE_STRING_MAP[i].str;
     }
 
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return "";
 }
 
@@ -195,7 +195,7 @@ void ClipWriter::SetClipName(string name)
             mD10Clip->SetClipName(name);
             break;
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -221,7 +221,7 @@ void ClipWriter::SetStartTimecode(Timecode start_timecode)
             mD10Clip->SetStartTimecode(start_timecode);
             break;
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -248,7 +248,7 @@ void ClipWriter::SetProductInfo(string company_name, string product_name, mxfPro
             mD10Clip->SetProductInfo(company_name, product_name, product_version, version, product_uid);
             break;
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -278,7 +278,7 @@ ClipWriterTrack* ClipWriter::CreateTrack(EssenceType essence_type, string track_
             track = new ClipWriterTrack(essence_type, mD10Clip->CreateTrack(essence_type));
             break;
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -307,7 +307,7 @@ void ClipWriter::PrepareWrite()
             mD10Clip->PrepareWrite();
             break;
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -340,7 +340,7 @@ void ClipWriter::CompleteWrite()
             mD10Clip->CompleteWrite();
             break;
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -361,7 +361,7 @@ Rational ClipWriter::GetFrameRate() const
         case CW_D10_CLIP_TYPE:
             return mD10Clip->GetFrameRate();
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -384,7 +384,7 @@ int64_t ClipWriter::GetDuration()
         case CW_D10_CLIP_TYPE:
             return mD10Clip->GetDuration();
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -393,7 +393,7 @@ int64_t ClipWriter::GetDuration()
 
 ClipWriterTrack* ClipWriter::GetTrack(uint32_t track_index)
 {
-    IM_CHECK(track_index < mTracks.size());
+    BMX_CHECK(track_index < mTracks.size());
     return mTracks[track_index];
 }
 

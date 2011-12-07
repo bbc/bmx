@@ -29,40 +29,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <im/clip_writer/ClipWriterTrack.h>
-#include <im/as02/AS02PictureTrack.h>
-#include <im/as02/AS02DVTrack.h>
-#include <im/as02/AS02UncTrack.h>
-#include <im/as02/AS02D10Track.h>
-#include <im/as02/AS02MPEG2LGTrack.h>
-#include <im/as02/AS02AVCITrack.h>
-#include <im/as02/AS02PCMTrack.h>
-#include <im/as11/AS11Track.h>
-#include <im/mxf_op1a/OP1APictureTrack.h>
-#include <im/mxf_op1a/OP1ADVTrack.h>
-#include <im/mxf_op1a/OP1AUncTrack.h>
-#include <im/mxf_op1a/OP1AD10Track.h>
-#include <im/mxf_op1a/OP1AMPEG2LGTrack.h>
-#include <im/mxf_op1a/OP1AAVCITrack.h>
-#include <im/mxf_op1a/OP1APCMTrack.h>
-#include <im/avid_mxf/AvidPictureTrack.h>
-#include <im/avid_mxf/AvidDVTrack.h>
-#include <im/avid_mxf/AvidD10Track.h>
-#include <im/avid_mxf/AvidMPEG2LGTrack.h>
-#include <im/avid_mxf/AvidMJPEGTrack.h>
-#include <im/avid_mxf/AvidVC3Track.h>
-#include <im/avid_mxf/AvidAVCITrack.h>
-#include <im/avid_mxf/AvidUncTrack.h>
-#include <im/avid_mxf/AvidPCMTrack.h>
-#include <im/d10_mxf/D10MPEGTrack.h>
-#include <im/d10_mxf/D10PCMTrack.h>
-#include <im/MXFUtils.h>
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/clip_writer/ClipWriterTrack.h>
+#include <bmx/as02/AS02PictureTrack.h>
+#include <bmx/as02/AS02DVTrack.h>
+#include <bmx/as02/AS02UncTrack.h>
+#include <bmx/as02/AS02D10Track.h>
+#include <bmx/as02/AS02MPEG2LGTrack.h>
+#include <bmx/as02/AS02AVCITrack.h>
+#include <bmx/as02/AS02PCMTrack.h>
+#include <bmx/as11/AS11Track.h>
+#include <bmx/mxf_op1a/OP1APictureTrack.h>
+#include <bmx/mxf_op1a/OP1ADVTrack.h>
+#include <bmx/mxf_op1a/OP1AUncTrack.h>
+#include <bmx/mxf_op1a/OP1AD10Track.h>
+#include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
+#include <bmx/mxf_op1a/OP1AAVCITrack.h>
+#include <bmx/mxf_op1a/OP1APCMTrack.h>
+#include <bmx/avid_mxf/AvidPictureTrack.h>
+#include <bmx/avid_mxf/AvidDVTrack.h>
+#include <bmx/avid_mxf/AvidD10Track.h>
+#include <bmx/avid_mxf/AvidMPEG2LGTrack.h>
+#include <bmx/avid_mxf/AvidMJPEGTrack.h>
+#include <bmx/avid_mxf/AvidVC3Track.h>
+#include <bmx/avid_mxf/AvidAVCITrack.h>
+#include <bmx/avid_mxf/AvidUncTrack.h>
+#include <bmx/avid_mxf/AvidPCMTrack.h>
+#include <bmx/d10_mxf/D10MPEGTrack.h>
+#include <bmx/d10_mxf/D10PCMTrack.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
@@ -172,7 +172,7 @@ void ClipWriterTrack::SetOutputTrackNumber(uint32_t track_number)
             mD10Track->SetOutputTrackNumber(track_number);
             break;
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -216,7 +216,7 @@ void ClipWriterTrack::SetAspectRatio(Rational aspect_ratio)
             break;
         }
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -261,7 +261,7 @@ void ClipWriterTrack::SetComponentDepth(uint32_t depth)
         case CW_D10_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -305,7 +305,7 @@ void ClipWriterTrack::SetSampleSize(uint32_t size)
             break;
         }
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -407,7 +407,7 @@ void ClipWriterTrack::SetAVCIMode(AVCIMode mode)
         case CW_D10_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -446,7 +446,7 @@ void ClipWriterTrack::SetAVCIHeader(const unsigned char *data, uint32_t size)
         case CW_D10_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -485,7 +485,7 @@ void ClipWriterTrack::SetAFD(uint8_t afd)
             break;
         }
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -508,7 +508,7 @@ void ClipWriterTrack::SetInputHeight(uint32_t height)
             break;
         }
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -552,7 +552,7 @@ void ClipWriterTrack::SetSamplingRate(Rational sampling_rate)
             break;
         }
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -596,7 +596,7 @@ void ClipWriterTrack::SetQuantizationBits(uint32_t bits)
             break;
         }
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -640,7 +640,7 @@ void ClipWriterTrack::SetChannelCount(uint32_t count)
             break;
         }
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -684,7 +684,7 @@ void ClipWriterTrack::SetLocked(bool locked)
             break;
         }
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -728,7 +728,7 @@ void ClipWriterTrack::SetAudioRefLevel(int8_t level)
             break;
         }
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -772,7 +772,7 @@ void ClipWriterTrack::SetDialNorm(int8_t dial_norm)
             break;
         }
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -813,7 +813,7 @@ void ClipWriterTrack::SetSequenceOffset(uint8_t offset)
             break;
         }
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -839,7 +839,7 @@ void ClipWriterTrack::WriteSamples(const unsigned char *data, uint32_t size, uin
             mD10Track->WriteSamples(data, size, num_samples);
             break;
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -860,7 +860,7 @@ bool ClipWriterTrack::IsPicture() const
         case CW_D10_CLIP_TYPE:
             return mD10Track->IsPicture();
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -883,7 +883,7 @@ uint32_t ClipWriterTrack::GetSampleSize() const
         case CW_D10_CLIP_TYPE:
             return mD10Track->GetSampleSize();
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -941,7 +941,7 @@ uint32_t ClipWriterTrack::GetAVCISampleWithoutHeaderSize() const
         case CW_D10_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -966,7 +966,7 @@ bool ClipWriterTrack::IsSingleField() const
             break;
         }
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -1009,7 +1009,7 @@ vector<uint32_t> ClipWriterTrack::GetShiftedSampleSequence() const
             break;
         }
         case CW_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 

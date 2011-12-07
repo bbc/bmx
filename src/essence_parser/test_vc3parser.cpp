@@ -38,9 +38,9 @@
 #include <cstdio>
 #include <cerrno>
 
-#include <im/essence_parser/VC3EssenceParser.h>
+#include <bmx/essence_parser/VC3EssenceParser.h>
 
-using namespace im;
+using namespace bmx;
 
 
 typedef struct

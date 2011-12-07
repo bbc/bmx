@@ -35,22 +35,22 @@
 
 #include <cstring>
 
-#include <im/mxf_helper/PictureMXFDescriptorHelper.h>
-#include <im/mxf_helper/D10MXFDescriptorHelper.h>
-#include <im/mxf_helper/DVMXFDescriptorHelper.h>
-#include <im/mxf_helper/AVCIMXFDescriptorHelper.h>
-#include <im/mxf_helper/UncMXFDescriptorHelper.h>
-#include <im/mxf_helper/MPEG2LGMXFDescriptorHelper.h>
-#include <im/mxf_helper/VC3MXFDescriptorHelper.h>
-#include <im/mxf_helper/MJPEGMXFDescriptorHelper.h>
-#include <im/IMTypes.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/D10MXFDescriptorHelper.h>
+#include <bmx/mxf_helper/DVMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/AVCIMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/UncMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/MPEG2LGMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/VC3MXFDescriptorHelper.h>
+#include <bmx/mxf_helper/MJPEGMXFDescriptorHelper.h>
+#include <bmx/BMXTypes.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -127,7 +127,7 @@ bool PictureMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 
 MXFDescriptorHelper* PictureMXFDescriptorHelper::Create(EssenceType essence_type)
 {
-    IM_ASSERT(IsSupported(essence_type));
+    BMX_ASSERT(IsSupported(essence_type));
 
     PictureMXFDescriptorHelper *helper;
     if (D10MXFDescriptorHelper::IsSupported(essence_type))
@@ -169,7 +169,7 @@ void PictureMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxf
     MXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
 
     GenericPictureEssenceDescriptor *picture_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
-    IM_ASSERT(picture_descriptor);
+    BMX_ASSERT(picture_descriptor);
 
     if (picture_descriptor->haveAspectRatio())
         mAspectRatio = picture_descriptor->getAspectRatio();
@@ -184,7 +184,7 @@ void PictureMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxf
 
 void PictureMXFDescriptorHelper::SetAspectRatio(mxfRational aspect_ratio)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     mAspectRatio = aspect_ratio;
 }
@@ -199,7 +199,7 @@ FileDescriptor* PictureMXFDescriptorHelper::CreateFileDescriptor(HeaderMetadata 
     (void)header_metadata;
 
     // implemented by child classes only
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return 0;
 }
 
@@ -208,7 +208,7 @@ void PictureMXFDescriptorHelper::UpdateFileDescriptor()
     MXFDescriptorHelper::UpdateFileDescriptor();
 
     GenericPictureEssenceDescriptor *picture_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(mFileDescriptor);
-    IM_ASSERT(picture_descriptor);
+    BMX_ASSERT(picture_descriptor);
 
     picture_descriptor->setAspectRatio(mAspectRatio);
     if (mAFD)
@@ -227,87 +227,87 @@ void PictureMXFDescriptorHelper::UpdateFileDescriptor()
 
 bool PictureMXFDescriptorHelper::HaveAvidResolutionID()
 {
-    IM_ASSERT(mFileDescriptor);
+    BMX_ASSERT(mFileDescriptor);
     return mFileDescriptor->haveItem(&MXF_ITEM_K(GenericPictureEssenceDescriptor, ResolutionID));
 }
 
 int32_t PictureMXFDescriptorHelper::GetAvidResolutionID()
 {
-    IM_ASSERT(mFileDescriptor);
+    BMX_ASSERT(mFileDescriptor);
     return mFileDescriptor->getInt32Item(&MXF_ITEM_K(GenericPictureEssenceDescriptor, ResolutionID));
 }
 
 void PictureMXFDescriptorHelper::SetAvidResolutionID(int32_t resolution_id)
 {
-    IM_ASSERT(mFileDescriptor);
+    BMX_ASSERT(mFileDescriptor);
     return mFileDescriptor->setInt32Item(&MXF_ITEM_K(GenericPictureEssenceDescriptor, ResolutionID), resolution_id);
 }
 
 bool PictureMXFDescriptorHelper::HaveAvidFrameSampleSize()
 {
-    IM_ASSERT(mFileDescriptor);
+    BMX_ASSERT(mFileDescriptor);
     return mFileDescriptor->haveItem(&MXF_ITEM_K(GenericPictureEssenceDescriptor, FrameSampleSize));
 }
 
 int32_t PictureMXFDescriptorHelper::GetAvidFrameSampleSize()
 {
-    IM_ASSERT(mFileDescriptor);
+    BMX_ASSERT(mFileDescriptor);
     return mFileDescriptor->getInt32Item(&MXF_ITEM_K(GenericPictureEssenceDescriptor, FrameSampleSize));
 }
 
 void PictureMXFDescriptorHelper::SetAvidFrameSampleSize(int32_t size)
 {
-    IM_ASSERT(mFileDescriptor);
+    BMX_ASSERT(mFileDescriptor);
     return mFileDescriptor->setInt32Item(&MXF_ITEM_K(GenericPictureEssenceDescriptor, FrameSampleSize), size);
 }
 
 bool PictureMXFDescriptorHelper::HaveAvidImageSize()
 {
-    IM_ASSERT(mFileDescriptor);
+    BMX_ASSERT(mFileDescriptor);
     return mFileDescriptor->haveItem(&MXF_ITEM_K(GenericPictureEssenceDescriptor, ImageSize));
 }
 
 int32_t PictureMXFDescriptorHelper::GetAvidImageSize()
 {
-    IM_ASSERT(mFileDescriptor);
+    BMX_ASSERT(mFileDescriptor);
     return mFileDescriptor->getInt32Item(&MXF_ITEM_K(GenericPictureEssenceDescriptor, ImageSize));
 }
 
 void PictureMXFDescriptorHelper::SetAvidImageSize(int32_t size)
 {
-    IM_ASSERT(mFileDescriptor);
+    BMX_ASSERT(mFileDescriptor);
     return mFileDescriptor->setInt32Item(&MXF_ITEM_K(GenericPictureEssenceDescriptor, ImageSize), size);
 }
 
 bool PictureMXFDescriptorHelper::HaveAvidFirstFrameOffset()
 {
-    IM_ASSERT(mFileDescriptor);
+    BMX_ASSERT(mFileDescriptor);
     return mFileDescriptor->haveItem(&MXF_ITEM_K(GenericPictureEssenceDescriptor, FirstFrameOffset));
 }
 
 int32_t PictureMXFDescriptorHelper::GetAvidFirstFrameOffset()
 {
-    IM_ASSERT(mFileDescriptor);
+    BMX_ASSERT(mFileDescriptor);
     return mFileDescriptor->getInt32Item(&MXF_ITEM_K(GenericPictureEssenceDescriptor, FirstFrameOffset));
 }
 
 void PictureMXFDescriptorHelper::SetFirstFrameOffset(int32_t offset)
 {
-    IM_ASSERT(mFileDescriptor);
+    BMX_ASSERT(mFileDescriptor);
     return mFileDescriptor->setInt32Item(&MXF_ITEM_K(GenericPictureEssenceDescriptor, FirstFrameOffset), offset);
 }
 
 mxfUL PictureMXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
     // implemented by child classes only
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return g_Null_UL;
 }
 
 void PictureMXFDescriptorHelper::SetCodingEquations(mxfUL label)
 {
     GenericPictureEssenceDescriptor *picture_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(mFileDescriptor);
-    IM_ASSERT(picture_descriptor);
+    BMX_ASSERT(picture_descriptor);
 
     mxfAUID auid;
     switch (mFlavour)
@@ -330,7 +330,7 @@ void PictureMXFDescriptorHelper::SetCodingEquations(mxfUL label)
 void PictureMXFDescriptorHelper::SetColorSiting(uint8_t color_siting)
 {
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
-    IM_ASSERT(cdci_descriptor);
+    BMX_ASSERT(cdci_descriptor);
 
     switch (mFlavour)
     {

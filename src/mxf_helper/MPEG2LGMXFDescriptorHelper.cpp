@@ -33,15 +33,15 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_helper/MPEG2LGMXFDescriptorHelper.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_helper/MPEG2LGMXFDescriptorHelper.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid_labels_and_keys.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -157,7 +157,7 @@ void MPEG2LGMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxf
     mFrameWrapped = mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(MPEGES0FrameWrapped));
 
     size_t mEssenceIndex = GetEssenceIndex(file_descriptor, alternative_ec_label);
-    IM_ASSERT(mEssenceIndex != (size_t)(-1));
+    BMX_ASSERT(mEssenceIndex != (size_t)(-1));
     mEssenceType = SUPPORTED_ESSENCE[mEssenceIndex].essence_type;
 
     // TODO: get other avid resolution ids
@@ -171,7 +171,7 @@ void MPEG2LGMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxf
 
 void MPEG2LGMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetEssenceType(essence_type);
 
@@ -180,7 +180,7 @@ void MPEG2LGMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 
 void MPEG2LGMXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetSampleRate(sample_rate);
 
@@ -189,7 +189,7 @@ void MPEG2LGMXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 
 void MPEG2LGMXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetFrameWrapped(frame_wrapped);
 
@@ -214,9 +214,9 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     PictureMXFDescriptorHelper::UpdateFileDescriptor();
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
-    IM_ASSERT(cdci_descriptor);
+    BMX_ASSERT(cdci_descriptor);
     MPEGVideoDescriptor *mpeg_descriptor = dynamic_cast<MPEGVideoDescriptor*>(mFileDescriptor);
-    IM_ASSERT(mFlavour == AVID_FLAVOUR || mpeg_descriptor);
+    BMX_ASSERT(mFlavour == AVID_FLAVOUR || mpeg_descriptor);
 
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
     SetCodingEquations(ITUR_BT709_CODING_EQ);
@@ -290,7 +290,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->appendVideoLineMap(0);
             break;
         default:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
     cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
@@ -334,7 +334,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
                 mpeg_descriptor->setProfileAndLevel(0x46); // Main Profile @ High 1440 level
                 break;
             default:
-                IM_ASSERT(false);
+                BMX_ASSERT(false);
                 break;
         }
     }
@@ -343,7 +343,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
 mxfUL MPEG2LGMXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
     if (mFlavour == AVID_FLAVOUR) {
-        IM_ASSERT(!mFrameWrapped);
+        BMX_ASSERT(!mFrameWrapped);
         return MXF_EC_L(AvidMPEGClipWrapped);
     } else {
         if (mFrameWrapped)
@@ -362,7 +362,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateEssenceIndex()
             break;
         }
     }
-    IM_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+    BMX_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 
     // TODO: get other avid resolution ids
     if (mEssenceType == MPEG2LG_422P_HL_1080I) {

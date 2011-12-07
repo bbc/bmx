@@ -35,15 +35,15 @@
 
 #include <cstring>
 
-#include <im/mxf_helper/VC3MXFDescriptorHelper.h>
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_helper/VC3MXFDescriptorHelper.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid_labels_and_keys.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -153,7 +153,7 @@ VC3MXFDescriptorHelper::~VC3MXFDescriptorHelper()
 
 void VC3MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
-    IM_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
+    BMX_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
 
     PictureMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
 
@@ -181,7 +181,7 @@ void VC3MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL a
 
 void VC3MXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     size_t i;
     for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
@@ -191,7 +191,7 @@ void VC3MXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
             break;
         }
     }
-    IM_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+    BMX_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 
     PictureMXFDescriptorHelper::SetEssenceType(essence_type);
 }
@@ -208,7 +208,7 @@ void VC3MXFDescriptorHelper::UpdateFileDescriptor()
     PictureMXFDescriptorHelper::UpdateFileDescriptor();
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
-    IM_ASSERT(cdci_descriptor);
+    BMX_ASSERT(cdci_descriptor);
 
     if (mFlavour == AVID_FLAVOUR)
         cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].avid_pc_label);
@@ -250,7 +250,7 @@ uint32_t VC3MXFDescriptorHelper::GetSampleSize()
 mxfUL VC3MXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
     if (mFlavour == AVID_FLAVOUR) {
-        IM_ASSERT(!mFrameWrapped);
+        BMX_ASSERT(!mFrameWrapped);
         return SUPPORTED_ESSENCE[mEssenceIndex].avid_ec_label;
     } else {
         if (mFrameWrapped)

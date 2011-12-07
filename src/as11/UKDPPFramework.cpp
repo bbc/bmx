@@ -35,13 +35,13 @@
 
 #include <libMXF++/MXF.h>
 
-#include <im/as11/UKDPPFramework.h>
-#include <im/as11/UKDPPDMS.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as11/UKDPPFramework.h>
+#include <bmx/as11/UKDPPDMS.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 

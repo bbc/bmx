@@ -33,16 +33,16 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_reader/MXFPackageResolver.h>
-#include <im/mxf_reader/MXFFileReader.h>
-#include <im/MXFUtils.h>
-#include <im/URI.h>
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_reader/MXFPackageResolver.h>
+#include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/URI.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 

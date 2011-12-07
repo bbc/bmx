@@ -37,22 +37,22 @@
 
 #include <cstdio>
 
-#include <im/mxf_op1a/OP1ATrack.h>
-#include <im/mxf_op1a/OP1AFile.h>
-#include <im/mxf_op1a/OP1ADVTrack.h>
-#include <im/mxf_op1a/OP1AD10Track.h>
-#include <im/mxf_op1a/OP1AAVCITrack.h>
-#include <im/mxf_op1a/OP1AUncTrack.h>
-#include <im/mxf_op1a/OP1AMPEG2LGTrack.h>
-#include <im/mxf_op1a/OP1AVC3Track.h>
-#include <im/mxf_op1a/OP1APCMTrack.h>
-#include <im/MXFUtils.h>
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_op1a/OP1ATrack.h>
+#include <bmx/mxf_op1a/OP1AFile.h>
+#include <bmx/mxf_op1a/OP1ADVTrack.h>
+#include <bmx/mxf_op1a/OP1AD10Track.h>
+#include <bmx/mxf_op1a/OP1AAVCITrack.h>
+#include <bmx/mxf_op1a/OP1AUncTrack.h>
+#include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
+#include <bmx/mxf_op1a/OP1AVC3Track.h>
+#include <bmx/mxf_op1a/OP1APCMTrack.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -173,7 +173,7 @@ OP1ATrack* OP1ATrack::Create(OP1AFile *file, uint32_t track_index, uint32_t trac
         case WAVE_PCM:
             return new OP1APCMTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         default:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
     }
 
     return 0;
@@ -218,7 +218,7 @@ void OP1ATrack::SetOutputTrackNumber(uint32_t track_number)
 
 void OP1ATrack::SetLowerLevelSourcePackage(SourcePackage *package, uint32_t track_id, string uri)
 {
-    IM_CHECK(!mHaveLowerLevelSourcePackage);
+    BMX_CHECK(!mHaveLowerLevelSourcePackage);
 
 #if 0   // TODO: allow dark strong referenced sets to be cloned without resulting in an error
     mLowerLevelSourcePackage = dynamic_cast<SourcePackage*>(package->clone(mHeaderMetadata));
@@ -234,7 +234,7 @@ void OP1ATrack::SetLowerLevelSourcePackage(SourcePackage *package, uint32_t trac
 
 void OP1ATrack::SetLowerLevelSourcePackage(mxfUMID package_uid, uint32_t track_id)
 {
-    IM_CHECK(!mHaveLowerLevelSourcePackage);
+    BMX_CHECK(!mHaveLowerLevelSourcePackage);
 
     mLowerLevelSourcePackageUID = package_uid;
     mLowerLevelTrackId = track_id;
@@ -320,7 +320,7 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     FileDescriptor *descriptor = mDescriptorHelper->CreateFileDescriptor(header_metadata);
     if (file_source_package->haveDescriptor()) {
         MultipleDescriptor *mult_descriptor = dynamic_cast<MultipleDescriptor*>(file_source_package->getDescriptor());
-        IM_ASSERT(mult_descriptor);
+        BMX_ASSERT(mult_descriptor);
         mult_descriptor->appendSubDescriptorUIDs(descriptor);
     } else {
         file_source_package->setDescriptor(descriptor);
@@ -341,7 +341,7 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
 
 void OP1ATrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_ASSERT(data && size && num_samples);
+    BMX_ASSERT(data && size && num_samples);
 
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
 }

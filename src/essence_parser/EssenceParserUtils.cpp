@@ -34,17 +34,17 @@
 #endif
 
 #include "EssenceParserUtils.h"
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
-using namespace im;
+using namespace bmx;
 
 
 
-uint32_t im::get_bits(const unsigned char *data, uint32_t data_size, uint32_t bit_offset, uint8_t num_bits)
+uint32_t bmx::get_bits(const unsigned char *data, uint32_t data_size, uint32_t bit_offset, uint8_t num_bits)
 {
-    IM_ASSERT(num_bits <= 32);
-    IM_CHECK((bit_offset + num_bits) / 8 + 1 <= data_size);
+    BMX_ASSERT(num_bits <= 32);
+    BMX_CHECK((bit_offset + num_bits) / 8 + 1 <= data_size);
 
     uint64_t buffer;
     const unsigned char *byte = data + bit_offset / 8;

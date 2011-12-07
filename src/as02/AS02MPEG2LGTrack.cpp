@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/as02/AS02MPEG2LGTrack.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as02/AS02MPEG2LGTrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -76,9 +76,9 @@ AS02MPEG2LGTrack::~AS02MPEG2LGTrack()
 
 void AS02MPEG2LGTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_ASSERT(mMXFFile);
-    IM_CHECK(num_samples == 1);
-    IM_CHECK(data && size);
+    BMX_ASSERT(mMXFFile);
+    BMX_CHECK(num_samples == 1);
+    BMX_CHECK(data && size);
 
     mWriterHelper.ProcessFrame(data, size);
 
@@ -86,7 +86,7 @@ void AS02MPEG2LGTrack::WriteSamples(const unsigned char *data, uint32_t size, ui
     // update previous index entry if temporal offset now known
 
     if (mWriterHelper.HavePrevTemporalOffset()) {
-        IM_ASSERT(!mIndexSegments.empty());
+        BMX_ASSERT(!mIndexSegments.empty());
         uint16_t segment_offset = mWriterHelper.GetPrevTemporalOffset() * INDEX_ENTRY_SIZE;
         size_t segment_index = mIndexSegments.size() - 1;
         while (segment_index > 0 && segment_offset > mIndexSegments[segment_index]->GetSize()) {
@@ -109,7 +109,7 @@ void AS02MPEG2LGTrack::WriteSamples(const unsigned char *data, uint32_t size, ui
     HandlePartitionInterval(mWriterHelper.HaveGOPHeader());
 
     mMXFFile->writeFixedKL(&mEssenceElementKey, mLLen, size);
-    IM_CHECK(mMXFFile->write(data, size) == size);
+    BMX_CHECK(mMXFFile->write(data, size) == size);
 
     UpdateEssenceOnlyChecksum(data, size);
 
@@ -191,7 +191,7 @@ void AS02MPEG2LGTrack::PostSampleWriting(mxfpp::Partition *partition)
 
     // update the file descriptor with info extracted from the essence data
     MPEGVideoDescriptor *mpeg_descriptor = dynamic_cast<MPEGVideoDescriptor*>(mDescriptorHelper->GetFileDescriptor());
-    IM_ASSERT(mpeg_descriptor);
+    BMX_ASSERT(mpeg_descriptor);
     mpeg_descriptor->setSingleSequence(mWriterHelper.GetSingleSequence());
     mpeg_descriptor->setConstantBFrames(mWriterHelper.GetConstantBFrames());
     mpeg_descriptor->setLowDelay(mWriterHelper.GetLowDelay());

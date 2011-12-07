@@ -38,9 +38,9 @@
 #include <cstdio>
 #include <cerrno>
 
-#include <im/essence_parser/MJPEGEssenceParser.h>
+#include <bmx/essence_parser/MJPEGEssenceParser.h>
 
-using namespace im;
+using namespace bmx;
 
 
 #define MAX_IMAGE_SIZE      50000000

@@ -33,14 +33,14 @@
 #include "config.h"
 #endif
 
-#include <im/essence_parser/MPEG2EssenceParser.h>
+#include <bmx/essence_parser/MPEG2EssenceParser.h>
 #include "EssenceParserUtils.h"
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 #define PICTURE_START_CODE      0x00000100
@@ -93,7 +93,7 @@ MPEG2EssenceParser::~MPEG2EssenceParser()
 
 uint32_t MPEG2EssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
 {
-    IM_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
+    BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
     uint32_t state = 0xffffffff;
     uint32_t offset = 0;
@@ -114,9 +114,9 @@ uint32_t MPEG2EssenceParser::ParseFrameStart(const unsigned char *data, uint32_t
 
 uint32_t MPEG2EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
-    IM_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
-    IM_CHECK(mOffset <= data_size);
-    IM_CHECK(data_size >= 4);
+    BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
+    BMX_CHECK(mOffset <= data_size);
+    BMX_CHECK(data_size >= 4);
 
     while (mOffset < data_size) {
         mState = (mState << 8) | data[mOffset];
@@ -152,7 +152,7 @@ uint32_t MPEG2EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t 
 
 void MPEG2EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
 {
-    IM_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
+    BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
     mHaveSequenceHeader = false;
     mHaveGOPHeader = false;

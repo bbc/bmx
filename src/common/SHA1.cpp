@@ -50,9 +50,9 @@
 #include <cstring>
 #include <cerrno>
 
-#include <im/SHA1.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/SHA1.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
 
@@ -138,7 +138,7 @@ static unsigned char workspace[64];
 
 /* sha1_init - Initialize new context */
 
-void im::sha1_init(SHA1Context *context)
+void bmx::sha1_init(SHA1Context *context)
 {
     /* SHA1 initialization constants */
     context->state[0] = 0x67452301;
@@ -152,7 +152,7 @@ void im::sha1_init(SHA1Context *context)
 
 /* Run your data through this. */
 
-void im::sha1_update(SHA1Context *context, const unsigned char *data, size_t len)
+void bmx::sha1_update(SHA1Context *context, const unsigned char *data, size_t len)
 {
 size_t i, j;
 
@@ -174,7 +174,7 @@ size_t i, j;
 
 /* Add padding and return the message digest. */
 
-void im::sha1_final(unsigned char digest[20], SHA1Context *context)
+void bmx::sha1_final(unsigned char digest[20], SHA1Context *context)
 {
 uint32_t i, j;
 unsigned char finalcount[8];
@@ -203,7 +203,7 @@ unsigned char finalcount[8];
 #endif
 }
 
-string im::sha1_digest_str(const unsigned char digest[20])
+string bmx::sha1_digest_str(const unsigned char digest[20])
 {
     static const char hex_chars[] = "0123456789abcdef";
 
@@ -218,7 +218,7 @@ string im::sha1_digest_str(const unsigned char digest[20])
     return digest_str;
 }
 
-string im::sha1_calc_file(string filename)
+string bmx::sha1_calc_file(string filename)
 {
     FILE *file = fopen(filename.c_str(), "rb");
     if (!file) {

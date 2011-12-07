@@ -33,15 +33,15 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_helper/MJPEGMXFDescriptorHelper.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_helper/MJPEGMXFDescriptorHelper.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid_labels_and_keys.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -101,7 +101,7 @@ EssenceType MJPEGMXFDescriptorHelper::IsSupported(FileDescriptor *file_descripto
     size_t i;
     for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label)) {
-            IM_CHECK(SUPPORTED_ESSENCE[i].sample_rate == sample_rate);
+            BMX_CHECK(SUPPORTED_ESSENCE[i].sample_rate == sample_rate);
             return SUPPORTED_ESSENCE[i].essence_type;
         }
     }
@@ -133,7 +133,7 @@ MJPEGMXFDescriptorHelper::~MJPEGMXFDescriptorHelper()
 
 void MJPEGMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
-    IM_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
+    BMX_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
 
     PictureMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
 
@@ -154,7 +154,7 @@ void MJPEGMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL
 
 void MJPEGMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetEssenceType(essence_type);
 
@@ -163,7 +163,7 @@ void MJPEGMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 
 void MJPEGMXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetSampleRate(sample_rate);
 
@@ -172,7 +172,7 @@ void MJPEGMXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 
 void MJPEGMXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetFrameWrapped(frame_wrapped);
 
@@ -193,7 +193,7 @@ void MJPEGMXFDescriptorHelper::UpdateFileDescriptor()
     PictureMXFDescriptorHelper::UpdateFileDescriptor();
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
-    IM_ASSERT(cdci_descriptor);
+    BMX_ASSERT(cdci_descriptor);
 
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
     cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_ITU601);
@@ -227,7 +227,7 @@ bool MJPEGMXFDescriptorHelper::IsSingleField() const
 mxfUL MJPEGMXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
     // Only have clip wrapped label
-    IM_ASSERT(!mFrameWrapped);
+    BMX_ASSERT(!mFrameWrapped);
 
     return MXF_EC_L(AvidMJPEGClipWrapped);
 }
@@ -244,6 +244,6 @@ void MJPEGMXFDescriptorHelper::UpdateEssenceIndex()
             break;
         }
     }
-    IM_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+    BMX_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 

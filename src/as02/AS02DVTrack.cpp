@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/as02/AS02DVTrack.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as02/AS02DVTrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -52,7 +52,7 @@ AS02DVTrack::AS02DVTrack(AS02Clip *clip, uint32_t track_index, EssenceType essen
 : AS02PictureTrack(clip, track_index, essence_type, file, rel_uri)
 {
     mDVDescriptorHelper = dynamic_cast<DVMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mDVDescriptorHelper);
+    BMX_ASSERT(mDVDescriptorHelper);
 
     mDVDescriptorHelper->SetComponentDepth(8);
 

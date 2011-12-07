@@ -29,12 +29,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <im/frame/FrameBuffer.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/frame/FrameBuffer.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 

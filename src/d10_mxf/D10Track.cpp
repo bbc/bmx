@@ -37,17 +37,17 @@
 
 #include <cstdio>
 
-#include <im/d10_mxf/D10Track.h>
-#include <im/d10_mxf/D10File.h>
-#include <im/d10_mxf/D10MPEGTrack.h>
-#include <im/d10_mxf/D10PCMTrack.h>
-#include <im/MXFUtils.h>
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/d10_mxf/D10Track.h>
+#include <bmx/d10_mxf/D10File.h>
+#include <bmx/d10_mxf/D10MPEGTrack.h>
+#include <bmx/d10_mxf/D10PCMTrack.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -96,7 +96,7 @@ D10Track* D10Track::Create(D10File *file, uint32_t track_index, mxfRational fram
         case WAVE_PCM:
             return new D10PCMTrack(file, track_index, frame_rate, essence_type);
         default:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
     }
 
     return 0;
@@ -142,7 +142,7 @@ uint32_t D10Track::GetSampleSize()
 
 void D10Track::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_ASSERT(data && size && num_samples);
+    BMX_ASSERT(data && size && num_samples);
 
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
 }

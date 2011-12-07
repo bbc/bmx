@@ -33,14 +33,14 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_reader/MXFFileTrackReader.h>
-#include <im/mxf_reader/MXFFileReader.h>
-#include <im/essence_parser/AVCIEssenceParser.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_reader/MXFFileTrackReader.h>
+#include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/essence_parser/AVCIEssenceParser.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -148,7 +148,7 @@ void MXFFileTrackReader::SetNextFramePosition(int64_t position)
 
 void MXFFileTrackReader::SetAVCIHeader(const unsigned char *frame_data, uint32_t frame_data_size)
 {
-    IM_CHECK(frame_data_size >= AVCI_HEADER_SIZE);
+    BMX_CHECK(frame_data_size >= AVCI_HEADER_SIZE);
 
     delete [] mAVCIHeader;
 

@@ -35,12 +35,12 @@
 
 #include <cstring>
 
-#include <im/KLVParser.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/KLVParser.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 

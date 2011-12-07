@@ -32,12 +32,12 @@
 #include <cstring>
 #include <cerrno>
 
-#include <im/XMLWriter.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/XMLWriter.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
@@ -82,7 +82,7 @@ XMLWriter::~XMLWriter()
 
 void XMLWriter::WriteDocumentStart()
 {
-    IM_CHECK(mPrevWriteType == NONE);
+    BMX_CHECK(mPrevWriteType == NONE);
 
     WriteProlog();
 
@@ -101,16 +101,16 @@ void XMLWriter::WriteDocumentEnd()
 
 void XMLWriter::WriteElementStart(std::string ns, string local_name)
 {
-    IM_CHECK(mPrevWriteType == START ||
-             mPrevWriteType == ELEMENT_START ||
-             mPrevWriteType == DELAYED_ELEMENT_START ||
-             mPrevWriteType == ATTRIBUTE_START ||
-             mPrevWriteType == ATTRIBUTE_CONTENT ||
-             mPrevWriteType == ATTRIBUTE_END ||
-             mPrevWriteType == ELEMENT_CONTENT ||
-             mPrevWriteType == ELEMENT_END ||
-             mPrevWriteType == COMMENT ||
-             mPrevWriteType == PROC_INSTRUCTION);
+    BMX_CHECK(mPrevWriteType == START ||
+              mPrevWriteType == ELEMENT_START ||
+              mPrevWriteType == DELAYED_ELEMENT_START ||
+              mPrevWriteType == ATTRIBUTE_START ||
+              mPrevWriteType == ATTRIBUTE_CONTENT ||
+              mPrevWriteType == ATTRIBUTE_END ||
+              mPrevWriteType == ELEMENT_CONTENT ||
+              mPrevWriteType == ELEMENT_END ||
+              mPrevWriteType == COMMENT ||
+              mPrevWriteType == PROC_INSTRUCTION);
 
     if (mPrevWriteType == ATTRIBUTE_START || mPrevWriteType == ATTRIBUTE_CONTENT)
         WriteAttributeEnd();
@@ -150,11 +150,11 @@ void XMLWriter::WriteElementStart(std::string ns, string local_name)
 
 void XMLWriter::DeclareNamespace(string ns, std::string prefix)
 {
-    IM_CHECK(mPrevWriteType == DELAYED_ELEMENT_START ||
-             mPrevWriteType == ELEMENT_START);
-    IM_CHECK(!ns.empty());
+    BMX_CHECK(mPrevWriteType == DELAYED_ELEMENT_START ||
+              mPrevWriteType == ELEMENT_START);
+    BMX_CHECK(!ns.empty());
 
-    IM_CHECK(!mElementStack.empty());
+    BMX_CHECK(!mElementStack.empty());
     Element *element = mElementStack.back();
     
     bool was_added;
@@ -190,10 +190,10 @@ void XMLWriter::DeclareNamespace(string ns, std::string prefix)
 
 void XMLWriter::WriteAttribute(std::string ns, string local_name, string value)
 {
-    IM_CHECK(mPrevWriteType == ELEMENT_START ||
-             mPrevWriteType == ATTRIBUTE_START ||
-             mPrevWriteType == ATTRIBUTE_CONTENT ||
-             mPrevWriteType == ATTRIBUTE_END);
+    BMX_CHECK(mPrevWriteType == ELEMENT_START ||
+              mPrevWriteType == ATTRIBUTE_START ||
+              mPrevWriteType == ATTRIBUTE_CONTENT ||
+              mPrevWriteType == ATTRIBUTE_END);
 
     if (mPrevWriteType == ATTRIBUTE_START || mPrevWriteType == ATTRIBUTE_CONTENT)
         WriteAttributeEnd();
@@ -218,10 +218,10 @@ void XMLWriter::WriteAttribute(std::string ns, string local_name, string value)
 
 void XMLWriter::WriteAttributeStart(std::string ns, string local_name)
 {
-    IM_CHECK(mPrevWriteType == ELEMENT_START ||
-             mPrevWriteType == ATTRIBUTE_START ||
-             mPrevWriteType == ATTRIBUTE_CONTENT ||
-             mPrevWriteType == ATTRIBUTE_END);
+    BMX_CHECK(mPrevWriteType == ELEMENT_START ||
+              mPrevWriteType == ATTRIBUTE_START ||
+              mPrevWriteType == ATTRIBUTE_CONTENT ||
+              mPrevWriteType == ATTRIBUTE_END);
 
     if (mPrevWriteType == ATTRIBUTE_START || mPrevWriteType == ATTRIBUTE_CONTENT)
         WriteAttributeEnd();
@@ -244,8 +244,8 @@ void XMLWriter::WriteAttributeStart(std::string ns, string local_name)
 
 void XMLWriter::WriteAttributeContent(string value)
 {
-    IM_CHECK(mPrevWriteType == ATTRIBUTE_START ||
-             mPrevWriteType == ATTRIBUTE_CONTENT);
+    BMX_CHECK(mPrevWriteType == ATTRIBUTE_START ||
+              mPrevWriteType == ATTRIBUTE_CONTENT);
 
     WriteAttributeData(value);
 
@@ -254,8 +254,8 @@ void XMLWriter::WriteAttributeContent(string value)
 
 void XMLWriter::WriteAttributeEnd()
 {
-    IM_CHECK(mPrevWriteType == ATTRIBUTE_START ||
-             mPrevWriteType == ATTRIBUTE_CONTENT);
+    BMX_CHECK(mPrevWriteType == ATTRIBUTE_START ||
+              mPrevWriteType == ATTRIBUTE_CONTENT);
 
     Write("\"", 1);
 
@@ -264,11 +264,11 @@ void XMLWriter::WriteAttributeEnd()
 
 void XMLWriter::WriteElementContent(string content)
 {
-    IM_CHECK(mPrevWriteType == ELEMENT_START ||
-             mPrevWriteType == ATTRIBUTE_START ||
-             mPrevWriteType == ATTRIBUTE_CONTENT ||
-             mPrevWriteType == ATTRIBUTE_END ||
-             mPrevWriteType == ELEMENT_CONTENT);
+    BMX_CHECK(mPrevWriteType == ELEMENT_START ||
+              mPrevWriteType == ATTRIBUTE_START ||
+              mPrevWriteType == ATTRIBUTE_CONTENT ||
+              mPrevWriteType == ATTRIBUTE_END ||
+              mPrevWriteType == ELEMENT_CONTENT);
 
     if (mPrevWriteType == ATTRIBUTE_START || mPrevWriteType == ATTRIBUTE_CONTENT)
         WriteAttributeEnd();
@@ -283,21 +283,21 @@ void XMLWriter::WriteElementContent(string content)
 
 void XMLWriter::WriteElementEnd()
 {
-    IM_CHECK(mPrevWriteType == ELEMENT_START ||
-             mPrevWriteType == ATTRIBUTE_START ||
-             mPrevWriteType == ATTRIBUTE_CONTENT ||
-             mPrevWriteType == ATTRIBUTE_END ||
-             mPrevWriteType == ELEMENT_CONTENT ||
-             mPrevWriteType == ELEMENT_END ||
-             mPrevWriteType == COMMENT ||
-             mPrevWriteType == PROC_INSTRUCTION);
+    BMX_CHECK(mPrevWriteType == ELEMENT_START ||
+              mPrevWriteType == ATTRIBUTE_START ||
+              mPrevWriteType == ATTRIBUTE_CONTENT ||
+              mPrevWriteType == ATTRIBUTE_END ||
+              mPrevWriteType == ELEMENT_CONTENT ||
+              mPrevWriteType == ELEMENT_END ||
+              mPrevWriteType == COMMENT ||
+              mPrevWriteType == PROC_INSTRUCTION);
 
     mLevel--;
 
-    IM_CHECK(!mElementStack.empty());
+    BMX_CHECK(!mElementStack.empty());
     Element *element = mElementStack.back();
     const string &prefix = element->GetPrefix();
-    IM_CHECK(!prefix.empty());
+    BMX_CHECK(!prefix.empty());
 
     if (mPrevWriteType == ATTRIBUTE_START || mPrevWriteType == ATTRIBUTE_CONTENT)
         WriteAttributeEnd();
@@ -339,14 +339,14 @@ void XMLWriter::WriteElement(string ns, string local_name, string content)
 
 void XMLWriter::WriteComment(string comment)
 {
-    IM_CHECK(mPrevWriteType == START ||
-             mPrevWriteType == ELEMENT_START ||
-             mPrevWriteType == ATTRIBUTE_START ||
-             mPrevWriteType == ATTRIBUTE_CONTENT ||
-             mPrevWriteType == ATTRIBUTE_END ||
-             mPrevWriteType == ELEMENT_END ||
-             mPrevWriteType == COMMENT ||
-             mPrevWriteType == PROC_INSTRUCTION);
+    BMX_CHECK(mPrevWriteType == START ||
+              mPrevWriteType == ELEMENT_START ||
+              mPrevWriteType == ATTRIBUTE_START ||
+              mPrevWriteType == ATTRIBUTE_CONTENT ||
+              mPrevWriteType == ATTRIBUTE_END ||
+              mPrevWriteType == ELEMENT_END ||
+              mPrevWriteType == COMMENT ||
+              mPrevWriteType == PROC_INSTRUCTION);
 
     if (mPrevWriteType == ATTRIBUTE_START || mPrevWriteType == ATTRIBUTE_CONTENT)
         WriteAttributeEnd();
@@ -365,14 +365,14 @@ void XMLWriter::WriteComment(string comment)
 
 void XMLWriter::WriteProcInstruction(string target, string instruction)
 {
-    IM_CHECK(mPrevWriteType == START ||
-             mPrevWriteType == ELEMENT_START ||
-             mPrevWriteType == ATTRIBUTE_START ||
-             mPrevWriteType == ATTRIBUTE_CONTENT ||
-             mPrevWriteType == ATTRIBUTE_END ||
-             mPrevWriteType == ELEMENT_END ||
-             mPrevWriteType == COMMENT ||
-             mPrevWriteType == PROC_INSTRUCTION);
+    BMX_CHECK(mPrevWriteType == START ||
+              mPrevWriteType == ELEMENT_START ||
+              mPrevWriteType == ATTRIBUTE_START ||
+              mPrevWriteType == ATTRIBUTE_CONTENT ||
+              mPrevWriteType == ATTRIBUTE_END ||
+              mPrevWriteType == ELEMENT_END ||
+              mPrevWriteType == COMMENT ||
+              mPrevWriteType == PROC_INSTRUCTION);
 
     if (mPrevWriteType == ATTRIBUTE_START || mPrevWriteType == ATTRIBUTE_CONTENT)
         WriteAttributeEnd();
@@ -438,8 +438,8 @@ XMLWriter::Element::~Element()
 
 bool XMLWriter::Element::AddNamespaceDecl(string ns, string prefix)
 {
-    IM_CHECK(!ns.empty());
-    IM_CHECK(!prefix.empty());
+    BMX_CHECK(!ns.empty());
+    BMX_CHECK(!prefix.empty());
 
     if (prefix == INTERNAL_DEFAULT_NAMESPACE_PREFIX) {
         mDefaultNS = ns;
@@ -535,7 +535,7 @@ void XMLWriter::WriteAttributeData(const string &data)
 
 void XMLWriter::WriteIndent(int level)
 {
-    IM_CHECK(level >= 0);
+    BMX_CHECK(level >= 0);
 
     int i;
     for (i = 0; i < level; i++)

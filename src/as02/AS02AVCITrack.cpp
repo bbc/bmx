@@ -35,12 +35,12 @@
 
 #define __STDC_FORMAT_MACROS
 
-#include <im/as02/AS02AVCITrack.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as02/AS02AVCITrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -53,7 +53,7 @@ AS02AVCITrack::AS02AVCITrack(AS02Clip *clip, uint32_t track_index, EssenceType e
 : AS02PictureTrack(clip, track_index, essence_type, file, rel_uri)
 {
     mAVCIDescriptorHelper = dynamic_cast<AVCIMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mAVCIDescriptorHelper);
+    BMX_ASSERT(mAVCIDescriptorHelper);
 
     mWriterHelper.SetMode(AVCI_ALL_FRAME_HEADER_MODE);
     mFirstFrameHeaderOnly = false;
@@ -100,13 +100,13 @@ uint32_t AS02AVCITrack::GetSampleWithoutHeaderSize()
 
 void AS02AVCITrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_ASSERT(mMXFFile);
-    IM_CHECK(data && size && num_samples);
+    BMX_ASSERT(mMXFFile);
+    BMX_CHECK(data && size && num_samples);
 
     // if multiple samples are passed in then they must all be the same size
     uint32_t sample_size = size / num_samples;
-    IM_CHECK(sample_size * num_samples == size);
-    IM_CHECK(sample_size == GetSampleSize() || sample_size == GetSampleWithoutHeaderSize());
+    BMX_CHECK(sample_size * num_samples == size);
+    BMX_CHECK(sample_size == GetSampleSize() || sample_size == GetSampleWithoutHeaderSize());
 
 
     HandlePartitionInterval(true);
@@ -121,7 +121,7 @@ void AS02AVCITrack::WriteSamples(const unsigned char *data, uint32_t size, uint3
 
         mMXFFile->writeFixedKL(&mEssenceElementKey, mLLen, write_sample_size);
         for (j = 0; j < array_size; j++) {
-            IM_CHECK(mMXFFile->write(data_array[j].data, data_array[j].size) == data_array[j].size);
+            BMX_CHECK(mMXFFile->write(data_array[j].data, data_array[j].size) == data_array[j].size);
             UpdateEssenceOnlyChecksum(data_array[j].data, data_array[j].size);
         }
 
@@ -176,15 +176,15 @@ void AS02AVCITrack::WriteCBEIndexTable(Partition *partition)
     partition->markIndexStart(mMXFFile);
 
     int64_t file_pos = mMXFFile->tell();
-    IM_CHECK(mxf_write_index_table_segment(mMXFFile->getCFile(), mIndexSegment1->getCIndexTableSegment()));
+    BMX_CHECK(mxf_write_index_table_segment(mMXFFile->getCFile(), mIndexSegment1->getCIndexTableSegment()));
 
     // rely on segment2 size == segment1 size and size remaining the same for both calls to WriteCBEIndexTable
     int64_t segment_size = mMXFFile->tell() - file_pos;
 
     if (mIndexSegment2) {
         file_pos = mMXFFile->tell();
-        IM_CHECK(mxf_write_index_table_segment(mMXFFile->getCFile(), mIndexSegment2->getCIndexTableSegment()));
-        IM_ASSERT(mMXFFile->tell() - file_pos == segment_size);
+        BMX_CHECK(mxf_write_index_table_segment(mMXFFile->getCFile(), mIndexSegment2->getCIndexTableSegment()));
+        BMX_ASSERT(mMXFFile->tell() - file_pos == segment_size);
     }
 
     if (mEndOfIndexTablePosition > 0) {

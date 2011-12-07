@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/d10_mxf/D10MPEGTrack.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/d10_mxf/D10MPEGTrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -47,7 +47,7 @@ D10MPEGTrack::D10MPEGTrack(D10File *file, uint32_t track_index, mxfRational fram
 : D10Track(file, track_index, frame_rate, essence_type)
 {
     mD10DescriptorHelper = dynamic_cast<D10MXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mD10DescriptorHelper);
+    BMX_ASSERT(mD10DescriptorHelper);
 
     mD10DescriptorHelper->SetAspectRatio(ASPECT_RATIO_16_9);
 }

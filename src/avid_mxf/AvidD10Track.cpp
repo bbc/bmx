@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/avid_mxf/AvidD10Track.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/avid_mxf/AvidD10Track.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -50,7 +50,7 @@ AvidD10Track::AvidD10Track(AvidClip *clip, uint32_t track_index, EssenceType ess
 : AvidPictureTrack(clip, track_index, essence_type, file)
 {
     mD10DescriptorHelper = dynamic_cast<D10MXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mD10DescriptorHelper);
+    BMX_ASSERT(mD10DescriptorHelper);
 
     mTrackNumber = MXF_D10_PICTURE_TRACK_NUM(0x01);
     mEssenceElementKey = VIDEO_ELEMENT_KEY;

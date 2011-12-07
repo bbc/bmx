@@ -40,21 +40,21 @@
 
 #include <memory>
 
-#include <im/as02/AS02Track.h>
-#include <im/as02/AS02DVTrack.h>
-#include <im/as02/AS02D10Track.h>
-#include <im/as02/AS02AVCITrack.h>
-#include <im/as02/AS02UncTrack.h>
-#include <im/as02/AS02MPEG2LGTrack.h>
-#include <im/as02/AS02PCMTrack.h>
-#include <im/as02/AS02Clip.h>
-#include <im/MXFUtils.h>
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as02/AS02Track.h>
+#include <bmx/as02/AS02DVTrack.h>
+#include <bmx/as02/AS02D10Track.h>
+#include <bmx/as02/AS02AVCITrack.h>
+#include <bmx/as02/AS02UncTrack.h>
+#include <bmx/as02/AS02MPEG2LGTrack.h>
+#include <bmx/as02/AS02PCMTrack.h>
+#include <bmx/as02/AS02Clip.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -174,7 +174,7 @@ AS02Track* AS02Track::OpenNew(AS02Clip *clip, string filepath, string rel_uri, u
         case WAVE_PCM:
             return new AS02PCMTrack(clip, track_index, file, rel_uri);
         default:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
     }
 
     return 0;
@@ -263,7 +263,7 @@ void AS02Track::SetMICScope(MICScope scope)
 
 void AS02Track::SetLowerLevelSourcePackage(SourcePackage *package, uint32_t track_id, string uri)
 {
-    IM_CHECK(!mHaveLowerLevelSourcePackage);
+    BMX_CHECK(!mHaveLowerLevelSourcePackage);
 
 #if 0   // TODO: allow dark strong referenced sets to be cloned without resulting in an error
     mLowerLevelSourcePackage = dynamic_cast<SourcePackage*>(package->clone(mHeaderMetadata));
@@ -279,7 +279,7 @@ void AS02Track::SetLowerLevelSourcePackage(SourcePackage *package, uint32_t trac
 
 void AS02Track::SetLowerLevelSourcePackage(mxfUMID package_uid, uint32_t track_id)
 {
-    IM_CHECK(!mHaveLowerLevelSourcePackage);
+    BMX_CHECK(!mHaveLowerLevelSourcePackage);
 
     mLowerLevelSourcePackageUID = package_uid;
     mLowerLevelTrackId = track_id;
@@ -289,19 +289,19 @@ void AS02Track::SetLowerLevelSourcePackage(mxfUMID package_uid, uint32_t track_i
 
 void AS02Track::SetOutputStartOffset(int64_t offset)
 {
-    IM_CHECK(offset >= 0);
+    BMX_CHECK(offset >= 0);
     mOutputStartOffset = offset;
 }
 
 void AS02Track::SetOutputEndOffset(int64_t offset)
 {
-    IM_CHECK(offset <= 0);
+    BMX_CHECK(offset <= 0);
     mOutputEndOffset = offset;
 }
 
 void AS02Track::PrepareWrite()
 {
-    IM_ASSERT(mMXFFile);
+    BMX_ASSERT(mMXFFile);
 
     mSampleSize = GetSampleSize();
 
@@ -311,7 +311,7 @@ void AS02Track::PrepareWrite()
 
 void AS02Track::CompleteWrite()
 {
-    IM_ASSERT(mMXFFile);
+    BMX_ASSERT(mMXFFile);
 
 
     // complete writing of samples
@@ -412,13 +412,13 @@ void AS02Track::UpdatePackageMetadata(GenericPackage *package)
     size_t i;
     for (i = 0; i < tracks.size(); i++) {
         Track *track = dynamic_cast<Track*>(tracks[i]);
-        IM_ASSERT(track);
+        BMX_ASSERT(track);
 
         if (source_package)
             track->setOrigin(mOutputStartOffset);
 
         Sequence *sequence = dynamic_cast<Sequence*>(track->getSequence());
-        IM_ASSERT(sequence);
+        BMX_ASSERT(sequence);
         if (sequence->getDuration() < 0) {
             if (source_package)
                 sequence->setDuration(GetDuration());
@@ -426,7 +426,7 @@ void AS02Track::UpdatePackageMetadata(GenericPackage *package)
                 sequence->setDuration(GetOutputDuration(false));
 
             vector<StructuralComponent*> components = sequence->getStructuralComponents();
-            IM_CHECK(components.size() == 1);
+            BMX_CHECK(components.size() == 1);
             if (source_package)
                 components[0]->setDuration(GetDuration());
             else
@@ -504,7 +504,7 @@ mxfRational& AS02Track::GetVideoFrameRate() const
 
 void AS02Track::WriteCBEIndexTable(Partition *partition)
 {
-    IM_ASSERT(mSampleSize > 0);
+    BMX_ASSERT(mSampleSize > 0);
 
     if (!mCBEIndexSegment) {
         mxfUUID uuid;

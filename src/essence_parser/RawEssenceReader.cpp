@@ -43,12 +43,12 @@
 #include <unistd.h>
 #endif
 
-#include <im/essence_parser/RawEssenceReader.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/essence_parser/RawEssenceReader.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 #define READ_BLOCK_SIZE         8192
@@ -147,17 +147,17 @@ uint32_t RawEssenceReader::ReadSamples(uint32_t num_samples)
 
 uint32_t RawEssenceReader::GetSampleSize() const
 {
-    IM_CHECK(mNumSamples > 0 && (mFixedSampleSize > 0 || mNumSamples == 1));
+    BMX_CHECK(mNumSamples > 0 && (mFixedSampleSize > 0 || mNumSamples == 1));
     return mSampleDataSize / mNumSamples;
 }
 
 int64_t RawEssenceReader::GetNumRemFixedSizeSamples() const
 {
-    IM_CHECK(mFixedSampleSize > 0);
+    BMX_CHECK(mFixedSampleSize > 0);
 
     struct stat stat_buf;
     if (fstat(fileno(mRawInput), &stat_buf) < 0)
-        throw IMException("Failed to stat raw file", strerror(errno));
+        throw BMXException("Failed to stat raw file", strerror(errno));
 
     int64_t start_offset = mSampleDataOffset + mSampleDataSize;
     int64_t end_offset = stat_buf.st_size;
@@ -172,7 +172,7 @@ int64_t RawEssenceReader::GetNumRemFixedSizeSamples() const
 void RawEssenceReader::Reset()
 {
     if (fseeko(mRawInput, mStartOffset, SEEK_SET) != 0)
-        throw IMException("Failed to seek to raw file start offset 0x%"PRIx64": %s", mStartOffset, strerror(errno));
+        throw BMXException("Failed to seek to raw file start offset 0x%"PRIx64": %s", mStartOffset, strerror(errno));
 
     mSampleDataOffset = mStartOffset;
     mTotalReadLength = 0;
@@ -185,7 +185,7 @@ void RawEssenceReader::Reset()
 
 bool RawEssenceReader::ReadAndParseSample()
 {
-    IM_CHECK(mEssenceParser);
+    BMX_CHECK(mEssenceParser);
 
     uint32_t sample_start_offset = mSampleDataSize;
     uint32_t sample_num_read = mSampleData.GetSize() - sample_start_offset;
@@ -228,7 +228,7 @@ bool RawEssenceReader::ReadAndParseSample()
         if (sample_size != ESSENCE_PARSER_NULL_OFFSET)
             break;
 
-        IM_CHECK_M(mMaxSampleSize == 0 || mSampleData.GetSize() - sample_start_offset <= mMaxSampleSize,
+        BMX_CHECK_M(mMaxSampleSize == 0 || mSampleData.GetSize() - sample_start_offset <= mMaxSampleSize,
                    ("Max raw sample size (%u) exceeded", mMaxSampleSize));
 
         if (!ReadBytes(READ_BLOCK_SIZE, &num_read)) {
@@ -262,7 +262,7 @@ bool RawEssenceReader::ReadAndParseSample()
 
 bool RawEssenceReader::ReadBytes(uint32_t size, uint32_t *num_read_out)
 {
-    IM_ASSERT(mMaxReadLength == 0 || mTotalReadLength <= mMaxReadLength);
+    BMX_ASSERT(mMaxReadLength == 0 || mTotalReadLength <= mMaxReadLength);
 
     uint32_t actual_size = size;
     if (mMaxReadLength > 0 && mTotalReadLength + size > mMaxReadLength)
@@ -288,8 +288,8 @@ bool RawEssenceReader::ReadBytes(uint32_t size, uint32_t *num_read_out)
 
 void RawEssenceReader::ShiftSampleData(uint32_t to_offset, uint32_t from_offset, uint32_t size)
 {
-    IM_ASSERT(mSampleData.GetSize() >= (from_offset - to_offset));
-    IM_ASSERT(from_offset + size <= mSampleData.GetSize());
+    BMX_ASSERT(mSampleData.GetSize() >= (from_offset - to_offset));
+    BMX_ASSERT(from_offset + size <= mSampleData.GetSize());
 
     if (mSampleData.GetSize() > (from_offset - to_offset)) {
         memmove(mSampleData.GetBytes() + to_offset, mSampleData.GetBytes() + from_offset, size);

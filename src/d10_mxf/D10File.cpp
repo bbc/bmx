@@ -38,15 +38,15 @@
 #include <cstdio>
 #include <cstring>
 
-#include <im/d10_mxf/D10File.h>
-#include <im/mxf_helper/MXFDescriptorHelper.h>
-#include <im/MXFUtils.h>
-#include <im/Version.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/d10_mxf/D10File.h>
+#include <bmx/mxf_helper/MXFDescriptorHelper.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/Version.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -90,7 +90,7 @@ static mxfUL get_essence_container_ul(EssenceType essence_type, mxfRational fram
         }
     }
 
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return ESS_CONTAINER_UL_TABLE[0].ec_label;
 }
 
@@ -103,17 +103,17 @@ D10File* D10File::OpenNew(string filename, mxfRational frame_rate)
 
 D10File::D10File(mxfpp::File *mxf_file, mxfRational frame_rate)
 {
-    IM_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
-             (frame_rate.numerator == 30000 && frame_rate.denominator == 1001));
+    BMX_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
+              (frame_rate.numerator == 30000 && frame_rate.denominator == 1001));
 
     mMXFFile = mxf_file;
     mFrameRate = frame_rate;
     mStartTimecode = Timecode(frame_rate, false);
-    mCompanyName = get_im_company_name();
-    mProductName = get_im_library_name();
-    mProductVersion = get_im_mxf_product_version();
-    mVersionString = get_im_version_string();
-    mProductUID = get_im_product_uid();
+    mCompanyName = get_bmx_company_name();
+    mProductName = get_bmx_library_name();
+    mProductVersion = get_bmx_mxf_product_version();
+    mVersionString = get_bmx_version_string();
+    mProductUID = get_bmx_product_uid();
     mReserveMinBytes = 8192;
     mxf_get_timestamp_now(&mCreationDate);
     mxf_generate_uuid(&mGenerationUID);
@@ -210,7 +210,7 @@ D10Track* D10File::CreateTrack(EssenceType essence_type)
     mTrackMap[track_index] = mTracks.back();
 
     if (mTracks.back()->IsPicture()) {
-        IM_CHECK(!mPictureTrack);
+        BMX_CHECK(!mPictureTrack);
         mPictureTrack = dynamic_cast<D10MPEGTrack*>(mTracks.back());
     } else if (!mFirstSoundTrack) {
         mFirstSoundTrack = dynamic_cast<D10PCMTrack*>(mTracks.back());
@@ -224,7 +224,7 @@ void D10File::PrepareHeaderMetadata()
     if (mHeaderMetadata)
         return;
 
-    IM_CHECK(mPictureTrack);
+    BMX_CHECK(mPictureTrack);
 
     mEssenceContainerUL = get_essence_container_ul(mPictureTrack->GetEssenceType(), mFrameRate);
 
@@ -270,7 +270,7 @@ void D10File::WriteSamples(uint32_t track_index, const unsigned char *data, uint
 {
     if (!data || size == 0)
         return;
-    IM_CHECK(data && size && num_samples);
+    BMX_CHECK(data && size && num_samples);
 
     GetTrack(track_index)->WriteSamplesInt(data, size, num_samples);
 
@@ -280,7 +280,7 @@ void D10File::WriteSamples(uint32_t track_index, const unsigned char *data, uint
 
 void D10File::CompleteWrite()
 {
-    IM_ASSERT(mMXFFile);
+    BMX_ASSERT(mMXFFile);
 
     // write remaining content packages if duration < sound sample sequence size
 
@@ -329,13 +329,13 @@ void D10File::CompleteWrite()
 
 D10Track* D10File::GetTrack(uint32_t track_index)
 {
-    IM_ASSERT(track_index < mTracks.size());
+    BMX_ASSERT(track_index < mTracks.size());
     return mTrackMap[track_index];
 }
 
 void D10File::CreateHeaderMetadata()
 {
-    IM_ASSERT(!mHeaderMetadata);
+    BMX_ASSERT(!mHeaderMetadata);
 
 
     // create the header metadata
@@ -528,7 +528,7 @@ void D10File::CreateHeaderMetadata()
 
 void D10File::CreateFile()
 {
-    IM_ASSERT(mHeaderMetadata);
+    BMX_ASSERT(mHeaderMetadata);
 
 
     // set minimum llen
@@ -585,7 +585,7 @@ void D10File::UpdatePackageMetadata()
     UpdateTrackMetadata(mFileSourcePackage, output_duration);
 
 
-    IM_ASSERT(mFileSourcePackage->haveDescriptor());
+    BMX_ASSERT(mFileSourcePackage->haveDescriptor());
     FileDescriptor *file_descriptor = dynamic_cast<FileDescriptor*>(mFileSourcePackage->getDescriptor());
     if (file_descriptor)
         file_descriptor->setContainerDuration(output_duration);
@@ -612,12 +612,12 @@ void D10File::UpdateTrackMetadata(GenericPackage *package, int64_t duration)
             continue;
 
         Sequence *sequence = dynamic_cast<Sequence*>(track->getSequence());
-        IM_ASSERT(sequence);
+        BMX_ASSERT(sequence);
         if (sequence->getDuration() < 0) {
             sequence->setDuration(duration);
 
             vector<StructuralComponent*> components = sequence->getStructuralComponents();
-            IM_CHECK(components.size() == 1);
+            BMX_CHECK(components.size() == 1);
             components[0]->setDuration(duration);
         }
     }

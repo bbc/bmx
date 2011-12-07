@@ -37,9 +37,9 @@
 #include <cstring>
 #include <cerrno>
 
-#include <im/CRC32.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/CRC32.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
 
@@ -112,24 +112,24 @@ static const uint32_t CRC32_TABLE[256] =
 };
 
 
-void im::crc32_init(uint32_t *crc32)
+void bmx::crc32_init(uint32_t *crc32)
 {
     *crc32 = 0xffffffffL;
 }
 
-void im::crc32_update(uint32_t *crc32, const unsigned char *data, size_t size)
+void bmx::crc32_update(uint32_t *crc32, const unsigned char *data, size_t size)
 {
     size_t i;
     for (i = 0; i < size; i++)
         *crc32 = CRC32_TABLE[((*crc32) ^ data[i]) & 0xff] ^ ((*crc32) >> 8);
 }
 
-void im::crc32_final(uint32_t *crc32)
+void bmx::crc32_final(uint32_t *crc32)
 {
     *crc32 ^= 0xffffffffL;
 }
 
-string im::crc32_digest_str(uint32_t crc32)
+string bmx::crc32_digest_str(uint32_t crc32)
 {
     static const char hex_chars[] = "0123456789abcdef";
 
@@ -147,7 +147,7 @@ string im::crc32_digest_str(uint32_t crc32)
     return digest_str;
 }
 
-string im::crc32_calc_file(string filename)
+string bmx::crc32_calc_file(string filename)
 {
     FILE *file = fopen(filename.c_str(), "rb");
     if (!file) {

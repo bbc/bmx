@@ -37,11 +37,11 @@
 
 #include <libMXF++/MXF.h>
 
-#include <im/as11/AS11Clip.h>
+#include <bmx/as11/AS11Clip.h>
 
 
 
-namespace im
+namespace bmx
 {
 
 

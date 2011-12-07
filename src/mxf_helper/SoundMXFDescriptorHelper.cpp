@@ -33,14 +33,14 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_helper/SoundMXFDescriptorHelper.h>
-#include <im/mxf_helper/WaveMXFDescriptorHelper.h>
-#include <im/IMTypes.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_helper/SoundMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/WaveMXFDescriptorHelper.h>
+#include <bmx/BMXTypes.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -81,7 +81,7 @@ bool SoundMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 
 MXFDescriptorHelper* SoundMXFDescriptorHelper::Create(EssenceType essence_type)
 {
-    IM_ASSERT(IsSupported(essence_type));
+    BMX_ASSERT(IsSupported(essence_type));
 
     SoundMXFDescriptorHelper *helper = new WaveMXFDescriptorHelper();
     helper->SetEssenceType(essence_type);
@@ -114,7 +114,7 @@ void SoundMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL
 
     GenericSoundEssenceDescriptor *sound_descriptor =
         dynamic_cast<GenericSoundEssenceDescriptor*>(file_descriptor);
-    IM_ASSERT(sound_descriptor);
+    BMX_ASSERT(sound_descriptor);
 
     if (sound_descriptor->haveAudioSamplingRate())
         mSamplingRate = sound_descriptor->getAudioSamplingRate();
@@ -155,29 +155,29 @@ void SoundMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL
 
 void SoundMXFDescriptorHelper::SetSamplingRate(mxfRational sampling_rate)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     mSamplingRate = sampling_rate;
 }
 
 void SoundMXFDescriptorHelper::SetQuantizationBits(uint32_t bits)
 {
-    IM_ASSERT(!mFileDescriptor);
-    IM_CHECK(bits > 0 && bits <= 32);
+    BMX_ASSERT(!mFileDescriptor);
+    BMX_CHECK(bits > 0 && bits <= 32);
 
     mQuantizationBits = bits;
 }
 
 void SoundMXFDescriptorHelper::SetChannelCount(uint32_t count)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     mChannelCount = count;
 }
 
 void SoundMXFDescriptorHelper::SetLocked(bool locked)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     mLocked = locked;
     mLockedSet = true;
@@ -185,7 +185,7 @@ void SoundMXFDescriptorHelper::SetLocked(bool locked)
 
 void SoundMXFDescriptorHelper::SetAudioRefLevel(int8_t level)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     mAudioRefLevel = level;
     mAudioRefLevelSet = true;
@@ -193,7 +193,7 @@ void SoundMXFDescriptorHelper::SetAudioRefLevel(int8_t level)
 
 void SoundMXFDescriptorHelper::SetDialNorm(int8_t dial_norm)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     mDialNorm = dial_norm;
     mDialNormSet = true;
@@ -204,7 +204,7 @@ FileDescriptor* SoundMXFDescriptorHelper::CreateFileDescriptor(HeaderMetadata *h
     (void)header_metadata;
 
     // implemented by child classes only
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return 0;
 }
 
@@ -214,7 +214,7 @@ void SoundMXFDescriptorHelper::UpdateFileDescriptor()
 
     GenericSoundEssenceDescriptor *sound_descriptor =
         dynamic_cast<GenericSoundEssenceDescriptor*>(mFileDescriptor);
-    IM_ASSERT(sound_descriptor);
+    BMX_ASSERT(sound_descriptor);
 
     sound_descriptor->setAudioSamplingRate(mSamplingRate);
     if (mLockedSet)
@@ -230,14 +230,14 @@ void SoundMXFDescriptorHelper::UpdateFileDescriptor()
 uint32_t SoundMXFDescriptorHelper::GetSampleSize()
 {
     // implemented by child classes only
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return 0;
 }
 
 mxfUL SoundMXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
     // implemented by child classes only
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return g_Null_UL;
 }
 

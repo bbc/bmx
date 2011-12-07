@@ -35,13 +35,13 @@
 
 #include <libMXF++/MXF.h>
 
-#include <im/IMTypes.h>
-#include <im/mxf_reader/MXFTrackInfo.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/BMXTypes.h>
+#include <bmx/mxf_reader/MXFTrackInfo.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 

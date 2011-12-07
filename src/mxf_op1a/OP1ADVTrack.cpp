@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_op1a/OP1ADVTrack.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_op1a/OP1ADVTrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -52,7 +52,7 @@ OP1ADVTrack::OP1ADVTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id
 : OP1APictureTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
 {
     mDVDescriptorHelper = dynamic_cast<DVMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mDVDescriptorHelper);
+    BMX_ASSERT(mDVDescriptorHelper);
 
     mDVDescriptorHelper->SetComponentDepth(8);
 

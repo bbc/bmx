@@ -33,14 +33,14 @@
 #include "config.h"
 #endif
 
-#include <im/essence_parser/VC3EssenceParser.h>
+#include <bmx/essence_parser/VC3EssenceParser.h>
 #include "EssenceParserUtils.h"
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 #define HEADER_PREFIX       0x000000028001LL
@@ -117,7 +117,7 @@ VC3EssenceParser::~VC3EssenceParser()
 
 uint32_t VC3EssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
 {
-    IM_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
+    BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
     uint64_t state = 0;
     uint32_t i;
@@ -135,14 +135,14 @@ uint32_t VC3EssenceParser::ParseFrameStart(const unsigned char *data, uint32_t d
 
 uint32_t VC3EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
-    IM_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
+    BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
     if (data_size < VC3_PARSER_MIN_DATA_SIZE)
         return ESSENCE_PARSER_NULL_OFFSET;
 
     // check header prefix
     uint64_t prefix = get_uint64(data) >> 24;
-    IM_CHECK((prefix & 0xffffffffffLL) == HEADER_PREFIX);
+    BMX_CHECK((prefix & 0xffffffffffLL) == HEADER_PREFIX);
 
     uint32_t compression_id = get_uint32(data + 40);
 
@@ -162,12 +162,12 @@ uint32_t VC3EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
 
 void VC3EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
 {
-    IM_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
-    IM_CHECK(data_size >= VC3_PARSER_MIN_DATA_SIZE);
+    BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
+    BMX_CHECK(data_size >= VC3_PARSER_MIN_DATA_SIZE);
 
     // check header prefix
     uint64_t prefix = get_uint64(data) >> 24;
-    IM_CHECK((prefix & 0xffffffffffLL) == HEADER_PREFIX);
+    BMX_CHECK((prefix & 0xffffffffffLL) == HEADER_PREFIX);
 
     // compression id
     mCompressionId = get_uint32(data + 40);
@@ -177,13 +177,13 @@ void VC3EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
         if (mCompressionId == COMPRESSION_PARAMETERS[param_index].compression_id)
             break;
     }
-    IM_CHECK(param_index < ARRAY_SIZE(COMPRESSION_PARAMETERS));
+    BMX_CHECK(param_index < ARRAY_SIZE(COMPRESSION_PARAMETERS));
 
     // coding control A
     uint32_t ffc_bits = get_bits(data, data_size, 5 * 8 + 6, 2);
-    IM_CHECK(ffc_bits == 1 || ffc_bits == 2);
+    BMX_CHECK(ffc_bits == 1 || ffc_bits == 2);
     mIsProgressive = (ffc_bits == 1);
-    IM_CHECK(mIsProgressive == COMPRESSION_PARAMETERS[param_index].is_progressive);
+    BMX_CHECK(mIsProgressive == COMPRESSION_PARAMETERS[param_index].is_progressive);
 
     // image geometry
     mFrameHeight = get_uint16(data + 24);
@@ -192,13 +192,13 @@ void VC3EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
     //       1080i sources. Hence the mFrameHeight != 1080 check below
     if (!mIsProgressive && mFrameHeight != 1080)
         mFrameHeight *= 2;
-    IM_CHECK(mFrameHeight == COMPRESSION_PARAMETERS[param_index].frame_height);
+    BMX_CHECK(mFrameHeight == COMPRESSION_PARAMETERS[param_index].frame_height);
     mFrameWidth = get_uint16(data + 26);
-    IM_CHECK(mFrameWidth == COMPRESSION_PARAMETERS[param_index].frame_width);
+    BMX_CHECK(mFrameWidth == COMPRESSION_PARAMETERS[param_index].frame_width);
     uint32_t sbd_bits = get_bits(data, data_size, 33 * 8, 3);
-    IM_CHECK(sbd_bits == 2 || sbd_bits == 1);
+    BMX_CHECK(sbd_bits == 2 || sbd_bits == 1);
     mBitDepth = (sbd_bits == 2 ? 10 : 8);
-    IM_CHECK(mBitDepth == COMPRESSION_PARAMETERS[param_index].bit_depth);
+    BMX_CHECK(mBitDepth == COMPRESSION_PARAMETERS[param_index].bit_depth);
 
     mFrameSize = COMPRESSION_PARAMETERS[param_index].frame_size;
 }

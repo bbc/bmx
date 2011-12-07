@@ -38,14 +38,14 @@
 #include <set>
 #include <memory>
 
-#include <im/as02/AS02Version.h>
-#include <im/mxf_helper/MXFDescriptorHelper.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as02/AS02Version.h>
+#include <bmx/mxf_helper/MXFDescriptorHelper.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -127,7 +127,7 @@ void AS02Version::PrepareWrite()
 
 void AS02Version::CompleteWrite()
 {
-    IM_ASSERT(mMXFFile);
+    BMX_ASSERT(mMXFFile);
 
     AS02Clip::CompleteWrite();
 
@@ -172,7 +172,7 @@ void AS02Version::CompleteWrite()
 
 void AS02Version::CreateHeaderMetadata()
 {
-    IM_ASSERT(!mHeaderMetadata);
+    BMX_ASSERT(!mHeaderMetadata);
 
     size_t i;
     for (i = 0; i < mTracks.size(); i++)
@@ -285,7 +285,7 @@ void AS02Version::CreateHeaderMetadata()
     }
 
     // add a network locator to the file descriptors
-    IM_ASSERT(mTracks.size() == mFilePackages.size());
+    BMX_ASSERT(mTracks.size() == mFilePackages.size());
     for (i = 0; i < mFilePackages.size(); i++) {
         NetworkLocator *network_locator = new NetworkLocator(mHeaderMetadata);
         mFilePackages[i]->getDescriptor()->appendLocators(network_locator);
@@ -295,7 +295,7 @@ void AS02Version::CreateHeaderMetadata()
 
 void AS02Version::CreateFile()
 {
-    IM_ASSERT(mHeaderMetadata);
+    BMX_ASSERT(mHeaderMetadata);
 
 
     // set minimum llen
@@ -325,7 +325,7 @@ void AS02Version::UpdatePackageMetadata()
 {
     // update the clone file packages
 
-    IM_ASSERT(mFilePackages.size() == mTracks.size());
+    BMX_ASSERT(mFilePackages.size() == mTracks.size());
     size_t i;
     for (i = 0; i < mFilePackages.size(); i++)
         mTracks[i]->UpdatePackageMetadata(mFilePackages[i]);
@@ -335,13 +335,13 @@ void AS02Version::UpdatePackageMetadata()
 
     vector<GenericTrack*> tracks = mMaterialPackage->getTracks();
 
-    IM_ASSERT(mTracks.size() == tracks.size() - 1);  // track 0 is the timecode track
+    BMX_ASSERT(mTracks.size() == tracks.size() - 1);  // track 0 is the timecode track
     for (i = 0; i < tracks.size(); i++) {
         Track *track = dynamic_cast<Track*>(tracks[i]);
-        IM_ASSERT(track);
+        BMX_ASSERT(track);
 
         Sequence *sequence = dynamic_cast<Sequence*>(track->getSequence());
-        IM_ASSERT(sequence);
+        BMX_ASSERT(sequence);
         if (i == 0) // timecode track
             sequence->setDuration(GetDuration());
         else

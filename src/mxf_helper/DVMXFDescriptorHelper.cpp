@@ -33,15 +33,15 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_helper/DVMXFDescriptorHelper.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_helper/DVMXFDescriptorHelper.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid_labels_and_keys.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -159,7 +159,7 @@ DVMXFDescriptorHelper::~DVMXFDescriptorHelper()
 
 void DVMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
-    IM_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
+    BMX_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
 
     PictureMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
 
@@ -200,8 +200,8 @@ void DVMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL al
 
 void DVMXFDescriptorHelper::SetComponentDepth(uint32_t depth)
 {
-    IM_ASSERT(!mFileDescriptor);
-    IM_CHECK(depth == 8 ||
+    BMX_ASSERT(!mFileDescriptor);
+    BMX_CHECK(depth == 8 ||
              (depth == 10 && (mEssenceType == DV100_720P || mEssenceType == DV100_1080I)));
 
     mComponentDepth = depth;
@@ -209,7 +209,7 @@ void DVMXFDescriptorHelper::SetComponentDepth(uint32_t depth)
 
 void DVMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetEssenceType(essence_type);
 
@@ -218,7 +218,7 @@ void DVMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 
 void DVMXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetSampleRate(sample_rate);
 
@@ -227,7 +227,7 @@ void DVMXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 
 void DVMXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetFrameWrapped(frame_wrapped);
 
@@ -248,7 +248,7 @@ void DVMXFDescriptorHelper::UpdateFileDescriptor()
     PictureMXFDescriptorHelper::UpdateFileDescriptor();
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
-    IM_ASSERT(cdci_descriptor);
+    BMX_ASSERT(cdci_descriptor);
 
     SetColorSiting(SUPPORTED_ESSENCE[mEssenceIndex].color_siting);
     cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
@@ -298,6 +298,6 @@ void DVMXFDescriptorHelper::UpdateEssenceIndex()
             break;
         }
     }
-    IM_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+    BMX_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 

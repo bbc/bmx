@@ -33,13 +33,13 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_op1a/OP1APCMTrack.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_op1a/OP1APCMTrack.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -51,10 +51,10 @@ OP1APCMTrack::OP1APCMTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
                            mxfRational frame_rate, EssenceType essence_type)
 : OP1ATrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
 {
-    IM_ASSERT(essence_type == WAVE_PCM);
+    BMX_ASSERT(essence_type == WAVE_PCM);
 
     mWaveDescriptorHelper = dynamic_cast<WaveMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mWaveDescriptorHelper);
+    BMX_ASSERT(mWaveDescriptorHelper);
 
     mWaveDescriptorHelper->SetSamplingRate(SAMPLING_RATE_48K);
     mWaveDescriptorHelper->SetQuantizationBits(16);
@@ -73,7 +73,7 @@ OP1APCMTrack::~OP1APCMTrack()
 
 void OP1APCMTrack::SetSamplingRate(mxfRational sampling_rate)
 {
-    IM_CHECK(sampling_rate.numerator == 48000 && sampling_rate.denominator == 1);
+    BMX_CHECK(sampling_rate.numerator == 48000 && sampling_rate.denominator == 1);
 
     mWaveDescriptorHelper->SetSamplingRate(sampling_rate);
 
@@ -82,7 +82,7 @@ void OP1APCMTrack::SetSamplingRate(mxfRational sampling_rate)
 
 void OP1APCMTrack::SetQuantizationBits(uint32_t bits)
 {
-    IM_CHECK(bits > 0 && bits <= 32);
+    BMX_CHECK(bits > 0 && bits <= 32);
 
     mWaveDescriptorHelper->SetQuantizationBits(bits);
 }
@@ -136,6 +136,6 @@ void OP1APCMTrack::PrepareWrite(uint8_t picture_track_count, uint8_t sound_track
 void OP1APCMTrack::SetSampleSequence()
 {
     mSampleSequence.clear();
-    IM_CHECK(get_sample_sequence(mFrameRate, mWaveDescriptorHelper->GetSamplingRate(), &mSampleSequence));
+    BMX_CHECK(get_sample_sequence(mFrameRate, mWaveDescriptorHelper->GetSamplingRate(), &mSampleSequence));
 }
 

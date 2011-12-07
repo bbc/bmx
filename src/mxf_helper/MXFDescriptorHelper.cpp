@@ -33,16 +33,16 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_helper/MXFDescriptorHelper.h>
-#include <im/mxf_helper/PictureMXFDescriptorHelper.h>
-#include <im/mxf_helper/SoundMXFDescriptorHelper.h>
-#include <im/Utils.h>
-#include <im/IMTypes.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_helper/MXFDescriptorHelper.h>
+#include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/SoundMXFDescriptorHelper.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXTypes.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -64,7 +64,7 @@ MXFDescriptorHelper* MXFDescriptorHelper::Create(mxfpp::FileDescriptor *file_des
     else if (SoundMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
         return SoundMXFDescriptorHelper::Create(file_descriptor, alternative_ec_label);
 
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return 0;
 }
 
@@ -75,7 +75,7 @@ MXFDescriptorHelper* MXFDescriptorHelper::Create(EssenceType essence_type)
     else if (SoundMXFDescriptorHelper::IsSupported(essence_type))
         return SoundMXFDescriptorHelper::Create(essence_type);
 
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return 0;
 }
 
@@ -105,15 +105,15 @@ void MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alte
 
 void MXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     mEssenceType = essence_type;
 }
 
 void MXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 {
-    IM_ASSERT(!mFileDescriptor);
-    IM_CHECK((sample_rate.numerator == 25    && sample_rate.denominator == 1) ||
+    BMX_ASSERT(!mFileDescriptor);
+    BMX_CHECK((sample_rate.numerator == 25    && sample_rate.denominator == 1) ||
              (sample_rate.numerator == 30000 && sample_rate.denominator == 1001) ||
              (sample_rate.numerator == 50    && sample_rate.denominator == 1) ||
              (sample_rate.numerator == 60000 && sample_rate.denominator == 1001) ||
@@ -126,14 +126,14 @@ void MXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 
 void MXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     mFrameWrapped = frame_wrapped;
 }
 
 void MXFDescriptorHelper::SetFlavour(DescriptorFlavour flavour)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     mFlavour = flavour;
     if (flavour == AVID_FLAVOUR)

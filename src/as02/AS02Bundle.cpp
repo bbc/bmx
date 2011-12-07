@@ -45,15 +45,15 @@
 #include <direct.h> // mkdir
 #endif
 
-#include <im/as02/AS02Bundle.h>
-#include <im/URI.h>
-#include <im/Utils.h>
-#include <im/Version.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as02/AS02Bundle.h>
+#include <bmx/URI.h>
+#include <bmx/Utils.h>
+#include <bmx/Version.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
@@ -100,12 +100,12 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory)
         if (mkdir(root_filepath.c_str(), 0777) != 0) {
 #endif
             if (errno != EEXIST)
-                throw IMException("Failed to create bundle directory '%s': %s", root_filepath.c_str(), strerror(errno));
+                throw BMXException("Failed to create bundle directory '%s': %s", root_filepath.c_str(), strerror(errno));
             if (!check_is_dir(root_filepath))
-                throw IMException("Bundle directory name '%s' clashes with non-directory file", root_filepath.c_str());
+                throw BMXException("Bundle directory name '%s' clashes with non-directory file", root_filepath.c_str());
         }
     } else if (!check_is_dir(root_filepath)) {
-        throw IMException("Bundle root directory '%s' does not exist", root_filepath.c_str());
+        throw BMXException("Bundle root directory '%s' does not exist", root_filepath.c_str());
     }
 
     string sub_dir;
@@ -117,9 +117,9 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory)
     if (mkdir(sub_dir.c_str(), 0777) != 0) {
 #endif
         if (errno != EEXIST)
-            throw IMException("Failed to create bundle media sub-directory '%s': %s", sub_dir.c_str(), strerror(errno));
+            throw BMXException("Failed to create bundle media sub-directory '%s': %s", sub_dir.c_str(), strerror(errno));
         if (!check_is_dir(sub_dir))
-            throw IMException("Media sub-directory '%s' clashes with non-directory file", sub_dir.c_str());
+            throw BMXException("Media sub-directory '%s' clashes with non-directory file", sub_dir.c_str());
     }
 
     return new AS02Bundle(root_filepath);
@@ -130,13 +130,13 @@ AS02Bundle::AS02Bundle(string root_filepath)
 {
     mRootFilepath = root_filepath;
 
-    IM_ASSERT(!root_filepath.empty() && root_filepath[root_filepath.size() - 1] == '/');
+    BMX_ASSERT(!root_filepath.empty() && root_filepath[root_filepath.size() - 1] == '/');
     mBundleName = strip_path(root_filepath.substr(0, root_filepath.size() - 1));
-    IM_CHECK_M(!mBundleName.empty(), ("Empty bundle name"));
+    BMX_CHECK_M(!mBundleName.empty(), ("Empty bundle name"));
 
     mManifest.SetBundleName(mBundleName);
     mManifest.SetBundleId(generate_uuid());
-    mManifest.SetCreator(get_im_library_name());
+    mManifest.SetCreator(get_bmx_library_name());
 }
 
 AS02Bundle::~AS02Bundle()
@@ -145,7 +145,7 @@ AS02Bundle::~AS02Bundle()
 
 string AS02Bundle::CreatePrimaryVersionFilepath(string *rel_uri_out)
 {
-    IM_ASSERT(!mBundleName.empty());
+    BMX_ASSERT(!mBundleName.empty());
 
     // 'primary' version has same name as bundle
     string result;
@@ -177,7 +177,7 @@ string AS02Bundle::CreateVersionFilepath(string name, string *rel_uri_out)
 string AS02Bundle::CreateEssenceComponentFilepath(string version_filename, bool is_video, uint32_t track_number,
                                                   string *rel_uri_out)
 {
-    IM_CHECK(track_number > 0);
+    BMX_CHECK(track_number > 0);
 
     char suffix[32];
     sprintf(suffix, "%s%u.mxf", (is_video ? "_v" : "_a"), track_number - 1);
@@ -199,7 +199,7 @@ string AS02Bundle::CreateEssenceComponentFilepath(string version_filename, bool 
 string AS02Bundle::CompleteFilepath(string rel_uri_in)
 {
     URI rel_uri(rel_uri_in);
-    IM_CHECK(rel_uri.IsRelative());
+    BMX_CHECK(rel_uri.IsRelative());
 
     string filename = rel_uri.ToFilename();
 

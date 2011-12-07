@@ -39,17 +39,17 @@
 #include <cstring>
 #include <cerrno>
 
-#include <im/mxf_reader/MXFFileReader.h>
-#include <im/mxf_reader/MXFGroupReader.h>
-#include <im/mxf_reader/MXFSequenceReader.h>
-#include <im/essence_parser/SoundConversion.h>
-#include <im/MD5.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/mxf_reader/MXFGroupReader.h>
+#include <bmx/mxf_reader/MXFSequenceReader.h>
+#include <bmx/essence_parser/SoundConversion.h>
+#include <bmx/MD5.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -731,7 +731,7 @@ int main(int argc, const char** argv)
                 max_samples_per_read = 1920;
 
             // read data
-            im::ByteArray sound_buffer;
+            bmx::ByteArray sound_buffer;
             int64_t total_num_read = 0;
             while (true)
             {
@@ -834,9 +834,9 @@ int main(int argc, const char** argv)
         log_error("MXF exception caught: %s\n", ex.getMessage().c_str());
         cmd_result = 1;
     }
-    catch (const IMException &ex)
+    catch (const BMXException &ex)
     {
-        log_error("IM exception caught: %s\n", ex.what());
+        log_error("BMX exception caught: %s\n", ex.what());
         cmd_result = 1;
     }
     catch (const bool &ex)

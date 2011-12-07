@@ -39,12 +39,12 @@
 #include <cstring>
 
 #include "AppUtils.h"
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
@@ -69,7 +69,7 @@ static const ColorMap COLOR_MAP[] =
 
 
 
-bool im::parse_timecode(const char *tc_str, Rational frame_rate, Timecode *timecode)
+bool bmx::parse_timecode(const char *tc_str, Rational frame_rate, Timecode *timecode)
 {
     int hour, min, sec, frame;
     char c;
@@ -81,7 +81,7 @@ bool im::parse_timecode(const char *tc_str, Rational frame_rate, Timecode *timec
     return true;
 }
 
-bool im::parse_position(const char *position_str, Timecode start_timecode, Rational frame_rate, int64_t *position)
+bool bmx::parse_position(const char *position_str, Timecode start_timecode, Rational frame_rate, int64_t *position)
 {
     if (position_str[0] == 'o') {
         // ignore drop frame indictor for offset
@@ -109,7 +109,7 @@ bool im::parse_position(const char *position_str, Timecode start_timecode, Ratio
     return true;
 }
 
-bool im::parse_partition_interval(const char *partition_interval_str, Rational frame_rate, int64_t *partition_interval)
+bool bmx::parse_partition_interval(const char *partition_interval_str, Rational frame_rate, int64_t *partition_interval)
 {
     bool in_seconds = (strchr(partition_interval_str, 's') != 0);
 
@@ -122,7 +122,7 @@ bool im::parse_partition_interval(const char *partition_interval_str, Rational f
     return true;
 }
 
-bool im::parse_image_type(const char *image_type_str, uint8_t *signal_standard, uint8_t *frame_layout)
+bool bmx::parse_image_type(const char *image_type_str, uint8_t *signal_standard, uint8_t *frame_layout)
 {
     if (strcmp(image_type_str, "1080i") == 0) {
         *signal_standard = MXF_SIGNAL_STANDARD_SMPTE274M;
@@ -141,7 +141,7 @@ bool im::parse_image_type(const char *image_type_str, uint8_t *signal_standard, 
     return false;
 }
 
-bool im::parse_bool(const char *bool_str, bool *value)
+bool bmx::parse_bool(const char *bool_str, bool *value)
 {
     if (strcmp(bool_str, "true") == 0)
         *value = true;
@@ -153,7 +153,7 @@ bool im::parse_bool(const char *bool_str, bool *value)
     return true;
 }
 
-bool im::parse_color(const char *color_str, Color *color)
+bool bmx::parse_color(const char *color_str, Color *color)
 {
     size_t i;
     for (i = 0; i < ARRAY_SIZE(COLOR_MAP); i++) {
@@ -166,7 +166,7 @@ bool im::parse_color(const char *color_str, Color *color)
     return false;
 }
 
-string im::create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture)
+string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture)
 {
     char buffer[16];
     sprintf(buffer, "_%s%u.mxf", (is_picture ? "v" : "a"), track_number);

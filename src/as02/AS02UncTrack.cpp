@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/as02/AS02UncTrack.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as02/AS02UncTrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -52,7 +52,7 @@ AS02UncTrack::AS02UncTrack(AS02Clip *clip, uint32_t track_index, EssenceType ess
 : AS02PictureTrack(clip, track_index, essence_type, file, rel_uri)
 {
     mUncDescriptorHelper = dynamic_cast<UncMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mUncDescriptorHelper);
+    BMX_ASSERT(mUncDescriptorHelper);
 
     mUncDescriptorHelper->SetComponentDepth(8);
 

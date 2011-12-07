@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/URI.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/URI.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
@@ -93,13 +93,13 @@ URI::URI()
 URI::URI(const char *uri_str)
 {
     memset(&mUriUri, 0, sizeof(mUriUri));
-    IM_CHECK(Parse(uri_str));
+    BMX_CHECK(Parse(uri_str));
 }
 
 URI::URI(string uri_str)
 {
     memset(&mUriUri, 0, sizeof(mUriUri));
-    IM_CHECK(Parse(uri_str.c_str()));
+    BMX_CHECK(Parse(uri_str.c_str()));
 }
 
 URI::URI(const URI &uri)
@@ -199,7 +199,7 @@ void URI::Copy(const URI &uri)
 
 bool URI::MakeAbsolute(const URI &base_uri)
 {
-    IM_CHECK(base_uri.IsAbsolute());
+    BMX_CHECK(base_uri.IsAbsolute());
 
     if (IsAbsolute())
         return true;
@@ -216,7 +216,7 @@ bool URI::MakeAbsolute(const URI &base_uri)
 
 bool URI::MakeRelative(const URI &base_uri)
 {
-    IM_CHECK(base_uri.IsAbsolute());
+    BMX_CHECK(base_uri.IsAbsolute());
 
     if (IsRelative())
         return true;

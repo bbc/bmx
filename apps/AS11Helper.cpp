@@ -40,14 +40,14 @@
 #include <cerrno>
 
 #include <AS11Helper.h>
-#include <im/as11/AS11DMS.h>
-#include <im/as11/UKDPPDMS.h>
+#include <bmx/as11/AS11DMS.h>
+#include <bmx/as11/UKDPPDMS.h>
 #include "AppUtils.h"
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -285,7 +285,7 @@ static size_t get_utf8_clip_len(const char *u8_str, size_t max_unicode_len)
 FrameworkHelper::FrameworkHelper(DataModel *data_model, DMFramework *framework)
 {
     mFramework = framework;
-    IM_ASSERT(data_model->findSetDef(framework->getKey(), &mSetDef));
+    BMX_ASSERT(data_model->findSetDef(framework->getKey(), &mSetDef));
 
     const FrameworkInfo *framework_info = FRAMEWORK_INFO;
     while (framework_info->name) {
@@ -295,7 +295,7 @@ FrameworkHelper::FrameworkHelper(DataModel *data_model, DMFramework *framework)
         }
         framework_info++;
     }
-    IM_ASSERT(framework_info->name);
+    BMX_ASSERT(framework_info->name);
 }
 
 FrameworkHelper::~FrameworkHelper()
@@ -316,7 +316,7 @@ bool FrameworkHelper::SetProperty(string name, string value)
     }
 
     ItemDef *item_def;
-    IM_ASSERT(mSetDef->findItemDef(&property_info->item_key, &item_def));
+    BMX_ASSERT(mSetDef->findItemDef(&property_info->item_key, &item_def));
     MXFItemDef *c_item_def = item_def->getCItemDef();
 
     switch (c_item_def->typeId)
@@ -414,7 +414,7 @@ bool FrameworkHelper::SetProperty(string name, string value)
             break;
         }
         default:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             return false;
     }
 
@@ -667,7 +667,7 @@ void AS11Helper::InsertFrameworks(AS11Clip *as11_clip)
 
     if (mAS11FrameworkHelper) {
         mClip->InsertAS11CoreFramework(dynamic_cast<AS11CoreFramework*>(mAS11FrameworkHelper->GetFramework()));
-        IM_CHECK_M(mAS11FrameworkHelper->GetFramework()->validate(true), ("AS11 Framework validation failed"));
+        BMX_CHECK_M(mAS11FrameworkHelper->GetFramework()->validate(true), ("AS11 Framework validation failed"));
     }
 
     if (!mSegments.empty())
@@ -687,7 +687,7 @@ void AS11Helper::InsertFrameworks(AS11Clip *as11_clip)
         else
             dpp_framework->SetTotalProgrammeDuration(0);
 
-        IM_CHECK_M(dpp_framework->validate(true), ("UK DPP Framework validation failed"));
+        BMX_CHECK_M(dpp_framework->validate(true), ("UK DPP Framework validation failed"));
     }
 }
 

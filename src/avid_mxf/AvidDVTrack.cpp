@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/avid_mxf/AvidDVTrack.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/avid_mxf/AvidDVTrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -51,7 +51,7 @@ AvidDVTrack::AvidDVTrack(AvidClip *clip, uint32_t track_index, EssenceType essen
 : AvidPictureTrack(clip, track_index, essence_type, file)
 {
     mDVDescriptorHelper = dynamic_cast<DVMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mDVDescriptorHelper);
+    BMX_ASSERT(mDVDescriptorHelper);
 
     mDVDescriptorHelper->SetComponentDepth(8);
 

@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/as02/AS02PictureTrack.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as02/AS02PictureTrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -48,7 +48,7 @@ AS02PictureTrack::AS02PictureTrack(AS02Clip *clip, uint32_t track_index, Essence
 : AS02Track(clip, track_index, essence_type, file, rel_uri)
 {
     mPictureDescriptorHelper = dynamic_cast<PictureMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mPictureDescriptorHelper);
+    BMX_ASSERT(mPictureDescriptorHelper);
 
     mPartitionInterval = 0;
     mPartitionFrameCount = 0;
@@ -76,23 +76,23 @@ void AS02PictureTrack::SetAFD(uint8_t afd)
 
 void AS02PictureTrack::SetPartitionInterval(int64_t frame_count)
 {
-    IM_CHECK(frame_count >= 0);
+    BMX_CHECK(frame_count >= 0);
     mPartitionInterval = frame_count;
 }
 
 void AS02PictureTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_ASSERT(mMXFFile);
-    IM_CHECK(mSampleSize > 0);
-    IM_CHECK(size > 0 && num_samples > 0);
-    IM_CHECK(size == num_samples * mSampleSize);
+    BMX_ASSERT(mMXFFile);
+    BMX_CHECK(mSampleSize > 0);
+    BMX_CHECK(size > 0 && num_samples > 0);
+    BMX_CHECK(size == num_samples * mSampleSize);
 
     uint32_t i;
     for (i = 0; i < num_samples; i++) {
         HandlePartitionInterval(true);
 
         mMXFFile->writeFixedKL(&mEssenceElementKey, mLLen, mSampleSize);
-        IM_CHECK(mMXFFile->write(&data[i * mSampleSize], mSampleSize) == mSampleSize);
+        BMX_CHECK(mMXFFile->write(&data[i * mSampleSize], mSampleSize) == mSampleSize);
 
         mContainerDuration++;
         mContainerSize += mxfKey_extlen + mLLen + mSampleSize;

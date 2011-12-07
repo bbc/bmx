@@ -56,9 +56,9 @@
 #include <cstring>
 #include <cerrno>
 
-#include <im/MD5.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/MD5.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
 
@@ -210,7 +210,7 @@ static void md5_transform(uint32_t buf[4], uint32_t in[16])
  * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.
  */
-void im::md5_init(MD5Context *ctx)
+void bmx::md5_init(MD5Context *ctx)
 {
     ctx->buf[0] = 0x67452301;
     ctx->buf[1] = 0xefcdab89;
@@ -225,7 +225,7 @@ void im::md5_init(MD5Context *ctx)
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
  */
-void im::md5_update(MD5Context *ctx, const unsigned char *buf, size_t len)
+void bmx::md5_update(MD5Context *ctx, const unsigned char *buf, size_t len)
 {
     uint32_t t;
 
@@ -273,7 +273,7 @@ void im::md5_update(MD5Context *ctx, const unsigned char *buf, size_t len)
  * Final wrapup - pad to 64-byte boundary with the bit pattern 
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
-void im::md5_final(unsigned char digest[16], MD5Context *ctx)
+void bmx::md5_final(unsigned char digest[16], MD5Context *ctx)
 {
     unsigned count;
     unsigned char *p;
@@ -314,7 +314,7 @@ void im::md5_final(unsigned char digest[16], MD5Context *ctx)
     memset(ctx, 0, sizeof(ctx));        /* In case it's sensitive */
 }
 
-string im::md5_digest_str(const unsigned char digest[16])
+string bmx::md5_digest_str(const unsigned char digest[16])
 {
     static const char hex_chars[] = "0123456789abcdef";
 
@@ -329,7 +329,7 @@ string im::md5_digest_str(const unsigned char digest[16])
     return digest_str;
 }
 
-string im::md5_calc_file(string filename)
+string bmx::md5_calc_file(string filename)
 {
     FILE *file = fopen(filename.c_str(), "rb");
     if (!file) {

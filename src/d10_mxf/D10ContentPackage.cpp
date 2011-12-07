@@ -35,13 +35,13 @@
 
 #include <cstring>
 
-#include <im/d10_mxf/D10ContentPackage.h>
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/d10_mxf/D10ContentPackage.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -159,7 +159,7 @@ void D10ContentPackage::Reset(int64_t position)
 
 void D10ContentPackage::SetUserTimecode(Timecode user_timecode)
 {
-    IM_ASSERT(!mUserTimecodeSet);
+    BMX_ASSERT(!mUserTimecodeSet);
 
     mUserTimecode = user_timecode;
     mUserTimecodeSet = true;
@@ -170,7 +170,7 @@ bool D10ContentPackage::IsComplete(uint32_t track_index)
     if (track_index == mInfo->picture_track_index)
         return mPictureData.GetSize() == mInfo->picture_sample_size;
 
-    IM_ASSERT(mSoundChannelSampleCount.find(track_index) != mSoundChannelSampleCount.end());
+    BMX_ASSERT(mSoundChannelSampleCount.find(track_index) != mSoundChannelSampleCount.end());
     return mSoundSampleCount > 0 && mSoundChannelSampleCount[track_index] == mSoundSampleCount;
 }
 
@@ -182,19 +182,19 @@ uint32_t D10ContentPackage::WriteSamples(uint32_t track_index, const unsigned ch
     if (track_index == mInfo->picture_track_index) {
         write_num_samples = 1;
 
-        IM_CHECK(size >= mInfo->picture_sample_size);
+        BMX_CHECK(size >= mInfo->picture_sample_size);
         mPictureData.CopyBytes(data, write_num_samples * mInfo->picture_sample_size);
     } else {
-        IM_ASSERT(mSoundChannelSampleCount.find(track_index) != mSoundChannelSampleCount.end());
+        BMX_ASSERT(mSoundChannelSampleCount.find(track_index) != mSoundChannelSampleCount.end());
 
         if (!mInfo->sound_sequence_offset_set) {
             // this call's num_samples equals content package sound sample count
             if (mSoundSampleCount == 0)
                 mSoundSampleCount = num_samples;
             else
-                IM_CHECK(num_samples == mSoundSampleCount);
+                BMX_CHECK(num_samples == mSoundSampleCount);
         } else {
-            IM_ASSERT(mSoundSampleCount > 0);
+            BMX_ASSERT(mSoundSampleCount > 0);
         }
 
         uint32_t output_start_sample = mSoundChannelSampleCount[track_index];
@@ -202,7 +202,7 @@ uint32_t D10ContentPackage::WriteSamples(uint32_t track_index, const unsigned ch
         if (write_num_samples > num_samples)
             write_num_samples = num_samples;
 
-        IM_CHECK(size >= write_num_samples * mInfo->sound_sample_size);
+        BMX_CHECK(size >= write_num_samples * mInfo->sound_sample_size);
         CopySoundSamples(data, write_num_samples, mInfo->sound_channels[track_index], output_start_sample);
         mSoundChannelSampleCount[track_index] += write_num_samples;
     }
@@ -232,14 +232,14 @@ bool D10ContentPackage::IsComplete()
 
 void D10ContentPackage::Write(File *mxf_file)
 {
-    IM_ASSERT(IsComplete());
+    BMX_ASSERT(IsComplete());
 
     // finalize data
 
-    IM_ASSERT(mInfo->sound_sequence_offset_set);
+    BMX_ASSERT(mInfo->sound_sequence_offset_set);
 
     mSoundSequenceIndex = (size_t)((mPosition + mInfo->sound_sequence_offset) % mInfo->sound_sample_sequence.size());
-    IM_ASSERT(mSoundSampleCount == mInfo->sound_sample_sequence[mSoundSequenceIndex]);
+    BMX_ASSERT(mSoundSampleCount == mInfo->sound_sample_sequence[mSoundSequenceIndex]);
 
     mSoundData.SetSize(mSoundSampleCount * 4 * 8 + 4);
 
@@ -255,11 +255,11 @@ void D10ContentPackage::Write(File *mxf_file)
     mxf_file->writeFill(mInfo->system_item_size - size);
 
     mxf_file->writeFixedKL(&PICTURE_ELEMENT_KEY, LLEN, mPictureData.GetSize());
-    IM_CHECK(mxf_file->write(mPictureData.GetBytes(), mPictureData.GetSize()) == mPictureData.GetSize());
+    BMX_CHECK(mxf_file->write(mPictureData.GetBytes(), mPictureData.GetSize()) == mPictureData.GetSize());
     mxf_file->writeFill(mInfo->picture_item_size - (mxfKey_extlen + LLEN + mPictureData.GetSize()));
 
     mxf_file->writeFixedKL(&SOUND_ELEMENT_KEY, LLEN, mSoundData.GetSize());
-    IM_CHECK(mxf_file->write(mSoundData.GetBytes(), mSoundData.GetSize()) == mSoundData.GetSize());
+    BMX_CHECK(mxf_file->write(mSoundData.GetBytes(), mSoundData.GetSize()) == mSoundData.GetSize());
     mxf_file->writeFill(mInfo->sound_item_size - (mxfKey_extlen + LLEN + mSoundData.GetSize()));
 }
 
@@ -321,7 +321,7 @@ uint32_t D10ContentPackage::WriteSystemItem(File *mxf_file)
     // (null) Package creation date / time stamp
     unsigned char ts_bytes[17];
     memset(ts_bytes, 0, sizeof(ts_bytes));
-    IM_CHECK(mxf_file->write(ts_bytes, sizeof(ts_bytes)) == sizeof(ts_bytes));
+    BMX_CHECK(mxf_file->write(ts_bytes, sizeof(ts_bytes)) == sizeof(ts_bytes));
 
     // User date / time stamp
     ts_bytes[0] = 0x81; // SMPTE 12-M timecode
@@ -332,7 +332,7 @@ uint32_t D10ContentPackage::WriteSystemItem(File *mxf_file)
         encode_smpte_timecode(Timecode((mInfo->is_25hz ? 25 : 30), false, mPosition), false, &ts_bytes[1],
                               sizeof(ts_bytes) - 1);
     }
-    IM_CHECK(mxf_file->write(ts_bytes, sizeof(ts_bytes)) == sizeof(ts_bytes));
+    BMX_CHECK(mxf_file->write(ts_bytes, sizeof(ts_bytes)) == sizeof(ts_bytes));
 
 
     // (empty) Package Metadata Set
@@ -346,7 +346,7 @@ uint32_t D10ContentPackage::WriteSystemItem(File *mxf_file)
 
 D10ContentPackageManager::D10ContentPackageManager(mxfRational frame_rate)
 {
-    IM_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
+    BMX_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
              (frame_rate.numerator == 30000 && frame_rate.denominator == 1001));
 
     mPosition = 0;
@@ -388,7 +388,7 @@ void D10ContentPackageManager::SetHaveInputUserTimecode(bool enable)
 
 void D10ContentPackageManager::SetSoundSequenceOffset(uint8_t offset)
 {
-    IM_CHECK(!mInfo.sound_sequence_offset_set || offset == mInfo.sound_sequence_offset);
+    BMX_CHECK(!mInfo.sound_sequence_offset_set || offset == mInfo.sound_sequence_offset);
 
     mInfo.sound_sequence_offset = offset;
     mInfo.sound_sequence_offset_set = true;
@@ -403,13 +403,13 @@ void D10ContentPackageManager::RegisterMPEGTrackElement(uint32_t track_index, ui
 void D10ContentPackageManager::RegisterPCMTrackElement(uint32_t track_index, uint8_t output_channel_index,
                                                        vector<uint32_t> sample_sequence, uint32_t sample_size)
 {
-    IM_CHECK(output_channel_index < 8);
-    IM_CHECK((mInfo.is_25hz && sample_sequence.size() == 1) || (!mInfo.is_25hz && sample_sequence.size() == 5));
-    IM_CHECK(sample_size == 2 || sample_size == 3);
+    BMX_CHECK(output_channel_index < 8);
+    BMX_CHECK((mInfo.is_25hz && sample_sequence.size() == 1) || (!mInfo.is_25hz && sample_sequence.size() == 5));
+    BMX_CHECK(sample_size == 2 || sample_size == 3);
 
     map<uint32_t, uint8_t>::const_iterator iter;
     for (iter = mInfo.sound_channels.begin(); iter != mInfo.sound_channels.end(); iter++) {
-        IM_CHECK_M(iter->second != output_channel_index,
+        BMX_CHECK_M(iter->second != output_channel_index,
                    ("Duplicate AES-3 channel indexes %d (track number %d)",
                      output_channel_index, output_channel_index + 1));
     }
@@ -423,14 +423,14 @@ void D10ContentPackageManager::RegisterPCMTrackElement(uint32_t track_index, uin
             if (sample_sequence[i] > mInfo.max_sound_sample_count)
                 mInfo.max_sound_sample_count = sample_sequence[i];
         }
-        IM_CHECK((mInfo.is_25hz  && mInfo.max_sound_sample_count == 1920) ||
+        BMX_CHECK((mInfo.is_25hz  && mInfo.max_sound_sample_count == 1920) ||
                  (!mInfo.is_25hz && mInfo.max_sound_sample_count == 1602));
     } else {
-        IM_CHECK(sample_size == mInfo.sound_sample_size);
-        IM_CHECK(sample_sequence.size() == mInfo.sound_sample_sequence.size());
+        BMX_CHECK(sample_size == mInfo.sound_sample_size);
+        BMX_CHECK(sample_sequence.size() == mInfo.sound_sample_sequence.size());
         size_t i;
         for (i = 0; i < sample_sequence.size(); i++) {
-            IM_CHECK(mInfo.sound_sample_sequence[i] == sample_sequence[i]);
+            BMX_CHECK(mInfo.sound_sample_sequence[i] == sample_sequence[i]);
         }
     }
 
@@ -439,12 +439,12 @@ void D10ContentPackageManager::RegisterPCMTrackElement(uint32_t track_index, uin
 
 void D10ContentPackageManager::PrepareWrite()
 {
-    IM_CHECK_M(mInfo.picture_track_index != (uint32_t)(-1), ("Require video track for D10 MXF"));
+    BMX_CHECK_M(mInfo.picture_track_index != (uint32_t)(-1), ("Require video track for D10 MXF"));
 
     mInfo.system_item_size = get_kag_aligned_size(mxfKey_extlen + LLEN + SYSTEM_ITEM_METADATA_PACK_SIZE +
                                                   mxfKey_extlen + LLEN);
     mInfo.picture_item_size = get_kag_aligned_size(mxfKey_extlen + LLEN + mInfo.picture_sample_size);
-    IM_ASSERT(mxfKey_extlen + LLEN < 4 * 8); // can add fill for mInfo.max_sound_sample_count - 1
+    BMX_ASSERT(mxfKey_extlen + LLEN < 4 * 8); // can add fill for mInfo.max_sound_sample_count - 1
     mInfo.sound_item_size = get_kag_aligned_size(mxfKey_extlen + LLEN + mInfo.max_sound_sample_count * 4 * 8 + 4);
 
 
@@ -465,7 +465,7 @@ void D10ContentPackageManager::PrepareWrite()
 
 void D10ContentPackageManager::WriteUserTimecode(Timecode user_timecode)
 {
-    IM_ASSERT(mInfo.have_input_user_timecode);
+    BMX_ASSERT(mInfo.have_input_user_timecode);
 
     size_t cp_index = 0;
     while (cp_index < mContentPackages.size() && mContentPackages[cp_index]->HaveUserTimecode())
@@ -480,8 +480,8 @@ void D10ContentPackageManager::WriteUserTimecode(Timecode user_timecode)
 void D10ContentPackageManager::WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size,
                                             uint32_t num_samples)
 {
-    IM_ASSERT(data && size && num_samples);
-    IM_CHECK(size % num_samples == 0);
+    BMX_ASSERT(data && size && num_samples);
+    BMX_CHECK(size % num_samples == 0);
 
     size_t cp_index = 0;
     while (cp_index < mContentPackages.size() && mContentPackages[cp_index]->IsComplete(track_index))
@@ -489,7 +489,7 @@ void D10ContentPackageManager::WriteSamples(uint32_t track_index, const unsigned
 
     uint32_t sample_size = (track_index == mInfo.picture_track_index ? mInfo.picture_sample_size :
                                                                        mInfo.sound_sample_size);
-    IM_CHECK(size >= sample_size * num_samples);
+    BMX_CHECK(size >= sample_size * num_samples);
     const unsigned char *data_ptr = data;
     uint32_t rem_size = size;
     uint32_t rem_num_samples = num_samples;
@@ -530,7 +530,7 @@ bool D10ContentPackageManager::HaveContentPackage() const
 
 void D10ContentPackageManager::WriteNextContentPackage(File *mxf_file)
 {
-    IM_ASSERT(HaveContentPackage());
+    BMX_ASSERT(HaveContentPackage());
 
     mContentPackages.front()->Write(mxf_file);
 
@@ -555,7 +555,7 @@ void D10ContentPackageManager::CreateContentPackage()
         CalcSoundSequenceOffset(false);
 
     if (mFreeContentPackages.empty()) {
-        IM_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
+        BMX_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
         mContentPackages.push_back(new D10ContentPackage(&mInfo));
     } else {
         mContentPackages.push_back(mFreeContentPackages.back());
@@ -587,7 +587,7 @@ void D10ContentPackageManager::CalcSoundSequenceOffset(bool final_write)
 
         offset++;
     }
-    IM_CHECK_M(offset < mInfo.sound_sample_sequence.size(), ("Invalid D10 sound sample sequence"));
+    BMX_CHECK_M(offset < mInfo.sound_sample_sequence.size(), ("Invalid D10 sound sample sequence"));
 
     if (final_write || input_sequence.size() >= mInfo.sound_sample_sequence.size()) {
         mInfo.sound_sequence_offset = offset;

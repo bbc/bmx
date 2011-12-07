@@ -33,14 +33,14 @@
 #include "config.h"
 #endif
 
-#include <im/avid_mxf/AvidMPEG2LGTrack.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/avid_mxf/AvidMPEG2LGTrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -65,9 +65,9 @@ AvidMPEG2LGTrack::~AvidMPEG2LGTrack()
 
 void AvidMPEG2LGTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_ASSERT(mMXFFile);
-    IM_CHECK(num_samples == 1);
-    IM_CHECK(data && size);
+    BMX_ASSERT(mMXFFile);
+    BMX_CHECK(num_samples == 1);
+    BMX_CHECK(data && size);
 
     mWriterHelper.ProcessFrame(data, size);
 
@@ -76,7 +76,7 @@ void AvidMPEG2LGTrack::WriteSamples(const unsigned char *data, uint32_t size, ui
 
     if (mWriterHelper.HavePrevTemporalOffset()) {
         // mIndexSegments only hold whole GOPs and so the earlier entry should be in the current segment
-        IM_CHECK((size_t)(mWriterHelper.GetPrevTemporalOffset() * INDEX_ENTRY_SIZE) <= mIndexSegment.GetSize());
+        BMX_CHECK((size_t)(mWriterHelper.GetPrevTemporalOffset() * INDEX_ENTRY_SIZE) <= mIndexSegment.GetSize());
 
         uint32_t segment_offset = mIndexSegment.GetSize();
         segment_offset -= 2 * mWriterHelper.GetPrevTemporalOffset() * INDEX_ENTRY_SIZE;
@@ -87,7 +87,7 @@ void AvidMPEG2LGTrack::WriteSamples(const unsigned char *data, uint32_t size, ui
 
     // write frame
 
-    IM_CHECK(mMXFFile->write(data, size) == size);
+    BMX_CHECK(mMXFFile->write(data, size) == size);
 
 
     // add index entry pair
@@ -120,7 +120,7 @@ void AvidMPEG2LGTrack::WriteVBEIndexTable(Partition *partition)
     segment.setEditUnitByteCount(0);
 
     uint32_t num_index_entries = mIndexSegment.GetSize() / INDEX_ENTRY_SIZE;
-    IM_ASSERT(num_index_entries >= 1);
+    BMX_ASSERT(num_index_entries >= 1);
     int64_t index_duration = (num_index_entries - 1) / 2;
 
     mxfUUID uuid;

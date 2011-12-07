@@ -33,15 +33,15 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_helper/WaveMXFDescriptorHelper.h>
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_helper/WaveMXFDescriptorHelper.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid_labels_and_keys.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -103,7 +103,7 @@ WaveMXFDescriptorHelper::~WaveMXFDescriptorHelper()
 
 void WaveMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
-    IM_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
+    BMX_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
 
     SoundMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
 
@@ -119,12 +119,12 @@ void WaveMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL 
             break;
         }
     }
-    IM_ASSERT(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+    BMX_ASSERT(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 
 void WaveMXFDescriptorHelper::SetSequenceOffset(uint8_t offset)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     mSequenceOffset = offset;
 }
@@ -141,7 +141,7 @@ void WaveMXFDescriptorHelper::UpdateFileDescriptor()
     SoundMXFDescriptorHelper::UpdateFileDescriptor();
 
     WaveAudioDescriptor *wav_descriptor = dynamic_cast<WaveAudioDescriptor*>(mFileDescriptor);
-    IM_ASSERT(wav_descriptor);
+    BMX_ASSERT(wav_descriptor);
 
     uint32_t sample_size = GetSampleSize();
     wav_descriptor->setBlockAlign(sample_size);

@@ -33,13 +33,13 @@
 #include "config.h"
 #endif
 
-#include <im/as02/AS02Shim.h>
-#include <im/XMLWriter.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as02/AS02Shim.h>
+#include <bmx/XMLWriter.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 static const char AS02_V10_NAMESPACE[] = "http://www.amwa.tv/as-02/1.0/shim";
@@ -77,7 +77,7 @@ void AS02Shim::AppendAnnotation(string annotation)
 void AS02Shim::Write(string filename)
 {
     XMLWriter *xml_writer = XMLWriter::Open(filename);
-    IM_CHECK(xml_writer);
+    BMX_CHECK(xml_writer);
 
     try
     {

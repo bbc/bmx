@@ -35,14 +35,14 @@
 
 #include <cstring>
 
-#include <im/mxf_reader/MXFSequenceTrackReader.h>
-#include <im/mxf_reader/MXFSequenceReader.h>
-#include <im/essence_parser/AVCIEssenceParser.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_reader/MXFSequenceTrackReader.h>
+#include <bmx/mxf_reader/MXFSequenceReader.h>
+#include <bmx/essence_parser/AVCIEssenceParser.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -134,7 +134,7 @@ void MXFSequenceTrackReader::AppendSegment(MXFTrackReader *segment)
         if (segment_track_info->file_track_number != mTrackInfo->file_track_number)
             mTrackInfo->file_track_number = 0;
 
-        IM_ASSERT(segment->GetSampleRate() == mTrackInfo->edit_rate);
+        BMX_ASSERT(segment->GetSampleRate() == mTrackInfo->edit_rate);
         mTrackInfo->duration += segment->GetDuration();
         mDuration += segment->GetDuration();
     }
@@ -144,7 +144,7 @@ void MXFSequenceTrackReader::AppendSegment(MXFTrackReader *segment)
 
 MXFTrackReader* MXFSequenceTrackReader::GetSegment(size_t index)
 {
-    IM_CHECK(index < mTrackSegments.size());
+    BMX_CHECK(index < mTrackSegments.size());
     return mTrackSegments[index];
 }
 
@@ -280,7 +280,7 @@ uint32_t MXFSequenceTrackReader::Read(uint32_t num_samples, bool is_top)
 
 void MXFSequenceTrackReader::Seek(int64_t position)
 {
-    IM_CHECK(!mTrackSegments.empty());
+    BMX_CHECK(!mTrackSegments.empty());
 
     MXFTrackReader *segment;
     int64_t segment_position;
@@ -293,7 +293,7 @@ void MXFSequenceTrackReader::Seek(int64_t position)
 
 bool MXFSequenceTrackReader::GetIndexEntry(MXFIndexEntryExt *entry, int64_t position) const
 {
-    IM_CHECK(!mTrackSegments.empty());
+    BMX_CHECK(!mTrackSegments.empty());
 
     // TODO: need to adjust index entries for the sequence or add source file info to give the entry context
     MXFTrackReader *segment;
@@ -305,7 +305,7 @@ bool MXFSequenceTrackReader::GetIndexEntry(MXFIndexEntryExt *entry, int64_t posi
 
 int16_t MXFSequenceTrackReader::GetPrecharge(int64_t position, bool limit_to_available) const
 {
-    IM_CHECK(!mTrackSegments.empty());
+    BMX_CHECK(!mTrackSegments.empty());
 
     MXFTrackReader *segment;
     int64_t segment_position;
@@ -316,7 +316,7 @@ int16_t MXFSequenceTrackReader::GetPrecharge(int64_t position, bool limit_to_ava
 
 int16_t MXFSequenceTrackReader::GetRollout(int64_t position, bool limit_to_available) const
 {
-    IM_CHECK(!mTrackSegments.empty());
+    BMX_CHECK(!mTrackSegments.empty());
 
     MXFTrackReader *segment;
     int64_t segment_position;
@@ -332,20 +332,20 @@ void MXFSequenceTrackReader::SetNextFramePosition(int64_t position)
 
 SourcePackage* MXFSequenceTrackReader::GetFileSourcePackage() const
 {
-    IM_CHECK(mFileSourcePackage);
+    BMX_CHECK(mFileSourcePackage);
     return mFileSourcePackage;
 }
 
 bool MXFSequenceTrackReader::HaveAVCIHeader() const
 {
-    IM_CHECK(!mTrackSegments.empty());
+    BMX_CHECK(!mTrackSegments.empty());
 
     return mTrackSegments.front()->HaveAVCIHeader();
 }
 
 const unsigned char* MXFSequenceTrackReader::GetAVCIHeader() const
 {
-    IM_CHECK(!mTrackSegments.empty());
+    BMX_CHECK(!mTrackSegments.empty());
 
     return mTrackSegments.front()->GetAVCIHeader();
 }
@@ -353,7 +353,7 @@ const unsigned char* MXFSequenceTrackReader::GetAVCIHeader() const
 void MXFSequenceTrackReader::GetSegmentPosition(int64_t position, MXFTrackReader **segment,
                                                 int64_t *segment_position) const
 {
-    IM_CHECK(!mTrackSegments.empty());
+    BMX_CHECK(!mTrackSegments.empty());
 
     size_t i;
     for (i = 0; i < mSegmentOffsets.size(); i++) {
@@ -372,8 +372,8 @@ void MXFSequenceTrackReader::GetSegmentPosition(int64_t position, MXFTrackReader
 
 void MXFSequenceTrackReader::UpdatePosition(size_t segment_index)
 {
-    IM_ASSERT(!mTrackSegments.empty());
-    IM_ASSERT(segment_index < mTrackSegments.size());
+    BMX_ASSERT(!mTrackSegments.empty());
+    BMX_ASSERT(segment_index < mTrackSegments.size());
 
     mPosition = mSegmentOffsets[segment_index] + mTrackSegments[segment_index]->GetPosition();
 }

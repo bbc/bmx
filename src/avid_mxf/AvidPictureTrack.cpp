@@ -33,13 +33,13 @@
 #include "config.h"
 #endif
 
-#include <im/avid_mxf/AvidPictureTrack.h>
-#include <im/avid_mxf/AvidClip.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/avid_mxf/AvidPictureTrack.h>
+#include <bmx/avid_mxf/AvidClip.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -48,7 +48,7 @@ AvidPictureTrack::AvidPictureTrack(AvidClip *clip, uint32_t track_index, Essence
 : AvidTrack(clip, track_index, essence_type, file)
 {
     mPictureDescriptorHelper = dynamic_cast<PictureMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mPictureDescriptorHelper);
+    BMX_ASSERT(mPictureDescriptorHelper);
 
     mPictureDescriptorHelper->SetFrameWrapped(false);
     mPictureDescriptorHelper->SetSampleRate(mClip->GetFrameRate());

@@ -51,10 +51,10 @@
 
 #include <algorithm>
 
-#include <im/Utils.h>
-#include <im/URI.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/Utils.h>
+#include <bmx/URI.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
 
@@ -77,7 +77,7 @@ static const SampleSequence SAMPLE_SEQUENCES[] =
 
 
 
-int64_t im::convert_position(int64_t in_position, int64_t factor_top, int64_t factor_bottom, Rounding rounding)
+int64_t bmx::convert_position(int64_t in_position, int64_t factor_top, int64_t factor_bottom, Rounding rounding)
 {
     if (in_position == 0 || factor_top == factor_bottom)
         return in_position;
@@ -112,7 +112,7 @@ int64_t im::convert_position(int64_t in_position, int64_t factor_top, int64_t fa
     }
 }
 
-int64_t im::convert_position(Rational in_edit_rate, int64_t in_position, Rational out_edit_rate, Rounding rounding)
+int64_t bmx::convert_position(Rational in_edit_rate, int64_t in_position, Rational out_edit_rate, Rounding rounding)
 {
     return convert_position(in_position,
                             (int64_t)out_edit_rate.numerator * in_edit_rate.denominator,
@@ -120,7 +120,7 @@ int64_t im::convert_position(Rational in_edit_rate, int64_t in_position, Rationa
                             rounding);
 }
 
-int64_t im::convert_duration(int64_t in_duration, int64_t factor_top, int64_t factor_bottom, Rounding rounding)
+int64_t bmx::convert_duration(int64_t in_duration, int64_t factor_top, int64_t factor_bottom, Rounding rounding)
 {
     if (in_duration <= 0)
         return 0;
@@ -133,7 +133,7 @@ int64_t im::convert_duration(int64_t in_duration, int64_t factor_top, int64_t fa
     }
 }
 
-int64_t im::convert_duration(Rational in_edit_rate, int64_t in_duration, Rational out_edit_rate, Rounding rounding)
+int64_t bmx::convert_duration(Rational in_edit_rate, int64_t in_duration, Rational out_edit_rate, Rounding rounding)
 {
     if (in_duration <= 0)
         return 0;
@@ -144,7 +144,7 @@ int64_t im::convert_duration(Rational in_edit_rate, int64_t in_duration, Rationa
                             rounding);
 }
 
-bool im::get_sample_sequence(Rational lower_edit_rate, Rational higher_edit_rate, vector<uint32_t> *sample_sequence)
+bool bmx::get_sample_sequence(Rational lower_edit_rate, Rational higher_edit_rate, vector<uint32_t> *sample_sequence)
 {
     if (lower_edit_rate == higher_edit_rate) {
         sample_sequence->push_back(1);
@@ -180,14 +180,14 @@ bool im::get_sample_sequence(Rational lower_edit_rate, Rational higher_edit_rate
     return !sample_sequence->empty();
 }
 
-void im::offset_sample_sequence(vector<uint32_t> &sample_sequence, uint8_t offset)
+void bmx::offset_sample_sequence(vector<uint32_t> &sample_sequence, uint8_t offset)
 {
     rotate(sample_sequence.begin(),
            sample_sequence.begin() + (offset % sample_sequence.size()),
            sample_sequence.end());
 }
 
-int64_t im::convert_position_lower(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size)
+int64_t bmx::convert_position_lower(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size)
 {
     int64_t lower_position = position / sequence_size * sequence.size();
 
@@ -215,7 +215,7 @@ int64_t im::convert_position_lower(int64_t position, const std::vector<uint32_t>
     return lower_position;
 }
 
-int64_t im::convert_position_higher(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size)
+int64_t bmx::convert_position_higher(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size)
 {
     int64_t higher_position = position / sequence.size() * sequence_size;
 
@@ -234,7 +234,7 @@ int64_t im::convert_position_higher(int64_t position, const std::vector<uint32_t
     return higher_position;
 }
 
-int64_t im::convert_duration_lower(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size)
+int64_t bmx::convert_duration_lower(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size)
 {
     if (duration <= 0)
         return 0;
@@ -254,8 +254,8 @@ int64_t im::convert_duration_lower(int64_t duration, const std::vector<uint32_t>
     return lower_duration;
 }
 
-int64_t im::convert_duration_lower(int64_t duration, int64_t position, const std::vector<uint32_t> &sequence,
-                                   int64_t sequence_size)
+int64_t bmx::convert_duration_lower(int64_t duration, int64_t position, const std::vector<uint32_t> &sequence,
+                                    int64_t sequence_size)
 {
     if (duration <= 0)
         return 0;
@@ -289,7 +289,7 @@ int64_t im::convert_duration_lower(int64_t duration, int64_t position, const std
     return lower_duration;
 }
 
-int64_t im::convert_duration_higher(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size)
+int64_t bmx::convert_duration_higher(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size)
 {
     if (duration <= 0)
         return 0;
@@ -304,8 +304,8 @@ int64_t im::convert_duration_higher(int64_t duration, const std::vector<uint32_t
     return higher_duration;
 }
 
-int64_t im::convert_duration_higher(int64_t duration, int64_t position, const std::vector<uint32_t> &sequence,
-                                    int64_t sequence_size)
+int64_t bmx::convert_duration_higher(int64_t duration, int64_t position, const std::vector<uint32_t> &sequence,
+                                     int64_t sequence_size)
 {
     if (duration <= 0)
         return 0;
@@ -328,7 +328,7 @@ int64_t im::convert_duration_higher(int64_t duration, int64_t position, const st
     return higher_duration;
 }
 
-string im::strip_path(string filename)
+string bmx::strip_path(string filename)
 {
     size_t sep_index;
     if ((sep_index = filename.rfind("/")) != string::npos)
@@ -337,7 +337,7 @@ string im::strip_path(string filename)
         return filename;
 }
 
-string im::strip_name(string filename)
+string bmx::strip_name(string filename)
 {
     size_t sep_index;
     if ((sep_index = filename.rfind("/")) != string::npos)
@@ -346,7 +346,7 @@ string im::strip_name(string filename)
         return "";
 }
 
-string im::strip_suffix(string filename)
+string bmx::strip_suffix(string filename)
 {
     size_t suffix_index;
     if ((suffix_index = filename.rfind(".")) != string::npos)
@@ -355,7 +355,7 @@ string im::strip_suffix(string filename)
         return filename;
 }
 
-string im::get_abs_cwd()
+string bmx::get_abs_cwd()
 {
 #define MAX_REASONABLE_PATH_SIZE    (10 * 1024)
 
@@ -371,9 +371,9 @@ string im::get_abs_cwd()
 
         delete [] temp_path;
         if (errno != ERANGE) {
-            throw IMException("Failed to get current working directory: %s", strerror(errno));
+            throw BMXException("Failed to get current working directory: %s", strerror(errno));
         } else if (path_size >= MAX_REASONABLE_PATH_SIZE) {
-            throw IMException("Maximum path size (%d) for current working directory exceeded",
+            throw BMXException("Maximum path size (%d) for current working directory exceeded",
                                MAX_REASONABLE_PATH_SIZE, strerror(errno));
         }
         path_size += 1024;
@@ -384,7 +384,7 @@ string im::get_abs_cwd()
     return abs_cwd;
 }
 
-string im::get_abs_filename(string base_dir, string filename)
+string bmx::get_abs_filename(string base_dir, string filename)
 {
     URI uri;
     uri.ParseFilename(filename);
@@ -399,7 +399,7 @@ string im::get_abs_filename(string base_dir, string filename)
     return uri.ToFilename();
 }
 
-im::Timestamp im::generate_timestamp_now()
+bmx::Timestamp bmx::generate_timestamp_now()
 {
     Timestamp now;
 
@@ -409,10 +409,10 @@ im::Timestamp im::generate_timestamp_now()
 #if defined(_MSC_VER)
     // TODO: need thread-safe (reentrant) version
     const struct tm *gmt_ptr = gmtime(&t);
-    IM_CHECK(gmt_ptr);
+    BMX_CHECK(gmt_ptr);
     gmt = *gmt_ptr;
 #else
-    IM_CHECK(gmtime_r(&t, &gmt));
+    BMX_CHECK(gmtime_r(&t, &gmt));
 #endif
 
     now.year  = gmt.tm_year + 1900;
@@ -426,24 +426,24 @@ im::Timestamp im::generate_timestamp_now()
     return now;
 }
 
-im::UUID im::generate_uuid()
+bmx::UUID bmx::generate_uuid()
 {
-    UUID im_uuid;
+    UUID bmx_uuid;
 
 #if defined(_WIN32)
     GUID guid;
     CoCreateGuid(&guid);
-    memcpy(&im_uuid, &guid, sizeof(im_uuid));
+    memcpy(&bmx_uuid, &guid, sizeof(bmx_uuid));
 #else
     uuid_t uuid;
     uuid_generate(uuid);
-    memcpy(&im_uuid, &uuid, sizeof(im_uuid));
+    memcpy(&bmx_uuid, &uuid, sizeof(bmx_uuid));
 #endif
 
-    return im_uuid;
+    return bmx_uuid;
 }
 
-im::UMID im::generate_umid()
+bmx::UMID bmx::generate_umid()
 {
     // material type not identified, UUID material generation method, no instance method defined
     static const unsigned char umid_prefix[16] = {0x06, 0x0a, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x05, 0x01, 0x01, 0x0f, 0x20,
@@ -458,12 +458,12 @@ im::UMID im::generate_umid()
     return umid;
 }
 
-uint16_t im::get_rounded_tc_base(Rational rate)
+uint16_t bmx::get_rounded_tc_base(Rational rate)
 {
     return (uint16_t)((rate.numerator + rate.denominator/2) / rate.denominator);
 }
 
-string im::get_generic_duration_string(int64_t count, Rational rate)
+string bmx::get_generic_duration_string(int64_t count, Rational rate)
 {
     if (count <= 0 || rate.numerator == 0 || rate.denominator == 0)
         return "00:00:00.00";
@@ -483,18 +483,18 @@ string im::get_generic_duration_string(int64_t count, Rational rate)
     return buffer;
 }
 
-im::Rational im::convert_int_to_rational(int32_t value)
+bmx::Rational bmx::convert_int_to_rational(int32_t value)
 {
     Rational ret = {value, 1};
     return ret;
 }
 
-void im::decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_tc, unsigned int size,
-                               Timecode *timecode, bool *field_mark)
+void bmx::decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_tc, unsigned int size,
+                                Timecode *timecode, bool *field_mark)
 {
     // see SMPTE 12M-1-2008 and SMPTE 331M-2004 section 8.2 for details
 
-    IM_ASSERT(size >= 4);
+    BMX_ASSERT(size >= 4);
 
     int hour, min, sec, frame;
     frame = ((smpte_tc[0] & 0x30) >> 4) * 10 + (smpte_tc[0] & 0x0f);
@@ -526,11 +526,11 @@ void im::decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_t
     timecode->Init(frame_rate, drop_frame, hour, min, sec, frame);
 }
 
-void im::encode_smpte_timecode(Timecode timecode, bool field_mark, unsigned char *smpte_tc, unsigned int size)
+void bmx::encode_smpte_timecode(Timecode timecode, bool field_mark, unsigned char *smpte_tc, unsigned int size)
 {
     // see SMPTE 12M-1-2008 and SMPTE 331M-2004 section 8.2 for details
 
-    IM_ASSERT(size >= 4);
+    BMX_ASSERT(size >= 4);
 
     int frame = timecode.GetFrame();
     if (timecode.GetRoundedTCBase() > 30)

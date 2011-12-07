@@ -39,16 +39,16 @@
 
 #include <algorithm>
 
-#include <im/as02/AS02Manifest.h>
-#include <im/as02/AS02Bundle.h>
-#include <im/MD5.h>
-#include <im/XMLUtils.h>
-#include <im/Utils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as02/AS02Manifest.h>
+#include <bmx/as02/AS02Bundle.h>
+#include <bmx/MD5.h>
+#include <bmx/XMLUtils.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 static const char AS02_V10_NAMESPACE[] = "http://www.amwa.tv/as-02/1.0/manifest";
@@ -111,7 +111,7 @@ static string get_xml_file_role_name(FileRole role)
             return FILE_ROLE_NAME_MAP[i].name;
     }
 
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return "";
 }
 
@@ -123,7 +123,7 @@ static string get_xml_mic_type_name(MICType type)
             return MIC_TYPE_NAME_MAP[i].name;
     }
 
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return "";
 }
 
@@ -135,7 +135,7 @@ static string get_xml_mic_scope_name(MICScope scope)
             return MIC_SCOPE_NAME_MAP[i].name;
     }
 
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return "";
 }
 
@@ -173,9 +173,9 @@ void AS02ManifestFile::SetId(string id)
     static const unsigned char uuid_umid_prefix[16] =
         {0x06, 0x0a, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x05, 0x01, 0x01, 0x0f, 0x20, 0x13, 0x00, 0x00, 0x00};
 
-    IM_CHECK(id.find("urn:uuid:") == 0 ||
-             id.find("urn:smpte:ul:") == 0 ||
-             id.find("urn:smpte:umid:") == 0);
+    BMX_CHECK(id.find("urn:uuid:") == 0 ||
+              id.find("urn:smpte:ul:") == 0 ||
+              id.find("urn:smpte:umid:") == 0);
 
     UMID umid;
     if (id.find("urn:smpte:umid:") == 0 &&
@@ -323,7 +323,7 @@ void AS02Manifest::SetBundleName(string name)
 
 void AS02Manifest::SetBundleId(string uuid_str)
 {
-    IM_CHECK(uuid_str.find("urn:uuid:") == 0);
+    BMX_CHECK(uuid_str.find("urn:uuid:") == 0);
 
     mBundleId = uuid_str;
 }
@@ -363,7 +363,7 @@ AS02ManifestFile* AS02Manifest::RegisterFile(string path, FileRole role)
 void AS02Manifest::Write(AS02Bundle *bundle, string filename)
 {
     XMLWriter *xml_writer = XMLWriter::Open(filename);
-    IM_CHECK(xml_writer);
+    BMX_CHECK(xml_writer);
 
     try
     {

@@ -33,14 +33,14 @@
 #include "config.h"
 #endif
 
-#include <im/avid_mxf/AvidPCMTrack.h>
-#include <im/avid_mxf/AvidClip.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/avid_mxf/AvidPCMTrack.h>
+#include <bmx/avid_mxf/AvidClip.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -53,7 +53,7 @@ AvidPCMTrack::AvidPCMTrack(AvidClip *clip, uint32_t track_index, EssenceType ess
 : AvidTrack(clip, track_index, essence_type, file)
 {
     mWaveDescriptorHelper = dynamic_cast<WaveMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mWaveDescriptorHelper);
+    BMX_ASSERT(mWaveDescriptorHelper);
 
     mWaveDescriptorHelper->SetFrameWrapped(false);
     mWaveDescriptorHelper->SetSamplingRate(SAMPLING_RATE_48K);
@@ -73,7 +73,7 @@ AvidPCMTrack::~AvidPCMTrack()
 
 void AvidPCMTrack::SetSamplingRate(mxfRational sampling_rate)
 {
-    IM_CHECK(sampling_rate.numerator == 48000 && sampling_rate.denominator == 1);
+    BMX_CHECK(sampling_rate.numerator == 48000 && sampling_rate.denominator == 1);
 
     mWaveDescriptorHelper->SetSamplingRate(sampling_rate);
     mWaveDescriptorHelper->SetSampleRate(mWaveDescriptorHelper->GetSamplingRate());
@@ -83,7 +83,7 @@ void AvidPCMTrack::SetSamplingRate(mxfRational sampling_rate)
 
 void AvidPCMTrack::SetQuantizationBits(uint32_t bits)
 {
-    IM_CHECK(bits > 0 && bits <= 32);
+    BMX_CHECK(bits > 0 && bits <= 32);
 
     mWaveDescriptorHelper->SetQuantizationBits(bits);
 }
@@ -126,6 +126,6 @@ vector<uint32_t> AvidPCMTrack::GetShiftedSampleSequence() const
 void AvidPCMTrack::SetSampleSequence()
 {
     mSampleSequence.clear();
-    IM_CHECK(get_sample_sequence(mClip->GetFrameRate(), mWaveDescriptorHelper->GetSamplingRate(), &mSampleSequence));
+    BMX_CHECK(get_sample_sequence(mClip->GetFrameRate(), mWaveDescriptorHelper->GetSamplingRate(), &mSampleSequence));
 }
 

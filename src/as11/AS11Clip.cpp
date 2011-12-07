@@ -37,16 +37,16 @@
 
 #include <cstring>
 
-#include <im/as11/AS11Clip.h>
-#include <im/as11/AS11SegmentationFramework.h>
-#include <im/MXFUtils.h>
-#include <im/Utils.h>
-#include <im/Version.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/as11/AS11Clip.h>
+#include <bmx/as11/AS11SegmentationFramework.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
+#include <bmx/Version.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -90,7 +90,7 @@ string AS11Clip::AS11ClipTypeToString(AS11ClipType clip_type)
             return AS11_CLIP_TYPE_STRING_MAP[i].str;
     }
 
-    IM_ASSERT(false);
+    BMX_ASSERT(false);
     return "";
 }
 
@@ -101,8 +101,8 @@ AS11Clip::AS11Clip(OP1AFile *clip)
     mD10Clip = 0;
     mSegmentationSequence = 0;
 
-    mOP1AClip->SetProductInfo(get_im_company_name(), get_im_library_name(), get_im_mxf_product_version(),
-                              get_im_version_string(), get_im_product_uid());
+    mOP1AClip->SetProductInfo(get_bmx_company_name(), get_bmx_library_name(), get_bmx_mxf_product_version(),
+                              get_bmx_version_string(), get_bmx_product_uid());
 }
 
 AS11Clip::AS11Clip(D10File *clip)
@@ -112,8 +112,8 @@ AS11Clip::AS11Clip(D10File *clip)
     mD10Clip = clip;
     mSegmentationSequence = 0;
 
-    mD10Clip->SetProductInfo(get_im_company_name(), get_im_library_name(), get_im_mxf_product_version(),
-                             get_im_version_string(), get_im_product_uid());
+    mD10Clip->SetProductInfo(get_bmx_company_name(), get_bmx_library_name(), get_bmx_mxf_product_version(),
+                             get_bmx_version_string(), get_bmx_product_uid());
 }
 
 AS11Clip::~AS11Clip()
@@ -137,7 +137,7 @@ void AS11Clip::SetClipName(string name)
             mD10Clip->SetClipName(name);
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -153,7 +153,7 @@ void AS11Clip::SetStartTimecode(Timecode start_timecode)
             mD10Clip->SetStartTimecode(start_timecode);
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -169,7 +169,7 @@ void AS11Clip::SetPartitionInterval(int64_t frame_count)
             log_warn("Setting partition interval not supported in D10 clip\n");
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -186,7 +186,7 @@ void AS11Clip::SetProductInfo(string company_name, string product_name, mxfProdu
             mD10Clip->SetProductInfo(company_name, product_name, product_version, version, product_uid);
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -202,7 +202,7 @@ void AS11Clip::SetOutputStartOffset(int64_t offset)
             log_warn("Setting output start offset not supported in D10 clip\n");
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -218,7 +218,7 @@ void AS11Clip::SetOutputEndOffset(int64_t offset)
             log_warn("Setting output end offset not supported in D10 clip\n");
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -235,7 +235,7 @@ AS11Track* AS11Clip::CreateTrack(EssenceType essence_type)
             track = new AS11Track(essence_type, mD10Clip->CreateTrack(essence_type));
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -254,7 +254,7 @@ void AS11Clip::PrepareHeaderMetadata()
             mD10Clip->PrepareHeaderMetadata();
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -270,7 +270,7 @@ void AS11Clip::PrepareWrite()
             mD10Clip->PrepareWrite();
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -292,7 +292,7 @@ void AS11Clip::CompleteWrite()
             mD10Clip->CompleteWrite();
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 }
@@ -306,7 +306,7 @@ HeaderMetadata* AS11Clip::GetHeaderMetadata() const
         case AS11_D10_CLIP_TYPE:
             return mD10Clip->GetHeaderMetadata();
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -322,7 +322,7 @@ DataModel* AS11Clip::GetDataModel() const
         case AS11_D10_CLIP_TYPE:
             return mD10Clip->GetDataModel();
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -343,15 +343,15 @@ void AS11Clip::InsertUKDPPFramework(UKDPPFramework *framework)
 
 void AS11Clip::InsertPosSegmentation(vector<AS11PosSegment> segments)
 {
-    IM_ASSERT(!mSegmentationSequence);
+    BMX_ASSERT(!mSegmentationSequence);
 
     AppendDMSLabel(MXF_DM_L(AS11SegmentationDescriptiveScheme));
 
     HeaderMetadata *header_metadata = GetHeaderMetadata();
-    IM_ASSERT(header_metadata);
+    BMX_ASSERT(header_metadata);
 
     MaterialPackage *material_package = header_metadata->getPreface()->findMaterialPackage();
-    IM_ASSERT(material_package);
+    BMX_ASSERT(material_package);
 
     // Preface - ContentStorage - Package - DM Track
     Track *dm_track = new Track(header_metadata);
@@ -371,7 +371,7 @@ void AS11Clip::InsertPosSegmentation(vector<AS11PosSegment> segments)
     int64_t next_start = 0;
     size_t i;
     for (i = 0; i < segments.size(); i++) {
-        IM_CHECK_M(segments[i].start >= next_start,
+        BMX_CHECK_M(segments[i].start >= next_start,
                    ("AS11 segment starts (%"PRId64") before end of last segment (%"PRId64")",
                     segments[i].start, next_start - 1));
 
@@ -416,7 +416,7 @@ void AS11Clip::InsertTCSegmentation(vector<AS11TCSegment> segments)
             start_timecode = mD10Clip->GetStartTimecode();
             break;
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -457,7 +457,7 @@ void AS11Clip::CompleteSegmentation(bool with_filler)
     }
 
     HeaderMetadata *header_metadata = GetHeaderMetadata();
-    IM_ASSERT(header_metadata);
+    BMX_ASSERT(header_metadata);
 
     vector<StructuralComponent*> components = mSegmentationSequence->getStructuralComponents();
 
@@ -516,7 +516,7 @@ Rational AS11Clip::GetFrameRate() const
         case AS11_D10_CLIP_TYPE:
             return mD10Clip->GetFrameRate();
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -532,7 +532,7 @@ int64_t AS11Clip::GetDuration()
         case AS11_D10_CLIP_TYPE:
             return mD10Clip->GetDuration();
         case AS11_UNKNOWN_CLIP_TYPE:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
             break;
     }
 
@@ -541,14 +541,14 @@ int64_t AS11Clip::GetDuration()
 
 AS11Track* AS11Clip::GetTrack(uint32_t track_index)
 {
-    IM_CHECK(track_index < mTracks.size());
+    BMX_CHECK(track_index < mTracks.size());
     return mTracks[track_index];
 }
 
 void AS11Clip::AppendDMSLabel(mxfUL scheme_label)
 {
     HeaderMetadata *header_metadata = GetHeaderMetadata();
-    IM_ASSERT(header_metadata);
+    BMX_ASSERT(header_metadata);
 
     vector<mxfUL> dm_schemes = header_metadata->getPreface()->getDMSchemes();
     size_t i;
@@ -563,10 +563,10 @@ void AS11Clip::AppendDMSLabel(mxfUL scheme_label)
 void AS11Clip::InsertFramework(uint32_t track_id, string track_name, DMFramework *framework)
 {
     HeaderMetadata *header_metadata = GetHeaderMetadata();
-    IM_ASSERT(header_metadata);
+    BMX_ASSERT(header_metadata);
 
     MaterialPackage *material_package = header_metadata->getPreface()->findMaterialPackage();
-    IM_ASSERT(material_package);
+    BMX_ASSERT(material_package);
 
     // Preface - ContentStorage - Package - DM Track
     StaticTrack *dm_track = new StaticTrack(header_metadata);
@@ -587,7 +587,7 @@ void AS11Clip::InsertFramework(uint32_t track_id, string track_name, DMFramework
 
     // move the framework set after the dm degment set
     mxf_remove_set(header_metadata->getCHeaderMetadata(), framework->getCMetadataSet());
-    IM_CHECK(mxf_add_set(header_metadata->getCHeaderMetadata(), framework->getCMetadataSet()));
+    BMX_CHECK(mxf_add_set(header_metadata->getCHeaderMetadata(), framework->getCMetadataSet()));
 
     // Preface - ContentStorage - Package - DM Track - Sequence - DMSegment - DMFramework
     dm_segment->setDMFramework(framework);

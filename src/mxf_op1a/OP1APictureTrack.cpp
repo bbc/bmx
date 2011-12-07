@@ -33,13 +33,13 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_op1a/OP1APictureTrack.h>
-#include <im/IMTypes.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_op1a/OP1APictureTrack.h>
+#include <bmx/BMXTypes.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -49,7 +49,7 @@ OP1APictureTrack::OP1APictureTrack(OP1AFile *file, uint32_t track_index, uint32_
 : OP1ATrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
 {
     mPictureDescriptorHelper = dynamic_cast<PictureMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mPictureDescriptorHelper);
+    BMX_ASSERT(mPictureDescriptorHelper);
 
     mPictureDescriptorHelper->SetAspectRatio(ASPECT_RATIO_16_9);
 

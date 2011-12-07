@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_op1a/OP1AVC3Track.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_op1a/OP1AVC3Track.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 

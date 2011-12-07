@@ -35,13 +35,13 @@
 
 #include <algorithm>
 
-#include <im/mxf_op1a/OP1AContentPackage.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_op1a/OP1AContentPackage.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -205,7 +205,7 @@ uint32_t OP1AContentPackageElementData::GetWriteSize() const
 void OP1AContentPackageElementData::Write(File *mxf_file)
 {
     mxf_file->writeFixedKL(&mElement->element_key, ESS_ELEMENT_LLEN, mData.GetSize());
-    IM_CHECK(mxf_file->write(mData.GetBytes(), mData.GetSize()) == mData.GetSize());
+    BMX_CHECK(mxf_file->write(mData.GetBytes(), mData.GetSize()) == mData.GetSize());
 
     uint32_t write_size = GetWriteSize();
     if (write_size != mxfKey_extlen + ESS_ELEMENT_LLEN + mData.GetSize())
@@ -249,7 +249,7 @@ void OP1AContentPackage::Reset(int64_t new_position)
 
 bool OP1AContentPackage::IsComplete(uint32_t track_index)
 {
-    IM_ASSERT(mElementTrackIndexMap.find(track_index) != mElementTrackIndexMap.end());
+    BMX_ASSERT(mElementTrackIndexMap.find(track_index) != mElementTrackIndexMap.end());
 
     return mElementTrackIndexMap[track_index]->IsComplete();
 }
@@ -257,14 +257,14 @@ bool OP1AContentPackage::IsComplete(uint32_t track_index)
 uint32_t OP1AContentPackage::WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size,
                                           uint32_t num_samples)
 {
-    IM_ASSERT(mElementTrackIndexMap.find(track_index) != mElementTrackIndexMap.end());
+    BMX_ASSERT(mElementTrackIndexMap.find(track_index) != mElementTrackIndexMap.end());
 
     return mElementTrackIndexMap[track_index]->WriteSamples(data, size, num_samples);
 }
 
 void OP1AContentPackage::WriteSample(uint32_t track_index, const CDataBuffer *data_array, uint32_t array_size)
 {
-    IM_ASSERT(mElementTrackIndexMap.find(track_index) != mElementTrackIndexMap.end());
+    BMX_ASSERT(mElementTrackIndexMap.find(track_index) != mElementTrackIndexMap.end());
 
     mElementTrackIndexMap[track_index]->WriteSample(data_array, array_size);
 }
@@ -300,7 +300,7 @@ void OP1AContentPackage::UpdateIndexTable(OP1AIndexTable *index_table)
 
 void OP1AContentPackage::Write(File *mxf_file)
 {
-    IM_ASSERT(mHaveUpdatedIndexTable);
+    BMX_ASSERT(mHaveUpdatedIndexTable);
 
     size_t i;
     for (i = 0; i < mElementData.size(); i++)
@@ -312,7 +312,7 @@ void OP1AContentPackage::Write(File *mxf_file)
 OP1AContentPackageManager::OP1AContentPackageManager(uint32_t kag_size, uint8_t min_llen)
 {
     // check assumption that filler will have llen == min_llen
-    IM_ASSERT(min_llen >= mxf_get_llen(0, kag_size + mxfKey_extlen + min_llen));
+    BMX_ASSERT(min_llen >= mxf_get_llen(0, kag_size + mxfKey_extlen + min_llen));
 
     mKAGSize = kag_size;
     mMinLLen = min_llen;
@@ -382,14 +382,14 @@ void OP1AContentPackageManager::PrepareWrite()
             }
         }
     }
-    IM_CHECK_M(valid_sequences, ("Sound tracks have different number of samples per frame"));
+    BMX_CHECK_M(valid_sequences, ("Sound tracks have different number of samples per frame"));
 }
 
 void OP1AContentPackageManager::WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size,
                                              uint32_t num_samples)
 {
-    IM_ASSERT(data && size && num_samples);
-    IM_CHECK(size % num_samples == 0);
+    BMX_ASSERT(data && size && num_samples);
+    BMX_CHECK(size % num_samples == 0);
 
     size_t cp_index = 0;
     while (cp_index < mContentPackages.size() && mContentPackages[cp_index]->IsComplete(track_index))
@@ -402,7 +402,7 @@ void OP1AContentPackageManager::WriteSamples(uint32_t track_index, const unsigne
     while (rem_num_samples > 0) {
         if (cp_index >= mContentPackages.size()) {
             if (mFreeContentPackages.empty()) {
-                IM_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
+                BMX_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
                 mContentPackages.push_back(new OP1AContentPackage(mElements, mPosition + cp_index));
             } else {
                 mContentPackages.push_back(mFreeContentPackages.back());
@@ -422,7 +422,7 @@ void OP1AContentPackageManager::WriteSamples(uint32_t track_index, const unsigne
 
 void OP1AContentPackageManager::WriteSample(uint32_t track_index, const CDataBuffer *data_array, uint32_t array_size)
 {
-    IM_ASSERT(data_array && array_size);
+    BMX_ASSERT(data_array && array_size);
 
     size_t cp_index = 0;
     while (cp_index < mContentPackages.size() && mContentPackages[cp_index]->IsComplete(track_index))
@@ -430,7 +430,7 @@ void OP1AContentPackageManager::WriteSample(uint32_t track_index, const CDataBuf
 
     if (cp_index >= mContentPackages.size()) {
         if (mFreeContentPackages.empty()) {
-            IM_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
+            BMX_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
             mContentPackages.push_back(new OP1AContentPackage(mElements, mPosition + cp_index));
         } else {
             mContentPackages.push_back(mFreeContentPackages.back());
@@ -462,15 +462,15 @@ void OP1AContentPackageManager::UpdateIndexTable(OP1AIndexTable *index_table, si
 {
     size_t i;
     for (i = 0; i < mContentPackages.size() && i < num_content_packages; i++) {
-        IM_ASSERT(mContentPackages[i]->IsComplete());
+        BMX_ASSERT(mContentPackages[i]->IsComplete());
         mContentPackages[i]->UpdateIndexTable(index_table);
     }
-    IM_ASSERT(i == num_content_packages);
+    BMX_ASSERT(i == num_content_packages);
 }
 
 void OP1AContentPackageManager::WriteNextContentPackage(File *mxf_file, OP1AIndexTable *index_table)
 {
-    IM_ASSERT(HaveContentPackage());
+    BMX_ASSERT(HaveContentPackage());
 
     mContentPackages.front()->UpdateIndexTable(index_table);
     mContentPackages.front()->Write(mxf_file);

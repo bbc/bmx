@@ -33,15 +33,15 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_helper/AVCIMXFDescriptorHelper.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_helper/AVCIMXFDescriptorHelper.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid_labels_and_keys.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -131,7 +131,7 @@ AVCIMXFDescriptorHelper::~AVCIMXFDescriptorHelper()
 
 void AVCIMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
-    IM_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
+    BMX_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
 
     PictureMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
 
@@ -157,7 +157,7 @@ void AVCIMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL 
 
 void AVCIMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetEssenceType(essence_type);
 
@@ -166,7 +166,7 @@ void AVCIMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 
 void AVCIMXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 {
-    IM_ASSERT(!mFileDescriptor);
+    BMX_ASSERT(!mFileDescriptor);
 
     PictureMXFDescriptorHelper::SetSampleRate(sample_rate);
 
@@ -190,9 +190,9 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
     PictureMXFDescriptorHelper::UpdateFileDescriptor();
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
-    IM_ASSERT(cdci_descriptor);
+    BMX_ASSERT(cdci_descriptor);
     MPEGVideoDescriptor *mpeg_descriptor = dynamic_cast<MPEGVideoDescriptor*>(mFileDescriptor);
-    IM_ASSERT(mFlavour == AVID_FLAVOUR || mpeg_descriptor);
+    BMX_ASSERT(mFlavour == AVID_FLAVOUR || mpeg_descriptor);
 
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
     switch (mEssenceType)
@@ -208,7 +208,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_SMPTE296M);
             break;
         default:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
     }
     switch (mEssenceType)
     {
@@ -223,7 +223,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setFrameLayout(MXF_FULL_FRAME);
             break;
         default:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
     }
     SetColorSiting(0x00); // coSiting
     cdci_descriptor->setComponentDepth(10);
@@ -255,7 +255,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->appendVideoLineMap(0);
             break;
         default:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
     }
     cdci_descriptor->setDisplayWidth(cdci_descriptor->getStoredWidth());
     cdci_descriptor->setDisplayHeight(cdci_descriptor->getStoredHeight());
@@ -276,7 +276,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setVerticalSubsampling(2);
             break;
         default:
-            IM_ASSERT(false);
+            BMX_ASSERT(false);
     }
 }
 
@@ -310,6 +310,6 @@ void AVCIMXFDescriptorHelper::UpdateEssenceIndex()
             break;
         }
     }
-    IM_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+    BMX_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 

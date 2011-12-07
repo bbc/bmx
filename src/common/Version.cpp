@@ -35,77 +35,77 @@
 
 #include <cstdio>
 
-#include <im/Version.h>
+#include <bmx/Version.h>
 
 using namespace std;
 
 
-bool IM_REGRESSION_TEST = false;
+bool BMX_REGRESSION_TEST = false;
 
 
-static const char* IM_COMPANY_NAME = "BBC";
-static const im::UUID IM_PRODUCT_UID =
+static const char* BMX_COMPANY_NAME = "BBC";
+static const bmx::UUID BMX_PRODUCT_UID =
     {0xb8, 0x60, 0x4d, 0x31, 0x2e, 0x15, 0x47, 0x99, 0xa3, 0xc6, 0x04, 0x7e, 0xd0, 0xe6, 0xf9, 0xa1};
-static const mxfProductVersion IM_MXF_PRODUCT_VERSION = {IM_VERSION_MAJOR,
-                                                         IM_VERSION_MINOR,
-                                                         IM_VERSION_MICRO,
-                                                         0,
-                                                         IM_MXF_VERSION_RELEASE};
+static const mxfProductVersion BMX_MXF_PRODUCT_VERSION = {BMX_VERSION_MAJOR,
+                                                          BMX_VERSION_MINOR,
+                                                          BMX_VERSION_MICRO,
+                                                          0,
+                                                          BMX_MXF_VERSION_RELEASE};
 
-static const im::UUID REGTEST_PRODUCT_UID =
+static const bmx::UUID REGTEST_PRODUCT_UID =
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const mxfProductVersion REGTEST_MXF_PRODUCT_VERSION = {1, 0, 0, 0, 0};
 
 
 
-string im::get_im_library_name()
+string bmx::get_bmx_library_name()
 {
-    if (IM_REGRESSION_TEST)
+    if (BMX_REGRESSION_TEST)
         return "RegLib";
     else
-        return IM_LIBRARY_NAME;
+        return BMX_LIBRARY_NAME;
 }
 
-string im::get_im_version_string()
+string bmx::get_bmx_version_string()
 {
-    if (IM_REGRESSION_TEST) {
+    if (BMX_REGRESSION_TEST) {
         return "0.0.0";
     } else {
         char buffer[32];
-        sprintf(buffer, "%d.%d.%d", IM_VERSION_MAJOR, IM_VERSION_MINOR, IM_VERSION_MICRO);
+        sprintf(buffer, "%d.%d.%d", BMX_VERSION_MAJOR, BMX_VERSION_MINOR, BMX_VERSION_MICRO);
         return buffer;
     }
 }
 
-string im::get_im_build_string()
+string bmx::get_bmx_build_string()
 {
-    if (IM_REGRESSION_TEST)
+    if (BMX_REGRESSION_TEST)
         return "1970-01-01 00:00:00";
     else
         return __DATE__ " " __TIME__;
 }
 
-string im::get_im_company_name()
+string bmx::get_bmx_company_name()
 {
-    if (IM_REGRESSION_TEST)
+    if (BMX_REGRESSION_TEST)
         return "RegCo";
     else
-        return IM_COMPANY_NAME;
+        return BMX_COMPANY_NAME;
 }
 
-im::UUID im::get_im_product_uid()
+bmx::UUID bmx::get_bmx_product_uid()
 {
-    if (IM_REGRESSION_TEST)
+    if (BMX_REGRESSION_TEST)
         return REGTEST_PRODUCT_UID;
     else
-        return IM_PRODUCT_UID;
+        return BMX_PRODUCT_UID;
 }
 
-mxfProductVersion im::get_im_mxf_product_version()
+mxfProductVersion bmx::get_bmx_mxf_product_version()
 {
-    if (IM_REGRESSION_TEST)
+    if (BMX_REGRESSION_TEST)
         return REGTEST_MXF_PRODUCT_VERSION;
     else
-        return IM_MXF_PRODUCT_VERSION;
+        return BMX_MXF_PRODUCT_VERSION;
 }
 

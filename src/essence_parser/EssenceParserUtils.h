@@ -29,15 +29,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __IM_ESSENCE_PARSER_UTILS_H__
-#define __IM_ESSENCE_PARSER_UTILS_H__
+#ifndef __BMX_ESSENCE_PARSER_UTILS_H__
+#define __BMX_ESSENCE_PARSER_UTILS_H__
 
 
-#include <im/IMTypes.h>
+#include <bmx/BMXTypes.h>
 
 
 
-namespace im
+namespace bmx
 {
 
 

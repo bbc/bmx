@@ -39,15 +39,15 @@
 
 #include <algorithm>
 
-#include <im/mxf_op1a/OP1AFile.h>
-#include <im/mxf_helper/MXFDescriptorHelper.h>
-#include <im/MXFUtils.h>
-#include <im/Version.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_op1a/OP1AFile.h>
+#include <bmx/mxf_helper/MXFDescriptorHelper.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/Version.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -79,20 +79,20 @@ OP1AFile* OP1AFile::OpenNew(int flavour, string filename, mxfRational frame_rate
 
 OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
 {
-    IM_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
-             (frame_rate.numerator == 50    && frame_rate.denominator == 1) ||
-             (frame_rate.numerator == 30000 && frame_rate.denominator == 1001) ||
-             (frame_rate.numerator == 60000 && frame_rate.denominator == 1001));
+    BMX_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
+              (frame_rate.numerator == 50    && frame_rate.denominator == 1) ||
+              (frame_rate.numerator == 30000 && frame_rate.denominator == 1001) ||
+              (frame_rate.numerator == 60000 && frame_rate.denominator == 1001));
 
     mFlavour = flavour;
     mMXFFile = mxf_file;
     mFrameRate = frame_rate;
     mStartTimecode = Timecode(frame_rate, false);
-    mCompanyName = get_im_company_name();
-    mProductName = get_im_library_name();
-    mProductVersion = get_im_mxf_product_version();
-    mVersionString = get_im_version_string();
-    mProductUID = get_im_product_uid();
+    mCompanyName = get_bmx_company_name();
+    mProductName = get_bmx_library_name();
+    mProductVersion = get_bmx_mxf_product_version();
+    mVersionString = get_bmx_version_string();
+    mProductUID = get_bmx_product_uid();
     mReserveMinBytes = 8192;
     mxf_get_timestamp_now(&mCreationDate);
     mxf_generate_uuid(&mGenerationUID);
@@ -182,19 +182,19 @@ void OP1AFile::ReserveHeaderMetadataSpace(uint32_t min_bytes)
 
 void OP1AFile::SetPartitionInterval(int64_t frame_count)
 {
-    IM_CHECK(frame_count >= 0);
+    BMX_CHECK(frame_count >= 0);
     mPartitionInterval = frame_count;
 }
 
 void OP1AFile::SetOutputStartOffset(int64_t offset)
 {
-    IM_CHECK(offset >= 0);
+    BMX_CHECK(offset >= 0);
     mOutputStartOffset = offset;
 }
 
 void OP1AFile::SetOutputEndOffset(int64_t offset)
 {
-    IM_CHECK(offset <= 0);
+    BMX_CHECK(offset <= 0);
     mOutputEndOffset = offset;
 }
 
@@ -223,7 +223,7 @@ void OP1AFile::PrepareHeaderMetadata()
     if (mHeaderMetadata)
         return;
 
-    IM_CHECK(!mTracks.empty());
+    BMX_CHECK(!mTracks.empty());
 
     // sort tracks, picture followed by sound
     stable_sort(mTracks.begin(), mTracks.end(), compare_track);
@@ -268,7 +268,7 @@ void OP1AFile::WriteSamples(uint32_t track_index, const unsigned char *data, uin
 {
     if (!data || size == 0)
         return;
-    IM_CHECK(data && size && num_samples);
+    BMX_CHECK(data && size && num_samples);
 
     GetTrack(track_index)->WriteSamplesInt(data, size, num_samples);
 
@@ -277,7 +277,7 @@ void OP1AFile::WriteSamples(uint32_t track_index, const unsigned char *data, uin
 
 void OP1AFile::CompleteWrite()
 {
-    IM_ASSERT(mMXFFile);
+    BMX_ASSERT(mMXFFile);
 
 
     // write any remaining content packages (e.g. first AVCI cp if duration equals 1)
@@ -287,7 +287,7 @@ void OP1AFile::CompleteWrite()
 
     // check that the duration is valid
 
-    IM_CHECK_M(mIndexTable->GetDuration() - mOutputStartOffset + mOutputEndOffset >= 0,
+    BMX_CHECK_M(mIndexTable->GetDuration() - mOutputStartOffset + mOutputEndOffset >= 0,
                ("Invalid output start %"PRId64" / end %"PRId64" offsets. Output duration %"PRId64" is negative",
                 mOutputStartOffset, mOutputEndOffset, mIndexTable->GetDuration() - mOutputStartOffset + mOutputEndOffset));
 
@@ -400,13 +400,13 @@ int64_t OP1AFile::GetContainerDuration()
 
 OP1ATrack* OP1AFile::GetTrack(uint32_t track_index)
 {
-    IM_ASSERT(track_index < mTracks.size());
+    BMX_ASSERT(track_index < mTracks.size());
     return mTrackMap[track_index];
 }
 
 void OP1AFile::CreateHeaderMetadata()
 {
-    IM_ASSERT(!mHeaderMetadata);
+    BMX_ASSERT(!mHeaderMetadata);
 
 
     // create the header metadata
@@ -525,7 +525,7 @@ void OP1AFile::CreateHeaderMetadata()
 
 void OP1AFile::CreateFile()
 {
-    IM_ASSERT(mHeaderMetadata);
+    BMX_ASSERT(mHeaderMetadata);
 
 
     // set minimum llen
@@ -570,7 +570,7 @@ void OP1AFile::UpdatePackageMetadata()
 
     int64_t container_duration = GetContainerDuration();
 
-    IM_ASSERT(mFileSourcePackage->haveDescriptor());
+    BMX_ASSERT(mFileSourcePackage->haveDescriptor());
     FileDescriptor *file_descriptor = dynamic_cast<FileDescriptor*>(mFileSourcePackage->getDescriptor());
     if (file_descriptor)
         file_descriptor->setContainerDuration(container_duration);
@@ -599,12 +599,12 @@ void OP1AFile::UpdateTrackMetadata(GenericPackage *package, int64_t origin, int6
         track->setOrigin(origin);
 
         Sequence *sequence = dynamic_cast<Sequence*>(track->getSequence());
-        IM_ASSERT(sequence);
+        BMX_ASSERT(sequence);
         if (sequence->getDuration() < 0) {
             sequence->setDuration(duration);
 
             vector<StructuralComponent*> components = sequence->getStructuralComponents();
-            IM_CHECK(components.size() == 1);
+            BMX_CHECK(components.size() == 1);
             components[0]->setDuration(duration);
         }
     }
@@ -659,7 +659,7 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
             // write VBE index table segments and ensure new essence partition is started
 
             if (mIndexTable->IsVBE()) {
-                IM_ASSERT(mIndexTable->HaveSegments());
+                BMX_ASSERT(mIndexTable->HaveSegments());
 
                 Partition &index_partition = mMXFFile->createPartition();
                 index_partition.setKey(&MXF_PP_K(OpenIncomplete, Body));

@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/essence_parser/MJPEGEssenceParser.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/essence_parser/MJPEGEssenceParser.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
@@ -54,7 +54,7 @@ MJPEGEssenceParser::~MJPEGEssenceParser()
 
 uint32_t MJPEGEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
 {
-    IM_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
+    BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
     (void)data;
     return 0;
@@ -144,7 +144,7 @@ uint32_t MJPEGEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t 
                 }
                 break;
             default:
-                IM_ASSERT(false); // won't get here
+                BMX_ASSERT(false); // won't get here
         }
 
         mOffset++;

@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/EssenceType.h>
-#include <im/Utils.h>
-#include <im/Logging.h>
-#include <im/IMException.h>
+#include <bmx/EssenceType.h>
+#include <bmx/Utils.h>
+#include <bmx/Logging.h>
+#include <bmx/BMXException.h>
 
-using namespace im;
+using namespace bmx;
 
 
 typedef struct
@@ -104,10 +104,10 @@ static const EssenceTypeStringMap ESSENCE_TYPE_STRING_MAP[] =
 
 
 
-const char* im::essence_type_to_string(EssenceType essence_type)
+const char* bmx::essence_type_to_string(EssenceType essence_type)
 {
-    IM_ASSERT((size_t)essence_type < ARRAY_SIZE(ESSENCE_TYPE_STRING_MAP));
-    IM_ASSERT(ESSENCE_TYPE_STRING_MAP[essence_type].essence_type == essence_type);
+    BMX_ASSERT((size_t)essence_type < ARRAY_SIZE(ESSENCE_TYPE_STRING_MAP));
+    BMX_ASSERT(ESSENCE_TYPE_STRING_MAP[essence_type].essence_type == essence_type);
 
     return ESSENCE_TYPE_STRING_MAP[essence_type].str;
 }

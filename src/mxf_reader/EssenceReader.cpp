@@ -39,17 +39,17 @@
 
 #include <memory>
 
-#include <im/mxf_reader/EssenceReader.h>
-#include <im/mxf_reader/MXFFileReader.h>
-#include <im/mxf_helper/PictureMXFDescriptorHelper.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_reader/EssenceReader.h>
+#include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -65,7 +65,7 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
     // FirstFrameOffset Avid extension property
     int32_t avid_first_frame_offset = 0;
     if (mFileReader->IsClipWrapped()) {
-        IM_ASSERT(mFileReader->GetNumInternalTrackReaders() == 1);
+        BMX_ASSERT(mFileReader->GetNumInternalTrackReaders() == 1);
         auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
             mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),
             mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->essence_container_label));
@@ -86,14 +86,14 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
 
     // extract essence container index
     mIndexTableHelper.ExtractIndexTable();
-    IM_CHECK(mIndexTableHelper.GetEditRate() == mFileReader->mSampleRate);
+    BMX_CHECK(mIndexTableHelper.GetEditRate() == mFileReader->mSampleRate);
     mIndexTableHelper.SetEssenceDataSize(mEssenceChunkHelper.GetEssenceDataSize());
 
     // check there is sufficient essence container data
     if (mIndexTableHelper.GetDuration() > 0) {
         int64_t last_unit_offset, last_unit_size;
         mIndexTableHelper.GetEditUnit(mIndexTableHelper.GetDuration() - 1, &last_unit_offset, &last_unit_size);
-        IM_CHECK_M(mEssenceChunkHelper.GetEssenceDataSize() >= last_unit_offset + last_unit_size,
+        BMX_CHECK_M(mEssenceChunkHelper.GetEssenceDataSize() >= last_unit_offset + last_unit_size,
                    ("Last edit unit (offset %"PRId64", size %"PRId64") not available in "
                         "essence container (size %"PRId64")",
                     last_unit_offset, last_unit_size, mEssenceChunkHelper.GetEssenceDataSize()));
@@ -125,7 +125,7 @@ EssenceReader::~EssenceReader()
 
 void EssenceReader::SetReadLimits(int64_t start_position, int64_t end_position)
 {
-    IM_CHECK(end_position >= start_position);
+    BMX_CHECK(end_position >= start_position);
 
     mReadStartPosition = LegitimisePosition(start_position);
     mReadEndPosition = LegitimisePosition(end_position - 1) + 1;
@@ -160,7 +160,7 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
     }
     if (mPosition + read_num_samples > mReadEndPosition)
         read_num_samples -= mPosition + read_num_samples - mReadEndPosition;
-    IM_ASSERT(read_num_samples > 0);
+    BMX_ASSERT(read_num_samples > 0);
 
 
     int64_t start_position = mPosition;
@@ -286,7 +286,7 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
             frame->Grow(size);
             uint32_t num_read = mxf_file->read(frame->GetBytesAvailable(), size);
             current_file_position += num_read;
-            IM_CHECK(num_read == size);
+            BMX_CHECK(num_read == size);
             frame->IncrementSize(size);
             frame->num_samples += num_cont_samples;
         } else {
@@ -354,7 +354,7 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                 if (frame) {
                     frame->Grow(len);
                     uint32_t num_read = mxf_file->read(frame->GetBytesAvailable(), len);
-                    IM_CHECK(num_read == len);
+                    BMX_CHECK(num_read == len);
                     frame->IncrementSize(len);
                     frame->num_samples++;
                 } else {
@@ -366,7 +366,7 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
 
             cp_num_read += len;
         }
-        IM_CHECK_M(cp_num_read == size,
+        BMX_CHECK_M(cp_num_read == size,
                    ("Read content package size (0x%"PRIx64") does not match size in index (0x%"PRIx64") "
                     "at file position 0x%"PRIx64,
                         cp_num_read, size, current_file_position + cp_num_read));
@@ -388,7 +388,7 @@ void EssenceReader::GetEditUnit(int64_t position, int64_t *file_position, int64_
 void EssenceReader::GetEditUnitGroup(int64_t position, uint32_t max_samples, int64_t *file_position, int64_t *size,
                                      uint32_t *num_samples)
 {
-    IM_CHECK(max_samples > 0);
+    BMX_CHECK(max_samples > 0);
 
     if (!mIndexTableHelper.HaveFixedEditUnitByteCount() || max_samples == 1) {
         GetEditUnit(position, file_position, size);
@@ -411,14 +411,14 @@ void EssenceReader::GetEditUnitGroup(int64_t position, uint32_t max_samples, int
     int64_t right_size;
     while (right_num_samples != left_num_samples) {
         GetEditUnit(position + right_num_samples - 1, &right_file_position, &right_size);
-        IM_CHECK(right_size == mIndexTableHelper.GetFixedEditUnitByteCount());
+        BMX_CHECK(right_size == mIndexTableHelper.GetFixedEditUnitByteCount());
 
         if (right_file_position > first_file_position + mIndexTableHelper.GetFixedEditUnitByteCount() * (right_num_samples - 1)) {
             // first to right is not contiguous - try halfway between left and right (round down)
             last_num_samples = right_num_samples;
             right_num_samples = (left_num_samples + right_num_samples) / 2;
         } else {
-            IM_CHECK(right_file_position == first_file_position + mIndexTableHelper.GetFixedEditUnitByteCount() * (right_num_samples - 1));
+            BMX_CHECK(right_file_position == first_file_position + mIndexTableHelper.GetFixedEditUnitByteCount() * (right_num_samples - 1));
             // first to right is contiguous - try halfway between right and last (round up)
             left_num_samples = right_num_samples;
             right_num_samples = (right_num_samples + last_num_samples + 1) / 2;

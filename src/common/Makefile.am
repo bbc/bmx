@@ -1,11 +1,11 @@
 noinst_LTLIBRARIES = libcommon.la
 
 libcommon_la_SOURCES = \
+	BMXException.cpp \
+	BMXTypes.cpp \
 	ByteArray.cpp \
 	CRC32.cpp \
 	EssenceType.cpp \
-	IMException.cpp \
-	IMTypes.cpp \
 	KLVParser.cpp \
 	Logging.cpp \
 	MD5.cpp \

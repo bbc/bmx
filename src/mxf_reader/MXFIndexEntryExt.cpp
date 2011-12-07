@@ -33,9 +33,9 @@
 #include "config.h"
 #endif
 
-#include <im/mxf_reader/MXFIndexEntryExt.h>
+#include <bmx/mxf_reader/MXFIndexEntryExt.h>
 
-using namespace im;
+using namespace bmx;
 
 
 

@@ -35,13 +35,13 @@
 
 #include <algorithm>
 
-#include <im/mxf_op1a/OP1AContentPackage.h>
-#include <im/MXFUtils.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/mxf_op1a/OP1AContentPackage.h>
+#include <bmx/MXFUtils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -120,14 +120,14 @@ OP1AIndexTableElement::OP1AIndexTableElement(uint32_t track_index_, bool is_pict
 void OP1AIndexTableElement::CacheIndexEntry(int64_t position, int8_t temporal_offset, int8_t key_frame_offset,
                                             uint8_t flags, bool can_start_partition)
 {
-    IM_CHECK(mIndexEntryCache.size() <= MAX_CACHE_ENTRIES);
+    BMX_CHECK(mIndexEntryCache.size() <= MAX_CACHE_ENTRIES);
 
     mIndexEntryCache[position] = OP1AIndexEntry(temporal_offset, key_frame_offset, flags, can_start_partition);
 }
 
 void OP1AIndexTableElement::UpdateIndexEntry(int64_t position, int8_t temporal_offset)
 {
-    IM_ASSERT(mIndexEntryCache.find(position) != mIndexEntryCache.end());
+    BMX_ASSERT(mIndexEntryCache.find(position) != mIndexEntryCache.end());
 
     mIndexEntryCache[position].temporal_offset = temporal_offset;
 }
@@ -149,7 +149,7 @@ bool OP1AIndexTableElement::CanStartPartition(int64_t position)
     if (is_cbe)
         return true;
 
-    IM_ASSERT(mIndexEntryCache.find(position) != mIndexEntryCache.end());
+    BMX_ASSERT(mIndexEntryCache.find(position) != mIndexEntryCache.end());
 
     return (mIndexEntryCache[position].can_start_partition);
 }
@@ -189,7 +189,7 @@ bool OP1AIndexTableSegment::RequireNewSegment(uint8_t can_start_partition)
 void OP1AIndexTableSegment::AddIndexEntry(const OP1AIndexEntry *entry, int64_t stream_offset,
                                           vector<uint32_t> slice_cp_offsets)
 {
-    IM_ASSERT(mIndexEntrySize == 11 + slice_cp_offsets.size() * 4);
+    BMX_ASSERT(mIndexEntrySize == 11 + slice_cp_offsets.size() * 4);
     mEntries.Grow(mIndexEntrySize);
 
     unsigned char *entry_bytes = mEntries.GetBytesAvailable();
@@ -208,7 +208,7 @@ void OP1AIndexTableSegment::AddIndexEntry(const OP1AIndexEntry *entry, int64_t s
 
 void OP1AIndexTableSegment::UpdateIndexEntry(int64_t segment_position, int8_t temporal_offset)
 {
-    IM_ASSERT(segment_position * mIndexEntrySize < mEntries.GetSize());
+    BMX_ASSERT(segment_position * mIndexEntrySize < mEntries.GetSize());
 
     mxf_set_int8(temporal_offset, &mEntries.GetBytes()[segment_position * mIndexEntrySize]);
 }
@@ -218,7 +218,7 @@ void OP1AIndexTableSegment::AddCBEIndexEntry(uint32_t edit_unit_byte_count)
     if (mSegment.getEditUnitByteCount() == 0) {
         mSegment.setEditUnitByteCount(edit_unit_byte_count);
     } else {
-        IM_CHECK_M(mSegment.getEditUnitByteCount() == edit_unit_byte_count,
+        BMX_CHECK_M(mSegment.getEditUnitByteCount() == edit_unit_byte_count,
                    ("Failed to index variable content package size in CBE index table"));
     }
 
@@ -294,7 +294,7 @@ void OP1AIndexTable::PrepareWrite()
         }
         mIndexElements[i]->slice_offset = mSliceCount;
     }
-    IM_ASSERT(!mIsCBE || mSliceCount == 0);
+    BMX_ASSERT(!mIsCBE || mSliceCount == 0);
 
     mIndexSegments.push_back(new OP1AIndexTableSegment(mIndexSID, mBodySID, mFrameRate, 0, mIndexEntrySize,
                                                        mSliceCount));
@@ -306,9 +306,9 @@ void OP1AIndexTable::PrepareWrite()
 void OP1AIndexTable::AddIndexEntry(uint32_t track_index, int64_t position, int8_t temporal_offset,
                                    int8_t key_frame_offset, uint8_t flags, bool can_start_partition)
 {
-    IM_ASSERT(!mIsCBE);
-    IM_ASSERT(position >= mDuration);
-    IM_ASSERT(mIndexElementsMap.find(track_index) != mIndexElementsMap.end());
+    BMX_ASSERT(!mIsCBE);
+    BMX_ASSERT(position >= mDuration);
+    BMX_ASSERT(mIndexElementsMap.find(track_index) != mIndexElementsMap.end());
 
     mIndexElementsMap[track_index]->CacheIndexEntry(position, temporal_offset, key_frame_offset, flags,
                                                     can_start_partition);
@@ -316,9 +316,9 @@ void OP1AIndexTable::AddIndexEntry(uint32_t track_index, int64_t position, int8_
 
 void OP1AIndexTable::UpdateIndexEntry(uint32_t track_index, int64_t position, int8_t temporal_offset)
 {
-    IM_ASSERT(!mIsCBE);
-    IM_ASSERT(position >= 0);
-    IM_ASSERT(mIndexElementsMap.find(track_index) != mIndexElementsMap.end());
+    BMX_ASSERT(!mIsCBE);
+    BMX_ASSERT(position >= 0);
+    BMX_ASSERT(mIndexElementsMap.find(track_index) != mIndexElementsMap.end());
 
     if (position > mDuration) {
         mIndexElementsMap[track_index]->UpdateIndexEntry(position, temporal_offset);
@@ -350,7 +350,7 @@ bool OP1AIndexTable::CanStartPartition()
 void OP1AIndexTable::UpdateIndex(uint32_t size, vector<uint32_t> element_sizes)
 {
     // create or check delta entries
-    IM_ASSERT(element_sizes.size() == mIndexElements.size());
+    BMX_ASSERT(element_sizes.size() == mIndexElements.size());
     if (mDuration == 0 || (mAVCIFirstIndexSegment && mDuration == 1)) {
         // create delta entries
 
@@ -404,7 +404,7 @@ void OP1AIndexTable::UpdateIndex(uint32_t size, vector<uint32_t> element_sizes)
         size_t i;
         for (i = 0; i < mIndexElements.size(); i++) {
             if (mIndexElements[i]->is_cbe) {
-                IM_CHECK_M(mIndexElements[i]->element_size == element_sizes[i],
+                BMX_CHECK_M(mIndexElements[i]->element_size == element_sizes[i],
                            ("Fixed size content package element data size changed"));
             }
         }
@@ -452,7 +452,7 @@ void OP1AIndexTable::UpdateIndex(uint32_t size, vector<uint32_t> element_sizes)
             // get non-default entry if exists
             OP1AIndexEntry element_entry;
             if (mIndexElements[i]->TakeIndexEntry(mDuration, &element_entry) && !element_entry.IsDefault()) {
-                IM_CHECK(entry.IsCompatible(element_entry));
+                BMX_CHECK(entry.IsCompatible(element_entry));
                 entry = element_entry;
             }
 
@@ -482,18 +482,18 @@ bool OP1AIndexTable::HaveSegments()
 
 void OP1AIndexTable::WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition)
 {
-    IM_ASSERT(HaveSegments());
-    IM_ASSERT(mDuration > 0);
+    BMX_ASSERT(HaveSegments());
+    BMX_ASSERT(mDuration > 0);
 
     partition->markIndexStart(mxf_file);
 
     if (mIsCBE) {
         if (mAVCIFirstIndexSegment) {
-            IM_CHECK(mxf_write_index_table_segment(mxf_file->getCFile(),
+            BMX_CHECK(mxf_write_index_table_segment(mxf_file->getCFile(),
                                                    mAVCIFirstIndexSegment->GetSegment()->getCIndexTableSegment()));
         }
         if (!mAVCIFirstIndexSegment || mDuration > 1) {
-            IM_CHECK(mxf_write_index_table_segment(mxf_file->getCFile(),
+            BMX_CHECK(mxf_write_index_table_segment(mxf_file->getCFile(),
                                                    mIndexSegments[0]->GetSegment()->getCIndexTableSegment()));
         }
     } else {

@@ -33,12 +33,12 @@
 #include "config.h"
 #endif
 
-#include <im/essence_parser/DVEssenceParser.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/essence_parser/DVEssenceParser.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 #define DV_DIF_BLOCK_SIZE           80
@@ -68,7 +68,7 @@ DVEssenceParser::~DVEssenceParser()
 
 uint32_t DVEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
 {
-    IM_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
+    BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
     (void)data;
     return 0;
@@ -76,7 +76,7 @@ uint32_t DVEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t da
 
 uint32_t DVEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
-    IM_ASSERT(DV_PARSER_MIN_DATA_SIZE >= DV_DIF_SEQUENCE_SIZE);
+    BMX_ASSERT(DV_PARSER_MIN_DATA_SIZE >= DV_DIF_SEQUENCE_SIZE);
     if (data_size < DV_PARSER_MIN_DATA_SIZE)
         return ESSENCE_PARSER_NULL_OFFSET; // insufficient data
 
@@ -109,7 +109,7 @@ uint32_t DVEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t dat
 
 void DVEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
 {
-    IM_CHECK(data_size >= DV_DIF_SEQUENCE_SIZE);
+    BMX_CHECK(data_size >= DV_DIF_SEQUENCE_SIZE);
 
     // 50Hz/60Hz is extracted from the VAUX section, VS pack
     unsigned char byte = data[VAUX_SECTION_VS0_OFFSET + 3];
@@ -133,7 +133,7 @@ void DVEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_si
         mEssenceType = DV100_720P;
     else
         // unknown type - shouldn't be here if ParseFrameSize called
-        IM_CHECK(false);
+        BMX_CHECK(false);
 
     // aspect ratio is extracted from the VAUX section, VSC pack, DISP bits
     byte = data[VAUX_SECTION_VSC0_OFFSET + 2];
@@ -150,7 +150,7 @@ void DVEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_si
 
 uint32_t DVEssenceParser::ParseFrameSizeInt(const unsigned char *data, uint32_t data_size)
 {
-    IM_ASSERT(data_size >= DV_DIF_SEQUENCE_SIZE);
+    BMX_ASSERT(data_size >= DV_DIF_SEQUENCE_SIZE);
 
     // 50Hz/60Hz is extracted from the VAUX section, VS pack, STYPE bits
     unsigned char byte = data[VAUX_SECTION_VS0_OFFSET + 3];

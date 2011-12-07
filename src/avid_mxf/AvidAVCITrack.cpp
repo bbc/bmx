@@ -35,14 +35,14 @@
 
 #define __STDC_FORMAT_MACROS
 
-#include <im/avid_mxf/AvidAVCITrack.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/avid_mxf/AvidAVCITrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 using namespace mxfpp;
 
 
@@ -55,7 +55,7 @@ AvidAVCITrack::AvidAVCITrack(AvidClip *clip, uint32_t track_index, EssenceType e
 : AvidPictureTrack(clip, track_index, essence_type, file)
 {
     mAVCIDescriptorHelper = dynamic_cast<AVCIMXFDescriptorHelper*>(mDescriptorHelper);
-    IM_ASSERT(mAVCIDescriptorHelper);
+    BMX_ASSERT(mAVCIDescriptorHelper);
 
     mWriterHelper.SetMode(AVCI_NO_OR_ALL_FRAME_HEADER_MODE);
 
@@ -95,13 +95,13 @@ uint32_t AvidAVCITrack::GetSampleWithoutHeaderSize()
 
 void AvidAVCITrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    IM_ASSERT(mMXFFile);
-    IM_CHECK(data && size && num_samples);
+    BMX_ASSERT(mMXFFile);
+    BMX_CHECK(data && size && num_samples);
 
     // if multiple samples are passed in then they must all be the same size
     uint32_t sample_size = size / num_samples;
-    IM_CHECK(sample_size * num_samples == size);
-    IM_CHECK(sample_size == GetSampleSize() || sample_size == GetSampleWithoutHeaderSize());
+    BMX_CHECK(sample_size * num_samples == size);
+    BMX_CHECK(sample_size == GetSampleSize() || sample_size == GetSampleWithoutHeaderSize());
 
 
     const unsigned char *sample_data = data;
@@ -113,7 +113,7 @@ void AvidAVCITrack::WriteSamples(const unsigned char *data, uint32_t size, uint3
         write_sample_size = mWriterHelper.ProcessFrame(sample_data, sample_size, &data_array, &array_size);
 
         for (j = 0; j < array_size; j++)
-            IM_CHECK(mMXFFile->write(data_array[j].data, data_array[j].size) == data_array[j].size);
+            BMX_CHECK(mMXFFile->write(data_array[j].data, data_array[j].size) == data_array[j].size);
 
         if (mContainerDuration == 0)
             mSampleSize = write_sample_size;

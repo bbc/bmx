@@ -35,12 +35,12 @@
 
 #include <cstring>
 
-#include <im/ByteArray.h>
-#include <im/IMException.h>
-#include <im/Logging.h>
+#include <bmx/ByteArray.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
 
 using namespace std;
-using namespace im;
+using namespace bmx;
 
 
 
@@ -72,7 +72,7 @@ ByteArray::~ByteArray()
 
 void ByteArray::SetAllocBlockSize(uint32_t block_size)
 {
-    IM_CHECK(block_size > 0);
+    BMX_CHECK(block_size > 0);
     mAllocBlockSize = block_size;
 }
 
@@ -88,7 +88,7 @@ uint32_t ByteArray::GetSize() const
 
 void ByteArray::Append(const unsigned char *bytes, uint32_t size)
 {
-    IM_ASSERT(!mIsCopy);
+    BMX_ASSERT(!mIsCopy);
 
     if (size == 0)
         return;
@@ -101,7 +101,7 @@ void ByteArray::Append(const unsigned char *bytes, uint32_t size)
 
 unsigned char* ByteArray::GetBytesAvailable() const
 {
-    IM_ASSERT(!mIsCopy);
+    BMX_ASSERT(!mIsCopy);
 
     if (mSize == mAllocatedSize)
         return 0;
@@ -117,7 +117,7 @@ uint32_t ByteArray::GetSizeAvailable() const
 void ByteArray::SetSize(uint32_t size)
 {
     if (size > mAllocatedSize)
-        IM_EXCEPTION(("Cannot set byte array size > allocated size"));
+        BMX_EXCEPTION(("Cannot set byte array size > allocated size"));
 
     mSize = size;
 }
@@ -125,7 +125,7 @@ void ByteArray::SetSize(uint32_t size)
 void ByteArray::IncrementSize(uint32_t inc)
 {
     if (mSize + inc > mAllocatedSize)
-        IM_EXCEPTION(("Cannot set byte array size > allocated size"));
+        BMX_EXCEPTION(("Cannot set byte array size > allocated size"));
 
     mSize += inc;
 }
@@ -148,7 +148,7 @@ void ByteArray::AssignBytes(unsigned char *bytes, uint32_t size)
 
 void ByteArray::Grow(uint32_t min_size)
 {
-    IM_ASSERT(!mIsCopy);
+    BMX_ASSERT(!mIsCopy);
 
     if (mSize + min_size > mAllocatedSize)
         Reallocate(mSize + min_size);
@@ -156,7 +156,7 @@ void ByteArray::Grow(uint32_t min_size)
 
 void ByteArray::Allocate(uint32_t min_size)
 {
-    IM_ASSERT(!mIsCopy);
+    BMX_ASSERT(!mIsCopy);
 
     if (mAllocatedSize >= min_size)
         return;
@@ -175,7 +175,7 @@ void ByteArray::Allocate(uint32_t min_size)
 
 void ByteArray::Reallocate(uint32_t min_size)
 {
-    IM_ASSERT(!mIsCopy);
+    BMX_ASSERT(!mIsCopy);
 
     if (mAllocatedSize >= min_size)
         return;

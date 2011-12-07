@@ -4,24 +4,24 @@ dnl-----------------------------------------------------------------------------
 
 dnl extract package name and version from Version.h
 
-m4_define([m4_IM_LIBRARY_NAME],
-	m4_esyscmd([(sed -n 's/^.*IM_LIBRARY_NAME[^\"]*\"\([^\"]*\)\"/\1/p' include/im/Version.h | tr -d '\n')]))
-m4_define([m4_IM_VERSION_MAJOR],
-	m4_esyscmd([(sed -n 's/^.*IM_VERSION_MAJOR[^0-9]*\([0-9]*\)/\1/p' include/im/Version.h | tr -d '\n')]))
-m4_define([m4_IM_VERSION_MINOR],
-	m4_esyscmd([(sed -n 's/^.*IM_VERSION_MINOR[^0-9]*\([0-9]*\)/\1/p' include/im/Version.h | tr -d '\n')]))
-m4_define([m4_IM_VERSION_MICRO],
-	m4_esyscmd([(sed -n 's/^.*IM_VERSION_MICRO[^0-9]*\([0-9]*\)/\1/p' include/im/Version.h | tr -d '\n')]))
-m4_define([m4_IM_VERSION],
-	m4_defn([m4_IM_VERSION_MAJOR]).m4_defn([m4_IM_VERSION_MINOR]).m4_defn([m4_IM_VERSION_MICRO]))
+m4_define([m4_BMX_LIBRARY_NAME],
+	m4_esyscmd([(sed -n 's/^.*BMX_LIBRARY_NAME[^\"]*\"\([^\"]*\)\"/\1/p' include/bmx/Version.h | tr -d '\n')]))
+m4_define([m4_BMX_VERSION_MAJOR],
+	m4_esyscmd([(sed -n 's/^.*BMX_VERSION_MAJOR[^0-9]*\([0-9]*\)/\1/p' include/bmx/Version.h | tr -d '\n')]))
+m4_define([m4_BMX_VERSION_MINOR],
+	m4_esyscmd([(sed -n 's/^.*BMX_VERSION_MINOR[^0-9]*\([0-9]*\)/\1/p' include/bmx/Version.h | tr -d '\n')]))
+m4_define([m4_BMX_VERSION_MICRO],
+	m4_esyscmd([(sed -n 's/^.*BMX_VERSION_MICRO[^0-9]*\([0-9]*\)/\1/p' include/bmx/Version.h | tr -d '\n')]))
+m4_define([m4_BMX_VERSION],
+	m4_defn([m4_BMX_VERSION_MAJOR]).m4_defn([m4_BMX_VERSION_MINOR]).m4_defn([m4_BMX_VERSION_MICRO]))
 
 
 dnl-----------------------------------------------------------------------------
 dnl -- Init
 dnl-----------------------------------------------------------------------------
 
-AC_INIT(m4_defn([m4_IM_LIBRARY_NAME]), m4_defn([m4_IM_VERSION]))
-AC_CONFIG_SRCDIR([src/common/IMException.cpp])
+AC_INIT(m4_defn([m4_BMX_LIBRARY_NAME]), m4_defn([m4_BMX_VERSION]))
+AC_CONFIG_SRCDIR([src/common/BMXException.cpp])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -41,7 +41,7 @@ BMX_LIBVERSION="1:1:0"
 AC_SUBST(BMX_LIBVERSION)
 
 
-BMX_MAJORMINOR=m4_defn([m4_IM_VERSION_MAJOR]).m4_defn([m4_IM_VERSION_MINOR])
+BMX_MAJORMINOR=m4_defn([m4_BMX_VERSION_MAJOR]).m4_defn([m4_BMX_VERSION_MINOR])
 AC_SUBST(BMX_MAJORMINOR)
 
 
