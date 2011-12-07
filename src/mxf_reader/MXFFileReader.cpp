@@ -123,7 +123,6 @@ MXFFileReader::MXFFileReader()
     BMX_ASSERT(MXF_RESULT_FAIL + 1 == ARRAY_SIZE(RESULT_STRINGS));
 
     mFile = 0;
-    mDataModel = 0;
     mHeaderMetadata = 0;
     mIsClipWrapped = false;
     mBodySID = 0;
@@ -132,6 +131,8 @@ MXFFileReader::MXFFileReader()
     mReadStartPosition = 0;
     mReadEndPosition = 0;
     mEssenceReader = 0;
+
+    mDataModel = new DataModel();
 
     mPackageResolver = new MXFDefaultPackageResolver();
     mOwnPackageResolver = true;
@@ -232,7 +233,6 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
         }
 
 
-        mDataModel = new DataModel();
         mHeaderMetadata = new AvidHeaderMetadata(mDataModel);
 
         // find last partition with header metadata
