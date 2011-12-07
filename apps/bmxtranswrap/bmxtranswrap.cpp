@@ -589,16 +589,16 @@ int main(int argc, const char** argv)
         // open an MXFReader using the input filenames
 
         MXFReader *reader;
-        MXFFileReader *file_reader = 0;
         if (use_group_reader) {
             MXFGroupReader *group_reader = new MXFGroupReader();
             size_t i;
             for (i = 0; i < input_filenames.size(); i++) {
-                MXFFileReader *file_reader;
-                MXFFileReader::OpenResult result = MXFFileReader::Open(input_filenames[i], 0, false, &file_reader);
+                MXFFileReader *file_reader = new MXFFileReader();
+                MXFFileReader::OpenResult result = file_reader->Open(input_filenames[i]);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", input_filenames[i],
                               MXFFileReader::ResultToString(result).c_str());
+                    delete file_reader;
                     throw false;
                 }
 
@@ -612,11 +612,12 @@ int main(int argc, const char** argv)
             MXFSequenceReader *seq_reader = new MXFSequenceReader();
             size_t i;
             for (i = 0; i < input_filenames.size(); i++) {
-                MXFFileReader *file_reader;
-                MXFFileReader::OpenResult result = MXFFileReader::Open(input_filenames[i], 0, false, &file_reader);
+                MXFFileReader *file_reader = new MXFFileReader();
+                MXFFileReader::OpenResult result = file_reader->Open(input_filenames[i]);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", input_filenames[i],
                               MXFFileReader::ResultToString(result).c_str());
+                    delete file_reader;
                     throw false;
                 }
 
@@ -627,10 +628,12 @@ int main(int argc, const char** argv)
 
             reader = seq_reader;
         } else {
-            MXFFileReader::OpenResult result = MXFFileReader::Open(input_filenames[0], 0, false, &file_reader);
+            MXFFileReader *file_reader = new MXFFileReader();
+            MXFFileReader::OpenResult result = file_reader->Open(input_filenames[0]);
             if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                 log_error("Failed to open MXF file '%s': %s\n", input_filenames[0],
                           MXFFileReader::ResultToString(result).c_str());
+                delete file_reader;
                 throw false;
             }
 

@@ -108,15 +108,68 @@ static bool compare_track_reader(const MXFTrackReader *left_reader, const MXFTra
 
 
 
-MXFFileReader::OpenResult MXFFileReader::Open(string filename, MXFPackageResolver *resolver,
-                                              bool resolver_take_ownership, MXFFileReader **file_reader)
+string MXFFileReader::ResultToString(OpenResult result)
+{
+    size_t index = (size_t)(result);
+    BMX_ASSERT(index < ARRAY_SIZE(RESULT_STRINGS));
+
+    return RESULT_STRINGS[index];
+}
+
+
+MXFFileReader::MXFFileReader()
+: MXFReader()
+{
+    BMX_ASSERT(MXF_RESULT_FAIL + 1 == ARRAY_SIZE(RESULT_STRINGS));
+
+    mFile = 0;
+    mDataModel = 0;
+    mHeaderMetadata = 0;
+    mIsClipWrapped = false;
+    mBodySID = 0;
+    mIndexSID = 0;
+    mOrigin = 0;
+    mReadStartPosition = 0;
+    mReadEndPosition = 0;
+    mEssenceReader = 0;
+
+    mPackageResolver = new MXFDefaultPackageResolver();
+    mOwnPackageResolver = true;
+}
+
+MXFFileReader::~MXFFileReader()
+{
+    if (mOwnPackageResolver)
+        delete mPackageResolver;
+    delete mEssenceReader;
+    delete mFile;
+    delete mHeaderMetadata;
+    delete mDataModel;
+
+    size_t i;
+    for (i = 0; i < mInternalTrackReaders.size(); i++)
+        delete mInternalTrackReaders[i];
+
+    // mPackageResolver owns external readers
+}
+
+void MXFFileReader::SetPackageResolver(MXFPackageResolver *resolver, bool take_ownership)
+{
+    if (mOwnPackageResolver)
+        delete mPackageResolver;
+
+    mPackageResolver = resolver;
+    mOwnPackageResolver = take_ownership;
+}
+
+MXFFileReader::OpenResult MXFFileReader::Open(string filename)
 {
     File *file = 0;
     try
     {
         file = File::openRead(filename);
 
-        OpenResult result = Open(file, filename, resolver, resolver_take_ownership, file_reader);
+        OpenResult result = Open(file, filename);
         if (result != MXF_RESULT_SUCCESS)
             delete file;
 
@@ -129,13 +182,16 @@ MXFFileReader::OpenResult MXFFileReader::Open(string filename, MXFPackageResolve
     }
 }
 
-MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename, MXFPackageResolver *resolver,
-                                              bool resolver_take_ownership, MXFFileReader **file_reader)
+MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
 {
-    BMX_ASSERT(MXF_RESULT_FAIL + 1 == ARRAY_SIZE(RESULT_STRINGS));
+    OpenResult result;
 
     try
     {
+        mFile = file;
+        mFilename = filename;
+
+
         // read the header partition pack and check the operational pattern
         if (!file->readHeaderPartition())
             THROW_RESULT(MXF_RESULT_INVALID_FILE);
@@ -148,60 +204,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename, MXFPa
             THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
         }
 
-        *file_reader = new MXFFileReader(filename, file, resolver, resolver_take_ownership);
 
-        return MXF_RESULT_SUCCESS;
-    }
-    catch (const OpenResult &ex)
-    {
-        if (resolver_take_ownership)
-            delete resolver;
-        return ex;
-    }
-    catch (const BMXException &ex)
-    {
-        log_error("Exception: %s\n", ex.what());
-        if (resolver_take_ownership)
-            delete resolver;
-        return MXF_RESULT_FAIL;
-    }
-    catch (...)
-    {
-        if (resolver_take_ownership)
-            delete resolver;
-        return MXF_RESULT_FAIL;
-    }
-}
-
-string MXFFileReader::ResultToString(OpenResult result)
-{
-    size_t index = (size_t)(result);
-    BMX_ASSERT(index < ARRAY_SIZE(RESULT_STRINGS));
-
-    return RESULT_STRINGS[index];
-}
-
-
-MXFFileReader::MXFFileReader(string filename, File *file, MXFPackageResolver *resolver, bool resolver_take_ownership)
-: MXFReader()
-{
-    mFilename = filename;
-    mFile = file;
-    mPackageResolver = resolver;
-    mOwnPackageResolver = (resolver ? resolver_take_ownership : false);
-    mHeaderMetadata = 0;
-    mDataModel = 0;
-    mIsClipWrapped = false;
-    mBodySID = 0;
-    mIndexSID = 0;
-    mOrigin = 0;
-    mReadStartPosition = 0;
-    mReadEndPosition = 0;
-    mEssenceReader = 0;
-    Partition &header_partition = file->getPartition(0);
-
-    try
-    {
         BMX_CHECK(mAbsoluteURI.ParseFilename(filename));
         if (mAbsoluteURI.IsRelative()) {
             URI base_uri;
@@ -262,11 +265,8 @@ MXFFileReader::MXFFileReader(string filename, File *file, MXFPackageResolver *re
         BMX_CHECK(mxf_is_header_metadata(&key));
         mHeaderMetadata->read(mFile, metadata_partition, &key, llen, len);
 
-        // default package resolver
-        if (!mPackageResolver) {
-            mPackageResolver = new MXFDefaultPackageResolver(this);
-            mOwnPackageResolver = true;
-        }
+        // extract resolved package info
+        mPackageResolver->ExtractResolvedPackages(this);
 
         // process header metadata
         ProcessMetadata(metadata_partition);
@@ -372,37 +372,50 @@ MXFFileReader::MXFFileReader(string filename, File *file, MXFPackageResolver *re
             log_warn("Possibly not enough rollout available (available=%d, required=%d)\n",
                      GetMaxRollout(mDuration - 1, true), GetMaxRollout(mDuration - 1, false));
         }
+
         SetReadLimits();
+
+
+        result = MXF_RESULT_SUCCESS;
+    }
+    catch (const OpenResult &ex)
+    {
+        result = ex;
+    }
+    catch (const BMXException &ex)
+    {
+        log_error("BMX exception: %s\n", ex.what());
+        result = MXF_RESULT_FAIL;
     }
     catch (...)
     {
-        delete mPackageResolver;
+        result = MXF_RESULT_FAIL;
+    }
+
+    // clean up
+    if (result != MXF_RESULT_SUCCESS) {
+        mFile = 0;
         delete mEssenceReader;
-        // mFile ownership reverts back to caller
+        mEssenceReader = 0;
         delete mHeaderMetadata;
+        mHeaderMetadata = 0;
         delete mDataModel;
+        mDataModel = 0;
+
         size_t i;
         for (i = 0; i < mInternalTrackReaders.size(); i++)
             delete mInternalTrackReaders[i];
-        // mPackageResolver owns external readers
-        throw;
+
+        mTrackReaders.clear();
+        mInternalTrackReaders.clear();
+        mInternalTrackReaderNumberMap.clear();
+        mExternalReaders.clear();
+        mExternalSampleSequences.clear();
+        mExternalSampleSequenceSizes.clear();
+        mExternalTrackReaders.clear();
     }
-}
 
-MXFFileReader::~MXFFileReader()
-{
-    if (mOwnPackageResolver)
-        delete mPackageResolver;
-    delete mEssenceReader;
-    delete mFile;
-    delete mHeaderMetadata;
-    delete mDataModel;
-
-    size_t i;
-    for (i = 0; i < mInternalTrackReaders.size(); i++)
-        delete mInternalTrackReaders[i];
-
-    // mPackageResolver owns external readers
+    return result;
 }
 
 void MXFFileReader::SetReadLimits()

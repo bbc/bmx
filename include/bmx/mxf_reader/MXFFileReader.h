@@ -76,15 +76,18 @@ public:
     } OpenResult;
 
 public:
-    static OpenResult Open(std::string filename, MXFPackageResolver *resolver, bool resolver_take_ownership,
-                           MXFFileReader **file_reader);
-    static OpenResult Open(mxfpp::File *file, std::string filename, MXFPackageResolver *resolver,
-                           bool resolver_take_ownership, MXFFileReader **file_reader);
     static std::string ResultToString(OpenResult result);
 
 public:
+    MXFFileReader();
     virtual ~MXFFileReader();
 
+    void SetPackageResolver(MXFPackageResolver *resolver, bool take_ownership);
+
+    OpenResult Open(std::string filename);
+    OpenResult Open(mxfpp::File *file, std::string filename);
+
+public:
     MXFPackageResolver* GetPackageResolver() const { return mPackageResolver; }
 
 public:
@@ -130,8 +133,6 @@ private:
     } PackageType;
 
 private:
-    MXFFileReader(std::string filename, mxfpp::File *file, MXFPackageResolver *resolver, bool resolver_take_ownership);
-
     void ProcessMetadata(mxfpp::Partition *partition);
 
     MXFTrackReader* CreateInternalTrackReader(mxfpp::Partition *partition, mxfpp::MaterialPackage *material_package,

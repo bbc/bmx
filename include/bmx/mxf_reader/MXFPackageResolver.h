@@ -65,6 +65,9 @@ class MXFPackageResolver
 public:
     virtual ~MXFPackageResolver() {};
 
+    virtual void ExtractResolvedPackages(MXFFileReader *file_reader) = 0;
+
+public:
     virtual std::vector<ResolvedPackage> ResolveSourceClip(mxfpp::SourceClip *source_clip) = 0;
     virtual std::vector<ResolvedPackage> ResolveSourceClip(mxfpp::SourceClip *source_clip,
                                                            std::vector<mxfpp::Locator*> &locators) = 0;
@@ -77,9 +80,12 @@ public:
 class MXFDefaultPackageResolver : public MXFPackageResolver
 {
 public:
-    MXFDefaultPackageResolver(MXFFileReader *file_reader);
+    MXFDefaultPackageResolver();
     virtual ~MXFDefaultPackageResolver();
 
+    virtual void ExtractResolvedPackages(MXFFileReader *file_reader);
+
+public:
     virtual std::vector<ResolvedPackage> ResolveSourceClip(mxfpp::SourceClip *source_clip);
     virtual std::vector<ResolvedPackage> ResolveSourceClip(mxfpp::SourceClip *source_clip,
                                                            std::vector<mxfpp::Locator*> &locators);
@@ -87,12 +93,8 @@ public:
     virtual std::vector<ResolvedPackage> GetResolvedPackages() { return mResolvedPackages; }
 
 protected:
-    void ExtractResolvedPackages(MXFFileReader *file_reader);
-
-protected:
-    std::vector<ResolvedPackage> mResolvedPackages;
-
     MXFFileReader* mFileReader;
+    std::vector<ResolvedPackage> mResolvedPackages;
     std::vector<MXFFileReader*> mExternalReaders;
 };
 

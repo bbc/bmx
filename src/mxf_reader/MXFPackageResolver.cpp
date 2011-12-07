@@ -59,10 +59,9 @@ ResolvedPackage::ResolvedPackage()
 
 
 
-MXFDefaultPackageResolver::MXFDefaultPackageResolver(MXFFileReader *file_reader)
+MXFDefaultPackageResolver::MXFDefaultPackageResolver()
 {
-    mFileReader = file_reader;
-    ExtractResolvedPackages(file_reader);
+    mFileReader = 0;
 }
 
 MXFDefaultPackageResolver::~MXFDefaultPackageResolver()
@@ -70,6 +69,48 @@ MXFDefaultPackageResolver::~MXFDefaultPackageResolver()
     size_t i;
     for (i = 0; i < mExternalReaders.size(); i++)
         delete mExternalReaders[i];
+}
+
+void MXFDefaultPackageResolver::ExtractResolvedPackages(MXFFileReader *file_reader)
+{
+    if (!mFileReader)
+        mFileReader = file_reader;
+
+
+    ContentStorage *content_storage = file_reader->GetHeaderMetadata()->getPreface()->getContentStorage();
+
+    vector<GenericPackage*> packages = content_storage->getPackages();
+    vector<EssenceContainerData*> ess_data;
+    if (content_storage->haveEssenceContainerData())
+        ess_data = content_storage->getEssenceContainerData();
+
+    size_t i;
+    for (i = 0; i < packages.size(); i++) {
+        ResolvedPackage resolved_package;
+        resolved_package.package = packages[i];
+        resolved_package.file_reader = file_reader;
+
+        SourcePackage *source_package = dynamic_cast<SourcePackage*>(packages[i]);
+        if (source_package &&
+            source_package->haveDescriptor() && dynamic_cast<FileDescriptor*>(source_package->getDescriptor()))
+        {
+            resolved_package.is_file_source_package = true;
+
+            // essence is internal if there exists an essence container linked with the file source package and
+            // the body SID != 0
+            resolved_package.external_essence = true;
+            size_t j;
+            for (j = 0; j < ess_data.size(); j++) {
+                if (ess_data[j]->getLinkedPackageUID() == packages[i]->getPackageUID()) {
+                    if (ess_data[j]->getBodySID() != 0)
+                        resolved_package.external_essence = false;
+                    break;
+                }
+            }
+        }
+
+        mResolvedPackages.push_back(resolved_package);
+    }
 }
 
 vector<ResolvedPackage> MXFDefaultPackageResolver::ResolveSourceClip(SourceClip *source_clip)
@@ -135,10 +176,11 @@ vector<ResolvedPackage> MXFDefaultPackageResolver::ResolveSourceClip(SourceClip 
             continue;
 
         string filename = uri.ToFilename();
-        MXFFileReader *file_reader;
-        MXFFileReader::OpenResult result = MXFFileReader::Open(filename, 0, false, &file_reader);
+        MXFFileReader *file_reader = new MXFFileReader();
+        MXFFileReader::OpenResult result = file_reader->Open(filename);
         if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
             log_warn("Failed to open external MXF file '%s'\n", filename.c_str());
+            delete file_reader;
             continue;
         }
 
@@ -147,43 +189,5 @@ vector<ResolvedPackage> MXFDefaultPackageResolver::ResolveSourceClip(SourceClip 
     }
 
     return ResolveSourceClip(source_clip);
-}
-
-void MXFDefaultPackageResolver::ExtractResolvedPackages(MXFFileReader *file_reader)
-{
-    ContentStorage *content_storage = file_reader->GetHeaderMetadata()->getPreface()->getContentStorage();
-
-    vector<GenericPackage*> packages = content_storage->getPackages();
-    vector<EssenceContainerData*> ess_data;
-    if (content_storage->haveEssenceContainerData())
-        ess_data = content_storage->getEssenceContainerData();
-
-    size_t i;
-    for (i = 0; i < packages.size(); i++) {
-        ResolvedPackage resolved_package;
-        resolved_package.package = packages[i];
-        resolved_package.file_reader = file_reader;
-
-        SourcePackage *source_package = dynamic_cast<SourcePackage*>(packages[i]);
-        if (source_package &&
-            source_package->haveDescriptor() && dynamic_cast<FileDescriptor*>(source_package->getDescriptor()))
-        {
-            resolved_package.is_file_source_package = true;
-
-            // essence is internal if there exists an essence container linked with the file source package and
-            // the body SID != 0
-            resolved_package.external_essence = true;
-            size_t j;
-            for (j = 0; j < ess_data.size(); j++) {
-                if (ess_data[j]->getLinkedPackageUID() == packages[i]->getPackageUID()) {
-                    if (ess_data[j]->getBodySID() != 0)
-                        resolved_package.external_essence = false;
-                    break;
-                }
-            }
-        }
-
-        mResolvedPackages.push_back(resolved_package);
-    }
 }
 
