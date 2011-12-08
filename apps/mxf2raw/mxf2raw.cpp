@@ -639,6 +639,7 @@ int main(int argc, const char** argv)
                            timecode_to_string(reader->GetPhysicalSourceTimecode(0)).c_str());
                     printf("  Physical src package name  : %s\n", reader->GetPhysicalSourcePackageName().c_str());
                 }
+                printf("  Edit rate                  : %d/%d\n", sample_rate.numerator, sample_rate.denominator);
                 printf("  Precharge                  : %"PRId64"\n", max_precharge);
                 printf("  Duration                   : %"PRId64"\n", output_duration);
                 printf("  Rollout                    : %"PRId64"\n", max_rollout);
@@ -675,10 +676,10 @@ int main(int argc, const char** argv)
                     log_info("Input filename: %s\n", filenames[0]);
                     log_info("Material package name: %s\n", reader->GetMaterialPackageName().c_str());
                 }
+                log_info("Edit rate: %d/%d\n", sample_rate.numerator, sample_rate.denominator);
                 log_info("Precharge: %"PRId64"\n", max_precharge);
                 log_info("Duration: %"PRId64"\n", output_duration);
                 log_info("Rollout: %"PRId64"\n", max_rollout);
-                log_info("Edit rate: %d/%d\n", sample_rate.numerator, sample_rate.denominator);
             }
 
             // md5 calculation initialization
