@@ -45,6 +45,7 @@
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/MD5.h>
 #include <bmx/MXFUtils.h>
+#include "AS11Info.h"
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -353,6 +354,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                       but actually belong to the same virtual package / group\n");
     fprintf(stderr, " --no-reorder          Don't attempt to order the inputs in a sequence\n");
     fprintf(stderr, "                       Use this option for files with broken timecode\n");
+    fprintf(stderr, " --as11                Print AS-11 and UK DPP metadata to stdout (single file only)\n");
 }
 
 int main(int argc, const char** argv)
@@ -371,6 +373,7 @@ int main(int argc, const char** argv)
     bool use_group_reader = false;
     bool keep_input_order = false;
     bool do_print_version = false;
+    bool do_print_as11 = false;
     int cmdln_index;
 
 
@@ -484,6 +487,10 @@ int main(int argc, const char** argv)
         {
             keep_input_order = true;
         }
+        else if (strcmp(argv[cmdln_index], "--as11") == 0)
+        {
+            do_print_as11 = true;
+        }
         else
         {
             break;
@@ -560,6 +567,9 @@ int main(int argc, const char** argv)
             reader = seq_reader;
         } else {
             file_reader = new MXFFileReader();
+            if (do_print_as11)
+                as11_register_extensions(file_reader);
+
             MXFFileReader::OpenResult result = file_reader->Open(filenames[0]);
             if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                 log_error("Failed to open MXF file '%s': %s\n", filenames[0],
@@ -649,6 +659,9 @@ int main(int argc, const char** argv)
             }
             printf("\n");
         }
+
+        if (do_print_as11 && file_reader)
+            as11_print_info(file_reader);
 
 
         // read data
