@@ -483,6 +483,26 @@ string bmx::get_generic_duration_string(int64_t count, Rational rate)
     return buffer;
 }
 
+string bmx::get_generic_duration_string_2(int64_t count, Rational rate)
+{
+    if (count < 0 || rate.numerator == 0 || rate.denominator == 0)
+        return "00:00:00:00";
+
+    uint16_t rounded_rate = get_rounded_tc_base(rate);
+
+    int64_t frame = count % rounded_rate;
+    int64_t sec = count / rounded_rate;
+    int64_t min = sec / 60;
+    sec %= 60;
+    int64_t hour = min / 60;
+    min %= 60;
+
+    char buffer[64];
+    sprintf(buffer, "%02"PRId64":%02d:%02d:%02d @%ufps", hour, (int)min, (int)sec, (int)frame, rounded_rate);
+
+    return buffer;
+}
+
 bmx::Rational bmx::convert_int_to_rational(int32_t value)
 {
     Rational ret = {value, 1};

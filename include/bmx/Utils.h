@@ -98,6 +98,7 @@ UMID generate_umid();
 uint16_t get_rounded_tc_base(Rational rate);
 
 std::string get_generic_duration_string(int64_t count, Rational rate);
+std::string get_generic_duration_string_2(int64_t count, Rational rate);
 
 Rational convert_int_to_rational(int32_t value);
 
