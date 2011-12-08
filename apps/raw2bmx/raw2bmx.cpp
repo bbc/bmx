@@ -2454,9 +2454,9 @@ int main(int argc, const char** argv)
 
         clip->CompleteWrite();
 
-        log_info("Duration: %s (%"PRId64" frames @%d/%d fps)\n",
-                 get_generic_duration_string(clip->GetDuration(), clip->GetFrameRate()).c_str(),
-                 clip->GetDuration(), clip->GetFrameRate().numerator, clip->GetFrameRate().denominator);
+        log_info("Duration: %"PRId64" (%s)\n",
+                 clip->GetDuration(),
+                 get_generic_duration_string_2(clip->GetDuration(), clip->GetFrameRate()).c_str());
 
 
         // clean up

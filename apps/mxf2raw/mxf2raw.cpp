@@ -824,7 +824,9 @@ int main(int argc, const char** argv)
                 }
             }
 
-            log_info("Read %"PRId64" samples\n", total_num_read);
+            log_info("Read %"PRId64" samples (%s)\n",
+                     total_num_read,
+                     get_generic_duration_string_2(total_num_read, sample_rate).c_str());
 
             if (calc_md5) {
                 unsigned char digest[16];
