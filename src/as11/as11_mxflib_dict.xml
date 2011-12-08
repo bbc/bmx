@@ -91,8 +91,8 @@
                 <EBU_R128             value="1"/>
             </AudioLoudStdType>
             <AudioDescType        type="UInt8">
-                <ControlData_Naration value="0"/>
-                <ADMix                value="1"/>
+                <ControlData_Narration value="0"/>
+                <ADMix                 value="1"/>
             </AudioDescType>
             <SignLanguageType     type="UInt8">
                 <BritishSignLanguage  value="0"/>
