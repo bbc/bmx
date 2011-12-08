@@ -122,25 +122,6 @@ bool bmx::parse_partition_interval(const char *partition_interval_str, Rational 
     return true;
 }
 
-bool bmx::parse_image_type(const char *image_type_str, uint8_t *signal_standard, uint8_t *frame_layout)
-{
-    if (strcmp(image_type_str, "1080i") == 0) {
-        *signal_standard = MXF_SIGNAL_STANDARD_SMPTE274M;
-        *frame_layout = MXF_SEPARATE_FIELDS;
-        return true;
-    } else if  (strcmp(image_type_str, "1080p") == 0) {
-        *signal_standard = MXF_SIGNAL_STANDARD_SMPTE274M;
-        *frame_layout = MXF_FULL_FRAME;
-        return true;
-    } else if  (strcmp(image_type_str, "720p") == 0) {
-        *signal_standard = MXF_SIGNAL_STANDARD_SMPTE296M;
-        *frame_layout = MXF_FULL_FRAME;
-        return true;
-    }
-
-    return false;
-}
-
 bool bmx::parse_bool(const char *bool_str, bool *value)
 {
     if (strcmp(bool_str, "true") == 0)
