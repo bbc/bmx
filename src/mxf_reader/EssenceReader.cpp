@@ -220,10 +220,6 @@ void EssenceReader::Seek(int64_t position)
         mFileReader->mFile->seek(file_position, SEEK_SET);
     }
 
-    size_t i;
-    for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++)
-        mFileReader->GetInternalTrackReader(i)->GetFrameBuffer()->Clear(true);
-
     mPosition = position;
 }
 

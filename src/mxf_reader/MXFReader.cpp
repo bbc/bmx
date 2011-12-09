@@ -63,6 +63,13 @@ MXFReader::~MXFReader()
     delete mPhysicalSourceStartTimecode;
 }
 
+void MXFReader::ClearFrameBuffers(bool del_frames)
+{
+    size_t i;
+    for (i = 0 ; i < GetNumTrackReaders(); i++)
+        GetTrackReader(i)->GetFrameBuffer()->Clear(del_frames);
+}
+
 Timecode MXFReader::GetMaterialTimecode(int64_t position) const
 {
     if (!HaveMaterialTimecode())

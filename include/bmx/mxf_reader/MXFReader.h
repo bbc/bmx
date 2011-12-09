@@ -63,7 +63,9 @@ public:
     virtual int64_t GetReadDuration() const = 0;
 
     virtual uint32_t Read(uint32_t num_samples, bool is_top = true) = 0;
+
     virtual void Seek(int64_t position) = 0;
+    void ClearFrameBuffers(bool del_frames);
 
     virtual int64_t GetPosition() const = 0;
 

@@ -835,8 +835,6 @@ int main(int argc, const char** argv)
         int16_t precharge = reader->GetMaxPrecharge(read_start, true);
         int16_t rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
 
-        // TODO: add mxf reader clear method for all framebuffers
-        //       also, don't clear framebuffers when seeking
         reader->SetReadLimits(read_start + precharge, read_start + output_duration + rollout, true);
 
 
