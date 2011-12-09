@@ -837,7 +837,7 @@ int main(int argc, const char** argv)
 
         // TODO: add mxf reader clear method for all framebuffers
         //       also, don't clear framebuffers when seeking
-        reader->SetReadLimits(read_start + precharge, read_start + output_duration + rollout, false);
+        reader->SetReadLimits(read_start + precharge, read_start + output_duration + rollout, true);
 
 
         // create output clip and initialize
@@ -1187,12 +1187,6 @@ int main(int argc, const char** argv)
             as11_clip->PrepareHeaderMetadata();
             as11_helper.InsertFrameworks(as11_clip);
         }
-
-
-        // seek to start
-        // TODO: assuming seek will clear the frame buffers
-
-        reader->Seek(read_start);
 
 
         // create clip file(s) and write samples
