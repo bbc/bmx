@@ -563,16 +563,24 @@ int16_t MXFSequenceReader::GetMaxPrecharge(int64_t position, bool limit_to_avail
 {
     BMX_CHECK(!mGroupSegments.empty());
 
-    size_t i = 0;
-    return mGroupSegments[i]->GetMaxPrecharge(CONVERT_SEQ_POS(position), limit_to_available);
+    MXFGroupReader *segment;
+    size_t segment_index;
+    int64_t segment_position;
+    GetSegmentPosition(position, &segment, &segment_index, &segment_position);
+
+    return segment->GetMaxPrecharge(segment_position, limit_to_available);
 }
 
 int16_t MXFSequenceReader::GetMaxRollout(int64_t position, bool limit_to_available) const
 {
     BMX_CHECK(!mGroupSegments.empty());
 
-    size_t i = mGroupSegments.size() - 1;
-    return mGroupSegments[i]->GetMaxRollout(CONVERT_SEQ_POS(position), limit_to_available);
+    MXFGroupReader *segment;
+    size_t segment_index;
+    int64_t segment_position;
+    GetSegmentPosition(position, &segment, &segment_index, &segment_position);
+
+    return segment->GetMaxRollout(segment_position, limit_to_available);
 }
 
 bool MXFSequenceReader::HaveFixedLeadFillerOffset() const
