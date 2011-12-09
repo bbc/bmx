@@ -470,11 +470,10 @@ bool AS02Track::HasValidDuration() const
 
 int64_t AS02Track::GetOutputDuration(bool clip_frame_rate) const
 {
+    BMX_ASSERT(!clip_frame_rate || mClip->mClipFrameRate == GetSampleRate());
+
     if (mContainerDuration - mOutputStartOffset + mOutputEndOffset <= 0)
         return 0;
-
-    if (clip_frame_rate)
-        return ContainerDurationToClipFrameRate(mContainerDuration - mOutputStartOffset + mOutputEndOffset);
 
     return mContainerDuration - mOutputStartOffset + mOutputEndOffset;
 }
@@ -492,12 +491,7 @@ int64_t AS02Track::GetContainerDuration() const
     return mContainerDuration;
 }
 
-int64_t AS02Track::ContainerDurationToClipFrameRate(int64_t length) const
-{
-    return convert_duration(GetSampleRate(), length, mClip->mClipFrameRate, ROUND_AUTO);
-}
-
-mxfRational& AS02Track::GetVideoFrameRate() const
+mxfRational& AS02Track::GetClipFrameRate() const
 {
     return mClip->mClipFrameRate;
 }

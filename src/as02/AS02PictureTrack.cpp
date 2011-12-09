@@ -54,7 +54,7 @@ AS02PictureTrack::AS02PictureTrack(AS02Clip *clip, uint32_t track_index, Essence
     mPartitionFrameCount = 0;
 
     mPictureDescriptorHelper->SetFrameWrapped(true);
-    mPictureDescriptorHelper->SetSampleRate(GetVideoFrameRate());
+    mPictureDescriptorHelper->SetSampleRate(GetClipFrameRate());
     mPictureDescriptorHelper->SetAspectRatio(ASPECT_RATIO_16_9);
 
     mIsPicture = true;

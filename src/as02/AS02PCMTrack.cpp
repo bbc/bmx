@@ -141,6 +141,19 @@ void AS02PCMTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32
     mContainerSize += size;
 }
 
+int64_t AS02PCMTrack::GetOutputDuration(bool clip_frame_rate) const
+{
+    if (mContainerDuration - mOutputStartOffset + mOutputEndOffset <= 0)
+        return 0;
+
+    if (clip_frame_rate) {
+        return convert_duration_lower(mContainerDuration - mOutputStartOffset + mOutputEndOffset,
+                                      mSampleSequence, mSampleSequence.size());
+    }
+
+    return mContainerDuration - mOutputStartOffset + mOutputEndOffset;
+}
+
 void AS02PCMTrack::PreSampleWriting()
 {
     mEssenceDataStartPos = mMXFFile->tell(); // need this position when we re-write the key
@@ -163,6 +176,6 @@ void AS02PCMTrack::PostSampleWriting(Partition *partition)
 void AS02PCMTrack::SetSampleSequence()
 {
     mSampleSequence.clear();
-    BMX_CHECK(get_sample_sequence(GetVideoFrameRate(), mWaveDescriptorHelper->GetSamplingRate(), &mSampleSequence));
+    BMX_CHECK(get_sample_sequence(GetClipFrameRate(), mWaveDescriptorHelper->GetSamplingRate(), &mSampleSequence));
 }
 

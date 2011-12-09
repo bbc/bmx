@@ -63,6 +63,8 @@ public:
 public:
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
 
+    virtual int64_t GetOutputDuration(bool clip_frame_rate) const;
+
 protected:
     virtual void PreSampleWriting();
     virtual void PostSampleWriting(mxfpp::Partition *partition);

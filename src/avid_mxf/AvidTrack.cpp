@@ -398,13 +398,10 @@ bool AvidTrack::HasValidDuration() const
 
 int64_t AvidTrack::GetOutputDuration(bool clip_frame_rate) const
 {
+    BMX_ASSERT(!clip_frame_rate || mClip->mClipFrameRate == GetSampleRate());
+
     if (mContainerDuration + mOutputEndOffset <= 0)
         return 0;
-
-    if (clip_frame_rate) {
-        return convert_duration(GetSampleRate(), mContainerDuration + mOutputEndOffset,
-                                mClip->mClipFrameRate, ROUND_AUTO);
-    }
 
     return mContainerDuration + mOutputEndOffset;
 }

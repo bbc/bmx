@@ -89,7 +89,7 @@ public:
     uint32_t GetSampleSize();
 
     bool HasValidDuration() const;
-    int64_t GetOutputDuration(bool clip_frame_rate) const;
+    virtual int64_t GetOutputDuration(bool clip_frame_rate) const;
     int64_t GetDuration() const;
     int64_t GetContainerDuration() const;
 
@@ -105,8 +105,7 @@ protected:
     virtual void PostSampleWriting(mxfpp::Partition *partition) { (void)partition; }
 
 protected:
-    int64_t ContainerDurationToClipFrameRate(int64_t length) const;
-    mxfRational& GetVideoFrameRate() const;
+    mxfRational& GetClipFrameRate() const;
 
     void WriteCBEIndexTable(mxfpp::Partition *partition, uint32_t edit_unit_size, mxfpp::IndexTableSegment *&mIndexSegment);
 
