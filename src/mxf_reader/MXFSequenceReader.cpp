@@ -299,14 +299,6 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
         }
 
 
-        // get the segment offsets
-        mSegmentOffsets.push_back(0);
-        for (i = 1; i < mGroupSegments.size(); i++) {
-            int64_t offset = mSegmentOffsets[i - 1] + mGroupSegments[i - 1]->GetDuration();
-            mSegmentOffsets.push_back(offset);
-        }
-
-
         // extract the sample sequences for each group
         for (i = 0; i < mGroupSegments.size(); i++) {
             vector<uint32_t> sample_sequence;
@@ -326,6 +318,15 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
                 sequence_size += sample_sequence[j];
             mSampleSequenceSizes.push_back(sequence_size);
         }
+
+
+        // get the segment offsets and total duration
+        int64_t offset = 0;
+        for (i = 0; i < mGroupSegments.size(); i++) {
+            mSegmentOffsets.push_back(offset);
+            offset += CONVERT_GROUP_DUR(mGroupSegments[i]->GetDuration());
+        }
+        mDuration = offset;
 
 
         // extract the sequence timecodes if present and continuous
@@ -378,11 +379,6 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
         }
 
 
-        // sequence duration is the sum of segment durations
-        mDuration = 0;
-        for (i = 0; i < mGroupSegments.size(); i++)
-            mDuration += CONVERT_GROUP_DUR(mGroupSegments[i]->GetDuration());
-
 
         // set default group sequence read limits
         SetReadLimits();
@@ -423,23 +419,24 @@ void MXFSequenceReader::UpdateReadLimits()
     for (i = 0; i < mGroupSegments.size(); i++) {
         if (mGroupSegments[i]->GetReadStartPosition() > DISABLED_SEG_READ_LIMIT)
             break;
-        read_duration += mGroupSegments[i]->GetDuration();
+        read_duration += CONVERT_GROUP_DUR(mGroupSegments[i]->GetDuration());
     }
     if (i >= mGroupSegments.size())
         return; // nothing enabled
-    mReadStartPosition = read_duration + mGroupSegments[i]->GetReadStartPosition();
+    mReadStartPosition = read_duration + CONVERT_GROUP_POS(mGroupSegments[i]->GetReadStartPosition());
 
     // get read end position from the last enabled segment
     for (; i < mGroupSegments.size(); i++) {
         if (mGroupSegments[i]->GetReadEndPosition() <= DISABLED_SEG_READ_LIMIT)
             break;
-        read_duration += mGroupSegments[i]->GetDuration();
+        read_duration += CONVERT_GROUP_DUR(mGroupSegments[i]->GetDuration());
     }
     if (i == 0) {
-        mReadEndPosition = mGroupSegments[0]->GetReadEndPosition();
+        mReadEndPosition = CONVERT_GROUP_POS(mGroupSegments[0]->GetReadEndPosition());
     } else {
-        mReadEndPosition = read_duration - mGroupSegments[i - 1]->GetDuration() +
-                                mGroupSegments[i - 1]->GetReadEndPosition();
+        i--;
+        mReadEndPosition = read_duration - CONVERT_GROUP_DUR(mGroupSegments[i]->GetDuration()) +
+                                CONVERT_GROUP_POS(mGroupSegments[i]->GetReadEndPosition());
     }
 }
 
@@ -592,7 +589,8 @@ bool MXFSequenceReader::HaveFixedLeadFillerOffset() const
 int64_t MXFSequenceReader::GetFixedLeadFillerOffset() const
 {
     BMX_CHECK(!mGroupSegments.empty());
-    return mGroupSegments[0]->GetFixedLeadFillerOffset();
+    return convert_duration_lower(mGroupSegments[0]->GetFixedLeadFillerOffset(),
+                                  mSampleSequences[0], mSampleSequenceSizes[0]);
 }
 
 MXFTrackReader* MXFSequenceReader::GetTrackReader(size_t track_index) const
@@ -670,11 +668,12 @@ void MXFSequenceReader::GetSegmentPosition(int64_t position, MXFGroupReader **se
     if (i == 0) {
         *segment = mGroupSegments[0];
         *segment_index = 0;
-        *segment_position = position;
+        *segment_position = CONVERT_SEQ_POS(position);
     } else {
-        *segment = mGroupSegments[i - 1];
-        *segment_index = i - 1;
-        *segment_position = position - mSegmentOffsets[i - 1];
+        i--;
+        *segment = mGroupSegments[i];
+        *segment_index = i;
+        *segment_position = CONVERT_SEQ_POS(position - mSegmentOffsets[i]);
     }
 }
 
