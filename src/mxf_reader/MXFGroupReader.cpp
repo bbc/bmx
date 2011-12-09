@@ -96,7 +96,7 @@ MXFGroupReader::MXFGroupReader()
 : MXFReader()
 {
     mReadStartPosition = 0;
-    mReadEndPosition = 0;
+    mReadDuration = 0;
 }
 
 MXFGroupReader::~MXFGroupReader()
@@ -241,18 +241,23 @@ void MXFGroupReader::SetReadLimits()
     SetReadLimits(GetMaxPrecharge(0, true), mDuration + GetMaxRollout(mDuration - 1, true), true);
 }
 
-void MXFGroupReader::SetReadLimits(int64_t start_position, int64_t end_position, bool seek_start_position)
+void MXFGroupReader::SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position)
 {
     mReadStartPosition = start_position;
-    mReadEndPosition = end_position;
+    mReadDuration = duration;
 
     size_t i;
     for (i = 0; i < mReaders.size(); i++) {
         if (!mReaders[i]->IsEnabled())
             continue;
 
-        mReaders[i]->SetReadLimits(CONVERT_GROUP_POS(start_position),
-                                   CONVERT_GROUP_POS(end_position), false);
+        int64_t member_start_position = CONVERT_GROUP_POS(start_position);
+        int64_t member_duration;
+        if (duration == 0)
+            member_duration = 0;
+        else
+            member_duration = CONVERT_GROUP_DUR(start_position + duration) - member_start_position;
+        mReaders[i]->SetReadLimits(member_start_position, member_duration, false);
     }
 
     if (seek_start_position)

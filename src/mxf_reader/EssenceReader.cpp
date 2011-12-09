@@ -101,7 +101,7 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
 
     // set read limits
     mReadStartPosition = 0;
-    mReadEndPosition = mIndexTableHelper.GetDuration();
+    mReadDuration = mIndexTableHelper.GetDuration();
 
 #if 0
     {
@@ -123,12 +123,15 @@ EssenceReader::~EssenceReader()
         delete mTrackFrames[i];
 }
 
-void EssenceReader::SetReadLimits(int64_t start_position, int64_t end_position)
+void EssenceReader::SetReadLimits(int64_t start_position, int64_t duration)
 {
-    BMX_CHECK(end_position >= start_position);
+    BMX_CHECK(duration >= 0);
 
     mReadStartPosition = LegitimisePosition(start_position);
-    mReadEndPosition = LegitimisePosition(end_position - 1) + 1;
+    if (duration == 0)
+        mReadDuration = 0;
+    else
+        mReadDuration = LegitimisePosition(start_position + duration - 1) - mReadStartPosition + 1;
 }
 
 uint32_t EssenceReader::Read(uint32_t num_samples)
@@ -141,8 +144,8 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
     mTrackFrames.assign(mFileReader->GetNumInternalTrackReaders(), 0);
 
     // check read limits
-    if (mReadStartPosition == mReadEndPosition ||
-        mPosition >= mReadEndPosition ||
+    if (mReadDuration == 0 ||
+        mPosition >= mReadStartPosition + mReadDuration ||
         mPosition + num_samples <= 0)
     {
         // always be positioned num_samples after previous position
@@ -158,8 +161,8 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
         read_num_samples -= first_sample_offset;
         Seek(0);
     }
-    if (mPosition + read_num_samples > mReadEndPosition)
-        read_num_samples -= mPosition + read_num_samples - mReadEndPosition;
+    if (mPosition + read_num_samples > mReadStartPosition + mReadDuration)
+        read_num_samples -= mPosition + read_num_samples - (mReadStartPosition + mReadDuration);
     BMX_ASSERT(read_num_samples > 0);
 
 
@@ -211,7 +214,7 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
 
 void EssenceReader::Seek(int64_t position)
 {
-    if (position >= 0 && position < mReadEndPosition) {
+    if (position >= 0 && position < mReadStartPosition + mReadDuration) {
         int64_t file_position, size;
         GetEditUnit(position, &file_position, &size);
         mFileReader->mFile->seek(file_position, SEEK_SET);

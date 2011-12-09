@@ -65,10 +65,9 @@ public:
 
 public:
     virtual void SetReadLimits();
-    virtual void SetReadLimits(int64_t start_position, int64_t end_position, bool seek_start_position);
+    virtual void SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position);
     virtual int64_t GetReadStartPosition() const { return mReadStartPosition; }
-    virtual int64_t GetReadEndPosition() const   { return mReadEndPosition; }
-    virtual int64_t GetReadDuration() const      { return mReadEndPosition - mReadStartPosition; }
+    virtual int64_t GetReadDuration() const      { return mReadDuration; }
 
     virtual uint32_t Read(uint32_t num_samples, bool is_top = true);
     virtual void Seek(int64_t position);
@@ -114,7 +113,7 @@ private:
     bool mIsEnabled;
 
     int64_t mReadStartPosition;
-    int64_t mReadEndPosition;
+    int64_t mReadDuration;
 
     mxfRational mSampleRate;
     int64_t mPosition;

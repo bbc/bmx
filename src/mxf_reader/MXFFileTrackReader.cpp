@@ -81,19 +81,14 @@ void MXFFileTrackReader::SetReadLimits()
     mFileReader->SetReadLimits();
 }
 
-void MXFFileTrackReader::SetReadLimits(int64_t start_position, int64_t end_position, bool seek_to_start)
+void MXFFileTrackReader::SetReadLimits(int64_t start_position, int64_t duration, bool seek_to_start)
 {
-    mFileReader->SetReadLimits(start_position, end_position, seek_to_start);
+    mFileReader->SetReadLimits(start_position, duration, seek_to_start);
 }
 
 int64_t MXFFileTrackReader::GetReadStartPosition() const
 {
     return mFileReader->GetReadStartPosition();
-}
-
-int64_t MXFFileTrackReader::GetReadEndPosition() const
-{
-    return mFileReader->GetReadEndPosition();
 }
 
 int64_t MXFFileTrackReader::GetReadDuration() const

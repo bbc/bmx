@@ -74,7 +74,7 @@ MXFSequenceReader::MXFSequenceReader()
 : MXFReader()
 {
     mReadStartPosition = 0;
-    mReadEndPosition = 0;
+    mReadDuration = 0;
     mPosition = 0;
 }
 
@@ -320,11 +320,15 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
         }
 
 
-        // get the segment offsets and total duration
+        // get the segment offsets, offset adjustments and total duration
         int64_t offset = 0;
+        int64_t offset_adjustment = 0;
         for (i = 0; i < mGroupSegments.size(); i++) {
             mSegmentOffsets.push_back(offset);
+            mSegmentOffsetAdjustments.push_back(offset_adjustment);
             offset += CONVERT_GROUP_DUR(mGroupSegments[i]->GetDuration());
+            offset_adjustment = mGroupSegments[i]->GetDuration() -
+                                    CONVERT_SEQ_DUR(CONVERT_GROUP_DUR(mGroupSegments[i]->GetDuration()));
         }
         mDuration = offset;
 
@@ -408,35 +412,29 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
 void MXFSequenceReader::UpdateReadLimits()
 {
     mReadStartPosition = 0;
-    mReadEndPosition = 0;
+    mReadDuration = 0;
 
     if (mGroupSegments.empty())
         return;
 
     // get read start position from first enabled segment
-    int64_t read_duration = 0;
     size_t i;
     for (i = 0; i < mGroupSegments.size(); i++) {
         if (mGroupSegments[i]->GetReadStartPosition() > DISABLED_SEG_READ_LIMIT)
             break;
-        read_duration += CONVERT_GROUP_DUR(mGroupSegments[i]->GetDuration());
+        mReadStartPosition += CONVERT_GROUP_DUR(mGroupSegments[i]->GetDuration());
     }
     if (i >= mGroupSegments.size())
         return; // nothing enabled
-    mReadStartPosition = read_duration + CONVERT_GROUP_POS(mGroupSegments[i]->GetReadStartPosition());
+
+    mReadStartPosition += CONVERT_GROUP_POS(mGroupSegments[i]->GetReadStartPosition());
+    mReadDuration = CONVERT_GROUP_DUR(mGroupSegments[i]->GetReadDuration());
 
     // get read end position from the last enabled segment
-    for (; i < mGroupSegments.size(); i++) {
-        if (mGroupSegments[i]->GetReadEndPosition() <= DISABLED_SEG_READ_LIMIT)
+    for (i = i + 1; i < mGroupSegments.size(); i++) {
+        if (mGroupSegments[i]->GetReadStartPosition() <= DISABLED_SEG_READ_LIMIT)
             break;
-        read_duration += CONVERT_GROUP_DUR(mGroupSegments[i]->GetDuration());
-    }
-    if (i == 0) {
-        mReadEndPosition = CONVERT_GROUP_POS(mGroupSegments[0]->GetReadEndPosition());
-    } else {
-        i--;
-        mReadEndPosition = read_duration - CONVERT_GROUP_DUR(mGroupSegments[i]->GetDuration()) +
-                                CONVERT_GROUP_POS(mGroupSegments[i]->GetReadEndPosition());
+        mReadDuration += CONVERT_GROUP_DUR(mGroupSegments[i]->GetReadDuration());
     }
 }
 
@@ -445,21 +443,22 @@ void MXFSequenceReader::SetReadLimits()
     SetReadLimits(GetMaxPrecharge(0, true), mDuration + GetMaxRollout(mDuration - 1, true), true);
 }
 
-void MXFSequenceReader::SetReadLimits(int64_t start_position, int64_t end_position, bool seek_start_position)
+void MXFSequenceReader::SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position)
 {
     MXFGroupReader *start_segment, *end_segment;
     size_t segment_index;
-    int64_t start_segment_position, end_segment_position;
+    int64_t start_segment_position;
+    int64_t end_segment_duration;
     GetSegmentPosition(start_position, &start_segment, &segment_index, &start_segment_position);
-    GetSegmentPosition(end_position, &end_segment, &segment_index, &end_segment_position);
+    GetSegmentPosition(start_position + duration, &end_segment, &segment_index, &end_segment_duration);
 
     if (start_segment == end_segment) {
-        start_segment->SetReadLimits(start_segment_position, end_segment_position, false);
+        start_segment->SetReadLimits(start_segment_position, end_segment_duration, false);
     } else {
         // end == start_segment->GetDuration() is safe because the start segment has 0 rollout
         start_segment->SetReadLimits(start_segment_position, start_segment->GetDuration(), false);
         // start == 0 is safe because the end segment has 0 pre-charge
-        end_segment->SetReadLimits(0, end_segment_position, false);
+        end_segment->SetReadLimits(0, end_segment_duration, false);
     }
 
     // effectively disable segments before the start segment and after the end segment
@@ -468,14 +467,14 @@ void MXFSequenceReader::SetReadLimits(int64_t start_position, int64_t end_positi
         if (mGroupSegments[i] == start_segment)
             break;
 
-        mGroupSegments[i]->SetReadLimits(DISABLED_SEG_READ_LIMIT, DISABLED_SEG_READ_LIMIT, false);
+        mGroupSegments[i]->SetReadLimits(DISABLED_SEG_READ_LIMIT, 0, false);
     }
     for (; i < mGroupSegments.size(); i++) {
         if (mGroupSegments[i] == end_segment)
             break;
     }
     for (i = i + 1; i < mGroupSegments.size(); i++)
-        mGroupSegments[i]->SetReadLimits(DISABLED_SEG_READ_LIMIT, DISABLED_SEG_READ_LIMIT, false);
+        mGroupSegments[i]->SetReadLimits(DISABLED_SEG_READ_LIMIT, 0, false);
 
 
     UpdateReadLimits();
@@ -673,7 +672,8 @@ void MXFSequenceReader::GetSegmentPosition(int64_t position, MXFGroupReader **se
         i--;
         *segment = mGroupSegments[i];
         *segment_index = i;
-        *segment_position = CONVERT_SEQ_POS(position - mSegmentOffsets[i]);
+        *segment_position = CONVERT_SEQ_POS(position) - CONVERT_SEQ_POS(mSegmentOffsets[i]) -
+                                mSegmentOffsetAdjustments[i];
     }
 }
 

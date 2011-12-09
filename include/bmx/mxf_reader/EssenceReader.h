@@ -54,7 +54,7 @@ public:
     EssenceReader(MXFFileReader *file_reader);
     ~EssenceReader();
 
-    void SetReadLimits(int64_t start_position, int64_t end_position);
+    void SetReadLimits(int64_t start_position, int64_t duration);
 
     uint32_t Read(uint32_t num_samples);
     void Seek(int64_t position);
@@ -82,7 +82,7 @@ private:
     IndexTableHelper mIndexTableHelper;
 
     int64_t mReadStartPosition;
-    int64_t mReadEndPosition;
+    int64_t mReadDuration;
     int64_t mPosition;
     uint32_t mImageStartOffset;
 

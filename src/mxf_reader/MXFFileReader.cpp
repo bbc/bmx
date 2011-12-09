@@ -53,6 +53,7 @@ using namespace mxfpp;
 #define TO_ESS_READER_POS(pos)      (pos + mOrigin)
 #define FROM_ESS_READER_POS(pos)    (pos - mOrigin)
 
+#define CONVERT_INTERNAL_DUR(dur)   convert_duration_higher(dur, mExternalSampleSequences[i], mExternalSampleSequenceSizes[i])
 #define CONVERT_EXTERNAL_DUR(dur)   convert_duration_lower(dur, mExternalSampleSequences[i], mExternalSampleSequenceSizes[i])
 #define CONVERT_INTERNAL_POS(pos)   convert_position_higher(pos, mExternalSampleSequences[i], mExternalSampleSequenceSizes[i])
 #define CONVERT_EXTERNAL_POS(pos)   convert_position_lower(pos, mExternalSampleSequences[i], mExternalSampleSequenceSizes[i])
@@ -129,7 +130,7 @@ MXFFileReader::MXFFileReader()
     mIndexSID = 0;
     mOrigin = 0;
     mReadStartPosition = 0;
-    mReadEndPosition = 0;
+    mReadDuration = 0;
     mEssenceReader = 0;
 
     mDataModel = new DataModel();
@@ -423,13 +424,13 @@ void MXFFileReader::SetReadLimits()
     SetReadLimits(GetMaxPrecharge(0, true), mDuration + GetMaxRollout(mDuration - 1, true), true);
 }
 
-void MXFFileReader::SetReadLimits(int64_t start_position, int64_t end_position, bool seek_to_start)
+void MXFFileReader::SetReadLimits(int64_t start_position, int64_t duration, bool seek_to_start)
 {
     mReadStartPosition = start_position;
-    mReadEndPosition = end_position;
+    mReadDuration = duration;
 
     if (InternalIsEnabled())
-        mEssenceReader->SetReadLimits(TO_ESS_READER_POS(start_position), TO_ESS_READER_POS(end_position));
+        mEssenceReader->SetReadLimits(TO_ESS_READER_POS(start_position), duration);
 
     size_t i;
     for (i = 0; i < mExternalReaders.size(); i++) {
@@ -437,8 +438,12 @@ void MXFFileReader::SetReadLimits(int64_t start_position, int64_t end_position, 
             continue;
 
         int64_t external_start_position = CONVERT_INTERNAL_POS(start_position);
-        int64_t external_end_position = CONVERT_INTERNAL_POS(end_position);
-        mExternalReaders[i]->SetReadLimits(external_start_position, external_end_position, false /* seek done below */);
+        int64_t external_duration;
+        if (duration == 0)
+            external_duration = 0;
+        else
+            external_duration = CONVERT_INTERNAL_DUR(start_position + duration) - external_start_position;
+        mExternalReaders[i]->SetReadLimits(external_start_position, external_duration, false /* seek done below */);
     }
 
     if (seek_to_start)

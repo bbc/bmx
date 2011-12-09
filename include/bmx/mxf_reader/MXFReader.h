@@ -58,9 +58,8 @@ public:
 
 public:
     virtual void SetReadLimits() = 0;
-    virtual void SetReadLimits(int64_t start_position, int64_t end_position, bool seek_start_position) = 0;
+    virtual void SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position) = 0;
     virtual int64_t GetReadStartPosition() const = 0;
-    virtual int64_t GetReadEndPosition() const = 0;
     virtual int64_t GetReadDuration() const = 0;
 
     virtual uint32_t Read(uint32_t num_samples, bool is_top = true) = 0;

@@ -59,7 +59,7 @@ MXFSequenceTrackReader::MXFSequenceTrackReader(MXFSequenceReader *sequence_reade
     mFileSourcePackage = 0;
     mIsEnabled = true;
     mReadStartPosition = 0;
-    mReadEndPosition = 0;
+    mReadDuration = 0;
     mSampleRate = ZERO_RATIONAL;
     mPosition = 0;
     mDuration = 0;
@@ -151,34 +151,30 @@ MXFTrackReader* MXFSequenceTrackReader::GetSegment(size_t index)
 void MXFSequenceTrackReader::UpdateReadLimits()
 {
     mReadStartPosition = 0;
-    mReadEndPosition = 0;
+    mReadDuration = 0;
 
     if (mTrackSegments.empty())
         return;
 
+
     // get read start position from first enabled segment
-    int64_t read_duration = 0;
     size_t i;
     for (i = 0; i < mTrackSegments.size(); i++) {
         if (mTrackSegments[i]->GetReadStartPosition() > DISABLED_SEG_READ_LIMIT)
             break;
-        read_duration += mTrackSegments[i]->GetDuration();
+        mReadStartPosition += mTrackSegments[i]->GetDuration();
     }
     if (i >= mTrackSegments.size())
         return; // nothing enabled
-    mReadStartPosition = read_duration + mTrackSegments[i]->GetReadStartPosition();
+
+    mReadStartPosition += mTrackSegments[i]->GetReadStartPosition();
+    mReadDuration = mTrackSegments[i]->GetReadDuration();
 
     // get read end position from the last enabled segment
-    for (; i < mTrackSegments.size(); i++) {
-        if (mTrackSegments[i]->GetReadEndPosition() <= DISABLED_SEG_READ_LIMIT)
+    for (i = i + 1; i < mTrackSegments.size(); i++) {
+        if (mTrackSegments[i]->GetReadStartPosition() <= DISABLED_SEG_READ_LIMIT)
             break;
-        read_duration += mTrackSegments[i]->GetDuration();
-    }
-    if (i == 0) {
-        mReadEndPosition = mTrackSegments[0]->GetReadEndPosition();
-    } else {
-        mReadEndPosition = read_duration - mTrackSegments[i - 1]->GetDuration() +
-                                mTrackSegments[i - 1]->GetReadEndPosition();
+        mReadDuration += mTrackSegments[i]->GetReadDuration();
     }
 }
 
@@ -201,20 +197,21 @@ void MXFSequenceTrackReader::SetReadLimits()
     SetReadLimits(GetPrecharge(0, true), mDuration + GetRollout(mDuration - 1, true), true);
 }
 
-void MXFSequenceTrackReader::SetReadLimits(int64_t start_position, int64_t end_position, bool seek_to_start)
+void MXFSequenceTrackReader::SetReadLimits(int64_t start_position, int64_t duration, bool seek_to_start)
 {
     MXFTrackReader *start_segment, *end_segment;
-    int64_t start_segment_position, end_segment_position;
+    int64_t start_segment_position;
+    int64_t end_segment_duration;
     GetSegmentPosition(start_position, &start_segment, &start_segment_position);
-    GetSegmentPosition(end_position, &end_segment, &end_segment_position);
+    GetSegmentPosition(start_position + duration, &end_segment, &end_segment_duration);
 
     if (start_segment == end_segment) {
-        start_segment->SetReadLimits(start_segment_position, end_segment_position, false);
+        start_segment->SetReadLimits(start_segment_position, end_segment_duration, false);
     } else {
         // end == start_segment->GetDuration() is safe because the start segment has 0 rollout
         start_segment->SetReadLimits(start_segment_position, start_segment->GetDuration(), false);
         // start == 0 is safe because the end segment has 0 pre-charge
-        end_segment->SetReadLimits(0, end_segment_position, false);
+        end_segment->SetReadLimits(0, end_segment_duration, false);
     }
 
     // effectively disable segments before the start segment and after the end segment
@@ -223,14 +220,14 @@ void MXFSequenceTrackReader::SetReadLimits(int64_t start_position, int64_t end_p
         if (mTrackSegments[i] == start_segment)
             break;
 
-        mTrackSegments[i]->SetReadLimits(DISABLED_SEG_READ_LIMIT, DISABLED_SEG_READ_LIMIT, false);
+        mTrackSegments[i]->SetReadLimits(DISABLED_SEG_READ_LIMIT, 0, false);
     }
     for (; i < mTrackSegments.size(); i++) {
         if (mTrackSegments[i] == end_segment)
             break;
     }
     for (i = i + 1; i < mTrackSegments.size(); i++)
-        mTrackSegments[i]->SetReadLimits(DISABLED_SEG_READ_LIMIT, DISABLED_SEG_READ_LIMIT, false);
+        mTrackSegments[i]->SetReadLimits(DISABLED_SEG_READ_LIMIT, 0, false);
 
 
     UpdateReadLimits();
