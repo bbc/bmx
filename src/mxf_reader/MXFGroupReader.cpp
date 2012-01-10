@@ -199,7 +199,7 @@ bool MXFGroupReader::Finalize()
             } else {
     #define CHECK_TIMECODE(tc_var) \
                 if ((tc_var != 0) != (mReaders[i]->tc_var != 0) || \
-                    (tc_var && tc_var != mReaders[i]->tc_var)) \
+                    (tc_var && *tc_var != *mReaders[i]->tc_var)) \
                 { \
                     delete tc_var; \
                     tc_var = 0; \
