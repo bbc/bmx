@@ -121,9 +121,9 @@ public:
 
     int64_t GetMaxOffset() const;
 
-    bool operator ==(const Timecode &right);
-    bool operator !=(const Timecode &right);
-    bool operator  <(const Timecode &right);
+    bool operator ==(const Timecode &right) const;
+    bool operator !=(const Timecode &right) const;
+    bool operator  <(const Timecode &right) const;
 
 private:
     void CleanOffset();

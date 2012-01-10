@@ -180,19 +180,19 @@ int64_t Timecode::GetMaxOffset() const
     return 24 * mFramesPerHour;
 }
 
-bool Timecode::operator==(const Timecode &right)
+bool Timecode::operator==(const Timecode &right) const
 {
     return (mRoundedTCBase == 0 && right.mRoundedTCBase == 0) ||
            (mRoundedTCBase != 0 && right.mRoundedTCBase != 0 &&
                mOffset == convert_position(right.mOffset, mRoundedTCBase, right.mRoundedTCBase, ROUND_AUTO));
 }
 
-bool Timecode::operator!=(const Timecode &right)
+bool Timecode::operator!=(const Timecode &right) const
 {
     return !(*this == right);
 }
 
-bool Timecode::operator<(const Timecode &right)
+bool Timecode::operator<(const Timecode &right) const
 {
     return (mRoundedTCBase != 0 && right.mRoundedTCBase == 0) ||
            (mRoundedTCBase != 0 && right.mRoundedTCBase != 0 &&
