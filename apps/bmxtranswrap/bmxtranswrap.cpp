@@ -463,7 +463,7 @@ int main(int argc, const char** argv)
         }
         else if (strcmp(argv[cmdln_index], "--seg") == 0)
         {
-            if (cmdln_index + 2 >= argc)
+            if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
