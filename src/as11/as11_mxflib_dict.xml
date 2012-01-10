@@ -3,8 +3,8 @@
 <MXFDictionary>
 
     <MXFLabels>
-        <AS11CoreSchemeLabel         detail="AS-11 Core DM Scheme"         ul="06 0e 2b 34 04 01 01 01 0d 01 04 01 0b 01 00 00"/>
-        <AS11SegmentationSchemeLabel detail="AS-11 Segmentation DM Scheme" ul="06 0e 2b 34 04 01 01 01 0d 01 04 01 0b 02 00 00"/>
+        <AS11CoreSchemeLabel         detail="AS-11 Core DM Scheme"         ul="06 0e 2b 34 04 01 01 01 0d 01 07 01 0b 01 00 00"/>
+        <AS11SegmentationSchemeLabel detail="AS-11 Segmentation DM Scheme" ul="06 0e 2b 34 04 01 01 01 0d 01 07 01 0b 02 00 00"/>
         <UKDPPSchemeLabel            detail="UK DPP DM Scheme"             ul="06 0e 2b 34 04 01 01 01 0d 0c 01 01 01 00 00 00"/> 
     </MXFLabels>
 
@@ -102,21 +102,21 @@
     </MXFTypes>
 
 
-    <AS11CoreFramework base="DM_Framework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 04 01 0b 01 01 00">
-        <SeriesTitle                type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 01"/>
-        <ProgrammeTitle             type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 02"/>
-        <EpisodeTitleNumber         type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 03"/>
-        <ShimName                   type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 04"/>
-        <AudioTrackLayout           type="AudioTrackLayoutType" use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 05"/>
-        <PrimaryAudioLanguage       type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 06"/>
-        <ClosedCaptionsPresent      type="Boolean"              use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 07"/>
-        <ClosedCaptionsType         type="CaptionsType"         use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 08"/>
-        <ClosedCaptionsLanguage     type="UTF16String"          use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 01 01 09"/>
+    <AS11CoreFramework base="DM_Framework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 07 01 0b 01 01 00">
+        <SeriesTitle                type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 01"/>
+        <ProgrammeTitle             type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 02"/>
+        <EpisodeTitleNumber         type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 03"/>
+        <ShimName                   type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 04"/>
+        <AudioTrackLayout           type="AudioTrackLayoutType" use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 05"/>
+        <PrimaryAudioLanguage       type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 06"/>
+        <ClosedCaptionsPresent      type="Boolean"              use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 07"/>
+        <ClosedCaptionsType         type="CaptionsType"         use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 08"/>
+        <ClosedCaptionsLanguage     type="UTF16String"          use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 09"/>
     </AS11CoreFramework>
 
-    <AS11SegmentationFramework base="DM_Framework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 04 01 0b 02 01 00">
-        <PartNumber                 type="UInt16"       use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 02 01 01"/>
-        <PartTotal                  type="UInt16"       use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 04 01 0b 02 01 02"/>
+    <AS11SegmentationFramework base="DM_Framework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 07 01 0b 02 01 00">
+        <PartNumber                 type="UInt16"       use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 02 01 01"/>
+        <PartTotal                  type="UInt16"       use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 02 01 02"/>
     </AS11SegmentationFramework>
 
     <UKDPPFramework base="DM_Framework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 0c 01 01 01 01 00 00">
