@@ -172,6 +172,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --dm-file <fwork> <name>       Parse and set descriptive framework properties from text file <name>. <fwork> is 'as11' or 'dpp'\n");
     fprintf(stderr, "    --seg <name>                   Parse and set segmentation data from text file <name>\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "  as02/as11op1a/as11d10/op1a/d10:\n");
+    fprintf(stderr, "    --afd <value>           Active Format Descriptor code. Default is input file's value or not set\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "  avid:\n");
     fprintf(stderr, "    --project <name>        Set the Avid project name\n");
     fprintf(stderr, "    --tape <name>           Source tape name\n");
@@ -212,6 +215,7 @@ int main(int argc, const char** argv)
     bool do_print_version = false;
     bool use_group_reader = false;
     bool keep_input_order = false;
+    uint8_t user_afd = 0;
     int value;
     int cmdln_index;
 
@@ -470,6 +474,24 @@ int main(int argc, const char** argv)
                 return 1;
             }
             segmentation_filename = argv[cmdln_index + 1];
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--afd") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
+                value <= 0 || value > 255)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            user_afd = value;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--project") == 0)
@@ -983,6 +1005,10 @@ int main(int argc, const char** argv)
             const MXFPictureTrackInfo *input_picture_info = dynamic_cast<const MXFPictureTrackInfo*>(input_track_info);
             const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
 
+            uint8_t afd = user_afd;
+            if (!afd && input_picture_info)
+                afd = input_picture_info->afd;
+
 
             // create track(s)
 
@@ -1067,22 +1093,22 @@ int main(int argc, const char** argv)
                     case DVBASED_DV25:
                     case DV50:
                         output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
-                        if (input_picture_info->afd)
-                            output_track.track->SetAFD(input_picture_info->afd);
+                        if (afd)
+                            output_track.track->SetAFD(afd);
                         break;
                     case DV100_1080I:
                     case DV100_720P:
                         output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
-                        if (input_picture_info->afd)
-                            output_track.track->SetAFD(input_picture_info->afd);
+                        if (afd)
+                            output_track.track->SetAFD(afd);
                         output_track.track->SetComponentDepth(input_picture_info->component_depth);
                         break;
                     case D10_30:
                     case D10_40:
                     case D10_50:
                         output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
-                        if (input_picture_info->afd)
-                            output_track.track->SetAFD(input_picture_info->afd);
+                        if (afd)
+                            output_track.track->SetAFD(afd);
                         BMX_ASSERT(input_picture_info->d10_frame_size != 0);
                         output_track.track->SetSampleSize(input_picture_info->d10_frame_size);
                         break;
@@ -1092,8 +1118,8 @@ int main(int argc, const char** argv)
                     case AVCI50_1080I:
                     case AVCI50_1080P:
                     case AVCI50_720P:
-                        if (input_picture_info->afd)
-                            output_track.track->SetAFD(input_picture_info->afd);
+                        if (afd)
+                            output_track.track->SetAFD(afd);
                         output_track.track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
                         BMX_ASSERT(input_track_reader->HaveAVCIHeader());
                         output_track.track->SetAVCIHeader(input_track_reader->GetAVCIHeader(), AVCI_HEADER_SIZE);
@@ -1107,8 +1133,8 @@ int main(int argc, const char** argv)
                     case AVID_10BIT_UNC_HD_1080P:
                     case AVID_10BIT_UNC_HD_720P:
                         output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
-                        if (input_picture_info->afd)
-                            output_track.track->SetAFD(input_picture_info->afd);
+                        if (afd)
+                            output_track.track->SetAFD(afd);
                         output_track.track->SetComponentDepth(input_picture_info->component_depth);
                         output_track.track->SetInputHeight(input_picture_info->stored_height);
                         break;
@@ -1120,8 +1146,8 @@ int main(int argc, const char** argv)
                     case MPEG2LG_MP_HL_720P:
                     case MPEG2LG_MP_H14_1080I:
                     case MPEG2LG_MP_H14_1080P:
-                        if (input_picture_info->afd)
-                            output_track.track->SetAFD(input_picture_info->afd);
+                        if (afd)
+                            output_track.track->SetAFD(afd);
                         break;
                     case MJPEG_2_1:
                     case MJPEG_3_1:
@@ -1130,8 +1156,8 @@ int main(int argc, const char** argv)
                     case MJPEG_4_1M:
                     case MJPEG_10_1M:
                     case MJPEG_15_1S:
-                        if (input_picture_info->afd)
-                            output_track.track->SetAFD(input_picture_info->afd);
+                        if (afd)
+                            output_track.track->SetAFD(afd);
                         output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
                         break;
                     case VC3_1080P_1235:
@@ -1144,8 +1170,8 @@ int main(int argc, const char** argv)
                     case VC3_720P_1251:
                     case VC3_720P_1252:
                     case VC3_1080P_1253:
-                        if (input_picture_info->afd)
-                            output_track.track->SetAFD(input_picture_info->afd);
+                        if (afd)
+                            output_track.track->SetAFD(afd);
                         break;
                     case WAVE_PCM:
                         output_track.track->SetSamplingRate(input_sound_info->sampling_rate);
