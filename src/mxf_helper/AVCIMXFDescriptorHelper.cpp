@@ -80,8 +80,8 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
 EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     mxfUL ec_label = file_descriptor->getEssenceContainer();
-    if (!mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AVCIFrameWrapped)) &&
-        !mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AVCIClipWrapped)) &&
+    if (!mxf_is_avc_ec(&ec_label, 0) &&
+        !mxf_is_avc_ec(&ec_label, 1) &&
         !(mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
             mxf_equals_ul_mod_regver(&alternative_ec_label, &MXF_EC_L(AVCIClipWrapped))))
     {
@@ -138,7 +138,7 @@ void AVCIMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL 
     mxfRational sample_rate = file_descriptor->getSampleRate();
 
     mxfUL ec_label = file_descriptor->getEssenceContainer();
-    mFrameWrapped = mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AVCIFrameWrapped));
+    mFrameWrapped = mxf_is_avc_ec(&ec_label, 1);
 
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();

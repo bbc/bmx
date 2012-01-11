@@ -91,8 +91,8 @@ bool MPEG2LGMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 size_t MPEG2LGMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     mxfUL ec_label = file_descriptor->getEssenceContainer();
-    if (!mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(MPEGES0FrameWrapped)) &&
-        !mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(MPEGES0ClipWrapped)) &&
+    if (!mxf_is_mpeg_video_ec(&ec_label, 0) &&
+        !mxf_is_mpeg_video_ec(&ec_label, 1) &&
         !(mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
             mxf_equals_ul_mod_regver(&alternative_ec_label, &MXF_EC_L(AvidMPEGClipWrapped))))
     {
@@ -154,7 +154,7 @@ void MPEG2LGMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxf
     mxfRational sample_rate = file_descriptor->getSampleRate();
 
     mxfUL ec_label = file_descriptor->getEssenceContainer();
-    mFrameWrapped = mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(MPEGES0FrameWrapped));
+    mFrameWrapped = mxf_is_mpeg_video_ec(&ec_label, 1);
 
     size_t mEssenceIndex = GetEssenceIndex(file_descriptor, alternative_ec_label);
     BMX_ASSERT(mEssenceIndex != (size_t)(-1));
