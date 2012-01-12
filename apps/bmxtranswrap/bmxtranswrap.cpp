@@ -841,6 +841,11 @@ int main(int argc, const char** argv)
                 }
             }
 
+            if (!is_supported) {
+                log_warn("Ignoring unsupported track %zu (essence type '%s')\n",
+                          i, essence_type_to_string(input_track_info->essence_type));
+            }
+
             track_reader->SetEnable(is_supported);
         }
 
