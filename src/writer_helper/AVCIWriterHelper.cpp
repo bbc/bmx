@@ -43,6 +43,11 @@ using namespace std;
 using namespace bmx;
 
 
+// Client code relies on this logic. This allows a client to set provisional header data
+// and this header data is overwritten if the first input frame contains header data
+#define SET_HEADER_ENABLED  mSampleCount == 0
+
+
 
 AVCIWriterHelper::AVCIWriterHelper()
 {
@@ -95,7 +100,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             break;
         case AVCI_NO_OR_ALL_FRAME_HEADER_MODE:
             if (have_header) {
-                if (mSampleCount == 0) {
+                if (SET_HEADER_ENABLED) {
                     mFirstFrameHeader = true;
                     SetHeader(data, AVCI_HEADER_SIZE);
                 }
@@ -113,7 +118,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             break;
         case AVCI_FIRST_FRAME_HEADER_MODE:
             if (have_header) {
-                if (mSampleCount == 0) {
+                if (SET_HEADER_ENABLED) {
                     output_frame_size = PassFrame(data, size, array_size);
                     SetHeader(data, AVCI_HEADER_SIZE);
                 } else {
@@ -132,7 +137,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             break;
         case AVCI_FIRST_OR_ALL_FRAME_HEADER_MODE:
             if (have_header) {
-                if (mSampleCount == 0) {
+                if (SET_HEADER_ENABLED) {
                     output_frame_size = PassFrame(data, size, array_size);
                     SetHeader(data, AVCI_HEADER_SIZE);
                 } else if (mSampleCount == 1) {
@@ -162,7 +167,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             break;
         case AVCI_ALL_FRAME_HEADER_MODE:
             if (have_header) {
-                if (mSampleCount == 0)
+                if (SET_HEADER_ENABLED)
                     SetHeader(data, AVCI_HEADER_SIZE);
                 output_frame_size = PassFrame(data, size, array_size);
             } else {
