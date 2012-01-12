@@ -33,13 +33,33 @@
 #define __BMX_APP_UTILS_H__
 
 #include <string>
+#include <vector>
 
 #include <bmx/BMXTypes.h>
+#include <bmx/EssenceType.h>
 
 
 
 namespace bmx
 {
+
+
+typedef struct
+{
+    EssenceType essence_type;
+    Rational sample_rate;
+} AVCIHeaderFormat;
+
+typedef struct
+{
+    std::vector<AVCIHeaderFormat> formats;
+    const char *filename;
+    int64_t offset;
+} AVCIHeaderInput;
+
+
+size_t get_num_avci_header_formats();
+const char* get_avci_header_format_string(size_t index);
 
 
 bool parse_timecode(const char *tc_str, Rational frame_rate, Timecode *timecode);
@@ -52,9 +72,19 @@ bool parse_bool(const char *bool_str, bool *value);
 
 bool parse_color(const char *color_str, Color *color);
 
+bool parse_avci_header(const char *format_str, const char *filename, const char *offset_str,
+                       std::vector<AVCIHeaderInput> *avci_header_inputs);
+
 
 std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture);
 
+
+
+bool have_avci_header_data(EssenceType essence_type, Rational sample_rate,
+                           std::vector<AVCIHeaderInput> &avci_header_inputs);
+bool read_avci_header_data(EssenceType essence_type, Rational sample_rate,
+                           std::vector<AVCIHeaderInput> &avci_header_inputs,
+                           unsigned char *buffer, size_t buffer_size);
 
 
 };

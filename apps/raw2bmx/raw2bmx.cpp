@@ -113,6 +113,7 @@ typedef struct
     uint8_t afd;
     uint32_t component_depth;
     uint32_t input_height;
+    bool have_avci_header;
 
     // sound
     Rational sampling_rate;
@@ -247,6 +248,15 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -y <hh:mm:sscff>        Start timecode. Is drop frame when c is not ':'. Default 00:00:00:00\n");
     fprintf(stderr, "  --clip <name>           Set the clip name\n");
     fprintf(stderr, "  --dur <frame>           Set the duration in frames. Default is minimum input duration\n");
+    fprintf(stderr, "  --avcihead <format> <file> <offset>\n");
+    fprintf(stderr, "                          Default AVC-Intra sequence header data (512 bytes) to use when the input file does have it\n");
+    fprintf(stderr, "                          <format> is a comma separated list of one or more of the following integer values:\n");
+    size_t i;
+    for (i = 0; i < get_num_avci_header_formats(); i++)
+        fprintf(stderr, "                              %2zu: %s\n", i, get_avci_header_format_string(i));
+    fprintf(stderr, "                          or set <format> to 'all' for all formats listed above\n");
+    fprintf(stderr, "                          The 512 bytes are extracted from <file> starting at <offset> bytes\n");
+    fprintf(stderr, "                              and incrementing 512 bytes for each format in the list\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02:\n");
     fprintf(stderr, "    --mic-type <type>       Media integrity check type: 'md5' or 'none'. Default 'md5'\n");
@@ -385,6 +395,7 @@ int main(int argc, const char** argv)
     bool sequence_offset_set = false;
     uint8_t sequence_offset = 0;
     bool do_print_version = false;
+    vector<AVCIHeaderInput> avci_header_inputs;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -515,6 +526,24 @@ int main(int argc, const char** argv)
                 return 1;
             }
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avcihead") == 0)
+        {
+            if (cmdln_index + 3 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_avci_header(argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3],
+                                   &avci_header_inputs))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid values '%s', '%s', '%s' for option '%s'\n",
+                        argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index += 3;
         }
         else if (strcmp(argv[cmdln_index], "--mic-type") == 0)
         {
@@ -2144,6 +2173,7 @@ int main(int argc, const char** argv)
 
         // open raw inputs, create and initialize track properties
 
+        unsigned char avci_header_data[AVCI_HEADER_SIZE];
         uint32_t picture_track_count = 0;
         uint32_t sound_track_count = 0;
         for (i = 0; i < inputs.size(); i++) {
@@ -2250,6 +2280,16 @@ int main(int argc, const char** argv)
                     if (input->afd)
                         input->track->SetAFD(input->afd);
                     input->track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
+                    if (have_avci_header_data(input->essence_type, frame_rate, avci_header_inputs)) {
+                        if (!read_avci_header_data(input->essence_type, frame_rate, avci_header_inputs,
+                                                   avci_header_data, sizeof(avci_header_data)))
+                        {
+                            log_error("Failed to read AVC-Intra header data from input file for %s\n",
+                                      essence_type_to_string(input->essence_type));
+                            throw false;
+                        }
+                        input->track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
+                    }
                     break;
                 case UNC_SD:
                 case UNC_HD_1080I:

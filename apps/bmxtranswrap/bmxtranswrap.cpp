@@ -156,6 +156,15 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          but actually belong to the same virtual package / group\n");
     fprintf(stderr, "  --no-reorder            Don't attempt to order the inputs in a sequence\n");
     fprintf(stderr, "                          Use this option for files with broken timecode\n");
+    fprintf(stderr, "  --avcihead <format> <file> <offset>\n");
+    fprintf(stderr, "                          Default AVC-Intra sequence header data (512 bytes) to use when the input file does not have it\n");
+    fprintf(stderr, "                          <format> is a comma separated list of one or more of the following integer values:\n");
+    size_t i;
+    for (i = 0; i < get_num_avci_header_formats(); i++)
+        fprintf(stderr, "                              %2zu: %s\n", i, get_avci_header_format_string(i));
+    fprintf(stderr, "                          or set <format> to 'all' for all formats listed above\n");
+    fprintf(stderr, "                          The 512 bytes are extracted from <file> starting at <offset> bytes\n");
+    fprintf(stderr, "                              and incrementing 512 bytes for each format in the list\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02:\n");
     fprintf(stderr, "    --mic-type <type>       Media integrity check type: 'md5' or 'none'. Default 'md5'\n");
@@ -216,6 +225,7 @@ int main(int argc, const char** argv)
     bool use_group_reader = false;
     bool keep_input_order = false;
     uint8_t user_afd = 0;
+    vector<AVCIHeaderInput> avci_header_inputs;
     int value;
     int cmdln_index;
 
@@ -366,6 +376,24 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--no-reorder") == 0)
         {
             keep_input_order = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--avcihead") == 0)
+        {
+            if (cmdln_index + 3 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_avci_header(argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3],
+                                   &avci_header_inputs))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid values '%s', '%s', '%s' for option '%s'\n",
+                        argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index += 3;
         }
         else if (strcmp(argv[cmdln_index], "--mic-type") == 0)
         {
@@ -802,7 +830,9 @@ int main(int argc, const char** argv)
                                input_track_info->essence_type == AVCI50_1080I ||
                                input_track_info->essence_type == AVCI50_1080P ||
                                input_track_info->essence_type == AVCI50_720P) &&
-                         !track_reader->HaveAVCIHeader())
+                         !track_reader->HaveAVCIHeader() &&
+                         !have_avci_header_data(input_track_info->essence_type, input_track_info->edit_rate,
+                                                avci_header_inputs))
                 {
                     log_warn("Track %zu (essence type '%s') does not have sequence and picture parameter sets\n",
                              i,
@@ -994,6 +1024,7 @@ int main(int argc, const char** argv)
 
         vector<OutputTrack> output_tracks;
 
+        unsigned char avci_header_data[AVCI_HEADER_SIZE];
         uint32_t picture_track_count = 0;
         uint32_t sound_track_count = 0;
         for (i = 0; i < reader->GetNumTrackReaders(); i++) {
@@ -1121,8 +1152,18 @@ int main(int argc, const char** argv)
                         if (afd)
                             output_track.track->SetAFD(afd);
                         output_track.track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
-                        BMX_ASSERT(input_track_reader->HaveAVCIHeader());
-                        output_track.track->SetAVCIHeader(input_track_reader->GetAVCIHeader(), AVCI_HEADER_SIZE);
+                        if (input_track_reader->HaveAVCIHeader()) {
+                            output_track.track->SetAVCIHeader(input_track_reader->GetAVCIHeader(), AVCI_HEADER_SIZE);
+                        } else {
+                            if (!read_avci_header_data(input_track_info->essence_type, input_picture_info->edit_rate,
+                                                       avci_header_inputs, avci_header_data, sizeof(avci_header_data)))
+                            {
+                                log_error("Failed to read AVC-Intra header data from input file for %s\n",
+                                          essence_type_to_string(input_track_info->essence_type));
+                                throw false;
+                            }
+                            output_track.track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
+                        }
                         break;
                     case UNC_SD:
                     case UNC_HD_1080I:

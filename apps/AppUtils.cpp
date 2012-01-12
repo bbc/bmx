@@ -37,6 +37,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cerrno>
 
 #include "AppUtils.h"
 #include <bmx/Utils.h>
@@ -54,6 +55,12 @@ typedef struct
     Color color;
 } ColorMap;
 
+typedef struct
+{
+    const char *format_str;
+    AVCIHeaderFormat format;
+} AVCIHeaderFormatInfo;
+
 
 static const ColorMap COLOR_MAP[] =
 {
@@ -66,6 +73,39 @@ static const ColorMap COLOR_MAP[] =
     {"magenta", COLOR_MAGENTA},
     {"black",   COLOR_BLACK},
 };
+
+static const AVCIHeaderFormatInfo AVCI_HEADER_FORMAT_INFO[] =
+{
+    {"AVC-Intra 100 1080i50",     {AVCI100_1080I,  {25, 1}}},
+    {"AVC-Intra 100 1080i59.94",  {AVCI100_1080I,  {30000, 1001}}},
+    {"AVC-Intra 100 1080p25",     {AVCI100_1080P,  {25, 1}}},
+    {"AVC-Intra 100 1080p29.97",  {AVCI100_1080P,  {30000, 1001}}},
+    {"AVC-Intra 100 720p25",      {AVCI100_720P,   {25, 1}}},
+    {"AVC-Intra 100 720p50",      {AVCI100_720P,   {50, 1}}},
+    {"AVC-Intra 100 720p29.97",   {AVCI100_720P,   {30000, 1001}}},
+    {"AVC-Intra 100 720p59.94",   {AVCI100_720P,   {60000, 1001}}},
+    {"AVC-Intra 50 1080p50",      {AVCI50_1080I,   {25, 1}}},
+    {"AVC-Intra 50 1080p29.97",   {AVCI50_1080I,   {30000, 1001}}},
+    {"AVC-Intra 50 1080p25",      {AVCI50_1080P,   {25, 1}}},
+    {"AVC-Intra 50 1080p29.97",   {AVCI50_1080P,   {30000, 1001}}},
+    {"AVC-Intra 50 720p25",       {AVCI50_720P,    {25, 1}}},
+    {"AVC-Intra 50 720p50",       {AVCI50_720P,    {50, 1}}},
+    {"AVC-Intra 50 720p29.97",    {AVCI50_720P,    {30000, 1001}}},
+    {"AVC-Intra 50 720p59.94",    {AVCI50_720P,    {60000, 1001}}},
+};
+
+
+
+size_t bmx::get_num_avci_header_formats()
+{
+    return ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO);
+}
+
+const char* bmx::get_avci_header_format_string(size_t index)
+{
+    BMX_ASSERT(index < ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO));
+    return AVCI_HEADER_FORMAT_INFO[index].format_str;
+}
 
 
 
@@ -147,6 +187,38 @@ bool bmx::parse_color(const char *color_str, Color *color)
     return false;
 }
 
+bool bmx::parse_avci_header(const char *format_str, const char *filename, const char *offset_str,
+                            vector<AVCIHeaderInput> *avci_header_inputs)
+{
+    AVCIHeaderInput input;
+
+    if (strcmp(format_str, "all") == 0) {
+        size_t i;
+        for (i = 0; i < ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO); i++)
+            input.formats.push_back(AVCI_HEADER_FORMAT_INFO[i].format);
+    } else {
+        size_t index;
+        const char *format_str_ptr = format_str;
+        while (format_str_ptr) {
+            if (sscanf(format_str_ptr, "%zu", &index) != 1 || index > ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO))
+                return false;
+            input.formats.push_back(AVCI_HEADER_FORMAT_INFO[index].format);
+
+            format_str_ptr = strchr(format_str_ptr, ',');
+            if (format_str_ptr)
+                format_str_ptr++;
+        }
+    }
+
+    input.filename = filename;
+    if (sscanf(offset_str, "%"PRId64, &input.offset) != 1)
+        return false;
+
+    avci_header_inputs->push_back(input);
+    return true;
+}
+
+
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture)
 {
     char buffer[16];
@@ -154,5 +226,77 @@ string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number,
 
     string filename = prefix;
     return filename.append(buffer);
+}
+
+
+bool bmx::have_avci_header_data(EssenceType essence_type, Rational sample_rate,
+                                vector<AVCIHeaderInput> &avci_header_inputs)
+{
+    size_t i;
+    size_t j;
+    for (i = 0; i < avci_header_inputs.size(); i++) {
+        for (j = 0; j < avci_header_inputs[i].formats.size(); j++) {
+            if (avci_header_inputs[i].formats[j].essence_type == essence_type &&
+                avci_header_inputs[i].formats[j].sample_rate == sample_rate)
+            {
+                break;
+            }
+        }
+        if (j < avci_header_inputs[i].formats.size())
+            break;
+    }
+
+    return i < avci_header_inputs.size();
+}
+
+bool bmx::read_avci_header_data(EssenceType essence_type, Rational sample_rate,
+                                vector<AVCIHeaderInput> &avci_header_inputs,
+                                unsigned char *buffer, size_t buffer_size)
+{
+    BMX_ASSERT(buffer_size >= 512);
+
+    size_t i;
+    size_t j;
+    for (i = 0; i < avci_header_inputs.size(); i++) {
+        for (j = 0; j < avci_header_inputs[i].formats.size(); j++) {
+            if (avci_header_inputs[i].formats[j].essence_type == essence_type &&
+                avci_header_inputs[i].formats[j].sample_rate == sample_rate)
+            {
+                break;
+            }
+        }
+        if (j < avci_header_inputs[i].formats.size())
+            break;
+    }
+    if (i >= avci_header_inputs.size())
+        return false;
+
+
+    FILE *file = fopen(avci_header_inputs[i].filename, "rb");
+    if (!file) {
+        log_error("Failed to open AVC-Intra header data input file '%s': %s\n",
+                  avci_header_inputs[i].filename, strerror(errno));
+        return false;
+    }
+
+    int64_t offset = avci_header_inputs[i].offset + j * 512;
+    if (fseek(file, offset, SEEK_SET) != 0) {
+        log_error("Failed to seek to offset %"PRId64" in AVC-Intra header data input file '%s': %s\n",
+                  offset, avci_header_inputs[i].filename, strerror(errno));
+        fclose(file);
+        return false;
+    }
+
+    if (fread(buffer, 512, 1, file) != 1) {
+        log_error("Failed to read 512 bytes from AVC-Intra header data input file '%s' at offset %"PRId64": %s\n",
+                  avci_header_inputs[i].filename, offset,
+                  ferror(file) ? "read error" : "end of file");
+        fclose(file);
+        return false;
+    }
+
+    fclose(file);
+
+    return true;
 }
 
