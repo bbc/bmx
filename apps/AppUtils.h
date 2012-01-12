@@ -87,6 +87,10 @@ bool read_avci_header_data(EssenceType essence_type, Rational sample_rate,
                            unsigned char *buffer, size_t buffer_size);
 
 
+void init_progress(float *next_update);
+void print_progress(int64_t count, int64_t duration, float *next_update);
+
+
 };
 
 

@@ -140,6 +140,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "Options (* means option is required):\n");
     fprintf(stderr, "  -h | --help             Show usage and exit\n");
     fprintf(stderr, "  -v | --version          Print version info\n");
+    fprintf(stderr, "  -p                      Print progress percentage to stdout\n");
     fprintf(stderr, "  -l <file>               Log filename. Default log to stderr/stdout\n");
     fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10. Default is as02\n");
     fprintf(stderr, "* -o <name>               as02: <name> is a bundle name\n");
@@ -226,6 +227,7 @@ int main(int argc, const char** argv)
     bool keep_input_order = false;
     uint8_t user_afd = 0;
     vector<AVCIHeaderInput> avci_header_inputs;
+    bool show_progress = false;
     int value;
     int cmdln_index;
 
@@ -250,6 +252,10 @@ int main(int argc, const char** argv)
                 return 0;
             }
             do_print_version = true;
+        }
+        else if (strcmp(argv[cmdln_index], "-p") == 0)
+        {
+            show_progress = true;
         }
         else if (strcmp(argv[cmdln_index], "-l") == 0)
         {
@@ -1263,6 +1269,9 @@ int main(int argc, const char** argv)
 
         clip->PrepareWrite();
 
+        float next_progress_update;
+        init_progress(&next_progress_update);
+
         bmx::ByteArray sound_buffer;
         while (output_duration < 0 || clip->GetDuration() < output_duration) {
             uint32_t num_read = reader->Read(max_samples_per_read);
@@ -1314,7 +1323,13 @@ int main(int argc, const char** argv)
                 if (take_frame)
                     delete frame;
             }
+
+            if (show_progress)
+                print_progress(clip->GetDuration(), output_duration, &next_progress_update);
         }
+
+        if (show_progress)
+            print_progress(clip->GetDuration(), output_duration, 0);
 
 
         // complete AS-11 descriptive metadata

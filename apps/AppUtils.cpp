@@ -300,3 +300,32 @@ bool bmx::read_avci_header_data(EssenceType essence_type, Rational sample_rate,
     return true;
 }
 
+
+void bmx::init_progress(float *next_update)
+{
+    *next_update = -1.0;
+}
+
+void bmx::print_progress(int64_t count, int64_t duration, float *next_update)
+{
+    if (duration == 0)
+        return;
+
+    if (count == 0 && (!next_update || *next_update <= 0.0)) {
+        printf("  0.0%%\r");
+        fflush(stdout);
+        *next_update = 1.0;
+    } else {
+        float progress = count / (float)duration * 100;
+        if (!next_update || progress >= *next_update) {
+            printf("  %.1f%%\r", progress);
+            fflush(stdout);
+            if (next_update) {
+                *next_update += 0.1;
+                if (*next_update < progress)
+                    *next_update = progress + 0.1;
+            }
+        }
+    }
+}
+
