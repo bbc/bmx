@@ -690,8 +690,52 @@ int main(int argc, const char** argv)
             reader = file_reader;
         }
 
-
         Rational frame_rate = reader->GetSampleRate();
+
+
+        // set read limits
+
+        int64_t read_start = start;
+        if (read_start >= reader->GetDuration()) {
+            log_error("Start position %"PRId64" is >= input duration %"PRId64"\n",
+                      start, reader->GetDuration());
+            throw false;
+        }
+        int64_t output_duration;
+        if (duration >= 0) {
+            output_duration = duration;
+            if (read_start + output_duration > reader->GetDuration()) {
+                log_warn("Limiting duration %"PRId64" because it exceeds the available duration %"PRId64"\n",
+                          duration, reader->GetDuration() - read_start);
+                output_duration = reader->GetDuration() - read_start;
+            }
+        } else {
+            output_duration = reader->GetDuration() - read_start;
+        }
+
+        int16_t precharge = reader->GetMaxPrecharge(read_start, true);
+        int16_t rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
+
+        reader->SetReadLimits(read_start + precharge, read_start + output_duration + rollout, true);
+
+
+        // get input start timecode
+
+        if (!start_timecode_str && reader->HavePlayoutTimecode()) {
+            start_timecode = reader->GetPlayoutTimecode(start);
+
+            // adjust start timecode to be at the point after the leading filler segments
+            // this corresponds to the zero position in the MXF reader
+            if (!reader->HaveFixedLeadFillerOffset())
+                log_warn("No fixed lead filler offset\n");
+            else
+                start_timecode.AddOffset(reader->GetFixedLeadFillerOffset(), frame_rate);
+
+            // the Avid or AS11 D-10 clip types don't support precharge and so the timecode
+            // needs to be adjusted back to the precharge starting point
+            if (clip_type == CW_AVID_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE)
+                start_timecode.AddOffset(precharge, frame_rate);
+        }
 
 
         // complete commandline parsing
@@ -869,32 +913,6 @@ int main(int argc, const char** argv)
         }
 
 
-        // set read limits
-
-        int64_t read_start = start;
-        if (read_start >= reader->GetDuration()) {
-            log_error("Start position %"PRId64" is >= input duration %"PRId64"\n",
-                      start, reader->GetDuration());
-            throw false;
-        }
-        int64_t output_duration;
-        if (duration >= 0) {
-            output_duration = duration;
-            if (read_start + output_duration > reader->GetDuration()) {
-                log_warn("Limiting duration %"PRId64" because it exceeds the available duration %"PRId64"\n",
-                          duration, reader->GetDuration() - read_start);
-                output_duration = reader->GetDuration() - read_start;
-            }
-        } else {
-            output_duration = reader->GetDuration() - read_start;
-        }
-
-        int16_t precharge = reader->GetMaxPrecharge(read_start, true);
-        int16_t rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
-
-        reader->SetReadLimits(read_start + precharge, read_start + output_duration + rollout, true);
-
-
         // create output clip and initialize
 
         ClipWriter *clip = 0;
@@ -926,24 +944,6 @@ int main(int argc, const char** argv)
         SourcePackage *tape_package = 0;
         vector<pair<mxfUMID, uint32_t> > tape_package_picture_refs;
         vector<pair<mxfUMID, uint32_t> > tape_package_sound_refs;
-
-        if (!start_timecode_str) {
-            if (reader->HavePlayoutTimecode()) {
-                start_timecode = reader->GetPlayoutTimecode(start);
-
-                // adjust start timecode to be at the point after the leading filler segments
-                // this corresponds to the zero position in the MXF reader
-                if (!reader->HaveFixedLeadFillerOffset())
-                    log_warn("No fixed lead filler offset\n");
-                else
-                    start_timecode.AddOffset(reader->GetFixedLeadFillerOffset(), frame_rate);
-
-                // the Avid or AS11 D-10 clip types don't support precharge and so the timecode
-                // needs to be adjusted back to the precharge starting point
-                if (clip_type == CW_AVID_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE)
-                    start_timecode.AddOffset(precharge, frame_rate);
-            }
-        }
 
         if (!start_timecode.IsInvalid())
             clip->SetStartTimecode(start_timecode);
