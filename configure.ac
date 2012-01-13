@@ -71,7 +71,7 @@ AC_SUBST(LIBURIPARSER_CFLAGS)
 AC_SUBST(LIBURIPARSER_LIBS)
 
 dnl version 0.7.2 has been tested
-AC_COMPILE_IFELSE([
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include <uriparser/Uri.h>
 #if (defined(URI_VER_MAJOR) && defined(URI_VER_MINOR) && defined(URI_VER_RELEASE) \
 && ((URI_VER_MAJOR > 0) \
@@ -82,7 +82,7 @@ AC_COMPILE_IFELSE([
 #else
 # error uriparser not recent enough
 #endif
-],,[AC_MSG_ERROR([uriparser 0.7.2 or later is required, your copy is too old])])
+])],,[AC_MSG_ERROR([uriparser 0.7.2 or later is required, your copy is too old])])
 
 
 dnl-----------------------------------------------------------------------------
