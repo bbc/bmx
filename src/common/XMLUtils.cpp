@@ -35,6 +35,8 @@
 
 #define __STDC_FORMAT_MACROS
 
+#include <cstdio>
+
 #include <bmx/XMLUtils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
