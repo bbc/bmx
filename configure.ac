@@ -149,9 +149,9 @@ AC_FUNC_FSEEKO
 dnl mingw doesn't support _FILE_OFFSET_BITS and so fseeko and ftello are
 dnl redefined instead
 case "$host" in
-	*-*-*mingw*) LARGEFILE_CFLAGS="-Dfseeko=fseeko64 -Dftello=ftello64" ;;
+	*-*-*mingw*) AC_DEFINE([fseeko], [fseeko64], [Define 64-bit file seek])
+				 AC_DEFINE([ftello], [ftello64], [Define 64-bit file tell]) ;;
 esac
-AC_SUBST(LARGEFILE_CFLAGS)
 
 
 AC_CHECK_FUNCS([getcwd gettimeofday memmove memset mkdir strerror])
@@ -167,8 +167,7 @@ if test x"$GCC" = xyes; then
 fi
 AC_SUBST(WARN_CFLAGS)
 
-BMX_CFLAGS="${WARN_CFLAGS} ${LARGEFILE_CFLAGS} \
-	${LIBMXF_CFLAGS} ${LIBMXFPP_CFLAGS} \
+BMX_CFLAGS="${WARN_CFLAGS} ${LIBMXF_CFLAGS} ${LIBMXFPP_CFLAGS} \
 	${LIBURIPARSER_CFLAGS} -I\$(top_srcdir)/include"
 AC_SUBST(BMX_CFLAGS)
 
