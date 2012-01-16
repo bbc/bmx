@@ -36,6 +36,7 @@
 #define __STDC_FORMAT_MACROS
 
 #include <cstring>
+#include <cstdio>
 
 #include <bmx/avid_mxf/AvidTrack.h>
 #include <bmx/avid_mxf/AvidDVTrack.h>
