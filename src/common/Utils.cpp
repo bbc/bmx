@@ -406,7 +406,7 @@ bmx::Timestamp bmx::generate_timestamp_now()
     struct tm gmt;
     time_t t = time(0);
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
     // TODO: need thread-safe (reentrant) version
     const struct tm *gmt_ptr = gmtime(&t);
     BMX_CHECK(gmt_ptr);
