@@ -64,9 +64,20 @@ dnl-----------------------------------------------------------------------------
 dnl -- Checks for libraries.
 dnl-----------------------------------------------------------------------------
 
-AC_CHECK_LIB(uriparser,uriParseUriA,
-	[LIBURIPARSER_CFLAGS="" LIBURIPARSER_LIBS="-luriparser"],
+ORIGCFLAGS=$CFLAGS
+if test x"$prefix" != x"NONE"; then
+	CFLAGS="${CFLAGS} -L${prefix}/lib -I${prefix}/include"
+fi
+
+AC_CHECK_LIB(uriparser,uriParseUriA,,
 	[AC_MSG_ERROR([liburiparser not found])])
+if test x"$prefix" = x"NONE"; then
+	LIBURIPARSER_CFLAGS=""
+	LIBURIPARSER_LIBS="-luriparser"
+else
+	LIBURIPARSER_CFLAGS="-I${prefix}/include"
+	LIBURIPARSER_LIBS="-L${prefix}/lib -luriparser"
+fi
 AC_SUBST(LIBURIPARSER_CFLAGS)
 AC_SUBST(LIBURIPARSER_LIBS)
 
@@ -83,6 +94,8 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 # error uriparser not recent enough
 #endif
 ])],,[AC_MSG_ERROR([uriparser 0.7.2 or later is required, your copy is too old])])
+
+CFLAGS=$ORIGCFLAGS
 
 
 dnl-----------------------------------------------------------------------------
