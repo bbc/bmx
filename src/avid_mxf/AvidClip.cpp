@@ -418,7 +418,7 @@ void AvidClip::CompleteWrite()
     size_t i;
     for (i = 0; i < mTracks.size(); i++) {
         BMX_CHECK_M(mTracks[i]->HasValidDuration(),
-                   ("Invalid end offsets. Track %zu has duration that is too small"));
+                   ("Invalid end offsets. Track %"PRIszt" has duration that is too small"));
     }
 
     for (i = 0; i < mTracks.size(); i++)

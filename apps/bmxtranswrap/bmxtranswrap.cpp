@@ -162,7 +162,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          <format> is a comma separated list of one or more of the following integer values:\n");
     size_t i;
     for (i = 0; i < get_num_avci_header_formats(); i++)
-        fprintf(stderr, "                              %2zu: %s\n", i, get_avci_header_format_string(i));
+        fprintf(stderr, "                              %2"PRIszt": %s\n", i, get_avci_header_format_string(i));
     fprintf(stderr, "                          or set <format> to 'all' for all formats listed above\n");
     fprintf(stderr, "                          The 512 bytes are extracted from <file> starting at <offset> bytes\n");
     fprintf(stderr, "                              and incrementing 512 bytes for each format in the list\n");
@@ -806,21 +806,21 @@ int main(int argc, const char** argv)
                 input_track_info->essence_type == PICTURE_ESSENCE ||
                 input_track_info->essence_type == SOUND_ESSENCE)
             {
-                log_warn("Track %zu has unknown essence type\n", i);
+                log_warn("Track %"PRIszt" has unknown essence type\n", i);
                 is_supported = false;
             }
             else if (input_track_info->essence_type == WAVE_PCM)
             {
                 Rational sampling_rate = input_sound_info->sampling_rate;
                 if (!ClipWriterTrack::IsSupported(clip_type, WAVE_PCM, sampling_rate)) {
-                    log_warn("Track %zu essence type '%s' @%d/%d sps not supported by clip type '%s'\n",
+                    log_warn("Track %"PRIszt" essence type '%s' @%d/%d sps not supported by clip type '%s'\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              sampling_rate.numerator, sampling_rate.denominator,
                              ClipWriter::ClipWriterTypeToString(clip_type).c_str());
                     is_supported = false;
                 } else if (input_sound_info->bits_per_sample == 0 || input_sound_info->bits_per_sample > 32) {
-                    log_warn("Track %zu (%s) bits per sample %u not supported\n",
+                    log_warn("Track %"PRIszt" (%s) bits per sample %u not supported\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              input_sound_info->bits_per_sample);
@@ -832,14 +832,14 @@ int main(int argc, const char** argv)
                 if (input_sound_info->sampling_rate.numerator != 48000 ||
                     input_sound_info->sampling_rate.denominator != 1)
                 {
-                    log_warn("Track %zu essence type D-10 AES-3 audio sampling rate %d/%d not supported\n",
+                    log_warn("Track %"PRIszt" essence type D-10 AES-3 audio sampling rate %d/%d not supported\n",
                              i,
                              input_sound_info->sampling_rate.numerator, input_sound_info->sampling_rate.denominator);
                     is_supported = false;
                 }
                 else if (input_sound_info->bits_per_sample == 0 || input_sound_info->bits_per_sample > 32)
                 {
-                    log_warn("Track %zu essence type D-10 AES-3 audio bits per sample %u not supported\n",
+                    log_warn("Track %"PRIszt" essence type D-10 AES-3 audio bits per sample %u not supported\n",
                              i,
                              input_sound_info->bits_per_sample);
                     is_supported = false;
@@ -848,7 +848,7 @@ int main(int argc, const char** argv)
             else
             {
                 if (input_track_info->edit_rate != frame_rate) {
-                    log_warn("Track %zu (essence type '%s') edit rate %d/%d does not equals clip edit rate %d/%d\n",
+                    log_warn("Track %"PRIszt" (essence type '%s') edit rate %d/%d does not equals clip edit rate %d/%d\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              input_track_info->edit_rate.numerator, input_track_info->edit_rate.denominator,
@@ -856,7 +856,7 @@ int main(int argc, const char** argv)
                              ClipWriter::ClipWriterTypeToString(clip_type).c_str());
                     is_supported = false;
                 } else if (!ClipWriterTrack::IsSupported(clip_type, input_track_info->essence_type, frame_rate)) {
-                    log_warn("Track %zu essence type '%s' @%d/%d fps not supported by clip type '%s'\n",
+                    log_warn("Track %"PRIszt" essence type '%s' @%d/%d fps not supported by clip type '%s'\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              frame_rate.numerator, frame_rate.denominator,
@@ -869,7 +869,7 @@ int main(int argc, const char** argv)
                         input_track_info->essence_type == D10_50) &&
                     input_picture_info->d10_frame_size == 0)
                 {
-                    log_warn("Track %zu (essence type '%s') has zero frame size\n",
+                    log_warn("Track %"PRIszt" (essence type '%s') has zero frame size\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type));
                     is_supported = false;
@@ -884,7 +884,7 @@ int main(int argc, const char** argv)
                          !have_avci_header_data(input_track_info->essence_type, input_track_info->edit_rate,
                                                 avci_header_inputs))
                 {
-                    log_warn("Track %zu (essence type '%s') does not have sequence and picture parameter sets\n",
+                    log_warn("Track %"PRIszt" (essence type '%s') does not have sequence and picture parameter sets\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type));
                     is_supported = false;
@@ -892,7 +892,7 @@ int main(int argc, const char** argv)
             }
 
             if (!is_supported) {
-                log_warn("Ignoring unsupported track %zu (essence type '%s')\n",
+                log_warn("Ignoring unsupported track %"PRIszt" (essence type '%s')\n",
                           i, essence_type_to_string(input_track_info->essence_type));
             }
 

@@ -253,7 +253,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          <format> is a comma separated list of one or more of the following integer values:\n");
     size_t i;
     for (i = 0; i < get_num_avci_header_formats(); i++)
-        fprintf(stderr, "                              %2zu: %s\n", i, get_avci_header_format_string(i));
+        fprintf(stderr, "                              %2"PRIszt": %s\n", i, get_avci_header_format_string(i));
     fprintf(stderr, "                          or set <format> to 'all' for all formats listed above\n");
     fprintf(stderr, "                          The 512 bytes are extracted from <file> starting at <offset> bytes\n");
     fprintf(stderr, "                              and incrementing 512 bytes for each format in the list\n");

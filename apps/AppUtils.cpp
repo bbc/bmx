@@ -200,7 +200,7 @@ bool bmx::parse_avci_header(const char *format_str, const char *filename, const 
         size_t index;
         const char *format_str_ptr = format_str;
         while (format_str_ptr) {
-            if (sscanf(format_str_ptr, "%zu", &index) != 1 || index > ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO))
+            if (sscanf(format_str_ptr, "%"PRIszt, &index) != 1 || index > ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO))
                 return false;
             input.formats.push_back(AVCI_HEADER_FORMAT_INFO[index].format);
 

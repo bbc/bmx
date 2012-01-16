@@ -139,6 +139,13 @@ AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
 
 
+dnl mingw doesn't support the 'z' printf format length modifier for size_t
+case "$host" in
+	*-*-*mingw32) AC_DEFINE([PRIszt], ["u"], [Define printf size_t format specifier]) ;;
+			   *) AC_DEFINE([PRIszt], ["zu"], [Define printf size_t format specifier])
+esac
+
+
 dnl-----------------------------------------------------------------------------
 dnl -- Checks for library functions
 dnl-----------------------------------------------------------------------------

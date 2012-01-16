@@ -129,7 +129,7 @@ void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
         if (mFirstGOP) {
             mGOPStructure.push_back(frame_type);
             if (mGOPStructure.size() >= 256) { // eg. max gop size for xdcam is 15
-                log_warn("Unexpected GOP size >= %zu\n", mGOPStructure.size());
+                log_warn("Unexpected GOP size >= %"PRIszt"\n", mGOPStructure.size());
                 mIdenticalGOP = false;
             }
         } else {

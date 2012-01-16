@@ -648,14 +648,14 @@ int main(int argc, const char** argv)
                 vector<Identification*> identifications = file_reader->GetHeaderMetadata()->getPreface()->getIdentifications();
                 size_t i;
                 for (i = 0; i < identifications.size(); i++) {
-                    printf("    Identification %zu:\n", i);
+                    printf("    Identification %"PRIszt":\n", i);
                     print_identification_info(identifications[i]);
                 }
             }
 
             size_t i;
             for (i = 0; i < reader->GetNumTrackReaders(); i++) {
-                printf("Track %zu:\n", i);
+                printf("Track %"PRIszt":\n", i);
                 print_track_info(reader->GetTrackReader(i)->GetTrackInfo());
             }
             printf("\n");
@@ -834,7 +834,7 @@ int main(int argc, const char** argv)
                 size_t i;
                 for (i = 0; i < reader->GetNumTrackReaders(); i++) {
                     md5_final(digest, &md5_contexts[i]);
-                    log_info("MD5 Track %zu: %s\n", i, md5_digest_str(digest).c_str());
+                    log_info("MD5 Track %"PRIszt": %s\n", i, md5_digest_str(digest).c_str());
                 }
             }
 
