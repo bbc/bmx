@@ -41,7 +41,7 @@
 #endif
 #include <sys/stat.h>
 #include <sys/types.h>
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 #include <direct.h> // mkdir
 #endif
 
@@ -94,7 +94,7 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory)
         root_filepath.append("/");
 
     if (create_directory) {
-#if defined(_MSC_VER)
+#if defined(_WIN32)
         if (mkdir(root_filepath.c_str()) != 0) {
 #else
         if (mkdir(root_filepath.c_str(), 0777) != 0) {
@@ -111,7 +111,7 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory)
     string sub_dir;
     sub_dir.reserve(root_filepath.size() + sizeof(MEDIA_SUBDIR_NAME));
     sub_dir.append(root_filepath).append(MEDIA_SUBDIR_NAME);
-#if defined(_MSC_VER)
+#if defined(_WIN32)
     if (mkdir(sub_dir.c_str()) != 0) {
 #else
     if (mkdir(sub_dir.c_str(), 0777) != 0) {
