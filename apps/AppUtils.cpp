@@ -314,7 +314,7 @@ void bmx::print_progress(int64_t count, int64_t duration, float *next_update)
     if (count == 0 && (!next_update || *next_update <= 0.0)) {
         printf("  0.0%%\r");
         fflush(stdout);
-        *next_update = 1.0;
+        *next_update = 0.1;
     } else {
         float progress = count / (float)duration * 100;
         if (!next_update || progress >= *next_update) {
