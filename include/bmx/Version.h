@@ -49,6 +49,8 @@
                                         4 = Pre-release beta version
                                         5 = Private version not intended for general release */
 
+#define BMX_VERSION          (BMX_VERSION_MAJOR << 16 | BMX_VERSION_MINOR << 8 | BMX_VERSION_MICRO)
+
 #define BMX_LIBRARY_NAME     "bmx"
 
 
