@@ -141,6 +141,8 @@ AS02Track* AS02Clip::CreateTrack(EssenceType essence_type)
 
 void AS02Clip::PrepareWrite()
 {
+    mReserveMinBytes += 256; // account for extra bytes when updating header metadata
+
     // sort tracks, picture followed by sound
     stable_sort(mTracks.begin(), mTracks.end(), compare_track);
 
