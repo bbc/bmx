@@ -63,6 +63,8 @@ static const uint32_t BODY_SID              = 2;
 
 static const uint8_t MIN_LLEN               = 4;
 
+static const uint32_t MEMORY_WRITE_CHUNK_SIZE   = 8192;
+
 
 
 static bool compare_track(OP1ATrack *left, OP1ATrack *right)
@@ -299,27 +301,37 @@ void OP1AFile::CompleteWrite()
         mTracks[i]->CompleteWrite();
 
 
+    // update metadata sets with duration
+
+    UpdatePackageMetadata();
+
+
+    // first write and complete last part to memory
+
+    mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
+
+
     // non-minimal partition flavour: write any remaining VBE index segments
 
     if (!(mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) &&
         mIndexTable->IsVBE() && mIndexTable->HaveSegments())
     {
         Partition &index_partition = mMXFFile->createPartition();
-        index_partition.setKey(&MXF_PP_K(OpenIncomplete, Body));
+        index_partition.setKey(&MXF_PP_K(ClosedComplete, Body)); // will be complete when memory flushed
         index_partition.setIndexSID(INDEX_SID);
         index_partition.setBodySID(0);
         index_partition.setKagSize(mKAGSize);
         index_partition.write(mMXFFile);
         index_partition.fillToKag(mMXFFile);
 
-        mIndexTable->WriteSegments(mMXFFile, &index_partition);
+        mIndexTable->WriteSegments(mMXFFile, &index_partition, true);
     }
 
 
     // write the footer partition pack
 
     Partition &footer_partition = mMXFFile->createPartition();
-    footer_partition.setKey(&MXF_PP_K(ClosedComplete, Footer));
+    footer_partition.setKey(&MXF_PP_K(ClosedComplete, Footer)); // will be complete when memory flushed
     if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) && mIndexTable->IsVBE() && mIndexTable->HaveSegments())
         footer_partition.setIndexSID(INDEX_SID);
     else
@@ -330,12 +342,20 @@ void OP1AFile::CompleteWrite()
     footer_partition.fillToKag(mMXFFile);
 
 
+    // write (complete) header metadata if it is a single pass write
+
+    if (mFlavour & OP1A_SINGLE_PASS_WRITE) {
+        KAGFillerWriter reserve_filler_writer(&footer_partition, mReserveMinBytes);
+        mHeaderMetadata->write(mMXFFile, &footer_partition, &reserve_filler_writer);
+    }
+
+
     // minimal partitions flavour: write any remaining VBE index segments
 
     if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) &&
         mIndexTable->IsVBE() && mIndexTable->HaveSegments())
     {
-        mIndexTable->WriteSegments(mMXFFile, &footer_partition);
+        mIndexTable->WriteSegments(mMXFFile, &footer_partition, true);
     }
 
 
@@ -344,12 +364,16 @@ void OP1AFile::CompleteWrite()
     mMXFFile->writeRIP();
 
 
+    // update final in-memory partitions and flush to file
 
-    // update metadata sets with duration
+    mMXFFile->updatePartitions();
+    mMXFFile->closeMemoryFile();
 
-    UpdatePackageMetadata();
 
 
+    // update previous partitions if not writing in a single pass
+
+    if (!(mFlavour & OP1A_SINGLE_PASS_WRITE)) {
     // re-write the header metadata in the header partition
 
     mMXFFile->seek(mHeaderMetadataStartPos, SEEK_SET);
@@ -362,7 +386,8 @@ void OP1AFile::CompleteWrite()
     if (!mFirstWrite && mIndexTable->IsCBE()) {
         mMXFFile->seek(mCBEIndexTableStartPos, SEEK_SET);
         mIndexTable->WriteSegments(mMXFFile,
-                                   &mMXFFile->getPartition(((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) ? 0 : 1)));
+                                   &mMXFFile->getPartition(((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) ? 0 : 1)),
+                                   true);
     }
 
 
@@ -376,6 +401,7 @@ void OP1AFile::CompleteWrite()
             partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Body));
     }
     mMXFFile->updatePartitions();
+    }
 
 
     // done with the file
@@ -533,6 +559,11 @@ void OP1AFile::CreateFile()
     mMXFFile->setMinLLen(MIN_LLEN);
 
 
+    // write to memory until essence data writing starts or there is no essence and the file is completed
+
+    mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
+
+
     // write the header metadata
 
     Partition &header_partition = mMXFFile->createPartition();
@@ -634,7 +665,7 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
 
                 if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR)) {
                     mCBEIndexTableStartPos = mMXFFile->tell(); // need this position when we re-write the index segment
-                    mIndexTable->WriteSegments(mMXFFile, &mMXFFile->getPartition(0));
+                    mIndexTable->WriteSegments(mMXFFile, &mMXFFile->getPartition(0), false);
                 } else {
                     Partition &index_partition = mMXFFile->createPartition();
                     index_partition.setKey(&MXF_PP_K(OpenIncomplete, Body));
@@ -645,7 +676,7 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                     index_partition.fillToKag(mMXFFile);
 
                     mCBEIndexTableStartPos = mMXFFile->tell(); // need this position when we re-write the index segment
-                    mIndexTable->WriteSegments(mMXFFile, &index_partition);
+                    mIndexTable->WriteSegments(mMXFFile, &index_partition, false);
                 }
             }
 
@@ -669,7 +700,7 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                 index_partition.write(mMXFFile);
                 index_partition.fillToKag(mMXFFile);
 
-                mIndexTable->WriteSegments(mMXFFile, &index_partition);
+                mIndexTable->WriteSegments(mMXFFile, &index_partition, true);
             }
 
             start_ess_partition = true;
@@ -687,10 +718,20 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
             ess_partition.fillToKag(mMXFFile);
         }
 
+        if (mMXFFile->isMemoryFileOpen()) {
+            mMXFFile->updatePartitions();
+            mMXFFile->closeMemoryFile();
+        }
+
         mCPManager->WriteNextContentPackage(mMXFFile, mIndexTable);
 
         if (mPartitionInterval > 0)
             mPartitionFrameCount++;
+    }
+
+    if (end_of_samples && mMXFFile->isMemoryFileOpen()) {
+        mMXFFile->updatePartitions();
+        mMXFFile->closeMemoryFile();
     }
 }
 

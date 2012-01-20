@@ -65,9 +65,9 @@ ClipWriter* ClipWriter::OpenNewAS02Clip(string bundle_directory, bool create_bun
     return new ClipWriter(bundle, AS02Version::OpenNewPrimary(bundle, frame_rate));
 }
 
-ClipWriter* ClipWriter::OpenNewAS11OP1AClip(string filename, Rational frame_rate)
+ClipWriter* ClipWriter::OpenNewAS11OP1AClip(int flavour, string filename, Rational frame_rate)
 {
-    return new ClipWriter(AS11Clip::OpenNewOP1AClip(filename, frame_rate));
+    return new ClipWriter(AS11Clip::OpenNewOP1AClip(flavour, filename, frame_rate));
 }
 
 ClipWriter* ClipWriter::OpenNewAS11D10Clip(string filename, Rational frame_rate)

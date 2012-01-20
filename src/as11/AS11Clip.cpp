@@ -72,9 +72,9 @@ static int64_t get_offset(uint16_t to_tc_base, uint16_t from_tc_base, int64_t fr
 
 
 
-AS11Clip* AS11Clip::OpenNewOP1AClip(string filename, Rational frame_rate)
+AS11Clip* AS11Clip::OpenNewOP1AClip(int flavour, string filename, Rational frame_rate)
 {
-    return new AS11Clip(OP1AFile::OpenNew(OP1A_DEFAULT_FLAVOUR, filename, frame_rate));
+    return new AS11Clip(OP1AFile::OpenNew(flavour, filename, frame_rate));
 }
 
 AS11Clip* AS11Clip::OpenNewD10Clip(string filename, Rational frame_rate)

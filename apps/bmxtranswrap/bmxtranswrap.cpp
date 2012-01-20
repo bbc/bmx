@@ -185,6 +185,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  as02/as11op1a/as11d10/op1a/d10:\n");
     fprintf(stderr, "    --afd <value>           Active Format Descriptor code. Default is input file's value or not set\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "  as11op1a/op1a:\n");
+    fprintf(stderr, "    --single-pass           Write file in a single pass. This for example means that the header metadata partition will be incomplete\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "  avid:\n");
     fprintf(stderr, "    --project <name>        Set the Avid project name\n");
     fprintf(stderr, "    --tape <name>           Source tape name\n");
@@ -228,6 +231,7 @@ int main(int argc, const char** argv)
     uint8_t user_afd = 0;
     vector<AVCIHeaderInput> avci_header_inputs;
     bool show_progress = false;
+    bool single_pass = false;
     int value;
     int cmdln_index;
 
@@ -527,6 +531,10 @@ int main(int argc, const char** argv)
             }
             user_afd = value;
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--single-pass") == 0)
+        {
+            single_pass = true;
         }
         else if (strcmp(argv[cmdln_index], "--project") == 0)
         {
@@ -921,6 +929,9 @@ int main(int argc, const char** argv)
 
         // create output clip and initialize
 
+        int op1a_flavour = OP1A_DEFAULT_FLAVOUR;
+        if (single_pass)
+            op1a_flavour |= OP1A_SINGLE_PASS_WRITE;
         ClipWriter *clip = 0;
         switch (clip_type)
         {
@@ -928,13 +939,13 @@ int main(int argc, const char** argv)
                 clip = ClipWriter::OpenNewAS02Clip(output_name, true, frame_rate);
                 break;
             case CW_AS11_OP1A_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS11OP1AClip(output_name, frame_rate);
+                clip = ClipWriter::OpenNewAS11OP1AClip(op1a_flavour, output_name, frame_rate);
                 break;
             case CW_AS11_D10_CLIP_TYPE:
                 clip = ClipWriter::OpenNewAS11D10Clip(output_name, frame_rate);
                 break;
             case CW_OP1A_CLIP_TYPE:
-                clip = ClipWriter::OpenNewOP1AClip(OP1A_DEFAULT_FLAVOUR, output_name, frame_rate);
+                clip = ClipWriter::OpenNewOP1AClip(op1a_flavour, output_name, frame_rate);
                 break;
             case CW_AVID_CLIP_TYPE:
                 clip = ClipWriter::OpenNewAvidClip(frame_rate);

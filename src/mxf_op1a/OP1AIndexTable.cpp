@@ -480,7 +480,7 @@ bool OP1AIndexTable::HaveSegments()
     return mIsCBE || (!mIndexSegments.empty() && mIndexSegments[0]->GetDuration() > 0);
 }
 
-void OP1AIndexTable::WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition)
+void OP1AIndexTable::WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition, bool final_write)
 {
     BMX_ASSERT(HaveSegments());
     BMX_ASSERT(mDuration > 0);
@@ -493,8 +493,12 @@ void OP1AIndexTable::WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *part
                                                    mAVCIFirstIndexSegment->GetSegment()->getCIndexTableSegment()));
         }
         if (!mAVCIFirstIndexSegment || mDuration > 1) {
+            int64_t orig_duration = mIndexSegments[0]->GetSegment()->getIndexDuration();
+            if (!final_write)
+                mIndexSegments[0]->GetSegment()->setIndexDuration(0); // duration is completed at the final write
             BMX_CHECK(mxf_write_index_table_segment(mxf_file->getCFile(),
                                                    mIndexSegments[0]->GetSegment()->getCIndexTableSegment()));
+            mIndexSegments[0]->GetSegment()->setIndexDuration(orig_duration);
         }
     } else {
         size_t i;

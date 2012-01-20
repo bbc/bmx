@@ -156,7 +156,7 @@ public:
 
 public:
     bool HaveSegments();
-    void WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition);
+    void WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition, bool final_write);
 
 private:
     uint32_t mIndexSID;

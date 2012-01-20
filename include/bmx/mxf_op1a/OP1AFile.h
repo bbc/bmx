@@ -47,6 +47,7 @@
 #define OP1A_MIN_PARTITIONS_FLAVOUR     0x0001
 #define OP1A_512_KAG_FLAVOUR            0x0002
 #define OP1A_377_2004_FLAVOUR           0x0004
+#define OP1A_SINGLE_PASS_WRITE          0x0008
 
 
 
