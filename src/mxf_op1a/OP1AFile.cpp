@@ -52,16 +52,16 @@ using namespace mxfpp;
 
 
 
-static uint32_t TIMECODE_TRACK_ID           = 901;
-static uint32_t FIRST_PICTURE_TRACK_ID      = 1001;
-static uint32_t FIRST_SOUND_TRACK_ID        = 2001;
+static const uint32_t TIMECODE_TRACK_ID         = 901;
+static const uint32_t FIRST_PICTURE_TRACK_ID    = 1001;
+static const uint32_t FIRST_SOUND_TRACK_ID      = 2001;
 
-static const char TIMECODE_TRACK_NAME[]     = "TC1";
+static const char TIMECODE_TRACK_NAME[]         = "TC1";
 
-static const uint32_t INDEX_SID             = 1;
-static const uint32_t BODY_SID              = 2;
+static const uint32_t INDEX_SID                 = 1;
+static const uint32_t BODY_SID                  = 2;
 
-static const uint8_t MIN_LLEN               = 4;
+static const uint8_t MIN_LLEN                   = 4;
 
 static const uint32_t MEMORY_WRITE_CHUNK_SIZE   = 8192;
 
@@ -374,33 +374,33 @@ void OP1AFile::CompleteWrite()
     // update previous partitions if not writing in a single pass
 
     if (!(mFlavour & OP1A_SINGLE_PASS_WRITE)) {
-    // re-write the header metadata in the header partition
+        // re-write the header metadata in the header partition
 
-    mMXFFile->seek(mHeaderMetadataStartPos, SEEK_SET);
-    PositionFillerWriter pos_filler_writer(mHeaderMetadataEndPos);
-    mHeaderMetadata->write(mMXFFile, &mMXFFile->getPartition(0), &pos_filler_writer);
-
-
-    // re-write the CBE index table segment(s)
-
-    if (!mFirstWrite && mIndexTable->IsCBE()) {
-        mMXFFile->seek(mCBEIndexTableStartPos, SEEK_SET);
-        mIndexTable->WriteSegments(mMXFFile,
-                                   &mMXFFile->getPartition(((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) ? 0 : 1)),
-                                   true);
-    }
+        mMXFFile->seek(mHeaderMetadataStartPos, SEEK_SET);
+        PositionFillerWriter pos_filler_writer(mHeaderMetadataEndPos);
+        mHeaderMetadata->write(mMXFFile, &mMXFFile->getPartition(0), &pos_filler_writer);
 
 
-    // update and re-write the partition packs
+        // re-write the CBE index table segment(s)
 
-    const std::vector<Partition*> &partitions = mMXFFile->getPartitions();
-    for (i = 0; i < partitions.size(); i++) {
-        if (mxf_is_header_partition_pack(partitions[i]->getKey()))
-            partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Header));
-        else if (mxf_is_body_partition_pack(partitions[i]->getKey()))
-            partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Body));
-    }
-    mMXFFile->updatePartitions();
+        if (!mFirstWrite && mIndexTable->IsCBE()) {
+            mMXFFile->seek(mCBEIndexTableStartPos, SEEK_SET);
+            mIndexTable->WriteSegments(mMXFFile,
+                                       &mMXFFile->getPartition(((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) ? 0 : 1)),
+                                       true);
+        }
+
+
+        // update and re-write the partition packs
+
+        const std::vector<Partition*> &partitions = mMXFFile->getPartitions();
+        for (i = 0; i < partitions.size(); i++) {
+            if (mxf_is_header_partition_pack(partitions[i]->getKey()))
+                partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Header));
+            else if (mxf_is_body_partition_pack(partitions[i]->getKey()))
+                partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Body));
+        }
+        mMXFFile->updatePartitions();
     }
 
 
