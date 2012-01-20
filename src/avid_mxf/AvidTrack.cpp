@@ -538,7 +538,6 @@ void AvidTrack::CreateHeaderMetadata()
     FileDescriptor *descriptor = mDescriptorHelper->CreateFileDescriptor(mHeaderMetadata);
     mFileSourcePackage->setDescriptor(descriptor);
     descriptor->setLinkedTrackID(AV_TRACK_ID);
-    descriptor->setContainerDuration(-1);  // updated when writing completed
     // replace essence container label with generic AAF-KLV (aka MXF) label
     descriptor->setEssenceContainer(MXF_EC_L(AvidAAFKLVEssenceContainer));
 

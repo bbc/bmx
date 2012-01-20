@@ -326,7 +326,6 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
         file_source_package->setDescriptor(descriptor);
     }
     descriptor->setLinkedTrackID(mTrackId);
-    descriptor->setContainerDuration(-1);  // updated when writing completed
 
     // Preface - ContentStorage - (lower-level) SourcePackage
     if (mLowerLevelSourcePackage) {

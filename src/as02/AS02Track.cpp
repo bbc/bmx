@@ -686,7 +686,6 @@ void AS02Track::CreateHeaderMetadata()
     FileDescriptor *descriptor = mDescriptorHelper->CreateFileDescriptor(mHeaderMetadata);
     mFileSourcePackage->setDescriptor(descriptor);
     descriptor->setLinkedTrackID(mIsPicture ? VIDEO_TRACK_ID : AUDIO_TRACK_ID);
-    descriptor->setContainerDuration(-1);  // updated when writing completed
 
     // Preface - ContentStorage - (lower-level) SourcePackage
     if (mLowerLevelSourcePackage) {
