@@ -7,11 +7,11 @@ dnl extract package name and version from Version.h
 m4_define([m4_BMX_LIBRARY_NAME],
 	m4_esyscmd([(sed -n 's/^.*BMX_LIBRARY_NAME[^\"]*\"\([^\"]*\)\"/\1/p' include/bmx/Version.h | tr -d '\n')]))
 m4_define([m4_BMX_VERSION_MAJOR],
-	m4_esyscmd([(sed -n 's/^.*BMX_VERSION_MAJOR[^0-9]*\([0-9]*\)/\1/p' include/bmx/Version.h | tr -d '\n')]))
+	m4_esyscmd([(sed -n 's/^.*BMX_VERSION_MAJOR\ *\([0-9][0-9]*\)/\1/p' include/bmx/Version.h | tr -d '\n')]))
 m4_define([m4_BMX_VERSION_MINOR],
-	m4_esyscmd([(sed -n 's/^.*BMX_VERSION_MINOR[^0-9]*\([0-9]*\)/\1/p' include/bmx/Version.h | tr -d '\n')]))
+	m4_esyscmd([(sed -n 's/^.*BMX_VERSION_MINOR\ *\([0-9][0-9]*\)/\1/p' include/bmx/Version.h | tr -d '\n')]))
 m4_define([m4_BMX_VERSION_MICRO],
-	m4_esyscmd([(sed -n 's/^.*BMX_VERSION_MICRO[^0-9]*\([0-9]*\)/\1/p' include/bmx/Version.h | tr -d '\n')]))
+	m4_esyscmd([(sed -n 's/^.*BMX_VERSION_MICRO\ *\([0-9][0-9]*\)/\1/p' include/bmx/Version.h | tr -d '\n')]))
 m4_define([m4_BMX_VERSION],
 	m4_defn([m4_BMX_VERSION_MAJOR]).m4_defn([m4_BMX_VERSION_MINOR]).m4_defn([m4_BMX_VERSION_MICRO]))
 
