@@ -114,10 +114,14 @@
         <ClosedCaptionsLanguage     type="UTF16String"          use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 09"/>
     </AS11CoreFramework>
 
-    <AS11SegmentationFramework base="DM_Framework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 07 01 0b 02 01 00">
+
+    <DMSegmentationFramework base="DM_Framework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 07 01 01 01 01 00"/>
+
+    <AS11SegmentationFramework base="DMSegmentationFramework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 07 01 0b 02 01 00">
         <PartNumber                 type="UInt16"       use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 02 01 01"/>
         <PartTotal                  type="UInt16"       use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 02 01 02"/>
     </AS11SegmentationFramework>
+
 
     <UKDPPFramework base="DM_Framework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 0c 01 01 01 01 00 00">
         <ProductionNumber           type="UTF16String"        use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 01 00"/>
