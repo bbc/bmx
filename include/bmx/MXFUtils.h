@@ -36,6 +36,8 @@
 #include <string>
 #include <vector>
 
+#include <mxf/mxf_file.h>
+
 #include <bmx/BMXTypes.h>
 #include <bmx/Utils.h>
 
@@ -45,11 +47,20 @@ namespace bmx
 {
 
 
+typedef struct MXFMD5WrapperFile MXFMD5WrapperFile;
+
+
+
 void connect_libmxf_logging();
 
 int64_t convert_tc_offset(mxfRational in_edit_rate, int64_t in_offset, uint16_t out_tc_base);
 
 std::string get_track_name(bool is_video, uint32_t track_number);
+
+
+MXFMD5WrapperFile* md5_wrap_mxf_file(MXFFile *target);
+MXFFile* md5_wrap_get_file(MXFMD5WrapperFile *md5_wrapper_file);
+void md5_wrap_finalize(MXFMD5WrapperFile *md5_wrapper_file, unsigned char digest[16]);
 
 
 };

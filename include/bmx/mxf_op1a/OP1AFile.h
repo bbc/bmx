@@ -41,6 +41,7 @@
 #include <bmx/mxf_op1a/OP1ATrack.h>
 #include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
 #include <bmx/BMXTypes.h>
+#include <bmx/MXFUtils.h>
 
 
 #define OP1A_DEFAULT_FLAVOUR            0x0000
@@ -48,6 +49,7 @@
 #define OP1A_512_KAG_FLAVOUR            0x0002
 #define OP1A_377_2004_FLAVOUR           0x0004
 #define OP1A_SINGLE_PASS_WRITE          0x0008
+#define OP1A_SINGLE_PASS_MD5_WRITE      0x0018
 
 
 
@@ -103,6 +105,8 @@ public:
 
     uint32_t GetNumTracks() const { return mTracks.size(); }
     OP1ATrack* GetTrack(uint32_t track_index);
+
+    std::string GetMD5DigestStr() const { return mMD5DigestStr; }
 
 private:
     OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate);
@@ -165,6 +169,9 @@ private:
 
     uint32_t mKAGSize;
     uint32_t mEssencePartitionKAGSize;
+
+    MXFMD5WrapperFile *mMXFMD5WrapperFile;
+    std::string mMD5DigestStr;
 };
 
 

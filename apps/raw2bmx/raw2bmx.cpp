@@ -282,6 +282,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/op1a:\n");
     fprintf(stderr, "    --single-pass           Write file in a single pass. This for example means that the header metadata partition will be incomplete\n");
+    fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is not required)\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  avid:\n");
     fprintf(stderr, "    --project <name>        Set the Avid project name\n");
@@ -400,6 +401,7 @@ int main(int argc, const char** argv)
     bool do_print_version = false;
     vector<AVCIHeaderInput> avci_header_inputs;
     bool single_pass = false;
+    bool file_md5 = false;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -714,6 +716,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--single-pass") == 0)
         {
             single_pass = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--file-md5") == 0)
+        {
+            file_md5 = true;
         }
         else if (strcmp(argv[cmdln_index], "--project") == 0)
         {
@@ -2072,7 +2078,9 @@ int main(int argc, const char** argv)
 
         // create clip
         int op1a_flavour = OP1A_DEFAULT_FLAVOUR;
-        if (single_pass)
+        if (file_md5)
+            op1a_flavour |= OP1A_SINGLE_PASS_MD5_WRITE;
+        else if (single_pass)
             op1a_flavour |= OP1A_SINGLE_PASS_WRITE;
         ClipWriter *clip = 0;
         switch (clip_type)
@@ -2508,6 +2516,19 @@ int main(int argc, const char** argv)
         log_info("Duration: %"PRId64" (%s)\n",
                  clip->GetDuration(),
                  get_generic_duration_string_2(clip->GetDuration(), clip->GetFrameRate()).c_str());
+
+
+        if (file_md5) {
+            if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_OP1A_CLIP_TYPE) {
+                OP1AFile *op1a_clip = clip->GetOP1AClip();
+                AS11Clip *as11_clip = clip->GetAS11Clip();
+                if (as11_clip)
+                    op1a_clip = as11_clip->GetOP1AClip();
+
+                if (op1a_clip)
+                    log_info("File MD5: %s\n", op1a_clip->GetMD5DigestStr().c_str());
+            }
+        }
 
 
         // clean up

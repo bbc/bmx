@@ -41,7 +41,7 @@
 
 #include <bmx/mxf_op1a/OP1AFile.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
-#include <bmx/MXFUtils.h>
+#include <bmx/MD5.h>
 #include <bmx/Version.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -116,9 +116,15 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mPartitionFrameCount = 0;
     mKAGSize = ((flavour & OP1A_512_KAG_FLAVOUR) ? 512 : 1);
     mEssencePartitionKAGSize = mKAGSize;
+    mMXFMD5WrapperFile = 0;
 
     mIndexTable = new OP1AIndexTable(INDEX_SID, BODY_SID, frame_rate);
     mCPManager = new OP1AContentPackageManager(mEssencePartitionKAGSize, MIN_LLEN);
+
+    if (flavour & OP1A_SINGLE_PASS_MD5_WRITE) {
+        mMXFMD5WrapperFile = md5_wrap_mxf_file(mMXFFile->getCFile());
+        mMXFFile->swapCFile(md5_wrap_get_file(mMXFMD5WrapperFile));
+    }
 
     // use fill key with correct version number
     g_KLVFill_key = g_CompliantKLVFill_key;
@@ -403,6 +409,15 @@ void OP1AFile::CompleteWrite()
                 partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Body));
         }
         mMXFFile->updatePartitions();
+    }
+
+
+    // finalize md5
+
+    if (mMXFMD5WrapperFile) {
+        unsigned char digest[16];
+        md5_wrap_finalize(mMXFMD5WrapperFile, digest);
+        mMD5DigestStr = md5_digest_str(digest);
     }
 
 
