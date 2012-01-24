@@ -70,6 +70,7 @@ typedef struct
 {
     FrameBuffer *input_buffer;
     ClipWriterTrack *track;
+    EssenceType essence_type;
     bool is_picture;
     uint32_t channel_count;
     uint32_t channel_index;
@@ -810,14 +811,7 @@ int main(int argc, const char** argv)
             const MXFPictureTrackInfo *input_picture_info = dynamic_cast<const MXFPictureTrackInfo*>(input_track_info);
 
             bool is_supported = true;
-            if (input_track_info->essence_type == UNKNOWN_ESSENCE_TYPE ||
-                input_track_info->essence_type == PICTURE_ESSENCE ||
-                input_track_info->essence_type == SOUND_ESSENCE)
-            {
-                log_warn("Track %"PRIszt" has unknown essence type\n", i);
-                is_supported = false;
-            }
-            else if (input_track_info->essence_type == WAVE_PCM)
+            if (input_track_info->essence_type == WAVE_PCM)
             {
                 Rational sampling_rate = input_sound_info->sampling_rate;
                 if (!ClipWriterTrack::IsSupported(clip_type, WAVE_PCM, sampling_rate)) {
@@ -835,7 +829,7 @@ int main(int argc, const char** argv)
                     is_supported = false;
                 }
             }
-            else if (input_track_info->IsD10Audio())
+            else if (input_track_info->IsD10Audio()) // essence_type == SOUND_ESSENCE
             {
                 if (input_sound_info->sampling_rate.numerator != 48000 ||
                     input_sound_info->sampling_rate.denominator != 1)
@@ -852,6 +846,13 @@ int main(int argc, const char** argv)
                              input_sound_info->bits_per_sample);
                     is_supported = false;
                 }
+            }
+            else if (input_track_info->essence_type == UNKNOWN_ESSENCE_TYPE ||
+                     input_track_info->essence_type == PICTURE_ESSENCE ||
+                     input_track_info->essence_type == SOUND_ESSENCE)
+            {
+                log_warn("Track %"PRIszt" has unknown essence type\n", i);
+                is_supported = false;
             }
             else
             {
@@ -1077,7 +1078,10 @@ int main(int argc, const char** argv)
                 output_track.is_picture    = input_track_info->is_picture;
                 output_track.channel_count = output_track_count;
                 output_track.channel_index = c;
+                output_track.essence_type  = input_track_info->essence_type;
                 output_track.is_d10_aes3   = input_track_info->IsD10Audio();
+                if (output_track.is_d10_aes3)
+                    output_track.essence_type    = WAVE_PCM;
                 if (input_sound_info) {
                     output_track.bits_per_sample = input_sound_info->bits_per_sample;
                     output_track.block_align     = (input_sound_info->bits_per_sample + 7) / 8;
@@ -1092,9 +1096,9 @@ int main(int argc, const char** argv)
                                             input_track_info->is_picture ? picture_track_count + 1 :
                                                                            sound_track_count + 1,
                                             input_track_info->is_picture);
-                    output_track.track = clip->CreateTrack(input_track_info->essence_type, track_name.c_str());
+                    output_track.track = clip->CreateTrack(output_track.essence_type, track_name.c_str());
                 } else {
-                    output_track.track = clip->CreateTrack(input_track_info->essence_type);
+                    output_track.track = clip->CreateTrack(output_track.essence_type);
                 }
 
 
@@ -1140,7 +1144,7 @@ int main(int argc, const char** argv)
                     // TODO: Import source package
                 }
 
-                switch (input_track_info->essence_type)
+                switch (output_track.essence_type)
                 {
                     case IEC_DV25:
                     case DVBASED_DV25:
