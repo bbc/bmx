@@ -58,6 +58,8 @@ static const uint32_t BODY_SID  = 2;
 
 static const mxfRational AUDIO_SAMPLING_RATE = {48000, 1};
 
+static const uint32_t MEMORY_WRITE_CHUNK_SIZE = 8192;
+
 
 
 typedef struct
@@ -126,8 +128,6 @@ D10File::D10File(mxfpp::File *mxf_file, mxfRational frame_rate)
     memset(&mEssenceContainerUL, 0, sizeof(mEssenceContainerUL));
     mDataModel = 0;
     mHeaderMetadata = 0;
-    mHeaderMetadataStartPos = 0;
-    mHeaderMetadataEndPos = 0;
     mCBEIndexTableStartPos = 0;
     mMaterialPackage = 0;
     mFileSourcePackage = 0;
@@ -304,24 +304,39 @@ void D10File::CompleteWrite()
     UpdatePackageMetadata();
 
 
-    // re-write the header metadata in the header partition
+    // re-write header to memory
 
-    mMXFFile->seek(mHeaderMetadataStartPos, SEEK_SET);
-    PositionFillerWriter pos_filler_writer(mHeaderMetadataEndPos);
-    mHeaderMetadata->write(mMXFFile, &mMXFFile->getPartition(0), &pos_filler_writer);
+    mMXFFile->seek(0, SEEK_SET);
+    mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
+    mMXFFile->setMemoryPartitionIndexes(0, 0); // overwriting and updating header pp
+
+
+    // update and re-write the header partition pack
+
+    Partition &header_partition = mMXFFile->getPartition(0);
+    header_partition.setFooterPartition(footer_partition.getThisPartition());
+    header_partition.write(mMXFFile);
+    header_partition.fillToKag(mMXFFile);
+
+
+    // re-write the header metadata
+
+    KAGFillerWriter reserve_filler_writer(&header_partition, mReserveMinBytes);
+    mHeaderMetadata->write(mMXFFile, &header_partition, &reserve_filler_writer);
 
 
     // update and re-write the index table segment
 
     mIndexSegment->setIndexDuration(GetDuration());
-    KAGFillerWriter kag_filler_writer(&mMXFFile->getPartition(0));
-    mIndexSegment->write(mMXFFile, &mMXFFile->getPartition(0), &kag_filler_writer);
+    KAGFillerWriter kag_filler_writer(&header_partition);
+    mIndexSegment->write(mMXFFile, &header_partition, &kag_filler_writer);
 
 
-    // update and re-write the partition packs
+    // update partition pack and flush memory writes to file
 
-    mMXFFile->getPartition(0).setKey(&MXF_PP_K(ClosedComplete, Header));
+    header_partition.setKey(&MXF_PP_K(ClosedComplete, Header));
     mMXFFile->updatePartitions();
+    mMXFFile->closeMemoryFile();
 
 
     // done with the file
@@ -538,6 +553,11 @@ void D10File::CreateFile()
     mMXFFile->setMinLLen(4);
 
 
+    // write to memory
+
+    mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
+
+
     // write the header metadata
 
     Partition &header_partition = mMXFFile->createPartition();
@@ -551,10 +571,8 @@ void D10File::CreateFile()
     header_partition.write(mMXFFile);
     header_partition.fillToKag(mMXFFile);
 
-    mHeaderMetadataStartPos = mMXFFile->tell(); // need this position when we re-write the header metadata
     KAGFillerWriter reserve_filler_writer(&header_partition, mReserveMinBytes);
     mHeaderMetadata->write(mMXFFile, &header_partition, &reserve_filler_writer);
-    mHeaderMetadataEndPos = mMXFFile->tell();  // need this position when we re-write the header metadata
 
 
     // write cbe index table
@@ -577,6 +595,12 @@ void D10File::CreateFile()
 
     KAGFillerWriter kag_filler_writer(&mMXFFile->getPartition(0));
     mIndexSegment->write(mMXFFile, &mMXFFile->getPartition(0), &kag_filler_writer);
+
+
+    // update partition pack and flush memory writes to file
+
+    mMXFFile->updatePartitions();
+    mMXFFile->closeMemoryFile();
 }
 
 void D10File::UpdatePackageMetadata()

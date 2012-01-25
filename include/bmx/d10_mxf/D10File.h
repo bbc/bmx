@@ -132,8 +132,6 @@ private:
 
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;
-    int64_t mHeaderMetadataStartPos;
-    int64_t mHeaderMetadataEndPos;
     int64_t mCBEIndexTableStartPos;
 
     mxfpp::MaterialPackage *mMaterialPackage;
