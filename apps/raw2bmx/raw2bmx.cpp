@@ -2532,8 +2532,7 @@ int main(int argc, const char** argv)
                 if (as11_clip)
                     op1a_clip = as11_clip->GetOP1AClip();
 
-                if (op1a_clip)
-                    log_info("File MD5: %s\n", op1a_clip->GetMD5DigestStr().c_str());
+                log_info("File MD5: %s\n", op1a_clip->GetMD5DigestStr().c_str());
             }
         }
 

@@ -1407,16 +1407,14 @@ int main(int argc, const char** argv)
                 if (as11_clip)
                     op1a_clip = as11_clip->GetOP1AClip();
 
-                if (op1a_clip)
-                    log_info("File MD5: %s\n", op1a_clip->GetMD5DigestStr().c_str());
+                log_info("File MD5: %s\n", op1a_clip->GetMD5DigestStr().c_str());
             } else if (clip_type == CW_AS11_D10_CLIP_TYPE || clip_type == CW_D10_CLIP_TYPE) {
                 D10File *d10_clip = clip->GetD10Clip();
                 AS11Clip *as11_clip = clip->GetAS11Clip();
                 if (as11_clip)
                     d10_clip = as11_clip->GetD10Clip();
 
-                if (d10_clip)
-                    log_info("File MD5: %s\n", d10_clip->GetMD5DigestStr().c_str());
+                log_info("File MD5: %s\n", d10_clip->GetMD5DigestStr().c_str());
             }
         }
 
