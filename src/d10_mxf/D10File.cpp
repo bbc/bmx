@@ -327,44 +327,44 @@ void D10File::CompleteWrite()
 
 
     if (mInputDuration < 0) {
-    // update metadata sets with duration
+        // update metadata sets with duration
 
-    UpdatePackageMetadata();
-
-
-    // re-write header to memory
-
-    mMXFFile->seek(0, SEEK_SET);
-    mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
-    mMXFFile->setMemoryPartitionIndexes(0, 0); // overwriting and updating header pp
+        UpdatePackageMetadata();
 
 
-    // update and re-write the header partition pack
+        // re-write header to memory
 
-    Partition &header_partition = mMXFFile->getPartition(0);
-    header_partition.setFooterPartition(footer_partition.getThisPartition());
-    header_partition.write(mMXFFile);
-    header_partition.fillToKag(mMXFFile);
-
-
-    // re-write the header metadata
-
-    KAGFillerWriter reserve_filler_writer(&header_partition, mReserveMinBytes);
-    mHeaderMetadata->write(mMXFFile, &header_partition, &reserve_filler_writer);
+        mMXFFile->seek(0, SEEK_SET);
+        mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
+        mMXFFile->setMemoryPartitionIndexes(0, 0); // overwriting and updating header pp
 
 
-    // update and re-write the index table segment
+        // update and re-write the header partition pack
 
-    mIndexSegment->setIndexDuration(GetDuration());
-    KAGFillerWriter kag_filler_writer(&header_partition);
-    mIndexSegment->write(mMXFFile, &header_partition, &kag_filler_writer);
+        Partition &header_partition = mMXFFile->getPartition(0);
+        header_partition.setFooterPartition(footer_partition.getThisPartition());
+        header_partition.write(mMXFFile);
+        header_partition.fillToKag(mMXFFile);
 
 
-    // update partition pack and flush memory writes to file
+        // re-write the header metadata
 
-    header_partition.setKey(&MXF_PP_K(ClosedComplete, Header));
-    mMXFFile->updatePartitions();
-    mMXFFile->closeMemoryFile();
+        KAGFillerWriter reserve_filler_writer(&header_partition, mReserveMinBytes);
+        mHeaderMetadata->write(mMXFFile, &header_partition, &reserve_filler_writer);
+
+
+        // update and re-write the index table segment
+
+        mIndexSegment->setIndexDuration(GetDuration());
+        KAGFillerWriter kag_filler_writer(&header_partition);
+        mIndexSegment->write(mMXFFile, &header_partition, &kag_filler_writer);
+
+
+        // update partition pack and flush memory writes to file
+
+        header_partition.setKey(&MXF_PP_K(ClosedComplete, Header));
+        mMXFFile->updatePartitions();
+        mMXFFile->closeMemoryFile();
     }
 
 
