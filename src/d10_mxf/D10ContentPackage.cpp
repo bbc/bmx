@@ -349,6 +349,7 @@ D10ContentPackageManager::D10ContentPackageManager(mxfRational frame_rate)
     BMX_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
              (frame_rate.numerator == 30000 && frame_rate.denominator == 1001));
 
+    mContentPackageSize = 0;
     mPosition = 0;
     mInfo.is_25hz = (frame_rate.numerator == 25);
 
@@ -448,11 +449,11 @@ void D10ContentPackageManager::PrepareWrite()
     mInfo.sound_item_size = get_kag_aligned_size(mxfKey_extlen + LLEN + mInfo.max_sound_sample_count * 4 * 8 + 4);
 
 
-    // delta entry array plus last entry for total / edit unit byte count
+    // delta entry array
     mExtDeltaEntryArray.push_back(0);
     mExtDeltaEntryArray.push_back(mExtDeltaEntryArray[0] + mInfo.system_item_size);
     mExtDeltaEntryArray.push_back(mExtDeltaEntryArray[1] + mInfo.picture_item_size);
-    mExtDeltaEntryArray.push_back(mExtDeltaEntryArray[2] + mInfo.sound_item_size);
+    mContentPackageSize = mExtDeltaEntryArray[2] + mInfo.sound_item_size;
 
 
     if (mInfo.sound_sample_sequence.size() == 1 || mInfo.sound_channels.empty()) {

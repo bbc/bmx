@@ -589,9 +589,9 @@ void D10File::CreateFile()
 
     const std::vector<uint32_t> &ext_delta_entries = mCPManager->GetExtDeltaEntryArray();
     size_t i;
-    for (i = 0; i < ext_delta_entries.size() - 1; i++)
+    for (i = 0; i < ext_delta_entries.size(); i++)
         mIndexSegment->appendDeltaEntry(0, 0, ext_delta_entries[i]);
-    mIndexSegment->setEditUnitByteCount(ext_delta_entries[i]);
+    mIndexSegment->setEditUnitByteCount(mCPManager->GetContentPackageSize());
 
     KAGFillerWriter kag_filler_writer(&mMXFFile->getPartition(0));
     mIndexSegment->write(mMXFFile, &mMXFFile->getPartition(0), &kag_filler_writer);

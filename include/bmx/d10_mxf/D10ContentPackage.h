@@ -135,6 +135,7 @@ public:
     int64_t GetDuration() const;
 
     const std::vector<uint32_t>& GetExtDeltaEntryArray() const { return mExtDeltaEntryArray; }
+    uint32_t GetContentPackageSize() const { return mContentPackageSize; }
 
     bool HaveContentPackage() const;
     void WriteNextContentPackage(mxfpp::File *mxf_file);
@@ -148,6 +149,7 @@ private:
 private:
     D10ContentPackageInfo mInfo;
     std::vector<uint32_t> mExtDeltaEntryArray;
+    uint32_t mContentPackageSize;
 
     std::deque<D10ContentPackage*> mContentPackages;
     std::vector<D10ContentPackage*> mFreeContentPackages;
