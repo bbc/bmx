@@ -121,7 +121,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mIndexTable = new OP1AIndexTable(INDEX_SID, BODY_SID, frame_rate);
     mCPManager = new OP1AContentPackageManager(mEssencePartitionKAGSize, MIN_LLEN);
 
-    if (flavour & OP1A_SINGLE_PASS_MD5_WRITE) {
+    if (flavour & OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR) {
         mMXFMD5WrapperFile = md5_wrap_mxf_file(mMXFFile->getCFile());
         mMXFFile->swapCFile(md5_wrap_get_file(mMXFMD5WrapperFile));
     }
@@ -352,7 +352,7 @@ void OP1AFile::CompleteWrite()
 
     // write (complete) header metadata if it is a single pass write
 
-    if (mFlavour & OP1A_SINGLE_PASS_WRITE) {
+    if (mFlavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR) {
         KAGFillerWriter reserve_filler_writer(&footer_partition, mReserveMinBytes);
         mHeaderMetadata->write(mMXFFile, &footer_partition, &reserve_filler_writer);
     }
@@ -381,7 +381,7 @@ void OP1AFile::CompleteWrite()
 
     // update previous partitions if not writing in a single pass
 
-    if (!(mFlavour & OP1A_SINGLE_PASS_WRITE)) {
+    if (!(mFlavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)) {
         // re-write the header metadata in the header partition
 
         mMXFFile->seek(mHeaderMetadataStartPos, SEEK_SET);

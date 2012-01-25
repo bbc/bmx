@@ -2079,9 +2079,9 @@ int main(int argc, const char** argv)
         // create clip
         int op1a_flavour = OP1A_DEFAULT_FLAVOUR;
         if (file_md5)
-            op1a_flavour |= OP1A_SINGLE_PASS_MD5_WRITE;
+            op1a_flavour |= OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR;
         else if (single_pass)
-            op1a_flavour |= OP1A_SINGLE_PASS_WRITE;
+            op1a_flavour |= OP1A_SINGLE_PASS_WRITE_FLAVOUR;
         ClipWriter *clip = 0;
         switch (clip_type)
         {
