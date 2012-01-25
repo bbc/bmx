@@ -281,8 +281,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --seq-off <value>       Sound sample sequence offset. Default 0 for as11d10/d10 and not set (0) for as11op1a/op1a\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/op1a:\n");
-    fprintf(stderr, "    --single-pass           Write file in a single pass. This for example means that the header metadata partition will be incomplete\n");
-    fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is not required)\n");
+    fprintf(stderr, "    --single-pass           Write file in a single pass\n");
+    fprintf(stderr, "                            The header and body partitions will be incomplete\n");
+    fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is assumed)\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  avid:\n");
     fprintf(stderr, "    --project <name>        Set the Avid project name\n");
@@ -2077,11 +2078,17 @@ int main(int argc, const char** argv)
 
 
         // create clip
-        int op1a_flavour = OP1A_DEFAULT_FLAVOUR;
-        if (file_md5)
-            op1a_flavour |= OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR;
-        else if (single_pass)
-            op1a_flavour |= OP1A_SINGLE_PASS_WRITE_FLAVOUR;
+        int flavour = 0;
+        if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_OP1A_CLIP_TYPE) {
+            flavour = OP1A_DEFAULT_FLAVOUR;
+            if (file_md5)
+                flavour |= OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR;
+            else if (single_pass)
+                flavour |= OP1A_SINGLE_PASS_WRITE_FLAVOUR;
+        } else if (clip_type == CW_AS11_D10_CLIP_TYPE || clip_type == CW_D10_CLIP_TYPE) {
+            flavour = D10_DEFAULT_FLAVOUR;
+            // single pass flavours not (yet) supported
+        }
         ClipWriter *clip = 0;
         switch (clip_type)
         {
@@ -2089,19 +2096,19 @@ int main(int argc, const char** argv)
                 clip = ClipWriter::OpenNewAS02Clip(output_name, true, frame_rate);
                 break;
             case CW_AS11_OP1A_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS11OP1AClip(op1a_flavour, output_name, frame_rate);
+                clip = ClipWriter::OpenNewAS11OP1AClip(flavour, output_name, frame_rate);
                 break;
             case CW_AS11_D10_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS11D10Clip(output_name, frame_rate);
+                clip = ClipWriter::OpenNewAS11D10Clip(flavour, output_name, frame_rate);
                 break;
             case CW_OP1A_CLIP_TYPE:
-                clip = ClipWriter::OpenNewOP1AClip(op1a_flavour, output_name, frame_rate);
+                clip = ClipWriter::OpenNewOP1AClip(flavour, output_name, frame_rate);
                 break;
             case CW_AVID_CLIP_TYPE:
                 clip = ClipWriter::OpenNewAvidClip(frame_rate);
                 break;
             case CW_D10_CLIP_TYPE:
-                clip = ClipWriter::OpenNewD10Clip(output_name, frame_rate);
+                clip = ClipWriter::OpenNewD10Clip(flavour, output_name, frame_rate);
                 break;
             case CW_UNKNOWN_CLIP_TYPE:
                 BMX_ASSERT(false);

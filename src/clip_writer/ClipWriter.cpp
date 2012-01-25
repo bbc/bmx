@@ -70,9 +70,9 @@ ClipWriter* ClipWriter::OpenNewAS11OP1AClip(int flavour, string filename, Ration
     return new ClipWriter(AS11Clip::OpenNewOP1AClip(flavour, filename, frame_rate));
 }
 
-ClipWriter* ClipWriter::OpenNewAS11D10Clip(string filename, Rational frame_rate)
+ClipWriter* ClipWriter::OpenNewAS11D10Clip(int flavour, string filename, Rational frame_rate)
 {
-    return new ClipWriter(AS11Clip::OpenNewD10Clip(filename, frame_rate));
+    return new ClipWriter(AS11Clip::OpenNewD10Clip(flavour, filename, frame_rate));
 }
 
 ClipWriter* ClipWriter::OpenNewOP1AClip(int flavour, string filename, Rational frame_rate)
@@ -85,9 +85,9 @@ ClipWriter* ClipWriter::OpenNewAvidClip(Rational frame_rate, string filename_pre
     return new ClipWriter(new AvidClip(frame_rate, filename_prefix));
 }
 
-ClipWriter* ClipWriter::OpenNewD10Clip(string filename, Rational frame_rate)
+ClipWriter* ClipWriter::OpenNewD10Clip(int flavour, string filename, Rational frame_rate)
 {
-    return new ClipWriter(D10File::OpenNew(filename, frame_rate));
+    return new ClipWriter(D10File::OpenNew(flavour, filename, frame_rate));
 }
 
 string ClipWriter::ClipWriterTypeToString(ClipWriterType clip_type)

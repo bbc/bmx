@@ -77,9 +77,9 @@ AS11Clip* AS11Clip::OpenNewOP1AClip(int flavour, string filename, Rational frame
     return new AS11Clip(OP1AFile::OpenNew(flavour, filename, frame_rate));
 }
 
-AS11Clip* AS11Clip::OpenNewD10Clip(string filename, Rational frame_rate)
+AS11Clip* AS11Clip::OpenNewD10Clip(int flavour, string filename, Rational frame_rate)
 {
-    return new AS11Clip(D10File::OpenNew(filename, frame_rate));
+    return new AS11Clip(D10File::OpenNew(flavour, filename, frame_rate));
 }
 
 string AS11Clip::AS11ClipTypeToString(AS11ClipType clip_type)

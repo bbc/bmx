@@ -52,10 +52,10 @@ class ClipWriter
 public:
     static ClipWriter* OpenNewAS02Clip(std::string bundle_directory, bool create_bundle_dir, Rational frame_rate);
     static ClipWriter* OpenNewAS11OP1AClip(int flavour, std::string filename, Rational frame_rate);
-    static ClipWriter* OpenNewAS11D10Clip(std::string filename, Rational frame_rate);
+    static ClipWriter* OpenNewAS11D10Clip(int flavour, std::string filename, Rational frame_rate);
     static ClipWriter* OpenNewOP1AClip(int flavour, std::string filename, Rational frame_rate);
     static ClipWriter* OpenNewAvidClip(Rational frame_rate, std::string filename_prefix = "");
-    static ClipWriter* OpenNewD10Clip(std::string filename, Rational frame_rate);
+    static ClipWriter* OpenNewD10Clip(int flavour, std::string filename, Rational frame_rate);
 
     static std::string ClipWriterTypeToString(ClipWriterType clip_type);
 

@@ -69,7 +69,7 @@ class AS11Clip
 {
 public:
     static AS11Clip* OpenNewOP1AClip(int flavour, std::string filename, Rational frame_rate);
-    static AS11Clip* OpenNewD10Clip(std::string filename, Rational frame_rate);
+    static AS11Clip* OpenNewD10Clip(int flavour, std::string filename, Rational frame_rate);
 
     static std::string AS11ClipTypeToString(AS11ClipType clip_type);
 

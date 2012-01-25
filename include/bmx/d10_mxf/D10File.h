@@ -40,6 +40,12 @@
 #include <bmx/d10_mxf/D10MPEGTrack.h>
 #include <bmx/d10_mxf/D10PCMTrack.h>
 #include <bmx/BMXTypes.h>
+#include <bmx/MXFUtils.h>
+
+
+#define D10_DEFAULT_FLAVOUR                 0x0000
+#define D10_SINGLE_PASS_WRITE_FLAVOUR       0x0001
+#define D10_SINGLE_PASS_MD5_WRITE_FLAVOUR   0x0003
 
 
 
@@ -53,7 +59,7 @@ public:
     friend class D10Track;
 
 public:
-    static D10File* OpenNew(std::string filename, mxfRational frame_rate);
+    static D10File* OpenNew(int flavour, std::string filename, mxfRational frame_rate);
 
 public:
     virtual ~D10File();
@@ -69,6 +75,7 @@ public:
     void SetMaterialPackageUID(mxfUMID package_uid);                    // default generated
     void SetFileSourcePackageUID(mxfUMID package_uid);                  // default generated
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);                // default 8192
+    void SetInputDuration(int64_t duration);                            // required for single pass flavours only
 
 public:
     D10Track* CreateTrack(EssenceType essence_type);
@@ -93,8 +100,10 @@ public:
     uint32_t GetNumTracks() const { return mTracks.size(); }
     D10Track* GetTrack(uint32_t track_index);
 
+    std::string GetMD5DigestStr() const { return mMD5DigestStr; }
+
 private:
-    D10File(mxfpp::File *mxf_file, mxfRational frame_rate);
+    D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate);
 
     D10ContentPackageManager* GetContentPackageManager() const { return mCPManager; }
 
@@ -105,6 +114,7 @@ private:
     void UpdateTrackMetadata(mxfpp::GenericPackage *package, int64_t duration);
 
 private:
+    int mFlavour;
     mxfpp::File *mMXFFile;
 
     std::string mClipName;
@@ -116,6 +126,7 @@ private:
     std::string mVersionString;
     mxfUUID mProductUID;
     uint32_t mReserveMinBytes;
+    int64_t mInputDuration;
     mxfTimestamp mCreationDate;
     mxfUUID mGenerationUID;
     mxfUMID mMaterialPackageUID;
@@ -139,6 +150,9 @@ private:
 
     D10ContentPackageManager *mCPManager;
     mxfpp::IndexTableSegment *mIndexSegment;
+
+    MXFMD5WrapperFile *mMXFMD5WrapperFile;
+    std::string mMD5DigestStr;
 };
 
 

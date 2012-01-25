@@ -40,7 +40,7 @@
 
 #include <bmx/d10_mxf/D10File.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
-#include <bmx/MXFUtils.h>
+#include <bmx/MD5.h>
 #include <bmx/Version.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -98,16 +98,17 @@ static mxfUL get_essence_container_ul(EssenceType essence_type, mxfRational fram
 
 
 
-D10File* D10File::OpenNew(string filename, mxfRational frame_rate)
+D10File* D10File::OpenNew(int flavour, string filename, mxfRational frame_rate)
 {
-    return new D10File(File::openNew(filename), frame_rate);
+    return new D10File(flavour, File::openNew(filename), frame_rate);
 }
 
-D10File::D10File(mxfpp::File *mxf_file, mxfRational frame_rate)
+D10File::D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
 {
     BMX_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
               (frame_rate.numerator == 30000 && frame_rate.denominator == 1001));
 
+    mFlavour = flavour;
     mMXFFile = mxf_file;
     mFrameRate = frame_rate;
     mStartTimecode = Timecode(frame_rate, false);
@@ -117,6 +118,7 @@ D10File::D10File(mxfpp::File *mxf_file, mxfRational frame_rate)
     mVersionString = get_bmx_version_string();
     mProductUID = get_bmx_product_uid();
     mReserveMinBytes = 8192;
+    mInputDuration = -1;
     mxf_get_timestamp_now(&mCreationDate);
     mxf_generate_uuid(&mGenerationUID);
     mxf_generate_umid(&mMaterialPackageUID);
@@ -133,6 +135,12 @@ D10File::D10File(mxfpp::File *mxf_file, mxfRational frame_rate)
     mFileSourcePackage = 0;
     mCPManager = new D10ContentPackageManager(frame_rate);
     mIndexSegment = 0;
+    mMXFMD5WrapperFile = 0;
+
+    if (flavour & D10_SINGLE_PASS_MD5_WRITE_FLAVOUR) {
+        mMXFMD5WrapperFile = md5_wrap_mxf_file(mMXFFile->getCFile());
+        mMXFFile->swapCFile(md5_wrap_get_file(mMXFMD5WrapperFile));
+    }
 }
 
 D10File::~D10File()
@@ -203,6 +211,12 @@ void D10File::ReserveHeaderMetadataSpace(uint32_t min_bytes)
     mReserveMinBytes = min_bytes;
 }
 
+void D10File::SetInputDuration(int64_t duration)
+{
+    if (mFlavour & D10_SINGLE_PASS_WRITE_FLAVOUR)
+        mInputDuration = duration;
+}
+
 D10Track* D10File::CreateTrack(EssenceType essence_type)
 {
     uint32_t track_index = mTracks.size();
@@ -225,6 +239,7 @@ void D10File::PrepareHeaderMetadata()
         return;
 
     BMX_CHECK(mPictureTrack);
+    BMX_CHECK(!(mFlavour & D10_SINGLE_PASS_WRITE_FLAVOUR) || mInputDuration >= 0);
 
     mEssenceContainerUL = get_essence_container_ul(mPictureTrack->GetEssenceType(), mFrameRate);
 
@@ -288,6 +303,18 @@ void D10File::CompleteWrite()
 
     mCPManager->FinalWrite(mMXFFile);
 
+    if (mInputDuration >= 0) {
+        BMX_CHECK_M(mCPManager->GetDuration() == mInputDuration,
+                    ("Single pass write failed because D10 output duration %"PRId64" "
+                     "does not equal set input duration %"PRId64,
+                     mCPManager->GetDuration(), mInputDuration));
+
+        BMX_CHECK_M(mMXFFile->tell() == (int64_t)mMXFFile->getPartition(0).getFooterPartition(),
+                    ("Single pass write failed because footer partition offset %"PRId64" "
+                     "is not at expected offset %"PRId64,
+                     mMXFFile->tell(), mMXFFile->getPartition(0).getFooterPartition()));
+    }
+
 
     // write the footer partition pack
 
@@ -299,6 +326,7 @@ void D10File::CompleteWrite()
     footer_partition.fillToKag(mMXFFile);
 
 
+    if (mInputDuration < 0) {
     // update metadata sets with duration
 
     UpdatePackageMetadata();
@@ -337,6 +365,16 @@ void D10File::CompleteWrite()
     header_partition.setKey(&MXF_PP_K(ClosedComplete, Header));
     mMXFFile->updatePartitions();
     mMXFFile->closeMemoryFile();
+    }
+
+
+    // finalize md5
+
+    if (mMXFMD5WrapperFile) {
+        unsigned char digest[16];
+        md5_wrap_finalize(mMXFMD5WrapperFile, digest);
+        mMD5DigestStr = md5_digest_str(digest);
+    }
 
 
     // done with the file
@@ -409,13 +447,13 @@ void D10File::CreateHeaderMetadata()
     Sequence *sequence = new Sequence(mHeaderMetadata);
     timecode_track->setSequence(sequence);
     sequence->setDataDefinition(MXF_DDEF_L(Timecode));
-    sequence->setDuration(-1); // updated when writing completed
+    sequence->setDuration(mInputDuration >= 0 ? mInputDuration : -1);
 
     // Preface - ContentStorage - MaterialPackage - Timecode Track - TimecodeComponent
     TimecodeComponent *timecode_component = new TimecodeComponent(mHeaderMetadata);
     sequence->appendStructuralComponents(timecode_component);
     timecode_component->setDataDefinition(MXF_DDEF_L(Timecode));
-    timecode_component->setDuration(-1); // updated when writing completed
+    timecode_component->setDuration(mInputDuration >= 0 ? mInputDuration : -1);
     timecode_component->setRoundedTimecodeBase(mStartTimecode.GetRoundedTCBase());
     timecode_component->setDropFrame(mStartTimecode.IsDropFrame());
     timecode_component->setStartTimecode(mStartTimecode.GetOffset());
@@ -440,13 +478,13 @@ void D10File::CreateHeaderMetadata()
     sequence = new Sequence(mHeaderMetadata);
     timecode_track->setSequence(sequence);
     sequence->setDataDefinition(MXF_DDEF_L(Timecode));
-    sequence->setDuration(-1); // updated when writing completed
+    sequence->setDuration(mInputDuration >= 0 ? mInputDuration : -1);
 
     // Preface - ContentStorage - SourcePackage - Timecode Track - TimecodeComponent
     timecode_component = new TimecodeComponent(mHeaderMetadata);
     sequence->appendStructuralComponents(timecode_component);
     timecode_component->setDataDefinition(MXF_DDEF_L(Timecode));
-    timecode_component->setDuration(-1); // updated when writing completed
+    timecode_component->setDuration(mInputDuration >= 0 ? mInputDuration : -1);
     timecode_component->setRoundedTimecodeBase(mStartTimecode.GetRoundedTCBase());
     timecode_component->setDropFrame(mStartTimecode.IsDropFrame());
     timecode_component->setStartTimecode(mStartTimecode.GetOffset());
@@ -473,13 +511,13 @@ void D10File::CreateHeaderMetadata()
         Sequence *sequence = new Sequence(mHeaderMetadata);
         track->setSequence(sequence);
         sequence->setDataDefinition(data_def);
-        sequence->setDuration(-1); // updated when writing completed
+        sequence->setDuration(mInputDuration >= 0 ? mInputDuration : -1);
 
         // Preface - ContentStorage - MaterialPackage - Timeline Track - Sequence - SourceClip
         SourceClip *source_clip = new SourceClip(mHeaderMetadata);
         sequence->appendStructuralComponents(source_clip);
         source_clip->setDataDefinition(data_def);
-        source_clip->setDuration(-1); // updated when writing completed
+        source_clip->setDuration(mInputDuration >= 0 ? mInputDuration : -1);
         source_clip->setStartPosition(0);
         source_clip->setSourcePackageID(mFileSourcePackageUID);
         source_clip->setSourceTrackID(i + 2);
@@ -492,18 +530,18 @@ void D10File::CreateHeaderMetadata()
         track->setTrackNumber(is_picture ? MXF_D10_PICTURE_TRACK_NUM(0x00) : MXF_D10_SOUND_TRACK_NUM(0x00));
         track->setEditRate(mFrameRate);
         track->setOrigin(0);
-    
+
         // Preface - ContentStorage - SourcePackage - Timeline Track - Sequence
         sequence = new Sequence(mHeaderMetadata);
         track->setSequence(sequence);
         sequence->setDataDefinition(data_def);
-        sequence->setDuration(-1); // updated when writing completed
+        sequence->setDuration(mInputDuration >= 0 ? mInputDuration : -1);
 
         // Preface - ContentStorage - SourcePackage - Timeline Track - Sequence - SourceClip
         source_clip = new SourceClip(mHeaderMetadata);
         sequence->appendStructuralComponents(source_clip);
         source_clip->setDataDefinition(data_def);
-        source_clip->setDuration(-1); // updated when writing completed
+        source_clip->setDuration(mInputDuration >= 0 ? mInputDuration : -1);
         source_clip->setStartPosition(0);
         source_clip->setSourceTrackID(0);
         source_clip->setSourcePackageID(g_Null_UMID);
@@ -514,6 +552,8 @@ void D10File::CreateHeaderMetadata()
     mFileSourcePackage->setDescriptor(mult_descriptor);
     mult_descriptor->setSampleRate(mFrameRate);
     mult_descriptor->setEssenceContainer(mEssenceContainerUL);
+    if (mInputDuration >= 0)
+        mult_descriptor->setContainerDuration(mInputDuration);
 
     // Preface - ContentStorage - SourcePackage - MultipleDescriptor - CDCIEssenceDescriptor
     CDCIEssenceDescriptor *cdci_descriptor =
@@ -521,6 +561,8 @@ void D10File::CreateHeaderMetadata()
     mult_descriptor->appendSubDescriptorUIDs(cdci_descriptor);
     cdci_descriptor->setLinkedTrackID(2);
     cdci_descriptor->setEssenceContainer(mEssenceContainerUL);
+    if (mInputDuration >= 0)
+        cdci_descriptor->setContainerDuration(mInputDuration);
 
     // Preface - ContentStorage - SourcePackage - MultipleDescriptor - GenericSoundEssenceDescriptor
     GenericSoundEssenceDescriptor *sound_descriptor = new GenericSoundEssenceDescriptor(mHeaderMetadata);
@@ -528,6 +570,8 @@ void D10File::CreateHeaderMetadata()
     sound_descriptor->setLinkedTrackID(3);
     sound_descriptor->setSampleRate(mFrameRate);
     sound_descriptor->setEssenceContainer(mEssenceContainerUL);
+    if (mInputDuration >= 0)
+        sound_descriptor->setContainerDuration(mInputDuration);
     if (mFirstSoundTrack) {
         sound_descriptor->setAudioSamplingRate(mFirstSoundTrack->GetSamplingRate());
         sound_descriptor->setChannelCount(mMaxSoundOutputTrackNumber);
@@ -561,7 +605,10 @@ void D10File::CreateFile()
     // write the header metadata
 
     Partition &header_partition = mMXFFile->createPartition();
-    header_partition.setKey(&MXF_PP_K(OpenIncomplete, Header));
+    if (mInputDuration >= 0)
+        header_partition.setKey(&MXF_PP_K(ClosedComplete, Header));
+    else
+        header_partition.setKey(&MXF_PP_K(OpenIncomplete, Header));
     header_partition.setVersion(1, 2);  // v1.2 - smpte 377-2004
     header_partition.setIndexSID(INDEX_SID);
     header_partition.setBodySID(BODY_SID);
@@ -583,7 +630,7 @@ void D10File::CreateFile()
     mIndexSegment = new IndexTableSegment();
     mIndexSegment->setInstanceUID(uuid);
     mIndexSegment->setIndexEditRate(mFrameRate);
-    mIndexSegment->setIndexDuration(0); // will be updated when writing is completed
+    mIndexSegment->setIndexDuration(mInputDuration >= 0 ? mInputDuration : 0);
     mIndexSegment->setIndexSID(INDEX_SID);
     mIndexSegment->setBodySID(BODY_SID);
 
@@ -598,6 +645,9 @@ void D10File::CreateFile()
 
 
     // update partition pack and flush memory writes to file
+
+    if (mInputDuration >= 0)
+        header_partition.setFooterPartition(mMXFFile->tell() + mInputDuration * mCPManager->GetContentPackageSize());
 
     mMXFFile->updatePartitions();
     mMXFFile->closeMemoryFile();

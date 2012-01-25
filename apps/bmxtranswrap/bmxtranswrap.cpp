@@ -186,9 +186,11 @@ static void usage(const char *cmd)
     fprintf(stderr, "  as02/as11op1a/as11d10/op1a/d10:\n");
     fprintf(stderr, "    --afd <value>           Active Format Descriptor code. Default is input file's value or not set\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/op1a:\n");
-    fprintf(stderr, "    --single-pass           Write file in a single pass. This for example means that the header metadata partition will be incomplete\n");
-    fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is not required)\n");
+    fprintf(stderr, "  as11op1a/as11d10/op1a/d10:\n");
+    fprintf(stderr, "    --single-pass           Write file in a single pass\n");
+    fprintf(stderr, "                            For as11op1a/op1a the header and body partitions will be incomplete\n");
+    fprintf(stderr, "                            For as11d10/d10 all the partitions will be complete\n");
+    fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is assumed)\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  avid:\n");
     fprintf(stderr, "    --project <name>        Set the Avid project name\n");
@@ -936,11 +938,20 @@ int main(int argc, const char** argv)
 
         // create output clip and initialize
 
-        int op1a_flavour = OP1A_DEFAULT_FLAVOUR;
-        if (file_md5)
-            op1a_flavour |= OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR;
-        else if (single_pass)
-            op1a_flavour |= OP1A_SINGLE_PASS_WRITE_FLAVOUR;
+        int flavour = 0;
+        if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_OP1A_CLIP_TYPE) {
+            flavour = OP1A_DEFAULT_FLAVOUR;
+            if (file_md5)
+                flavour |= OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR;
+            else if (single_pass)
+                flavour |= OP1A_SINGLE_PASS_WRITE_FLAVOUR;
+        } else if (clip_type == CW_AS11_D10_CLIP_TYPE || clip_type == CW_D10_CLIP_TYPE) {
+            flavour = D10_DEFAULT_FLAVOUR;
+            if (file_md5)
+                flavour |= D10_SINGLE_PASS_MD5_WRITE_FLAVOUR;
+            else if (single_pass)
+                flavour |= D10_SINGLE_PASS_WRITE_FLAVOUR;
+        }
         ClipWriter *clip = 0;
         switch (clip_type)
         {
@@ -948,19 +959,19 @@ int main(int argc, const char** argv)
                 clip = ClipWriter::OpenNewAS02Clip(output_name, true, frame_rate);
                 break;
             case CW_AS11_OP1A_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS11OP1AClip(op1a_flavour, output_name, frame_rate);
+                clip = ClipWriter::OpenNewAS11OP1AClip(flavour, output_name, frame_rate);
                 break;
             case CW_AS11_D10_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS11D10Clip(output_name, frame_rate);
+                clip = ClipWriter::OpenNewAS11D10Clip(flavour, output_name, frame_rate);
                 break;
             case CW_OP1A_CLIP_TYPE:
-                clip = ClipWriter::OpenNewOP1AClip(op1a_flavour, output_name, frame_rate);
+                clip = ClipWriter::OpenNewOP1AClip(flavour, output_name, frame_rate);
                 break;
             case CW_AVID_CLIP_TYPE:
                 clip = ClipWriter::OpenNewAvidClip(frame_rate);
                 break;
             case CW_D10_CLIP_TYPE:
-                clip = ClipWriter::OpenNewD10Clip(output_name, frame_rate);
+                clip = ClipWriter::OpenNewD10Clip(flavour, output_name, frame_rate);
                 break;
             case CW_UNKNOWN_CLIP_TYPE:
                 BMX_ASSERT(false);
@@ -1002,6 +1013,12 @@ int main(int argc, const char** argv)
                 as11_clip->SetPartitionInterval(partition_interval);
                 as11_clip->SetOutputStartOffset(- precharge);
                 as11_clip->SetOutputEndOffset(- rollout);
+            }
+
+            if (clip_type == CW_AS11_D10_CLIP_TYPE &&
+                (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR))
+            {
+                as11_clip->GetD10Clip()->SetInputDuration(reader->GetReadDuration());
             }
 
             if (!clip_name && as11_helper.HaveProgrammeTitle())
@@ -1048,6 +1065,11 @@ int main(int argc, const char** argv)
                 tape_package_sound_refs = avid_clip->GetSoundSourceReferences(tape_package);
                 BMX_ASSERT(tape_package_sound_refs.size() == num_sound_tracks);
             }
+        } else if (clip_type == CW_D10_CLIP_TYPE) {
+            D10File *d10_clip = clip->GetD10Clip();
+
+            if (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR)
+                d10_clip->SetInputDuration(reader->GetReadDuration());
         }
 
 
@@ -1387,6 +1409,14 @@ int main(int argc, const char** argv)
 
                 if (op1a_clip)
                     log_info("File MD5: %s\n", op1a_clip->GetMD5DigestStr().c_str());
+            } else if (clip_type == CW_AS11_D10_CLIP_TYPE || clip_type == CW_D10_CLIP_TYPE) {
+                D10File *d10_clip = clip->GetD10Clip();
+                AS11Clip *as11_clip = clip->GetAS11Clip();
+                if (as11_clip)
+                    d10_clip = as11_clip->GetD10Clip();
+
+                if (d10_clip)
+                    log_info("File MD5: %s\n", d10_clip->GetMD5DigestStr().c_str());
             }
         }
 
