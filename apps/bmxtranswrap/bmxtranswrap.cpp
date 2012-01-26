@@ -739,7 +739,7 @@ int main(int argc, const char** argv)
         int16_t precharge = reader->GetMaxPrecharge(read_start, true);
         int16_t rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
 
-        reader->SetReadLimits(read_start + precharge, read_start + output_duration + rollout, true);
+        reader->SetReadLimits(read_start + precharge, - precharge + output_duration + rollout, true);
 
 
         // get input start timecode

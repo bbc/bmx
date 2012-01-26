@@ -194,7 +194,9 @@ void MXFSequenceTrackReader::SetFrameBuffer(FrameBuffer *frame_buffer, bool take
 
 void MXFSequenceTrackReader::SetReadLimits()
 {
-    SetReadLimits(GetPrecharge(0, true), mDuration + GetRollout(mDuration - 1, true), true);
+    int16_t precharge = GetPrecharge(0, true);
+    int16_t rollout = GetRollout(mDuration - 1, true);
+    SetReadLimits(0 + precharge, - precharge + mDuration + rollout, true);
 }
 
 void MXFSequenceTrackReader::SetReadLimits(int64_t start_position, int64_t duration, bool seek_to_start)
@@ -208,9 +210,11 @@ void MXFSequenceTrackReader::SetReadLimits(int64_t start_position, int64_t durat
     if (start_segment == end_segment) {
         start_segment->SetReadLimits(start_segment_position, end_segment_duration, false);
     } else {
-        // end == start_segment->GetDuration() is safe because the start segment has 0 rollout
-        start_segment->SetReadLimits(start_segment_position, start_segment->GetDuration(), false);
-        // start == 0 is safe because the end segment has 0 pre-charge
+        // note that start segment has 0 rollout
+        start_segment->SetReadLimits(start_segment_position,
+                                     start_segment->GetDuration() - start_segment_position,
+                                     false);
+        // note that end segment has 0 pre-charge
         end_segment->SetReadLimits(0, end_segment_duration, false);
     }
 

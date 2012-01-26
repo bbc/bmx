@@ -608,7 +608,7 @@ int main(int argc, const char** argv)
         if (!no_rollout)
             max_rollout = reader->GetMaxRollout(start + output_duration - 1, true);
 
-        reader->SetReadLimits(start + max_precharge, start + output_duration + max_rollout, true);
+        reader->SetReadLimits(start + max_precharge, - max_precharge + output_duration + max_rollout, true);
 
         int64_t lead_filler_offset = 0;
         if (!reader->HaveFixedLeadFillerOffset())

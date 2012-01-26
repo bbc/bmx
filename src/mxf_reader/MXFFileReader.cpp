@@ -421,7 +421,9 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
 
 void MXFFileReader::SetReadLimits()
 {
-    SetReadLimits(GetMaxPrecharge(0, true), mDuration + GetMaxRollout(mDuration - 1, true), true);
+    int16_t precharge = GetMaxPrecharge(0, true);
+    int16_t rollout = GetMaxRollout(mDuration - 1, true);
+    SetReadLimits(0 + precharge, - precharge + mDuration + rollout, true);
 }
 
 void MXFFileReader::SetReadLimits(int64_t start_position, int64_t duration, bool seek_to_start)
