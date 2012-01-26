@@ -65,7 +65,7 @@ public:
 
     void ExtractEssenceChunkIndex(uint32_t avid_first_frame_offset);
 
-    int64_t GetEssenceDataSize();
+    int64_t GetEssenceDataSize() const;
     void GetEditUnit(int64_t index_offset, int64_t index_size, int64_t *file_position);
 
 private:

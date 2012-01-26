@@ -353,7 +353,8 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
         // create internal essence reader
         if (!mInternalTrackReaders.empty()) {
             mEssenceReader = new EssenceReader(this);
-            BMX_CHECK(mEssenceReader->GetEditRate() == mSampleRate);
+            if (mEssenceReader->GetIndexedDuration() > 0)
+                BMX_CHECK(mEssenceReader->GetEditRate() == mSampleRate);
         }
 
         // extract info from first frame if required

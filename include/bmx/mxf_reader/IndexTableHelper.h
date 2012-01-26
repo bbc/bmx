@@ -90,11 +90,11 @@ public:
     IndexTableHelper(MXFFileReader *file_reader);
     ~IndexTableHelper();
 
-    void ExtractIndexTable();
+    bool ExtractIndexTable();
     void SetEssenceDataSize(int64_t size);
 
     mxfRational GetEditRate();
-    int64_t GetDuration() { return mDuration; }
+    int64_t GetDuration() const { return mDuration; }
 
     bool HaveFixedEditUnitByteCount() const { return mHaveFixedEditUnitByteCount; }
     uint32_t GetFixedEditUnitByteCount() const { return mFixedEditUnitByteCount; }

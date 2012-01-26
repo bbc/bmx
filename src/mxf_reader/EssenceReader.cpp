@@ -85,18 +85,23 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
     mEssenceChunkHelper.ExtractEssenceChunkIndex(avid_first_frame_offset);
 
     // extract essence container index
-    mIndexTableHelper.ExtractIndexTable();
-    BMX_CHECK(mIndexTableHelper.GetEditRate() == mFileReader->mSampleRate);
-    mIndexTableHelper.SetEssenceDataSize(mEssenceChunkHelper.GetEssenceDataSize());
+    if (mIndexTableHelper.ExtractIndexTable()) {
+        BMX_CHECK(mIndexTableHelper.GetEditRate() == mFileReader->mSampleRate);
+        mIndexTableHelper.SetEssenceDataSize(mEssenceChunkHelper.GetEssenceDataSize());
 
-    // check there is sufficient essence container data
-    if (mIndexTableHelper.GetDuration() > 0) {
-        int64_t last_unit_offset, last_unit_size;
-        mIndexTableHelper.GetEditUnit(mIndexTableHelper.GetDuration() - 1, &last_unit_offset, &last_unit_size);
-        BMX_CHECK_M(mEssenceChunkHelper.GetEssenceDataSize() >= last_unit_offset + last_unit_size,
-                   ("Last edit unit (offset %"PRId64", size %"PRId64") not available in "
-                        "essence container (size %"PRId64")",
-                    last_unit_offset, last_unit_size, mEssenceChunkHelper.GetEssenceDataSize()));
+        // check there is sufficient essence container data
+        if (mIndexTableHelper.GetDuration() > 0) {
+            int64_t last_unit_offset, last_unit_size;
+            mIndexTableHelper.GetEditUnit(mIndexTableHelper.GetDuration() - 1, &last_unit_offset, &last_unit_size);
+            BMX_CHECK_M(mEssenceChunkHelper.GetEssenceDataSize() >= last_unit_offset + last_unit_size,
+                       ("Last edit unit (offset %"PRId64", size %"PRId64") not available in "
+                            "essence container (size %"PRId64")",
+                        last_unit_offset, last_unit_size, mEssenceChunkHelper.GetEssenceDataSize()));
+        }
+    } else {
+        BMX_CHECK_M(mEssenceChunkHelper.GetEssenceDataSize() == 0,
+                    ("Missing index table segments for essence data with size %"PRId64,
+                     mEssenceChunkHelper.GetEssenceDataSize()));
     }
 
     // set read limits

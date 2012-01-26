@@ -62,7 +62,7 @@ public:
     mxfRational GetEditRate();
     int64_t GetPosition() { return mPosition; }
 
-    int64_t GetIndexedDuration() { return mIndexTableHelper.GetDuration(); }
+    int64_t GetIndexedDuration() const { return mIndexTableHelper.GetDuration(); }
     bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position);
 
     int64_t LegitimisePosition(int64_t position);

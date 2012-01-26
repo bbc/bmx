@@ -216,7 +216,7 @@ IndexTableHelper::~IndexTableHelper()
         delete mSegments[i];
 }
 
-void IndexTableHelper::ExtractIndexTable()
+bool IndexTableHelper::ExtractIndexTable()
 {
     mxfKey key;
     uint8_t llen;
@@ -287,13 +287,10 @@ void IndexTableHelper::ExtractIndexTable()
             mxf_file->readNextNonFillerKL(&key, &llen, &len);
         }
     }
-
-    BMX_CHECK(!mSegments.empty());
+    if (mSegments.empty())
+        return false;
 
     // calc total duration and determine fixed edit unit byte count
-    mDuration = 0;
-    mHaveFixedEditUnitByteCount = true;
-    mFixedEditUnitByteCount = 0;
     for (i = 0; i < mSegments.size(); i++) {
         BMX_CHECK(mSegments[i]->getIndexDuration() > 0 || mSegments[i]->HaveFixedEditUnitByteCount());
         mDuration += mSegments[i]->getIndexDuration();
@@ -312,10 +309,14 @@ void IndexTableHelper::ExtractIndexTable()
             }
         }
     }
+
+    return true;
 }
 
 void IndexTableHelper::SetEssenceDataSize(int64_t size)
 {
+    BMX_ASSERT(!mSegments.empty());
+
     mEssenceDataSize = size;
 
     // calc index duration if unknown
@@ -332,6 +333,7 @@ mxfRational IndexTableHelper::GetEditRate()
 void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, int8_t *key_frame_offset, uint8_t *flags,
                                    int64_t *offset, int64_t *size)
 {
+    BMX_ASSERT(!mSegments.empty());
     BMX_CHECK(mDuration == 0 || position < mDuration);
 
     int result = mSegments[mLastEditUnitSegment]->GetEditUnit(position, temporal_offset, key_frame_offset, flags,

@@ -175,7 +175,7 @@ void EssenceChunkHelper::ExtractEssenceChunkIndex(uint32_t avid_first_frame_offs
 #endif
 }
 
-int64_t EssenceChunkHelper::GetEssenceDataSize()
+int64_t EssenceChunkHelper::GetEssenceDataSize() const
 {
     if (mEssenceChunks.empty())
         return 0;
