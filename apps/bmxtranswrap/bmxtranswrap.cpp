@@ -736,10 +736,13 @@ int main(int argc, const char** argv)
             output_duration = reader->GetDuration() - read_start;
         }
 
-        int16_t precharge = reader->GetMaxPrecharge(read_start, true);
-        int16_t rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
-
-        reader->SetReadLimits(read_start + precharge, - precharge + output_duration + rollout, true);
+        int16_t precharge = 0;
+        int16_t rollout = 0;
+        if (output_duration > 0) {
+            precharge = reader->GetMaxPrecharge(read_start, true);
+            rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
+            reader->SetReadLimits(read_start + precharge, - precharge + output_duration + rollout, true);
+        }
 
 
         // get input start timecode
