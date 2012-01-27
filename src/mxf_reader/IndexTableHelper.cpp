@@ -146,7 +146,11 @@ int IndexTableHelperSegment::GetEditUnit(int64_t position, int8_t *temporal_offs
             rel_position *= 2;
 
         *temporal_offset = GET_TEMPORAL_OFFSET(rel_position);
+        if (mHavePairedIndexEntries)
+            *temporal_offset /= 2;
         *key_frame_offset = GET_KEY_FRAME_OFFSET(rel_position);
+        if (mHavePairedIndexEntries)
+            *key_frame_offset /= 2;
         *flags = GET_FLAGS(rel_position);
         *stream_offset = GET_STREAM_OFFSET(rel_position);
     }
