@@ -52,6 +52,7 @@ public:
     bool Finalize();
 
 public:
+    virtual void GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const;
     virtual void SetReadLimits();
     virtual void SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position);
     virtual int64_t GetReadStartPosition() const { return mReadStartPosition; }

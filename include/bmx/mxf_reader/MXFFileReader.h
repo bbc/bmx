@@ -91,6 +91,7 @@ public:
     MXFPackageResolver* GetPackageResolver() const { return mPackageResolver; }
 
 public:
+    virtual void GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const;
     virtual void SetReadLimits();
     virtual void SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position);
     virtual int64_t GetReadStartPosition() const { return mReadStartPosition; }
@@ -164,6 +165,7 @@ private:
     bool GetInternalIndexEntry(MXFIndexEntryExt *entry, int64_t position) const;
     int16_t GetInternalPrecharge(int64_t position, bool limit_to_available) const;
     int16_t GetInternalRollout(int64_t position, bool limit_to_available) const;
+    void GetInternalAvailableReadLimits(int64_t *start_position, int64_t *duration) const;
 
     bool InternalIsEnabled() const;
 

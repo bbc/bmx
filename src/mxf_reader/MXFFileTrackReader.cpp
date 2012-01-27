@@ -76,6 +76,11 @@ void MXFFileTrackReader::SetFrameBuffer(FrameBuffer *frame_buffer, bool take_own
     mFrameBuffer.SetTargetBuffer(frame_buffer, take_ownership);
 }
 
+void MXFFileTrackReader::GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const
+{
+    return mFileReader->GetAvailableReadLimits(start_position, duration);
+}
+
 void MXFFileTrackReader::SetReadLimits()
 {
     mFileReader->SetReadLimits();

@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#define __STDC_LIMIT_MACROS
+
 #include <algorithm>
 
 #include <bmx/mxf_reader/MXFGroupReader.h>
@@ -236,11 +238,20 @@ bool MXFGroupReader::Finalize()
     }
 }
 
-void MXFGroupReader::SetReadLimits()
+void MXFGroupReader::GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const
 {
     int16_t precharge = GetMaxPrecharge(0, true);
     int16_t rollout = GetMaxRollout(mDuration - 1, true);
-    SetReadLimits(0 + precharge, - precharge + mDuration + rollout, true);
+    *start_position = 0 + precharge;
+    *duration = - precharge + mDuration + rollout;
+}
+
+void MXFGroupReader::SetReadLimits()
+{
+    int64_t start_position;
+    int64_t duration;
+    GetAvailableReadLimits(&start_position, &duration);
+    SetReadLimits(start_position, duration, true);
 }
 
 void MXFGroupReader::SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position)
@@ -333,44 +344,70 @@ int64_t MXFGroupReader::GetPosition() const
 
 int16_t MXFGroupReader::GetMaxPrecharge(int64_t position, bool limit_to_available) const
 {
-    int16_t max_precharge = 0;
+    int64_t max_precharge = 0;
 
+    int64_t max_start_position = INT64_MIN;
     size_t i;
     for (i = 0; i < mReaders.size(); i++) {
         if (!mReaders[i]->IsEnabled())
             continue;
 
         int16_t precharge = mReaders[i]->GetMaxPrecharge(CONVERT_GROUP_POS(position), limit_to_available);
-        if (precharge < max_precharge) {
+        if (precharge != 0) {
             BMX_CHECK_M(mReaders[i]->GetSampleRate() == mSampleRate,
-                       ("Currently only support precharge in group members if "
-                        "member sample rate equals group sample rate"));
-            max_precharge = precharge;
+                        ("Currently only support precharge in group members if "
+                         "member sample rate equals group sample rate"));
+            if (precharge < max_precharge)
+                max_precharge = precharge;
+        }
+
+        if (limit_to_available) {
+            int64_t mem_start_position, mem_duration;
+            mReaders[i]->GetAvailableReadLimits(&mem_start_position, &mem_duration);
+            int64_t mem_max_start_position = CONVERT_MEMBER_POS(mem_start_position);
+            if (mem_max_start_position > max_start_position)
+                max_start_position = mem_max_start_position;
         }
     }
 
-    return max_precharge;
+    if (limit_to_available && max_precharge < max_start_position - position)
+        max_precharge = max_start_position - position;
+
+    return max_precharge < 0 ? (int16_t)max_precharge : 0;
 }
 
 int16_t MXFGroupReader::GetMaxRollout(int64_t position, bool limit_to_available) const
 {
-    int16_t max_rollout = 0;
+    int64_t max_rollout = 0;
 
+    int64_t min_end_position = INT64_MAX;
     size_t i;
     for (i = 0; i < mReaders.size(); i++) {
         if (!mReaders[i]->IsEnabled())
             continue;
 
-        int16_t rollout = mReaders[i]->GetMaxRollout(CONVERT_GROUP_POS(position), limit_to_available);
-        if (rollout > max_rollout) {
+        int16_t rollout = mReaders[i]->GetMaxRollout(CONVERT_GROUP_POS(position + 1) - 1, limit_to_available);
+        if (rollout != 0) {
             BMX_CHECK_M(mReaders[i]->GetSampleRate() == mSampleRate,
-                       ("Currently only support rollout in group members if "
-                        "member sample rate equals group sample rate"));
-            max_rollout = rollout;
+                        ("Currently only support rollout in group members if "
+                         "member sample rate equals group sample rate"));
+            if (rollout > max_rollout)
+                max_rollout = rollout;
+        }
+
+        if (limit_to_available) {
+            int64_t mem_start_position, mem_duration;
+            mReaders[i]->GetAvailableReadLimits(&mem_start_position, &mem_duration);
+            int64_t mem_min_end_position = CONVERT_MEMBER_DUR(mem_start_position + mem_duration);
+            if (mem_min_end_position < min_end_position)
+                min_end_position = mem_min_end_position;
         }
     }
 
-    return max_rollout;
+    if (limit_to_available && max_rollout > min_end_position - position)
+        max_rollout = min_end_position - position;
+
+    return max_rollout > 0 ? (int16_t)max_rollout : 0;
 }
 
 bool MXFGroupReader::HaveFixedLeadFillerOffset() const

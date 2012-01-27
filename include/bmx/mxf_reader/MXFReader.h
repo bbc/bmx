@@ -57,6 +57,7 @@ public:
     virtual ~MXFReader();
 
 public:
+    virtual void GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const = 0;
     virtual void SetReadLimits() = 0;
     virtual void SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position) = 0;
     virtual int64_t GetReadStartPosition() const = 0;

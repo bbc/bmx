@@ -34,6 +34,7 @@
 #endif
 
 #define __STDC_FORMAT_MACROS
+#define __STDC_LIMIT_MACROS
 
 #include <algorithm>
 
@@ -420,11 +421,20 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
     return result;
 }
 
-void MXFFileReader::SetReadLimits()
+void MXFFileReader::GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const
 {
     int16_t precharge = GetMaxPrecharge(0, true);
     int16_t rollout = GetMaxRollout(mDuration - 1, true);
-    SetReadLimits(0 + precharge, - precharge + mDuration + rollout, true);
+    *start_position = 0 + precharge;
+    *duration = - precharge + mDuration + rollout;
+}
+
+void MXFFileReader::SetReadLimits()
+{
+    int64_t start_position;
+    int64_t duration;
+    GetAvailableReadLimits(&start_position, &duration);
+    SetReadLimits(start_position, duration, true);
 }
 
 void MXFFileReader::SetReadLimits(int64_t start_position, int64_t duration, bool seek_to_start)
@@ -537,9 +547,16 @@ int16_t MXFFileReader::GetMaxPrecharge(int64_t position, bool limit_to_available
     if (target_position == CURRENT_POSITION_VALUE)
         target_position = GetPosition();
 
-    int16_t precharge = 0;
-    if (InternalIsEnabled())
+    int64_t max_start_position = INT64_MIN;
+    int64_t precharge = 0;
+    if (InternalIsEnabled()) {
         precharge = GetInternalPrecharge(target_position, limit_to_available);
+        if (limit_to_available) {
+            int64_t start_position, duration;
+            GetInternalAvailableReadLimits(&start_position, &duration);
+            max_start_position = start_position;
+        }
+    }
 
     size_t i;
     for (i = 0; i < mExternalReaders.size(); i++) {
@@ -548,15 +565,27 @@ int16_t MXFFileReader::GetMaxPrecharge(int64_t position, bool limit_to_available
 
         int16_t ext_reader_precharge = mExternalReaders[i]->GetMaxPrecharge(CONVERT_INTERNAL_POS(target_position),
                                                                             limit_to_available);
-        if (ext_reader_precharge < precharge) {
+        if (ext_reader_precharge != 0) {
             BMX_CHECK_M(mExternalReaders[i]->GetSampleRate() == mSampleRate,
                        ("Currently only support precharge in external reader if "
                         "external reader sample rate equals group sample rate"));
-            precharge = ext_reader_precharge;
+            if (ext_reader_precharge < precharge)
+                precharge = ext_reader_precharge;
+        }
+
+        if (limit_to_available) {
+            int64_t ext_start_position, ext_duration;
+            mExternalReaders[i]->GetAvailableReadLimits(&ext_start_position, &ext_duration);
+            int64_t int_max_start_position = CONVERT_EXTERNAL_POS(ext_start_position);
+            if (int_max_start_position > max_start_position)
+                max_start_position = int_max_start_position;
         }
     }
 
-    return precharge;
+    if (limit_to_available && precharge < max_start_position - target_position)
+        precharge = max_start_position - target_position;
+
+    return precharge < 0 ? (int16_t)precharge : 0;
 }
 
 int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available) const
@@ -565,26 +594,45 @@ int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available) 
     if (target_position == CURRENT_POSITION_VALUE)
         target_position = GetPosition();
 
-    int16_t rollout = 0;
-    if (InternalIsEnabled())
+    int64_t min_end_position = INT64_MAX;
+    int64_t rollout = 0;
+    if (InternalIsEnabled()) {
         rollout = GetInternalRollout(target_position, limit_to_available);
+        if (limit_to_available) {
+            int64_t start_position, duration;
+            GetInternalAvailableReadLimits(&start_position, &duration);
+            min_end_position = start_position + duration;
+        }
+    }
 
     size_t i;
     for (i = 0; i < mExternalReaders.size(); i++) {
         if (!mExternalReaders[i]->IsEnabled())
             continue;
 
-        int16_t ext_reader_rollout = mExternalReaders[i]->GetMaxRollout(CONVERT_INTERNAL_POS(target_position),
+        int16_t ext_reader_rollout = mExternalReaders[i]->GetMaxRollout(CONVERT_INTERNAL_POS(target_position + 1) - 1,
                                                                         limit_to_available);
-        if (ext_reader_rollout > rollout) {
+        if (ext_reader_rollout != 0) {
             BMX_CHECK_M(mExternalReaders[i]->GetSampleRate() == mSampleRate,
                        ("Currently only support rollout in external reader if "
                         "external reader sample rate equals group sample rate"));
-            rollout = ext_reader_rollout;
+            if (ext_reader_rollout > rollout)
+                rollout = ext_reader_rollout;
+        }
+
+        if (limit_to_available) {
+            int64_t ext_start_position, ext_duration;
+            mExternalReaders[i]->GetAvailableReadLimits(&ext_start_position, &ext_duration);
+            int64_t int_min_end_position = CONVERT_EXTERNAL_DUR(ext_start_position + ext_duration);
+            if (int_min_end_position < min_end_position)
+                min_end_position = int_min_end_position;
         }
     }
 
-    return rollout;
+    if (limit_to_available && rollout > min_end_position - target_position)
+        rollout = min_end_position - target_position;
+
+    return rollout > 0 ? (int16_t)rollout : 0;
 }
 
 bool MXFFileReader::HaveFixedLeadFillerOffset() const
@@ -1330,6 +1378,14 @@ int16_t MXFFileReader::GetInternalRollout(int64_t position, bool limit_to_availa
         rollout = FROM_ESS_READER_POS(mEssenceReader->LegitimisePosition(TO_ESS_READER_POS(target_position + rollout))) - target_position;
 
     return rollout > 0 ? rollout : 0;
+}
+
+void MXFFileReader::GetInternalAvailableReadLimits(int64_t *start_position, int64_t *duration) const
+{
+    int16_t precharge = GetInternalPrecharge(0, true);
+    int16_t rollout = GetInternalRollout(mDuration - 1, true);
+    *start_position = 0 + precharge;
+    *duration = - precharge + mDuration + rollout;
 }
 
 bool MXFFileReader::InternalIsEnabled() const

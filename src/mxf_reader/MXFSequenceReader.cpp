@@ -438,11 +438,20 @@ void MXFSequenceReader::UpdateReadLimits()
     }
 }
 
-void MXFSequenceReader::SetReadLimits()
+void MXFSequenceReader::GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const
 {
     int16_t precharge = GetMaxPrecharge(0, true);
     int16_t rollout = GetMaxRollout(mDuration - 1, true);
-    SetReadLimits(0 + precharge, - precharge + mDuration + rollout, true);
+    *start_position = 0 + precharge;
+    *duration = - precharge + mDuration + rollout;
+}
+
+void MXFSequenceReader::SetReadLimits()
+{
+    int64_t start_position;
+    int64_t duration;
+    GetAvailableReadLimits(&start_position, &duration);
+    SetReadLimits(start_position, duration, true);
 }
 
 void MXFSequenceReader::SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position)

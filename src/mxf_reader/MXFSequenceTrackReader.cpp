@@ -192,11 +192,20 @@ void MXFSequenceTrackReader::SetFrameBuffer(FrameBuffer *frame_buffer, bool take
     mFrameBuffer.SetTargetBuffer(frame_buffer, take_ownership);
 }
 
-void MXFSequenceTrackReader::SetReadLimits()
+void MXFSequenceTrackReader::GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const
 {
     int16_t precharge = GetPrecharge(0, true);
     int16_t rollout = GetRollout(mDuration - 1, true);
-    SetReadLimits(0 + precharge, - precharge + mDuration + rollout, true);
+    *start_position = 0 + precharge;
+    *duration = - precharge + mDuration + rollout;
+}
+
+void MXFSequenceTrackReader::SetReadLimits()
+{
+    int64_t start_position;
+    int64_t duration;
+    GetAvailableReadLimits(&start_position, &duration);
+    SetReadLimits(start_position, duration, true);
 }
 
 void MXFSequenceTrackReader::SetReadLimits(int64_t start_position, int64_t duration, bool seek_to_start)
