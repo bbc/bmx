@@ -218,6 +218,15 @@ bool MXFGroupReader::Finalize()
             }
         }
 
+        if (GetMaxPrecharge(0, true) != GetMaxPrecharge(0, false)) {
+            log_warn("Possibly not enough precharge available in group (available=%d, required=%d)\n",
+                     GetMaxPrecharge(0, true), GetMaxPrecharge(0, false));
+        }
+        if (GetMaxRollout(mDuration - 1, true) != GetMaxRollout(mDuration - 1, false)) {
+            log_warn("Possibly not enough rollout available in group (available=%d, required=%d)\n",
+                     GetMaxRollout(mDuration - 1, true), GetMaxRollout(mDuration - 1, false));
+        }
+
         // set default group read limits
         SetReadLimits();
 
