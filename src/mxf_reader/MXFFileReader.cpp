@@ -75,6 +75,20 @@ static const char *RESULT_STRINGS[] =
     "general error",
 };
 
+
+static const EssenceType TEMPORAL_REORDERING_ESSENCE_TYPES[] =
+{
+    MPEG2LG_422P_HL_1080I,
+    MPEG2LG_422P_HL_1080P,
+    MPEG2LG_422P_HL_720P,
+    MPEG2LG_MP_HL_1080I,
+    MPEG2LG_MP_HL_1080P,
+    MPEG2LG_MP_HL_720P,
+    MPEG2LG_MP_H14_1080I,
+    MPEG2LG_MP_H14_1080P,
+};
+
+
 #define THROW_RESULT(result) \
 { \
     log_warn("Open error '%s' near %s:%d\n", #result, __FILE__, __LINE__); \
@@ -1357,6 +1371,9 @@ int16_t MXFFileReader::GetInternalPrecharge(int64_t position, bool limit_to_avai
 {
     BMX_ASSERT(mEssenceReader);
 
+    if (!HaveTemporalReorderingTrack())
+        return 0;
+
     int64_t target_position = position;
     if (target_position == CURRENT_POSITION_VALUE)
         target_position = GetPosition();
@@ -1388,6 +1405,9 @@ int16_t MXFFileReader::GetInternalPrecharge(int64_t position, bool limit_to_avai
 int16_t MXFFileReader::GetInternalRollout(int64_t position, bool limit_to_available) const
 {
     BMX_ASSERT(mEssenceReader);
+
+    if (!HaveTemporalReorderingTrack())
+        return 0;
 
     int64_t target_position = position;
     if (target_position == CURRENT_POSITION_VALUE)
@@ -1425,6 +1445,23 @@ bool MXFFileReader::InternalIsEnabled() const
         if (mInternalTrackReaders[i]->IsEnabled()) {
             BMX_ASSERT(mEssenceReader);
             return true;
+        }
+    }
+
+    return false;
+}
+
+bool MXFFileReader::HaveTemporalReorderingTrack() const
+{
+    size_t i;
+    for (i = 0; i < mInternalTrackReaders.size(); i++) {
+        if (mInternalTrackReaders[i]->IsEnabled()) {
+            EssenceType essence_type = mInternalTrackReaders[i]->GetTrackInfo()->essence_type;
+            size_t j;
+            for (j = 0; j < ARRAY_SIZE(TEMPORAL_REORDERING_ESSENCE_TYPES); j++) {
+                if (essence_type == TEMPORAL_REORDERING_ESSENCE_TYPES[j])
+                    return true;
+            }
         }
     }
 

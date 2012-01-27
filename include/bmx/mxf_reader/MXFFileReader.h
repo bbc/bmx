@@ -170,6 +170,8 @@ private:
     int16_t GetInternalRollout(int64_t position, bool limit_to_available) const;
     void GetInternalAvailableReadLimits(int64_t *start_position, int64_t *duration) const;
 
+    bool HaveTemporalReorderingTrack() const;
+
     bool InternalIsEnabled() const;
 
     void ExtractInfoFromFirstFrame();
