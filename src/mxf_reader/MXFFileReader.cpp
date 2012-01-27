@@ -76,7 +76,7 @@ static const char *RESULT_STRINGS[] =
 };
 
 
-static const EssenceType TEMPORAL_REORDERING_ESSENCE_TYPES[] =
+static const EssenceType INTER_FRAME_ENCODING_ESSENCE_TYPES[] =
 {
     MPEG2LG_422P_HL_1080I,
     MPEG2LG_422P_HL_1080P,
@@ -1371,7 +1371,7 @@ int16_t MXFFileReader::GetInternalPrecharge(int64_t position, bool limit_to_avai
 {
     BMX_ASSERT(mEssenceReader);
 
-    if (!HaveTemporalReorderingTrack())
+    if (!HaveInterFrameEncodingTrack())
         return 0;
 
     int64_t target_position = position;
@@ -1406,7 +1406,7 @@ int16_t MXFFileReader::GetInternalRollout(int64_t position, bool limit_to_availa
 {
     BMX_ASSERT(mEssenceReader);
 
-    if (!HaveTemporalReorderingTrack())
+    if (!HaveInterFrameEncodingTrack())
         return 0;
 
     int64_t target_position = position;
@@ -1451,15 +1451,15 @@ bool MXFFileReader::InternalIsEnabled() const
     return false;
 }
 
-bool MXFFileReader::HaveTemporalReorderingTrack() const
+bool MXFFileReader::HaveInterFrameEncodingTrack() const
 {
     size_t i;
     for (i = 0; i < mInternalTrackReaders.size(); i++) {
         if (mInternalTrackReaders[i]->IsEnabled()) {
             EssenceType essence_type = mInternalTrackReaders[i]->GetTrackInfo()->essence_type;
             size_t j;
-            for (j = 0; j < ARRAY_SIZE(TEMPORAL_REORDERING_ESSENCE_TYPES); j++) {
-                if (essence_type == TEMPORAL_REORDERING_ESSENCE_TYPES[j])
+            for (j = 0; j < ARRAY_SIZE(INTER_FRAME_ENCODING_ESSENCE_TYPES); j++) {
+                if (essence_type == INTER_FRAME_ENCODING_ESSENCE_TYPES[j])
                     return true;
             }
         }
