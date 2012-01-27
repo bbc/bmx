@@ -855,6 +855,15 @@ int main(int argc, const char** argv)
         if (output_duration > 0) {
             precharge = reader->GetMaxPrecharge(read_start, true);
             rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
+
+            if (clip_type == CW_AVID_CLIP_TYPE && precharge != 0) {
+                output_duration += (- precharge);
+                log_warn("Avid clip type does not support %d precharge. Duration has changed to %"PRId64"\n",
+                         precharge, output_duration);
+                read_start += precharge;
+                precharge = 0;
+            }
+
             reader->SetReadLimits(read_start + precharge, - precharge + output_duration + rollout, true);
         }
 
