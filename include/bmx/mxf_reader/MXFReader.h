@@ -102,6 +102,9 @@ public:
 
     virtual bool IsEnabled() const = 0;
 
+    virtual int16_t GetTrackPrecharge(size_t track_index, int64_t clip_position, int16_t clip_precharge) const = 0;
+    virtual int16_t GetTrackRollout(size_t track_index, int64_t clip_position, int16_t clip_rollout) const = 0;
+
 public:
     virtual void SetNextFramePosition(int64_t position) = 0;
     virtual void SetNextFrameTrackPositions() = 0;

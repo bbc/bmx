@@ -690,6 +690,36 @@ bool MXFFileReader::IsEnabled() const
     return false;
 }
 
+int16_t MXFFileReader::GetTrackPrecharge(size_t track_index, int64_t clip_position, int16_t clip_precharge) const
+{
+    if (clip_precharge >= 0)
+        return 0;
+
+    MXFTrackReader *track_reader = GetTrackReader(track_index);
+
+    BMX_CHECK_M(track_reader->GetSampleRate() == mSampleRate,
+               ("Currently only support precharge in external reader if "
+                "external reader sample rate equals group sample rate"));
+    (void)clip_position;
+
+    return clip_precharge;
+}
+
+int16_t MXFFileReader::GetTrackRollout(size_t track_index, int64_t clip_position, int16_t clip_rollout) const
+{
+    if (clip_rollout <= 0)
+        return 0;
+
+    MXFTrackReader *track_reader = GetTrackReader(track_index);
+
+    BMX_CHECK_M(track_reader->GetSampleRate() == mSampleRate,
+               ("Currently only support rollout in external reader if "
+                "external reader sample rate equals group sample rate"));
+    (void)clip_position;
+
+    return clip_rollout;
+}
+
 void MXFFileReader::SetNextFramePosition(int64_t position)
 {
     size_t i;

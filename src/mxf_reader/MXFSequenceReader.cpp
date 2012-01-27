@@ -617,6 +617,36 @@ bool MXFSequenceReader::IsEnabled() const
     return mGroupSegments[0]->IsEnabled();
 }
 
+int16_t MXFSequenceReader::GetTrackPrecharge(size_t track_index, int64_t clip_position, int16_t clip_precharge) const
+{
+    if (clip_precharge >= 0)
+        return 0;
+
+    BMX_CHECK(!mGroupSegments.empty());
+
+    MXFGroupReader *segment;
+    size_t segment_index;
+    int64_t segment_position;
+    GetSegmentPosition(clip_position, &segment, &segment_index, &segment_position);
+
+    return segment->GetTrackPrecharge(track_index, segment_position, clip_precharge);
+}
+
+int16_t MXFSequenceReader::GetTrackRollout(size_t track_index, int64_t clip_position, int16_t clip_rollout) const
+{
+    if (clip_rollout <= 0)
+        return 0;
+
+    BMX_CHECK(!mGroupSegments.empty());
+
+    MXFGroupReader *segment;
+    size_t segment_index;
+    int64_t segment_position;
+    GetSegmentPosition(clip_position, &segment, &segment_index, &segment_position);
+
+    return segment->GetTrackRollout(track_index, segment_position, clip_rollout);
+}
+
 void MXFSequenceReader::SetNextFramePosition(int64_t position)
 {
     size_t i;

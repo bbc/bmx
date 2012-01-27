@@ -1144,14 +1144,9 @@ int main(int argc, const char** argv)
                     as02_track->SetMICType(mic_type);
                     as02_track->SetMICScope(ess_component_mic_scope);
 
-                    // TODO: need precharge/rollout at track rates
-                    // TODO: check whether precharge/rollout is available on all tracks etc.
-                    if (precharge != 0)
-                        log_warn("TODO: precharge in AS-02 track\n");
-                    //as02_track->SetOutputStartOffset(- precharge);
-                    if (rollout != 0)
-                        log_warn("TODO: rollout in AS-02 track\n");
-                    //as02_track->SetOutputEndOffset(- rollout);
+                    as02_track->SetOutputStartOffset(- reader->GetTrackPrecharge(i, read_start, precharge));
+                    as02_track->SetOutputEndOffset(- reader->GetTrackRollout(i, read_start + output_duration - 1,
+                                                                             rollout));
 
                     AS02PictureTrack *as02_pict_track = dynamic_cast<AS02PictureTrack*>(as02_track);
                     if (as02_pict_track)
@@ -1159,11 +1154,8 @@ int main(int argc, const char** argv)
                 } else if (clip_type == CW_AVID_CLIP_TYPE) {
                     AvidTrack *avid_track = output_track.track->GetAvidTrack();
 
-                    // TODO: need precharge/rollout at track rates
-                    // TODO: check whether precharge/rollout is available on all tracks etc.
-                    if (rollout != 0)
-                        log_warn("TODO: rollout in Avid track\n");
-                    //avid_track->SetOutputEndOffset(- rollout);
+                    avid_track->SetOutputEndOffset(- reader->GetTrackRollout(i, read_start + output_duration - 1,
+                                                                             rollout));
 
                     if (tape_package) {
                         if (input_track_info->is_picture) {
