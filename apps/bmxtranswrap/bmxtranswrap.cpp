@@ -716,104 +716,9 @@ int main(int argc, const char** argv)
         Rational frame_rate = reader->GetSampleRate();
 
 
-        // set read limits
-
-        int64_t read_start = start;
-        if (read_start >= reader->GetDuration()) {
-            log_error("Start position %"PRId64" is >= input duration %"PRId64"\n",
-                      start, reader->GetDuration());
-            throw false;
-        }
-        int64_t output_duration;
-        if (duration >= 0) {
-            output_duration = duration;
-            if (read_start + output_duration > reader->GetDuration()) {
-                log_warn("Limiting duration %"PRId64" because it exceeds the available duration %"PRId64"\n",
-                          duration, reader->GetDuration() - read_start);
-                output_duration = reader->GetDuration() - read_start;
-            }
-        } else {
-            output_duration = reader->GetDuration() - read_start;
-        }
-
-        int16_t precharge = 0;
-        int16_t rollout = 0;
-        if (output_duration > 0) {
-            precharge = reader->GetMaxPrecharge(read_start, true);
-            rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
-            reader->SetReadLimits(read_start + precharge, - precharge + output_duration + rollout, true);
-        }
-
-
-        // get input start timecode
-
-        if (!start_timecode_str && reader->HavePlayoutTimecode()) {
-            start_timecode = reader->GetPlayoutTimecode(start);
-
-            // adjust start timecode to be at the point after the leading filler segments
-            // this corresponds to the zero position in the MXF reader
-            if (!reader->HaveFixedLeadFillerOffset())
-                log_warn("No fixed lead filler offset\n");
-            else
-                start_timecode.AddOffset(reader->GetFixedLeadFillerOffset(), frame_rate);
-
-            // the Avid or AS11 D-10 clip types don't support precharge and so the timecode
-            // needs to be adjusted back to the precharge starting point
-            if (clip_type == CW_AVID_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE)
-                start_timecode.AddOffset(precharge, frame_rate);
-        }
-
-
-        // complete commandline parsing
-
-        if (!timecode_rate_set) {
-            size_t i;
-            for (i = 0; i < reader->GetNumTrackReaders(); i++) {
-                if (reader->GetTrackReader(i)->GetTrackInfo()->is_picture) {
-                    timecode_rate = frame_rate;
-                    break;
-                }
-            }
-        }
-        if (start_timecode_str && !parse_timecode(start_timecode_str, timecode_rate, &start_timecode)) {
-            usage(argv[0]);
-            log_error("Invalid value '%s' for option '-t'\n", start_timecode_str);
-            throw false;
-        }
-
-        if (partition_interval_str &&
-            !parse_partition_interval(partition_interval_str, frame_rate, &partition_interval))
-        {
-            usage(argv[0]);
-            log_error("Invalid value '%s' for option '--part'\n", partition_interval_str);
-            throw false;
-        }
-
-        if (segmentation_filename &&
-            !as11_helper.ParseSegmentationFile(segmentation_filename, frame_rate))
-        {
-            log_error("Failed to parse segmentation file '%s'\n", segmentation_filename);
-            throw false;
-        }
-
-        size_t i;
-        for (i = 0; i < locators.size(); i++) {
-            Timecode position_start_timecode = start_timecode;
-            if (position_start_timecode.IsInvalid())
-                position_start_timecode.Init(timecode_rate, false);
-
-            if (!parse_position(locators[i].position_str, position_start_timecode, timecode_rate,
-                                &locators[i].locator.position))
-            {
-                usage(argv[0]);
-                log_error("Invalid value '%s' for option '--locator'\n", locators[i].position_str);
-                throw false;
-            }
-        }
-
-
         // check support for tracks and disable unsupported track types
 
+        size_t i;
         for (i = 0; i < reader->GetNumTrackReaders(); i++) {
             MXFTrackReader *track_reader = reader->GetTrackReader(i);
             const MXFTrackInfo *input_track_info = track_reader->GetTrackInfo();
@@ -922,6 +827,101 @@ int main(int argc, const char** argv)
         if (!reader->IsEnabled()) {
             log_error("All tracks are disabled\n");
             throw false;
+        }
+
+
+        // set read limits
+
+        int64_t read_start = start;
+        if (read_start >= reader->GetDuration()) {
+            log_error("Start position %"PRId64" is >= input duration %"PRId64"\n",
+                      start, reader->GetDuration());
+            throw false;
+        }
+        int64_t output_duration;
+        if (duration >= 0) {
+            output_duration = duration;
+            if (read_start + output_duration > reader->GetDuration()) {
+                log_warn("Limiting duration %"PRId64" because it exceeds the available duration %"PRId64"\n",
+                          duration, reader->GetDuration() - read_start);
+                output_duration = reader->GetDuration() - read_start;
+            }
+        } else {
+            output_duration = reader->GetDuration() - read_start;
+        }
+
+        int16_t precharge = 0;
+        int16_t rollout = 0;
+        if (output_duration > 0) {
+            precharge = reader->GetMaxPrecharge(read_start, true);
+            rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
+            reader->SetReadLimits(read_start + precharge, - precharge + output_duration + rollout, true);
+        }
+
+
+        // get input start timecode
+
+        if (!start_timecode_str && reader->HavePlayoutTimecode()) {
+            start_timecode = reader->GetPlayoutTimecode(start);
+
+            // adjust start timecode to be at the point after the leading filler segments
+            // this corresponds to the zero position in the MXF reader
+            if (!reader->HaveFixedLeadFillerOffset())
+                log_warn("No fixed lead filler offset\n");
+            else
+                start_timecode.AddOffset(reader->GetFixedLeadFillerOffset(), frame_rate);
+
+            // the Avid or AS11 D-10 clip types don't support precharge and so the timecode
+            // needs to be adjusted back to the precharge starting point
+            if (clip_type == CW_AVID_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE)
+                start_timecode.AddOffset(precharge, frame_rate);
+        }
+
+
+        // complete commandline parsing
+
+        if (!timecode_rate_set) {
+            size_t i;
+            for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+                if (reader->GetTrackReader(i)->GetTrackInfo()->is_picture) {
+                    timecode_rate = frame_rate;
+                    break;
+                }
+            }
+        }
+        if (start_timecode_str && !parse_timecode(start_timecode_str, timecode_rate, &start_timecode)) {
+            usage(argv[0]);
+            log_error("Invalid value '%s' for option '-t'\n", start_timecode_str);
+            throw false;
+        }
+
+        if (partition_interval_str &&
+            !parse_partition_interval(partition_interval_str, frame_rate, &partition_interval))
+        {
+            usage(argv[0]);
+            log_error("Invalid value '%s' for option '--part'\n", partition_interval_str);
+            throw false;
+        }
+
+        if (segmentation_filename &&
+            !as11_helper.ParseSegmentationFile(segmentation_filename, frame_rate))
+        {
+            log_error("Failed to parse segmentation file '%s'\n", segmentation_filename);
+            throw false;
+        }
+
+        for (i = 0; i < locators.size(); i++) {
+            Timecode position_start_timecode = start_timecode;
+            if (position_start_timecode.IsInvalid())
+                position_start_timecode.Init(timecode_rate, false);
+
+            if (!parse_position(locators[i].position_str, position_start_timecode, timecode_rate,
+                                &locators[i].locator.position))
+            {
+                usage(argv[0]);
+                log_error("Invalid value '%s' for option '--locator'\n", locators[i].position_str);
+                throw false;
+            }
         }
 
 
