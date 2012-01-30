@@ -85,7 +85,7 @@ static uint64_t get_uint64(const unsigned char *data)
              (uint64_t)data[7];
 }
 
-static uint64_t get_uint32(const unsigned char *data)
+static uint32_t get_uint32(const unsigned char *data)
 {
     return (((uint32_t)data[0]) << 24) |
            (((uint32_t)data[1]) << 16) |
@@ -93,7 +93,7 @@ static uint64_t get_uint32(const unsigned char *data)
              (uint32_t)data[3];
 }
 
-static uint64_t get_uint16(const unsigned char *data)
+static uint16_t get_uint16(const unsigned char *data)
 {
     return (((uint16_t)data[0]) << 8) |
              (uint16_t)data[1];
