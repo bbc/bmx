@@ -39,7 +39,7 @@
 // Modifications:
 // * Changed 'unsigned long' to 'uint32_t' (otherwise calculation is
 //   wrong)
-// * Changed sha1_update 'len' parameter type to 'size_t'
+// * Changed sha1_update 'len' parameter type to 'uint32_t'
 
 
 #ifdef HAVE_CONFIG_H
@@ -152,7 +152,7 @@ void bmx::sha1_init(SHA1Context *context)
 
 /* Run your data through this. */
 
-void bmx::sha1_update(SHA1Context *context, const unsigned char *data, size_t len)
+void bmx::sha1_update(SHA1Context *context, const unsigned char *data, uint32_t len)
 {
 size_t i, j;
 
@@ -239,7 +239,7 @@ string bmx::sha1_calc_file(string filename)
         }
 
         if (num_read > 0)
-            sha1_update(&context, buffer, num_read);
+            sha1_update(&context, buffer, (uint32_t)num_read);
     }
 
     fclose(file);

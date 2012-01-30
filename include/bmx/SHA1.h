@@ -32,8 +32,6 @@
 #ifndef __BMX_SHA1_H__
 #define __BMX_SHA1_H__
 
-#include <cstddef> // for size_t
-
 #include <string>
 
 #include <bmx/BMXTypes.h>
@@ -53,7 +51,7 @@ typedef struct
 
 
 void sha1_init(SHA1Context *context);
-void sha1_update(SHA1Context *context, const unsigned char *data, size_t len);
+void sha1_update(SHA1Context *context, const unsigned char *data, uint32_t len);
 void sha1_final(unsigned char digest[20], SHA1Context *context);
 
 std::string sha1_digest_str(const unsigned char digest[20]);
