@@ -45,6 +45,7 @@
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/MD5.h>
 #include <bmx/MXFUtils.h>
+#include <bmx/Version.h>
 #include "AS11Info.h"
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -328,7 +329,9 @@ static string create_raw_filename(string prefix, bool is_video, uint32_t index, 
 static string get_version_info()
 {
     char buffer[256];
-    sprintf(buffer, "mxf2raw, %s v%s (%s %s)", PACKAGE_NAME, PACKAGE_VERSION, __DATE__, __TIME__);
+    sprintf(buffer, "mxf2raw, %s v%s (%s %s)", get_bmx_library_name().c_str(),
+                                               get_bmx_version_string().c_str(),
+                                               __DATE__, __TIME__);
     return buffer;
 }
 

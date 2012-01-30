@@ -53,6 +53,7 @@
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/URI.h>
 #include <bmx/MXFUtils.h>
+#include <bmx/Version.h>
 #include "../AppUtils.h"
 #include "../AS11Helper.h"
 #include <bmx/BMXException.h>
@@ -130,7 +131,9 @@ static bool parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type
 static string get_version_info()
 {
     char buffer[256];
-    sprintf(buffer, "bmxtranswrap, %s v%s (%s %s)", PACKAGE_NAME, PACKAGE_VERSION, __DATE__, __TIME__);
+    sprintf(buffer, "bmxtranswrap, %s v%s (%s %s)", get_bmx_library_name().c_str(),
+                                                    get_bmx_version_string().c_str(),
+                                                    __DATE__, __TIME__);
     return buffer;
 }
 
