@@ -179,12 +179,12 @@ void AS02AVCITrack::WriteCBEIndexTable(Partition *partition)
     BMX_CHECK(mxf_write_index_table_segment(mMXFFile->getCFile(), mIndexSegment1->getCIndexTableSegment()));
 
     // rely on segment2 size == segment1 size and size remaining the same for both calls to WriteCBEIndexTable
-    int64_t segment_size = mMXFFile->tell() - file_pos;
+    uint32_t segment_size = (uint32_t)(mMXFFile->tell() - file_pos);
 
     if (mIndexSegment2) {
         file_pos = mMXFFile->tell();
         BMX_CHECK(mxf_write_index_table_segment(mMXFFile->getCFile(), mIndexSegment2->getCIndexTableSegment()));
-        BMX_ASSERT(mMXFFile->tell() - file_pos == segment_size);
+        BMX_ASSERT((uint32_t)(mMXFFile->tell() - file_pos) == segment_size);
     }
 
     if (mEndOfIndexTablePosition > 0) {

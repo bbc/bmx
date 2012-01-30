@@ -227,7 +227,7 @@ void OP1AIndexTableSegment::AddCBEIndexEntry(uint32_t edit_unit_byte_count)
 
 uint32_t OP1AIndexTableSegment::GetDuration()
 {
-    return mSegment.getIndexDuration();
+    return (uint32_t)mSegment.getIndexDuration();
 }
 
 
@@ -506,10 +506,10 @@ void OP1AIndexTable::WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *part
             IndexTableSegment *segment = mIndexSegments[i]->GetSegment();
             ByteArray *entries = mIndexSegments[i]->GetEntries();
 
-            segment->writeHeader(mxf_file, mDeltaEntries.size(), segment->getIndexDuration());
+            segment->writeHeader(mxf_file, mDeltaEntries.size(), (uint32_t)segment->getIndexDuration());
 
             if (!mDeltaEntries.empty()) {
-                segment->writeDeltaEntryArrayHeader(mxf_file, mDeltaEntries.size());
+                segment->writeDeltaEntryArrayHeader(mxf_file, (uint32_t)mDeltaEntries.size());
                 size_t j;
                 for (j = 0; j < mDeltaEntries.size(); j++) {
                     segment->writeDeltaEntry(mxf_file, mDeltaEntries[j].pos_table_index, mDeltaEntries[j].slice,
@@ -517,7 +517,7 @@ void OP1AIndexTable::WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *part
                 }
             }
 
-            segment->writeIndexEntryArrayHeader(mxf_file, mSliceCount, 0, segment->getIndexDuration());
+            segment->writeIndexEntryArrayHeader(mxf_file, mSliceCount, 0, (uint32_t)segment->getIndexDuration());
             mxf_file->write(entries->GetBytes(), entries->GetSize());
 
             delete mIndexSegments[i];

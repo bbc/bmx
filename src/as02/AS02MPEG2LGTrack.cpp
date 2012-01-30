@@ -153,7 +153,7 @@ void AS02MPEG2LGTrack::WriteVBEIndexTable(Partition *partition)
     segment.setEditUnitByteCount(0);
 
     int64_t index_start_position = mIndexStartPosition;
-    int64_t index_duration;
+    uint32_t index_duration;
     mxfUUID uuid;
     size_t i;
     for (i = 0; i < mIndexSegments.size(); i++) {
