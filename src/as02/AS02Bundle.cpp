@@ -42,7 +42,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #if defined(_WIN32)
-#include <direct.h> // mkdir
+#include <direct.h> // _mkdir
 #endif
 
 #include <bmx/as02/AS02Bundle.h>
@@ -95,7 +95,7 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory)
 
     if (create_directory) {
 #if defined(_WIN32)
-        if (mkdir(root_filepath.c_str()) != 0) {
+        if (_mkdir(root_filepath.c_str()) != 0) {
 #else
         if (mkdir(root_filepath.c_str(), 0777) != 0) {
 #endif
@@ -112,7 +112,7 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory)
     sub_dir.reserve(root_filepath.size() + sizeof(MEDIA_SUBDIR_NAME));
     sub_dir.append(root_filepath).append(MEDIA_SUBDIR_NAME);
 #if defined(_WIN32)
-    if (mkdir(sub_dir.c_str()) != 0) {
+    if (_mkdir(sub_dir.c_str()) != 0) {
 #else
     if (mkdir(sub_dir.c_str(), 0777) != 0) {
 #endif
