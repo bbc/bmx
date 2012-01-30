@@ -156,7 +156,8 @@ bool bmx::get_sample_sequence(Rational lower_edit_rate, Rational higher_edit_rat
         if (num_higher_samples > 0) {
             if (remainder == 0) {
                 // fixed integer number of reader samples for each clip sample
-                sample_sequence->push_back(num_higher_samples);
+                BMX_ASSERT(num_higher_samples <= 0xffffffff);
+                sample_sequence->push_back((uint32_t)num_higher_samples);
             } else {
                 // try known sample sequences
                 size_t i;
