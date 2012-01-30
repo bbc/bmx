@@ -42,7 +42,7 @@
 #if defined(_WIN32)
 #include <sys/timeb.h>
 #include <time.h>
-#include <direct.h> // getcwd
+#include <direct.h> // _getcwd
 #include <windows.h>
 #else
 #include <uuid/uuid.h>
@@ -365,7 +365,11 @@ string bmx::get_abs_cwd()
     size_t path_size = 1024;
     while (true) {
         temp_path = new char[path_size];
+#if defined(_WIN32)
+        if (_getcwd(temp_path, (int)path_size))
+#else
         if (getcwd(temp_path, path_size))
+#endif
             break;
         if (errno == EEXIST)
             break;
