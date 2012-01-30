@@ -54,7 +54,7 @@ typedef struct
 
 
 void md5_init(MD5Context *ctx);
-void md5_update(MD5Context *ctx, const unsigned char *buf, size_t len);
+void md5_update(MD5Context *ctx, const unsigned char *buf, uint32_t len);
 void md5_final(unsigned char digest[16], MD5Context *ctx);
 
 std::string md5_digest_str(const unsigned char digest[16]);

@@ -225,7 +225,7 @@ void bmx::md5_init(MD5Context *ctx)
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
  */
-void bmx::md5_update(MD5Context *ctx, const unsigned char *buf, size_t len)
+void bmx::md5_update(MD5Context *ctx, const unsigned char *buf, uint32_t len)
 {
     uint32_t t;
 
@@ -350,7 +350,7 @@ string bmx::md5_calc_file(string filename)
         }
 
         if (num_read > 0)
-            md5_update(&context, buffer, num_read);
+            md5_update(&context, buffer, (uint32_t)num_read);
     }
 
     fclose(file);
