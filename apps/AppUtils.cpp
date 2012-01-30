@@ -280,7 +280,11 @@ bool bmx::read_avci_header_data(EssenceType essence_type, Rational sample_rate,
     }
 
     int64_t offset = avci_header_inputs[i].offset + j * 512;
-    if (fseek(file, offset, SEEK_SET) != 0) {
+#if defined(_MSC_VER)
+    if (_fseeki64(file, offset, SEEK_SET) != 0) {
+#else
+    if (fseeko(file, offset, SEEK_SET) != 0) {
+#endif
         log_error("Failed to seek to offset %"PRId64" in AVC-Intra header data input file '%s': %s\n",
                   offset, avci_header_inputs[i].filename, strerror(errno));
         fclose(file);
