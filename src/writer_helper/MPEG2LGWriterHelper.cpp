@@ -147,10 +147,13 @@ void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
 
     mKeyFrameOffset = 0;
     if (frame_type != I_FRAME) {
-        if (!mCurrentGOPClosed && mKeyFramePosition + mKeyFrameTemporalReference >= mPosition)
-            mKeyFrameOffset = mPrevKeyFramePosition - mPosition;
-        else
-            mKeyFrameOffset = mKeyFramePosition - mPosition;
+        if (!mCurrentGOPClosed && mKeyFramePosition + mKeyFrameTemporalReference >= mPosition) {
+            BMX_CHECK(mPrevKeyFramePosition - mPosition >= -128);
+            mKeyFrameOffset = (int8_t)(mPrevKeyFramePosition - mPosition);
+        } else {
+            BMX_CHECK(mKeyFramePosition - mPosition >= -128);
+            mKeyFrameOffset = (int8_t)(mKeyFramePosition - mPosition);
+        }
     }
 
 
