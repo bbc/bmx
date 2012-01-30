@@ -69,6 +69,6 @@ void AvidPictureTrack::PostSampleWriting(mxfpp::Partition *partition)
     (void)partition;
 
     // ImageSize is an int32, but Avid sample files have shown it holds the lower 32-bits of the actual size
-    mPictureDescriptorHelper->SetAvidImageSize(mContainerSize);
+    mPictureDescriptorHelper->SetAvidImageSize((int32_t)mContainerSize);
 }
 
