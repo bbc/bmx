@@ -506,7 +506,7 @@ void OP1AIndexTable::WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *part
             IndexTableSegment *segment = mIndexSegments[i]->GetSegment();
             ByteArray *entries = mIndexSegments[i]->GetEntries();
 
-            segment->writeHeader(mxf_file, mDeltaEntries.size(), (uint32_t)segment->getIndexDuration());
+            segment->writeHeader(mxf_file, (uint32_t)mDeltaEntries.size(), (uint32_t)segment->getIndexDuration());
 
             if (!mDeltaEntries.empty()) {
                 segment->writeDeltaEntryArrayHeader(mxf_file, (uint32_t)mDeltaEntries.size());

@@ -111,7 +111,7 @@ public:
 
     int64_t GetDuration();
 
-    uint32_t GetNumTracks() const { return mTracks.size(); }
+    uint32_t GetNumTracks() const { return (uint32_t)mTracks.size(); }
     AS11Track* GetTrack(uint32_t track_index);
 
 public:

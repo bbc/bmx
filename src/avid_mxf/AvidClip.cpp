@@ -372,7 +372,7 @@ AvidTrack* AvidClip::CreateTrack(EssenceType essence_type)
 
 AvidTrack* AvidClip::CreateTrack(EssenceType essence_type, string filename)
 {
-    mTracks.push_back(AvidTrack::OpenNew(this, filename, mTracks.size(), essence_type));
+    mTracks.push_back(AvidTrack::OpenNew(this, filename, (uint32_t)mTracks.size(), essence_type));
     return mTracks.back();
 }
 

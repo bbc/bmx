@@ -103,7 +103,7 @@ public:
     int64_t GetDuration();
     int64_t GetContainerDuration();
 
-    uint32_t GetNumTracks() const { return mTracks.size(); }
+    uint32_t GetNumTracks() const { return (uint32_t)mTracks.size(); }
     OP1ATrack* GetTrack(uint32_t track_index);
 
     std::string GetMD5DigestStr() const { return mMD5DigestStr; }

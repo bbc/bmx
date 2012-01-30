@@ -133,7 +133,7 @@ AS02Track* AS02Clip::CreateTrack(EssenceType essence_type)
     }
     filepath = mBundle->CreateEssenceComponentFilepath(mClipFilename, is_video, track_number, &rel_uri);
 
-    mTracks.push_back(AS02Track::OpenNew(this, filepath, rel_uri, mTracks.size(), essence_type));
+    mTracks.push_back(AS02Track::OpenNew(this, filepath, rel_uri, (uint32_t)mTracks.size(), essence_type));
     mTrackMap[mTracks.back()->GetTrackIndex()] = mTracks.back();
 
     return mTracks.back();

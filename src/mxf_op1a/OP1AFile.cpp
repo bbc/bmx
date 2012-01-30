@@ -220,7 +220,8 @@ OP1ATrack* OP1AFile::CreateTrack(EssenceType essence_type)
         mPictureTrackCount++;
     }
 
-    mTracks.push_back(OP1ATrack::Create(this, mTracks.size(), track_id, track_type_number, mFrameRate, essence_type));
+    mTracks.push_back(OP1ATrack::Create(this, (uint32_t)mTracks.size(), track_id, track_type_number, mFrameRate,
+                                        essence_type));
     mTrackMap[mTracks.back()->GetTrackIndex()] = mTracks.back();
 
     return mTracks.back();

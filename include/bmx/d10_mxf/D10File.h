@@ -97,7 +97,7 @@ public:
 
     int64_t GetDuration() const { return mCPManager->GetDuration(); }
 
-    uint32_t GetNumTracks() const { return mTracks.size(); }
+    uint32_t GetNumTracks() const { return (uint32_t)mTracks.size(); }
     D10Track* GetTrack(uint32_t track_index);
 
     std::string GetMD5DigestStr() const { return mMD5DigestStr; }

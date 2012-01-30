@@ -219,7 +219,7 @@ void D10File::SetInputDuration(int64_t duration)
 
 D10Track* D10File::CreateTrack(EssenceType essence_type)
 {
-    uint32_t track_index = mTracks.size();
+    uint32_t track_index = (uint32_t)mTracks.size();
     mTracks.push_back(D10Track::Create(this, track_index, mFrameRate, essence_type));
     mTrackMap[track_index] = mTracks.back();
 
