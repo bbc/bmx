@@ -1486,8 +1486,10 @@ void MXFFileReader::ExtractInfoFromFirstFrame()
         {
             if (mIsClipWrapped) {
                 MXFIndexEntryExt index_entry;
-                if (mEssenceReader->GetIndexEntry(&index_entry, 0))
-                    picture_info->d10_frame_size = index_entry.edit_unit_size;
+                if (mEssenceReader->GetIndexEntry(&index_entry, 0)) {
+                    BMX_CHECK(index_entry.edit_unit_size <= 0xffffffff);
+                    picture_info->d10_frame_size = (uint32_t)index_entry.edit_unit_size;
+                }
             } else {
                 require_first_frame = true;
             }
