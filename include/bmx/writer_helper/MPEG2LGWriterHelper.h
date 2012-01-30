@@ -107,6 +107,7 @@ private:
     bool mCurrentGOPClosed;
     bool mIdenticalGOP;
     uint16_t mMaxGOP;
+    bool mUnlimitedGOPSize;
     uint16_t mMaxBPictureCount;
     uint32_t mBitRate;
 };

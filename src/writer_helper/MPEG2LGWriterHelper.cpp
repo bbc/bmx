@@ -72,6 +72,7 @@ MPEG2LGWriterHelper::MPEG2LGWriterHelper()
     mCurrentGOPClosed = false;
     mIdenticalGOP = true;
     mMaxGOP = 0;
+    mUnlimitedGOPSize = false;
     mMaxBPictureCount = 0;
     mBitRate = 0;
 }
@@ -110,10 +111,15 @@ void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
         mBPictureCount = 0;
     }
 
-    if (mHaveGOPHeader) {
-        uint8_t gop_size = mPosition - mGOPStartPosition;
-        if (gop_size > mMaxGOP)
-            mMaxGOP = gop_size;
+    if (mHaveGOPHeader && !mUnlimitedGOPSize) {
+        if (mPosition - mGOPStartPosition > 0xffff) {
+            mUnlimitedGOPSize = true;
+            mMaxGOP = 0;
+        } else {
+            uint16_t gop_size = (uint16_t)(mPosition - mGOPStartPosition);
+            if (gop_size > mMaxGOP)
+                mMaxGOP = gop_size;
+        }
     }
 
     if (mEssenceParser.HaveSequenceHeader()) {
