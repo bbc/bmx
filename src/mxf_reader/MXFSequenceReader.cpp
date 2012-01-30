@@ -391,6 +391,8 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
     }
     catch (const bool &err)
     {
+        (void)err;
+
         size_t i;
         for (i = 0; i < mGroupSegments.size(); i++)
             delete mGroupSegments[i];

@@ -1438,6 +1438,7 @@ int main(int argc, const char** argv)
     }
     catch (const bool &ex)
     {
+        (void)ex;
         cmd_result = 1;
     }
     catch (...)

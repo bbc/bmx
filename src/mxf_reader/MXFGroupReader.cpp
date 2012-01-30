@@ -234,6 +234,8 @@ bool MXFGroupReader::Finalize()
     }
     catch (const bool &err)
     {
+        (void)err;
+
         size_t i;
         for (i = 0; i < mTrackReaders.size(); i++)
             delete mTrackReaders[i];
