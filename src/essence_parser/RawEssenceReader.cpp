@@ -156,7 +156,11 @@ int64_t RawEssenceReader::GetNumRemFixedSizeSamples() const
     BMX_CHECK(mFixedSampleSize > 0);
 
     struct stat stat_buf;
+#if defined(_WIN32)
+    if (fstat(_fileno(mRawInput), &stat_buf) < 0)
+#else
     if (fstat(fileno(mRawInput), &stat_buf) < 0)
+#endif
         throw BMXException("Failed to stat raw file", strerror(errno));
 
     int64_t start_offset = mSampleDataOffset + mSampleDataSize;
@@ -171,7 +175,11 @@ int64_t RawEssenceReader::GetNumRemFixedSizeSamples() const
 
 void RawEssenceReader::Reset()
 {
+#if defined(_MSC_VER)
+    if (_fseeki64(mRawInput, mStartOffset, SEEK_SET) != 0)
+#else
     if (fseeko(mRawInput, mStartOffset, SEEK_SET) != 0)
+#endif
         throw BMXException("Failed to seek to raw file start offset 0x%"PRIx64": %s", mStartOffset, strerror(errno));
 
     mSampleDataOffset = mStartOffset;
