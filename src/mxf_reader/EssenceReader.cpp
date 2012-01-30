@@ -162,12 +162,12 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
     uint32_t first_sample_offset = 0;
     uint32_t read_num_samples = num_samples;
     if (mPosition < 0) {
-        first_sample_offset = -mPosition;
+        first_sample_offset = (uint32_t)(-mPosition);
         read_num_samples -= first_sample_offset;
         Seek(0);
     }
     if (mPosition + read_num_samples > mReadStartPosition + mReadDuration)
-        read_num_samples -= mPosition + read_num_samples - (mReadStartPosition + mReadDuration);
+        read_num_samples -= (uint32_t)(mPosition + read_num_samples - (mReadStartPosition + mReadDuration));
     BMX_ASSERT(read_num_samples > 0);
 
 
