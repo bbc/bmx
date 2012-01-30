@@ -164,14 +164,17 @@ void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
         mGOPStartPosition = mPosition;
         memset(mGOPTemporalOffsets, NULL_TEMPORAL_OFFSET, sizeof(mGOPTemporalOffsets));
     }
-    uint8_t gop_start_offset = mPosition - mGOPStartPosition;
+    BMX_CHECK(mPosition - mGOPStartPosition <= 0xff);
+    uint8_t gop_start_offset = (uint8_t)(mPosition - mGOPStartPosition);
 
     // temporal reference = display position for current frame
     mTemporalReference = mEssenceParser.GetTemporalReference();
 
     // temporal offset = offset to frame data required for displaying at the current position
     BMX_CHECK(mTemporalReference < sizeof(mGOPTemporalOffsets));
-    mGOPTemporalOffsets[mTemporalReference] = gop_start_offset - mTemporalReference;
+    BMX_CHECK(gop_start_offset - (int64_t)mTemporalReference <= 127 &&
+              gop_start_offset - (int64_t)mTemporalReference >= -128);
+    mGOPTemporalOffsets[mTemporalReference] = (int8_t)(gop_start_offset - mTemporalReference);
 
     mHaveTemporalOffset = (mGOPTemporalOffsets[gop_start_offset] != NULL_TEMPORAL_OFFSET);
     mTemporalOffset = mGOPTemporalOffsets[gop_start_offset];
