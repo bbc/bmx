@@ -134,7 +134,7 @@ bool UKDPPFramework::HavePictureRatio()
     return haveItem(&MXF_ITEM_K(UKDPPFramework, UKDPPPictureRatio));
 }
 
-mxfRational UKDPPFramework::UKDPPFramework::GetPictureRatio()
+mxfRational UKDPPFramework::GetPictureRatio()
 {
     return getRationalItem(&MXF_ITEM_K(UKDPPFramework, UKDPPPictureRatio));
 }
