@@ -221,12 +221,12 @@ int64_t bmx::convert_position_higher(int64_t position, const std::vector<uint32_
     int64_t higher_position = position / sequence.size() * sequence_size;
 
     if (position >= 0) {
-        size_t sequence_remainder = position % sequence.size();
+        size_t sequence_remainder = (size_t)(position % sequence.size());
         uint32_t i;
         for (i = 0; i < sequence_remainder; i++)
             higher_position += sequence[i];
     } else {
-        size_t sequence_remainder = ( - position) % sequence.size();
+        size_t sequence_remainder = (size_t)(( - position) % sequence.size());
         uint32_t i;
         for (i = 0; i < sequence_remainder; i++)
             higher_position -= sequence[sequence.size() - i - 1];
@@ -267,11 +267,11 @@ int64_t bmx::convert_duration_lower(int64_t duration, int64_t position, const st
     int64_t adjusted_duration;
     size_t sequence_offset;
     if (position >= 0) {
-        sequence_offset = lower_position % sequence.size();
+        sequence_offset = (size_t)(lower_position % sequence.size());
         // samples before the rounded position are not considered to be part of the duration
         adjusted_duration = duration - (round_up_position - position);
     } else {
-        sequence_offset = sequence.size() - (( - lower_position) % sequence.size());
+        sequence_offset = sequence.size() - (size_t)((( - lower_position) % sequence.size()));
         // samples before the rounded position are not considered to be part of the duration
         adjusted_duration = duration - (position - round_up_position);
     }
@@ -297,7 +297,7 @@ int64_t bmx::convert_duration_higher(int64_t duration, const std::vector<uint32_
 
     int64_t higher_duration = duration / sequence.size() * sequence_size;
 
-    size_t sequence_remainder = duration % sequence.size();
+    size_t sequence_remainder = (size_t)(duration % sequence.size());
     uint32_t i;
     for (i = 0; i < sequence_remainder; i++)
         higher_duration += sequence[i];
@@ -313,12 +313,12 @@ int64_t bmx::convert_duration_higher(int64_t duration, int64_t position, const s
 
     int64_t higher_duration = duration / sequence.size() * sequence_size;
 
-    size_t sequence_remainder = duration % sequence.size();
+    size_t sequence_remainder = (size_t)(duration % sequence.size());
     size_t sequence_offset;
     if (position >= 0)
-        sequence_offset = position % sequence.size();
+        sequence_offset = (size_t)(position % sequence.size());
     else
-        sequence_offset = sequence.size() - (( - position) % sequence.size());
+        sequence_offset = sequence.size() - (size_t)((( - position) % sequence.size()));
 
     while (sequence_remainder > 0) {
         higher_duration += sequence[sequence_offset];
