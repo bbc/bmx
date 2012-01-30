@@ -149,10 +149,10 @@ bool bmx::get_sample_sequence(Rational lower_edit_rate, Rational higher_edit_rat
     if (lower_edit_rate == higher_edit_rate) {
         sample_sequence->push_back(1);
     } else {
-        int64_t num_higher_samples = (int64_t)(higher_edit_rate.numerator * lower_edit_rate.denominator) /
-                                        (int64_t)(higher_edit_rate.denominator * lower_edit_rate.numerator);
-        int64_t remainder = (int64_t)(higher_edit_rate.numerator * lower_edit_rate.denominator) %
-                                    (int64_t)(higher_edit_rate.denominator * lower_edit_rate.numerator);
+        int64_t num_higher_samples = ((int64_t)higher_edit_rate.numerator * lower_edit_rate.denominator) /
+                                        ((int64_t)higher_edit_rate.denominator * lower_edit_rate.numerator);
+        int64_t remainder = ((int64_t)higher_edit_rate.numerator * lower_edit_rate.denominator) %
+                                    ((int64_t)higher_edit_rate.denominator * lower_edit_rate.numerator);
         if (num_higher_samples > 0) {
             if (remainder == 0) {
                 // fixed integer number of reader samples for each clip sample
