@@ -138,7 +138,7 @@ uint32_t OP1AContentPackageElement::GetNumSamples(int64_t position) const
     if (sample_sequence.empty())
         return 1;
     else
-        return sample_sequence[position % sample_sequence.size()];
+        return sample_sequence[(size_t)(position % sample_sequence.size())];
 }
 
 uint32_t OP1AContentPackageElement::GetKAGAlignedSize(uint32_t data_size)
