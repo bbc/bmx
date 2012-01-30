@@ -1394,10 +1394,12 @@ int16_t MXFFileReader::GetInternalPrecharge(int64_t position, bool limit_to_avai
         }
     }
 
-    if (precharge > 0)
+    if (precharge > 0) {
         log_warn("Unexpected positive precharge value %d\n", precharge);
-    else if (precharge < 0 && limit_to_available)
-        precharge = FROM_ESS_READER_POS(mEssenceReader->LegitimisePosition(TO_ESS_READER_POS(target_position + precharge))) - target_position;
+    } else if (precharge < 0 && limit_to_available) {
+        precharge = (int16_t)(FROM_ESS_READER_POS(mEssenceReader->LegitimisePosition(
+                                TO_ESS_READER_POS(target_position + precharge))) - target_position);
+    }
 
     return precharge < 0 ? precharge : 0;
 }
@@ -1422,10 +1424,12 @@ int16_t MXFFileReader::GetInternalRollout(int64_t position, bool limit_to_availa
     if (GetInternalIndexEntry(&index_entry, target_position) && index_entry.temporal_offset > 0)
         rollout = index_entry.temporal_offset;
 
-    if (rollout < 0)
+    if (rollout < 0) {
         log_warn("Unexpected negative rollout value %d\n", rollout);
-    else if (rollout > 0 && limit_to_available)
-        rollout = FROM_ESS_READER_POS(mEssenceReader->LegitimisePosition(TO_ESS_READER_POS(target_position + rollout))) - target_position;
+    } else if (rollout > 0 && limit_to_available) {
+        rollout = (int16_t)(FROM_ESS_READER_POS(mEssenceReader->LegitimisePosition(
+                                TO_ESS_READER_POS(target_position + rollout))) - target_position);
+    }
 
     return rollout > 0 ? rollout : 0;
 }
