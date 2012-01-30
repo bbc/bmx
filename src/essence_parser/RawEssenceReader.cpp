@@ -274,14 +274,14 @@ bool RawEssenceReader::ReadBytes(uint32_t size, uint32_t *num_read_out)
 
     uint32_t actual_size = size;
     if (mMaxReadLength > 0 && mTotalReadLength + size > mMaxReadLength)
-        actual_size = mMaxReadLength - mTotalReadLength;
+        actual_size = (uint32_t)(mMaxReadLength - mTotalReadLength);
     if (actual_size == 0) {
         *num_read_out = 0;
         return true;
     }
 
     mSampleData.Grow(actual_size);
-    uint32_t num_read = fread(mSampleData.GetBytesAvailable(), 1, actual_size, mRawInput);
+    uint32_t num_read = (uint32_t)fread(mSampleData.GetBytesAvailable(), 1, actual_size, mRawInput);
     if (ferror(mRawInput)) {
         log_warn("Failed to read from raw file: %s\n", strerror(errno));
         return false;
