@@ -287,11 +287,13 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
                 frame->file_position       = current_file_position;
             }
 
-            frame->Grow(size);
-            uint32_t num_read = mxf_file->read(frame->GetBytesAvailable(), size);
+            BMX_CHECK(size <= 0xffffffff);
+
+            frame->Grow((uint32_t)size);
+            uint32_t num_read = mxf_file->read(frame->GetBytesAvailable(), (uint32_t)size);
             current_file_position += num_read;
             BMX_CHECK(num_read == size);
-            frame->IncrementSize(size);
+            frame->IncrementSize((uint32_t)size);
             frame->num_samples += num_cont_samples;
         } else {
             mxf_file->seek(file_position + size, SEEK_SET);
@@ -338,9 +340,11 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                         mTrackFrames[track_reader->GetTrackIndex()] = track_reader->GetFrameBuffer()->CreateFrame();
                         frame = mTrackFrames[track_reader->GetTrackIndex()];
 
+                        BMX_CHECK(cp_num_read <= 0xffffffff);
+
                         frame->ec_position         = start_position;
                         frame->temporal_reordering =
-                            mIndexTableHelper.GetTemporalReordering(cp_num_read - (mxfKey_extlen + llen));
+                            mIndexTableHelper.GetTemporalReordering((uint32_t)(cp_num_read - (mxfKey_extlen + llen)));
                         frame->cp_file_position    = cp_file_position;
                         frame->file_position       = cp_file_position + cp_num_read;
 
@@ -356,10 +360,12 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                 }
 
                 if (frame) {
-                    frame->Grow(len);
-                    uint32_t num_read = mxf_file->read(frame->GetBytesAvailable(), len);
+                    BMX_CHECK(len <= 0xffffffff);
+
+                    frame->Grow((uint32_t)len);
+                    uint32_t num_read = mxf_file->read(frame->GetBytesAvailable(), (uint32_t)len);
                     BMX_CHECK(num_read == len);
-                    frame->IncrementSize(len);
+                    frame->IncrementSize((uint32_t)len);
                     frame->num_samples++;
                 } else {
                     mxf_file->skip(len);
