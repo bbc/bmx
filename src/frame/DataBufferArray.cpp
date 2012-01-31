@@ -29,6 +29,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #define __STDC_LIMIT_MACROS
 
 #include <bmx/frame/DataBufferArray.h>

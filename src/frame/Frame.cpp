@@ -29,6 +29,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <bmx/frame/Frame.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
