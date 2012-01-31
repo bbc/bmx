@@ -34,6 +34,7 @@
 #endif
 
 #define __STDC_FORMAT_MACROS
+#define __STDC_LIMIT_MACROS
 
 #include <cstring>
 #include <cstdio>
@@ -156,7 +157,7 @@ bool bmx::get_sample_sequence(Rational lower_edit_rate, Rational higher_edit_rat
         if (num_higher_samples > 0) {
             if (remainder == 0) {
                 // fixed integer number of reader samples for each clip sample
-                BMX_ASSERT(num_higher_samples <= 0xffffffff);
+                BMX_ASSERT(num_higher_samples <= UINT32_MAX);
                 sample_sequence->push_back((uint32_t)num_higher_samples);
             } else {
                 // try known sample sequences

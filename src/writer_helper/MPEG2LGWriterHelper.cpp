@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#define __STDC_LIMIT_MACROS
+
 #include <cstring>
 
 #include <bmx/writer_helper/MPEG2LGWriterHelper.h>
@@ -112,7 +114,7 @@ void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
     }
 
     if (mHaveGOPHeader && !mUnlimitedGOPSize) {
-        if (mPosition - mGOPStartPosition > 0xffff) {
+        if (mPosition - mGOPStartPosition > UINT16_MAX) {
             mUnlimitedGOPSize = true;
             mMaxGOP = 0;
         } else {
@@ -164,7 +166,7 @@ void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
         mGOPStartPosition = mPosition;
         memset(mGOPTemporalOffsets, NULL_TEMPORAL_OFFSET, sizeof(mGOPTemporalOffsets));
     }
-    BMX_CHECK(mPosition - mGOPStartPosition <= 0xff);
+    BMX_CHECK(mPosition - mGOPStartPosition <= UINT8_MAX);
     uint8_t gop_start_offset = (uint8_t)(mPosition - mGOPStartPosition);
 
     // temporal reference = display position for current frame

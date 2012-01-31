@@ -34,6 +34,7 @@
 #endif
 
 #define __STDC_FORMAT_MACROS
+#define __STDC_LIMIT_MACROS
 
 #include <cstring>
 
@@ -287,7 +288,7 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
                 frame->file_position       = current_file_position;
             }
 
-            BMX_CHECK(size <= 0xffffffff);
+            BMX_CHECK(size <= UINT32_MAX);
 
             frame->Grow((uint32_t)size);
             uint32_t num_read = mxf_file->read(frame->GetBytesAvailable(), (uint32_t)size);
@@ -340,7 +341,7 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                         mTrackFrames[track_reader->GetTrackIndex()] = track_reader->GetFrameBuffer()->CreateFrame();
                         frame = mTrackFrames[track_reader->GetTrackIndex()];
 
-                        BMX_CHECK(cp_num_read <= 0xffffffff);
+                        BMX_CHECK(cp_num_read <= UINT32_MAX);
 
                         frame->ec_position         = start_position;
                         frame->temporal_reordering =
@@ -360,7 +361,7 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                 }
 
                 if (frame) {
-                    BMX_CHECK(len <= 0xffffffff);
+                    BMX_CHECK(len <= UINT32_MAX);
 
                     frame->Grow((uint32_t)len);
                     uint32_t num_read = mxf_file->read(frame->GetBytesAvailable(), (uint32_t)len);

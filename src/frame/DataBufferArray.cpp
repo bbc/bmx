@@ -29,6 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define __STDC_LIMIT_MACROS
+
 #include <bmx/frame/DataBufferArray.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -45,7 +47,7 @@ uint32_t bmx::dba_get_total_size(const CDataBuffer *data_array, uint32_t array_s
     for (i = 0; i < array_size; i++)
         total_size += data_array[i].size;
 
-    BMX_CHECK(total_size <= 0xffffffff);
+    BMX_CHECK(total_size <= UINT32_MAX);
 
     return (uint32_t)total_size;
 }
