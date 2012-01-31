@@ -236,6 +236,8 @@ AC_CONFIG_FILES([
 	apps/mxf2raw/Makefile
 	apps/raw2bmx/Makefile
 	apps/bmxtranswrap/Makefile
+	msvc_build/Makefile
+	msvc_build/vs8/Makefile
     libbmx.pc])
 
 AC_OUTPUT
