@@ -795,8 +795,9 @@ int main(int argc, const char** argv)
                                                            sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
                                         sound_buffer.SetSize(frame->GetSize() / sound_info->channel_count);
                                     }
-                                    uint32_t num_written = fwrite(sound_buffer.GetBytes(), sound_buffer.GetSize(), 1,
-                                                                  raw_files[file_count]);
+                                    uint32_t num_written = (uint32_t)fwrite(sound_buffer.GetBytes(),
+                                                                            sound_buffer.GetSize(), 1,
+                                                                            raw_files[file_count]);
                                     if (num_written != 1) {
                                         log_error("Failed to write to raw file '%s': %s\n",
                                                   raw_filenames[file_count].c_str(), strerror(errno));
@@ -805,8 +806,9 @@ int main(int argc, const char** argv)
                                     file_count++;
                                 }
                             } else {
-                                uint32_t num_written = fwrite(frame->GetBytes(), frame->GetSize(), 1,
-                                                              raw_files[file_count]);
+                                uint32_t num_written = (uint32_t)fwrite(frame->GetBytes(),
+                                                                        frame->GetSize(), 1,
+                                                                        raw_files[file_count]);
                                 if (num_written != 1) {
                                     log_error("Failed to write to raw file '%s': %s\n",
                                               raw_filenames[file_count].c_str(), strerror(errno));
