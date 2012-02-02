@@ -419,18 +419,28 @@ void AS02Track::UpdatePackageMetadata(GenericPackage *package)
 
         Sequence *sequence = dynamic_cast<Sequence*>(track->getSequence());
         BMX_ASSERT(sequence);
+        vector<StructuralComponent*> components = sequence->getStructuralComponents();
         if (sequence->getDuration() < 0) {
             if (source_package)
                 sequence->setDuration(GetDuration());
             else
                 sequence->setDuration(GetOutputDuration(false));
 
-            vector<StructuralComponent*> components = sequence->getStructuralComponents();
-            BMX_CHECK(components.size() == 1);
+            BMX_ASSERT(components.size() == 1);
             if (source_package)
                 components[0]->setDuration(GetDuration());
             else
                 components[0]->setDuration(GetOutputDuration(false));
+        }
+        if (source_package && components.size() == 1) {
+            TimecodeComponent *timecode_component = dynamic_cast<TimecodeComponent*>(components[0]);
+            if (timecode_component) {
+                Timecode sp_start_timecode = mClip->mStartTimecode;
+                sp_start_timecode.AddOffset(- mOutputStartOffset, GetSampleRate());
+                timecode_component->setRoundedTimecodeBase(sp_start_timecode.GetRoundedTCBase());
+                timecode_component->setDropFrame(sp_start_timecode.IsDropFrame());
+                timecode_component->setStartTimecode(sp_start_timecode.GetOffset());
+            }
         }
     }
 
