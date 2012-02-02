@@ -170,6 +170,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          or set <format> to 'all' for all formats listed above\n");
     fprintf(stderr, "                          The 512 bytes are extracted from <file> starting at <offset> bytes\n");
     fprintf(stderr, "                              and incrementing 512 bytes for each format in the list\n");
+    fprintf(stderr, "  -a <n:d>                Override or set the image aspect ratio. Either 4:3 or 16:9.\n");
+    fprintf(stderr, "  --locked <bool>         Override or set flag indicating whether the number of audio samples is locked to the video. Either true or false\n");
+    fprintf(stderr, "  --audio-ref <level>     Override or set audio reference level, number of dBm for 0VU\n");
+    fprintf(stderr, "  --dial-norm <value>     Override or set gain to be applied to normalize perceived loudness of the clip\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02:\n");
     fprintf(stderr, "    --mic-type <type>       Media integrity check type: 'md5' or 'none'. Default 'md5'\n");
@@ -240,7 +244,15 @@ int main(int argc, const char** argv)
     bool show_progress = false;
     bool single_pass = false;
     bool file_md5 = false;
-    int value;
+    Rational user_aspect_ratio = ASPECT_RATIO_16_9;
+    bool user_aspect_ratio_set = false;
+    bool user_locked = false;
+    bool user_locked_set = false;
+    int8_t user_audio_ref_level = 0;
+    bool user_audio_ref_level_set = false;
+    int8_t user_dial_norm = 0;
+    bool user_dial_norm_set = false;
+    int value, num, den;
     int cmdln_index;
 
     if (argc == 1) {
@@ -412,6 +424,83 @@ int main(int argc, const char** argv)
                 return 1;
             }
             cmdln_index += 3;
+        }
+        else if (strcmp(argv[cmdln_index], "-a") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%d:%d", &num, &den) != 2 ||
+                ((num != 4 || den != 3) && (num != 16 || den != 9)))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            if (num == 4)
+                user_aspect_ratio = ASPECT_RATIO_4_3;
+            else
+                user_aspect_ratio = ASPECT_RATIO_16_9;
+            user_aspect_ratio_set = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--locked") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_bool(argv[cmdln_index + 1], &user_locked))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            user_locked_set = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--audio-ref") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
+                value < -128 || value > 127)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            user_audio_ref_level = value;
+            user_audio_ref_level_set = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--dial-norm") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
+                value < -128 || value > 127)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            user_dial_norm = value;
+            user_dial_norm_set = true;
+            cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--mic-type") == 0)
         {
@@ -1186,13 +1275,19 @@ int main(int argc, const char** argv)
                     case IEC_DV25:
                     case DVBASED_DV25:
                     case DV50:
-                        output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
+                        if (user_aspect_ratio_set)
+                            output_track.track->SetAspectRatio(user_aspect_ratio);
+                        else
+                            output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
                         if (afd)
                             output_track.track->SetAFD(afd);
                         break;
                     case DV100_1080I:
                     case DV100_720P:
-                        output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
+                        if (user_aspect_ratio_set)
+                            output_track.track->SetAspectRatio(user_aspect_ratio);
+                        else
+                            output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
                         if (afd)
                             output_track.track->SetAFD(afd);
                         output_track.track->SetComponentDepth(input_picture_info->component_depth);
@@ -1200,7 +1295,10 @@ int main(int argc, const char** argv)
                     case D10_30:
                     case D10_40:
                     case D10_50:
-                        output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
+                        if (user_aspect_ratio_set)
+                            output_track.track->SetAspectRatio(user_aspect_ratio);
+                        else
+                            output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
                         if (afd)
                             output_track.track->SetAFD(afd);
                         BMX_ASSERT(input_picture_info->d10_frame_size != 0);
@@ -1236,7 +1334,10 @@ int main(int argc, const char** argv)
                     case AVID_10BIT_UNC_HD_1080I:
                     case AVID_10BIT_UNC_HD_1080P:
                     case AVID_10BIT_UNC_HD_720P:
-                        output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
+                        if (user_aspect_ratio_set)
+                            output_track.track->SetAspectRatio(user_aspect_ratio);
+                        else
+                            output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
                         if (afd)
                             output_track.track->SetAFD(afd);
                         output_track.track->SetComponentDepth(input_picture_info->component_depth);
@@ -1262,7 +1363,10 @@ int main(int argc, const char** argv)
                     case MJPEG_15_1S:
                         if (afd)
                             output_track.track->SetAFD(afd);
-                        output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
+                        if (user_aspect_ratio_set)
+                            output_track.track->SetAspectRatio(user_aspect_ratio);
+                        else
+                            output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
                         break;
                     case VC3_1080P_1235:
                     case VC3_1080P_1237:
@@ -1281,11 +1385,17 @@ int main(int argc, const char** argv)
                         output_track.track->SetSamplingRate(input_sound_info->sampling_rate);
                         output_track.track->SetQuantizationBits(input_sound_info->bits_per_sample);
                         output_track.track->SetChannelCount(1);
-                        if (input_sound_info->locked_set)
+                        if (user_locked_set)
+                            output_track.track->SetLocked(user_locked);
+                        else if (input_sound_info->locked_set)
                             output_track.track->SetLocked(input_sound_info->locked);
-                        if (input_sound_info->audio_ref_level_set)
+                        if (user_audio_ref_level_set)
+                            output_track.track->SetAudioRefLevel(user_audio_ref_level);
+                        else if (input_sound_info->audio_ref_level_set)
                             output_track.track->SetAudioRefLevel(input_sound_info->audio_ref_level);
-                        if (input_sound_info->dial_norm_set)
+                        if (user_dial_norm_set)
+                            output_track.track->SetDialNorm(user_dial_norm);
+                        else if (input_sound_info->dial_norm_set)
                             output_track.track->SetDialNorm(input_sound_info->dial_norm);
                         if (clip_type == CW_D10_CLIP_TYPE || input_sound_info->sequence_offset)
                             output_track.track->SetSequenceOffset(input_sound_info->sequence_offset);
