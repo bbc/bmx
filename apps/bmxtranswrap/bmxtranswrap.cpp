@@ -955,9 +955,9 @@ int main(int argc, const char** argv)
                 read_start += precharge;
                 precharge = 0;
             }
-
-            reader->SetReadLimits(read_start + precharge, - precharge + output_duration + rollout, true);
         }
+
+        reader->SetReadLimits(read_start + precharge, - precharge + output_duration + rollout, true);
 
 
         // get input start timecode
