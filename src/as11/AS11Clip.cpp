@@ -448,10 +448,14 @@ void AS11Clip::CompleteSegmentation(bool with_filler)
     if (!mSegmentationSequence)
         return;
 
-    if (mSegmentationSequence->getDuration() >= GetDuration()) {
-        if (mSegmentationSequence->getDuration() > GetDuration()) {
+    int64_t clip_duration = GetInputDuration();
+    if (clip_duration < 0)
+        clip_duration = GetDuration();
+
+    if (mSegmentationSequence->getDuration() >= clip_duration) {
+        if (mSegmentationSequence->getDuration() > clip_duration) {
             log_warn("AS-11 segmentation duration (%"PRId64") exceeds package duration (%"PRId64")\n",
-                     mSegmentationSequence->getDuration(), GetDuration());
+                     mSegmentationSequence->getDuration(), clip_duration);
         }
         return;
     }
@@ -467,12 +471,12 @@ void AS11Clip::CompleteSegmentation(bool with_filler)
             header_metadata->createAndWrap(&MXF_SET_K(Filler)));
         mSegmentationSequence->appendStructuralComponents(component);
         component->setDataDefinition(MXF_DDEF_L(DescriptiveMetadata));
-        component->setDuration(GetDuration() - mSegmentationSequence->getDuration());
+        component->setDuration(clip_duration - mSegmentationSequence->getDuration());
     } else {
-        components.back()->setDuration(GetDuration() - mSegmentationSequence->getDuration());
+        components.back()->setDuration(clip_duration - mSegmentationSequence->getDuration());
     }
 
-    mSegmentationSequence->setDuration(GetDuration());
+    mSegmentationSequence->setDuration(clip_duration);
 }
 
 uint16_t AS11Clip::GetTotalSegments()
@@ -531,6 +535,22 @@ int64_t AS11Clip::GetDuration()
             return mOP1AClip->GetDuration();
         case AS11_D10_CLIP_TYPE:
             return mD10Clip->GetDuration();
+        case AS11_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0;
+}
+
+int64_t AS11Clip::GetInputDuration() const
+{
+    switch (mType)
+    {
+        case AS11_OP1A_CLIP_TYPE:
+            return mOP1AClip->GetInputDuration();
+        case AS11_D10_CLIP_TYPE:
+            return mD10Clip->GetInputDuration();
         case AS11_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;

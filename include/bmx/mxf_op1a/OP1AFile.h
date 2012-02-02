@@ -104,6 +104,8 @@ public:
     int64_t GetDuration();
     int64_t GetContainerDuration();
 
+    int64_t GetInputDuration() const { return mInputDuration; }
+
     uint32_t GetNumTracks() const { return (uint32_t)mTracks.size(); }
     OP1ATrack* GetTrack(uint32_t track_index);
 

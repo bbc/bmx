@@ -1425,6 +1425,12 @@ int main(int argc, const char** argv)
             AS11Clip *as11_clip = clip->GetAS11Clip();
             as11_clip->PrepareHeaderMetadata();
             as11_helper.InsertFrameworks(as11_clip);
+
+            if ((clip_type == CW_AS11_OP1A_CLIP_TYPE && (flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)) ||
+                (clip_type == CW_AS11_D10_CLIP_TYPE  && (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR)))
+            {
+                as11_helper.Complete();
+            }
         }
 
 
@@ -1497,8 +1503,11 @@ int main(int argc, const char** argv)
 
         // complete AS-11 descriptive metadata
 
-        if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE)
+        if ((clip_type == CW_AS11_OP1A_CLIP_TYPE && !(flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)) ||
+            (clip_type == CW_AS11_D10_CLIP_TYPE  && !(flavour & D10_SINGLE_PASS_WRITE_FLAVOUR)))
+        {
             as11_helper.Complete();
+        }
 
 
         // complete writing
