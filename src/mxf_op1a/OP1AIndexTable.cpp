@@ -237,6 +237,7 @@ OP1AIndexTable::OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRationa
     mIndexSID = index_sid;
     mBodySID = body_sid;
     mFrameRate = frame_rate;
+    mInputDuration = -1;
     mIsCBE = true;
     mHaveAVCI = false;
     mSliceCount = 0;
@@ -255,6 +256,11 @@ OP1AIndexTable::~OP1AIndexTable()
     delete mAVCIFirstIndexSegment;
     for (i = 0; i < mIndexSegments.size(); i++)
         delete mIndexSegments[i];
+}
+
+void OP1AIndexTable::SetInputDuration(int64_t duration)
+{
+    mInputDuration = duration;
 }
 
 void OP1AIndexTable::RegisterPictureTrackElement(uint32_t track_index, bool is_cbe, bool apply_temporal_reordering)
@@ -312,6 +318,22 @@ void OP1AIndexTable::AddIndexEntry(uint32_t track_index, int64_t position, int8_
 
     mIndexElementsMap[track_index]->CacheIndexEntry(position, temporal_offset, key_frame_offset, flags,
                                                     can_start_partition);
+}
+
+void OP1AIndexTable::GetCBEEditUnitSize(uint32_t *first, uint32_t *non_first) const
+{
+    BMX_ASSERT(mIsCBE);
+    BMX_ASSERT(mIndexSegments.size() <= 1);
+
+    if (mIndexSegments.empty())
+        *non_first = 0;
+    else
+        *non_first = mIndexSegments[0]->GetSegment()->getEditUnitByteCount();
+
+    if (mAVCIFirstIndexSegment)
+        *first = mAVCIFirstIndexSegment->GetSegment()->getEditUnitByteCount();
+    else
+        *first = *non_first;
 }
 
 void OP1AIndexTable::UpdateIndexEntry(uint32_t track_index, int64_t position, int8_t temporal_offset)
@@ -494,13 +516,21 @@ void OP1AIndexTable::WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *part
         }
         if (!mAVCIFirstIndexSegment || mDuration > 1) {
             int64_t orig_duration = mIndexSegments[0]->GetSegment()->getIndexDuration();
-            if (!final_write)
+            if (mInputDuration >= 0) {
+                BMX_ASSERT(mInputDuration >= mDuration);
+                if (mAVCIFirstIndexSegment)
+                    mIndexSegments[0]->GetSegment()->setIndexDuration(mInputDuration - 1);
+                else
+                    mIndexSegments[0]->GetSegment()->setIndexDuration(mInputDuration);
+            } else if (!final_write) {
                 mIndexSegments[0]->GetSegment()->setIndexDuration(0); // duration is completed at the final write
+            }
             BMX_CHECK(mxf_write_index_table_segment(mxf_file->getCFile(),
                                                     mIndexSegments[0]->GetSegment()->getCIndexTableSegment()));
             mIndexSegments[0]->GetSegment()->setIndexDuration(orig_duration);
         }
     } else {
+        BMX_ASSERT(mInputDuration < 0);
         size_t i;
         for (i = 0; i < mIndexSegments.size(); i++) {
             IndexTableSegment *segment = mIndexSegments[i]->GetSegment();

@@ -195,8 +195,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/as11d10/op1a/d10:\n");
     fprintf(stderr, "    --single-pass           Write file in a single pass\n");
-    fprintf(stderr, "                            For as11op1a/op1a the header and body partitions will be incomplete\n");
-    fprintf(stderr, "                            For as11d10/d10 all the partitions will be complete\n");
+    fprintf(stderr, "                            Header and body partitions will be incomplete for as11op1a/op1a if the number if essence container bytes per edit unit is variable\n");
     fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is assumed)\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  avid:\n");
@@ -1119,16 +1118,18 @@ int main(int argc, const char** argv)
                 as11_clip->SetOutputEndOffset(- rollout);
             }
 
-            if (clip_type == CW_AS11_D10_CLIP_TYPE &&
-                (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR))
-            {
+            if (clip_type == CW_AS11_OP1A_CLIP_TYPE && (flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR))
+                as11_clip->GetOP1AClip()->SetInputDuration(reader->GetReadDuration());
+            else if (clip_type == CW_AS11_D10_CLIP_TYPE && (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR))
                 as11_clip->GetD10Clip()->SetInputDuration(reader->GetReadDuration());
-            }
 
             if (!clip_name && as11_helper.HaveProgrammeTitle())
                 as11_clip->SetClipName(as11_helper.GetProgrammeTitle());
         } else if (clip_type == CW_OP1A_CLIP_TYPE) {
             OP1AFile *op1a_clip = clip->GetOP1AClip();
+
+            if (flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)
+                op1a_clip->SetInputDuration(reader->GetReadDuration());
 
             op1a_clip->SetPartitionInterval(partition_interval);
             op1a_clip->SetOutputStartOffset(- precharge);

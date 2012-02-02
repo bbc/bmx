@@ -70,6 +70,7 @@ protected:
 private:
     AVCIMXFDescriptorHelper *mAVCIDescriptorHelper;
     AVCIWriterHelper mWriterHelper;
+    OP1AAVCIMode mMode;
 };
 
 

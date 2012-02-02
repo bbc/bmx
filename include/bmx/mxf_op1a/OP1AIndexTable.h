@@ -137,6 +137,8 @@ public:
 
     void PrepareWrite();
 
+    void SetInputDuration(int64_t duration);
+
 public:
     bool IsCBE() const { return mIsCBE; }
     bool IsVBE() const { return !mIsCBE; }
@@ -144,6 +146,8 @@ public:
 
     int64_t GetDuration() const { return mDuration; }
     int64_t GetStreamOffset() const { return mStreamOffset; }
+
+    void GetCBEEditUnitSize(uint32_t *first, uint32_t *non_first) const;
 
 public:
     void AddIndexEntry(uint32_t track_index, int64_t position, int8_t temporal_offset,
@@ -162,6 +166,8 @@ private:
     uint32_t mIndexSID;
     uint32_t mBodySID;
     mxfRational mFrameRate;
+
+    int64_t mInputDuration;
 
     std::vector<OP1AIndexTableElement*> mIndexElements;
     std::map<uint32_t, OP1AIndexTableElement*> mIndexElementsMap;

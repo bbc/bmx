@@ -79,6 +79,7 @@ public:
     void SetFileSourcePackageUID(mxfUMID package_uid);                  // default generated
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);                // default 8192
     void SetPartitionInterval(int64_t frame_count);                     // default 0 (single partition)
+    void SetInputDuration(int64_t duration);                            // single pass flavours only
 
 public:
     void SetOutputStartOffset(int64_t offset);
@@ -122,6 +123,8 @@ private:
 
     void WriteContentPackages(bool end_of_samples);
 
+    void UpdateFirstPartitions();
+
 private:
     int mFlavour;
     mxfpp::File *mMXFFile;
@@ -135,6 +138,7 @@ private:
     std::string mVersionString;
     mxfUUID mProductUID;
     uint32_t mReserveMinBytes;
+    int64_t mInputDuration;
     mxfTimestamp mCreationDate;
     mxfUUID mGenerationUID;
     mxfUMID mMaterialPackageUID;
@@ -169,6 +173,9 @@ private:
 
     uint32_t mKAGSize;
     uint32_t mEssencePartitionKAGSize;
+
+    bool mSupportCompleteSinglePass;
+    int64_t mFooterPartitionOffset;
 
     MXFMD5WrapperFile *mMXFMD5WrapperFile;
     std::string mMD5DigestStr;

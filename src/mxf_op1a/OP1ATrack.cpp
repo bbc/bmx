@@ -101,7 +101,7 @@ static const OP1ASampleRateSupport OP1A_SAMPLE_RATE_SUPPORT[] =
     {VC3_720P_1251,          {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {VC3_720P_1252,          {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {VC3_1080P_1253,         {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
-    {WAVE_PCM,                    {{48000, 1}, {0, 0}}},
+    {WAVE_PCM,               {{48000, 1}, {0, 0}}},
 };
 
 
@@ -262,6 +262,18 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
 {
     mxfUL data_def = (mIsPicture ? MXF_DDEF_L(Picture) : MXF_DDEF_L(Sound));
 
+    int64_t material_track_duration = -1; // unknown - could be updated if not writing in a single pass
+    int64_t source_track_duration = -1; // unknown - could be updated if not writing in a single pass
+    int64_t source_track_origin = 0; // could be updated if not writing in a single pass
+    if (mOP1AFile->mSupportCompleteSinglePass) {
+        material_track_duration = mOP1AFile->mInputDuration - mOP1AFile->mOutputStartOffset +
+                                  mOP1AFile->mOutputEndOffset;
+        if (material_track_duration < 0)
+            material_track_duration = 0;
+        source_track_duration = mOP1AFile->mInputDuration + mOP1AFile->mOutputEndOffset;
+        source_track_origin = mOP1AFile->mOutputStartOffset;
+    }
+
     // Preface - ContentStorage - MaterialPackage - Timeline Track
     Track *track = new Track(header_metadata);
     material_package->appendTracks(track);
@@ -275,13 +287,13 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     Sequence *sequence = new Sequence(header_metadata);
     track->setSequence(sequence);
     sequence->setDataDefinition(data_def);
-    sequence->setDuration(-1); // updated when writing completed
+    sequence->setDuration(material_track_duration);
 
     // Preface - ContentStorage - MaterialPackage - Timeline Track - Sequence - SourceClip
     SourceClip *source_clip = new SourceClip(header_metadata);
     sequence->appendStructuralComponents(source_clip);
     source_clip->setDataDefinition(data_def);
-    source_clip->setDuration(-1); // updated when writing completed
+    source_clip->setDuration(material_track_duration);
     source_clip->setStartPosition(0);
     source_clip->setSourcePackageID(file_source_package->getPackageUID());
     source_clip->setSourceTrackID(mTrackId);
@@ -294,19 +306,19 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     track->setTrackID(mTrackId);
     track->setTrackNumber(mTrackNumber);
     track->setEditRate(mFrameRate);
-    track->setOrigin(0); // could be updated when writing completed
+    track->setOrigin(source_track_origin);
 
     // Preface - ContentStorage - SourcePackage - Timeline Track - Sequence
     sequence = new Sequence(header_metadata);
     track->setSequence(sequence);
     sequence->setDataDefinition(data_def);
-    sequence->setDuration(-1); // updated when writing completed
+    sequence->setDuration(source_track_duration);
 
     // Preface - ContentStorage - SourcePackage - Timeline Track - Sequence - SourceClip
     source_clip = new SourceClip(header_metadata);
     sequence->appendStructuralComponents(source_clip);
     source_clip->setDataDefinition(data_def);
-    source_clip->setDuration(-1); // updated when writing completed
+    source_clip->setDuration(source_track_duration);
     source_clip->setStartPosition(0);
     if (mHaveLowerLevelSourcePackage) {
         source_clip->setSourcePackageID(mLowerLevelSourcePackageUID);
@@ -326,6 +338,8 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
         file_source_package->setDescriptor(descriptor);
     }
     descriptor->setLinkedTrackID(mTrackId);
+    if (mOP1AFile->mSupportCompleteSinglePass)
+        descriptor->setContainerDuration(mOP1AFile->mInputDuration);
 
     // Preface - ContentStorage - (lower-level) SourcePackage
     if (mLowerLevelSourcePackage) {
