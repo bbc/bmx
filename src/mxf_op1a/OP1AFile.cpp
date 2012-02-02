@@ -701,12 +701,21 @@ void OP1AFile::UpdateTrackMetadata(GenericPackage *package, int64_t origin, int6
 
         Sequence *sequence = dynamic_cast<Sequence*>(track->getSequence());
         BMX_ASSERT(sequence);
+        vector<StructuralComponent*> components = sequence->getStructuralComponents();
         if (sequence->getDuration() < 0) {
             sequence->setDuration(duration);
-
-            vector<StructuralComponent*> components = sequence->getStructuralComponents();
-            BMX_CHECK(components.size() == 1);
+            BMX_ASSERT(components.size() == 1);
             components[0]->setDuration(duration);
+        }
+        if (components.size() == 1) {
+            TimecodeComponent *timecode_component = dynamic_cast<TimecodeComponent*>(components[0]);
+            if (timecode_component) {
+                Timecode start_timecode = mStartTimecode;
+                start_timecode.AddOffset(- origin, mFrameRate);
+                timecode_component->setRoundedTimecodeBase(start_timecode.GetRoundedTCBase());
+                timecode_component->setDropFrame(start_timecode.IsDropFrame());
+                timecode_component->setStartTimecode(start_timecode.GetOffset());
+            }
         }
     }
 }
