@@ -479,6 +479,26 @@ uint16_t bmx::get_rounded_tc_base(Rational rate)
     return (uint16_t)((rate.numerator + rate.denominator/2) / rate.denominator);
 }
 
+string bmx::get_duration_string(int64_t count, Rational rate)
+{
+    if (count < 0 || rate.numerator == 0 || rate.denominator == 0)
+        return "00:00:00:00";
+
+    uint16_t rounded_rate = get_rounded_tc_base(rate);
+
+    int64_t frame = count % rounded_rate;
+    int64_t sec = count / rounded_rate;
+    int64_t min = sec / 60;
+    sec %= 60;
+    int64_t hour = min / 60;
+    min %= 60;
+
+    char buffer[64];
+    sprintf(buffer, "%02"PRId64":%02d:%02d:%02d", hour, (int)min, (int)sec, (int)frame);
+
+    return buffer;
+}
+
 string bmx::get_generic_duration_string(int64_t count, Rational rate)
 {
     if (count <= 0 || rate.numerator == 0 || rate.denominator == 0)
@@ -523,6 +543,19 @@ bmx::Rational bmx::convert_int_to_rational(int32_t value)
 {
     Rational ret = {value, 1};
     return ret;
+}
+
+string bmx::get_timecode_string(Timecode timecode)
+{
+    char buffer[64];
+    sprintf(buffer, "%02d:%02d:%02d%c%02d",
+            timecode.GetHour(),
+            timecode.GetMin(),
+            timecode.GetSec(),
+            timecode.IsDropFrame() ? ';' : ':',
+            timecode.GetFrame(),
+            timecode.GetRoundedTCBase());
+    return buffer;
 }
 
 void bmx::decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_tc, unsigned int size,

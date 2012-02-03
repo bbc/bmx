@@ -392,16 +392,18 @@ static void print_uk_dpp_framework(UKDPPFramework *udf, Rational frame_rate)
     printf("      ContactTelephoneNo        : %s\n", udf->GetContactTelephoneNo().c_str());
 }
 
-static void print_segmentation_framework(DMSegment *seg, Rational frame_rate)
+static void print_segmentation_framework(DMSegment *seg, Timecode start_timecode, int64_t offset, Rational edit_rate)
 {
     AS11SegmentationFramework *framework = dynamic_cast<AS11SegmentationFramework*>(seg->getDMFramework());
 
-    printf("      Part:\n");
-    printf("          Duration    : %"PRId64" (%s)\n",
-           seg->getDuration(),
-           get_generic_duration_string_2(seg->getDuration(), frame_rate).c_str());
-    printf("          PartNumber  : %u\n", framework->GetPartNumber());
-    printf("          PartTotal   : %u\n", framework->GetPartTotal());
+    char part_str[12];
+    sprintf(part_str, "%u/%u", framework->GetPartNumber(), framework->GetPartTotal());
+
+    Timecode som = start_timecode;
+    som.AddOffset(offset, edit_rate);
+
+    printf("      %-15s%-13s%s\n", part_str, get_timecode_string(som).c_str(),
+           get_duration_string(seg->getDuration(), edit_rate).c_str());
 }
 
 
@@ -455,17 +457,17 @@ void bmx::as11_print_info(MXFFileReader *file_reader)
 
     if (!segmentation.empty()) {
         printf("  Segmentation:\n");
+        printf("      PartNo/Total   SOM          Duration\n");
 
+        Timecode start_timecode = file_reader->GetMaterialTimecode(0);
+        BMX_CHECK(file_reader->GetFixedLeadFillerOffset() == 0);
+
+        int64_t offset = 0;
         for (i = 0; i < segmentation.size(); i++) {
             DMSegment *seg = dynamic_cast<DMSegment*>(segmentation[i]);
-            if (seg) {
-                print_segmentation_framework(seg, segmentation_rate);
-            } else {
-                printf("      Filler:\n");
-                printf("          Duration    : %"PRId64" (%s)\n",
-                       segmentation[i]->getDuration(),
-                       get_generic_duration_string_2(segmentation[i]->getDuration(), segmentation_rate).c_str());
-            }
+            if (seg)
+                print_segmentation_framework(seg, start_timecode, offset, segmentation_rate);
+            offset += segmentation[i]->getDuration();
         }
     }
 

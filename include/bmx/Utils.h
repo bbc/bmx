@@ -99,10 +99,13 @@ UMID generate_umid();
 
 uint16_t get_rounded_tc_base(Rational rate);
 
+std::string get_duration_string(int64_t count, Rational rate);
 std::string get_generic_duration_string(int64_t count, Rational rate);
 std::string get_generic_duration_string_2(int64_t count, Rational rate);
 
 Rational convert_int_to_rational(int32_t value);
+
+std::string get_timecode_string(Timecode timecode);
 
 
 void decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_tc, unsigned int size, 

@@ -504,6 +504,7 @@ bool AS11Helper::ParseSegmentationFile(const char *filename, Rational frame_rate
         return false;
     }
 
+    const uint16_t rounded_rate = get_rounded_tc_base(frame_rate);
     bool last_tc_xx = false;
     int line_num = 0;
     int c = '1';
@@ -514,75 +515,54 @@ bool AS11Helper::ParseSegmentationFile(const char *filename, Rational frame_rate
                 line_num++;
         }
 
-        AS11TCSegment segment;
-        segment.start.Init(frame_rate, false);
+        // skip leading space
+        while (c == ' ' || c == '\t')
+            c = fgetc(file);
 
-        string part_number_string;
-        string tc_pair_string;
-        int space_count = 0;
-        size_t second_tc_start = 0;
+        // line
+        string line_str;
         while (c != EOF && (c != '\r' && c != '\n')) {
-            if (space_count < 2) {
-                tc_pair_string += c;
-                if (c == ' ') {
-                    if (space_count == 0)
-                        second_tc_start = tc_pair_string.size();
-                    space_count++;
-                }
-                if (space_count == 2) {
-                    last_tc_xx = false;
-
-                    Timecode end;
-                    if (!parse_timecode(tc_pair_string.c_str(), frame_rate, &segment.start)) {
-                        fprintf(stderr, "Failed to parse 1st timecode on line %d\n", line_num);
-                        fclose(file);
-                        mSegments.clear();
-                        return false;
-                    }
-                    if (!parse_timecode(&tc_pair_string[second_tc_start], frame_rate, &end)) {
-                        if (trim_string(&tc_pair_string[second_tc_start]) != "xx:xx:xx:xx") {
-                            fprintf(stderr, "Failed to parse 2nd timecode on line %d\n", line_num);
-                            fclose(file);
-                            mSegments.clear();
-                            return false;
-                        }
-
-                        // segment extends to package duration
-                        last_tc_xx = true;
-                        segment.duration = 0;
-                    } else {
-                        segment.duration = end.GetOffset() - segment.start.GetOffset() + 1;
-                        if (segment.duration < 0) // assume crossed midnight
-                            segment.duration += end.GetMaxOffset();
-                    }
-                }
-            } else {
-                part_number_string += c;
-            }
-
+            line_str += c;
             c = fgetc(file);
         }
-        if (!tc_pair_string.empty()) {
-            if (space_count != 2) {
-                fprintf(stderr, "Failed to parse line %d\n", line_num);
-                fclose(file);
-                mSegments.clear();
-                return false;
-            }
 
-            int pnum, ptotal;
-            if (sscanf(part_number_string.c_str(), "%d/%d", &pnum, &ptotal) != 2 ||
-                pnum < 0 || ptotal <= 0)
+        int part_num = 0, part_total = 0;
+        int som_h = 0, som_m = 0, som_s = 0, som_f = 0;
+        int dur_h = 0, dur_m = 0, dur_s = 0, dur_f = 0;
+        char xc = 0;
+        if (!line_str.empty()) {
+            if (sscanf(line_str.c_str(), "%d/%d %d:%d:%d:%d %d:%d:%d:%d",
+                       &part_num, &part_total,
+                       &som_h, &som_m, &som_s, &som_f,
+                       &dur_h, &dur_m, &dur_s, &dur_f) != 10 &&
+                (sscanf(line_str.c_str(), "%d/%d %d:%d:%d:%d %c",
+                       &part_num, &part_total,
+                       &som_h, &som_m, &som_s, &som_f, &xc) != 7 ||
+                   (xc != 'x' && xc != 'X')))
             {
-                fprintf(stderr, "Failed to parse valid part number on line %d\n", line_num);
+                fprintf(stderr, "Failed to parse segment line %d\n", line_num);
                 fclose(file);
                 mSegments.clear();
                 return false;
             }
-            segment.part_number = pnum;
-            segment.part_total = ptotal;
 
+            AS11TCSegment segment;
+            segment.part_number  = part_num;
+            segment.part_total   = part_total;
+            segment.start.Init(frame_rate, false, som_h, som_m, som_s, som_f);
+            segment.duration     = 0;
+            if (!xc) {
+                segment.duration = dur_h * 60 * 60 * rounded_rate +
+                                   dur_m * 60 * rounded_rate +
+                                   dur_s * rounded_rate +
+                                   dur_f;
+            }
             mSegments.push_back(segment);
+
+            if (xc) {
+                last_tc_xx = true;
+                break;
+            }
         }
 
         if (c == '\n')
