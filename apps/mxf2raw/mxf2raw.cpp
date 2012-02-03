@@ -326,6 +326,16 @@ static string create_raw_filename(string prefix, bool is_video, uint32_t index, 
     return prefix + buffer;
 }
 
+static bool open_md5_wrapped_file(const char *filename, MXFMD5WrapperFile **md5_wrap_file)
+{
+    MXFFile *mxf_file;
+    if (!mxf_disk_file_open_read(filename, &mxf_file))
+        return false;
+
+    *md5_wrap_file = md5_wrap_mxf_file(mxf_file);
+    return true;
+}
+
 static string get_version_info()
 {
     char buffer[256];
@@ -352,6 +362,7 @@ static void usage(const char *cmd)
     fprintf(stderr, " --nopc                Don't include pre-charge frames\n");
     fprintf(stderr, " --noro                Don't include roll-out frames\n");
     fprintf(stderr, " --md5                 Calculate md5 checksum of essence data\n");
+    fprintf(stderr, " --file-md5            Calculate md5 checksum of the file\n");
     fprintf(stderr, " --group               Use the group reader instead of the sequence reader\n");
     fprintf(stderr, "                       Use this option if the files have different material packages\n");
     fprintf(stderr, "                       but actually belong to the same virtual package / group\n");
@@ -373,6 +384,7 @@ int main(int argc, const char** argv)
     bool no_precharge = false;
     bool no_rollout = false;
     bool calc_md5 = false;
+    bool calc_file_md5 = false;
     bool use_group_reader = false;
     bool keep_input_order = false;
     bool do_print_version = false;
@@ -482,6 +494,10 @@ int main(int argc, const char** argv)
             calc_md5 = true;
             do_read = true;
         }
+        else if (strcmp(argv[cmdln_index], "--file-md5") == 0)
+        {
+            calc_file_md5 = true;
+        }
         else if (strcmp(argv[cmdln_index], "--group") == 0)
         {
             use_group_reader = true;
@@ -525,9 +541,31 @@ int main(int argc, const char** argv)
         log_info("%s\n", get_version_info().c_str());
 
 
+#define OPEN_FILE(sreader, index)                                                       \
+    MXFFileReader::OpenResult result;                                                   \
+    if (calc_file_md5) {                                                                \
+        MXFMD5WrapperFile *md5_wrap_file;                                               \
+        if (open_md5_wrapped_file(filenames[index], &md5_wrap_file)) {                  \
+            md5_wrap_files.push_back(md5_wrap_file);                                    \
+            result = sreader->Open(new File(md5_wrap_get_file(md5_wrap_files.back())),  \
+                                  filenames[index]);                                    \
+        } else {                                                                        \
+            result = MXFFileReader::MXF_RESULT_OPEN_FAIL;                               \
+        }                                                                               \
+    } else {                                                                            \
+        result = sreader->Open(filenames[index]);                                       \
+    }                                                                                   \
+    if (result != MXFFileReader::MXF_RESULT_SUCCESS) {                                  \
+        log_error("Failed to open MXF file '%s': %s\n", filenames[index],               \
+                  MXFFileReader::ResultToString(result).c_str());                       \
+        delete sreader;                                                                 \
+        throw false;                                                                    \
+    }
+
     int cmd_result = 0;
     try
     {
+        vector<MXFMD5WrapperFile*> md5_wrap_files;
         MXFReader *reader;
         MXFFileReader *file_reader = 0;
         if (use_group_reader) {
@@ -535,14 +573,7 @@ int main(int argc, const char** argv)
             size_t i;
             for (i = 0; i < filenames.size(); i++) {
                 MXFFileReader *grp_file_reader = new MXFFileReader();
-                MXFFileReader::OpenResult result = grp_file_reader->Open(filenames[i]);
-                if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-                    log_error("Failed to open MXF file '%s': %s\n", filenames[i],
-                              MXFFileReader::ResultToString(result).c_str());
-                    delete grp_file_reader;
-                    throw false;
-                }
-
+                OPEN_FILE(grp_file_reader, i)
                 group_reader->AddReader(grp_file_reader);
             }
             if (!group_reader->Finalize())
@@ -554,14 +585,7 @@ int main(int argc, const char** argv)
             size_t i;
             for (i = 0; i < filenames.size(); i++) {
                 MXFFileReader *seq_file_reader = new MXFFileReader();
-                MXFFileReader::OpenResult result = seq_file_reader->Open(filenames[i]);
-                if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-                    log_error("Failed to open MXF file '%s': %s\n", filenames[i],
-                              MXFFileReader::ResultToString(result).c_str());
-                    delete seq_file_reader;
-                    throw false;
-                }
-
+                OPEN_FILE(seq_file_reader, i)
                 seq_reader->AddReader(seq_file_reader);
             }
             if (!seq_reader->Finalize(false, keep_input_order))
@@ -572,14 +596,7 @@ int main(int argc, const char** argv)
             file_reader = new MXFFileReader();
             if (do_print_as11)
                 as11_register_extensions(file_reader);
-
-            MXFFileReader::OpenResult result = file_reader->Open(filenames[0]);
-            if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-                log_error("Failed to open MXF file '%s': %s\n", filenames[0],
-                          MXFFileReader::ResultToString(result).c_str());
-                delete file_reader;
-                throw false;
-            }
+            OPEN_FILE(file_reader, 0)
 
             reader = file_reader;
         }
@@ -746,6 +763,13 @@ int main(int argc, const char** argv)
                 }
             }
 
+            // force file md5 update now that reading/seeking will be forwards only
+            if (calc_file_md5) {
+                size_t i;
+                for (i = 0; i < md5_wrap_files.size(); i++)
+                    md5_wrap_force_update(md5_wrap_files[i]);
+            }
+
             // choose number of samples to read in one go
             uint32_t max_samples_per_read = 1;
             if (!have_video && sample_rate.numerator == 48000 && sample_rate.denominator == 1)
@@ -843,11 +867,29 @@ int main(int argc, const char** argv)
                 }
             }
 
+            if (calc_file_md5) {
+                BMX_ASSERT(filenames.size() == md5_wrap_files.size());
+                unsigned char digest[16];
+                size_t i;
+                for (i = 0; i < md5_wrap_files.size(); i++) {
+                    md5_wrap_finalize(md5_wrap_files[i], digest);
+                    log_info("File MD5: %s %s\n", filenames[i], md5_digest_str(digest).c_str());
+                }
+            }
+
 
             // clean-up
             size_t i;
             for (i = 0; i < raw_files.size(); i++)
                 fclose(raw_files[i]);
+        } else if (calc_file_md5) {
+            BMX_ASSERT(filenames.size() == md5_wrap_files.size());
+            unsigned char digest[16];
+            size_t i;
+            for (i = 0; i < md5_wrap_files.size(); i++) {
+                md5_wrap_finalize(md5_wrap_files[i], digest);
+                log_info("File MD5: %s %s\n", filenames[i], md5_digest_str(digest).c_str());
+            }
         }
 
 
