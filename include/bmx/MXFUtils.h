@@ -60,7 +60,8 @@ std::string get_track_name(bool is_video, uint32_t track_number);
 
 MXFMD5WrapperFile* md5_wrap_mxf_file(MXFFile *target);
 MXFFile* md5_wrap_get_file(MXFMD5WrapperFile *md5_wrapper_file);
-void md5_wrap_finalize(MXFMD5WrapperFile *md5_wrapper_file, unsigned char digest[16]);
+void md5_wrap_force_update(MXFMD5WrapperFile *md5_wrapper_file);
+bool md5_wrap_finalize(MXFMD5WrapperFile *md5_wrapper_file, unsigned char digest[16]);
 
 
 };
