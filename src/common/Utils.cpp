@@ -405,6 +405,16 @@ string bmx::get_abs_filename(string base_dir, string filename)
     return uri.ToFilename();
 }
 
+bool bmx::check_file_exists(string filename)
+{
+    FILE *file = fopen(filename.c_str(), "rb");
+    if (!file)
+        return false;
+
+    fclose(file);
+    return true;
+}
+
 bmx::Timestamp bmx::generate_timestamp_now()
 {
     Timestamp now;

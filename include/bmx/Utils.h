@@ -90,6 +90,8 @@ std::string strip_suffix(std::string filename);
 std::string get_abs_cwd();
 std::string get_abs_filename(std::string base_dir, std::string filename);
 
+bool check_file_exists(std::string filename);
+
 Timestamp generate_timestamp_now();
 
 UUID generate_uuid();

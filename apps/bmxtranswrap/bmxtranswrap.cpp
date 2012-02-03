@@ -737,8 +737,18 @@ int main(int argc, const char** argv)
         }
     }
 
-    for (; cmdln_index < argc; cmdln_index++)
+    for (; cmdln_index < argc; cmdln_index++) {
+        if (!check_file_exists(argv[cmdln_index])) {
+            if (argv[cmdln_index][0] == '-') {
+                usage(argv[0]);
+                fprintf(stderr, "Unknown argument '%s'\n", argv[cmdln_index]);
+            } else {
+                fprintf(stderr, "Failed to open input filename '%s'\n", argv[cmdln_index]);
+            }
+            return 1;
+        }
         input_filenames.push_back(argv[cmdln_index]);
+    }
 
     if (input_filenames.empty()) {
         usage(argv[0]);
