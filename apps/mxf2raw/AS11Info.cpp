@@ -304,7 +304,7 @@ static void print_core_framework(AS11CoreFramework *cf)
         printf("      ClosedCaptionsLanguage    : %s\n", cf->GetClosedCaptionsLanguage().c_str());
 }
 
-static void print_uk_dpp_framework(UKDPPFramework *udf, Rational frame_rate)
+static void print_uk_dpp_framework(UKDPPFramework *udf, Timecode start_timecode, Rational frame_rate)
 {
     printf("  UK DPP Framework:\n");
     printf("      ProductionNumber          : %s\n", udf->GetProductionNumber().c_str());
@@ -348,12 +348,19 @@ static void print_uk_dpp_framework(UKDPPFramework *udf, Rational frame_rate)
                            ARRAY_SIZE(AUDIO_LOUDNESS_STANDARD_STR)));
     if (udf->HaveAudioComments())
         printf("      AudioComments             : %s\n", udf->GetAudioComments().c_str());
-    printf("      LineUpStart               : %"PRId64" (%s)\n",
-           udf->GetLineUpStart(),
-           get_generic_duration_string_2(udf->GetLineUpStart(), frame_rate).c_str());
-    printf("      IdentClockStart           : %"PRId64" (%s)\n",
-           udf->GetIdentClockStart(),
-           get_generic_duration_string_2(udf->GetIdentClockStart(), frame_rate).c_str());
+
+    Timecode line_up_start = start_timecode;
+    line_up_start.AddOffset(udf->GetLineUpStart(), frame_rate);
+    printf("      LineUpStart               : %s (%"PRId64" offset)\n",
+           get_timecode_string(line_up_start).c_str(),
+           udf->GetLineUpStart());
+
+    Timecode ident_clock_start = start_timecode;
+    ident_clock_start.AddOffset(udf->GetIdentClockStart(), frame_rate);
+    printf("      IdentClockStart           : %s (%"PRId64" offset)\n",
+           get_timecode_string(ident_clock_start).c_str(),
+           udf->GetIdentClockStart());
+
     printf("      TotalNumberOfParts        : %u\n", udf->GetTotalNumberOfParts());
     printf("      TotalProgrammeDuration    : %"PRId64" (%s)\n",
            udf->GetTotalProgrammeDuration(),
@@ -429,6 +436,8 @@ void bmx::as11_print_info(MXFFileReader *file_reader)
     }
 
     Rational frame_rate = file_reader->GetSampleRate();
+    Timecode start_timecode = file_reader->GetMaterialTimecode(0);
+    BMX_CHECK(file_reader->GetFixedLeadFillerOffset() == 0);
 
     vector<DMFramework*> static_frameworks = get_static_frameworks(mp);
 
@@ -452,15 +461,12 @@ void bmx::as11_print_info(MXFFileReader *file_reader)
         if (cf)
             print_core_framework(cf);
         else if (udf)
-            print_uk_dpp_framework(udf, frame_rate);
+            print_uk_dpp_framework(udf, start_timecode, frame_rate);
     }
 
     if (!segmentation.empty()) {
         printf("  Segmentation:\n");
         printf("      PartNo/Total   SOM          Duration\n");
-
-        Timecode start_timecode = file_reader->GetMaterialTimecode(0);
-        BMX_CHECK(file_reader->GetFixedLeadFillerOffset() == 0);
 
         int64_t offset = 0;
         for (i = 0; i < segmentation.size(); i++) {
