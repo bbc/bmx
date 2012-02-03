@@ -362,9 +362,9 @@ static void print_uk_dpp_framework(UKDPPFramework *udf, Timecode start_timecode,
            udf->GetIdentClockStart());
 
     printf("      TotalNumberOfParts        : %u\n", udf->GetTotalNumberOfParts());
-    printf("      TotalProgrammeDuration    : %"PRId64" (%s)\n",
-           udf->GetTotalProgrammeDuration(),
-           get_generic_duration_string_2(udf->GetTotalProgrammeDuration(), frame_rate).c_str());
+    printf("      TotalProgrammeDuration    : %s (%"PRId64" frames)\n",
+           get_duration_string(udf->GetTotalProgrammeDuration(), frame_rate).c_str(),
+           udf->GetTotalProgrammeDuration());
     printf("      AudioDescriptionPresent   : %s\n", get_bool_string(udf->GetAudioDescriptionPresent()));
     if (udf->HaveAudioDescriptionType()) {
         printf("      AudioDescriptionType      : %u (%s)\n",
