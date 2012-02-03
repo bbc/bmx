@@ -286,110 +286,110 @@ static vector<StructuralComponent*> get_segmentation(MaterialPackage *mp, Ration
 static void print_core_framework(AS11CoreFramework *cf)
 {
     printf("  AS-11 Core Framework:\n");
-    printf("      Shim Name                 : %s\n", cf->GetShimName().c_str());
-    printf("      Series Title              : %s\n", cf->GetSeriesTitle().c_str());
-    printf("      Programme Title           : %s\n", cf->GetProgrammeTitle().c_str());
-    printf("      Episode Title Number      : %s\n", cf->GetEpisodeTitleNumber().c_str());
-    printf("      Audio Track Layout        : %u (%s)\n",
+    printf("      ShimName                  : %s\n", cf->GetShimName().c_str());
+    printf("      SeriesTitle               : %s\n", cf->GetSeriesTitle().c_str());
+    printf("      ProgrammeTitle            : %s\n", cf->GetProgrammeTitle().c_str());
+    printf("      EpisodeTitleNumber        : %s\n", cf->GetEpisodeTitleNumber().c_str());
+    printf("      AudioTrackLayout          : %u (%s)\n",
            cf->GetAudioTrackLayout(),
            get_audio_track_layout_string(cf->GetAudioTrackLayout()));
-    printf("      Primary Audio Language    : %s\n", cf->GetPrimaryAudioLanguage().c_str());
-    printf("      Closed Captions Present   : %s\n", get_bool_string(cf->GetClosedCaptionsPresent()));
+    printf("      PrimaryAudioLanguage      : %s\n", cf->GetPrimaryAudioLanguage().c_str());
+    printf("      ClosedCaptionsPresent     : %s\n", get_bool_string(cf->GetClosedCaptionsPresent()));
     if (cf->HaveClosedCaptionsType()) {
-        printf("      Closed Captions Type      : %u (%s)\n",
+        printf("      ClosedCaptionsType        : %u (%s)\n",
                cf->GetClosedCaptionsType(),
                get_enum_string(cf->GetClosedCaptionsType(), CAPTIONS_TYPE_STR, ARRAY_SIZE(CAPTIONS_TYPE_STR)));
     }
     if (cf->HaveClosedCaptionsLanguage())
-        printf("      Closed Captions Language  : %s\n", cf->GetClosedCaptionsLanguage().c_str());
+        printf("      ClosedCaptionsLanguage    : %s\n", cf->GetClosedCaptionsLanguage().c_str());
 }
 
 static void print_uk_dpp_framework(UKDPPFramework *udf, Rational frame_rate)
 {
     printf("  UK DPP Framework:\n");
-    printf("      Production Number         : %s\n", udf->GetProductionNumber().c_str());
+    printf("      ProductionNumber          : %s\n", udf->GetProductionNumber().c_str());
     printf("      Synopsis                  : %s\n", udf->GetSynopsis().c_str());
     printf("      Originator                : %s\n", udf->GetOriginator().c_str());
-    printf("      Copyright Year            : %u\n", udf->GetCopyrightYear());
+    printf("      CopyrightYear             : %u\n", udf->GetCopyrightYear());
     if (udf->HaveOtherIdentifier())
-        printf("      Other Identifier          : %s\n", udf->GetOtherIdentifier().c_str());
+        printf("      OtherIdentifier           : %s\n", udf->GetOtherIdentifier().c_str());
     if (udf->HaveOtherIdentifierType())
-        printf("      Other Identifier Type     : %s\n", udf->GetOtherIdentifierType().c_str());
+        printf("      OtherIdentifierType       : %s\n", udf->GetOtherIdentifierType().c_str());
     if (udf->HaveGenre())
         printf("      Genre                     : %s\n", udf->GetGenre().c_str());
     if (udf->HaveDistributor())
         printf("      Distributor               : %s\n", udf->GetDistributor().c_str());
     if (udf->HavePictureRatio())
-        printf("      Picture Ratio             : %s\n", get_picture_ratio_string(udf->GetPictureRatio()));
+        printf("      PictureRatio              : %s\n", get_picture_ratio_string(udf->GetPictureRatio()));
     printf("      3D                        : %s\n", get_bool_string(udf->Get3D()));
     if (udf->Have3DType()) {
-        printf("      3D Type                   : %u (%s)\n",
+        printf("      3DType                    : %u (%s)\n",
            udf->Get3DType(),
            get_enum_string(udf->Get3DType(), T3D_TYPE_STR, ARRAY_SIZE(T3D_TYPE_STR)));
     }
     if (udf->HaveProductPlacement())
-        printf("      Product Placement         : %s\n", get_bool_string(udf->GetProductPlacement()));
+        printf("      ProductPlacement          : %s\n", get_bool_string(udf->GetProductPlacement()));
     if (udf->HaveFPAPass()) {
-        printf("      FPA Pass                  : %u (%s)\n",
+        printf("      FPAPass                   : %u (%s)\n",
                udf->GetFPAPass(),
                get_enum_string(udf->GetFPAPass(), FPA_PASS_STR, ARRAY_SIZE(FPA_PASS_STR)));
     }
     if (udf->HaveFPAManufacturer())
-        printf("      FPA Manufacturer          : %s\n", udf->GetFPAManufacturer().c_str());
+        printf("      FPAManufacturer           : %s\n", udf->GetFPAManufacturer().c_str());
     if (udf->HaveFPAVersion())
-        printf("      FPA Version               : %s\n", udf->GetFPAVersion().c_str());
+        printf("      FPAVersion                : %s\n", udf->GetFPAVersion().c_str());
     if (udf->HaveVideoComments())
-        printf("      Video Comments            : %s\n", udf->GetVideoComments().c_str());
-    printf("      Secondary Audio Language  : %s\n", udf->GetSecondaryAudioLanguage().c_str());
-    printf("      Tertiary Audio Language   : %s\n", udf->GetTertiaryAudioLanguage().c_str());
-    printf("      Audio Loudness Standard   : %u (%s)\n",
+        printf("      VideoComments             : %s\n", udf->GetVideoComments().c_str());
+    printf("      SecondaryAudioLanguage    : %s\n", udf->GetSecondaryAudioLanguage().c_str());
+    printf("      TertiaryAudioLanguage     : %s\n", udf->GetTertiaryAudioLanguage().c_str());
+    printf("      AudioLoudnessStandard     : %u (%s)\n",
            udf->GetAudioLoudnessStandard(),
            get_enum_string(udf->GetAudioLoudnessStandard(), AUDIO_LOUDNESS_STANDARD_STR,
                            ARRAY_SIZE(AUDIO_LOUDNESS_STANDARD_STR)));
     if (udf->HaveAudioComments())
-        printf("      Audio Comments            : %s\n", udf->GetAudioComments().c_str());
-    printf("      Line Up Start             : %"PRId64" (%s)\n",
+        printf("      AudioComments             : %s\n", udf->GetAudioComments().c_str());
+    printf("      LineUpStart               : %"PRId64" (%s)\n",
            udf->GetLineUpStart(),
            get_generic_duration_string_2(udf->GetLineUpStart(), frame_rate).c_str());
-    printf("      Ident Clock Start         : %"PRId64" (%s)\n",
+    printf("      IdentClockStart           : %"PRId64" (%s)\n",
            udf->GetIdentClockStart(),
            get_generic_duration_string_2(udf->GetIdentClockStart(), frame_rate).c_str());
-    printf("      Total Number Of Parts     : %u\n", udf->GetTotalNumberOfParts());
-    printf("      Total Programme Duration  : %"PRId64" (%s)\n",
+    printf("      TotalNumberOfParts        : %u\n", udf->GetTotalNumberOfParts());
+    printf("      TotalProgrammeDuration    : %"PRId64" (%s)\n",
            udf->GetTotalProgrammeDuration(),
            get_generic_duration_string_2(udf->GetTotalProgrammeDuration(), frame_rate).c_str());
-    printf("      Audio Description Present : %s\n", get_bool_string(udf->GetAudioDescriptionPresent()));
+    printf("      AudioDescriptionPresent   : %s\n", get_bool_string(udf->GetAudioDescriptionPresent()));
     if (udf->HaveAudioDescriptionType()) {
-        printf("      Audio Description Type    : %u (%s)\n",
+        printf("      AudioDescriptionType      : %u (%s)\n",
                udf->GetAudioDescriptionType(),
                get_enum_string(udf->GetAudioDescriptionType(), AUDIO_DESCRIPTION_TYPE_STR,
                                ARRAY_SIZE(AUDIO_DESCRIPTION_TYPE_STR)));
     }
-    printf("      Open Captions Present     : %s\n", get_bool_string(udf->GetOpenCaptionsPresent()));
+    printf("      OpenCaptionsPresent       : %s\n", get_bool_string(udf->GetOpenCaptionsPresent()));
     if (udf->HaveOpenCaptionsType()) {
-        printf("      Open Captions Type        : %u (%s)\n",
+        printf("      OpenCaptionsType          : %u (%s)\n",
                udf->GetOpenCaptionsType(),
                get_enum_string(udf->GetOpenCaptionsType(), CAPTIONS_TYPE_STR, ARRAY_SIZE(CAPTIONS_TYPE_STR)));
     }
     if (udf->HaveOpenCaptionsLanguage())
-        printf("      Open Captions Language    : %s\n", udf->GetOpenCaptionsLanguage().c_str());
-    printf("      Signing Present           : %u (%s)\n",
+        printf("      OpenCaptionsLanguage      : %s\n", udf->GetOpenCaptionsLanguage().c_str());
+    printf("      SigningPresent            : %u (%s)\n",
                udf->GetSigningPresent(),
                get_enum_string(udf->GetSigningPresent(), SIGNING_PRESENT_STR, ARRAY_SIZE(SIGNING_PRESENT_STR)));
     if (udf->HaveSignLanguage()) {
-        printf("      Sign Language             : %u (%s)\n",
+        printf("      SignLanguage              : %u (%s)\n",
                udf->GetSignLanguage(),
                get_enum_string(udf->GetSignLanguage(), SIGN_LANGUAGE_STR, ARRAY_SIZE(SIGN_LANGUAGE_STR)));
     }
-    printf("      Completion Date           : %s\n", get_date_string(udf->GetCompletionDate()));
+    printf("      CompletionDate            : %s\n", get_date_string(udf->GetCompletionDate()));
     if (udf->HaveTextlessElementsExist())
-        printf("      Textless Elements Exist   : %s\n", get_bool_string(udf->GetTextlessElementsExist()));
+        printf("      TextlessElementsExist     : %s\n", get_bool_string(udf->GetTextlessElementsExist()));
     if (udf->HaveProgrammeHasText())
-        printf("      Programme Has Text        : %s\n", get_bool_string(udf->GetProgrammeHasText()));
+        printf("      ProgrammeHasText          : %s\n", get_bool_string(udf->GetProgrammeHasText()));
     if (udf->HaveProgrammeTextLanguage())
-        printf("      Programme Text Language   : %s\n", udf->GetProgrammeTextLanguage().c_str());
-    printf("      Contact Email             : %s\n", udf->GetContactEmail().c_str());
-    printf("      Contact Telephone No      : %s\n", udf->GetContactTelephoneNo().c_str());
+        printf("      ProgrammeTextLanguage     : %s\n", udf->GetProgrammeTextLanguage().c_str());
+    printf("      ContactEmail              : %s\n", udf->GetContactEmail().c_str());
+    printf("      ContactTelephoneNo        : %s\n", udf->GetContactTelephoneNo().c_str());
 }
 
 static void print_segmentation_framework(DMSegment *seg, Rational frame_rate)
@@ -400,8 +400,8 @@ static void print_segmentation_framework(DMSegment *seg, Rational frame_rate)
     printf("          Duration    : %"PRId64" (%s)\n",
            seg->getDuration(),
            get_generic_duration_string_2(seg->getDuration(), frame_rate).c_str());
-    printf("          Part Number : %u\n", framework->GetPartNumber());
-    printf("          Part Total  : %u\n", framework->GetPartTotal());
+    printf("          PartNumber  : %u\n", framework->GetPartNumber());
+    printf("          PartTotal   : %u\n", framework->GetPartTotal());
 }
 
 
