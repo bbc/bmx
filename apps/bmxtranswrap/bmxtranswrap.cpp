@@ -96,6 +96,16 @@ extern bool BMX_REGRESSION_TEST;
 
 
 
+static bool open_md5_wrapped_file(const char *filename, MXFMD5WrapperFile **md5_wrap_file)
+{
+    MXFFile *mxf_file;
+    if (!mxf_disk_file_open_read(filename, &mxf_file))
+        return false;
+
+    *md5_wrap_file = md5_wrap_mxf_file(mxf_file);
+    return true;
+}
+
 static bool parse_mic_type(const char *mic_type_str, MICType *mic_type)
 {
     if (strcmp(mic_type_str, "md5") == 0)
@@ -150,6 +160,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "* -o <name>               as02: <name> is a bundle name\n");
     fprintf(stderr, "                          as11op1a/as11d10/op1a/d10: <name> is a filename\n");
     fprintf(stderr, "                          avid: <name> is a filename prefix\n");
+    fprintf(stderr, "  --input-file-md5        Calculate an MD5 checksum of the input file\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Override input start timecode. Is drop frame when c is not ':'. Default 00:00:00:00\n");
     fprintf(stderr, "  --tc-rate <rate>        Start timecode rate to use when input is audio only\n");
     fprintf(stderr, "                          Values are 25 (default), 30 (30000/1001), 50 or 60 (60000/1001)\n");
@@ -196,7 +207,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  as11op1a/as11d10/op1a/d10:\n");
     fprintf(stderr, "    --single-pass           Write file in a single pass\n");
     fprintf(stderr, "                            Header and body partitions will be incomplete for as11op1a/op1a if the number if essence container bytes per edit unit is variable\n");
-    fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is assumed)\n");
+    fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the output file. This requires writing in a single pass (--single-pass is assumed)\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  avid:\n");
     fprintf(stderr, "    --project <name>        Set the Avid project name\n");
@@ -242,7 +253,7 @@ int main(int argc, const char** argv)
     vector<AVCIHeaderInput> avci_header_inputs;
     bool show_progress = false;
     bool single_pass = false;
-    bool file_md5 = false;
+    bool output_file_md5 = false;
     Rational user_aspect_ratio = ASPECT_RATIO_16_9;
     bool user_aspect_ratio_set = false;
     bool user_locked = false;
@@ -251,6 +262,7 @@ int main(int argc, const char** argv)
     bool user_audio_ref_level_set = false;
     int8_t user_dial_norm = 0;
     bool user_dial_norm_set = false;
+    bool input_file_md5 = false;
     int value, num, den;
     int cmdln_index;
 
@@ -317,6 +329,10 @@ int main(int argc, const char** argv)
             }
             output_name = argv[cmdln_index + 1];
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--input-file-md5") == 0)
+        {
+            input_file_md5 = true;
         }
         else if (strcmp(argv[cmdln_index], "-y") == 0)
         {
@@ -634,7 +650,7 @@ int main(int argc, const char** argv)
         }
         else if (strcmp(argv[cmdln_index], "--file-md5") == 0)
         {
-            file_md5 = true;
+            output_file_md5 = true;
         }
         else if (strcmp(argv[cmdln_index], "--project") == 0)
         {
@@ -752,20 +768,35 @@ int main(int argc, const char** argv)
     {
         // open an MXFReader using the input filenames
 
+#define OPEN_FILE(sreader, index)                                                               \
+    MXFFileReader::OpenResult result;                                                           \
+    if (input_file_md5) {                                                                       \
+        MXFMD5WrapperFile *md5_wrap_file;                                                       \
+        if (open_md5_wrapped_file(input_filenames[index], &md5_wrap_file)) {                    \
+            input_md5_wrap_files.push_back(md5_wrap_file);                                      \
+            result = sreader->Open(new File(md5_wrap_get_file(input_md5_wrap_files.back())),    \
+                                  input_filenames[index]);                                      \
+        } else {                                                                                \
+            result = MXFFileReader::MXF_RESULT_OPEN_FAIL;                                       \
+        }                                                                                       \
+    } else {                                                                                    \
+        result = sreader->Open(input_filenames[index]);                                         \
+    }                                                                                           \
+    if (result != MXFFileReader::MXF_RESULT_SUCCESS) {                                          \
+        log_error("Failed to open MXF file '%s': %s\n", input_filenames[index],                 \
+                  MXFFileReader::ResultToString(result).c_str());                               \
+        delete sreader;                                                                         \
+        throw false;                                                                            \
+    }
+
+        vector<MXFMD5WrapperFile*> input_md5_wrap_files;
         MXFReader *reader;
         if (use_group_reader) {
             MXFGroupReader *group_reader = new MXFGroupReader();
             size_t i;
             for (i = 0; i < input_filenames.size(); i++) {
                 MXFFileReader *file_reader = new MXFFileReader();
-                MXFFileReader::OpenResult result = file_reader->Open(input_filenames[i]);
-                if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-                    log_error("Failed to open MXF file '%s': %s\n", input_filenames[i],
-                              MXFFileReader::ResultToString(result).c_str());
-                    delete file_reader;
-                    throw false;
-                }
-
+                OPEN_FILE(file_reader, i)
                 group_reader->AddReader(file_reader);
             }
             if (!group_reader->Finalize())
@@ -777,14 +808,7 @@ int main(int argc, const char** argv)
             size_t i;
             for (i = 0; i < input_filenames.size(); i++) {
                 MXFFileReader *file_reader = new MXFFileReader();
-                MXFFileReader::OpenResult result = file_reader->Open(input_filenames[i]);
-                if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-                    log_error("Failed to open MXF file '%s': %s\n", input_filenames[i],
-                              MXFFileReader::ResultToString(result).c_str());
-                    delete file_reader;
-                    throw false;
-                }
-
+                OPEN_FILE(file_reader, i)
                 seq_reader->AddReader(file_reader);
             }
             if (!seq_reader->Finalize(false, keep_input_order))
@@ -793,13 +817,7 @@ int main(int argc, const char** argv)
             reader = seq_reader;
         } else {
             MXFFileReader *file_reader = new MXFFileReader();
-            MXFFileReader::OpenResult result = file_reader->Open(input_filenames[0]);
-            if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-                log_error("Failed to open MXF file '%s': %s\n", input_filenames[0],
-                          MXFFileReader::ResultToString(result).c_str());
-                delete file_reader;
-                throw false;
-            }
+            OPEN_FILE(file_reader, 0)
 
             reader = file_reader;
         }
@@ -1044,13 +1062,13 @@ int main(int argc, const char** argv)
         int flavour = 0;
         if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_OP1A_CLIP_TYPE) {
             flavour = OP1A_DEFAULT_FLAVOUR;
-            if (file_md5)
+            if (output_file_md5)
                 flavour |= OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
                 flavour |= OP1A_SINGLE_PASS_WRITE_FLAVOUR;
         } else if (clip_type == CW_AS11_D10_CLIP_TYPE || clip_type == CW_D10_CLIP_TYPE) {
             flavour = D10_DEFAULT_FLAVOUR;
-            if (file_md5)
+            if (output_file_md5)
                 flavour |= D10_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
                 flavour |= D10_SINGLE_PASS_WRITE_FLAVOUR;
@@ -1434,6 +1452,15 @@ int main(int argc, const char** argv)
         }
 
 
+        // force file md5 update now that reading/seeking will be forwards only
+
+        if (input_file_md5) {
+            size_t i;
+            for (i = 0; i < input_md5_wrap_files.size(); i++)
+                md5_wrap_force_update(input_md5_wrap_files[i]);
+        }
+
+
         // create clip file(s) and write samples
 
         clip->PrepareWrite();
@@ -1527,21 +1554,36 @@ int main(int argc, const char** argv)
         }
 
 
-        if (file_md5) {
+        // output file md5
+
+        if (output_file_md5) {
             if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_OP1A_CLIP_TYPE) {
                 OP1AFile *op1a_clip = clip->GetOP1AClip();
                 AS11Clip *as11_clip = clip->GetAS11Clip();
                 if (as11_clip)
                     op1a_clip = as11_clip->GetOP1AClip();
 
-                log_info("File MD5: %s\n", op1a_clip->GetMD5DigestStr().c_str());
+                log_info("Output file MD5: %s\n", op1a_clip->GetMD5DigestStr().c_str());
             } else if (clip_type == CW_AS11_D10_CLIP_TYPE || clip_type == CW_D10_CLIP_TYPE) {
                 D10File *d10_clip = clip->GetD10Clip();
                 AS11Clip *as11_clip = clip->GetAS11Clip();
                 if (as11_clip)
                     d10_clip = as11_clip->GetD10Clip();
 
-                log_info("File MD5: %s\n", d10_clip->GetMD5DigestStr().c_str());
+                log_info("Output file MD5: %s\n", d10_clip->GetMD5DigestStr().c_str());
+            }
+        }
+
+
+        // input file md5
+
+        if (input_file_md5) {
+            BMX_ASSERT(input_filenames.size() == input_md5_wrap_files.size());
+            unsigned char digest[16];
+            size_t i;
+            for (i = 0; i < input_md5_wrap_files.size(); i++) {
+                md5_wrap_finalize(input_md5_wrap_files[i], digest);
+                log_info("Input file MD5: %s %s\n", input_filenames[i], md5_digest_str(digest).c_str());
             }
         }
 
