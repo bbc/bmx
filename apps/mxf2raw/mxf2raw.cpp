@@ -362,7 +362,8 @@ static void usage(const char *cmd)
     fprintf(stderr, " --nopc                Don't include pre-charge frames\n");
     fprintf(stderr, " --noro                Don't include roll-out frames\n");
     fprintf(stderr, " --md5                 Calculate md5 checksum of essence data\n");
-    fprintf(stderr, " --file-md5            Calculate md5 checksum of the file\n");
+    fprintf(stderr, " --file-md5            Calculate md5 checksum of the file(s)\n");
+    fprintf(stderr, " --file-md5-only       Calculate md5 checksum of the file(s) and exit\n");
     fprintf(stderr, " --group               Use the group reader instead of the sequence reader\n");
     fprintf(stderr, "                       Use this option if the files have different material packages\n");
     fprintf(stderr, "                       but actually belong to the same virtual package / group\n");
@@ -385,6 +386,7 @@ int main(int argc, const char** argv)
     bool no_rollout = false;
     bool calc_md5 = false;
     bool calc_file_md5 = false;
+    bool calc_file_md5_only = false;
     bool use_group_reader = false;
     bool keep_input_order = false;
     bool do_print_version = false;
@@ -498,6 +500,10 @@ int main(int argc, const char** argv)
         {
             calc_file_md5 = true;
         }
+        else if (strcmp(argv[cmdln_index], "--file-md5-only") == 0)
+        {
+            calc_file_md5_only = true;
+        }
         else if (strcmp(argv[cmdln_index], "--group") == 0)
         {
             use_group_reader = true;
@@ -541,6 +547,41 @@ int main(int argc, const char** argv)
         log_info("%s\n", get_version_info().c_str());
 
 
+    int cmd_result = 0;
+
+    if (calc_file_md5_only) {
+        try
+        {
+            size_t i;
+            for (i = 0; i < filenames.size(); i++) {
+                string md5_str = md5_calc_file(filenames[i]);
+                if (md5_str.empty()) {
+                    log_error("failed to calculate md5 for file '%s'\n", filenames[i]);
+                    cmd_result = 1;
+                    break;
+                }
+                log_info("File MD5: %s %s\n", filenames[i], md5_str.c_str());
+            }
+        }
+        catch (const BMXException &ex)
+        {
+            log_error("BMX exception caught: %s\n", ex.what());
+            cmd_result = 1;
+        }
+        catch (...)
+        {
+            log_error("Unknown exception caught\n");
+            cmd_result = 1;
+        }
+
+        if (log_filename)
+            close_log_file();
+
+        return cmd_result;
+    }
+
+    try
+    {
 #define OPEN_FILE(sreader, index)                                                       \
     MXFFileReader::OpenResult result;                                                   \
     if (calc_file_md5) {                                                                \
@@ -562,9 +603,6 @@ int main(int argc, const char** argv)
         throw false;                                                                    \
     }
 
-    int cmd_result = 0;
-    try
-    {
         vector<MXFMD5WrapperFile*> md5_wrap_files;
         MXFReader *reader;
         MXFFileReader *file_reader = 0;
