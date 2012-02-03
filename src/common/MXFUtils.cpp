@@ -96,7 +96,6 @@ static bool update_md5_to_position(MXFMD5WrapperFile *md5_wrapper_file, int64_t 
     unsigned char *buffer = 0;
     try
     {
-        int64_t original_position = mxf_file_tell(mxf_file);
         if (!mxf_file_seek(mxf_file, sys_data->md5_position, SEEK_SET))
             throw false;
 
@@ -113,7 +112,7 @@ static bool update_md5_to_position(MXFMD5WrapperFile *md5_wrapper_file, int64_t 
         delete [] buffer;
         buffer = 0;
 
-        result = mxf_file_seek(mxf_file, original_position, SEEK_SET);
+        result = true;
     }
     catch (...)
     {
@@ -221,6 +220,14 @@ static int md5_mxf_file_eof(MXFFileSysData *sys_data)
 
 static int md5_mxf_file_seek(MXFFileSysData *sys_data, int64_t offset, int whence)
 {
+    // if possible, seek using the md5 update if forced to update
+    if (sys_data->force_update) {
+        if (whence == SEEK_SET && offset > sys_data->md5_position)
+            return update_md5_to_position(&sys_data->md5_wrapper_file, offset);
+        else if (whence == SEEK_CUR && sys_data->position + offset > sys_data->md5_position)
+            return update_md5_to_position(&sys_data->md5_wrapper_file, sys_data->position + offset);
+    }
+
     int result = mxf_file_seek(sys_data->target, offset, whence);
 
     if (result) {
