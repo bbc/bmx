@@ -58,6 +58,9 @@ public:
     static MXFDescriptorHelper* Create(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
     static MXFDescriptorHelper* Create(EssenceType essence_type);
 
+protected:
+   static bool CompareECULs(mxfUL ec_label_a, mxfUL alternative_ec_label_a, mxfUL ec_label_b);
+
 public:
     MXFDescriptorHelper();
     virtual ~MXFDescriptorHelper();

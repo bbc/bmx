@@ -98,9 +98,7 @@ EssenceType D10MXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
     size_t i;
     for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
-            (mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label) ||
-                (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
-                    mxf_equals_ul_mod_regver(&alternative_ec_label, &SUPPORTED_ESSENCE[i].ec_label))) &&
+            CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label) &&
             SUPPORTED_ESSENCE[i].sample_rate == sample_rate)
         {
             return SUPPORTED_ESSENCE[i].essence_type;
@@ -148,9 +146,7 @@ void D10MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL a
     size_t i;
     for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
-            (mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label) ||
-                (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
-                    mxf_equals_ul_mod_regver(&alternative_ec_label, &SUPPORTED_ESSENCE[i].ec_label))) &&
+            CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label) &&
             SUPPORTED_ESSENCE[i].sample_rate == sample_rate)
         {
             mEssenceIndex = i;

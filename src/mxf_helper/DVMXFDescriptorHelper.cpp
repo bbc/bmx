@@ -124,7 +124,7 @@ EssenceType DVMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, 
             }
         }
         else if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
-                 mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label) &&
+                 CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label) &&
                  SUPPORTED_ESSENCE[i].sample_rate == sample_rate)
         {
             return SUPPORTED_ESSENCE[i].essence_type;
@@ -184,7 +184,7 @@ void DVMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL al
             }
         }
         else if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
-                 mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label) &&
+                 CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label) &&
                  SUPPORTED_ESSENCE[i].sample_rate == sample_rate)
         {
             break;

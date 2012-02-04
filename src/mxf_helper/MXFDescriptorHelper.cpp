@@ -79,6 +79,12 @@ MXFDescriptorHelper* MXFDescriptorHelper::Create(EssenceType essence_type)
     return 0;
 }
 
+bool MXFDescriptorHelper::CompareECULs(mxfUL ec_label_a, mxfUL alternative_ec_label_a, mxfUL ec_label_b)
+{
+    return mxf_equals_ul_mod_regver(&ec_label_a, &ec_label_b) ||
+           mxf_equals_ul_mod_regver(&alternative_ec_label_a, &ec_label_b);
+}
+
 MXFDescriptorHelper::MXFDescriptorHelper()
 {
     mSampleRate = FRAME_RATE_25;

@@ -83,8 +83,8 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
 EssenceType VC3MXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     mxfUL ec_label = file_descriptor->getEssenceContainer();
-    if (!mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(VC3FrameWrapped)) &&
-        !mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(VC3ClipWrapped)))
+    if (!CompareECULs(ec_label, alternative_ec_label, MXF_EC_L(VC3FrameWrapped)) &&
+        !CompareECULs(ec_label, alternative_ec_label, MXF_EC_L(VC3ClipWrapped)))
     {
         size_t index;
         if (IsAvidDNxHD(file_descriptor, alternative_ec_label, &index))
@@ -163,7 +163,7 @@ void VC3MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL a
         mAvidResolutionId = SUPPORTED_ESSENCE[mEssenceIndex].resolution_id;
     } else {
         mxfUL ec_label = file_descriptor->getEssenceContainer();
-        mFrameWrapped = mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(VC3FrameWrapped));
+        mFrameWrapped = CompareECULs(ec_label, alternative_ec_label, MXF_EC_L(VC3FrameWrapped));
 
         GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
         mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();

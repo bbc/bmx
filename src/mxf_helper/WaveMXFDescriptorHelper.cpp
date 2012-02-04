@@ -68,12 +68,8 @@ EssenceType WaveMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
     for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
-        if (mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label) ||
-            (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
-                mxf_equals_ul_mod_regver(&alternative_ec_label, &SUPPORTED_ESSENCE[i].ec_label)))
-        {
+        if (CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label))
             return SUPPORTED_ESSENCE[i].essence_type;
-        }
     }
 
     return UNKNOWN_ESSENCE_TYPE;
@@ -110,10 +106,7 @@ void WaveMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL 
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
     for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
-        if (mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label) ||
-            (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
-                mxf_equals_ul_mod_regver(&alternative_ec_label, &SUPPORTED_ESSENCE[i].ec_label)))
-        {
+        if (CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label)) {
             mEssenceType = SUPPORTED_ESSENCE[i].essence_type;
             mFrameWrapped = SUPPORTED_ESSENCE[i].frame_wrapped;
             break;

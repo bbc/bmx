@@ -146,21 +146,17 @@ size_t UncMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descriptor, 
         if (SUPPORTED_ESSENCE[i].sample_rate != sample_rate)
             continue;
 
-        if (mxf_equals_ul_mod_regver(&ec_label, &SUPPORTED_ESSENCE[i].ec_label)) {
+        if (CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label))
+        {
             return i;
-        } else if (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer))) {
-            if (mxf_equals_ul_mod_regver(&alternative_ec_label, &SUPPORTED_ESSENCE[i].ec_label))
-            {
-                return i;
-            }
-            else if (mxf_equals_ul_mod_regver(&alternative_ec_label, &MXF_EC_L(HD_Unc_720_60p_422_ClipWrapped)) &&
-                     SUPPORTED_ESSENCE[i].essence_type == UNC_HD_720P &&
-                     sample_rate == FRAME_RATE_50)
-            {
-                // Avid 8-bit 720p50 sample file had the wrong label
-                return i;
-            }
-
+        }
+        else if (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
+                 mxf_equals_ul_mod_regver(&alternative_ec_label, &MXF_EC_L(HD_Unc_720_60p_422_ClipWrapped)) &&
+                 SUPPORTED_ESSENCE[i].essence_type == UNC_HD_720P &&
+                 sample_rate == FRAME_RATE_50)
+        {
+            // Avid 8-bit 720p50 sample file had the wrong label
+            return i;
         }
     }
 
