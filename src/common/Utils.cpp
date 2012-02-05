@@ -78,6 +78,16 @@ static const SampleSequence SAMPLE_SEQUENCES[] =
 
 
 
+static int32_t gcd(int32_t a, int32_t b)
+{
+    if (b == 0)
+        return a;
+    else
+        return gcd(b, a % b);
+}
+
+
+
 int64_t bmx::convert_position(int64_t in_position, int64_t factor_top, int64_t factor_bottom, Rounding rounding)
 {
     if (in_position == 0 || factor_top == factor_bottom)
@@ -556,6 +566,34 @@ string bmx::get_timecode_string(Timecode timecode)
             timecode.GetFrame(),
             timecode.GetRoundedTCBase());
     return buffer;
+}
+
+bmx::Rational bmx::normalize_rate(Rational rate)
+{
+    if (rate.numerator == 0 || rate.denominator == 0)
+        return ZERO_RATIONAL;
+
+    Rational result = rate;
+
+    // can't normalize an invalid negative rate
+    if ((result.numerator < 0) ^ (result.denominator < 0))
+        return rate;
+
+    if (result.numerator < 0)
+        result.numerator = -result.numerator;
+    if (result.denominator < 0)
+        result.denominator = -result.denominator;
+
+    int32_t d = gcd(result.numerator, result.denominator);
+    result.numerator /= d;
+    result.denominator /= d;
+
+    if (result.numerator == 2997 && result.denominator == 1000)
+        return FRAME_RATE_2997;
+    else if (result.numerator == 2997 && result.denominator == 500)
+        return FRAME_RATE_5994;
+
+    return result;
 }
 
 void bmx::decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_tc, unsigned int size,

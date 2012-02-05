@@ -43,6 +43,7 @@
 
 #include <bmx/mxf_reader/IndexTableHelper.h>
 #include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -105,6 +106,7 @@ void IndexTableHelperSegment::ParseIndexTableSegment(File *file, uint64_t segmen
                                                  mxf_default_add_delta_entry, 0,
                                                  add_frame_offset_index_entry, this,
                                                  &_cSegment));
+    setIndexEditRate(normalize_rate(getIndexEditRate()));
 
     BMX_CHECK((mNumIndexEntries == 0 && getEditUnitByteCount() > 0) ||
              ((int64_t)mNumIndexEntries >= getIndexDuration()));

@@ -847,7 +847,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
             else
                 track_info->material_track_id = 0;
             track_info->material_track_number = mp_track->getTrackNumber();
-            track_info->edit_rate = mp_track->getEditRate();
+            track_info->edit_rate = normalize_rate(mp_track->getEditRate());
             track_info->duration = mp_source_clip->getDuration();
             track_info->lead_filler_offset = lead_filler_offset;
         } else {
@@ -946,12 +946,12 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
             }
         }
 
-        mSampleRate = mult_desc->getSampleRate();
+        mSampleRate = normalize_rate(mult_desc->getSampleRate());
     } else {
         file_desc = dynamic_cast<FileDescriptor*>(file_source_package->getDescriptor());
         BMX_CHECK(file_desc);
 
-        mSampleRate = file_desc->getSampleRate();
+        mSampleRate = normalize_rate(file_desc->getSampleRate());
     }
     BMX_CHECK(file_desc);
 
@@ -974,7 +974,7 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
         track_info->material_track_id = mp_track->getTrackID();
     track_info->material_track_number = mp_track->getTrackNumber();
     track_info->file_package_uid = file_source_package->getPackageUID();
-    track_info->edit_rate = mp_track->getEditRate();
+    track_info->edit_rate = normalize_rate(mp_track->getEditRate());
     track_info->duration = mp_source_clip->getDuration();
     if (fsp_track->haveTrackID())
         track_info->file_track_id = fsp_track->getTrackID();
@@ -1122,7 +1122,8 @@ bool MXFFileReader::GetStartTimecode(GenericPackage *package, Track *track, int6
 
     int64_t tc_offset = offset;
     if (track)
-        tc_offset = convert_tc_offset(track->getEditRate(), offset, tc_component->getRoundedTimecodeBase());
+        tc_offset = convert_tc_offset(normalize_rate(track->getEditRate()), offset,
+                                      tc_component->getRoundedTimecodeBase());
 
     timecode->Init(tc_component->getRoundedTimecodeBase(),
                    tc_component->getDropFrame(),
@@ -1161,9 +1162,9 @@ bool MXFFileReader::GetReferencedPackage(Preface *preface, Track *track, int64_t
     if (!ref_track)
         return false;
 
-    int64_t ref_offset = convert_position(track->getEditRate(),
+    int64_t ref_offset = convert_position(normalize_rate(track->getEditRate()),
                                           source_clip->getStartPosition() + offset_in,
-                                          ref_track->getEditRate(),
+                                          normalize_rate(ref_track->getEditRate()),
                                           ROUND_AUTO);
     ref_offset += ref_track->getOrigin();
 
@@ -1291,7 +1292,7 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
     BMX_CHECK(sound_descriptor);
     
     if (sound_descriptor->haveAudioSamplingRate())
-        sound_track_info->sampling_rate = sound_descriptor->getAudioSamplingRate();
+        sound_track_info->sampling_rate = normalize_rate(sound_descriptor->getAudioSamplingRate());
 
     if (sound_descriptor->haveChannelCount())
         sound_track_info->channel_count = sound_descriptor->getChannelCount();
