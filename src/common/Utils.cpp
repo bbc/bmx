@@ -563,8 +563,7 @@ string bmx::get_timecode_string(Timecode timecode)
             timecode.GetMin(),
             timecode.GetSec(),
             timecode.IsDropFrame() ? ';' : ':',
-            timecode.GetFrame(),
-            timecode.GetRoundedTCBase());
+            timecode.GetFrame());
     return buffer;
 }
 
