@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check.sh 11 d10_50 2997
+

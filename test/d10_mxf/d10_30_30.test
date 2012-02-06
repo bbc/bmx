@@ -1,4 +1,0 @@
-#!/bin/sh
-
-${srcdir}/check.sh 13 d10_30 30
-
