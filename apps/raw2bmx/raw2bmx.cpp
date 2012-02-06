@@ -247,7 +247,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "* -o <name>               as02: <name> is a bundle name\n");
     fprintf(stderr, "                          as11op1a/as11d10/op1a/d10: <name> is a filename\n");
     fprintf(stderr, "                          avid: <name> is a filename prefix\n");
-    fprintf(stderr, "  -f <rate>               Frame rate: 25, 2997 (30000/1001), 50 or 5994 (60000/1001). Default parsed or 25\n");
+    fprintf(stderr, "  -f <rate>               Frame rate: 23976 (24000/1001), 24, 25, 2997 (30000/1001), 50 or 5994 (60000/1001). Default parsed or 25\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Start timecode. Is drop frame when c is not ':'. Default 00:00:00:00\n");
     fprintf(stderr, "  --clip <name>           Set the clip name\n");
     fprintf(stderr, "  --dur <frame>           Set the duration in frames. Default is minimum input duration\n");

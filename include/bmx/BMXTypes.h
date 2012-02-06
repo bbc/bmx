@@ -75,6 +75,8 @@ typedef mxfUUID       UUID;
 typedef mxfUMID       UMID;
 
 
+static const Rational FRAME_RATE_23976  = {24000, 1001};
+static const Rational FRAME_RATE_24     = {24, 1};
 static const Rational FRAME_RATE_25     = {25, 1};
 static const Rational FRAME_RATE_2997   = {30000, 1001};
 static const Rational FRAME_RATE_50     = {50, 1};

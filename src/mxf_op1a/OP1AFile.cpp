@@ -81,10 +81,12 @@ OP1AFile* OP1AFile::OpenNew(int flavour, string filename, mxfRational frame_rate
 
 OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
 {
-    BMX_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
-              (frame_rate.numerator == 50    && frame_rate.denominator == 1) ||
-              (frame_rate.numerator == 30000 && frame_rate.denominator == 1001) ||
-              (frame_rate.numerator == 60000 && frame_rate.denominator == 1001));
+    BMX_CHECK(frame_rate == FRAME_RATE_23976 ||
+              frame_rate == FRAME_RATE_24 ||
+              frame_rate == FRAME_RATE_25 ||
+              frame_rate == FRAME_RATE_2997 ||
+              frame_rate == FRAME_RATE_50 ||
+              frame_rate == FRAME_RATE_5994);
 
     mFlavour = flavour;
     mMXFFile = mxf_file;
