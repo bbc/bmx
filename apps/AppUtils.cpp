@@ -108,6 +108,25 @@ const char* bmx::get_avci_header_format_string(size_t index)
 }
 
 
+bool bmx::parse_frame_rate(const char *rate_str, Rational *frame_rate)
+{
+    unsigned int value;
+    if (sscanf(rate_str, "%u", &value) != 1)
+        return false;
+
+    if (value == 25)
+        *frame_rate = FRAME_RATE_25;
+    else if (value == 30)
+        *frame_rate = FRAME_RATE_2997;
+    else if (value == 50)
+        *frame_rate = FRAME_RATE_50;
+    else if (value == 60)
+        *frame_rate = FRAME_RATE_5994;
+    else
+        return false;
+
+    return true;
+}
 
 bool bmx::parse_timecode(const char *tc_str, Rational frame_rate, Timecode *timecode)
 {

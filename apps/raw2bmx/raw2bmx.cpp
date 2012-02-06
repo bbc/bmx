@@ -479,22 +479,11 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
-                (value != 25 && value != 30 && value != 50 && value != 60))
+            if (!parse_frame_rate(argv[cmdln_index + 1], &frame_rate))
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
-            }
-            if (value == 25 || value == 50) {
-                frame_rate.numerator = value;
-                frame_rate.denominator = 1;
-            } else if (value == 30) {
-                frame_rate.numerator = 30000;
-                frame_rate.denominator = 1001;
-            } else {
-                frame_rate.numerator = 60000;
-                frame_rate.denominator = 1001;
             }
             frame_rate_set = true;
             cmdln_index++;

@@ -62,6 +62,8 @@ size_t get_num_avci_header_formats();
 const char* get_avci_header_format_string(size_t index);
 
 
+bool parse_frame_rate(const char *rate_str, Rational *frame_rate);
+
 bool parse_timecode(const char *tc_str, Rational frame_rate, Timecode *timecode);
 
 bool parse_position(const char *position_str, Timecode start_timecode, Rational frame_rate, int64_t *position);

@@ -353,21 +353,12 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
-                (value != 25 && value != 30 && value != 50 && value != 60))
+            if (!parse_frame_rate(argv[cmdln_index + 1], &timecode_rate))
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
-            if (value == 25)
-                timecode_rate = FRAME_RATE_25;
-            else if (value == 30)
-                timecode_rate = FRAME_RATE_2997;
-            else if (value == 50)
-                timecode_rate = FRAME_RATE_50;
-            else
-                timecode_rate = FRAME_RATE_5994;
             timecode_rate_set = true;
             cmdln_index++;
         }
