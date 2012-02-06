@@ -346,8 +346,8 @@ uint32_t D10ContentPackage::WriteSystemItem(File *mxf_file)
 
 D10ContentPackageManager::D10ContentPackageManager(mxfRational frame_rate)
 {
-    BMX_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
-             (frame_rate.numerator == 30000 && frame_rate.denominator == 1001));
+    BMX_CHECK(frame_rate == FRAME_RATE_25 ||
+              frame_rate == FRAME_RATE_2997);
 
     mContentPackageSize = 0;
     mPosition = 0;
