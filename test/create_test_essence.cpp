@@ -197,7 +197,7 @@ static void write_data(FILE *file, int64_t size)
         write_buffer(file, DATA, sizeof(DATA));
 
     if (partial_data_size > 0)
-        write_buffer(file, DATA, partial_data_size);
+        write_buffer(file, DATA, (size_t)partial_data_size);
 }
 
 static void write_pcm(FILE *file, unsigned int duration)
