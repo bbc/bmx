@@ -50,6 +50,10 @@
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
+#if defined(_WIN32)
+#include <mxf/mxf_win32_file.h>
+#endif
+
 using namespace std;
 using namespace bmx;
 using namespace mxfpp;
@@ -326,16 +330,6 @@ static string create_raw_filename(string prefix, bool is_video, uint32_t index, 
     return prefix + buffer;
 }
 
-static bool open_md5_wrapped_file(const char *filename, MXFMD5WrapperFile **md5_wrap_file)
-{
-    MXFFile *mxf_file;
-    if (!mxf_disk_file_open_read(filename, &mxf_file))
-        return false;
-
-    *md5_wrap_file = md5_wrap_mxf_file(mxf_file);
-    return true;
-}
-
 static string get_version_info()
 {
     char buffer[256];
@@ -370,6 +364,9 @@ static void usage(const char *cmd)
     fprintf(stderr, " --no-reorder          Don't attempt to order the inputs in a sequence\n");
     fprintf(stderr, "                       Use this option for files with broken timecode\n");
     fprintf(stderr, " --as11                Print AS-11 and UK DPP metadata to stdout (single file only)\n");
+#if defined(_WIN32)
+    fprintf(stderr, " --no-seq-scan         Do not set the sequential scan hint for optimizing file caching\n");
+#endif
 }
 
 int main(int argc, const char** argv)
@@ -391,6 +388,9 @@ int main(int argc, const char** argv)
     bool keep_input_order = false;
     bool do_print_version = false;
     bool do_print_as11 = false;
+#if defined(_WIN32)
+    int file_flags = MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
+#endif
     int cmdln_index;
 
 
@@ -516,6 +516,12 @@ int main(int argc, const char** argv)
         {
             do_print_as11 = true;
         }
+#if defined(_WIN32)
+        else if (strcmp(argv[cmdln_index], "--no-seq-scan") == 0)
+        {
+            file_flags &= ~MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
+        }
+#endif
         else
         {
             break;
@@ -592,19 +598,27 @@ int main(int argc, const char** argv)
 
     try
     {
+
+#if defined(_WIN32)
+#define MXF_OPEN_READ(fn, pf)   mxf_win32_file_open_read(fn, file_flags, pf)
+#else
+#define MXF_OPEN_READ(fn, pf)   mxf_disk_file_open_read(fn, pf)
+#endif
+
 #define OPEN_FILE(sreader, index)                                                       \
     MXFFileReader::OpenResult result;                                                   \
-    if (calc_file_md5) {                                                                \
-        MXFMD5WrapperFile *md5_wrap_file;                                               \
-        if (open_md5_wrapped_file(filenames[index], &md5_wrap_file)) {                  \
+    MXFFile *mxf_file;                                                                  \
+    if (MXF_OPEN_READ(filenames[index], &mxf_file)) {                                   \
+        if (calc_file_md5) {                                                            \
+            MXFMD5WrapperFile *md5_wrap_file = md5_wrap_mxf_file(mxf_file);             \
             md5_wrap_files.push_back(md5_wrap_file);                                    \
             result = sreader->Open(new File(md5_wrap_get_file(md5_wrap_files.back())),  \
                                   filenames[index]);                                    \
         } else {                                                                        \
-            result = MXFFileReader::MXF_RESULT_OPEN_FAIL;                               \
+            result = sreader->Open(new File(mxf_file), filenames[index]);               \
         }                                                                               \
     } else {                                                                            \
-        result = sreader->Open(filenames[index]);                                       \
+        result = MXFFileReader::MXF_RESULT_OPEN_FAIL;                                   \
     }                                                                                   \
     if (result != MXFFileReader::MXF_RESULT_SUCCESS) {                                  \
         log_error("Failed to open MXF file '%s': %s\n", filenames[index],               \

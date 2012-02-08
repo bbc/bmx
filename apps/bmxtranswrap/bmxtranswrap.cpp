@@ -60,6 +60,9 @@
 #include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
+#if defined(_WIN32)
+#include <mxf/mxf_win32_file.h>
+#endif
 
 using namespace std;
 using namespace bmx;
@@ -95,16 +98,6 @@ static const char DEFAULT_SHIM_ANNOTATION[] = "Default AS-02 shim";
 extern bool BMX_REGRESSION_TEST;
 
 
-
-static bool open_md5_wrapped_file(const char *filename, MXFMD5WrapperFile **md5_wrap_file)
-{
-    MXFFile *mxf_file;
-    if (!mxf_disk_file_open_read(filename, &mxf_file))
-        return false;
-
-    *md5_wrap_file = md5_wrap_mxf_file(mxf_file);
-    return true;
-}
 
 static bool parse_mic_type(const char *mic_type_str, MICType *mic_type)
 {
@@ -172,6 +165,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          but actually belong to the same virtual package / group\n");
     fprintf(stderr, "  --no-reorder            Don't attempt to order the inputs in a sequence\n");
     fprintf(stderr, "                          Use this option for files with broken timecode\n");
+#if defined(_WIN32)
+    fprintf(stderr, "  --seq-scan              Set the sequential scan hint for optimizing file caching whilst reading\n");
+#endif
     fprintf(stderr, "  --avcihead <format> <file> <offset>\n");
     fprintf(stderr, "                          Default AVC-Intra sequence header data (512 bytes) to use when the input file does not have it\n");
     fprintf(stderr, "                          <format> is a comma separated list of one or more of the following integer values:\n");
@@ -263,6 +259,9 @@ int main(int argc, const char** argv)
     int8_t user_dial_norm = 0;
     bool user_dial_norm_set = false;
     bool input_file_md5 = false;
+#if defined(_WIN32)
+    int file_flags = 0;
+#endif
     int value, num, den;
     int cmdln_index;
 
@@ -413,6 +412,12 @@ int main(int argc, const char** argv)
         {
             keep_input_order = true;
         }
+#if defined(_WIN32)
+        else if (strcmp(argv[cmdln_index], "--seq-scan") == 0)
+        {
+            file_flags |= MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
+        }
+#endif
         else if (strcmp(argv[cmdln_index], "--avcihead") == 0)
         {
             if (cmdln_index + 3 >= argc)
@@ -769,19 +774,26 @@ int main(int argc, const char** argv)
     {
         // open an MXFReader using the input filenames
 
+#if defined(_WIN32)
+#define MXF_OPEN_READ(fn, pf)   mxf_win32_file_open_read(fn, file_flags, pf)
+#else
+#define MXF_OPEN_READ(fn, pf)   mxf_disk_file_open_read(fn, pf)
+#endif
+
 #define OPEN_FILE(sreader, index)                                                               \
     MXFFileReader::OpenResult result;                                                           \
-    if (input_file_md5) {                                                                       \
-        MXFMD5WrapperFile *md5_wrap_file;                                                       \
-        if (open_md5_wrapped_file(input_filenames[index], &md5_wrap_file)) {                    \
+    MXFFile *mxf_file;                                                                          \
+    if (MXF_OPEN_READ(input_filenames[index], &mxf_file)) {                                     \
+        if (input_file_md5) {                                                                   \
+            MXFMD5WrapperFile *md5_wrap_file = md5_wrap_mxf_file(mxf_file);                     \
             input_md5_wrap_files.push_back(md5_wrap_file);                                      \
             result = sreader->Open(new File(md5_wrap_get_file(input_md5_wrap_files.back())),    \
                                   input_filenames[index]);                                      \
         } else {                                                                                \
-            result = MXFFileReader::MXF_RESULT_OPEN_FAIL;                                       \
+            result = sreader->Open(new File(mxf_file), input_filenames[index]);                 \
         }                                                                                       \
     } else {                                                                                    \
-        result = sreader->Open(input_filenames[index]);                                         \
+        result = MXFFileReader::MXF_RESULT_OPEN_FAIL;                                           \
     }                                                                                           \
     if (result != MXFFileReader::MXF_RESULT_SUCCESS) {                                          \
         log_error("Failed to open MXF file '%s': %s\n", input_filenames[index],                 \
