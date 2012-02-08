@@ -303,7 +303,7 @@ bool bmx::read_avci_header_data(EssenceType essence_type, Rational sample_rate,
     }
 
     int64_t offset = avci_header_inputs[i].offset + j * 512;
-#if defined(_MSC_VER)
+#if defined(_WIN32)
     if (_fseeki64(file, offset, SEEK_SET) != 0) {
 #else
     if (fseeko(file, offset, SEEK_SET) != 0) {
