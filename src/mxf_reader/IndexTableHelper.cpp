@@ -108,6 +108,12 @@ void IndexTableHelperSegment::ParseIndexTableSegment(File *file, uint64_t segmen
                                                  &_cSegment));
     setIndexEditRate(normalize_rate(getIndexEditRate()));
 
+    // samples files produced by Ardendo product 'ardftp' had an invalid index duration -1
+    if (getIndexDuration() < 0) {
+        log_warn("Index duration %"PRId64" is invalid. Assuming index duration 0 instead.\n", getIndexDuration());
+        setIndexDuration(0);
+    }
+
     BMX_CHECK((mNumIndexEntries == 0 && getEditUnitByteCount() > 0) ||
              ((int64_t)mNumIndexEntries >= getIndexDuration()));
     BMX_CHECK(getIndexDuration() > 0 || mNumIndexEntries == 0);
