@@ -165,6 +165,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          but actually belong to the same virtual package / group\n");
     fprintf(stderr, "  --no-reorder            Don't attempt to order the inputs in a sequence\n");
     fprintf(stderr, "                          Use this option for files with broken timecode\n");
+    fprintf(stderr, "  --no-precharge          Don't output clip/track with precharge. Adjust the start position and duration instead\n");
+    fprintf(stderr, "  --no-rollout            Don't output clip/track with rollout. Adjust the duration instead\n");
 #if defined(_WIN32)
     fprintf(stderr, "  --seq-scan              Set the sequential scan hint for optimizing file caching whilst reading\n");
 #endif
@@ -262,6 +264,8 @@ int main(int argc, const char** argv)
 #if defined(_WIN32)
     int file_flags = 0;
 #endif
+    bool no_precharge = false;
+    bool no_rollout = false;
     int value, num, den;
     int cmdln_index;
 
@@ -411,6 +415,14 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--no-reorder") == 0)
         {
             keep_input_order = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--no-precharge") == 0)
+        {
+            no_precharge = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--no-rollout") == 0)
+        {
+            no_rollout = true;
         }
 #if defined(_WIN32)
         else if (strcmp(argv[cmdln_index], "--seq-scan") == 0)
@@ -978,22 +990,28 @@ int main(int argc, const char** argv)
             precharge = reader->GetMaxPrecharge(read_start, true);
             rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
 
-            if (clip_type == CW_AVID_CLIP_TYPE && precharge != 0) {
-                output_duration += (- precharge);
-                log_warn("Avid clip type does not support precharge. "
-                         "Start position and duration have been adjusted by %d frames\n",
+            if (precharge != 0 && (no_precharge || clip_type == CW_AVID_CLIP_TYPE)) {
+                if (!no_precharge) {
+                    log_warn("'%s' clip type does not support precharge\n",
+                             ClipWriter::ClipWriterTypeToString(clip_type).c_str());
+                }
+                log_info("Precharge resulted in %d frame adjustment of start position and duration\n",
                          precharge);
+                output_duration += (- precharge);
                 read_start += precharge;
                 precharge = 0;
             }
-            if (clip_type == CW_AVID_CLIP_TYPE && rollout != 0) {
+            if (rollout != 0 && (no_rollout || clip_type == CW_AVID_CLIP_TYPE)) {
                 int64_t original_output_duration = output_duration;
                 while (rollout != 0) {
                     output_duration += rollout;
                     rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
                 }
-                log_warn("Avid clip type does not support rollout. "
-                         "Duration has been adjusted by %"PRId64" frames\n",
+                if (!no_rollout) {
+                    log_warn("'%s' clip type does not support rollout\n",
+                             ClipWriter::ClipWriterTypeToString(clip_type).c_str());
+                }
+                log_info("Rollout resulted in %"PRId64" frame adjustment of duration\n",
                          output_duration - original_output_duration);
             }
         }
