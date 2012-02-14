@@ -244,7 +244,6 @@ AvidTrack::AvidTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_t
     mRefSourcePackage = 0;
     mContainerDuration = 0;
     mContainerSize = 0;
-    mOutputEndOffset = 0;
     memset(&mEssenceContainerUL, 0, sizeof(mEssenceContainerUL));
 
     mEssenceType = essence_type;
@@ -276,12 +275,6 @@ void AvidTrack::SetSourceRef(mxfUMID ref_package_uid, uint32_t ref_track_id)
 {
     mSourceRefPackageUID = ref_package_uid;
     mSourceRefTrackId = ref_track_id;
-}
-
-void AvidTrack::SetOutputEndOffset(int64_t offset)
-{
-    BMX_CHECK(offset <= 0);
-    mOutputEndOffset = offset;
 }
 
 void AvidTrack::PrepareWrite()
@@ -392,27 +385,16 @@ mxfRational AvidTrack::GetSampleRate() const
     return mDescriptorHelper->GetSampleRate();
 }
 
-bool AvidTrack::HasValidDuration() const
-{
-    return mContainerDuration + mOutputEndOffset >= 0;
-}
-
 int64_t AvidTrack::GetOutputDuration(bool clip_frame_rate) const
 {
     BMX_ASSERT(!clip_frame_rate || mClip->mClipFrameRate == GetSampleRate());
 
-    if (mContainerDuration + mOutputEndOffset <= 0)
-        return 0;
-
-    return mContainerDuration + mOutputEndOffset;
+    return mContainerDuration;
 }
 
 int64_t AvidTrack::GetDuration() const
 {
-    if (mContainerDuration + mOutputEndOffset <= 0)
-        return 0;
-
-    return mContainerDuration + mOutputEndOffset;
+    return mContainerDuration;
 }
 
 int64_t AvidTrack::GetContainerDuration() const

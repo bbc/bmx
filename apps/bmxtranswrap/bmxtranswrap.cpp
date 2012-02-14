@@ -980,10 +980,21 @@ int main(int argc, const char** argv)
 
             if (clip_type == CW_AVID_CLIP_TYPE && precharge != 0) {
                 output_duration += (- precharge);
-                log_warn("Avid clip type does not support %d precharge. Duration has changed to %"PRId64"\n",
-                         precharge, output_duration);
+                log_warn("Avid clip type does not support precharge. "
+                         "Start position and duration have been adjusted by %d frames\n",
+                         precharge);
                 read_start += precharge;
                 precharge = 0;
+            }
+            if (clip_type == CW_AVID_CLIP_TYPE && rollout != 0) {
+                int64_t original_output_duration = output_duration;
+                while (rollout != 0) {
+                    output_duration += rollout;
+                    rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
+                }
+                log_warn("Avid clip type does not support rollout. "
+                         "Duration has been adjusted by %"PRId64" frames\n",
+                         output_duration - original_output_duration);
             }
         }
 
@@ -1286,9 +1297,6 @@ int main(int argc, const char** argv)
                         as02_pict_track->SetPartitionInterval(partition_interval);
                 } else if (clip_type == CW_AVID_CLIP_TYPE) {
                     AvidTrack *avid_track = output_track.track->GetAvidTrack();
-
-                    avid_track->SetOutputEndOffset(- reader->GetTrackRollout(i, read_start + output_duration - 1,
-                                                                             rollout));
 
                     if (tape_package) {
                         if (input_track_info->is_picture) {

@@ -140,7 +140,7 @@ void AvidMPEG2LGTrack::WriteVBEIndexTable(Partition *partition)
 
 void AvidMPEG2LGTrack::PostSampleWriting(mxfpp::Partition *partition)
 {
-    if (!mWriterHelper.CheckTemporalOffsetsComplete(mOutputEndOffset))
+    if (!mWriterHelper.CheckTemporalOffsetsComplete(0))
         log_warn("Incomplete MPEG-2 temporal offset data in index table\n");
 
     // append final (single) index entry providing the total size / end of last frame

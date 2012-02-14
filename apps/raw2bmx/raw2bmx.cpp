@@ -2237,8 +2237,6 @@ int main(int argc, const char** argv)
                 AvidTrack *avid_track = input->track->GetAvidTrack();
                 AvidClip *avid_clip = clip->GetAvidClip();
 
-                avid_track->SetOutputEndOffset(- input->output_end_offset);
-
                 if (tape_package) {
                     if (is_picture) {
                         avid_track->SetSourceRef(tape_package_picture_refs[picture_track_count].first,

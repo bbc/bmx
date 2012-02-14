@@ -61,8 +61,6 @@ public:
     void SetFileSourcePackageUID(mxfUMID package_uid);
     void SetSourceRef(mxfUMID ref_package_uid, uint32_t ref_track_id);
 
-    void SetOutputEndOffset(int64_t offset);
-
 public:
     virtual void PrepareWrite();
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
@@ -72,7 +70,6 @@ public:
 
     mxfRational GetSampleRate() const;
 
-    bool HasValidDuration() const;
     virtual int64_t GetOutputDuration(bool clip_frame_rate) const;
     int64_t GetDuration() const;
     int64_t GetContainerDuration() const;
@@ -145,7 +142,6 @@ protected:
 
     int64_t mContainerDuration;
     int64_t mContainerSize;
-    int64_t mOutputEndOffset;
 
 private:
     void CreateHeaderMetadata();

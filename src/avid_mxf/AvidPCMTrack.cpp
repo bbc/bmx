@@ -125,13 +125,10 @@ vector<uint32_t> AvidPCMTrack::GetShiftedSampleSequence() const
 
 int64_t AvidPCMTrack::GetOutputDuration(bool clip_frame_rate) const
 {
-    if (mContainerDuration + mOutputEndOffset <= 0)
-        return 0;
-
     if (clip_frame_rate)
-        return convert_duration_lower(mContainerDuration + mOutputEndOffset, mSampleSequence, mSampleSequence.size());
+        return convert_duration_lower(mContainerDuration, mSampleSequence, mSampleSequence.size());
 
-    return mContainerDuration + mOutputEndOffset;
+    return mContainerDuration;
 }
 
 void AvidPCMTrack::SetSampleSequence()
