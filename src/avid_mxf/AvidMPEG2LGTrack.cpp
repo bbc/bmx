@@ -53,6 +53,8 @@ using namespace mxfpp;
 AvidMPEG2LGTrack::AvidMPEG2LGTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, File *file)
 : AvidPictureTrack(clip, track_index, essence_type, file)
 {
+    mWriterHelper.SetFlavour(MPEG2LGWriterHelper::AVID_FLAVOUR);
+
     mTrackNumber = MXF_AVID_MPEG_PICT_TRACK_NUM;
     mEssenceElementKey = MXF_EE_K(AvidMPEGClipWrapped);
 

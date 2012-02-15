@@ -51,6 +51,7 @@ using namespace bmx;
 
 MPEG2LGWriterHelper::MPEG2LGWriterHelper()
 {
+    mFlavour = DEFAULT_FLAVOUR;
     mPosition = 0;
     mPrevKeyFramePosition = -1;
     mKeyFramePosition = -1;
@@ -81,6 +82,11 @@ MPEG2LGWriterHelper::MPEG2LGWriterHelper()
 
 MPEG2LGWriterHelper::~MPEG2LGWriterHelper()
 {
+}
+
+void MPEG2LGWriterHelper::SetFlavour(Flavour flavour)
+{
+    mFlavour = flavour;
 }
 
 void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
@@ -192,8 +198,15 @@ void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
     if (mEssenceParser.HaveSequenceHeader())
         mFlags |= 0x40; // sequence header bit
     if (frame_type == I_FRAME) {
-        if (mEssenceParser.HaveSequenceHeader() && mHaveGOPHeader && mEssenceParser.IsClosedGOP())
+        // according to SMPTE ST-381 bit 7 shall not be set if the GOP is Open. However, in Avid OP-Atom files
+        // this bit must be set because otherwise it assumes the precharge is right back to the first frame
+        // (which has a Closed GOP), but doesn't get the index table correct resulting in this error:
+        //      Exception: MXF_DIDMapper::ReadRange - End Sample Index exceeds on-disk Index Entry Count.
+        if (mEssenceParser.HaveSequenceHeader() &&
+            (mFlavour == AVID_FLAVOUR || (mHaveGOPHeader && mEssenceParser.IsClosedGOP())))
+        {
             mFlags |= 0x80; // reference frame bit
+        }
     } else if (frame_type == P_FRAME) {
         mFlags |= 0x22;
     } else {

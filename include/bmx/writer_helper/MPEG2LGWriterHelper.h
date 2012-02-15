@@ -45,9 +45,19 @@ namespace bmx
 class MPEG2LGWriterHelper
 {
 public:
+    typedef enum
+    {
+        DEFAULT_FLAVOUR,
+        AVID_FLAVOUR,
+    } Flavour;
+
+public:
     MPEG2LGWriterHelper();
     ~MPEG2LGWriterHelper();
 
+    void SetFlavour(Flavour flavour);
+
+public:
     void ProcessFrame(const unsigned char *data, uint32_t size);
 
     bool CheckTemporalOffsetsComplete(int64_t end_offset);
@@ -76,6 +86,8 @@ public:
     uint32_t GetBitRate() const             { return mBitRate; }
 
 private:
+    Flavour mFlavour;
+
     MPEG2EssenceParser mEssenceParser;
 
     int64_t mPosition;
