@@ -105,8 +105,7 @@ D10File* D10File::OpenNew(int flavour, string filename, mxfRational frame_rate)
 
 D10File::D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
 {
-    BMX_CHECK((frame_rate.numerator == 25    && frame_rate.denominator == 1) ||
-              (frame_rate.numerator == 30000 && frame_rate.denominator == 1001));
+    BMX_CHECK(frame_rate == FRAME_RATE_25 || frame_rate == FRAME_RATE_2997);
 
     mFlavour = flavour;
     mMXFFile = mxf_file;
