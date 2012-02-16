@@ -74,11 +74,6 @@ static bool compare_track(OP1ATrack *left, OP1ATrack *right)
 
 
 
-OP1AFile* OP1AFile::OpenNew(int flavour, string filename, mxfRational frame_rate)
-{
-    return new OP1AFile(flavour, File::openNew(filename), frame_rate);
-}
-
 OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
 {
     BMX_CHECK(frame_rate == FRAME_RATE_23976 ||

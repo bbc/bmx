@@ -79,7 +79,8 @@ static bool check_is_dir(string name)
 
 
 
-AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory)
+AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory,
+                                MXFFileFactory *file_factory, bool take_factory_ownership)
 {
     string root_filepath;
     if (root_directory.empty() || root_directory[0] != '/') {
@@ -122,13 +123,15 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory)
             throw BMXException("Media sub-directory '%s' clashes with non-directory file", sub_dir.c_str());
     }
 
-    return new AS02Bundle(root_filepath);
+    return new AS02Bundle(root_filepath, file_factory, take_factory_ownership);
 }
 
 
-AS02Bundle::AS02Bundle(string root_filepath)
+AS02Bundle::AS02Bundle(string root_filepath, MXFFileFactory *file_factory, bool take_factory_ownership)
 {
     mRootFilepath = root_filepath;
+    mFileFactory = file_factory;
+    mOwnFileFactory = take_factory_ownership;
 
     BMX_ASSERT(!root_filepath.empty() && root_filepath[root_filepath.size() - 1] == '/');
     mBundleName = strip_path(root_filepath.substr(0, root_filepath.size() - 1));
@@ -141,6 +144,8 @@ AS02Bundle::AS02Bundle(string root_filepath)
 
 AS02Bundle::~AS02Bundle()
 {
+    if (mOwnFileFactory)
+        delete mFileFactory;
 }
 
 string AS02Bundle::CreatePrimaryVersionFilepath(string *rel_uri_out)

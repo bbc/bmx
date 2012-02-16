@@ -37,6 +37,7 @@
 #include <bmx/Logging.h>
 
 using namespace std;
+using namespace mxfpp;
 using namespace bmx;
 
 
@@ -59,35 +60,37 @@ static const ClipWriterTypeStringMap CLIP_WRITER_TYPE_STRING_MAP[] =
 
 
 
-ClipWriter* ClipWriter::OpenNewAS02Clip(string bundle_directory, bool create_bundle_dir, Rational frame_rate)
+ClipWriter* ClipWriter::OpenNewAS02Clip(string bundle_directory, bool create_bundle_dir, Rational frame_rate,
+                                        MXFFileFactory *file_factory, bool take_factory_ownership)
 {
-    AS02Bundle *bundle = AS02Bundle::OpenNew(bundle_directory, create_bundle_dir);
+    AS02Bundle *bundle = AS02Bundle::OpenNew(bundle_directory, create_bundle_dir, file_factory, take_factory_ownership);
     return new ClipWriter(bundle, AS02Version::OpenNewPrimary(bundle, frame_rate));
 }
 
-ClipWriter* ClipWriter::OpenNewAS11OP1AClip(int flavour, string filename, Rational frame_rate)
+ClipWriter* ClipWriter::OpenNewAS11OP1AClip(int flavour, File *file, Rational frame_rate)
 {
-    return new ClipWriter(AS11Clip::OpenNewOP1AClip(flavour, filename, frame_rate));
+    return new ClipWriter(AS11Clip::OpenNewOP1AClip(flavour, file, frame_rate));
 }
 
-ClipWriter* ClipWriter::OpenNewAS11D10Clip(int flavour, string filename, Rational frame_rate)
+ClipWriter* ClipWriter::OpenNewAS11D10Clip(int flavour, File *file, Rational frame_rate)
 {
-    return new ClipWriter(AS11Clip::OpenNewD10Clip(flavour, filename, frame_rate));
+    return new ClipWriter(AS11Clip::OpenNewD10Clip(flavour, file, frame_rate));
 }
 
-ClipWriter* ClipWriter::OpenNewOP1AClip(int flavour, string filename, Rational frame_rate)
+ClipWriter* ClipWriter::OpenNewOP1AClip(int flavour, File *file, Rational frame_rate)
 {
-    return new ClipWriter(OP1AFile::OpenNew(flavour, filename, frame_rate));
+    return new ClipWriter(new OP1AFile(flavour, file, frame_rate));
 }
 
-ClipWriter* ClipWriter::OpenNewAvidClip(Rational frame_rate, string filename_prefix)
+ClipWriter* ClipWriter::OpenNewAvidClip(Rational frame_rate, MXFFileFactory *file_factory, bool take_factory_ownership,
+                                        string filename_prefix)
 {
-    return new ClipWriter(new AvidClip(frame_rate, filename_prefix));
+    return new ClipWriter(new AvidClip(frame_rate, file_factory, take_factory_ownership, filename_prefix));
 }
 
-ClipWriter* ClipWriter::OpenNewD10Clip(int flavour, string filename, Rational frame_rate)
+ClipWriter* ClipWriter::OpenNewD10Clip(int flavour, File *file, Rational frame_rate)
 {
-    return new ClipWriter(D10File::OpenNew(flavour, filename, frame_rate));
+    return new ClipWriter(new D10File(flavour, file, frame_rate));
 }
 
 string ClipWriter::ClipWriterTypeToString(ClipWriterType clip_type)

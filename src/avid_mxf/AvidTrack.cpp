@@ -148,10 +148,8 @@ bool AvidTrack::IsSupported(EssenceType essence_type, mxfRational sample_rate)
     return false;
 }
 
-AvidTrack* AvidTrack::OpenNew(AvidClip *clip, string filename, uint32_t track_index, EssenceType essence_type)
+AvidTrack* AvidTrack::OpenNew(AvidClip *clip, File *file, uint32_t track_index, EssenceType essence_type)
 {
-    File *file = File::openNew(filename);
-
     switch (essence_type)
     {
         case IEC_DV25:

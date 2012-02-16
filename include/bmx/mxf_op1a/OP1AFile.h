@@ -40,6 +40,7 @@
 
 #include <bmx/mxf_op1a/OP1ATrack.h>
 #include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
+#include <bmx/mxf_helper/MXFFileFactory.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFUtils.h>
 
@@ -64,9 +65,7 @@ public:
     friend class OP1AMPEG2LGTrack;
 
 public:
-    static OP1AFile* OpenNew(int flavour, std::string filename, mxfRational frame_rate);
-
-public:
+    OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate);
     virtual ~OP1AFile();
 
     void SetClipName(std::string name);                                 // default ""
@@ -112,8 +111,6 @@ public:
     std::string GetMD5DigestStr() const { return mMD5DigestStr; }
 
 private:
-    OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate);
-
     OP1AIndexTable* GetIndexTable() const { return mIndexTable; }
     OP1AContentPackageManager* GetContentPackageManager() const { return mCPManager; }
 

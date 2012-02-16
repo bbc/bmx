@@ -51,7 +51,7 @@ class AvidTrack
 public:
     static bool IsSupported(EssenceType essence_type, mxfRational sample_rate);
 
-    static AvidTrack* OpenNew(AvidClip *clip, std::string filename, uint32_t track_index, EssenceType essence_type);
+    static AvidTrack* OpenNew(AvidClip *clip, mxfpp::File *file, uint32_t track_index, EssenceType essence_type);
 
 public:
     virtual ~AvidTrack();

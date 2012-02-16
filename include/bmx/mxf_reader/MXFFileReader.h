@@ -43,6 +43,7 @@
 #include <bmx/mxf_reader/MXFFileTrackReader.h>
 #include <bmx/mxf_reader/EssenceReader.h>
 #include <bmx/mxf_reader/MXFPackageResolver.h>
+#include <bmx/mxf_helper/MXFFileFactory.h>
 #include <bmx/URI.h>
 
 
@@ -83,12 +84,14 @@ public:
     virtual ~MXFFileReader();
 
     void SetPackageResolver(MXFPackageResolver *resolver, bool take_ownership);
+    void SetFileFactory(MXFFileFactory *factory, bool take_ownership);
 
     OpenResult Open(std::string filename);
     OpenResult Open(mxfpp::File *file, std::string filename);
 
     mxfpp::DataModel* GetDataModel() const         { return mDataModel; }
     MXFPackageResolver* GetPackageResolver() const { return mPackageResolver; }
+    MXFFileFactory* GetFileFactory() const         { return mFileFactory; }
 
 public:
     virtual void GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const;
@@ -183,6 +186,8 @@ private:
 
     MXFPackageResolver *mPackageResolver;
     bool mOwnPackageResolver;
+    MXFFileFactory *mFileFactory;
+    bool mOwnFilefactory;
 
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;

@@ -39,6 +39,7 @@
 #include <bmx/d10_mxf/D10Track.h>
 #include <bmx/d10_mxf/D10MPEGTrack.h>
 #include <bmx/d10_mxf/D10PCMTrack.h>
+#include <bmx/mxf_helper/MXFFileFactory.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFUtils.h>
 
@@ -59,9 +60,7 @@ public:
     friend class D10Track;
 
 public:
-    static D10File* OpenNew(int flavour, std::string filename, mxfRational frame_rate);
-
-public:
+    D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate);
     virtual ~D10File();
 
     void SetClipName(std::string name);                                 // default ""
@@ -105,8 +104,6 @@ public:
     std::string GetMD5DigestStr() const { return mMD5DigestStr; }
 
 private:
-    D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate);
-
     D10ContentPackageManager* GetContentPackageManager() const { return mCPManager; }
 
     void CreateHeaderMetadata();

@@ -2081,26 +2081,27 @@ int main(int argc, const char** argv)
             flavour = D10_DEFAULT_FLAVOUR;
             // single pass flavours not (yet) supported
         }
+        DefaultMXFFileFactory file_factory;
         ClipWriter *clip = 0;
         switch (clip_type)
         {
             case CW_AS02_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS02Clip(output_name, true, frame_rate);
+                clip = ClipWriter::OpenNewAS02Clip(output_name, true, frame_rate, &file_factory, false);
                 break;
             case CW_AS11_OP1A_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS11OP1AClip(flavour, output_name, frame_rate);
+                clip = ClipWriter::OpenNewAS11OP1AClip(flavour, file_factory.OpenNew(output_name), frame_rate);
                 break;
             case CW_AS11_D10_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS11D10Clip(flavour, output_name, frame_rate);
+                clip = ClipWriter::OpenNewAS11D10Clip(flavour, file_factory.OpenNew(output_name), frame_rate);
                 break;
             case CW_OP1A_CLIP_TYPE:
-                clip = ClipWriter::OpenNewOP1AClip(flavour, output_name, frame_rate);
+                clip = ClipWriter::OpenNewOP1AClip(flavour, file_factory.OpenNew(output_name), frame_rate);
                 break;
             case CW_AVID_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAvidClip(frame_rate);
+                clip = ClipWriter::OpenNewAvidClip(frame_rate, &file_factory, false);
                 break;
             case CW_D10_CLIP_TYPE:
-                clip = ClipWriter::OpenNewD10Clip(flavour, output_name, frame_rate);
+                clip = ClipWriter::OpenNewD10Clip(flavour, file_factory.OpenNew(output_name), frame_rate);
                 break;
             case CW_UNKNOWN_CLIP_TYPE:
                 BMX_ASSERT(false);

@@ -7,6 +7,7 @@ libmxfhelper_la_SOURCES = \
 	MJPEGMXFDescriptorHelper.cpp \
 	MPEG2LGMXFDescriptorHelper.cpp \
 	MXFDescriptorHelper.cpp \
+	MXFFileFactory.cpp \
 	PictureMXFDescriptorHelper.cpp \
 	SoundMXFDescriptorHelper.cpp \
 	UncMXFDescriptorHelper.cpp \

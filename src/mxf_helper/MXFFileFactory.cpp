@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2012, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,65 +29,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AS02_BUNDLE_H__
-#define __BMX_AS02_BUNDLE_H__
-
-
-#include <string>
-#include <vector>
-
-#include <bmx/as02/AS02Shim.h>
-#include <bmx/as02/AS02Manifest.h>
-#include <bmx/mxf_helper/MXFFileFactory.h>
-
-
-
-namespace bmx
-{
-
-
-class AS02Bundle
-{
-public:
-    static AS02Bundle* OpenNew(std::string root_directory, bool create_root,
-                               MXFFileFactory *file_factory, bool take_factory_ownership);
-
-public:
-    ~AS02Bundle();
-
-public:
-    std::string CreatePrimaryVersionFilepath(std::string *rel_uri);
-    std::string CreateVersionFilepath(std::string name, std::string *rel_uri);
-    std::string CreateEssenceComponentFilepath(std::string version_filename, bool is_video, uint32_t track_number,
-                                               std::string *rel_uri);
-
-    std::string CompleteFilepath(std::string rel_uri);
-
-public:
-    MXFFileFactory* GetFileFactory() const { return mFileFactory; }
-
-    AS02Shim* GetShim() { return &mShim; }
-    AS02Manifest* GetManifest() { return &mManifest; }
-
-    void FinalizeBundle();
-
-private:
-    AS02Bundle(std::string root_filepath, MXFFileFactory *file_factory, bool take_factory_ownership);
-
-private:
-    std::string mRootFilepath;
-    std::string mBundleName;
-    MXFFileFactory *mFileFactory;
-    bool mOwnFileFactory;
-
-    AS02Shim mShim;
-    AS02Manifest mManifest;
-};
-
-
-};
-
-
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
+
+#include <bmx/mxf_helper/MXFFileFactory.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
+
+using namespace std;
+using namespace bmx;
+using namespace mxfpp;
+
+
+
+File* DefaultMXFFileFactory::OpenNew(string filename)
+{
+    return File::openNew(filename);
+}
+
+File* DefaultMXFFileFactory::OpenRead(string filename)
+{
+    return File::openRead(filename);
+}
+
+File* DefaultMXFFileFactory::OpenModify(string filename)
+{
+    return File::openModify(filename);
+}
 

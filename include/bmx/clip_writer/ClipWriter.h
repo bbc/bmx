@@ -50,16 +50,23 @@ namespace bmx
 class ClipWriter
 {
 public:
-    static ClipWriter* OpenNewAS02Clip(std::string bundle_directory, bool create_bundle_dir, Rational frame_rate);
-    static ClipWriter* OpenNewAS11OP1AClip(int flavour, std::string filename, Rational frame_rate);
-    static ClipWriter* OpenNewAS11D10Clip(int flavour, std::string filename, Rational frame_rate);
-    static ClipWriter* OpenNewOP1AClip(int flavour, std::string filename, Rational frame_rate);
-    static ClipWriter* OpenNewAvidClip(Rational frame_rate, std::string filename_prefix = "");
-    static ClipWriter* OpenNewD10Clip(int flavour, std::string filename, Rational frame_rate);
+    static ClipWriter* OpenNewAS02Clip(std::string bundle_directory, bool create_bundle_dir, Rational frame_rate,
+                                       MXFFileFactory *file_factory, bool take_factory_ownership);
+    static ClipWriter* OpenNewAS11OP1AClip(int flavour, mxfpp::File *file, Rational frame_rate);
+    static ClipWriter* OpenNewAS11D10Clip(int flavour, mxfpp::File *file, Rational frame_rate);
+    static ClipWriter* OpenNewOP1AClip(int flavour, mxfpp::File *file, Rational frame_rate);
+    static ClipWriter* OpenNewAvidClip(Rational frame_rate, MXFFileFactory *file_factory, bool take_factory_ownership,
+                                       std::string filename_prefix = "");
+    static ClipWriter* OpenNewD10Clip(int flavour, mxfpp::File *file, Rational frame_rate);
 
     static std::string ClipWriterTypeToString(ClipWriterType clip_type);
 
 public:
+    ClipWriter(AS02Bundle *bundle, AS02Clip *clip);
+    ClipWriter(AS11Clip *clip);
+    ClipWriter(OP1AFile *clip);
+    ClipWriter(AvidClip *clip);
+    ClipWriter(D10File *clip);
     ~ClipWriter();
 
     void SetClipName(std::string name);                             // default ""
@@ -91,13 +98,6 @@ public:
     OP1AFile* GetOP1AClip() const { return mOP1AClip; }
     AvidClip* GetAvidClip() const { return mAvidClip; }
     D10File* GetD10Clip()   const { return mD10Clip; }
-
-private:
-    ClipWriter(AS02Bundle *bundle, AS02Clip *clip);
-    ClipWriter(AS11Clip *clip);
-    ClipWriter(OP1AFile *clip);
-    ClipWriter(AvidClip *clip);
-    ClipWriter(D10File *clip);
 
 private:
     ClipWriterType mType;

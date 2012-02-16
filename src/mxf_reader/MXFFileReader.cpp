@@ -152,12 +152,17 @@ MXFFileReader::MXFFileReader()
 
     mPackageResolver = new MXFDefaultPackageResolver();
     mOwnPackageResolver = true;
+
+    mFileFactory = new DefaultMXFFileFactory();
+    mOwnFilefactory = true;
 }
 
 MXFFileReader::~MXFFileReader()
 {
     if (mOwnPackageResolver)
         delete mPackageResolver;
+    if (mOwnFilefactory)
+        delete mFileFactory;
     delete mEssenceReader;
     delete mFile;
     delete mHeaderMetadata;
@@ -179,12 +184,21 @@ void MXFFileReader::SetPackageResolver(MXFPackageResolver *resolver, bool take_o
     mOwnPackageResolver = take_ownership;
 }
 
+void MXFFileReader::SetFileFactory(MXFFileFactory *factory, bool take_ownership)
+{
+    if (mOwnFilefactory)
+        delete mFileFactory;
+
+    mFileFactory = factory;
+    mOwnFilefactory = take_ownership;
+}
+
 MXFFileReader::OpenResult MXFFileReader::Open(string filename)
 {
     File *file = 0;
     try
     {
-        file = File::openRead(filename);
+        file = mFileFactory->OpenRead(filename);
 
         OpenResult result = Open(file, filename);
         if (result != MXF_RESULT_SUCCESS)

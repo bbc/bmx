@@ -423,6 +423,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\bmx\mxf_helper\MXFFileFactory.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\include\bmx\mxf_reader\MXFFileReader.h"
 				>
 			</File>
@@ -846,6 +850,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\mxf_helper\MXFDescriptorHelper.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\mxf_helper\MXFFileFactory.cpp"
 				>
 			</File>
 			<File

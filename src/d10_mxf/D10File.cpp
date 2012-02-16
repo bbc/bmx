@@ -98,11 +98,6 @@ static mxfUL get_essence_container_ul(EssenceType essence_type, mxfRational fram
 
 
 
-D10File* D10File::OpenNew(int flavour, string filename, mxfRational frame_rate)
-{
-    return new D10File(flavour, File::openNew(filename), frame_rate);
-}
-
 D10File::D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
 {
     BMX_CHECK(frame_rate == FRAME_RATE_25 || frame_rate == FRAME_RATE_2997);

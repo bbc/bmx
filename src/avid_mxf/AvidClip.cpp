@@ -81,7 +81,8 @@ static bool compare_track(const AvidTrack *left, const AvidTrack *right)
 
 
 
-AvidClip::AvidClip(mxfRational frame_rate, string filename_prefix)
+AvidClip::AvidClip(mxfRational frame_rate, MXFFileFactory *file_factory, bool take_factory_ownership,
+                   string filename_prefix)
 {
     BMX_CHECK(frame_rate == FRAME_RATE_23976 ||
               frame_rate == FRAME_RATE_24 ||
@@ -90,6 +91,8 @@ AvidClip::AvidClip(mxfRational frame_rate, string filename_prefix)
               frame_rate == FRAME_RATE_50 ||
               frame_rate == FRAME_RATE_5994);
 
+    mFileFactory = file_factory;
+    mOwnFileFactory = take_factory_ownership;
     mClipFrameRate = frame_rate;
     mFilenamePrefix = filename_prefix;
     mStartTimecode = Timecode(frame_rate, false);
@@ -114,6 +117,9 @@ AvidClip::AvidClip(mxfRational frame_rate, string filename_prefix)
 
 AvidClip::~AvidClip()
 {
+    if (mOwnFileFactory)
+        delete mFileFactory;
+
     delete mHeaderMetadata;
     delete mDataModel;
 
@@ -374,7 +380,8 @@ AvidTrack* AvidClip::CreateTrack(EssenceType essence_type)
 
 AvidTrack* AvidClip::CreateTrack(EssenceType essence_type, string filename)
 {
-    mTracks.push_back(AvidTrack::OpenNew(this, filename, (uint32_t)mTracks.size(), essence_type));
+    mTracks.push_back(AvidTrack::OpenNew(this, mFileFactory->OpenNew(filename), (uint32_t)mTracks.size(),
+                                         essence_type));
     return mTracks.back();
 }
 

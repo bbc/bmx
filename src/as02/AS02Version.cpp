@@ -76,8 +76,10 @@ AS02Version* AS02Version::OpenNewPrimary(AS02Bundle *bundle, mxfRational frame_r
 {
     string filepath;
     string rel_uri;
+    File *file;
+
     filepath = bundle->CreatePrimaryVersionFilepath(&rel_uri);
-    File *file = File::openNew(filepath);
+    file = bundle->GetFileFactory()->OpenNew(filepath);
 
     return new AS02Version(bundle, filepath, rel_uri, file, frame_rate);
 }
@@ -86,8 +88,10 @@ AS02Version* AS02Version::OpenNew(AS02Bundle *bundle, string name, mxfRational f
 {
     string filepath;
     string rel_uri;
+    File *file;
+
     filepath = bundle->CreateVersionFilepath(name, &rel_uri);
-    File *file = File::openNew(filepath);
+    file = bundle->GetFileFactory()->OpenNew(filepath);
 
     return new AS02Version(bundle, filepath, rel_uri, file, frame_rate);
 }

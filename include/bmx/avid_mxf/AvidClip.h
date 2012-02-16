@@ -40,6 +40,7 @@
 #include <libMXF++/MXF.h>
 
 #include <bmx/avid_mxf/AvidTrack.h>
+#include <bmx/mxf_helper/MXFFileFactory.h>
 #include <bmx/BMXTypes.h>
 
 
@@ -62,7 +63,8 @@ public:
     friend class AvidTrack;
 
 public:
-    AvidClip(mxfRational frame_rate, std::string filename_prefix = "");
+    AvidClip(mxfRational frame_rate, MXFFileFactory *file_factory, bool take_factory_ownership,
+             std::string filename_prefix = "");
     ~AvidClip();
 
     void SetProjectName(std::string name);                              // default ""
@@ -117,6 +119,9 @@ private:
     std::vector<std::pair<mxfUMID, uint32_t> > GetSourceReferences(mxfpp::SourcePackage *source_package, bool is_picture);
 
 private:
+    MXFFileFactory *mFileFactory;
+    bool mOwnFileFactory;
+
     std::string mProjectName;
     std::string mClipName;
     mxfRational mClipFrameRate;

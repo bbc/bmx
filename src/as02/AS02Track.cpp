@@ -133,11 +133,9 @@ bool AS02Track::IsSupported(EssenceType essence_type, mxfRational sample_rate)
     return false;
 }
 
-AS02Track* AS02Track::OpenNew(AS02Clip *clip, string filepath, string rel_uri, uint32_t track_index,
+AS02Track* AS02Track::OpenNew(AS02Clip *clip, File *file, string rel_uri, uint32_t track_index,
                               EssenceType essence_type)
 {
-    File *file = File::openNew(filepath);
-
     switch (essence_type)
     {
         case IEC_DV25:

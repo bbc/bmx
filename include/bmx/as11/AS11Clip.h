@@ -68,12 +68,14 @@ typedef struct
 class AS11Clip
 {
 public:
-    static AS11Clip* OpenNewOP1AClip(int flavour, std::string filename, Rational frame_rate);
-    static AS11Clip* OpenNewD10Clip(int flavour, std::string filename, Rational frame_rate);
+    static AS11Clip* OpenNewOP1AClip(int flavour, mxfpp::File *file, Rational frame_rate);
+    static AS11Clip* OpenNewD10Clip(int flavour, mxfpp::File *file, Rational frame_rate);
 
     static std::string AS11ClipTypeToString(AS11ClipType clip_type);
 
 public:
+    AS11Clip(OP1AFile *clip);
+    AS11Clip(D10File *clip);
     ~AS11Clip();
 
     void SetClipName(std::string name);                // default ""
@@ -122,9 +124,6 @@ public:
     D10File* GetD10Clip() const { return mD10Clip; }
 
 private:
-    AS11Clip(OP1AFile *clip);
-    AS11Clip(D10File *clip);
-
     void AppendDMSLabel(mxfUL scheme_label);
     void InsertFramework(uint32_t track_id, std::string track_name, mxfpp::DMFramework *framework);
 

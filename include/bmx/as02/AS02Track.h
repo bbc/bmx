@@ -50,7 +50,7 @@ class AS02Track
 public:
     static bool IsSupported(EssenceType essence_type, mxfRational sample_rate);
 
-    static AS02Track* OpenNew(AS02Clip *clip, std::string filepath, std::string rel_uri, uint32_t track_index,
+    static AS02Track* OpenNew(AS02Clip *clip, mxfpp::File *file, std::string rel_uri, uint32_t track_index,
                               EssenceType essence_type);
 
 public:

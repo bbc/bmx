@@ -87,6 +87,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_helper/MJPEGMXFDescriptorHelper.h \
 	bmx/mxf_helper/MPEG2LGMXFDescriptorHelper.h \
 	bmx/mxf_helper/MXFDescriptorHelper.h \
+	bmx/mxf_helper/MXFFileFactory.h \
 	bmx/mxf_helper/PictureMXFDescriptorHelper.h \
 	bmx/mxf_helper/SoundMXFDescriptorHelper.h \
 	bmx/mxf_helper/UncMXFDescriptorHelper.h \
