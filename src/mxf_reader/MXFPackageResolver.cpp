@@ -59,19 +59,19 @@ ResolvedPackage::ResolvedPackage()
 
 
 
-MXFDefaultPackageResolver::MXFDefaultPackageResolver()
+DefaultMXFPackageResolver::DefaultMXFPackageResolver()
 {
     mFileReader = 0;
 }
 
-MXFDefaultPackageResolver::~MXFDefaultPackageResolver()
+DefaultMXFPackageResolver::~DefaultMXFPackageResolver()
 {
     size_t i;
     for (i = 0; i < mExternalReaders.size(); i++)
         delete mExternalReaders[i];
 }
 
-void MXFDefaultPackageResolver::ExtractResolvedPackages(MXFFileReader *file_reader)
+void DefaultMXFPackageResolver::ExtractResolvedPackages(MXFFileReader *file_reader)
 {
     if (!mFileReader)
         mFileReader = file_reader;
@@ -113,7 +113,7 @@ void MXFDefaultPackageResolver::ExtractResolvedPackages(MXFFileReader *file_read
     }
 }
 
-vector<ResolvedPackage> MXFDefaultPackageResolver::ResolveSourceClip(SourceClip *source_clip)
+vector<ResolvedPackage> DefaultMXFPackageResolver::ResolveSourceClip(SourceClip *source_clip)
 {
     vector<ResolvedPackage> resolved_packages;
 
@@ -134,7 +134,7 @@ vector<ResolvedPackage> MXFDefaultPackageResolver::ResolveSourceClip(SourceClip 
     return resolved_packages;
 }
 
-vector<ResolvedPackage> MXFDefaultPackageResolver::ResolveSourceClip(SourceClip *source_clip,
+vector<ResolvedPackage> DefaultMXFPackageResolver::ResolveSourceClip(SourceClip *source_clip,
                                                                      vector<Locator*> &locators)
 {
     // it is sufficient to return existing resolved packages if resolving a non-file source package or

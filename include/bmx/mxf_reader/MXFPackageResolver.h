@@ -77,11 +77,11 @@ public:
 
 
 
-class MXFDefaultPackageResolver : public MXFPackageResolver
+class DefaultMXFPackageResolver : public MXFPackageResolver
 {
 public:
-    MXFDefaultPackageResolver();
-    virtual ~MXFDefaultPackageResolver();
+    DefaultMXFPackageResolver();
+    virtual ~DefaultMXFPackageResolver();
 
     virtual void ExtractResolvedPackages(MXFFileReader *file_reader);
 

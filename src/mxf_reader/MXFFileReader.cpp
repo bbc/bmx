@@ -150,7 +150,7 @@ MXFFileReader::MXFFileReader()
 
     mDataModel = new DataModel();
 
-    mPackageResolver = new MXFDefaultPackageResolver();
+    mPackageResolver = new DefaultMXFPackageResolver();
     mOwnPackageResolver = true;
 
     mFileFactory = new DefaultMXFFileFactory();
