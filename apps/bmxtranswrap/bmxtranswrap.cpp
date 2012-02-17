@@ -63,6 +63,7 @@
 #if defined(_WIN32)
 #include <mxf/mxf_win32_file.h>
 #endif
+#include <mxf/mxf_rw_intl_file.h>
 
 using namespace std;
 using namespace bmx;
@@ -96,6 +97,127 @@ static const char DEFAULT_SHIM_ANNOTATION[] = "Default AS-02 shim";
 
 
 extern bool BMX_REGRESSION_TEST;
+
+
+
+class TranswrapFileFactory : public MXFFileFactory
+{
+public:
+    TranswrapFileFactory(bool md5_wrap_input, bool rw_interleave)
+    {
+        mMD5WrapInput = md5_wrap_input;
+        mInterleaver = 0;
+
+        if (rw_interleave)
+            BMX_CHECK(mxf_create_rw_intl(64 * 1024, 2 * 1024 * 1024, &mInterleaver));
+    }
+    ~TranswrapFileFactory()
+    {
+        mxf_free_rw_intl(&mInterleaver);
+    }
+
+    bool OpenInput(string filename, File **file)
+    {
+        MXFFile *mxf_file = 0;
+
+        try
+        {
+#if defined(_WIN32)
+            BMX_CHECK(mxf_win32_file_open_read(filename.c_str(), 0, &mxf_file));
+#else
+            BMX_CHECK(mxf_disk_file_open_read(filename.c_str(), &mxf_file));
+#endif
+
+            if (mMD5WrapInput) {
+                MXFMD5WrapperFile *md5_wrap_file = md5_wrap_mxf_file(mxf_file);
+                mInputMD5WrapFiles.push_back(md5_wrap_file);
+                mxf_file = md5_wrap_get_file(mInputMD5WrapFiles.back());
+            }
+
+            if (mInterleaver) {
+                MXFFile *intl_mxf_file;
+                BMX_CHECK(mxf_rw_intl_open(mInterleaver, mxf_file, 0, &intl_mxf_file));
+                mxf_file = intl_mxf_file;
+            }
+
+            *file = new File(mxf_file);
+            return true;
+        }
+        catch (...)
+        {
+            mxf_file_close(&mxf_file);
+            return false;
+        }
+    }
+
+public:
+    MXFRWInterleaver* GetInterleaver() const { return mInterleaver; }
+
+    vector<MXFMD5WrapperFile*>& GetInputMD5WrapFiles() { return mInputMD5WrapFiles; }
+
+public:
+    virtual File* OpenNew(string filename)
+    {
+        MXFFile *mxf_file;
+
+#if defined(_WIN32)
+        BMX_CHECK(mxf_win32_file_open_new(filename.c_str(), 0, &mxf_file));
+#else
+        BMX_CHECK(mxf_disk_file_open_new(filename.c_str(), &mxf_file));
+#endif
+
+        if (mInterleaver) {
+            MXFFile *intl_mxf_file;
+            BMX_CHECK(mxf_rw_intl_open(mInterleaver, mxf_file, 1, &intl_mxf_file));
+            mxf_file = intl_mxf_file;
+        }
+
+        return new File(mxf_file);
+    }
+
+    virtual File* OpenRead(string filename)
+    {
+        MXFFile *mxf_file;
+
+#if defined(_WIN32)
+        BMX_CHECK(mxf_win32_file_open_read(filename.c_str(), 0, &mxf_file));
+#else
+        BMX_CHECK(mxf_disk_file_open_read(filename.c_str(), &mxf_file));
+#endif
+
+        if (mInterleaver) {
+            MXFFile *intl_mxf_file;
+            BMX_CHECK(mxf_rw_intl_open(mInterleaver, mxf_file, 0, &intl_mxf_file));
+            mxf_file = intl_mxf_file;
+        }
+
+        return new File(mxf_file);
+    }
+
+    virtual File* OpenModify(string filename)
+    {
+        MXFFile *mxf_file;
+
+#if defined(_WIN32)
+        BMX_CHECK(mxf_win32_file_open_modify(filename.c_str(), 0, &mxf_file));
+#else
+        BMX_CHECK(mxf_disk_file_open_modify(filename.c_str(), &mxf_file));
+#endif
+
+        if (mInterleaver) {
+            MXFFile *intl_mxf_file;
+            BMX_CHECK(mxf_rw_intl_open(mInterleaver, mxf_file, 1, &intl_mxf_file));
+            mxf_file = intl_mxf_file;
+        }
+
+        return new File(mxf_file);
+    }
+
+private:
+    bool mMD5WrapInput;
+    vector<MXFMD5WrapperFile*> mInputMD5WrapFiles;
+    MXFRWInterleaver *mInterleaver;
+};
 
 
 
@@ -167,6 +289,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          Use this option for files with broken timecode\n");
     fprintf(stderr, "  --no-precharge          Don't output clip/track with precharge. Adjust the start position and duration instead\n");
     fprintf(stderr, "  --no-rollout            Don't output clip/track with rollout. Adjust the duration instead\n");
+    fprintf(stderr, "  --rw-intl               Interleave input reads with output writes\n");
 #if defined(_WIN32)
     fprintf(stderr, "  --seq-scan              Set the sequential scan hint for optimizing file caching whilst reading\n");
 #endif
@@ -266,6 +389,7 @@ int main(int argc, const char** argv)
 #endif
     bool no_precharge = false;
     bool no_rollout = false;
+    bool rw_interleave = false;
     int value, num, den;
     int cmdln_index;
 
@@ -423,6 +547,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--no-rollout") == 0)
         {
             no_rollout = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--rw-intl") == 0)
+        {
+            rw_interleave = true;
         }
 #if defined(_WIN32)
         else if (strcmp(argv[cmdln_index], "--seq-scan") == 0)
@@ -786,35 +914,21 @@ int main(int argc, const char** argv)
     {
         // open an MXFReader using the input filenames
 
-#if defined(_WIN32)
-#define MXF_OPEN_READ(fn, pf)   mxf_win32_file_open_read(fn, file_flags, pf)
-#else
-#define MXF_OPEN_READ(fn, pf)   mxf_disk_file_open_read(fn, pf)
-#endif
-
-#define OPEN_FILE(sreader, index)                                                               \
-    MXFFileReader::OpenResult result;                                                           \
-    MXFFile *mxf_file;                                                                          \
-    if (MXF_OPEN_READ(input_filenames[index], &mxf_file)) {                                     \
-        if (input_file_md5) {                                                                   \
-            MXFMD5WrapperFile *md5_wrap_file = md5_wrap_mxf_file(mxf_file);                     \
-            input_md5_wrap_files.push_back(md5_wrap_file);                                      \
-            result = sreader->Open(new File(md5_wrap_get_file(input_md5_wrap_files.back())),    \
-                                  input_filenames[index]);                                      \
-        } else {                                                                                \
-            result = sreader->Open(new File(mxf_file), input_filenames[index]);                 \
-        }                                                                                       \
-    } else {                                                                                    \
-        result = MXFFileReader::MXF_RESULT_OPEN_FAIL;                                           \
-    }                                                                                           \
-    if (result != MXFFileReader::MXF_RESULT_SUCCESS) {                                          \
-        log_error("Failed to open MXF file '%s': %s\n", input_filenames[index],                 \
-                  MXFFileReader::ResultToString(result).c_str());                               \
-        delete sreader;                                                                         \
-        throw false;                                                                            \
+#define OPEN_FILE(sreader, index)                                                   \
+    MXFFileReader::OpenResult result;                                               \
+    File *file = 0;                                                                 \
+    if (file_factory.OpenInput(input_filenames[index], &file))                      \
+        result = sreader->Open(file, input_filenames[index]);                       \
+    else                                                                            \
+        result = MXFFileReader::MXF_RESULT_OPEN_FAIL;                               \
+    if (result != MXFFileReader::MXF_RESULT_SUCCESS) {                              \
+        log_error("Failed to open MXF file '%s': %s\n", input_filenames[index],     \
+                  MXFFileReader::ResultToString(result).c_str());                   \
+        delete sreader;                                                             \
+        throw false;                                                                \
     }
 
-        vector<MXFMD5WrapperFile*> input_md5_wrap_files;
+        TranswrapFileFactory file_factory(input_file_md5, rw_interleave);
         MXFReader *reader;
         if (use_group_reader) {
             MXFGroupReader *group_reader = new MXFGroupReader();
@@ -1110,7 +1224,6 @@ int main(int argc, const char** argv)
             else if (single_pass)
                 flavour |= D10_SINGLE_PASS_WRITE_FLAVOUR;
         }
-        DefaultMXFFileFactory file_factory;
         ClipWriter *clip = 0;
         switch (clip_type)
         {
@@ -1491,8 +1604,8 @@ int main(int argc, const char** argv)
 
         if (input_file_md5) {
             size_t i;
-            for (i = 0; i < input_md5_wrap_files.size(); i++)
-                md5_wrap_force_update(input_md5_wrap_files[i]);
+            for (i = 0; i < file_factory.GetInputMD5WrapFiles().size(); i++)
+                md5_wrap_force_update(file_factory.GetInputMD5WrapFiles()[i]);
         }
 
 
@@ -1613,11 +1726,11 @@ int main(int argc, const char** argv)
         // input file md5
 
         if (input_file_md5) {
-            BMX_ASSERT(input_filenames.size() == input_md5_wrap_files.size());
+            BMX_ASSERT(input_filenames.size() == file_factory.GetInputMD5WrapFiles().size());
             unsigned char digest[16];
             size_t i;
-            for (i = 0; i < input_md5_wrap_files.size(); i++) {
-                md5_wrap_finalize(input_md5_wrap_files[i], digest);
+            for (i = 0; i < file_factory.GetInputMD5WrapFiles().size(); i++) {
+                md5_wrap_finalize(file_factory.GetInputMD5WrapFiles()[i], digest);
                 log_info("Input file MD5: %s %s\n", input_filenames[i], md5_digest_str(digest).c_str());
             }
         }
