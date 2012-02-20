@@ -183,10 +183,10 @@ static const char* get_bool_string(bool value)
         return "false";
 }
 
-static const char* get_picture_ratio_string(mxfRational ratio)
+static const char* get_rational_string(mxfRational ratio)
 {
     static char buf[32];
-    sprintf(buf, "%d:%d", ratio.numerator, ratio.denominator);
+    sprintf(buf, "%d/%d", ratio.numerator, ratio.denominator);
     return buf;
 }
 
@@ -320,7 +320,7 @@ static void print_uk_dpp_framework(UKDPPFramework *udf, Timecode start_timecode,
     if (udf->HaveDistributor())
         printf("      Distributor               : %s\n", udf->GetDistributor().c_str());
     if (udf->HavePictureRatio())
-        printf("      PictureRatio              : %s\n", get_picture_ratio_string(udf->GetPictureRatio()));
+        printf("      PictureRatio              : %s\n", get_rational_string(udf->GetPictureRatio()));
     printf("      3D                        : %s\n", get_bool_string(udf->Get3D()));
     if (udf->Have3DType()) {
         printf("      3DType                    : %u (%s)\n",
