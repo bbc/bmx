@@ -111,7 +111,7 @@ public:
     bool HaveProgrammeTextLanguage();
     std::string GetProgrammeTextLanguage();
     std::string GetContactEmail();
-    std::string GetContactTelephoneNo();
+    std::string GetContactTelephoneNumber();
 
     void SetProductionNumber(std::string value);
     void SetSynopsis(std::string value);
@@ -149,7 +149,7 @@ public:
     void SetProgrammeHasText(bool value);
     void SetProgrammeTextLanguage(std::string value);
     void SetContactEmail(std::string value);
-    void SetContactTelephoneNo(std::string value);
+    void SetContactTelephoneNumber(std::string value);
 
 protected:
     UKDPPFramework(mxfpp::HeaderMetadata *header_metadata, ::MXFMetadataSet *c_metadata_set);

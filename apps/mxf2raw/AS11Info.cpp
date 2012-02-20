@@ -396,7 +396,7 @@ static void print_uk_dpp_framework(UKDPPFramework *udf, Timecode start_timecode,
     if (udf->HaveProgrammeTextLanguage())
         printf("      ProgrammeTextLanguage     : %s\n", udf->GetProgrammeTextLanguage().c_str());
     printf("      ContactEmail              : %s\n", udf->GetContactEmail().c_str());
-    printf("      ContactTelephoneNumber    : %s\n", udf->GetContactTelephoneNo().c_str());
+    printf("      ContactTelephoneNumber    : %s\n", udf->GetContactTelephoneNumber().c_str());
 }
 
 static void print_segmentation_framework(DMSegment *seg, Timecode start_timecode, int64_t offset, Rational edit_rate)
