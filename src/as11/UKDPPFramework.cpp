@@ -346,7 +346,7 @@ string UKDPPFramework::GetContactEmail()
 
 string UKDPPFramework::GetContactTelephoneNo()
 {
-    return getStringItem(&MXF_ITEM_K(UKDPPFramework, UKDPPContactTelephoneNo));
+    return getStringItem(&MXF_ITEM_K(UKDPPFramework, UKDPPContactTelephoneNumber));
 }
 
 void UKDPPFramework::SetProductionNumber(string value)
@@ -531,6 +531,6 @@ void UKDPPFramework::SetContactEmail(string value)
 
 void UKDPPFramework::SetContactTelephoneNo(string value)
 {
-    setStringItem(&MXF_ITEM_K(UKDPPFramework, UKDPPContactTelephoneNo), value);
+    setStringItem(&MXF_ITEM_K(UKDPPFramework, UKDPPContactTelephoneNumber), value);
 }
 

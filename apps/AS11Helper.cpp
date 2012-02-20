@@ -113,7 +113,7 @@ static const PropertyInfo UK_DPP_PROPERTY_INFO[] =
     {"ProgrammeHasText",            MXF_ITEM_K(UKDPPFramework, UKDPPProgrammeHasText)},
     {"ProgrammeTextLanguage",       MXF_ITEM_K(UKDPPFramework, UKDPPProgrammeTextLanguage)},
     {"ContactEmail",                MXF_ITEM_K(UKDPPFramework, UKDPPContactEmail)},
-    {"ContactTelephoneNo",          MXF_ITEM_K(UKDPPFramework, UKDPPContactTelephoneNo)},
+    {"ContactTelephoneNumber",      MXF_ITEM_K(UKDPPFramework, UKDPPContactTelephoneNumber)},
 
     {0, g_Null_Key},
 };
