@@ -428,16 +428,20 @@ bool bmx::check_file_exists(string filename)
 bmx::Timestamp bmx::generate_timestamp_now()
 {
     Timestamp now;
-
     struct tm gmt;
-    time_t t = time(0);
 
-#if defined(_WIN32)
+#if defined(_MSC_VER)
+    struct _timeb tb;
+    BMX_CHECK(_ftime_s(&tb) == 0);
+    BMX_CHECK(gmtime_s(&gmt, &tb.time) == 0);
+#elif defined(_WIN32)
     // TODO: need thread-safe (reentrant) version
+    time_t t = time(0);
     const struct tm *gmt_ptr = gmtime(&t);
     BMX_CHECK(gmt_ptr);
     gmt = *gmt_ptr;
 #else
+    time_t t = time(0);
     BMX_CHECK(gmtime_r(&t, &gmt));
 #endif
 
