@@ -33,7 +33,8 @@
 #include "config.h"
 #endif
 
-#define __STDC_FORMAT_MACROS 1
+#define __STDC_FORMAT_MACROS
+#define __STDC_LIMIT_MACROS
 
 #include <cstdio>
 #include <cstring>
@@ -95,6 +96,8 @@ static const char DEFAULT_SHIM_NAME[]       = "Sample File";
 static const char DEFAULT_SHIM_ID[]         = "http://bbc.co.uk/rd/as02/default-shim.txt";
 static const char DEFAULT_SHIM_ANNOTATION[] = "Default AS-02 shim";
 
+static const uint32_t DEFAULT_RW_INTL_SIZE  = (64 * 1024);
+
 
 extern bool BMX_REGRESSION_TEST;
 
@@ -103,14 +106,20 @@ extern bool BMX_REGRESSION_TEST;
 class TranswrapFileFactory : public MXFFileFactory
 {
 public:
-    TranswrapFileFactory(bool md5_wrap_input, bool rw_interleave, int input_flags)
+    TranswrapFileFactory(bool md5_wrap_input, bool rw_interleave, uint32_t rw_interleave_size, int input_flags)
     {
         mMD5WrapInput = md5_wrap_input;
         mInterleaver = 0;
         mInputFlags = input_flags;
 
-        if (rw_interleave)
-            BMX_CHECK(mxf_create_rw_intl(64 * 1024, 2 * 1024 * 1024, &mInterleaver));
+        if (rw_interleave) {
+            uint32_t cacheSize = 2 * 1024 * 1024;
+            if (cacheSize < rw_interleave_size) {
+                BMX_CHECK(rw_interleave_size < UINT32_MAX / 2);
+                cacheSize = 2 * rw_interleave_size;
+            }
+            BMX_CHECK(mxf_create_rw_intl(rw_interleave_size, cacheSize, &mInterleaver));
+        }
     }
     ~TranswrapFileFactory()
     {
@@ -292,6 +301,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --no-precharge          Don't output clip/track with precharge. Adjust the start position and duration instead\n");
     fprintf(stderr, "  --no-rollout            Don't output clip/track with rollout. Adjust the duration instead\n");
     fprintf(stderr, "  --rw-intl               Interleave input reads with output writes\n");
+    fprintf(stderr, "  --rw-intl-size          The interleave size. Default is %u\n", DEFAULT_RW_INTL_SIZE);
+    fprintf(stderr, "                          Value must be a multiple of the system page size, %u\n", mxf_get_system_page_size());
 #if defined(_WIN32)
     fprintf(stderr, "  --seq-scan              Set the sequential scan hint for optimizing file caching whilst reading\n");
 #endif
@@ -390,7 +401,10 @@ int main(int argc, const char** argv)
     bool no_precharge = false;
     bool no_rollout = false;
     bool rw_interleave = false;
+    uint32_t rw_interleave_size = DEFAULT_RW_INTL_SIZE;
+    uint32_t system_page_size = mxf_get_system_page_size();
     int value, num, den;
+    unsigned int uvalue;
     int cmdln_index;
 
     if (argc == 1) {
@@ -551,6 +565,24 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--rw-intl") == 0)
         {
             rw_interleave = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--rw-intl-size") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1 ||
+                (uvalue % system_page_size) != 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            rw_interleave_size = uvalue;
+            cmdln_index++;
         }
 #if defined(_WIN32)
         else if (strcmp(argv[cmdln_index], "--seq-scan") == 0)
@@ -928,7 +960,7 @@ int main(int argc, const char** argv)
         throw false;                                                                \
     }
 
-        TranswrapFileFactory file_factory(input_file_md5, rw_interleave, input_file_flags);
+        TranswrapFileFactory file_factory(input_file_md5, rw_interleave, rw_interleave_size, input_file_flags);
         MXFReader *reader;
         if (use_group_reader) {
             MXFGroupReader *group_reader = new MXFGroupReader();
