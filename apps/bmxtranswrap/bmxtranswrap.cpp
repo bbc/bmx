@@ -103,10 +103,11 @@ extern bool BMX_REGRESSION_TEST;
 class TranswrapFileFactory : public MXFFileFactory
 {
 public:
-    TranswrapFileFactory(bool md5_wrap_input, bool rw_interleave)
+    TranswrapFileFactory(bool md5_wrap_input, bool rw_interleave, int input_flags)
     {
         mMD5WrapInput = md5_wrap_input;
         mInterleaver = 0;
+        mInputFlags = input_flags;
 
         if (rw_interleave)
             BMX_CHECK(mxf_create_rw_intl(64 * 1024, 2 * 1024 * 1024, &mInterleaver));
@@ -123,7 +124,7 @@ public:
         try
         {
 #if defined(_WIN32)
-            BMX_CHECK(mxf_win32_file_open_read(filename.c_str(), 0, &mxf_file));
+            BMX_CHECK(mxf_win32_file_open_read(filename.c_str(), mInputFlags, &mxf_file));
 #else
             BMX_CHECK(mxf_disk_file_open_read(filename.c_str(), &mxf_file));
 #endif
@@ -217,6 +218,7 @@ private:
     bool mMD5WrapInput;
     vector<MXFMD5WrapperFile*> mInputMD5WrapFiles;
     MXFRWInterleaver *mInterleaver;
+    int mInputFlags;
 };
 
 
@@ -384,9 +386,7 @@ int main(int argc, const char** argv)
     int8_t user_dial_norm = 0;
     bool user_dial_norm_set = false;
     bool input_file_md5 = false;
-#if defined(_WIN32)
-    int file_flags = 0;
-#endif
+    int input_file_flags = 0;
     bool no_precharge = false;
     bool no_rollout = false;
     bool rw_interleave = false;
@@ -555,7 +555,7 @@ int main(int argc, const char** argv)
 #if defined(_WIN32)
         else if (strcmp(argv[cmdln_index], "--seq-scan") == 0)
         {
-            file_flags |= MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
+            input_file_flags |= MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
         }
 #endif
         else if (strcmp(argv[cmdln_index], "--avcihead") == 0)
@@ -928,7 +928,7 @@ int main(int argc, const char** argv)
         throw false;                                                                \
     }
 
-        TranswrapFileFactory file_factory(input_file_md5, rw_interleave);
+        TranswrapFileFactory file_factory(input_file_md5, rw_interleave, input_file_flags);
         MXFReader *reader;
         if (use_group_reader) {
             MXFGroupReader *group_reader = new MXFGroupReader();
