@@ -688,8 +688,8 @@ void AS11Helper::Complete()
             dpp_framework->SetTotalNumberOfParts(mClip->GetTotalSegments());
         }
         if (mHaveUKDPPTotalProgrammeDuration) {
-            if (mClip->GetTotalSegmentDuration() != dpp_framework->GetTotalProgrammeDuration()) {
-                log_warn("UKDPPTotalProgrammeDuration value %u does not equal actual total part duration %u\n",
+            if (dpp_framework->GetTotalProgrammeDuration() < mClip->GetTotalSegmentDuration()) {
+                log_warn("UKDPPTotalProgrammeDuration value %u is less than duration of parts in this file %u\n",
                          dpp_framework->GetTotalProgrammeDuration(), mClip->GetTotalSegmentDuration());
             }
         } else {
