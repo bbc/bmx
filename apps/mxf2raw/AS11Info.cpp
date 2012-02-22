@@ -321,9 +321,9 @@ static void print_uk_dpp_framework(UKDPPFramework *udf, Timecode start_timecode,
         printf("      Distributor               : %s\n", udf->GetDistributor().c_str());
     if (udf->HavePictureRatio())
         printf("      PictureRatio              : %s\n", get_rational_string(udf->GetPictureRatio()));
-    printf("      3D                        : %s\n", get_bool_string(udf->Get3D()));
+    printf("      ThreeD                    : %s\n", get_bool_string(udf->Get3D()));
     if (udf->Have3DType()) {
-        printf("      3DType                    : %u (%s)\n",
+        printf("      ThreeDType                : %u (%s)\n",
            udf->Get3DType(),
            get_enum_string(udf->Get3DType(), T3D_TYPE_STR, ARRAY_SIZE(T3D_TYPE_STR)));
     }
