@@ -466,7 +466,7 @@ void MXFSequenceReader::SetReadLimits(int64_t start_position, int64_t duration, 
     GetSegmentPosition(start_position + duration, &end_segment, &segment_index, &end_segment_duration);
 
     if (start_segment == end_segment) {
-        start_segment->SetReadLimits(start_segment_position, end_segment_duration, false);
+        start_segment->SetReadLimits(start_segment_position, end_segment_duration - start_segment_position, false);
     } else {
         // note that start segment has 0 rollout
         start_segment->SetReadLimits(start_segment_position,
