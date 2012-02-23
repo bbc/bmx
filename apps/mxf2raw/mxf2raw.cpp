@@ -685,10 +685,10 @@ int main(int argc, const char** argv)
 
         int64_t max_precharge = 0;
         if (!no_precharge)
-            max_precharge = reader->GetMaxPrecharge(start, true);
+            max_precharge = reader->GetMaxPrecharge(start, false);
         int64_t max_rollout = 0;
         if (!no_rollout)
-            max_rollout = reader->GetMaxRollout(start + output_duration - 1, true);
+            max_rollout = reader->GetMaxRollout(start + output_duration - 1, false);
 
         reader->SetReadLimits(start + max_precharge, - max_precharge + output_duration + max_rollout, true);
 
