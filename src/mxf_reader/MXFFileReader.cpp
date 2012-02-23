@@ -824,9 +824,14 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         if (!mp_source_clip)
             continue;
 
-        // currently only support 0 start position
-        BMX_CHECK_M(mp_source_clip->getStartPosition() == 0,
-                   ("Non-zero material package source clip start position is not yet supported"));
+        // Avid files will have a non-zero start position if consolidation of a sequence
+        // required the first couple of frames to be re-encoded. The start position is equivalent to
+        // using origin to indicate precharge.
+        if (mp_source_clip->getStartPosition() != 0) {
+            mxfUL op = preface->getOperationalPattern();
+            BMX_CHECK_M(is_op_atom(&op) && mp_source_clip->getStartPosition() >= 0,
+                        ("Non-zero material package source clip start position is not supported"));
+        }
 
         // skip if could not resolve the source clip
         vector<ResolvedPackage> resolved_packages = mPackageResolver->ResolveSourceClip(mp_source_clip);
@@ -932,11 +937,21 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
 
 
     // get track origin (pre-charge)
+
     int64_t origin = fsp_track->getOrigin();
     BMX_CHECK_M(origin >= 0,
-               ("Negative track Origin %"PRId64" in top-level file Source Package not supported", origin));
+               ("Negative track origin %"PRId64" in top-level file Source Package not supported", origin));
+
+    // Avid start position > 0 is equivalent to origin in the file source package
+    if (mp_source_clip->getStartPosition() > 0) {
+        origin += convert_position(normalize_rate(mp_track->getEditRate()),
+                                   mp_source_clip->getStartPosition(),
+                                   normalize_rate(fsp_track->getEditRate()),
+                                   ROUND_AUTO);
+    }
+
     BMX_CHECK_M(mInternalTrackReaders.empty() || mOrigin == origin,
-               ("Different track Origins (%"PRId64" != %"PRId64") in top-level file Source Package", mOrigin, origin));
+               ("Different track origins (%"PRId64" != %"PRId64")", mOrigin, origin));
     mOrigin = origin;
 
 
