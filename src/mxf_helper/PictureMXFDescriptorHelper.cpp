@@ -155,6 +155,7 @@ MXFDescriptorHelper* PictureMXFDescriptorHelper::Create(EssenceType essence_type
 PictureMXFDescriptorHelper::PictureMXFDescriptorHelper()
 : MXFDescriptorHelper()
 {
+    mEssenceType = PICTURE_ESSENCE;
     mAspectRatio = ASPECT_RATIO_16_9;
     mAFD = 0;
     mAvidResolutionId = 0;
