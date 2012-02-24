@@ -36,6 +36,7 @@
 #include <bmx/mxf_helper/SoundMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/WaveMXFDescriptorHelper.h>
 #include <bmx/BMXTypes.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -45,12 +46,38 @@ using namespace mxfpp;
 
 
 
+typedef struct
+{
+    mxfUL ec_label;
+    EssenceType essence_type;
+    bool frame_wrapped;
+} SupportedEssence;
+
+static const SupportedEssence SUPPORTED_ESSENCE[] =
+{
+    {MXF_EC_L(D10_30_625_50_defined_template),  AES3_PCM,     true},
+    {MXF_EC_L(D10_30_525_60_defined_template),  AES3_PCM,     true},
+    {MXF_EC_L(D10_40_625_50_defined_template),  AES3_PCM,     true},
+    {MXF_EC_L(D10_40_525_60_defined_template),  AES3_PCM,     true},
+    {MXF_EC_L(D10_50_625_50_defined_template),  AES3_PCM,     true},
+    {MXF_EC_L(D10_50_525_60_defined_template),  AES3_PCM,     true},
+};
+
+
+
 EssenceType SoundMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     GenericSoundEssenceDescriptor *sound_descriptor =
         dynamic_cast<GenericSoundEssenceDescriptor*>(file_descriptor);
     if (!sound_descriptor)
         return UNKNOWN_ESSENCE_TYPE;
+
+    mxfUL ec_label = file_descriptor->getEssenceContainer();
+    size_t i;
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+        if (CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label))
+            return SUPPORTED_ESSENCE[i].essence_type;
+    }
 
     EssenceType essence_type =
         WaveMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
@@ -76,6 +103,12 @@ SoundMXFDescriptorHelper* SoundMXFDescriptorHelper::Create(FileDescriptor *file_
 
 bool SoundMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
+    size_t i;
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+        if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
+            return true;
+    }
+
     return WaveMXFDescriptorHelper::IsSupported(essence_type);
 }
 
@@ -83,7 +116,11 @@ MXFDescriptorHelper* SoundMXFDescriptorHelper::Create(EssenceType essence_type)
 {
     BMX_ASSERT(IsSupported(essence_type));
 
-    SoundMXFDescriptorHelper *helper = new WaveMXFDescriptorHelper();
+    SoundMXFDescriptorHelper *helper;
+    if (WaveMXFDescriptorHelper::IsSupported(essence_type))
+        helper = new WaveMXFDescriptorHelper();
+    else
+        helper = new SoundMXFDescriptorHelper();
     helper->SetEssenceType(essence_type);
 
     return helper;
@@ -92,6 +129,7 @@ MXFDescriptorHelper* SoundMXFDescriptorHelper::Create(EssenceType essence_type)
 SoundMXFDescriptorHelper::SoundMXFDescriptorHelper()
 : MXFDescriptorHelper()
 {
+    mEssenceType = SOUND_ESSENCE;
     mSamplingRate = SAMPLING_RATE_48K;
     mQuantizationBits = 16;
     mSampleRate = mSamplingRate;
@@ -115,6 +153,18 @@ void SoundMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL
     GenericSoundEssenceDescriptor *sound_descriptor =
         dynamic_cast<GenericSoundEssenceDescriptor*>(file_descriptor);
     BMX_ASSERT(sound_descriptor);
+
+    mxfUL ec_label = file_descriptor->getEssenceContainer();
+    size_t i;
+    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+        if (CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label)) {
+            mEssenceType = SUPPORTED_ESSENCE[i].essence_type;
+            mFrameWrapped = SUPPORTED_ESSENCE[i].frame_wrapped;
+            break;
+        }
+    }
+    if (i >= ARRAY_SIZE(SUPPORTED_ESSENCE))
+        mEssenceType = SOUND_ESSENCE;
 
     if (sound_descriptor->haveAudioSamplingRate())
         mSamplingRate = sound_descriptor->getAudioSamplingRate();

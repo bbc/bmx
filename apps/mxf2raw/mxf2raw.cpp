@@ -869,7 +869,7 @@ int main(int argc, const char** argv)
                                 sound_buffer.Allocate(frame->GetSize()); // more than enough
                                 uint32_t c;
                                 for (c = 0; c < sound_info->channel_count; c++) {
-                                    if (sound_info->IsD10Audio()) {
+                                    if (sound_info->essence_type == AES3_PCM) {
                                         convert_aes3_to_pcm(frame->GetBytes(), frame->GetSize(),
                                                             sound_info->bits_per_sample, c,
                                                             sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());

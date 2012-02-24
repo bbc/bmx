@@ -98,8 +98,9 @@ typedef enum
     MJPEG_4_1M,
     MJPEG_10_1M,
     MJPEG_15_1S,
-    // WAVE PCM
+    // PCM
     WAVE_PCM,
+    AES3_PCM,
 } EssenceType;
 
 

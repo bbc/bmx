@@ -100,6 +100,7 @@ static const EssenceTypeStringMap ESSENCE_TYPE_STRING_MAP[] =
     {MJPEG_10_1M,              "MJPEG 10:1m"},
     {MJPEG_15_1S,              "MJPEG 15:1s"},
     {WAVE_PCM,                 "WAVE PCM"},
+    {AES3_PCM,                 "AES3 PCM"},
 };
 
 

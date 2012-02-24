@@ -77,10 +77,10 @@ typedef struct
     FrameBuffer *input_buffer;
     ClipWriterTrack *track;
     EssenceType essence_type;
+    EssenceType input_essence_type;
     bool is_picture;
     uint32_t channel_count;
     uint32_t channel_index;
-    bool is_d10_aes3;
     uint32_t bits_per_sample;
     uint16_t block_align;
 } OutputTrack;
@@ -1025,7 +1025,7 @@ int main(int argc, const char** argv)
                     is_supported = false;
                 }
             }
-            else if (input_track_info->IsD10Audio()) // essence_type == SOUND_ESSENCE
+            else if (input_track_info->essence_type == AES3_PCM)
             {
                 if (input_sound_info->sampling_rate.numerator != 48000 ||
                     input_sound_info->sampling_rate.denominator != 1)
@@ -1410,14 +1410,15 @@ int main(int argc, const char** argv)
             uint32_t c;
             for (c = 0; c < output_track_count; c++) {
                 OutputTrack output_track;
-                output_track.input_buffer  = input_track_reader->GetFrameBuffer();
-                output_track.is_picture    = input_track_info->is_picture;
-                output_track.channel_count = output_track_count;
-                output_track.channel_index = c;
-                output_track.essence_type  = input_track_info->essence_type;
-                output_track.is_d10_aes3   = input_track_info->IsD10Audio();
-                if (output_track.is_d10_aes3)
+                output_track.input_buffer        = input_track_reader->GetFrameBuffer();
+                output_track.is_picture          = input_track_info->is_picture;
+                output_track.channel_count       = output_track_count;
+                output_track.channel_index       = c;
+                output_track.input_essence_type  = input_track_info->essence_type;
+                if (input_track_info->essence_type == AES3_PCM)
                     output_track.essence_type    = WAVE_PCM;
+                else
+                    output_track.essence_type    = input_track_info->essence_type;
                 if (input_sound_info) {
                     output_track.bits_per_sample = input_sound_info->bits_per_sample;
                     output_track.block_align     = (input_sound_info->bits_per_sample + 7) / 8;
@@ -1599,6 +1600,7 @@ int main(int argc, const char** argv)
                         if (clip_type == CW_D10_CLIP_TYPE || input_sound_info->sequence_offset)
                             output_track.track->SetSequenceOffset(input_sound_info->sequence_offset);
                         break;
+                    case AES3_PCM:
                     case PICTURE_ESSENCE:
                     case SOUND_ESSENCE:
                     case UNKNOWN_ESSENCE_TYPE:
@@ -1671,9 +1673,9 @@ int main(int argc, const char** argv)
                 }
 
                 uint32_t num_samples;
-                if (output_track.channel_count > 1 || output_track.is_d10_aes3) {
+                if (output_track.channel_count > 1 || output_track.input_essence_type == AES3_PCM) {
                     sound_buffer.Allocate(frame->GetSize()); // more than enough
-                    if (output_track.is_d10_aes3) {
+                    if (output_track.input_essence_type == AES3_PCM) {
                         convert_aes3_to_pcm(frame->GetBytes(), frame->GetSize(),
                                             output_track.bits_per_sample, output_track.channel_index,
                                             sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());

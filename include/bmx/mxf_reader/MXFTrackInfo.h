@@ -48,8 +48,6 @@ public:
     MXFTrackInfo();
     virtual ~MXFTrackInfo() {}
 
-    bool IsD10Audio() const;
-
     virtual bool IsCompatible(const MXFTrackInfo *right) const;
 
     virtual MXFTrackInfo* Clone() const = 0;

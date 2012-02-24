@@ -64,17 +64,6 @@ MXFTrackInfo::MXFTrackInfo()
     file_track_number = 0;
 };
 
-bool MXFTrackInfo::IsD10Audio() const
-{
-    return is_sound &&
-           (mxf_equals_ul_mod_regver(&essence_container_label, &MXF_EC_L(D10_30_625_50_defined_template)) ||
-            mxf_equals_ul_mod_regver(&essence_container_label, &MXF_EC_L(D10_30_525_60_defined_template)) ||
-            mxf_equals_ul_mod_regver(&essence_container_label, &MXF_EC_L(D10_40_625_50_defined_template)) ||
-            mxf_equals_ul_mod_regver(&essence_container_label, &MXF_EC_L(D10_40_525_60_defined_template)) ||
-            mxf_equals_ul_mod_regver(&essence_container_label, &MXF_EC_L(D10_50_625_50_defined_template)) ||
-            mxf_equals_ul_mod_regver(&essence_container_label, &MXF_EC_L(D10_50_525_60_defined_template)));
-}
-
 bool MXFTrackInfo::IsCompatible(const MXFTrackInfo *right) const
 {
     return essence_type == right->essence_type &&

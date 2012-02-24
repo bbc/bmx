@@ -2371,6 +2371,7 @@ int main(int argc, const char** argv)
                     if (clip_type == CW_D10_CLIP_TYPE || sequence_offset_set)
                         input->track->SetSequenceOffset(sequence_offset);
                     break;
+                case AES3_PCM:
                 case PICTURE_ESSENCE:
                 case SOUND_ESSENCE:
                 case UNKNOWN_ESSENCE_TYPE:
@@ -2454,6 +2455,7 @@ int main(int argc, const char** argv)
                     input->raw_reader->SetFixedSampleSize(input->track->GetSampleSize());
                     break;
                 }
+                case AES3_PCM:
                 case PICTURE_ESSENCE:
                 case SOUND_ESSENCE:
                 case UNKNOWN_ESSENCE_TYPE:
