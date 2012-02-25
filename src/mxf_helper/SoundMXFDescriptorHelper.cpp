@@ -55,12 +55,12 @@ typedef struct
 
 static const SupportedEssence SUPPORTED_ESSENCE[] =
 {
-    {MXF_EC_L(D10_30_625_50_defined_template),  AES3_PCM,     true},
-    {MXF_EC_L(D10_30_525_60_defined_template),  AES3_PCM,     true},
-    {MXF_EC_L(D10_40_625_50_defined_template),  AES3_PCM,     true},
-    {MXF_EC_L(D10_40_525_60_defined_template),  AES3_PCM,     true},
-    {MXF_EC_L(D10_50_625_50_defined_template),  AES3_PCM,     true},
-    {MXF_EC_L(D10_50_525_60_defined_template),  AES3_PCM,     true},
+    {MXF_EC_L(D10_30_625_50_defined_template),  D10_AES3_PCM,     true},
+    {MXF_EC_L(D10_30_525_60_defined_template),  D10_AES3_PCM,     true},
+    {MXF_EC_L(D10_40_625_50_defined_template),  D10_AES3_PCM,     true},
+    {MXF_EC_L(D10_40_525_60_defined_template),  D10_AES3_PCM,     true},
+    {MXF_EC_L(D10_50_625_50_defined_template),  D10_AES3_PCM,     true},
+    {MXF_EC_L(D10_50_525_60_defined_template),  D10_AES3_PCM,     true},
 };
 
 

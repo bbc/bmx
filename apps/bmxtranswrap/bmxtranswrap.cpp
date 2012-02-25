@@ -1025,7 +1025,7 @@ int main(int argc, const char** argv)
                     is_supported = false;
                 }
             }
-            else if (input_track_info->essence_type == AES3_PCM)
+            else if (input_track_info->essence_type == D10_AES3_PCM)
             {
                 if (input_sound_info->sampling_rate.numerator != 48000 ||
                     input_sound_info->sampling_rate.denominator != 1)
@@ -1415,7 +1415,7 @@ int main(int argc, const char** argv)
                 output_track.channel_count       = output_track_count;
                 output_track.channel_index       = c;
                 output_track.input_essence_type  = input_track_info->essence_type;
-                if (input_track_info->essence_type == AES3_PCM)
+                if (input_track_info->essence_type == D10_AES3_PCM)
                     output_track.essence_type    = WAVE_PCM;
                 else
                     output_track.essence_type    = input_track_info->essence_type;
@@ -1600,7 +1600,7 @@ int main(int argc, const char** argv)
                         if (clip_type == CW_D10_CLIP_TYPE || input_sound_info->sequence_offset)
                             output_track.track->SetSequenceOffset(input_sound_info->sequence_offset);
                         break;
-                    case AES3_PCM:
+                    case D10_AES3_PCM:
                     case PICTURE_ESSENCE:
                     case SOUND_ESSENCE:
                     case UNKNOWN_ESSENCE_TYPE:
@@ -1673,9 +1673,9 @@ int main(int argc, const char** argv)
                 }
 
                 uint32_t num_samples;
-                if (output_track.channel_count > 1 || output_track.input_essence_type == AES3_PCM) {
+                if (output_track.channel_count > 1 || output_track.input_essence_type == D10_AES3_PCM) {
                     sound_buffer.Allocate(frame->GetSize()); // more than enough
-                    if (output_track.input_essence_type == AES3_PCM) {
+                    if (output_track.input_essence_type == D10_AES3_PCM) {
                         convert_aes3_to_pcm(frame->GetBytes(), frame->GetSize(),
                                             output_track.bits_per_sample, output_track.channel_index,
                                             sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());

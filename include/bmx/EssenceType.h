@@ -100,7 +100,7 @@ typedef enum
     MJPEG_15_1S,
     // PCM
     WAVE_PCM,
-    AES3_PCM,
+    D10_AES3_PCM,
 } EssenceType;
 
 
