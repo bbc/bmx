@@ -55,6 +55,8 @@ public:
 public:
     bool is_25hz;
     mxfUL essence_container_ul;
+    uint8_t mute_sound_flags;
+    uint8_t invalid_sound_flags;
     bool have_input_user_timecode;
     uint32_t picture_track_index;
     uint32_t picture_sample_size;
@@ -115,6 +117,8 @@ public:
     ~D10ContentPackageManager();
 
     void SetEssenceContainerUL(mxfUL essence_container_ul);
+    void SetMuteSoundFlags(uint8_t flags);
+    void SetInvalidSoundFlags(uint8_t flags);
     void SetHaveInputUserTimecode(bool enable);
     void SetSoundSequenceOffset(uint8_t offset);
 
@@ -129,6 +133,8 @@ public:
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
 
 public:
+    uint8_t GetSoundChannelCount() const;
+
     bool HaveSoundSequenceOffset() const   { return mInfo.sound_sequence_offset_set; }
     uint8_t GetSoundSequenceOffset() const { return mInfo.sound_sequence_offset; }
 

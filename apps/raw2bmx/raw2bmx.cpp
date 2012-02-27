@@ -288,6 +288,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            The header and body partitions will be incomplete\n");
     fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is assumed)\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "  as11d10/d10:\n");
+    fprintf(stderr, "    --d10-mute <flags>      Indicate using a string of 8 '0' or '1' which sound channels should be muted. The lsb is the rightmost digit\n");
+    fprintf(stderr, "    --d10-invalid <flags>   Indicate using a string of 8 '0' or '1' which sound channels should be flagged invalid. The lsb is the rightmost digit\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "  avid:\n");
     fprintf(stderr, "    --project <name>        Set the Avid project name\n");
     fprintf(stderr, "    --tape <name>           Source tape name\n");
@@ -406,6 +410,8 @@ int main(int argc, const char** argv)
     vector<AVCIHeaderInput> avci_header_inputs;
     bool single_pass = false;
     bool file_md5 = false;
+    uint8_t d10_mute_sound_flags = 0;
+    uint8_t d10_invalid_sound_flags = 0;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -713,6 +719,38 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--file-md5") == 0)
         {
             file_md5 = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--d10-mute") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_d10_sound_flags(argv[cmdln_index + 1], &d10_mute_sound_flags))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--d10-invalid") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_d10_sound_flags(argv[cmdln_index + 1], &d10_invalid_sound_flags))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--project") == 0)
         {
@@ -2147,6 +2185,12 @@ int main(int argc, const char** argv)
                 as11_clip->SetOutputEndOffset(- output_end_offset);
             }
 
+            if (clip_type == CW_AS11_D10_CLIP_TYPE) {
+                D10File *d10_clip = as11_clip->GetD10Clip();
+                d10_clip->SetMuteSoundFlags(d10_mute_sound_flags);
+                d10_clip->SetInvalidSoundFlags(d10_invalid_sound_flags);
+            }
+
             if (!clip_name && as11_helper.HaveProgrammeTitle())
                 as11_clip->SetClipName(as11_helper.GetProgrammeTitle());
         } else if (clip_type == CW_OP1A_CLIP_TYPE) {
@@ -2187,6 +2231,11 @@ int main(int argc, const char** argv)
                 tape_package_sound_refs = avid_clip->GetSoundSourceReferences(tape_package);
                 BMX_ASSERT(tape_package_sound_refs.size() == num_sound_tracks);
             }
+        } else if (clip_type == CW_D10_CLIP_TYPE) {
+            D10File *d10_clip = clip->GetD10Clip();
+
+            d10_clip->SetMuteSoundFlags(d10_mute_sound_flags);
+            d10_clip->SetInvalidSoundFlags(d10_invalid_sound_flags);
         }
 
 

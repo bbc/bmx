@@ -77,6 +77,8 @@ bool parse_color(const char *color_str, Color *color);
 bool parse_avci_header(const char *format_str, const char *filename, const char *offset_str,
                        std::vector<AVCIHeaderInput> *avci_header_inputs);
 
+bool parse_d10_sound_flags(const char *flags_str, uint8_t *flags);
+
 
 std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture);
 

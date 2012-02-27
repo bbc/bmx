@@ -83,6 +83,8 @@ D10ContentPackageInfo::D10ContentPackageInfo()
 {
     is_25hz = true;
     memset(&essence_container_ul, 0, sizeof(essence_container_ul));
+    mute_sound_flags = 0;
+    invalid_sound_flags = 0;
     have_input_user_timecode = false;
     picture_track_index = (uint32_t)(-1);
     picture_sample_size = 0;
@@ -149,12 +151,13 @@ void D10ContentPackage::Reset(int64_t position)
     }
 
     unsigned char *output = mSoundData.GetBytes();
-    output[3] = 0; // channel valid flags
+    output[3] = mInfo->mute_sound_flags; // byte 3 channel valid flags
     map<uint32_t, uint8_t>::const_iterator iter;
     for (iter = mInfo->sound_channels.begin(); iter != mInfo->sound_channels.end(); iter++) {
         mSoundChannelSampleCount[iter->first] = 0;
         output[3] |= (1 << iter->second);
     }
+    output[3] &= ~mInfo->invalid_sound_flags;
 }
 
 void D10ContentPackage::SetUserTimecode(Timecode user_timecode)
@@ -267,8 +270,14 @@ void D10ContentPackage::CopySoundSamples(const unsigned char *data, uint32_t num
                                          uint32_t output_start_sample)
 {
     const unsigned char *input = data;
-    unsigned char *output = mSoundData.GetBytes() + 4 + output_start_sample * 4 * 8 + channel * 4;
+    unsigned char *output = mSoundData.GetBytes();
+    uint8_t flag = (1 << channel);
 
+    // don'c copy if channel was flagged as invalid or muted
+    if (!(flag & output[3]) || (flag & mInfo->mute_sound_flags))
+        return;
+
+    output += 4 + output_start_sample * 4 * 8 + channel * 4;
 
     uint32_t s;
     if (mInfo->sound_sample_size == 3) { // 24-bit
@@ -380,6 +389,16 @@ D10ContentPackageManager::~D10ContentPackageManager()
 void D10ContentPackageManager::SetEssenceContainerUL(mxfUL essence_container_ul)
 {
     mInfo.essence_container_ul = essence_container_ul;
+}
+
+void D10ContentPackageManager::SetMuteSoundFlags(uint8_t flags)
+{
+    mInfo.mute_sound_flags = flags;
+}
+
+void D10ContentPackageManager::SetInvalidSoundFlags(uint8_t flags)
+{
+    mInfo.invalid_sound_flags = flags;
 }
 
 void D10ContentPackageManager::SetHaveInputUserTimecode(bool enable)
@@ -506,6 +525,17 @@ void D10ContentPackageManager::WriteSamples(uint32_t track_index, const unsigned
 
         cp_index++;
     }
+}
+
+uint8_t D10ContentPackageManager::GetSoundChannelCount() const
+{
+    uint8_t flags = mInfo.mute_sound_flags;
+    map<uint32_t, uint8_t>::const_iterator iter;
+    for (iter = mInfo.sound_channels.begin(); iter != mInfo.sound_channels.end(); iter++)
+        flags |= (1 << iter->second);
+    flags &= ~mInfo.invalid_sound_flags;
+
+    return (flags & 0xf0) ? 8 : 4;
 }
 
 int64_t D10ContentPackageManager::GetDuration() const

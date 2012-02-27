@@ -241,6 +241,25 @@ bool bmx::parse_avci_header(const char *format_str, const char *filename, const 
     return true;
 }
 
+bool bmx::parse_d10_sound_flags(const char *flags_str, uint8_t *out_flags)
+{
+    uint8_t flags = 0;
+    uint8_t i = 0;
+    while (i < 8 && flags_str[i]) {
+        flags <<= 1;
+        if (flags_str[i] == '1')
+            flags |= 1;
+        else if (flags_str[i] != '0')
+            return false;
+        i++;
+    }
+    if (flags_str[i])
+        return false;
+
+    *out_flags = flags;
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture)
 {

@@ -119,8 +119,6 @@ D10File::D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mxf_generate_umid(&mFileSourcePackageUID);
     mPictureTrack = 0;
     mFirstSoundTrack = 0;
-    mSoundTrackCount = 0;
-    mMaxSoundOutputTrackNumber = 0;
     memset(&mEssenceContainerUL, 0, sizeof(mEssenceContainerUL));
     mDataModel = 0;
     mHeaderMetadata = 0;
@@ -168,6 +166,16 @@ void D10File::SetHaveInputUserTimecode(bool enable)
 void D10File::SetSoundSequenceOffset(uint8_t offset)
 {
     mCPManager->SetSoundSequenceOffset(offset);
+}
+
+void D10File::SetMuteSoundFlags(uint8_t flags)
+{
+    mCPManager->SetMuteSoundFlags(flags);
+}
+
+void D10File::SetInvalidSoundFlags(uint8_t flags)
+{
+    mCPManager->SetInvalidSoundFlags(flags);
 }
 
 void D10File::SetProductInfo(string company_name, string product_name, mxfProductVersion product_version,
@@ -244,9 +252,6 @@ void D10File::PrepareHeaderMetadata()
             if (!mTracks[i]->IsOutputTrackNumberSet())
                 mTracks[i]->SetOutputTrackNumber(last_sound_track_number + 1);
             last_sound_track_number = mTracks[i]->GetOutputTrackNumber();
-
-            if (mTracks[i]->GetOutputTrackNumber() > mMaxSoundOutputTrackNumber)
-                mMaxSoundOutputTrackNumber = mTracks[i]->GetOutputTrackNumber();
         }
     }
 
@@ -568,7 +573,7 @@ void D10File::CreateHeaderMetadata()
         sound_descriptor->setContainerDuration(mInputDuration);
     if (mFirstSoundTrack) {
         sound_descriptor->setAudioSamplingRate(mFirstSoundTrack->GetSamplingRate());
-        sound_descriptor->setChannelCount((mMaxSoundOutputTrackNumber + 3) / 4 * 4);
+        sound_descriptor->setChannelCount(mCPManager->GetSoundChannelCount());
         sound_descriptor->setQuantizationBits(mFirstSoundTrack->GetQuantizationBits());
         if (mFirstSoundTrack->HaveSetLocked())
             sound_descriptor->setLocked(mFirstSoundTrack->GetLocked());
@@ -576,7 +581,7 @@ void D10File::CreateHeaderMetadata()
             sound_descriptor->setAudioRefLevel(mFirstSoundTrack->GetAudioRefLevel());
     } else {
         sound_descriptor->setAudioSamplingRate(AUDIO_SAMPLING_RATE);
-        sound_descriptor->setChannelCount(4);
+        sound_descriptor->setChannelCount(mCPManager->GetSoundChannelCount());
         sound_descriptor->setQuantizationBits(16);
     }
 }

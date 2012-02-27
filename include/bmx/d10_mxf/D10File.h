@@ -67,6 +67,8 @@ public:
     void SetStartTimecode(Timecode start_timecode);                     // default 00:00:00:00, non-drop frame
     void SetHaveInputUserTimecode(bool enable);                         // default false (generated)
     void SetSoundSequenceOffset(uint8_t offset);                        // default determined from input
+    void SetMuteSoundFlags(uint8_t flags);                              // default bit 0
+    void SetInvalidSoundFlags(uint8_t flags);                           // default bit 0 if channel present or muted, else 1
     void SetProductInfo(std::string company_name, std::string product_name, mxfProductVersion product_version,
                         std::string version, mxfUUID product_uid);
     void SetCreationDate(mxfTimestamp creation_date);                   // default generated ('now')
@@ -135,8 +137,6 @@ private:
     std::map<uint32_t, D10Track*> mTrackMap;
     D10MPEGTrack *mPictureTrack;
     D10PCMTrack *mFirstSoundTrack;
-    uint8_t mSoundTrackCount;
-    uint32_t mMaxSoundOutputTrackNumber;
 
     mxfUL mEssenceContainerUL;
 
