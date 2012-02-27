@@ -568,7 +568,7 @@ void D10File::CreateHeaderMetadata()
         sound_descriptor->setContainerDuration(mInputDuration);
     if (mFirstSoundTrack) {
         sound_descriptor->setAudioSamplingRate(mFirstSoundTrack->GetSamplingRate());
-        sound_descriptor->setChannelCount(mMaxSoundOutputTrackNumber);
+        sound_descriptor->setChannelCount((mMaxSoundOutputTrackNumber + 3) / 4 * 4);
         sound_descriptor->setQuantizationBits(mFirstSoundTrack->GetQuantizationBits());
         if (mFirstSoundTrack->HaveSetLocked())
             sound_descriptor->setLocked(mFirstSoundTrack->GetLocked());
@@ -576,7 +576,7 @@ void D10File::CreateHeaderMetadata()
             sound_descriptor->setAudioRefLevel(mFirstSoundTrack->GetAudioRefLevel());
     } else {
         sound_descriptor->setAudioSamplingRate(AUDIO_SAMPLING_RATE);
-        sound_descriptor->setChannelCount(0);
+        sound_descriptor->setChannelCount(4);
         sound_descriptor->setQuantizationBits(16);
     }
 }
