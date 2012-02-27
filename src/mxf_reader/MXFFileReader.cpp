@@ -1524,6 +1524,10 @@ void MXFFileReader::ExtractInfoFromFirstFrame()
                 require_first_frame = true;
             }
         }
+        else if (track_info->essence_type == D10_AES3_PCM)
+        {
+            require_first_frame = true;
+        }
         else if (track_info->essence_type == AVCI100_1080I ||
                  track_info->essence_type == AVCI100_1080P ||
                  track_info->essence_type == AVCI100_720P ||
@@ -1549,6 +1553,7 @@ void MXFFileReader::ExtractInfoFromFirstFrame()
 
         MXFTrackInfo *track_info = mInternalTrackReaders[i]->GetTrackInfo();
         MXFPictureTrackInfo *picture_info = dynamic_cast<MXFPictureTrackInfo*>(track_info);
+        MXFSoundTrackInfo *sound_info = dynamic_cast<MXFSoundTrackInfo*>(track_info);
 
         if (track_info->essence_type == D10_30 ||
             track_info->essence_type == D10_40 ||
@@ -1556,6 +1561,11 @@ void MXFFileReader::ExtractInfoFromFirstFrame()
         {
             if (!mIsClipWrapped)
                 picture_info->d10_frame_size = frame->GetSize();
+        }
+        else if (track_info->essence_type == D10_AES3_PCM)
+        {
+            if (frame->GetSize() >= 4)
+                sound_info->d10_aes3_valid_flags = frame->GetBytes()[3];
         }
         else if (track_info->essence_type == AVCI100_1080I ||
                  track_info->essence_type == AVCI100_1080P ||

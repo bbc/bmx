@@ -118,6 +118,7 @@ public:
     uint32_t bits_per_sample;
     uint16_t block_align;
     uint32_t channel_count;
+    uint8_t d10_aes3_valid_flags;
     uint8_t sequence_offset;
     bool locked;
     bool locked_set;

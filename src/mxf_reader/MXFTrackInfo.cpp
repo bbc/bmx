@@ -182,6 +182,7 @@ MXFSoundTrackInfo::MXFSoundTrackInfo()
     audio_ref_level_set = false;
     dial_norm = 0;
     dial_norm_set = false;
+    d10_aes3_valid_flags = 0;
 }
 
 bool MXFSoundTrackInfo::IsCompatible(const MXFTrackInfo *right) const
@@ -195,6 +196,7 @@ bool MXFSoundTrackInfo::IsCompatible(const MXFTrackInfo *right) const
            bits_per_sample      == sound_right->bits_per_sample &&
            block_align          == sound_right->block_align &&
            channel_count        == sound_right->channel_count &&
+           d10_aes3_valid_flags == sound_right->d10_aes3_valid_flags &&
            sequence_offset      == sound_right->sequence_offset;
 }
 
@@ -209,6 +211,7 @@ MXFTrackInfo* MXFSoundTrackInfo::Clone() const
     clone->bits_per_sample      = bits_per_sample;
     clone->block_align          = block_align;
     clone->channel_count        = channel_count;
+    clone->d10_aes3_valid_flags = d10_aes3_valid_flags;
     clone->sequence_offset      = sequence_offset;
     clone->locked               = locked;
     clone->locked_set           = locked_set;

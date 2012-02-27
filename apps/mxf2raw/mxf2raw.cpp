@@ -218,6 +218,21 @@ static const char* get_color_siting_string(uint8_t color_siting)
     return "not recognized";
 }
 
+static const char* get_d10_sound_flags(uint8_t flags, char *buf)
+{
+    uint8_t i;
+    for (i = 0; i < 8; i++) {
+        if (flags & (1 << i))
+            buf[7 - i] = '1';
+        else
+            buf[7 - i] = '0';
+    }
+    buf[i    ] = 'b';
+    buf[i + 1] = 0;
+
+    return buf;
+}
+
 static void print_track_info(const MXFTrackInfo *track_info)
 {
     char string_buffer[128];
@@ -267,6 +282,8 @@ static void print_track_info(const MXFTrackInfo *track_info)
         printf("  Bits per sample      : %u\n", sound_info->bits_per_sample);
         printf("  Block align          : %u\n", sound_info->block_align);
         printf("  Channel count        : %u\n", sound_info->channel_count);
+        if (track_info->essence_type == D10_AES3_PCM)
+            printf("  D10 AES3 valid flags : %s\n", get_d10_sound_flags(sound_info->d10_aes3_valid_flags, string_buffer));
         printf("  Sequence offset      : %u\n", sound_info->sequence_offset);
         printf("  Locked               : %s\n", (sound_info->locked_set ? (sound_info->locked ? "true" : "false") : "(not set)"));
         printf("  Audio ref level      : ");
