@@ -44,22 +44,19 @@ using namespace bmx;
 uint32_t bmx::get_bits(const unsigned char *data, uint32_t data_size, uint32_t bit_offset, uint8_t num_bits)
 {
     BMX_ASSERT(num_bits <= 32);
-    BMX_CHECK((bit_offset + num_bits) / 8 + 1 <= data_size);
+    BMX_CHECK((bit_offset + num_bits + 7) / 8 <= data_size);
 
-    uint64_t buffer;
     const unsigned char *byte = data + bit_offset / 8;
-    uint8_t num_bytes = num_bits / 8 + 1;
-
-    buffer = (*byte) & (0xff >> (bit_offset % 8));
-    byte++;
-
-    uint8_t i;
-    for (i = 1; i < num_bytes; i++) {
+    uint32_t num_bytes = ((bit_offset % 8) + num_bits + 7) / 8;
+    uint64_t buffer = 0;
+    uint32_t i;
+    for (i = 0; i < num_bytes; i++) {
         buffer = (buffer << 8) | (*byte);
         byte++;
     }
 
-    buffer = buffer >> (7 - ((bit_offset + num_bits - 1) % 8));
+    buffer >>= (7 - ((bit_offset + num_bits - 1) % 8));
+    buffer &=  (1UL << num_bits) - 1;
 
     return (uint32_t)buffer;
 }
