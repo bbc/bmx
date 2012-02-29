@@ -1,4 +1,4 @@
-SUBDIRS = include src apps test msvc_build
+SUBDIRS = include src apps tools test msvc_build
 
 
 pkgconfig_DATA = libbmx-$(BMX_MAJORMINOR).pc
