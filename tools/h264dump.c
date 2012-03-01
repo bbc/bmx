@@ -45,8 +45,8 @@
 
 #define CEIL_DIVISION(a, b)     (((a) + (b) - 1) / (b))
 
-#define PRINT_UINT(name)        printf("%*c " name ": %u\n", context->indent * 4, ' ', (unsigned int)context->value)
-#define PRINT_INT(name)         printf("%*c " name ": %d\n", context->indent * 4, ' ', (int)context->svalue)
+#define PRINT_UINT(name)        printf("%*c " name ": %"PRIu64"\n", context->indent * 4, ' ', context->value)
+#define PRINT_INT(name)         printf("%*c " name ": %"PRId64"\n", context->indent * 4, ' ', context->svalue)
 
 #define CHK(cmd)                                                                \
     if (!(cmd))                                                                 \
@@ -234,7 +234,7 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
 }
 
 
-static int next_bits(ParseContext *context, uint8_t num_bits)
+static int next_bits(ParseContext *context, uint8_t num_bits, uint8_t *advance_bits)
 {
     assert(num_bits <= 64);
 
@@ -243,10 +243,15 @@ static int next_bits(ParseContext *context, uint8_t num_bits)
 
     const unsigned char *byte = context->buffer + context->bit_pos / 8;
     uint32_t num_bytes = ((context->bit_pos % 8) + num_bits + 7) / 8;
+    uint8_t skip_bits = 0;
 
     context->next_value = 0;
     uint32_t i;
     for (i = 0; i < num_bytes; i++) {
+        if (*byte == 0x03 && context->bit_pos + i * 8 >= 16 && byte[-1] == 0x00 && byte[-2] == 0x00) {
+            skip_bits += 8;
+            byte++;
+        }
         context->next_value = (context->next_value << 8) | (*byte);
         byte++;
     }
@@ -254,16 +259,20 @@ static int next_bits(ParseContext *context, uint8_t num_bits)
     context->next_value >>= (7 - ((context->bit_pos + num_bits - 1) % 8));
     context->next_value &=  (1UL << num_bits) - 1;
 
+    if (advance_bits)
+        *advance_bits = num_bits + skip_bits;
+
     return 1;
 }
 
 static int read_bits(ParseContext *context, uint8_t num_bits)
 {
-    if (!next_bits(context, num_bits))
+    uint8_t advance_bits;
+    if (!next_bits(context, num_bits, &advance_bits))
         return 0;
 
     context->value = context->next_value;
-    context->bit_pos += num_bits;
+    context->bit_pos += advance_bits;
 
     return 1;
 }
@@ -300,12 +309,6 @@ static int _f(ParseContext *context, uint8_t num_bits)
 
 #define u(a)    CHK(_u(context, a))
 static int _u(ParseContext *context, uint8_t num_bits)
-{
-    return read_bits(context, num_bits);
-}
-
-#define b(a)    CHK(_b(context, a))
-static int _b(ParseContext *context, uint8_t num_bits)
 {
     return read_bits(context, num_bits);
 }
@@ -360,7 +363,7 @@ static int rbsp_trailing_bits(ParseContext *context)
 }
 
 
-static void print_nal_unit_type(ParseContext *context, const char *name)
+static void print_nal_unit_type(ParseContext *context)
 {
     static const char *NAL_UNIT_TYPE_STRINGS[] =
     {
@@ -378,7 +381,7 @@ static void print_nal_unit_type(ParseContext *context, const char *name)
         "End of stream",
         "Filler data",
         "Sequence parameter set extension",
-        "prefix NAL unit",
+        "Prefix NAL unit",
         "Subset sequence parameter set",
         "Reserved",
         "Reserved",
@@ -400,8 +403,8 @@ static void print_nal_unit_type(ParseContext *context, const char *name)
 
     uint8_t nal_unit_type = context->value & 31;
 
-    printf("%*c %s: %u (%s)\n", context->indent * 4, ' ', name, nal_unit_type,
-           NAL_UNIT_TYPE_STRINGS[nal_unit_type & 31]);
+    printf("%*c nal_unit_type: %u (%s)\n", context->indent * 4, ' ', nal_unit_type,
+           NAL_UNIT_TYPE_STRINGS[nal_unit_type]);
 }
 
 static void print_profile_and_flags(ParseContext *context, uint8_t profile_idc, uint8_t flags)
@@ -429,7 +432,7 @@ static void print_profile_and_flags(ParseContext *context, uint8_t profile_idc, 
         { 44,   0x00,   "CAVLC 4:4:4 Intra"},
     };
 
-    const char *profile_str = "unknown profile";
+    const char *profile_str = "unknown";
     size_t i;
     for (i = 0; i < sizeof(PROFILE_NAMES) / sizeof(PROFILE_NAMES[0]); i++) {
         if (profile_idc == PROFILE_NAMES[i].profile_idc &&
@@ -456,6 +459,75 @@ static void print_level(ParseContext *context, uint8_t level_idc, uint8_t flags)
         printf("%*c level_idc: %u (1b)\n", context->indent * 4, ' ', level_idc);
     else
         printf("%*c level_idc: %u (%.1f)\n", context->indent * 4, ' ', level_idc, level_idc / 10.0);
+}
+
+static void print_chroma_format(ParseContext *context, uint8_t chroma_format_idc)
+{
+    static const char *CHROMA_FORMAT_STRINGS[] =
+    {
+        "Monochrome",
+        "4:2:0",
+        "4:2:2",
+        "4:4:4",
+    };
+
+    if (chroma_format_idc < sizeof(CHROMA_FORMAT_STRINGS) / sizeof(CHROMA_FORMAT_STRINGS[0])) {
+        printf("%*c chroma_format_idc: %u (%s)\n", context->indent * 4, ' ', chroma_format_idc,
+               CHROMA_FORMAT_STRINGS[chroma_format_idc]);
+    } else {
+        printf("%*c chroma_format_idc: %u (unknown)\n", context->indent * 4, ' ', chroma_format_idc);
+    }
+}
+
+static void print_aspect_ratio(ParseContext *context, uint8_t aspect_ratio_idc)
+{
+    static const char *SAMPLE_ASPECT_RATIO_STRINGS[] =
+    {
+        "Unspecified",
+        "1:1",
+        "12:11",
+        "10:11",
+        "16:11",
+        "40:33",
+        "24:11",
+        "20:11",
+        "32:11",
+        "80:33",
+        "18:11",
+        "15:11",
+        "64:33",
+        "160:99",
+        "4:3",
+        "3:2",
+        "2:1",
+    };
+
+    if (aspect_ratio_idc < sizeof(SAMPLE_ASPECT_RATIO_STRINGS) / sizeof(SAMPLE_ASPECT_RATIO_STRINGS[0])) {
+        printf("%*c aspect_ratio_idc: %u (%s)\n", context->indent * 4, ' ', aspect_ratio_idc,
+               SAMPLE_ASPECT_RATIO_STRINGS[aspect_ratio_idc]);
+    } else if (aspect_ratio_idc == EXTENDED_SAR) {
+        printf("%*c aspect_ratio_idc: %u (Extended_SAR)\n", context->indent * 4, ' ', aspect_ratio_idc);
+    } else {
+        printf("%*c aspect_ratio_idc: %u (Reserved)\n", context->indent * 4, ' ', aspect_ratio_idc);
+    }
+}
+
+static void print_video_format(ParseContext *context, uint8_t video_format)
+{
+    static const char *VIDEO_FORMAT_STRINGS[] =
+    {
+        "Component",
+        "PAL",
+        "NTSC",
+        "SECAM",
+        "MAC",
+        "Unspecified",
+        "Reserved",
+        "Reserved",
+    };
+
+    printf("%*c video_format: %u (%s)\n", context->indent * 4, ' ', video_format,
+           VIDEO_FORMAT_STRINGS[video_format & 0x07]);
 }
 
 
@@ -491,10 +563,12 @@ static int vui_parameters(ParseContext *context)
     u(1); PRINT_UINT("aspect_ratio_present_flag");
     if (context->value) {
         context->indent++;
-        u(8); PRINT_UINT("aspect_ratio_idc");
+        u(8); print_aspect_ratio(context, (uint8_t)context->value);
         if (context->value == EXTENDED_SAR) {
+            context->indent++;
             u(16); PRINT_UINT("sar_width");
             u(16); PRINT_UINT("sar_height");
+            context->indent--;
         }
         context->indent--;
     }
@@ -507,7 +581,7 @@ static int vui_parameters(ParseContext *context)
     u(1); PRINT_UINT("video_signal_type_present_flag");
     if (context->value) {
         context->indent++;
-        u(3); PRINT_UINT("video_format");
+        u(3); print_video_format(context, (uint8_t)context->value);
         u(1); PRINT_UINT("video_full_range");
         u(1); PRINT_UINT("colour_description_present_flag");
         if (context->value) {
@@ -588,7 +662,7 @@ static int sequence_parameter_set(ParseContext *context)
     uint8_t constraint_flags;
     uint64_t pict_order_cnt_type;
 
-    printf("%*c Sequence Parameter Set:\n", context->indent * 4, ' ');
+    printf("%*c sequence_parameter_set:\n", context->indent * 4, ' ');
     context->indent++;
 
     u(8); profile_idc = (uint8_t)context->value;
@@ -608,7 +682,7 @@ static int sequence_parameter_set(ParseContext *context)
         profile_idc ==  83 || profile_idc ==  86 || profile_idc == 118 ||
         profile_idc == 128)
     {
-        ue(); PRINT_UINT("chroma_format_idc");
+        ue(); print_chroma_format(context, context->value);
         context->chroma_format_idc = context->value;
         if (context->chroma_format_idc == 3) {
             u(1); PRINT_UINT("separate_colour_plane_flag");
@@ -691,7 +765,7 @@ static int picture_parameter_set(ParseContext *context)
 {
     uint64_t num_slice_groups_minus1;
 
-    printf("%*c Picture Parameter Set:\n", context->indent * 4, ' ');
+    printf("%*c picture_parameter_set:\n", context->indent * 4, ' ');
     context->indent++;
 
     ue(); PRINT_UINT("pic_parameter_set_id");
@@ -777,57 +851,78 @@ static int picture_parameter_set(ParseContext *context)
     return 1;
 }
 
+static int nal_unit_header_svc_extension(ParseContext *context)
+{
+    printf("%*c nal_unit_header_svc_extension:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    u(1); PRINT_UINT("idr_flag");
+    u(6); PRINT_UINT("priority_id");
+    u(1); PRINT_UINT("no_inter_layer_pred_flag");
+    u(3); PRINT_UINT("dependency_id");
+    u(4); PRINT_UINT("quality_id");
+    u(3); PRINT_UINT("temporal_id");
+    u(1); PRINT_UINT("use_ref_base_pic_flag");
+    u(1); PRINT_UINT("discardable_flag");
+    u(1); PRINT_UINT("output_flag");
+    u(2); PRINT_UINT("reserved_three_2bits");
+
+    context->indent--;
+    return 1;
+}
+
+static int nal_unit_header_mvc_extension(ParseContext *context)
+{
+    printf("%*c nal_unit_header_mvc_extension:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    u(1); PRINT_UINT("non_idr_flag");
+    u(6); PRINT_UINT("priority_id");
+    u(10); PRINT_UINT("view_id");
+    u(3); PRINT_UINT("temporal_id");
+    u(1); PRINT_UINT("anchor_pic_flag");
+    u(1); PRINT_UINT("inter_view_flag");
+    u(1); PRINT_UINT("reserved_one_bit");
+
+    context->indent--;
+    return 1;
+}
+
 static int parse_nal_unit(ParseContext *context)
 {
-    uint32_t num_bytes_in_rbsp = 0;
-    uint32_t nal_unit_header_bytes = 1;
     uint8_t nal_unit_type;
-    uint32_t i;
+    uint64_t bit_pos;
 
     printf("NAL: pos=%"PRId64", start=%u, size=%u\n",
            context->data_start_file_pos, context->nal_start, context->nal_size);
 
     context->indent++;
 
-    f(1);
+    f(1); PRINT_UINT("forbidden_zero_bit");
     u(2); PRINT_UINT("nal_ref_idc");
-    u(5); print_nal_unit_type(context, "nal_unit_type");
+    u(5); print_nal_unit_type(context);
     nal_unit_type = (uint8_t)context->value;
 
+    bit_pos = context->bit_pos;
     if (nal_unit_type == 14 || nal_unit_type == 20) {
         u(1); PRINT_UINT("svc_extension_flag");
         if (context->value) {
-            /* TODO */
-            assert(0);
+            CHK(nal_unit_header_svc_extension(context));
         } else {
-            /* TODO */
-            assert(0);
+            CHK(nal_unit_header_mvc_extension(context));
         }
-        nal_unit_header_bytes += 3;
+        bit_pos += 3 * 8;
     }
+    CHK(context->bit_pos <= bit_pos);
+    context->bit_pos = bit_pos;
 
-    for (i = nal_unit_header_bytes; i < context->num_bytes_in_nal_unit; i++) {
-        if (i + 2 < context->num_bytes_in_nal_unit && next_bits(context, 24) && context->next_value == 0x000003) {
-            b(8); context->buffer[num_bytes_in_rbsp++] = (unsigned char)context->value;
-            b(8); context->buffer[num_bytes_in_rbsp++] = (unsigned char)context->value;
-            i += 2;
-            f(8);
-        } else {
-            b(8); context->buffer[num_bytes_in_rbsp++] = (unsigned char)context->value;
-        }
-    }
-
-    context->bit_pos = 0;
-    context->end_bit_pos = num_bytes_in_rbsp * 8;
     switch (nal_unit_type)
     {
         case 7:
-            if (!sequence_parameter_set(context))
-                return 0;
+            CHK(sequence_parameter_set(context));
             break;
         case 8:
-            if (!picture_parameter_set(context))
-                return 0;
+            CHK(picture_parameter_set(context));
             break;
         default:
             break;
