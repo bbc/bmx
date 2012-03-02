@@ -35,7 +35,7 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <assert.h>
-#include <math.h>
+#include <ctype.h>
 
 
 #define READ_BLOCK_SIZE         (64 * 1024)
@@ -78,11 +78,20 @@ typedef struct
     uint64_t bit_pos;
     uint64_t end_bit_pos;
 
+    uint64_t emu_prevent_count;
+
     uint64_t value;
     int64_t svalue;
     uint64_t next_value;
 
+    uint8_t profile_idc;
     uint64_t chroma_format_idc;
+    uint64_t chroma_array_type;
+    uint8_t cpb_dpb_delays_present_flag;
+    uint8_t cpb_removal_delay_length_minus1;
+    uint8_t dpb_removal_delay_length_minus1;
+    uint8_t pict_struct_present_flag;
+    uint8_t time_offset_length;
 
     int indent;
 } ParseContext;
@@ -92,6 +101,9 @@ typedef struct
 static int init_context(ParseContext *context, const char *filename)
 {
     memset(context, 0, sizeof(*context));
+    context->time_offset_length = 24;
+    context->chroma_format_idc = 1;
+    context->chroma_array_type = 1;
 
     context->file = fopen(filename, "rb");
     if (!context->file) {
@@ -233,23 +245,31 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
     return 1;
 }
 
+static int byte_aligned(ParseContext *context)
+{
+    return !(context->bit_pos & 7);
+}
 
 static int next_bits(ParseContext *context, uint8_t num_bits, uint8_t *advance_bits)
 {
-    assert(num_bits <= 64);
+    const unsigned char *byte;
+    uint32_t num_bytes;
+    uint8_t skip_bits = 0;
+    uint32_t i;
+
+    CHK(num_bits > 0);
+    CHK(num_bits <= 64);
 
     if (context->bit_pos + num_bits > context->end_bit_pos)
         return 0;
 
-    const unsigned char *byte = context->buffer + context->bit_pos / 8;
-    uint32_t num_bytes = ((context->bit_pos % 8) + num_bits + 7) / 8;
-    uint8_t skip_bits = 0;
-
+    byte = context->buffer + context->bit_pos / 8;
+    num_bytes = ((context->bit_pos % 8) + num_bits + 7) / 8;
     context->next_value = 0;
-    uint32_t i;
     for (i = 0; i < num_bytes; i++) {
         if (*byte == 0x03 && context->bit_pos + i * 8 >= 16 && byte[-1] == 0x00 && byte[-2] == 0x00) {
             skip_bits += 8;
+            context->emu_prevent_count++;
             byte++;
         }
         context->next_value = (context->next_value << 8) | (*byte);
@@ -277,6 +297,15 @@ static int read_bits(ParseContext *context, uint8_t num_bits)
     return 1;
 }
 
+static int skip_bits(ParseContext *context, uint64_t num_bits)
+{
+    CHK(context->bit_pos + num_bits <= context->end_bit_pos);
+
+    context->bit_pos += num_bits;
+
+    return 1;
+}
+
 static int exp_golumb(ParseContext *context)
 {
     int8_t leading_zero_bits = -1;
@@ -292,12 +321,24 @@ static int exp_golumb(ParseContext *context)
         return 0;
     }
 
-    CHK(read_bits(context, leading_zero_bits));
-    code_num = (1ULL << leading_zero_bits) - 1 + context->value;
-
-    context->value = code_num;
+    if (leading_zero_bits == 0) {
+        context->value = 0;
+    } else {
+        CHK(read_bits(context, leading_zero_bits));
+        code_num = (1ULL << leading_zero_bits) - 1 + context->value;
+        context->value = code_num;
+    }
 
     return 1;
+}
+
+static uint8_t get_bits_required(uint64_t value)
+{
+    uint8_t count = 63;
+    while (count && !(value & (1ULL << count)))
+        count--;
+
+    return count;
 }
 
 
@@ -311,6 +352,21 @@ static int _f(ParseContext *context, uint8_t num_bits)
 static int _u(ParseContext *context, uint8_t num_bits)
 {
     return read_bits(context, num_bits);
+}
+
+#define ii(a)    CHK(_ii(context, a))
+static int _ii(ParseContext *context, uint8_t num_bits)
+{
+    int result = read_bits(context, num_bits);
+    if (!result)
+        return result;
+
+    if (context->value & (1ULL << (num_bits - 1)))
+        context->svalue = (UINT64_MAX << num_bits) | context->value;
+    else
+        context->svalue = context->value;
+
+    return 1;
 }
 
 #define ue()    CHK(_ue(context))
@@ -336,12 +392,12 @@ static int more_rbsp_data(ParseContext *context)
     uint64_t bit_pos = context->end_bit_pos - 1;
     uint8_t b = 0;
 
-    while (!b && bit_pos > context->bit_pos) {
+    while (!b && bit_pos >= context->bit_pos) {
         b = context->buffer[bit_pos / 8] & (0x80 >> (bit_pos % 8));
         bit_pos--;
     }
 
-    return (bit_pos > context->bit_pos);
+    return (bit_pos >= context->bit_pos);
 }
 
 static int rbsp_trailing_bits(ParseContext *context)
@@ -530,6 +586,90 @@ static void print_video_format(ParseContext *context, uint8_t video_format)
            VIDEO_FORMAT_STRINGS[video_format & 0x07]);
 }
 
+static void print_pict_struct(ParseContext *context, uint8_t pict_struct)
+{
+    static const char *PICT_STRUCT_STRINGS[] =
+    {
+        "(progressive) frame",
+        "top field",
+        "bottom field",
+        "top field, bottom field, in that order",
+        "bottom field, top field, in that order",
+        "top field, bottom field, top field repeated, in that order",
+        "bottom field, top field, bottom field repeated in that order",
+        "frame doubling",
+        "frame tripling",
+    };
+
+    if (pict_struct < sizeof(PICT_STRUCT_STRINGS) / sizeof(PICT_STRUCT_STRINGS[0])) {
+        printf("%*c pict_struct: %u (%s)\n", context->indent * 4, ' ', pict_struct,
+               PICT_STRUCT_STRINGS[pict_struct]);
+    } else {
+        printf("%*c pict_struct: %u (reserved)\n", context->indent * 4, ' ', pict_struct);
+    }
+}
+
+static void print_uuid(ParseContext *context, uint64_t uuid_high, uint64_t uuid_low)
+{
+    int i;
+
+    printf("%*c uuid_iso_iec11576: ", context->indent * 4, ' ');
+    for (i = 0; i < 4; i++)
+        printf("%02x", (unsigned char)((uuid_high >> ((7 - i) * 8)) & 0xff));
+    printf("-");
+    for (; i < 6; i++)
+        printf("%02x", (unsigned char)((uuid_high >> ((7 - i) * 8)) & 0xff));
+    printf("-");
+    for (; i < 8; i++)
+        printf("%02x", (unsigned char)((uuid_high >> ((7 - i) * 8)) & 0xff));
+    printf("-");
+    for (i = 0; i < 2; i++)
+        printf("%02x", (unsigned char)((uuid_low >> ((7 - i) * 8)) & 0xff));
+    printf("-");
+    for (; i < 8; i++)
+        printf("%02x", (unsigned char)((uuid_low >> ((7 - i) * 8)) & 0xff));
+    printf("\n");
+}
+
+static void print_bytes_line(ParseContext *context, uint64_t index, uint8_t *line, size_t num_values, size_t line_size)
+{
+    size_t i;
+
+    printf("%*c %06"PRIx64" ", context->indent * 4, ' ', index);
+    for (i = 0; i < num_values; i++)
+        printf(" %02x", line[i]);
+    for (; i < line_size; i++)
+        printf("   ");
+    printf("  |");
+    for (i = 0; i < num_values; i++) {
+        if (isprint(line[i]))
+            printf("%c", line[i]);
+        else
+            printf(".");
+    }
+    printf("|\n");
+}
+
+static int read_and_print_bytes(ParseContext *context, uint32_t num_bytes)
+{
+    uint32_t i;
+    uint8_t line[16];
+    size_t num_values = 0;
+
+    for (i = 0; i < num_bytes; i++) {
+        u(8); line[num_values] = (uint8_t)context->value;
+        num_values++;
+        if (num_values == sizeof(line)) {
+            print_bytes_line(context, i + 1 - num_values, line, num_values, sizeof(line));
+            num_values = 0;
+        }
+    }
+    if (num_values > 0)
+        print_bytes_line(context, i - num_values, line, num_values, sizeof(line));
+
+    return 1;
+}
+
 
 static int hrd_parameters(ParseContext *context)
 {
@@ -541,7 +681,7 @@ static int hrd_parameters(ParseContext *context)
     u(4); PRINT_UINT("bit_rate_scale");
     u(4); PRINT_UINT("cpb_size_scale");
     context->indent++;
-    for (sched_sel_idx = 0; sched_sel_idx < cpb_cnt_minus1; sched_sel_idx++) {
+    for (sched_sel_idx = 0; sched_sel_idx <= cpb_cnt_minus1; sched_sel_idx++) {
         ue(); PRINT_UINT("bit_rate_value_minus1");
         ue(); PRINT_UINT("cpb_size_value_minus1");
         u(1); PRINT_UINT("cbr_flag");
@@ -549,8 +689,11 @@ static int hrd_parameters(ParseContext *context)
     context->indent--;
     u(5); PRINT_UINT("initial_cpb_removal_delay_length_minus1");
     u(5); PRINT_UINT("cpb_removal_delay_length_minus1");
+    context->cpb_removal_delay_length_minus1 = (uint8_t)context->value;
     u(5); PRINT_UINT("dpb_removal_delay_length_minus1");
+    context->dpb_removal_delay_length_minus1 = (uint8_t)context->value;
     u(5); PRINT_UINT("time_offset_length");
+    context->time_offset_length = (uint8_t)context->value;
 
     return 1;
 }
@@ -623,7 +766,9 @@ static int vui_parameters(ParseContext *context)
     if (nal_hrd_parameters_present_flag || vcl_hrd_parameters_present_flag) {
         u(1); PRINT_UINT("low_delay_hrd_flag");
     }
+    context->cpb_dpb_delays_present_flag = nal_hrd_parameters_present_flag || vcl_hrd_parameters_present_flag;
     u(1); PRINT_UINT("pict_struct_present_flag");
+    context->pict_struct_present_flag = (uint8_t)context->value;
     u(1); PRINT_UINT("bitstream_restriction_flag");
     if (context->value) {
         u(1); PRINT_UINT("motion_vectors_over_pic_boundaries_flag");
@@ -638,54 +783,232 @@ static int vui_parameters(ParseContext *context)
     return 1;
 }
 
-static int scaling_list(ParseContext *context, uint8_t list_size)
+static int scaling_list(ParseContext *context, uint32_t dim)
 {
     uint8_t last_scale = 8, next_scale = 8;
-    int64_t delta_scale;
-    uint8_t j;
+    uint32_t list_size = dim * dim;
+    uint8_t i;
 
-    for (j = 0; j < list_size; j++) {
+    for (i = 0; i < list_size; i++) {
         if (next_scale != 0) {
-            se(); PRINT_INT("delta_scale");
-            delta_scale = context->svalue;
-            next_scale = (uint8_t)((last_scale + delta_scale + 256) % 256);
+            se();
+            next_scale = (uint8_t)((last_scale + context->svalue + 256) % 256);
         }
         last_scale = (next_scale == 0 ? last_scale : next_scale);
+
+        if (i % dim == 0)
+            printf("%*c %02x", context->indent * 4, ' ', last_scale);
+        else if ((i + 1) % dim == 0)
+            printf(" %02x\n", last_scale);
+        else
+            printf(" %02x", last_scale);
     }
 
     return 1;
 }
 
-static int sequence_parameter_set(ParseContext *context)
+static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
 {
-    uint8_t profile_idc;
+    printf("%*c pic_timing (type=%"PRIu64", size=%"PRIu64"):\n", context->indent * 4, ' ', payload_type, payload_size);
+    context->indent++;
+
+    if (context->cpb_dpb_delays_present_flag) {
+        u(context->cpb_removal_delay_length_minus1 + 1); PRINT_UINT("cpb_removal_delay");
+        u(context->dpb_removal_delay_length_minus1 + 1); PRINT_UINT("dpb_removal_delay");
+    }
+    if (context->pict_struct_present_flag) {
+        uint64_t pict_struct;
+        uint8_t num_clock_ts = 0;
+        uint8_t i;
+
+        u(4); print_pict_struct(context, (uint8_t)context->value);
+        pict_struct = context->value;
+        switch (pict_struct)
+        {
+            case 0:
+            case 1:
+            case 2:
+                num_clock_ts = 1;
+                break;
+            case 3:
+            case 4:
+            case 7:
+                num_clock_ts = 2;
+                break;
+            case 5:
+            case 6:
+            case 8:
+                num_clock_ts = 3;
+                break;
+            default:
+                CHK(pict_struct <= 8);
+                break;
+        }
+
+        for (i = 0; i < num_clock_ts; i++) {
+            u(1); PRINT_UINT("clock_timestamp_flag");
+            if (context->value) {
+                uint8_t full_timestamp_flag;
+
+                context->indent++;
+
+                u(2); PRINT_UINT("ct_type");
+                u(1); PRINT_UINT("nuit_field_based_flag");
+                u(5); PRINT_UINT("counting_type");
+                u(1); PRINT_UINT("full_timestamp_flag");
+                full_timestamp_flag = (uint8_t)context->value;
+                u(1); PRINT_UINT("discontinuity_flag");
+                u(1); PRINT_UINT("cnt_dropped_flag");
+                u(8); PRINT_UINT("n_frames");
+                if (full_timestamp_flag) {
+                    u(6); PRINT_UINT("seconds");
+                    u(6); PRINT_UINT("minutes");
+                    u(5); PRINT_UINT("hours");
+                } else {
+                    u(1); PRINT_UINT("seconds_flag");
+                    if (context->value) {
+                        u(6); PRINT_UINT("seconds");
+                        u(1); PRINT_UINT("minutes_flag");
+                        if (context->value) {
+                            u(6); PRINT_UINT("minutes");
+                            u(1); PRINT_UINT("hours_flag");
+                            if (context->value) {
+                                u(5); PRINT_UINT("hours");
+                            }
+                        }
+                    }
+                }
+                if (context->time_offset_length > 0) {
+                    ii(context->time_offset_length); PRINT_INT("time_offset");
+                }
+
+                context->indent--;
+            }
+        }
+    }
+
+    context->indent--;
+    return 1;
+}
+
+static int user_data_unregistered(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
+{
+    uint64_t uuid_high, uuid_low;
+
+    printf("%*c user_data_unregistered (type=%"PRIu64", size=%"PRIu64"):\n", context->indent * 4, ' ', payload_type, payload_size);
+    context->indent++;
+
+    u(64); uuid_high = context->value;
+    u(64); uuid_low = context->value;
+    print_uuid(context, uuid_high, uuid_low);
+
+    printf("%*c payload_data:\n", context->indent * 4, ' ');
+    context->indent++;
+    CHK(read_and_print_bytes(context, payload_size - 16));
+    context->indent--;
+
+    context->indent--;
+    return 1;
+}
+
+static int sei_payload(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
+{
+    uint64_t next_bit_pos = context->bit_pos + payload_size * 8;
+    context->emu_prevent_count = 0;
+
+    if (payload_type == 1) {
+        CHK(pic_timing(context, payload_type, payload_size));
+    } else if (payload_type == 5) {
+        CHK(user_data_unregistered(context, payload_type, payload_size));
+    } else {
+        printf("%*c payload (type=%"PRIu64", size=%"PRIu64")\n", context->indent * 4, ' ', payload_type, payload_size);
+    }
+
+    next_bit_pos -= context->emu_prevent_count * 8;
+
+    CHK(context->bit_pos <= next_bit_pos);
+    if (context->bit_pos < next_bit_pos) {
+        CHK(skip_bits(context, next_bit_pos - context->bit_pos));
+    }
+
+    if (!byte_aligned(context)) {
+        CHK(rbsp_trailing_bits(context));
+    }
+
+    return 1;
+}
+
+static int sei_message(ParseContext *context)
+{
+    uint64_t payload_type = 0;
+    uint64_t payload_size = 0;
+
+    while (next_bits(context, 8, NULL) && context->next_value == 0xff) {
+        f(8);
+        payload_type += 255;
+    }
+    u(8); payload_type += context->value;
+
+    while (next_bits(context, 8, NULL) && context->next_value == 0xff) {
+        f(8);
+        payload_size += 255;
+    }
+    u(8); payload_size += context->value;
+
+
+    CHK(sei_payload(context, payload_type, payload_size));
+
+    return 1;
+}
+
+static int sei(ParseContext *context)
+{
+    printf("%*c sei:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    do {
+        CHK(sei_message(context));
+    } while (more_rbsp_data(context));
+
+    CHK(rbsp_trailing_bits(context));
+
+    context->indent--;
+    return 1;
+}
+
+static int sequence_parameter_set_data(ParseContext *context)
+{
     uint8_t constraint_flags;
     uint64_t pict_order_cnt_type;
 
     printf("%*c sequence_parameter_set:\n", context->indent * 4, ' ');
     context->indent++;
 
-    u(8); profile_idc = (uint8_t)context->value;
+    u(8); context->profile_idc = (uint8_t)context->value;
     u(1); constraint_flags = (uint8_t)context->value;
     u(1); constraint_flags |= (uint8_t)context->value << 1;
     u(1); constraint_flags |= (uint8_t)context->value << 2;
     u(1); constraint_flags |= (uint8_t)context->value << 3;
     u(1); constraint_flags |= (uint8_t)context->value << 4;
     u(1); constraint_flags |= (uint8_t)context->value << 5;
-    print_profile_and_flags(context, profile_idc, constraint_flags);
+    print_profile_and_flags(context, context->profile_idc, constraint_flags);
     u(2); PRINT_UINT("reserved_zero_2bits");
     u(8); print_level(context, (uint8_t)context->value, constraint_flags);
     ue(); PRINT_UINT("seq_parameter_set_id");
 
-    if (profile_idc == 100 || profile_idc == 110 ||
-        profile_idc == 122 || profile_idc == 244 || profile_idc ==  44 ||
-        profile_idc ==  83 || profile_idc ==  86 || profile_idc == 118 ||
-        profile_idc == 128)
+    if (context->profile_idc == 100 || context->profile_idc == 110 ||
+        context->profile_idc == 122 || context->profile_idc == 244 || context->profile_idc ==  44 ||
+        context->profile_idc ==  83 || context->profile_idc ==  86 || context->profile_idc == 118 ||
+        context->profile_idc == 128)
     {
         ue(); print_chroma_format(context, context->value);
         context->chroma_format_idc = context->value;
         if (context->chroma_format_idc == 3) {
             u(1); PRINT_UINT("separate_colour_plane_flag");
+            if (context->value == 0)
+                context->chroma_array_type = context->chroma_format_idc;
+            else
+                context->chroma_array_type = 0;
         }
         ue(); PRINT_UINT("bit_depth_luma_minus8");
         ue(); PRINT_UINT("bit_depth_chroma_minus8");
@@ -700,9 +1023,9 @@ static int sequence_parameter_set(ParseContext *context)
                 if (context->value) {
                     context->indent++;
                     if (i < 6) {
-                        CHK(scaling_list(context, 16));
+                        CHK(scaling_list(context, 4));
                     } else {
-                        CHK(scaling_list(context, 64));
+                        CHK(scaling_list(context, 8));
                     }
                     context->indent--;
                 }
@@ -755,9 +1078,15 @@ static int sequence_parameter_set(ParseContext *context)
         context->indent--;
     }
 
+    context->indent--;
+    return 1;
+}
+
+static int sequence_parameter_set(ParseContext *context)
+{
+    CHK(sequence_parameter_set_data(context));
     CHK(rbsp_trailing_bits(context));
 
-    context->indent--;
     return 1;
 }
 
@@ -783,7 +1112,7 @@ static int picture_parameter_set(ParseContext *context)
 
         context->indent++;
         if (slice_group_map_type == 0) {
-            for (i = 0; i < num_slice_groups_minus1; i++) {
+            for (i = 0; i <= num_slice_groups_minus1; i++) {
                 ue(); PRINT_UINT("run_length_minus1");
             }
         } else if (slice_group_map_type == 2) {
@@ -800,9 +1129,8 @@ static int picture_parameter_set(ParseContext *context)
             ue(); PRINT_UINT("pic_size_in_map_units_minus1");
             pic_size_in_map_units_minus1 = context->value;
             context->indent++;
-            for (i = 0; i < pic_size_in_map_units_minus1; i++) {
-                /* note: assuming ue() because spec has u(v) */
-                ue(); PRINT_UINT("slice_group_id");
+            for (i = 0; i <= pic_size_in_map_units_minus1; i++) {
+                u(get_bits_required(num_slice_groups_minus1 + 1)); PRINT_UINT("slice_group_id");
             }
             context->indent--;
         }
@@ -833,9 +1161,9 @@ static int picture_parameter_set(ParseContext *context)
                 if (context->value) {
                     context->indent++;
                     if (i < 6) {
-                        CHK(scaling_list(context, 16));
+                        CHK(scaling_list(context, 4));
                     } else {
-                        CHK(scaling_list(context, 64));
+                        CHK(scaling_list(context, 8));
                     }
                     context->indent--;
                 }
@@ -848,6 +1176,264 @@ static int picture_parameter_set(ParseContext *context)
     CHK(rbsp_trailing_bits(context));
 
     context->indent--;
+    return 1;
+}
+
+static int sequence_parameter_set_extension(ParseContext *context)
+{
+    uint64_t bit_depth_aux_minus8;
+    printf("%*c sequence_parameter_set_extension:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    ue(); PRINT_UINT("seq_parameter_set_id");
+    ue(); PRINT_UINT("aux_format_idc");
+    if (context->value) {
+        ue(); PRINT_UINT("bit_depth_aux_minus8");
+        bit_depth_aux_minus8 = context->value;
+        u(1); PRINT_UINT("alpha_incr_flag");
+        u(bit_depth_aux_minus8 + 9); PRINT_UINT("alpha_opaque_value");
+        u(bit_depth_aux_minus8 + 9); PRINT_UINT("alpha_transparent_value");
+    }
+    u(1); PRINT_UINT("additional_extension_flag");
+    CHK(rbsp_trailing_bits(context));
+
+    context->indent++;
+    return 1;
+}
+
+static int sequence_parameter_set_svc_extension(ParseContext *context)
+{
+    uint64_t extended_spatial_scalability_idc;
+
+    printf("%*c sequence_parameter_set_svc_extension:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    u(1); PRINT_UINT("inter_layer_deblocking_filter_control_present_flag");
+    u(2); PRINT_UINT("extended_spatial_scalability_idc");
+    extended_spatial_scalability_idc = context->value;
+    if (context->chroma_array_type == 1 || context->chroma_array_type == 2) {
+        u(1); PRINT_UINT("chroma_phase_x_plus1_flag");
+    }
+    if (context->chroma_array_type == 1) {
+        u(2); PRINT_UINT("chroma_phase_y_plus1");
+    }
+    if (extended_spatial_scalability_idc == 1) {
+        if (context->chroma_array_type > 0) {
+            u(1); PRINT_UINT("seq_ref_layer_chroma_phase_x_plus1_flag");
+            u(2); PRINT_UINT("seq_ref_layer_chroma_phase_y_plus1");
+        }
+        se(); PRINT_INT("seq_scaled_ref_layer_left_offset");
+        se(); PRINT_INT("seq_scaled_ref_layer_top_offset");
+        se(); PRINT_INT("seq_scaled_ref_layer_right_offset");
+        se(); PRINT_INT("seq_scaled_ref_layer_bottom_offset");
+    }
+    u(1); PRINT_UINT("seq_tcoeff_level_prediction_flag");
+    if (context->value) {
+        u(1); PRINT_UINT("adaptive_tcoeff_level_prediction_flag");
+    }
+    u(1); PRINT_UINT("slice_header_restriction_flag");
+
+    context->indent++;
+    return 1;
+}
+
+static int svc_vui_parameters_extension(ParseContext *context)
+{
+    uint64_t vui_ext_num_entries_minus1;
+    uint8_t vui_ext_nal_hrd_parameters_present_flag;
+    uint8_t vui_ext_vcl_hrd_parameters_present_flag;
+    uint64_t i;
+
+    printf("%*c svc_vui_parameters_extension:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    ue(); PRINT_UINT("vui_ext_num_entries_minus1");
+    vui_ext_num_entries_minus1 = context->value;
+    for (i = 0; i <= vui_ext_num_entries_minus1; i++) {
+        printf("%*c entry %"PRIu64":\n", context->indent * 4, ' ', i);
+        context->indent++;
+
+        u(3); PRINT_UINT("vui_ext_dependency_id");
+        u(4); PRINT_UINT("vui_ext_quality_id");
+        u(3); PRINT_UINT("vui_ext_temporal_id");
+        u(1); PRINT_UINT("vui_ext_timing_info_present_flag");
+        if (context->value) {
+            context->indent++;
+            u(32); PRINT_UINT("vui_ext_num_units_in_tick");
+            u(32); PRINT_UINT("vui_ext_time_scale");
+            u(1); PRINT_UINT("vui_ext_fixed_frame_rate_flag");
+            context->indent--;
+        }
+        u(1); PRINT_UINT("vui_ext_nal_hrd_parameters_present_flag");
+        vui_ext_nal_hrd_parameters_present_flag = (uint8_t)context->value;
+        if (context->value) {
+            context->indent++;
+            CHK(hrd_parameters(context));
+            context->indent--;
+        }
+        u(1); PRINT_UINT("vui_ext_vcl_hrd_parameters_present_flag");
+        vui_ext_vcl_hrd_parameters_present_flag = (uint8_t)context->value;
+        if (context->value) {
+            context->indent++;
+            CHK(hrd_parameters(context));
+            context->indent--;
+        }
+        if (vui_ext_nal_hrd_parameters_present_flag || vui_ext_vcl_hrd_parameters_present_flag) {
+            u(1); PRINT_UINT("vui_ext_low_delay_hrd_flag");
+        }
+        u(1); PRINT_UINT("vui_ext_pic_struct_present_flag");
+
+        context->indent--;
+    }
+
+    context->indent++;
+    return 1;
+}
+
+static int sequence_parameter_set_mvc_extension(ParseContext *context)
+{
+    uint64_t num_views_minus1, num_refs, num_level_values_signalled_minus1,
+             num_applicable_ops_minus1, applicable_op_num_target_views_minus1;
+    uint64_t i, j, k;
+
+    printf("%*c sequence_parameter_set_mvc_extension:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    ue(); PRINT_UINT("num_views_minus1");
+    num_views_minus1 = context->value;
+    for (i = 0; i <= num_views_minus1; i++) {
+        ue(); PRINT_UINT("view_id");
+    }
+    for (i = 1; i <= num_views_minus1; i++) {
+        ue(); PRINT_UINT("num_anchor_refs_I0");
+        num_refs = context->value;
+        for (j = 0; j < num_refs; j++) {
+            ue(); PRINT_UINT("anchor_ref_I0");
+        }
+        ue(); PRINT_UINT("num_anchor_refs_I1");
+        num_refs = context->value;
+        for (j = 0; j < num_refs; j++) {
+            ue(); PRINT_UINT("anchor_ref_I1");
+        }
+    }
+    for (i = 1; i <= num_views_minus1; i++) {
+        ue(); PRINT_UINT("num_non_anchor_refs_I0");
+        num_refs = context->value;
+        for (j = 0; j < num_refs; j++) {
+            ue(); PRINT_UINT("non_anchor_ref_I0");
+        }
+        ue(); PRINT_UINT("num_non_anchor_refs_I1");
+        num_refs = context->value;
+        for (j = 0; j < num_refs; j++) {
+            ue(); PRINT_UINT("non_anchor_ref_I1");
+        }
+    }
+    ue(); PRINT_UINT("num_level_values_signalled_minus1");
+    num_level_values_signalled_minus1 = context->value;
+    for (i = 0; i <= num_level_values_signalled_minus1; i++) {
+        u(8); PRINT_UINT("level_idc");
+        ue(); PRINT_UINT("num_applicable_ops_minus1");
+        num_applicable_ops_minus1 = context->value;
+        for (j = 0; j <= num_applicable_ops_minus1; j++) {
+            u(3); PRINT_UINT("applicable_op_temporal_id");
+            ue(); PRINT_UINT("applicable_op_num_target_views_minus1");
+            applicable_op_num_target_views_minus1 = context->value;
+            for (k = 0; k <= applicable_op_num_target_views_minus1; k++) {
+                ue(); PRINT_UINT("applicable_op_target_view_id");
+            }
+            ue(); PRINT_UINT("applicable_op_num_views_minus1");
+        }
+    }
+
+    context->indent++;
+    return 1;
+}
+
+static int mvc_vui_parameters_extension(ParseContext *context)
+{
+    uint64_t vui_mvc_num_ops_minus1, vui_mvc_num_target_output_views_minus1;
+    uint8_t vui_mvc_nal_hrd_parameters_present_flag;
+    uint8_t vui_mvc_vcl_hrd_parameters_present_flag;
+    uint64_t i, j;
+
+    printf("%*c mvc_vui_parameters_extension:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    ue(); PRINT_UINT("vui_mvc_num_ops_minus1");
+    vui_mvc_num_ops_minus1 = context->value;
+    for (i = 0; i <= vui_mvc_num_ops_minus1; i++) {
+        printf("%*c entry %"PRIu64":\n", context->indent * 4, ' ', i);
+        context->indent++;
+
+        u(3); PRINT_UINT("vui_mvc_temporal_id");
+        ue(); PRINT_UINT("vui_mvc_num_target_output_views_minus1");
+        vui_mvc_num_target_output_views_minus1 = context->value;
+        for (j = 0; j <= vui_mvc_num_target_output_views_minus1; j++) {
+            ue(); PRINT_UINT("vui_mvc_view_id");
+        }
+        u(1); PRINT_UINT("vui_mvc_timing_info_present_flag");
+        if (context->value) {
+            context->indent++;
+            u(32); PRINT_UINT("vui_mvc_num_units_in_tick");
+            u(32); PRINT_UINT("vui_mvc_time_scale");
+            u(1); PRINT_UINT("vui_mvc_fixed_frame_rate_flag");
+            context->indent--;
+        }
+        u(1); PRINT_UINT("vui_mvc_nal_hrd_parameters_present_flag");
+        vui_mvc_nal_hrd_parameters_present_flag = (uint8_t)context->value;
+        if (context->value) {
+            context->indent++;
+            CHK(hrd_parameters(context));
+            context->indent--;
+        }
+        u(1); PRINT_UINT("vui_mvc_vcl_hrd_parameters_present_flag");
+        vui_mvc_vcl_hrd_parameters_present_flag = (uint8_t)context->value;
+        if (context->value) {
+            context->indent++;
+            CHK(hrd_parameters(context));
+            context->indent--;
+        }
+        if (vui_mvc_nal_hrd_parameters_present_flag || vui_mvc_vcl_hrd_parameters_present_flag) {
+            u(1); PRINT_UINT("vui_mvc_low_delay_hrd_flag");
+        }
+        u(1); PRINT_UINT("vui_mvc_pic_struct_present_flag");
+
+        context->indent--;
+    }
+
+    context->indent++;
+    return 1;
+}
+
+static int subset_sequence_parameter_set(ParseContext *context)
+{
+    printf("%*c subset_sequence_parameter_set:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    CHK(sequence_parameter_set_data(context));
+    if (context->profile_idc == 83 || context->profile_idc == 86) {
+        CHK(sequence_parameter_set_svc_extension(context));
+        u(1); PRINT_UINT("svc_vui_parameter_present_flag");
+        if (context->value) {
+            CHK(svc_vui_parameters_extension(context));
+        }
+    } else if (context->profile_idc == 118 || context->profile_idc == 128) {
+        f(1); PRINT_UINT("bit_equal_to_one");
+        CHK(sequence_parameter_set_mvc_extension(context));
+        u(1); PRINT_UINT("mvc_vui_parameter_present_flag");
+        if (context->value) {
+            CHK(mvc_vui_parameters_extension(context));
+        }
+    }
+    u(1); PRINT_UINT("additional_extension2_flag");
+    if (context->value) {
+        while (more_rbsp_data(context)) {
+            u(1); PRINT_UINT("additional_extension2_data_flag");
+        }
+    }
+    CHK(rbsp_trailing_bits(context));
+
+    context->indent++;
     return 1;
 }
 
@@ -918,11 +1504,20 @@ static int parse_nal_unit(ParseContext *context)
 
     switch (nal_unit_type)
     {
+        case 6:
+            CHK(sei(context));
+            break;
         case 7:
             CHK(sequence_parameter_set(context));
             break;
         case 8:
             CHK(picture_parameter_set(context));
+            break;
+        case 13:
+            CHK(sequence_parameter_set_extension(context));
+            break;
+        case 15:
+            CHK(subset_sequence_parameter_set(context));
             break;
         default:
             break;
