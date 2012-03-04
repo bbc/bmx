@@ -289,15 +289,16 @@ void AvidTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t 
     BMX_ASSERT(mMXFFile);
     BMX_CHECK(mSampleSize > 0);
     BMX_CHECK(size > 0 && num_samples > 0);
-    BMX_CHECK(size == num_samples * mSampleSize);
+    BMX_CHECK(size >= num_samples * mSampleSize);
 
     if (mImageStartOffset > 0) {
         mMXFFile->writeZeros(mImageStartOffset);
         mContainerSize += mImageStartOffset;
     }
 
-    BMX_CHECK(mMXFFile->write(data, size) == size);
-    mContainerSize += size;
+    uint32_t write_size = num_samples * mSampleSize;
+    BMX_CHECK(mMXFFile->write(data, write_size) == write_size);
+    mContainerSize += write_size;
 
     mContainerDuration += num_samples;
 }

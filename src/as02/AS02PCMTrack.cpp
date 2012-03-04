@@ -131,14 +131,15 @@ void AS02PCMTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32
     BMX_ASSERT(mMXFFile);
     BMX_CHECK(mSampleSize > 0);
     BMX_CHECK(size > 0 && num_samples > 0);
-    BMX_CHECK(size == num_samples * mSampleSize);
+    BMX_CHECK(size >= num_samples * mSampleSize);
 
-    BMX_CHECK(mMXFFile->write(data, size) == size);
+    uint32_t write_size = num_samples * mSampleSize;
+    BMX_CHECK(mMXFFile->write(data, write_size) == write_size);
 
-    UpdateEssenceOnlyChecksum(data, size);
+    UpdateEssenceOnlyChecksum(data, write_size);
 
     mContainerDuration += num_samples;
-    mContainerSize += size;
+    mContainerSize += write_size;
 }
 
 int64_t AS02PCMTrack::GetOutputDuration(bool clip_frame_rate) const

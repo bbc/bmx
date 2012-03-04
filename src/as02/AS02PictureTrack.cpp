@@ -85,7 +85,7 @@ void AS02PictureTrack::WriteSamples(const unsigned char *data, uint32_t size, ui
     BMX_ASSERT(mMXFFile);
     BMX_CHECK(mSampleSize > 0);
     BMX_CHECK(size > 0 && num_samples > 0);
-    BMX_CHECK(size == num_samples * mSampleSize);
+    BMX_CHECK(size >= num_samples * mSampleSize);
 
     uint32_t i;
     for (i = 0; i < num_samples; i++) {
@@ -98,7 +98,7 @@ void AS02PictureTrack::WriteSamples(const unsigned char *data, uint32_t size, ui
         mContainerSize += mxfKey_extlen + mLLen + mSampleSize;
     }
 
-    UpdateEssenceOnlyChecksum(data, size);
+    UpdateEssenceOnlyChecksum(data, num_samples * mSampleSize);
 }
 
 void AS02PictureTrack::HandlePartitionInterval(bool can_start_partition)

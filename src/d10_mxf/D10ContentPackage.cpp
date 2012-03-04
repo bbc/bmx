@@ -501,7 +501,6 @@ void D10ContentPackageManager::WriteSamples(uint32_t track_index, const unsigned
                                             uint32_t num_samples)
 {
     BMX_ASSERT(data && size && num_samples);
-    BMX_CHECK(size % num_samples == 0);
 
     size_t cp_index = 0;
     while (cp_index < mContentPackages.size() && mContentPackages[cp_index]->IsComplete(track_index))
@@ -511,7 +510,7 @@ void D10ContentPackageManager::WriteSamples(uint32_t track_index, const unsigned
                                                                        mInfo.sound_sample_size);
     BMX_CHECK(size >= sample_size * num_samples);
     const unsigned char *data_ptr = data;
-    uint32_t rem_size = size;
+    uint32_t rem_size = sample_size * num_samples;
     uint32_t rem_num_samples = num_samples;
     while (rem_num_samples > 0) {
         if (cp_index >= mContentPackages.size())

@@ -167,6 +167,8 @@ OP1AContentPackageElementData::OP1AContentPackageElementData(OP1AContentPackageE
 
 uint32_t OP1AContentPackageElementData::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
+    BMX_ASSERT(size % num_samples == 0);
+
     uint32_t write_num_samples = mNumSamples - mNumSamplesWritten;
     if (write_num_samples > num_samples)
         write_num_samples = num_samples;
@@ -336,6 +338,7 @@ void OP1AContentPackageManager::RegisterPictureTrackElement(uint32_t track_index
     mElements.push_back(new OP1AContentPackageElement(track_index, element_key,
                                                       mKAGSize, mMinLLen,
                                                       is_cbe));
+    mElementTrackIndexMap[track_index] = mElements.back();
 }
 
 void OP1AContentPackageManager::RegisterAVCITrackElement(uint32_t track_index, mxfKey element_key,
@@ -344,6 +347,7 @@ void OP1AContentPackageManager::RegisterAVCITrackElement(uint32_t track_index, m
     mElements.push_back(new OP1AContentPackageElement(track_index, element_key,
                                                       mKAGSize, mMinLLen,
                                                       first_sample_size, nonfirst_sample_size));
+    mElementTrackIndexMap[track_index] = mElements.back();
 }
 
 void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,
@@ -351,6 +355,7 @@ void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, 
 {
     mElements.push_back(new OP1AContentPackageElement(track_index, element_key, mKAGSize, mMinLLen,
                                                       sample_sequence, sample_size));
+    mElementTrackIndexMap[track_index] = mElements.back();
 }
 
 void OP1AContentPackageManager::PrepareWrite()
@@ -389,15 +394,19 @@ void OP1AContentPackageManager::WriteSamples(uint32_t track_index, const unsigne
                                              uint32_t num_samples)
 {
     BMX_ASSERT(data && size && num_samples);
-    BMX_CHECK(size % num_samples == 0);
+    BMX_ASSERT(mElementTrackIndexMap.find(track_index) != mElementTrackIndexMap.end());
 
     size_t cp_index = 0;
     while (cp_index < mContentPackages.size() && mContentPackages[cp_index]->IsComplete(track_index))
         cp_index++;
 
-    uint32_t sample_size = size / num_samples;
+    uint32_t sample_size = mElementTrackIndexMap[track_index]->sample_size;
+    if (sample_size == 0)
+        sample_size = size / num_samples;
+    BMX_CHECK(size >= sample_size * num_samples);
+
     const unsigned char *data_ptr = data;
-    uint32_t rem_size = size;
+    uint32_t rem_size = sample_size * num_samples;
     uint32_t rem_num_samples = num_samples;
     while (rem_num_samples > 0) {
         if (cp_index >= mContentPackages.size()) {
