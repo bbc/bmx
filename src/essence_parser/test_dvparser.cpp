@@ -61,7 +61,7 @@ static uint32_t fill_buffer(FILE *file, Buffer *buffer, uint32_t size)
         buffer->data = new_data;
         buffer->buffer_size = buffer->data_size + size;
     }
-    
+
     uint32_t num_read = fread(buffer->data + buffer->data_size, 1, size, file);
     if (num_read == 0 && ferror(file)) {
         fprintf(stderr, "Failed to read from file: %s\n", strerror(errno));

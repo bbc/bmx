@@ -109,7 +109,7 @@ std::string get_timecode_string(Timecode timecode);
 
 Rational normalize_rate(Rational rate);
 
-void decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_tc, unsigned int size, 
+void decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_tc, unsigned int size,
                            Timecode *timecode, bool *field_mark);
 void encode_smpte_timecode(Timecode timecode, bool field_mark, unsigned char *smpte_tc, unsigned int size);
 

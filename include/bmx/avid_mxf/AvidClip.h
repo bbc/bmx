@@ -86,7 +86,7 @@ public:
                                                     uint32_t num_video_tracks, uint32_t num_audio_tracks);
     std::vector<std::pair<mxfUMID, uint32_t> > GetPictureSourceReferences(mxfpp::SourcePackage *source_package);
     std::vector<std::pair<mxfUMID, uint32_t> > GetSoundSourceReferences(mxfpp::SourcePackage *source_package);
-    
+
     // custom source package creation
     mxfpp::DataModel* GetDataModel() const { return mDataModel; }
     mxfpp::AvidHeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }

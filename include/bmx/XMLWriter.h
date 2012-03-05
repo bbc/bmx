@@ -48,7 +48,7 @@ class XMLWriter
 {
 public:
     static XMLWriter* Open(std::string filename);
-    
+
 public:
     XMLWriter(FILE *xml_file);
     virtual ~XMLWriter();

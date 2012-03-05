@@ -79,7 +79,7 @@ public:
     bool ParseDirectory(std::string dirname);
 
     void Copy(const URI &uri);
-    
+
     bool MakeAbsolute(const URI &base_uri);
     bool MakeRelative(const URI &base_uri);
 

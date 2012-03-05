@@ -317,7 +317,7 @@ void AvidTrack::CompleteWrite()
     mMXFFile->writeFixedKL(&mEssenceElementKey, LLEN, file_pos - (mEssenceDataStartPos + mxfKey_extlen + LLEN));
     mMXFFile->seek(file_pos, SEEK_SET);
     mMXFFile->getPartition(BODY_PARTITION).fillToKag(mMXFFile);
-    
+
 
     // write the footer partition pack and header metadata
 

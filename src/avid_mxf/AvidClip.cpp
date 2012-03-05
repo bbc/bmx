@@ -62,7 +62,7 @@ static uint32_t DM_TRACK_NUMBER = 1;
 static const RGBColor AVID_RGB_COLORS[] =
 {
     {65534, 65535, 65535}, // white
-    {41471, 12134, 6564 }, // red 
+    {41471, 12134, 6564 }, // red
     {58981, 58981, 6553 }, // yellow
     {13107, 52428, 13107}, // green
     {13107, 52428, 52428}, // cyan
@@ -706,7 +706,7 @@ void AvidClip::UpdateTrackDurations(AvidTrack *avid_track, Track *track, mxfRati
     vector<StructuralComponent*> components = sequence->getStructuralComponents();
     BMX_CHECK(components.size() == 1);
     components[0]->setDuration(track_duration);
-    
+
     // update duration further down the reference chain
     SourceClip *source_clip = dynamic_cast<SourceClip*>(components[0]);
     if (source_clip) {

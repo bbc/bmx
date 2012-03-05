@@ -417,7 +417,7 @@ void EssenceReader::GetEditUnitGroup(int64_t position, uint32_t max_samples, int
     uint32_t left_num_samples = 1;
     uint32_t right_num_samples = max_samples;
     uint32_t last_num_samples = max_samples;
-    
+
     int64_t right_file_position;
     int64_t right_size;
     while (right_num_samples != left_num_samples) {

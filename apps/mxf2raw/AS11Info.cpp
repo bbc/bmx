@@ -241,7 +241,7 @@ static vector<DMFramework*> get_static_frameworks(MaterialPackage *mp)
 
 static vector<StructuralComponent*> get_segmentation(MaterialPackage *mp, Rational *edit_rate)
 {
-    // expect to find DM Track -> Sequence -> (Filler | DM Segment -> AS11 Segmentation Framework)+ 
+    // expect to find DM Track -> Sequence -> (Filler | DM Segment -> AS11 Segmentation Framework)+
 
     vector<GenericTrack*> tracks = mp->getTracks();
     size_t i;

@@ -736,7 +736,7 @@ void AS02Track::CreateFile()
         // write the CBE index partition pack and index table segment
 
         Partition &index_partition = mMXFFile->createPartition();
-        index_partition.setKey(&MXF_PP_K(OpenIncomplete, Body)); 
+        index_partition.setKey(&MXF_PP_K(OpenIncomplete, Body));
         index_partition.setIndexSID(mIndexSID);
         index_partition.setBodySID(0);
         index_partition.write(mMXFFile);

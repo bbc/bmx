@@ -118,7 +118,7 @@ private:
     uint32_t mFixedEditUnitByteCount;
 
     int64_t mEssenceDataSize;
-    
+
     int64_t mDuration;
 };
 

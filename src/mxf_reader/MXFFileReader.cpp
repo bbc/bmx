@@ -1319,7 +1319,7 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
     GenericSoundEssenceDescriptor *sound_descriptor =
         dynamic_cast<GenericSoundEssenceDescriptor*>(file_descriptor);
     BMX_CHECK(sound_descriptor);
-    
+
     if (sound_descriptor->haveAudioSamplingRate())
         sound_track_info->sampling_rate = normalize_rate(sound_descriptor->getAudioSamplingRate());
 

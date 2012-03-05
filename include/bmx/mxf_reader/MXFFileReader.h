@@ -208,7 +208,7 @@ private:
     std::vector<std::vector<uint32_t> > mExternalSampleSequences;
     std::vector<int64_t> mExternalSampleSequenceSizes;
     std::vector<MXFTrackReader*> mExternalTrackReaders;
-    
+
     EssenceReader *mEssenceReader;
 };
 

@@ -156,7 +156,7 @@ void XMLWriter::DeclareNamespace(string ns, std::string prefix)
 
     BMX_CHECK(!mElementStack.empty());
     Element *element = mElementStack.back();
-    
+
     bool was_added;
     if (prefix.empty())
         was_added = element->AddNamespaceDecl(ns, INTERNAL_DEFAULT_NAMESPACE_PREFIX);
