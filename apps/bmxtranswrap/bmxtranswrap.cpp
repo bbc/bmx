@@ -52,6 +52,7 @@
 #include <bmx/as02/AS02PCMTrack.h>
 #include <bmx/avid_mxf/AvidPCMTrack.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
+#include <bmx/wave/WaveFileIO.h>
 #include <bmx/URI.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Version.h>
@@ -95,6 +96,8 @@ typedef struct
 static const char DEFAULT_SHIM_NAME[]       = "Sample File";
 static const char DEFAULT_SHIM_ID[]         = "http://bbc.co.uk/rd/as02/default-shim.txt";
 static const char DEFAULT_SHIM_ANNOTATION[] = "Default AS-02 shim";
+
+static const char DEFAULT_BEXT_ORIGINATOR[] = "bmx";
 
 static const uint32_t DEFAULT_RW_INTL_SIZE  = (64 * 1024);
 
@@ -258,6 +261,8 @@ static bool parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type
         *clip_type = CW_AVID_CLIP_TYPE;
     else if (strcmp(clip_type_str, "d10") == 0)
         *clip_type = CW_D10_CLIP_TYPE;
+    else if (strcmp(clip_type_str, "wave") == 0)
+        *clip_type = CW_WAVE_CLIP_TYPE;
     else
         return false;
 
@@ -282,9 +287,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -v | --version          Print version info\n");
     fprintf(stderr, "  -p                      Print progress percentage to stdout\n");
     fprintf(stderr, "  -l <file>               Log filename. Default log to stderr/stdout\n");
-    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10. Default is as02\n");
+    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, wave. Default is as02\n");
     fprintf(stderr, "* -o <name>               as02: <name> is a bundle name\n");
-    fprintf(stderr, "                          as11op1a/as11d10/op1a/d10: <name> is a filename\n");
+    fprintf(stderr, "                          as11op1a/as11d10/op1a/d10/wave: <name> is a filename\n");
     fprintf(stderr, "                          avid: <name> is a filename prefix\n");
     fprintf(stderr, "  --input-file-md5        Calculate an MD5 checksum of the input file\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Override input start timecode. Is drop frame when c is not ':'. Default 00:00:00:00\n");
@@ -356,6 +361,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --locator <position> <comment> <color>\n");
     fprintf(stderr, "                            Add locator at <position> with <comment> and <color>\n");
     fprintf(stderr, "                            <position> format is o?hh:mm:sscff, where the optional 'o' indicates it is an offset\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "  wave:\n");
+    fprintf(stderr, "    --orig <name>           Set originator in the Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
 }
 
 int main(int argc, const char** argv)
@@ -409,6 +417,7 @@ int main(int argc, const char** argv)
     uint32_t system_page_size = mxf_get_system_page_size();
     uint8_t d10_mute_sound_flags = 0;
     uint8_t d10_invalid_sound_flags = 0;
+    const char *originator = DEFAULT_BEXT_ORIGINATOR;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -933,6 +942,17 @@ int main(int argc, const char** argv)
             locators.push_back(locator);
             cmdln_index += 3;
         }
+        else if (strcmp(argv[cmdln_index], "--orig") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            originator = argv[cmdln_index + 1];
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--regtest") == 0)
         {
             BMX_REGRESSION_TEST = true;
@@ -1264,7 +1284,7 @@ int main(int argc, const char** argv)
         }
 
 
-        // choose number of samples to read in one go
+        // improve efficiency and read more than 1 sample if there is only sound
 
         uint32_t max_samples_per_read = 1;
         for (i = 0; i < reader->GetNumTrackReaders(); i++) {
@@ -1314,6 +1334,9 @@ int main(int argc, const char** argv)
                 break;
             case CW_D10_CLIP_TYPE:
                 clip = ClipWriter::OpenNewD10Clip(flavour, file_factory.OpenNew(output_name), frame_rate);
+                break;
+            case CW_WAVE_CLIP_TYPE:
+                clip = ClipWriter::OpenNewWaveClip(WaveFileIO::OpenNew(output_name));
                 break;
             case CW_UNKNOWN_CLIP_TYPE:
                 BMX_ASSERT(false);
@@ -1423,6 +1446,11 @@ int main(int argc, const char** argv)
 
             if (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR)
                 d10_clip->SetInputDuration(reader->GetReadDuration());
+        } else if (clip_type == CW_WAVE_CLIP_TYPE) {
+            WaveWriter *wave_clip = clip->GetWaveClip();
+
+            if (originator)
+                wave_clip->GetBroadcastAudioExtension()->SetOriginator(originator);
         }
 
 
@@ -1697,11 +1725,14 @@ int main(int argc, const char** argv)
         float next_progress_update;
         init_progress(&next_progress_update);
 
+        int64_t read_duration = reader->GetReadDuration();
+        int64_t total_read = 0;
         bmx::ByteArray sound_buffer;
-        while (output_duration < 0 || clip->GetDuration() < output_duration) {
+        while (total_read < read_duration) {
             uint32_t num_read = reader->Read(max_samples_per_read);
             if (num_read == 0)
                 break;
+            total_read += num_read;
 
             bool take_frame;
             for (i = 0; i < output_tracks.size(); i++) {
@@ -1750,11 +1781,13 @@ int main(int argc, const char** argv)
             }
 
             if (show_progress)
-                print_progress(clip->GetDuration(), output_duration, &next_progress_update);
-        }
+                print_progress(total_read, read_duration, &next_progress_update);
 
+            if (num_read < max_samples_per_read)
+                break;
+        }
         if (show_progress)
-            print_progress(clip->GetDuration(), output_duration, 0);
+            print_progress(total_read, read_duration, 0);
 
 
         // complete AS-11 descriptive metadata
@@ -1775,10 +1808,9 @@ int main(int argc, const char** argv)
                  get_generic_duration_string_2(clip->GetDuration(), clip->GetFrameRate()).c_str());
 
 
-        if (clip->GetDuration() != output_duration) {
-            log_error("Clip duration does not equal expected duration, %"PRId64" (%s)\n",
-                      output_duration,
-                      get_generic_duration_string_2(output_duration, clip->GetFrameRate()).c_str());
+        if (total_read != read_duration) {
+            log_error("Read less (%"PRId64") samples than expected (%"PRId64")\n",
+                      total_read, read_duration);
             throw false;
         }
 

@@ -579,7 +579,35 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\bmx\wave\WaveBEXT.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\bmx\wave\WaveFileIO.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\bmx\wave\WaveIO.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\include\bmx\mxf_helper\WaveMXFDescriptorHelper.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\bmx\wave\WaveReader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\bmx\wave\WaveTrackReader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\bmx\wave\WaveTrackWriter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\bmx\wave\WaveWriter.h"
 				>
 			</File>
 			<File
@@ -1001,7 +1029,35 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\wave\WaveBEXT.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\wave\WaveFileIO.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\wave\WaveIO.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\mxf_helper\WaveMXFDescriptorHelper.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\wave\WaveReader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\wave\WaveTrackReader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\wave\WaveTrackWriter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\wave\WaveWriter.h"
 				>
 			</File>
 			<File

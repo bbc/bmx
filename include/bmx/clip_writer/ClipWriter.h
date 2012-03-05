@@ -38,6 +38,7 @@
 #include <bmx/mxf_op1a/OP1AFile.h>
 #include <bmx/avid_mxf/AvidClip.h>
 #include <bmx/d10_mxf/D10File.h>
+#include <bmx/wave/WaveWriter.h>
 
 #include <bmx/clip_writer/ClipWriterTrack.h>
 
@@ -58,6 +59,7 @@ public:
     static ClipWriter* OpenNewAvidClip(Rational frame_rate, MXFFileFactory *file_factory, bool take_factory_ownership,
                                        std::string filename_prefix = "");
     static ClipWriter* OpenNewD10Clip(int flavour, mxfpp::File *file, Rational frame_rate);
+    static ClipWriter* OpenNewWaveClip(WaveIO *file);
 
     static std::string ClipWriterTypeToString(ClipWriterType clip_type);
 
@@ -67,6 +69,7 @@ public:
     ClipWriter(OP1AFile *clip);
     ClipWriter(AvidClip *clip);
     ClipWriter(D10File *clip);
+    ClipWriter(WaveWriter *clip);
     ~ClipWriter();
 
     void SetClipName(std::string name);                             // default ""
@@ -93,11 +96,12 @@ public:
 public:
     ClipWriterType GetType() const { return mType; }
 
-    AS02Clip* GetAS02Clip() const { return mAS02Clip; }
-    AS11Clip* GetAS11Clip() const { return mAS11Clip; }
-    OP1AFile* GetOP1AClip() const { return mOP1AClip; }
-    AvidClip* GetAvidClip() const { return mAvidClip; }
-    D10File* GetD10Clip()   const { return mD10Clip; }
+    AS02Clip* GetAS02Clip()   const { return mAS02Clip; }
+    AS11Clip* GetAS11Clip()   const { return mAS11Clip; }
+    OP1AFile* GetOP1AClip()   const { return mOP1AClip; }
+    AvidClip* GetAvidClip()   const { return mAvidClip; }
+    D10File* GetD10Clip()     const { return mD10Clip; }
+    WaveWriter* GetWaveClip() const { return mWaveClip; }
 
 private:
     ClipWriterType mType;
@@ -107,6 +111,7 @@ private:
     OP1AFile *mOP1AClip;
     AvidClip *mAvidClip;
     D10File *mD10Clip;
+    WaveWriter *mWaveClip;
 
     std::vector<ClipWriterTrack*> mTracks;
 };

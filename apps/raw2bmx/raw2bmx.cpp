@@ -53,6 +53,8 @@
 #include <bmx/essence_parser/MJPEGEssenceParser.h>
 #include <bmx/essence_parser/VC3EssenceParser.h>
 #include <bmx/essence_parser/RawEssenceReader.h>
+#include <bmx/wave/WaveFileIO.h>
+#include <bmx/wave/WaveReader.h>
 #include <bmx/URI.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Version.h>
@@ -90,6 +92,7 @@ typedef struct
     ClipWriterType clip_type;
     EssenceTypeGroup essence_type_group;
     EssenceType essence_type;
+    bool is_wave;
 
     ClipWriterTrack *track;
 
@@ -101,6 +104,9 @@ typedef struct
     int64_t output_end_offset;
 
     RawEssenceReader *raw_reader;
+    WaveReader *wave_reader;
+    uint32_t wave_track_index;
+
     uint32_t sample_sequence[32];
     size_t sample_sequence_size;
     size_t sample_sequence_offset;
@@ -132,17 +138,42 @@ static const char DEFAULT_SHIM_NAME[]       = "Sample File";
 static const char DEFAULT_SHIM_ID[]         = "http://bbc.co.uk/rd/as02/default-shim.txt";
 static const char DEFAULT_SHIM_ANNOTATION[] = "Default AS-02 shim";
 
+static const char DEFAULT_BEXT_ORIGINATOR[] = "bmx";
+
+static const Rational DEFAULT_SAMPLING_RATE = SAMPLING_RATE_48K;
+
 
 extern bool BMX_REGRESSION_TEST;
 
 
 
-static bool read_samples(RawInput *input)
+static uint32_t read_samples(RawInput *input, uint32_t max_samples_per_read)
 {
-    uint32_t num_samples = input->sample_sequence[input->sample_sequence_offset];
-    input->sample_sequence_offset = (input->sample_sequence_offset + 1) % input->sample_sequence_size;
+    if (max_samples_per_read == 1) {
+        uint32_t num_frame_samples = input->sample_sequence[input->sample_sequence_offset];
+        input->sample_sequence_offset = (input->sample_sequence_offset + 1) % input->sample_sequence_size;
 
-    return input->raw_reader->ReadSamples(num_samples) == num_samples;
+        if (input->raw_reader) {
+            return (input->raw_reader->ReadSamples(num_frame_samples) == num_frame_samples ? 1 : 0);
+        } else {
+            Frame *last_frame = input->wave_reader->GetTrack(input->wave_track_index)->GetFrameBuffer()->GetLastFrame(false);
+            if (last_frame)
+                return (last_frame->num_samples == num_frame_samples ? 1 : 0);
+            else
+                return (input->wave_reader->Read(num_frame_samples) == num_frame_samples ? 1 : 0);
+        }
+    } else {
+        BMX_ASSERT(input->sample_sequence_size == 1 && input->sample_sequence[0] == 1);
+        if (input->raw_reader) {
+            return input->raw_reader->ReadSamples(max_samples_per_read);
+        } else {
+            Frame *last_frame = input->wave_reader->GetTrack(input->wave_track_index)->GetFrameBuffer()->GetLastFrame(false);
+            if (last_frame)
+                return last_frame->num_samples;
+            else
+                return input->wave_reader->Read(max_samples_per_read);
+        }
+    }
 }
 
 static bool open_raw_reader(RawInput *input)
@@ -179,19 +210,46 @@ static bool open_raw_reader(RawInput *input)
     return true;
 }
 
+static bool open_wave_reader(RawInput *input)
+{
+    BMX_ASSERT(!input->wave_reader);
+
+    WaveFileIO *wave_file = WaveFileIO::OpenRead(input->filename);
+    if (!wave_file) {
+        log_error("Failed to open wave file '%s'\n", input->filename);
+        return false;
+    }
+
+    input->wave_reader = WaveReader::Open(wave_file, true);
+    if (!input->wave_reader) {
+        log_error("Failed to parse wave file '%s'\n", input->filename);
+        return false;
+    }
+
+    return true;
+}
+
 static void init_input(RawInput *input)
 {
     memset(input, 0, sizeof(*input));
     input->aspect_ratio = ASPECT_RATIO_16_9;
     input->aspect_ratio_set = false;
-    input->sampling_rate = SAMPLING_RATE_48K;
+    input->sampling_rate = DEFAULT_SAMPLING_RATE;
     input->component_depth = 8;
     input->audio_quant_bits = 16;
+}
+
+static void copy_input(const RawInput *from, RawInput *to)
+{
+    memcpy(to, from, sizeof(*to));
+    to->track = 0;
 }
 
 static void clear_input(RawInput *input)
 {
     delete input->raw_reader;
+    if (input->wave_track_index == 0)
+        delete input->wave_reader;
 }
 
 static bool parse_mic_type(const char *mic_type_str, MICType *mic_type)
@@ -220,6 +278,8 @@ static bool parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type
         *clip_type = CW_AVID_CLIP_TYPE;
     else if (strcmp(clip_type_str, "d10") == 0)
         *clip_type = CW_D10_CLIP_TYPE;
+    else if (strcmp(clip_type_str, "wave") == 0)
+        *clip_type = CW_WAVE_CLIP_TYPE;
     else
         return false;
 
@@ -243,9 +303,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -h | --help             Show usage and exit\n");
     fprintf(stderr, "  -v | --version          Print version info\n");
     fprintf(stderr, "  -l <file>               Log filename. Default log to stderr/stdout\n");
-    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10. Default is as02\n");
+    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, wave. Default is as02\n");
     fprintf(stderr, "* -o <name>               as02: <name> is a bundle name\n");
-    fprintf(stderr, "                          as11op1a/as11d10/op1a/d10: <name> is a filename\n");
+    fprintf(stderr, "                          as11op1a/as11d10/op1a/d10/wave: <name> is a filename\n");
     fprintf(stderr, "                          avid: <name> is a filename prefix\n");
     fprintf(stderr, "  -f <rate>               Frame rate: 23976 (24000/1001), 24, 25, 2997 (30000/1001), 50 or 5994 (60000/1001). Default parsed or 25\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Start timecode. Is drop frame when c is not ':'. Default 00:00:00:00\n");
@@ -302,12 +362,16 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            Add locator at <position> with <comment> and <color>\n");
     fprintf(stderr, "                            <position> format is o?hh:mm:sscff, where the optional 'o' indicates it is an offset\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "  wave:\n");
+    fprintf(stderr, "    --orig <name>           Set originator in the output Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
+    fprintf(stderr, "\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Input Options (must precede the input to which it applies):\n");
     fprintf(stderr, "  -a <n:d>                Image aspect ratio. Either 4:3 or 16:9. Default parsed or 16:9\n");
     fprintf(stderr, "  --afd <value>           Active Format Descriptor code. Default not set\n");
     fprintf(stderr, "  -c <depth>              Component depth for uncompressed/DV100 video. Either 8 or 10. Default parsed or 8\n");
     fprintf(stderr, "  --height                Height of input uncompressed video data. Default is the production aperture height, except for PAL (592) and NTSC (496)\n");
+    fprintf(stderr, "  -s <bps>                Audio sampling rate numerator. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);
     fprintf(stderr, "  -q <bps>                Audio quantization bits per sample. Either 16 or 24. Default 16\n");
     fprintf(stderr, "  --locked <bool>         Indicate whether the number of audio samples is locked to the video. Either true or false. Default not set\n");
     fprintf(stderr, "  --audio-ref <level>     Audio reference level, number of dBm for 0VU. Default not set\n");
@@ -374,6 +438,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --vc3_720p_1252 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps input file\n");
     fprintf(stderr, "  --vc3_1080p_1253 <name> Raw VC3/DNxHD 1920x1080p 45/36 Mbps input file\n");
     fprintf(stderr, "  --pcm <name>            Raw PCM audio input file\n");
+    fprintf(stderr, "  --wave <name>           Wave PCM audio input file\n");
 }
 
 int main(int argc, const char** argv)
@@ -412,6 +477,7 @@ int main(int argc, const char** argv)
     bool file_md5 = false;
     uint8_t d10_mute_sound_flags = 0;
     uint8_t d10_invalid_sound_flags = 0;
+    const char *originator = DEFAULT_BEXT_ORIGINATOR;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -827,6 +893,17 @@ int main(int argc, const char** argv)
             locators.push_back(locator);
             cmdln_index += 3;
         }
+        else if (strcmp(argv[cmdln_index], "--orig") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            originator = argv[cmdln_index + 1];
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--regtest") == 0)
         {
             BMX_REGRESSION_TEST = true;
@@ -915,6 +992,25 @@ int main(int argc, const char** argv)
                 return 1;
             }
             input.input_height = value;
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "-s") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1 && uvalue > 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            input.sampling_rate.numerator = uvalue;
+            input.sampling_rate.denominator = 1;
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -1710,6 +1806,20 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--wave") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = WAVE_PCM;
+            input.is_wave = true;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else
         {
             break;
@@ -1789,6 +1899,32 @@ int main(int argc, const char** argv)
             RawInput *input = &inputs[i];
 
             input->clip_type = clip_type;
+
+            if (input->is_wave) {
+                if (!open_wave_reader(input))
+                    throw false;
+                BMX_ASSERT(input->wave_reader->GetNumTracks() > 0);
+
+                input->wave_track_index = 0;
+                input->sampling_rate = input->wave_reader->GetSamplingRate();
+                input->audio_quant_bits = input->wave_reader->GetQuantizationBits();
+
+                if (input->wave_reader->GetNumTracks() > 1) {
+                    vector<RawInput> additional_inputs;
+                    uint32_t j;
+                    for (j = 1; j < input->wave_reader->GetNumTracks(); j++) {
+                        RawInput new_input;
+                        copy_input(input, &new_input);
+                        new_input.wave_track_index = j;
+                        additional_inputs.push_back(new_input);
+                    }
+                    inputs.insert(inputs.begin() + i + 1, additional_inputs.begin(), additional_inputs.end());
+                }
+
+                i += input->wave_reader->GetNumTracks() - 1;
+                continue;
+            }
+
 
             // TODO: require parse friendly essence data in regression test for all formats
             if (BMX_REGRESSION_TEST) {
@@ -2087,6 +2223,8 @@ int main(int argc, const char** argv)
 
 
         // check support for essence type and frame/sampling rates
+
+        bool have_picture = false;
         for (i = 0; i < inputs.size(); i++) {
             RawInput *input = &inputs[i];
             if (input->essence_type == WAVE_PCM) {
@@ -2103,11 +2241,20 @@ int main(int argc, const char** argv)
                               ClipWriter::ClipWriterTypeToString(input->clip_type).c_str());
                     throw false;
                 }
+                have_picture = true;
             }
         }
 
 
+        // improve efficiency and read more than 1 sample if there is only sound
+
+        uint32_t max_samples_per_read = 1;
+        if (!have_picture)
+            max_samples_per_read = 1920;
+
+
         // create clip
+
         int flavour = 0;
         if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_OP1A_CLIP_TYPE) {
             flavour = OP1A_DEFAULT_FLAVOUR;
@@ -2140,6 +2287,9 @@ int main(int argc, const char** argv)
                 break;
             case CW_D10_CLIP_TYPE:
                 clip = ClipWriter::OpenNewD10Clip(flavour, file_factory.OpenNew(output_name), frame_rate);
+                break;
+            case CW_WAVE_CLIP_TYPE:
+                clip = ClipWriter::OpenNewWaveClip(WaveFileIO::OpenNew(output_name));
                 break;
             case CW_UNKNOWN_CLIP_TYPE:
                 BMX_ASSERT(false);
@@ -2236,6 +2386,11 @@ int main(int argc, const char** argv)
 
             d10_clip->SetMuteSoundFlags(d10_mute_sound_flags);
             d10_clip->SetInvalidSoundFlags(d10_invalid_sound_flags);
+        } else if (clip_type == CW_WAVE_CLIP_TYPE) {
+            WaveWriter *wave_clip = clip->GetWaveClip();
+
+            if (originator)
+                wave_clip->GetBroadcastAudioExtension()->SetOriginator(originator);
         }
 
 
@@ -2249,7 +2404,7 @@ int main(int argc, const char** argv)
 
             // open raw file reader
 
-            if (!open_raw_reader(input))
+            if (!input->is_wave && !open_raw_reader(input))
                 throw false;
 
             bool is_picture = (input->essence_type != WAVE_PCM);
@@ -2501,7 +2656,8 @@ int main(int argc, const char** argv)
                     memcpy(input->sample_sequence, &shifted_sample_sequence[0],
                            shifted_sample_sequence.size() * sizeof(uint32_t));
                     input->sample_sequence_size = shifted_sample_sequence.size();
-                    input->raw_reader->SetFixedSampleSize(input->track->GetSampleSize());
+                    if (input->raw_reader)
+                        input->raw_reader->SetFixedSampleSize(input->track->GetSampleSize());
                     break;
                 }
                 case D10_AES3_PCM:
@@ -2532,23 +2688,49 @@ int main(int argc, const char** argv)
         clip->PrepareWrite();
 
         // write samples
-        while (duration < 0 || clip->GetDuration() < duration) {
+        int64_t total_read = 0;
+        while (duration < 0 || total_read < duration) {
             // read samples into input buffers first to ensure the frame data is available for all tracks
+            uint32_t min_num_samples = max_samples_per_read;
+            uint32_t num_samples;
             for (i = 0; i < inputs.size(); i++) {
-                RawInput *input = &inputs[i];
-                if (!read_samples(input))
-                    break;
+                num_samples = read_samples(&inputs[i], max_samples_per_read);
+                if (num_samples < min_num_samples) {
+                    min_num_samples = num_samples;
+                    if (min_num_samples == 0)
+                        break;
+                }
             }
-            if (i != inputs.size())
+            if (min_num_samples == 0)
                 break;
+            BMX_ASSERT(min_num_samples == max_samples_per_read || !have_picture);
+            total_read += min_num_samples;
 
             // write samples from input buffers
             for (i = 0; i < inputs.size(); i++) {
                 RawInput *input = &inputs[i];
-                input->track->WriteSamples(input->raw_reader->GetSampleData(),
-                                           input->raw_reader->GetSampleDataSize(),
-                                           input->raw_reader->GetNumSamples());
+                if (input->raw_reader) {
+                    num_samples = input->raw_reader->GetNumSamples();
+                    if (!have_picture && num_samples > min_num_samples)
+                        num_samples = min_num_samples;
+                    input->track->WriteSamples(input->raw_reader->GetSampleData(),
+                                               input->raw_reader->GetSampleDataSize(),
+                                               num_samples);
+                } else {
+                    Frame *frame = input->wave_reader->GetTrack(input->wave_track_index)->GetFrameBuffer()->GetLastFrame(true);
+                    BMX_ASSERT(frame);
+                    num_samples = frame->num_samples;
+                    if (!have_picture && num_samples > min_num_samples)
+                        num_samples = min_num_samples;
+                    input->track->WriteSamples(frame->GetBytes(),
+                                               frame->GetSize(),
+                                               num_samples);
+                    delete frame;
+                }
             }
+
+            if (min_num_samples < max_samples_per_read)
+                break;
         }
 
 

@@ -82,6 +82,8 @@ bool ClipWriterTrack::IsSupported(ClipWriterType clip_type, EssenceType essence_
             return AvidTrack::IsSupported(essence_type, sample_rate);
         case CW_D10_CLIP_TYPE:
             return D10Track::IsSupported(essence_type, sample_rate);
+        case CW_WAVE_CLIP_TYPE:
+            return essence_type == WAVE_PCM;
         case CW_UNKNOWN_CLIP_TYPE:
             break;
     }
@@ -98,6 +100,7 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AS02Track *track)
     mOP1ATrack = 0;
     mAvidTrack = 0;
     mD10Track = 0;
+    mWaveTrack = 0;
 }
 
 ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AS11Track *track)
@@ -112,6 +115,7 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AS11Track *track)
     mOP1ATrack = 0;
     mAvidTrack = 0;
     mD10Track = 0;
+    mWaveTrack = 0;
 }
 
 ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, OP1ATrack *track)
@@ -123,6 +127,7 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, OP1ATrack *track)
     mOP1ATrack = track;
     mAvidTrack = 0;
     mD10Track = 0;
+    mWaveTrack = 0;
 }
 
 ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AvidTrack *track)
@@ -134,6 +139,7 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AvidTrack *track)
     mOP1ATrack = 0;
     mAvidTrack = track;
     mD10Track = 0;
+    mWaveTrack = 0;
 }
 
 ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, D10Track *track)
@@ -145,6 +151,19 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, D10Track *track)
     mOP1ATrack = 0;
     mAvidTrack = 0;
     mD10Track = track;
+    mWaveTrack = 0;
+}
+
+ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, WaveTrackWriter *track)
+{
+    mClipType = CW_WAVE_CLIP_TYPE;
+    mEssenceType = essence_type;
+    mAS02Track = 0;
+    mAS11Track = 0;
+    mOP1ATrack = 0;
+    mAvidTrack = 0;
+    mD10Track = 0;
+    mWaveTrack = track;
 }
 
 ClipWriterTrack::~ClipWriterTrack()
@@ -170,6 +189,9 @@ void ClipWriterTrack::SetOutputTrackNumber(uint32_t track_number)
             break;
         case CW_D10_CLIP_TYPE:
             mD10Track->SetOutputTrackNumber(track_number);
+            break;
+        case CW_WAVE_CLIP_TYPE:
+            // TODO
             break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
@@ -215,6 +237,8 @@ void ClipWriterTrack::SetAspectRatio(Rational aspect_ratio)
                 mpeg_track->SetAspectRatio(aspect_ratio);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -259,6 +283,7 @@ void ClipWriterTrack::SetComponentDepth(uint32_t depth)
             break;
         }
         case CW_D10_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
@@ -304,6 +329,8 @@ void ClipWriterTrack::SetSampleSize(uint32_t size)
                 mpeg_track->SetSampleSize(size);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -405,6 +432,7 @@ void ClipWriterTrack::SetAVCIMode(AVCIMode mode)
             break;
         }
         case CW_D10_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
@@ -444,6 +472,7 @@ void ClipWriterTrack::SetAVCIHeader(const unsigned char *data, uint32_t size)
             break;
         }
         case CW_D10_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
@@ -484,6 +513,8 @@ void ClipWriterTrack::SetAFD(uint8_t afd)
                 mpeg_track->SetAFD(afd);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -507,6 +538,8 @@ void ClipWriterTrack::SetInputHeight(uint32_t height)
                 unc_track->SetInputHeight(height);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -551,6 +584,9 @@ void ClipWriterTrack::SetSamplingRate(Rational sampling_rate)
                 pcm_track->SetSamplingRate(sampling_rate);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            mWaveTrack->SetSamplingRate(sampling_rate);
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -595,6 +631,9 @@ void ClipWriterTrack::SetQuantizationBits(uint32_t bits)
                 pcm_track->SetQuantizationBits(bits);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            mWaveTrack->SetQuantizationBits(bits);
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -639,6 +678,9 @@ void ClipWriterTrack::SetChannelCount(uint32_t count)
                 pcm_track->SetChannelCount(count);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            mWaveTrack->SetChannelCount(count);
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -683,6 +725,8 @@ void ClipWriterTrack::SetLocked(bool locked)
                 pcm_track->SetLocked(locked);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -727,6 +771,8 @@ void ClipWriterTrack::SetAudioRefLevel(int8_t level)
                 pcm_track->SetAudioRefLevel(level);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -771,6 +817,8 @@ void ClipWriterTrack::SetDialNorm(int8_t dial_norm)
                 pcm_track->SetDialNorm(dial_norm);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -812,6 +860,8 @@ void ClipWriterTrack::SetSequenceOffset(uint8_t offset)
                 pcm_track->SetSequenceOffset(offset);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -838,6 +888,9 @@ void ClipWriterTrack::WriteSamples(const unsigned char *data, uint32_t size, uin
         case CW_D10_CLIP_TYPE:
             mD10Track->WriteSamples(data, size, num_samples);
             break;
+        case CW_WAVE_CLIP_TYPE:
+            mWaveTrack->WriteSamples(data, size, num_samples);
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -859,6 +912,8 @@ bool ClipWriterTrack::IsPicture() const
             return mAvidTrack->IsPicture();
         case CW_D10_CLIP_TYPE:
             return mD10Track->IsPicture();
+        case CW_WAVE_CLIP_TYPE:
+            return false;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -882,6 +937,8 @@ uint32_t ClipWriterTrack::GetSampleSize() const
             return mAvidTrack->GetSampleSize();
         case CW_D10_CLIP_TYPE:
             return mD10Track->GetSampleSize();
+        case CW_WAVE_CLIP_TYPE:
+            return mWaveTrack->GetSampleSize();
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -939,6 +996,7 @@ uint32_t ClipWriterTrack::GetAVCISampleWithoutHeaderSize() const
             break;
         }
         case CW_D10_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
@@ -965,6 +1023,8 @@ bool ClipWriterTrack::IsSingleField() const
                 return mjpeg_track->IsSingleField();
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
@@ -1008,11 +1068,13 @@ vector<uint32_t> ClipWriterTrack::GetShiftedSampleSequence() const
                 return pcm_track->GetShiftedSampleSequence();
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
     }
 
-    return vector<uint32_t>(1);
+    return vector<uint32_t>(1, 1);
 }
 

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check_read.sh wave_read
+
