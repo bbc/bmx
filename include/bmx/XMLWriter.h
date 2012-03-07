@@ -127,7 +127,6 @@ private:
     void WriteIndent(int level);
 
     void Write(const std::string &data);
-    void Write(const char *data);
     void Write(const char *data, size_t len);
 
 private:

@@ -544,16 +544,12 @@ void XMLWriter::WriteIndent(int level)
 
 void XMLWriter::Write(const string &data)
 {
-    fwrite(data.c_str(), 1, data.size(), mXMLFile);
-}
-
-void XMLWriter::Write(const char *data)
-{
-    fwrite(data, 1, strlen(data), mXMLFile);
+    Write(data.c_str(), data.size());
 }
 
 void XMLWriter::Write(const char *data, size_t len)
 {
-    fwrite(data, 1, len, mXMLFile);
+    if (fwrite(data, 1, len, mXMLFile) != len)
+        log_error("XML fwrite failed: %s\n", strerror(errno));
 }
 
