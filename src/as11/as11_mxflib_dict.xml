@@ -80,12 +80,12 @@
                 <No                   value="1"/>
                 <SignerOnly           value="2"/>
             </SigningPresentType>
-            <3DTypeType           type="UInt8">
+            <ThreeDTypeType           type="UInt8">
                 <SideBySide           value="0"/>
                 <Dual                 value="1"/>
                 <LeftEyeOnly          value="2"/>
                 <RightEyeOnly         value="3"/>
-            </3DTypeType>
+            </ThreeDTypeType>
             <AudioLoudStdType     type="UInt8">
                 <None                 value="0"/>
                 <EBU_R128             value="1"/>
@@ -133,8 +133,8 @@
         <Genre                      type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 07 00"/>
         <Distributor                type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 08 00"/>
         <PictureRatio               type="Rational"           use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 09 00"/>
-        <3D                         type="Boolean"            use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0a 00"/>
-        <3DType                     type="3DTypeType"         use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0b 00"/>
+        <ThreeD                     type="Boolean"            use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0a 00"/>
+        <ThreeDType                 type="ThreeDTypeType"     use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0b 00"/>
         <ProductPlacement           type="Boolean"            use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0c 00"/>
         <FPAPass                    type="FPAPassType"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0d 00"/>
         <FPAManufacturer            type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0e 00"/>
