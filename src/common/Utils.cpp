@@ -192,6 +192,16 @@ bool bmx::get_sample_sequence(Rational lower_edit_rate, Rational higher_edit_rat
     return !sample_sequence->empty();
 }
 
+int64_t bmx::get_sequence_size(const std::vector<uint32_t> &sequence)
+{
+    int64_t size = 0;
+    size_t i;
+    for (i = 0; i < sequence.size(); i++)
+        size += sequence[i];
+
+    return size;
+}
+
 void bmx::offset_sample_sequence(vector<uint32_t> &sample_sequence, uint8_t offset)
 {
     rotate(sample_sequence.begin(),
@@ -199,8 +209,13 @@ void bmx::offset_sample_sequence(vector<uint32_t> &sample_sequence, uint8_t offs
            sample_sequence.end());
 }
 
-int64_t bmx::convert_position_lower(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size)
+int64_t bmx::convert_position_lower(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size_in)
 {
+    int64_t sequence_size = sequence_size_in;
+    if (sequence_size <= 0)
+        sequence_size = get_sequence_size(sequence);
+    BMX_ASSERT(sequence_size > 0);
+
     int64_t lower_position = position / sequence_size * sequence.size();
 
     if (position >= 0) {
@@ -227,8 +242,13 @@ int64_t bmx::convert_position_lower(int64_t position, const std::vector<uint32_t
     return lower_position;
 }
 
-int64_t bmx::convert_position_higher(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size)
+int64_t bmx::convert_position_higher(int64_t position, const std::vector<uint32_t> &sequence, int64_t sequence_size_in)
 {
+    int64_t sequence_size = sequence_size_in;
+    if (sequence_size <= 0)
+        sequence_size = get_sequence_size(sequence);
+    BMX_ASSERT(sequence_size > 0);
+
     int64_t higher_position = position / sequence.size() * sequence_size;
 
     if (position >= 0) {
@@ -246,10 +266,15 @@ int64_t bmx::convert_position_higher(int64_t position, const std::vector<uint32_
     return higher_position;
 }
 
-int64_t bmx::convert_duration_lower(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size)
+int64_t bmx::convert_duration_lower(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size_in)
 {
     if (duration <= 0)
         return 0;
+
+    int64_t sequence_size = sequence_size_in;
+    if (sequence_size <= 0)
+        sequence_size = get_sequence_size(sequence);
+    BMX_ASSERT(sequence_size > 0);
 
     int64_t lower_duration = duration / sequence_size * sequence.size();
 
@@ -267,10 +292,15 @@ int64_t bmx::convert_duration_lower(int64_t duration, const std::vector<uint32_t
 }
 
 int64_t bmx::convert_duration_lower(int64_t duration, int64_t position, const std::vector<uint32_t> &sequence,
-                                    int64_t sequence_size)
+                                    int64_t sequence_size_in)
 {
     if (duration <= 0)
         return 0;
+
+    int64_t sequence_size = sequence_size_in;
+    if (sequence_size <= 0)
+        sequence_size = get_sequence_size(sequence);
+    BMX_ASSERT(sequence_size > 0);
 
     int64_t lower_position = convert_position_lower(position, sequence, sequence_size);
     int64_t round_up_position = convert_position_higher(lower_position, sequence, sequence_size);
@@ -301,10 +331,15 @@ int64_t bmx::convert_duration_lower(int64_t duration, int64_t position, const st
     return lower_duration;
 }
 
-int64_t bmx::convert_duration_higher(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size)
+int64_t bmx::convert_duration_higher(int64_t duration, const std::vector<uint32_t> &sequence, int64_t sequence_size_in)
 {
     if (duration <= 0)
         return 0;
+
+    int64_t sequence_size = sequence_size_in;
+    if (sequence_size <= 0)
+        sequence_size = get_sequence_size(sequence);
+    BMX_ASSERT(sequence_size > 0);
 
     int64_t higher_duration = duration / sequence.size() * sequence_size;
 
@@ -317,10 +352,15 @@ int64_t bmx::convert_duration_higher(int64_t duration, const std::vector<uint32_
 }
 
 int64_t bmx::convert_duration_higher(int64_t duration, int64_t position, const std::vector<uint32_t> &sequence,
-                                     int64_t sequence_size)
+                                     int64_t sequence_size_in)
 {
     if (duration <= 0)
         return 0;
+
+    int64_t sequence_size = sequence_size_in;
+    if (sequence_size <= 0)
+        sequence_size = get_sequence_size(sequence);
+    BMX_ASSERT(sequence_size > 0);
 
     int64_t higher_duration = duration / sequence.size() * sequence_size;
 

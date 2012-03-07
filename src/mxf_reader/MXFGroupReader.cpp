@@ -167,12 +167,7 @@ bool MXFGroupReader::Finalize()
             }
 
             mSampleSequences.push_back(sample_sequence);
-
-            int64_t sequence_size = 0;
-            size_t j;
-            for (j = 0; j < sample_sequence.size(); j++)
-                sequence_size += sample_sequence[j];
-            mSampleSequenceSizes.push_back(sequence_size);
+            mSampleSequenceSizes.push_back(get_sequence_size(sample_sequence));
         }
 
 

@@ -337,12 +337,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
             }
 
             mExternalSampleSequences.push_back(sample_sequence);
-
-            int64_t sequence_size = 0;
-            size_t j;
-            for (j = 0; j < sample_sequence.size(); j++)
-                sequence_size += sample_sequence[j];
-            mExternalSampleSequenceSizes.push_back(sequence_size);
+            mExternalSampleSequenceSizes.push_back(get_sequence_size(sample_sequence));
         }
 
         // clip duration is the minimum duration (tracks should really have equal duration)

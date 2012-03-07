@@ -147,10 +147,8 @@ int64_t AS02PCMTrack::GetOutputDuration(bool clip_frame_rate) const
     if (mContainerDuration - mOutputStartOffset + mOutputEndOffset <= 0)
         return 0;
 
-    if (clip_frame_rate) {
-        return convert_duration_lower(mContainerDuration - mOutputStartOffset + mOutputEndOffset,
-                                      mSampleSequence, mSampleSequence.size());
-    }
+    if (clip_frame_rate)
+        return convert_duration_lower(mContainerDuration - mOutputStartOffset + mOutputEndOffset, mSampleSequence);
 
     return mContainerDuration - mOutputStartOffset + mOutputEndOffset;
 }
