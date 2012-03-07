@@ -65,6 +65,8 @@ public:
 
     virtual int64_t GetOutputDuration(bool clip_frame_rate) const;
 
+    virtual int64_t ConvertClipDuration(int64_t clip_duration) const;
+
 protected:
     virtual void PreSampleWriting();
     virtual void PostSampleWriting(mxfpp::Partition *partition);

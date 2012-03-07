@@ -1296,6 +1296,7 @@ int main(int argc, const char** argv)
                 break;
             }
         }
+        BMX_ASSERT(max_samples_per_read == 1 || (precharge == 0 && rollout == 0));
 
 
         // create output clip and initialize
@@ -1523,10 +1524,6 @@ int main(int argc, const char** argv)
                     as02_track->SetMICType(mic_type);
                     as02_track->SetMICScope(ess_component_mic_scope);
 
-                    as02_track->SetOutputStartOffset(- reader->GetTrackPrecharge(i, read_start, precharge));
-                    as02_track->SetOutputEndOffset(- reader->GetTrackRollout(i, read_start + output_duration - 1,
-                                                                             rollout));
-
                     AS02PictureTrack *as02_pict_track = dynamic_cast<AS02PictureTrack*>(as02_track);
                     if (as02_pict_track)
                         as02_pict_track->SetPartitionInterval(partition_interval);
@@ -1727,12 +1724,28 @@ int main(int argc, const char** argv)
 
         int64_t read_duration = reader->GetReadDuration();
         int64_t total_read = 0;
+        int64_t duration_at_precharge_end = -1;
+        int64_t duration_at_rollout_start = -1;
+        int64_t container_duration;
+        int64_t prev_container_duration = -1;
         bmx::ByteArray sound_buffer;
         while (total_read < read_duration) {
             uint32_t num_read = reader->Read(max_samples_per_read);
             if (num_read == 0)
                 break;
-            total_read += num_read;
+
+            if (clip_type == CW_AS02_CLIP_TYPE && (precharge || rollout)) {
+                container_duration = clip->GetDuration();
+                if (total_read == - precharge)
+                    duration_at_precharge_end = container_duration;
+                if (total_read == read_duration - rollout) {
+                    duration_at_rollout_start = container_duration;
+                    // roundup for rollout
+                    if (container_duration == prev_container_duration)
+                        duration_at_rollout_start++;
+                }
+                prev_container_duration = container_duration;
+            }
 
             bool take_frame;
             for (i = 0; i < output_tracks.size(); i++) {
@@ -1780,6 +1793,8 @@ int main(int argc, const char** argv)
                     delete frame;
             }
 
+            total_read += num_read;
+
             if (show_progress)
                 print_progress(total_read, read_duration, &next_progress_update);
 
@@ -1788,6 +1803,26 @@ int main(int argc, const char** argv)
         }
         if (show_progress)
             print_progress(total_read, read_duration, 0);
+
+
+        // set precharge and rollout for non-interleaved clip types
+
+        if (clip_type == CW_AS02_CLIP_TYPE && (precharge || rollout)) {
+            for (i = 0; i < output_tracks.size(); i++) {
+                OutputTrack &output_track = output_tracks[i];
+                AS02Track *as02_track = output_track.track->GetAS02Track();
+                int64_t container_duration = as02_track->GetContainerDuration();
+
+                if (duration_at_precharge_end >= 0)
+                    as02_track->SetOutputStartOffset(as02_track->ConvertClipDuration(duration_at_precharge_end));
+                if (duration_at_rollout_start >= 0) {
+                    int64_t end_offset = as02_track->ConvertClipDuration(duration_at_rollout_start) - container_duration;
+                    if (end_offset < 0)
+                        as02_track->SetOutputEndOffset(end_offset);
+                    // note that end_offset could be > 0 if rounded up and there was a last incomplete frame
+                }
+            }
+        }
 
 
         // complete AS-11 descriptive metadata

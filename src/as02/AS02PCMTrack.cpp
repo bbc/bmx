@@ -153,6 +153,11 @@ int64_t AS02PCMTrack::GetOutputDuration(bool clip_frame_rate) const
     return mContainerDuration - mOutputStartOffset + mOutputEndOffset;
 }
 
+int64_t AS02PCMTrack::ConvertClipDuration(int64_t clip_duration) const
+{
+    return convert_duration_higher(clip_duration, mSampleSequence);
+}
+
 void AS02PCMTrack::PreSampleWriting()
 {
     mEssenceDataStartPos = mMXFFile->tell(); // need this position when we re-write the key

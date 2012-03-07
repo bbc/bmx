@@ -499,6 +499,12 @@ int64_t AS02Track::GetContainerDuration() const
     return mContainerDuration;
 }
 
+int64_t AS02Track::ConvertClipDuration(int64_t clip_duration) const
+{
+    BMX_ASSERT(mClip->mClipFrameRate == GetSampleRate());
+    return clip_duration;
+}
+
 mxfRational& AS02Track::GetClipFrameRate() const
 {
     return mClip->mClipFrameRate;

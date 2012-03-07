@@ -93,6 +93,8 @@ public:
     int64_t GetDuration() const;
     int64_t GetContainerDuration() const;
 
+    virtual int64_t ConvertClipDuration(int64_t clip_duration) const;
+
 protected:
     AS02Track(AS02Clip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *mxf_file,
               std::string rel_uri);
