@@ -4,7 +4,7 @@ Originator: Maverick Productions
 CopyrightYear: 2011
 Distributor: Rick Distributors
 PictureRatio: 16/9
-3D: false
+ThreeD: false
 ProductPlacement: true
 FPAPass: 1
 FPAManufacturer: Harding
