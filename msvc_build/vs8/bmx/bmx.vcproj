@@ -1029,15 +1029,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\wave\WaveBEXT.h"
+				RelativePath="..\..\..\src\wave\WaveBEXT.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\wave\WaveFileIO.h"
+				RelativePath="..\..\..\src\wave\WaveFileIO.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\wave\WaveIO.h"
+				RelativePath="..\..\..\src\wave\WaveIO.cpp"
 				>
 			</File>
 			<File
@@ -1045,19 +1045,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\wave\WaveReader.h"
+				RelativePath="..\..\..\src\wave\WaveReader.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\wave\WaveTrackReader.h"
+				RelativePath="..\..\..\src\wave\WaveTrackReader.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\wave\WaveTrackWriter.h"
+				RelativePath="..\..\..\src\wave\WaveTrackWriter.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\wave\WaveWriter.h"
+				RelativePath="..\..\..\src\wave\WaveWriter.cpp"
 				>
 			</File>
 			<File
