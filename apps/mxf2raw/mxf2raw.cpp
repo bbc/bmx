@@ -277,6 +277,15 @@ static void print_track_info(const MXFTrackInfo *track_info)
         {
             printf("  Frame size           : %u\n", picture_info->d10_frame_size);
         }
+        if (track_info->essence_type == AVCI100_1080I ||
+            track_info->essence_type == AVCI100_1080P ||
+            track_info->essence_type == AVCI100_720P ||
+            track_info->essence_type == AVCI50_1080I ||
+            track_info->essence_type == AVCI50_1080P ||
+            track_info->essence_type == AVCI50_720P)
+        {
+            printf("  AVCI header          : %s\n", picture_info->have_avci_header ? "true" : "false");
+        }
     } else if (sound_info) {
         printf("  Sampling rate        : %s\n", get_rational_string(sound_info->sampling_rate, string_buffer));
         printf("  Bits per sample      : %u\n", sound_info->bits_per_sample);

@@ -1570,7 +1570,8 @@ void MXFFileReader::ExtractInfoFromFirstFrame()
                  track_info->essence_type == AVCI50_720P)
         {
             avci_parser.ParseFrameInfo(frame->GetBytes(), frame->GetSize());
-            if (avci_parser.HaveSequenceParameterSet()) {
+            picture_info->have_avci_header = avci_parser.HaveSequenceParameterSet();
+            if (picture_info->have_avci_header) {
                 dynamic_cast<MXFFileTrackReader*>(mInternalTrackReaders[i])->SetAVCIHeader(
                     frame->GetBytes(), frame->GetSize());
             } else {

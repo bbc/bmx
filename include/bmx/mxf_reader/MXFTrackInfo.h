@@ -100,6 +100,7 @@ public:
     uint8_t color_siting;
     uint8_t afd;
     uint32_t d10_frame_size;
+    bool have_avci_header;
 };
 
 

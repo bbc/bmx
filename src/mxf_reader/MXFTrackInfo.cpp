@@ -111,6 +111,7 @@ MXFPictureTrackInfo::MXFPictureTrackInfo()
     color_siting = MXF_COLOR_SITING_UNKNOWN;
     afd = 0;
     d10_frame_size = 0;
+    have_avci_header = false;
 };
 
 bool MXFPictureTrackInfo::IsCompatible(const MXFTrackInfo *right) const
@@ -135,7 +136,8 @@ bool MXFPictureTrackInfo::IsCompatible(const MXFTrackInfo *right) const
            frame_layout                  == picture_right->frame_layout &&
            color_siting                  == picture_right->color_siting &&
            afd                           == picture_right->afd &&
-           d10_frame_size                == picture_right->d10_frame_size;
+           d10_frame_size                == picture_right->d10_frame_size &&
+           have_avci_header              == picture_right->have_avci_header;
 }
 
 MXFTrackInfo* MXFPictureTrackInfo::Clone() const
@@ -160,6 +162,7 @@ MXFTrackInfo* MXFPictureTrackInfo::Clone() const
     clone->color_siting                  = color_siting;
     clone->afd                           = afd;
     clone->d10_frame_size                = d10_frame_size;
+    clone->have_avci_header              = have_avci_header;
 
     return clone;
 }
