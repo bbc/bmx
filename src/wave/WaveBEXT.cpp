@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#define __STDC_LIMIT_MACROS
+
 #include <cstring>
 #include <cstdio>
 
@@ -197,8 +199,17 @@ void WaveBEXT::AppendCodingHistory(vector<pair<string, string> > line)
 
 void WaveBEXT::Write(WaveIO *output)
 {
+    size_t coding_history_size = mCodingHistory.size();
+    if (coding_history_size > 0) {
+        if (602 + (uint64_t)coding_history_size > UINT32_MAX - 2) {
+            log_warn("Truncating coding history to keep within the 32-bit chunk size limit\n");
+            coding_history_size = UINT32_MAX - 2 - 602;
+        }
+        coding_history_size += 1; // null terminator
+    }
+
     output->WriteTag("bext");
-    output->WriteSize(602 + (mCodingHistory.empty() ? 0 : mCodingHistory.size() + 1));
+    output->WriteSize((uint32_t)(602 + coding_history_size));
 
     output->Write((const unsigned char*)mDescription, STRING_SIZE(mDescription));
     output->Write((const unsigned char*)mOriginator, STRING_SIZE(mOriginator));
@@ -230,7 +241,7 @@ void WaveBEXT::Write(WaveIO *output)
     output->WriteZeros(reserved_count);
 
     if (!mCodingHistory.empty())
-        output->Write((const unsigned char*)mCodingHistory.c_str(), mCodingHistory.size() + 1);
+        output->Write((const unsigned char*)mCodingHistory.c_str(), (uint32_t)(coding_history_size));
 }
 
 void WaveBEXT::Read(WaveIO *input, uint32_t size)
@@ -280,11 +291,12 @@ void WaveBEXT::Read(WaveIO *input, uint32_t size)
     BMX_CHECK(bext_remainder >= 0);
     if (bext_remainder > 0) {
         char *coding_history_buffer = 0;
+        uint32_t coding_history_size = (uint32_t)bext_remainder;
         try
         {
-            coding_history_buffer = new char[bext_remainder + 1];
-            input->ReadString(coding_history_buffer, bext_remainder);
-            coding_history_buffer[bext_remainder] = '\0';
+            coding_history_buffer = new char[coding_history_size + 1];
+            input->ReadString(coding_history_buffer, coding_history_size);
+            coding_history_buffer[coding_history_size] = '\0';
             mCodingHistory = coding_history_buffer;
 
             delete [] coding_history_buffer;
