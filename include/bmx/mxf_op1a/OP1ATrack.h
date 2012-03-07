@@ -77,6 +77,9 @@ public:
 
     uint32_t GetSampleSize();
 
+    int64_t GetDuration() const;
+    int64_t GetContainerDuration() const;
+
 protected:
     OP1ATrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
               mxfRational frame_rate, EssenceType essence_type);

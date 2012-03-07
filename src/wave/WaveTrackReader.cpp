@@ -92,7 +92,7 @@ int64_t WaveTrackReader::GetPosition()
     return mReader->GetPosition();
 }
 
-int64_t WaveTrackReader::GetDuration()
+int64_t WaveTrackReader::GetDuration() const
 {
     return mReader->GetDuration();
 }

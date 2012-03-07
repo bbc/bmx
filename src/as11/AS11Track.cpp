@@ -551,3 +551,35 @@ uint32_t AS11Track::GetAVCISampleWithoutHeaderSize()
     return 0;
 }
 
+int64_t AS11Track::GetDuration() const
+{
+    switch (mClipType)
+    {
+        case AS11_OP1A_CLIP_TYPE:
+            return mOP1ATrack->GetDuration();
+        case AS11_D10_CLIP_TYPE:
+            return mD10Track->GetDuration();
+        case AS11_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0;
+}
+
+int64_t AS11Track::GetContainerDuration() const
+{
+    switch (mClipType)
+    {
+        case AS11_OP1A_CLIP_TYPE:
+            return mOP1ATrack->GetContainerDuration();
+        case AS11_D10_CLIP_TYPE:
+            return mD10Track->GetDuration();
+        case AS11_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0;
+}
+

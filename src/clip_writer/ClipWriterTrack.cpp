@@ -1078,3 +1078,53 @@ vector<uint32_t> ClipWriterTrack::GetShiftedSampleSequence() const
     return vector<uint32_t>(1, 1);
 }
 
+int64_t ClipWriterTrack::GetDuration() const
+{
+    switch (mClipType)
+    {
+        case CW_AS02_CLIP_TYPE:
+            return mAS02Track->GetDuration();
+        case CW_AS11_OP1A_CLIP_TYPE:
+        case CW_AS11_D10_CLIP_TYPE:
+            return mAS11Track->GetDuration();
+        case CW_OP1A_CLIP_TYPE:
+            return mOP1ATrack->GetDuration();
+        case CW_AVID_CLIP_TYPE:
+            return mAvidTrack->GetDuration();
+        case CW_D10_CLIP_TYPE:
+            return mD10Track->GetDuration();
+        case CW_WAVE_CLIP_TYPE:
+            return mWaveTrack->GetDuration();
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0;
+}
+
+int64_t ClipWriterTrack::GetContainerDuration() const
+{
+    switch (mClipType)
+    {
+        case CW_AS02_CLIP_TYPE:
+            return mAS02Track->GetContainerDuration();
+        case CW_AS11_OP1A_CLIP_TYPE:
+        case CW_AS11_D10_CLIP_TYPE:
+            return mAS11Track->GetContainerDuration();
+        case CW_OP1A_CLIP_TYPE:
+            return mOP1ATrack->GetContainerDuration();
+        case CW_AVID_CLIP_TYPE:
+            return mAvidTrack->GetContainerDuration();
+        case CW_D10_CLIP_TYPE:
+            return mD10Track->GetDuration();
+        case CW_WAVE_CLIP_TYPE:
+            return mWaveTrack->GetDuration();
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0;
+}
+

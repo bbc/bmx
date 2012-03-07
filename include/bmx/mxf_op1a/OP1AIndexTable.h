@@ -113,7 +113,7 @@ public:
 
     void AddCBEIndexEntry(uint32_t edit_unit_byte_count);
 
-    uint32_t GetDuration();
+    uint32_t GetDuration() const;
 
     mxfpp::IndexTableSegment* GetSegment() { return &mSegment; }
     ByteArray* GetEntries() { return &mEntries; }

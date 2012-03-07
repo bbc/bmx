@@ -460,7 +460,7 @@ void OP1AFile::CompleteWrite()
     mMXFFile = 0;
 }
 
-int64_t OP1AFile::GetDuration()
+int64_t OP1AFile::GetDuration() const
 {
     int64_t container_duration = GetContainerDuration();
 
@@ -470,7 +470,7 @@ int64_t OP1AFile::GetDuration()
     return container_duration - mOutputStartOffset + mOutputEndOffset;
 }
 
-int64_t OP1AFile::GetContainerDuration()
+int64_t OP1AFile::GetContainerDuration() const
 {
     return mIndexTable->GetDuration();
 }

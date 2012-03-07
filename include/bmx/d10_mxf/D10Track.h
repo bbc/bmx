@@ -75,6 +75,8 @@ public:
     bool IsOutputTrackNumberSet() const   { return mOutputTrackNumberSet; }
     uint32_t GetOutputTrackNumber() const { return mOutputTrackNumber; }
 
+    int64_t GetDuration() const;
+
 protected:
     D10Track(D10File *file, uint32_t track_index, mxfRational frame_rate, EssenceType essence_type);
 

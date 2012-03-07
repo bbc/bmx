@@ -257,6 +257,16 @@ uint32_t OP1ATrack::GetSampleSize()
     return mDescriptorHelper->GetSampleSize();
 }
 
+int64_t OP1ATrack::GetDuration() const
+{
+    return mOP1AFile->GetDuration();
+}
+
+int64_t OP1ATrack::GetContainerDuration() const
+{
+    return mOP1AFile->GetContainerDuration();
+}
+
 void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPackage *material_package,
                                   SourcePackage *file_source_package)
 {

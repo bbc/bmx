@@ -62,6 +62,8 @@ public:
     uint32_t GetSampleSize() const;
     Rational GetSamplingRate() const;
 
+    int64_t GetDuration() const;
+
 protected:
     WaveTrackWriter(WaveWriter *writer, uint32_t track_index);
 

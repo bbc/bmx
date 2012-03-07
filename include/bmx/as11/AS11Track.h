@@ -97,6 +97,9 @@ public:
     uint32_t GetSampleSize();
     uint32_t GetAVCISampleWithoutHeaderSize();
 
+    int64_t GetDuration() const;
+    int64_t GetContainerDuration() const;
+
 public:
     AS11ClipType GetClipType() const   { return mClipType; }
     EssenceType GetEssenceType() const { return mEssenceType; }

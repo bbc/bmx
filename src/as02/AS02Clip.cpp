@@ -185,7 +185,7 @@ void AS02Clip::CompleteWrite()
         mTracks[i]->CompleteWrite();
 }
 
-int64_t AS02Clip::GetDuration()
+int64_t AS02Clip::GetDuration() const
 {
     int64_t min_duration = -1;
     size_t i;

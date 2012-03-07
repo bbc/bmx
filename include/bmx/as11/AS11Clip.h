@@ -111,7 +111,7 @@ public:
 public:
     Rational GetFrameRate() const;
 
-    int64_t GetDuration();
+    int64_t GetDuration() const;
 
     int64_t GetInputDuration() const;
 

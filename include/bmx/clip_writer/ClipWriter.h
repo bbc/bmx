@@ -88,7 +88,7 @@ public:
 public:
     Rational GetFrameRate() const;
 
-    int64_t GetDuration();
+    int64_t GetDuration() const;
 
     uint32_t GetNumTracks() const { return (uint32_t)mTracks.size(); }
     ClipWriterTrack* GetTrack(uint32_t track_index);

@@ -100,8 +100,8 @@ public:
 
     Timecode GetStartTimecode() const { return mStartTimecode; }
 
-    int64_t GetDuration();
-    int64_t GetContainerDuration();
+    int64_t GetDuration() const;
+    int64_t GetContainerDuration() const;
 
     int64_t GetInputDuration() const { return mInputDuration; }
 

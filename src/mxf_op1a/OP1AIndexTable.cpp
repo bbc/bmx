@@ -225,7 +225,7 @@ void OP1AIndexTableSegment::AddCBEIndexEntry(uint32_t edit_unit_byte_count)
     mSegment.incrementIndexDuration();
 }
 
-uint32_t OP1AIndexTableSegment::GetDuration()
+uint32_t OP1AIndexTableSegment::GetDuration() const
 {
     return (uint32_t)mSegment.getIndexDuration();
 }

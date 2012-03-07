@@ -140,6 +140,11 @@ uint32_t D10Track::GetSampleSize()
     return mDescriptorHelper->GetSampleSize();
 }
 
+int64_t D10Track::GetDuration() const
+{
+    return mD10File->GetDuration();
+}
+
 void D10Track::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
     BMX_ASSERT(data && size && num_samples);

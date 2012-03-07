@@ -57,7 +57,7 @@ public:
     void Seek(int64_t position);
 
     int64_t GetPosition();
-    int64_t GetDuration();
+    int64_t GetDuration() const;
 
 public:
     Rational GetSamplingRate() const        { return mSamplingRate; }

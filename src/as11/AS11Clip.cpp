@@ -527,7 +527,7 @@ Rational AS11Clip::GetFrameRate() const
     return ZERO_RATIONAL;
 }
 
-int64_t AS11Clip::GetDuration()
+int64_t AS11Clip::GetDuration() const
 {
     switch (mType)
     {

@@ -414,7 +414,7 @@ Rational ClipWriter::GetFrameRate() const
     return ZERO_RATIONAL;
 }
 
-int64_t ClipWriter::GetDuration()
+int64_t ClipWriter::GetDuration() const
 {
     switch (mType)
     {

@@ -109,6 +109,9 @@ public:
 
     std::vector<uint32_t> GetShiftedSampleSequence() const;
 
+    int64_t GetDuration() const;
+    int64_t GetContainerDuration() const;
+
 public:
     ClipWriterType GetClipType() const { return mClipType; }
     EssenceType GetEssenceType() const { return mEssenceType; }

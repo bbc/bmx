@@ -88,3 +88,8 @@ Rational WaveTrackWriter::GetSamplingRate() const
     return mWriter->GetSamplingRate();
 }
 
+int64_t WaveTrackWriter::GetDuration() const
+{
+    return mWriter->GetDuration();
+}
+
