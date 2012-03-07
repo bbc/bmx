@@ -53,7 +53,7 @@ uint32_t convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes3_da
                                 unsigned char *pcm_data, uint32_t pcm_data_size);
 
 void deinterleave_audio(const unsigned char *input_data, uint32_t input_data_size,
-                        uint32_t bits_per_sample, uint8_t channel_count, uint8_t channel_num,
+                        uint32_t bits_per_sample, uint16_t channel_count, uint16_t channel_num,
                         unsigned char *output_data, uint32_t output_data_size);
 
 
