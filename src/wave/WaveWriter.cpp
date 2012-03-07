@@ -94,7 +94,7 @@ void WaveWriter::SetStartTimecode(Timecode start_timecode)
 
 WaveTrackWriter* WaveWriter::CreateTrack()
 {
-    mTracks.push_back(new WaveTrackWriter(this, mTracks.size()));
+    mTracks.push_back(new WaveTrackWriter(this, (uint32_t)mTracks.size()));
     return mTracks.back();
 }
 
@@ -193,7 +193,7 @@ void WaveWriter::WriteSamples(uint32_t track_index, const unsigned char *data, u
                     break;
             }
             segment = mBufferSegments[segment_index];
-            segment_offset = track->mSampleCount - segment->start_sample_count;
+            segment_offset = (uint32_t)(track->mSampleCount - segment->start_sample_count);
             input_sample_count = segment->num_samples - segment_offset;
             if (input_sample_count > num_samples)
                 input_sample_count = num_samples;

@@ -170,12 +170,12 @@ uint32_t WaveReader::Read(uint32_t num_samples)
     uint32_t first_sample_offset = 0;
     uint32_t read_num_samples = num_samples;
     if (mPosition < mReadStartPosition) {
-        first_sample_offset = mReadStartPosition - mPosition;
+        first_sample_offset = (uint32_t)(mReadStartPosition - mPosition);
         read_num_samples -= first_sample_offset;
         Seek(mReadStartPosition);
     }
     if (end_position > mReadStartPosition + mReadDuration)
-        read_num_samples -= end_position - (mReadStartPosition + mReadDuration);
+        read_num_samples -= (uint32_t)(end_position - (mReadStartPosition + mReadDuration));
     BMX_ASSERT(read_num_samples > 0);
 
 
@@ -214,7 +214,7 @@ uint32_t WaveReader::Read(uint32_t num_samples)
 
         if (mTracks.size() > 1) {
             deinterleave_audio(mReadBuffer.GetBytes(), mReadBuffer.GetSize(),
-                               mQuantizationBits, mChannelCount, i,
+                               mQuantizationBits, mChannelCount, (uint16_t)i,
                                frame->GetBytesAvailable(), frame->GetSizeAvailable());
         }
 
