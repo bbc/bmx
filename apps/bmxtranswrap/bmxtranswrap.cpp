@@ -235,6 +235,26 @@ private:
 
 
 
+static uint32_t read_samples(MXFReader *reader, const vector<uint32_t> &sample_sequence,
+                             uint32_t *sample_sequence_offset, uint32_t max_samples_per_read)
+{
+    uint32_t num_read;
+
+    if (max_samples_per_read == 1) {
+        uint32_t num_frame_samples = sample_sequence[*sample_sequence_offset];
+        *sample_sequence_offset = (*sample_sequence_offset + 1) % sample_sequence.size();
+
+        num_read = reader->Read(num_frame_samples);
+        if (num_read != num_frame_samples)
+            num_read = 0;
+    } else {
+        BMX_ASSERT(sample_sequence.size() == 1 && sample_sequence[0] == 1);
+        num_read = reader->Read(max_samples_per_read);
+    }
+
+    return num_read;
+}
+
 static bool parse_mic_type(const char *mic_type_str, MICType *mic_type)
 {
     if (strcmp(mic_type_str, "md5") == 0)
@@ -296,8 +316,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --tc-rate <rate>        Start timecode rate to use when input is audio only\n");
     fprintf(stderr, "                          Values are 23976 (24000/1001), 24, 25 (default), 2997 (30000/1001), 50 or 5994 (60000/1001)\n");
     fprintf(stderr, "  --clip <name>           Set the clip name\n");
-    fprintf(stderr, "  --start <frame>         Set the start frame. Default is 0\n");
-    fprintf(stderr, "  --dur <frame>           Set the duration in frames. Default is minimum input duration\n");
+    fprintf(stderr, "  --start <frame>         Set the start frame in input edit rate units. Default is 0\n");
+    fprintf(stderr, "  --dur <frame>           Set the duration in frames in input edit rate units. Default is minimum input duration\n");
     fprintf(stderr, "  --group                 Use the group reader instead of the sequence reader\n");
     fprintf(stderr, "                          Use this option if the files have different material packages\n");
     fprintf(stderr, "                          but actually belong to the same virtual package / group\n");
@@ -333,7 +353,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --shim-annot <str>      Set AnnotationText element value in shim.xml file to <str>. Default is '%s'\n", DEFAULT_SHIM_ANNOTATION);
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02/as11op1a/op1a:\n");
-    fprintf(stderr, "    --part <interval>       Video essence partition interval in frames, or seconds with 's' suffix. Default single partition\n");
+    fprintf(stderr, "    --part <interval>       Video essence partition interval in frames in input edit rate units, or seconds with 's' suffix. Default single partition\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/as11d10:\n");
     fprintf(stderr, "    --dm <fwork> <name> <value>    Set descriptive framework property. <fwork> is 'as11' or 'dpp'\n");
@@ -1054,9 +1074,25 @@ int main(int argc, const char** argv)
         Rational frame_rate = reader->GetSampleRate();
 
 
+        // check whether the frame rate is a sound sampling rate
+        // a frame rate that is a sound sampling rate will result in the timecode rate being used as
+        // the clip frame rate and the timecode rate defaulting to 25fps if not set by the user
+
+        bool is_sound_frame_rate = false;
+        size_t i;
+        for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+            const MXFSoundTrackInfo *input_sound_info =
+                dynamic_cast<const MXFSoundTrackInfo*>(reader->GetTrackReader(i)->GetTrackInfo());
+
+            if (input_sound_info && frame_rate == input_sound_info->sampling_rate) {
+                is_sound_frame_rate = true;
+                break;
+            }
+        }
+
+
         // check support for tracks and disable unsupported track types
 
-        size_t i;
         for (i = 0; i < reader->GetNumTrackReaders(); i++) {
             MXFTrackReader *track_reader = reader->GetTrackReader(i);
             const MXFTrackInfo *input_track_info = track_reader->GetTrackInfo();
@@ -1239,15 +1275,8 @@ int main(int argc, const char** argv)
 
         // complete commandline parsing
 
-        if (!timecode_rate_set) {
-            size_t i;
-            for (i = 0; i < reader->GetNumTrackReaders(); i++) {
-                if (reader->GetTrackReader(i)->GetTrackInfo()->is_picture) {
-                    timecode_rate = frame_rate;
-                    break;
-                }
-            }
-        }
+        if (!timecode_rate_set && !is_sound_frame_rate)
+            timecode_rate = frame_rate;
         if (start_timecode_str && !parse_timecode(start_timecode_str, timecode_rate, &start_timecode)) {
             usage(argv[0]);
             log_error("Invalid value '%s' for option '-t'\n", start_timecode_str);
@@ -1284,21 +1313,6 @@ int main(int argc, const char** argv)
         }
 
 
-        // improve efficiency and read more than 1 sample if there is only sound
-
-        uint32_t max_samples_per_read = 1;
-        for (i = 0; i < reader->GetNumTrackReaders(); i++) {
-            const MXFSoundTrackInfo *input_sound_info =
-                dynamic_cast<const MXFSoundTrackInfo*>(reader->GetTrackReader(i)->GetTrackInfo());
-
-            if (input_sound_info && frame_rate == input_sound_info->sampling_rate) {
-                max_samples_per_read = 1920;
-                break;
-            }
-        }
-        BMX_ASSERT(max_samples_per_read == 1 || (precharge == 0 && rollout == 0));
-
-
         // create output clip and initialize
 
         int flavour = 0;
@@ -1316,25 +1330,26 @@ int main(int argc, const char** argv)
                 flavour |= D10_SINGLE_PASS_WRITE_FLAVOUR;
         }
         ClipWriter *clip = 0;
+        Rational clip_frame_rate = (is_sound_frame_rate ? timecode_rate : frame_rate);
         switch (clip_type)
         {
             case CW_AS02_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS02Clip(output_name, true, frame_rate, &file_factory, false);
+                clip = ClipWriter::OpenNewAS02Clip(output_name, true, clip_frame_rate, &file_factory, false);
                 break;
             case CW_AS11_OP1A_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS11OP1AClip(flavour, file_factory.OpenNew(output_name), frame_rate);
+                clip = ClipWriter::OpenNewAS11OP1AClip(flavour, file_factory.OpenNew(output_name), clip_frame_rate);
                 break;
             case CW_AS11_D10_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS11D10Clip(flavour, file_factory.OpenNew(output_name), frame_rate);
+                clip = ClipWriter::OpenNewAS11D10Clip(flavour, file_factory.OpenNew(output_name), clip_frame_rate);
                 break;
             case CW_OP1A_CLIP_TYPE:
-                clip = ClipWriter::OpenNewOP1AClip(flavour, file_factory.OpenNew(output_name), frame_rate);
+                clip = ClipWriter::OpenNewOP1AClip(flavour, file_factory.OpenNew(output_name), clip_frame_rate);
                 break;
             case CW_AVID_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAvidClip(frame_rate, &file_factory, false);
+                clip = ClipWriter::OpenNewAvidClip(clip_frame_rate, &file_factory, false);
                 break;
             case CW_D10_CLIP_TYPE:
-                clip = ClipWriter::OpenNewD10Clip(flavour, file_factory.OpenNew(output_name), frame_rate);
+                clip = ClipWriter::OpenNewD10Clip(flavour, file_factory.OpenNew(output_name), clip_frame_rate);
                 break;
             case CW_WAVE_CLIP_TYPE:
                 clip = ClipWriter::OpenNewWaveClip(WaveFileIO::OpenNew(output_name));
@@ -1715,6 +1730,21 @@ int main(int argc, const char** argv)
         }
 
 
+        // set the sample sequence
+        // read more than 1 sample to improve efficiency if the input is sound only and the output
+        // doesn't require a sample sequence
+
+        BMX_ASSERT(!output_tracks.empty());
+        BMX_CHECK(!is_sound_frame_rate || output_tracks[0].essence_type == WAVE_PCM);
+        vector<uint32_t> sample_sequence;
+        uint32_t sample_sequence_offset = 0;
+        uint32_t max_samples_per_read = 1;
+        sample_sequence = output_tracks[0].track->GetShiftedSampleSequence();
+        if (is_sound_frame_rate && sample_sequence.size() == 1 && sample_sequence[0] == 1)
+            max_samples_per_read = 1920;
+        BMX_ASSERT(max_samples_per_read == 1 || (precharge == 0 && rollout == 0));
+
+
         // create clip file(s) and write samples
 
         clip->PrepareWrite();
@@ -1730,7 +1760,7 @@ int main(int argc, const char** argv)
         int64_t prev_container_duration = -1;
         bmx::ByteArray sound_buffer;
         while (total_read < read_duration) {
-            uint32_t num_read = reader->Read(max_samples_per_read);
+            uint32_t num_read = read_samples(reader, sample_sequence, &sample_sequence_offset, max_samples_per_read);
             if (num_read == 0)
                 break;
 
@@ -1798,7 +1828,7 @@ int main(int argc, const char** argv)
             if (show_progress)
                 print_progress(total_read, read_duration, &next_progress_update);
 
-            if (num_read < max_samples_per_read)
+            if (max_samples_per_read > 1 && num_read < max_samples_per_read)
                 break;
         }
         if (show_progress)
