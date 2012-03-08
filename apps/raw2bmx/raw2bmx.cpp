@@ -383,8 +383,6 @@ static void usage(const char *cmd)
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02:\n");
     fprintf(stderr, "    --trk-out-start <offset>   Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as02/avid:\n");
     fprintf(stderr, "    --trk-out-end <offset>     Offset (positive value) from last frame to last output frame, eg. rollout in MPEG-2 Long GOP\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "\n");
