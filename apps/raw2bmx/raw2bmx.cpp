@@ -310,7 +310,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -f <rate>               Frame rate: 23976 (24000/1001), 24, 25, 2997 (30000/1001), 50 or 5994 (60000/1001). Default parsed or 25\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Start timecode. Is drop frame when c is not ':'. Default 00:00:00:00\n");
     fprintf(stderr, "  --clip <name>           Set the clip name\n");
-    fprintf(stderr, "  --dur <frame>           Set the duration in frames. Default is minimum input duration\n");
+    fprintf(stderr, "  --dur <frame>           Set the duration in frames in frame rate units. Default is minimum input duration\n");
     fprintf(stderr, "  --avcihead <format> <file> <offset>\n");
     fprintf(stderr, "                          Default AVC-Intra sequence header data (512 bytes) to use when the input file does have it\n");
     fprintf(stderr, "                          <format> is a comma separated list of one or more of the following integer values:\n");
@@ -359,7 +359,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --desc <string>         Add 'Descript' user comment to the MaterialPackage\n");
     fprintf(stderr, "    --tag <name> <value>    Add <name> user comment to the MaterialPackage. Option can be used multiple times\n");
     fprintf(stderr, "    --locator <position> <comment> <color>\n");
-    fprintf(stderr, "                            Add locator at <position> with <comment> and <color>\n");
+    fprintf(stderr, "                            Add locator at <position> (in frame rate units) with <comment> and <color>\n");
     fprintf(stderr, "                            <position> format is o?hh:mm:sscff, where the optional 'o' indicates it is an offset\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  wave:\n");
@@ -2222,7 +2222,6 @@ int main(int argc, const char** argv)
 
         // check support for essence type and frame/sampling rates
 
-        bool have_picture = false;
         for (i = 0; i < inputs.size(); i++) {
             RawInput *input = &inputs[i];
             if (input->essence_type == WAVE_PCM) {
@@ -2239,16 +2238,8 @@ int main(int argc, const char** argv)
                               ClipWriter::ClipWriterTypeToString(input->clip_type).c_str());
                     throw false;
                 }
-                have_picture = true;
             }
         }
-
-
-        // improve efficiency and read more than 1 sample if there is only sound
-
-        uint32_t max_samples_per_read = 1;
-        if (!have_picture)
-            max_samples_per_read = 1920;
 
 
         // create clip
@@ -2681,6 +2672,26 @@ int main(int argc, const char** argv)
         }
 
 
+        // read more than 1 sample to improve efficiency if the input is sound only and the output
+        // doesn't require a sample sequence
+
+        bool have_sound_sample_sequence = true;
+        bool sound_only = true;
+        uint32_t max_samples_per_read = 1;
+        for (i = 0; i < inputs.size(); i++) {
+            RawInput *input = &inputs[i];
+            if (input->essence_type == WAVE_PCM) {
+                if (input->sample_sequence_size == 1 && input->sample_sequence[0] == 1)
+                    have_sound_sample_sequence = false;
+            } else {
+                sound_only = false;
+            }
+        }
+        BMX_ASSERT(sound_only || have_sound_sample_sequence);
+        if (sound_only && !have_sound_sample_sequence)
+            max_samples_per_read = 1920;
+
+
         // create clip file(s) and write samples
 
         clip->PrepareWrite();
@@ -2701,7 +2712,7 @@ int main(int argc, const char** argv)
             }
             if (min_num_samples == 0)
                 break;
-            BMX_ASSERT(min_num_samples == max_samples_per_read || !have_picture);
+            BMX_ASSERT(min_num_samples == max_samples_per_read || max_samples_per_read > 1);
             total_read += min_num_samples;
 
             // write samples from input buffers
@@ -2709,7 +2720,7 @@ int main(int argc, const char** argv)
                 RawInput *input = &inputs[i];
                 if (input->raw_reader) {
                     num_samples = input->raw_reader->GetNumSamples();
-                    if (!have_picture && num_samples > min_num_samples)
+                    if (max_samples_per_read > 1 && num_samples > min_num_samples)
                         num_samples = min_num_samples;
                     input->track->WriteSamples(input->raw_reader->GetSampleData(),
                                                input->raw_reader->GetSampleDataSize(),
@@ -2718,7 +2729,7 @@ int main(int argc, const char** argv)
                     Frame *frame = input->wave_reader->GetTrack(input->wave_track_index)->GetFrameBuffer()->GetLastFrame(true);
                     BMX_ASSERT(frame);
                     num_samples = frame->num_samples;
-                    if (!have_picture && num_samples > min_num_samples)
+                    if (max_samples_per_read > 1 && num_samples > min_num_samples)
                         num_samples = min_num_samples;
                     input->track->WriteSamples(frame->GetBytes(),
                                                frame->GetSize(),
