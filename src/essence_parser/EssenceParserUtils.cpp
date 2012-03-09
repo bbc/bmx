@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#define __STDC_LIMIT_MACROS
+
 #include "EssenceParserUtils.h"
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -56,7 +58,7 @@ uint32_t bmx::get_bits(const unsigned char *data, uint32_t data_size, uint32_t b
     }
 
     buffer >>= (7 - ((bit_offset + num_bits - 1) % 8));
-    buffer &=  (1UL << num_bits) - 1;
+    buffer &=  UINT64_MAX >> (64 - num_bits);
 
     return (uint32_t)buffer;
 }
