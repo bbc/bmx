@@ -922,6 +922,12 @@ static int sei_payload(ParseContext *context, uint64_t payload_type, uint64_t pa
         CHK(user_data_unregistered(context, payload_type, payload_size));
     } else {
         printf("%*c payload (type=%"PRIu64", size=%"PRIu64")\n", context->indent * 4, ' ', payload_type, payload_size);
+        context->indent++;
+        printf("%*c data:\n", context->indent * 4, ' ');
+        context->indent++;
+        CHK(read_and_print_bytes(context, payload_size));
+        context->indent--;
+        context->indent--;
     }
 
     next_bit_pos -= context->emu_prevent_count * 8;
