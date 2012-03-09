@@ -902,7 +902,7 @@ static int user_data_unregistered(ParseContext *context, uint64_t payload_type, 
     u(64); uuid_low = context->value;
     print_uuid(context, uuid_high, uuid_low);
 
-    printf("%*c payload_data:\n", context->indent * 4, ' ');
+    printf("%*c user_data:\n", context->indent * 4, ' ');
     context->indent++;
     CHK(read_and_print_bytes(context, payload_size - 16));
     context->indent--;
