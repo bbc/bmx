@@ -277,7 +277,7 @@ static int next_bits(ParseContext *context, uint8_t num_bits, uint8_t *advance_b
     }
 
     context->next_value >>= (7 - ((context->bit_pos + num_bits - 1) % 8));
-    context->next_value &=  (1UL << num_bits) - 1;
+    context->next_value &= UINT64_MAX >> (64 - num_bits);
 
     if (advance_bits)
         *advance_bits = num_bits + skip_bits;
