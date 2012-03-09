@@ -930,7 +930,7 @@ static int sei_payload(ParseContext *context, uint64_t payload_type, uint64_t pa
         context->indent--;
     }
 
-    next_bit_pos -= context->emu_prevent_count * 8;
+    next_bit_pos += context->emu_prevent_count * 8;
 
     CHK(context->bit_pos <= next_bit_pos);
     if (context->bit_pos < next_bit_pos) {
