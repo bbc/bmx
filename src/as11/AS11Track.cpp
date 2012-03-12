@@ -479,7 +479,7 @@ vector<uint32_t> AS11Track::GetShiftedSampleSequence() const
             break;
     }
 
-    return vector<uint32_t>(1);
+    return vector<uint32_t>(1, 1);
 }
 
 void AS11Track::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
