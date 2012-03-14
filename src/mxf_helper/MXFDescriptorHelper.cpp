@@ -41,6 +41,8 @@
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
+#include <mxf/mxf_avid_labels_and_keys.h>
+
 using namespace std;
 using namespace bmx;
 using namespace mxfpp;
@@ -83,6 +85,12 @@ bool MXFDescriptorHelper::CompareECULs(mxfUL ec_label_a, mxfUL alternative_ec_la
 {
     return mxf_equals_ul_mod_regver(&ec_label_a, &ec_label_b) ||
            mxf_equals_ul_mod_regver(&alternative_ec_label_a, &ec_label_b);
+}
+
+bool MXFDescriptorHelper::IsNullAvidECUL(mxfUL ec_label, mxfUL alternative_ec_label)
+{
+    return mxf_equals_ul(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
+           mxf_equals_ul(&alternative_ec_label, &g_Null_UL);
 }
 
 MXFDescriptorHelper::MXFDescriptorHelper()

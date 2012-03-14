@@ -55,8 +55,7 @@ using namespace mxfpp;
 
 
 
-EssenceType PictureMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
-                                                                         mxfUL alternative_ec_label)
+EssenceType PictureMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     GenericPictureEssenceDescriptor *picture_descriptor =
         dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);

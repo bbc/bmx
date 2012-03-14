@@ -84,8 +84,11 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
 EssenceType MJPEGMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     mxfUL ec_label = file_descriptor->getEssenceContainer();
-    if (!CompareECULs(ec_label, alternative_ec_label, MXF_EC_L(AvidMJPEGClipWrapped)))
+    if (!CompareECULs(ec_label, alternative_ec_label, MXF_EC_L(AvidMJPEGClipWrapped)) &&
+        !IsNullAvidECUL(ec_label, alternative_ec_label))
+    {
         return UNKNOWN_ESSENCE_TYPE;
+    }
 
     mxfRational sample_rate = file_descriptor->getSampleRate();
 

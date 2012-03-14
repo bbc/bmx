@@ -95,7 +95,8 @@ size_t MPEG2LGMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descript
         !mxf_is_mpeg_video_ec(&ec_label, 1) &&
         !mxf_is_mpeg_video_ec(&alternative_ec_label, 0) &&
         !mxf_is_mpeg_video_ec(&alternative_ec_label, 1) &&
-        !CompareECULs(ec_label, alternative_ec_label, MXF_EC_L(AvidMPEGClipWrapped)))
+        !CompareECULs(ec_label, alternative_ec_label, MXF_EC_L(AvidMPEGClipWrapped)) &&
+        !IsNullAvidECUL(ec_label, alternative_ec_label))
     {
         return (size_t)(-1);
     }

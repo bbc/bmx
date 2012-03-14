@@ -83,7 +83,8 @@ EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor
     if (!mxf_is_avc_ec(&ec_label, 0) &&
         !mxf_is_avc_ec(&ec_label, 1) &&
         !mxf_is_avc_ec(&alternative_ec_label, 0) &&
-        !mxf_is_avc_ec(&alternative_ec_label, 1))
+        !mxf_is_avc_ec(&alternative_ec_label, 1) &&
+        !IsNullAvidECUL(ec_label, alternative_ec_label))
     {
         return UNKNOWN_ESSENCE_TYPE;
     }

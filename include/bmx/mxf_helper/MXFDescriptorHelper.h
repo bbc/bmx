@@ -60,6 +60,7 @@ public:
 
 protected:
    static bool CompareECULs(mxfUL ec_label_a, mxfUL alternative_ec_label_a, mxfUL ec_label_b);
+   static bool IsNullAvidECUL(mxfUL ec_label, mxfUL alternative_ec_label);
 
 public:
     MXFDescriptorHelper();
