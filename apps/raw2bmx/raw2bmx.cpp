@@ -1917,9 +1917,10 @@ int main(int argc, const char** argv)
                         additional_inputs.push_back(new_input);
                     }
                     inputs.insert(inputs.begin() + i + 1, additional_inputs.begin(), additional_inputs.end());
+
+                    i += additional_inputs.size();
                 }
 
-                i += input->wave_reader->GetNumTracks() - 1;
                 continue;
             }
 
