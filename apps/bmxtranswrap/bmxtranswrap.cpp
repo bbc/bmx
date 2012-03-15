@@ -1442,10 +1442,13 @@ int main(int argc, const char** argv)
                     if (!input_track_reader->IsEnabled())
                         continue;
 
-                    if (input_track_reader->GetTrackInfo()->is_picture)
-                        num_picture_tracks++;
+                    const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
+                    const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
+
+                    if (input_sound_info)
+                        num_sound_tracks += input_sound_info->channel_count;
                     else
-                        num_sound_tracks++;
+                        num_picture_tracks++;
                 }
                 tape_package = avid_clip->CreateDefaultTapeSource(tape_name, num_picture_tracks, num_sound_tracks);
 
