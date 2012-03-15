@@ -1117,6 +1117,11 @@ int main(int argc, const char** argv)
                              essence_type_to_string(input_track_info->essence_type),
                              input_sound_info->bits_per_sample);
                     is_supported = false;
+                } else if (input_sound_info->channel_count == 0) {
+                    log_warn("Track %"PRIszt" (%s) has zero channel count\n",
+                             i,
+                             essence_type_to_string(input_track_info->essence_type));
+                    is_supported = false;
                 }
             }
             else if (input_track_info->essence_type == D10_AES3_PCM)
