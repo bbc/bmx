@@ -37,6 +37,7 @@
 #define __STDC_LIMIT_MACROS
 
 #include <algorithm>
+#include <memory>
 
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
@@ -810,9 +811,24 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
                 if (mp_source_clip) {
                     break;
                 } else {
-                    // lead Filler segments, eg. used in P2 spanned clips
-                    BMX_CHECK(mxf_equals_key(components[j]->getKey(), &MXF_SET_K(Filler)));
-                    lead_filler_offset += components[j]->getDuration();
+                    if (mxf_equals_key(components[j]->getKey(), &MXF_SET_K(Filler))) {
+                        // lead Filler segments, e.g. used for P2 clips spanning multiple cards
+                        lead_filler_offset += components[j]->getDuration();
+                    } else if (mxf_equals_key(components[j]->getKey(), &MXF_SET_K(EssenceGroup))) {
+                        // Essence Group used in Avid files, e.g. alpha component tracks
+                        auto_ptr<ObjectIterator> choices(components[j]->getStrongRefArrayItem(
+                            &MXF_ITEM_K(EssenceGroup, Choices)));
+                        if (!choices->next()) {
+                            BMX_EXCEPTION(("0 Choices found in EssenceGroup"));
+                        }
+                        mp_source_clip = dynamic_cast<SourceClip*>(choices->get());
+                        BMX_CHECK_M(mp_source_clip,
+                                    ("Unsupported (not a SourceClip) metadata set referenced by EssenceGroup::Choices"));
+                        if (choices->next())
+                            log_warn("Multiple choices in EssenceGroup; chose the first one\n");
+                    } else {
+                        BMX_EXCEPTION(("StructuralComponent in Sequence is not a SourceClip, Filler or EssenceGroup"));
+                    }
                 }
             }
         }
