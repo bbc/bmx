@@ -233,7 +233,9 @@ static vector<DMFramework*> get_static_frameworks(MaterialPackage *mp)
         if (!seg->haveDMFramework())
             continue;
 
-        frameworks.push_back(seg->getDMFramework());
+        DMFramework *framework = seg->getDMFrameworkLight();
+        if (framework)
+            frameworks.push_back(framework);
     }
 
     return frameworks;
@@ -268,7 +270,7 @@ static vector<StructuralComponent*> get_segmentation(MaterialPackage *mp, Ration
             bool is_filler = (*scs[j]->getKey() == MXF_SET_K(Filler));
             if ((!seg && !is_filler) ||
                 ((seg && !seg->haveDMFramework())) ||
-                (seg && !dynamic_cast<AS11SegmentationFramework*>(seg->getDMFramework())))
+                (seg && !dynamic_cast<AS11SegmentationFramework*>(seg->getDMFrameworkLight())))
             {
                 break;
             }
