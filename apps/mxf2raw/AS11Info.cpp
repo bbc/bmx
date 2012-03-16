@@ -267,9 +267,8 @@ static vector<StructuralComponent*> get_segmentation(MaterialPackage *mp, Ration
         size_t j;
         for (j = 0; j < scs.size(); j++) {
             DMSegment *seg = dynamic_cast<DMSegment*>(scs[j]);
-            bool is_filler = (*scs[j]->getKey() == MXF_SET_K(Filler));
-            if ((!seg && !is_filler) ||
-                ((seg && !seg->haveDMFramework())) ||
+            if ((!seg && *scs[j]->getKey() != MXF_SET_K(Filler)) ||
+                (seg && !seg->haveDMFramework()) ||
                 (seg && !dynamic_cast<AS11SegmentationFramework*>(seg->getDMFrameworkLight())))
             {
                 break;
