@@ -196,7 +196,7 @@ static bool parse_int64(string value, int64_t *int64_value)
     return false;
 }
 
-static bool parse_timestamp(string value, mxfTimestamp *timestamp_value)
+static bool parse_as11_timestamp(string value, mxfTimestamp *timestamp_value)
 {
     int year;
     unsigned int month, day, hour, min, sec;
@@ -392,7 +392,7 @@ bool FrameworkHelper::SetProperty(string name, string value)
         case MXF_TIMESTAMP_TYPE:
         {
             mxfTimestamp timestamp_value = {0, 0, 0, 0, 0, 0, 0};
-            if (!parse_timestamp(value, &timestamp_value)) {
+            if (!parse_as11_timestamp(value, &timestamp_value)) {
                 log_warn("Invalid framework property value %s::%s '%s'\n",  mFrameworkInfo->name, name.c_str(),
                          value.c_str());
                 return false;

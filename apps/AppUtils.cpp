@@ -260,6 +260,57 @@ bool bmx::parse_d10_sound_flags(const char *flags_str, uint8_t *out_flags)
     return true;
 }
 
+bool bmx::parse_timestamp(const char *timestamp_str, Timestamp *timestamp)
+{
+    int year;
+    unsigned int month, day, hour, min, sec, qmsec;
+
+    if (sscanf(timestamp_str, "%d-%u-%uT%u:%u:%u:%u", &year, &month, &day, &hour, &min, &sec, &qmsec) != 7)
+        return false;
+
+    timestamp->year  = (int16_t)year;
+    timestamp->month = (uint8_t)month;
+    timestamp->day   = (uint8_t)day;
+    timestamp->hour  = (uint8_t)hour;
+    timestamp->min   = (uint8_t)min;
+    timestamp->sec   = (uint8_t)sec;
+    timestamp->qmsec = (uint8_t)qmsec;
+
+    return true;
+}
+
+bool bmx::parse_umid(const char *umid_str, UMID *umid_out)
+{
+    UMID umid = g_Null_UMID;
+    unsigned char *octet_ptr = (unsigned char*)&umid.octet0;
+    const unsigned char *octet_end_ptr = (unsigned char*)&umid.octet31 + 1;
+
+#define DECODE_UMID_CHAR                            \
+    if (*umid_str >= 'a' && *umid_str <= 'f')       \
+        *octet_ptr |= 10 + (*umid_str - 'a');       \
+    else if (*umid_str >= 'A' && *umid_str <= 'F')  \
+        *octet_ptr |= 10 + (*umid_str - 'A');       \
+    else if (*umid_str >= '0' && *umid_str <= '9')  \
+        *octet_ptr |= (*umid_str - '0');            \
+    else                                            \
+        break;
+
+    while (*umid_str && octet_ptr != octet_end_ptr) {
+        DECODE_UMID_CHAR
+        *octet_ptr <<= 4;
+        umid_str++;
+        DECODE_UMID_CHAR
+        umid_str++;
+        octet_ptr++;
+    }
+    if (octet_ptr != octet_end_ptr)
+        return false;
+
+    *umid_out = umid;
+
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture)
 {

@@ -74,6 +74,8 @@ public:
                         std::string version, mxfUUID product_uid);
     void SetCreationDate(mxfTimestamp creation_date);                   // default generated ('now')
     void SetGenerationUID(mxfUUID generation_uid);                      // default generated
+    void SetMaterialPackageCreationDate(mxfTimestamp creation_date);    // default file creation date
+    void SetMaterialPackageUID(mxfUMID package_uid);                    // default generated
 
 public:
     void SetUserComment(std::string name, std::string value);
@@ -139,6 +141,8 @@ private:
     mxfTimestamp mCreationDate;
     mxfUUID mGenerationUID;
     mxfUMID mMaterialPackageUID;
+    mxfTimestamp mMaterialPackageCreationDate;
+    bool mMaterialPackageCreationDateSet;
 
     mxfpp::DataModel *mDataModel;
     mxfpp::AvidHeaderMetadata *mHeaderMetadata;

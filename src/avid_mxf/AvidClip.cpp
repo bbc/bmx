@@ -105,6 +105,8 @@ AvidClip::AvidClip(mxfRational frame_rate, MXFFileFactory *file_factory, bool ta
     mxf_get_timestamp_now(&mCreationDate);
     mxf_generate_uuid(&mGenerationUID);
     mxf_generate_aafsdk_umid(&mMaterialPackageUID);
+    mMaterialPackageCreationDate = mCreationDate;
+    mMaterialPackageCreationDateSet = false;
     mDataModel = 0;
     mHeaderMetadata = 0;
     mContentStorage = 0;
@@ -157,11 +159,24 @@ void AvidClip::SetProductInfo(string company_name, string product_name, mxfProdu
 void AvidClip::SetCreationDate(mxfTimestamp creation_date)
 {
     mCreationDate = creation_date;
+    if (!mMaterialPackageCreationDateSet)
+        mMaterialPackageCreationDate = creation_date;
 }
 
 void AvidClip::SetGenerationUID(mxfUUID generation_uid)
 {
     mGenerationUID = generation_uid;
+}
+
+void AvidClip::SetMaterialPackageUID(mxfUMID package_uid)
+{
+    mMaterialPackageUID = package_uid;
+}
+
+void AvidClip::SetMaterialPackageCreationDate(mxfTimestamp creation_date)
+{
+    mMaterialPackageCreationDate = creation_date;
+    mMaterialPackageCreationDateSet = true;
 }
 
 void AvidClip::SetUserComment(string name, string value)
@@ -460,8 +475,8 @@ void AvidClip::CreateMaterialPackage()
     mMaterialPackage = new MaterialPackage(mHeaderMetadata);
     mContentStorage->appendPackages(mMaterialPackage);
     mMaterialPackage->setPackageUID(mMaterialPackageUID);
-    mMaterialPackage->setPackageCreationDate(mCreationDate);
-    mMaterialPackage->setPackageModifiedDate(mCreationDate);
+    mMaterialPackage->setPackageCreationDate(mMaterialPackageCreationDate);
+    mMaterialPackage->setPackageModifiedDate(mMaterialPackageCreationDate);
     if (!mClipName.empty())
         mMaterialPackage->setName(mClipName);
     mMaterialPackage->setBooleanItem(&MXF_ITEM_K(GenericPackage, ConvertFrameRate), false);
