@@ -50,7 +50,7 @@ public:
     RawEssenceReader(FILE *raw_input);
     virtual ~RawEssenceReader();
 
-    void SeekToOffset(int64_t offset);
+    void SetStartOffset(int64_t offset);
     void SetMaxReadLength(int64_t len);
 
     void SetFixedSampleSize(uint32_t size);

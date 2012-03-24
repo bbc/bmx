@@ -81,7 +81,7 @@ RawEssenceReader::~RawEssenceReader()
     delete mEssenceParser;
 }
 
-void RawEssenceReader::SeekToOffset(int64_t offset)
+void RawEssenceReader::SetStartOffset(int64_t offset)
 {
     mStartOffset = offset;
     Reset();

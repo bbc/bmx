@@ -203,7 +203,7 @@ static bool open_raw_reader(RawInput *input)
         input->raw_reader = new RawEssenceReader(raw_file);
     }
     if (input->file_start_offset)
-        input->raw_reader->SeekToOffset(input->file_start_offset);
+        input->raw_reader->SetStartOffset(input->file_start_offset);
     if (input->file_max_length > 0)
         input->raw_reader->SetMaxReadLength(input->file_max_length);
 
