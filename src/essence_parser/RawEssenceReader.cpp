@@ -115,7 +115,7 @@ uint32_t RawEssenceReader::ReadSamples(uint32_t num_samples)
     // shift data from previous read to start of sample data
     // note that this is needed even if mFixedSampleSize > 0 because the previous read could have occurred
     // when mFixedSampleSize == 0
-    ShiftSampleData(0, mSampleDataSize, mSampleBuffer.GetSize() - mSampleDataSize);
+    ShiftSampleData(0, mSampleDataSize);
     mSampleDataSize = 0;
     mNumSamples = 0;
 
@@ -183,7 +183,7 @@ bool RawEssenceReader::ReadAndParseSample()
 
         // shift start of first sample to offset 0
         if (offset > 0) {
-            ShiftSampleData(sample_start_offset, sample_start_offset + offset, sample_num_read - offset);
+            ShiftSampleData(sample_start_offset, sample_start_offset + offset);
             sample_num_read -= offset;
         }
 
@@ -248,15 +248,14 @@ uint32_t RawEssenceReader::ReadBytes(uint32_t size)
     return num_read;
 }
 
-void RawEssenceReader::ShiftSampleData(uint32_t to_offset, uint32_t from_offset, uint32_t size)
+void RawEssenceReader::ShiftSampleData(uint32_t to_offset, uint32_t from_offset)
 {
-    BMX_ASSERT(from_offset + size <= mSampleBuffer.GetSize());
+    BMX_ASSERT(to_offset <= from_offset);
+    BMX_ASSERT(from_offset <= mSampleBuffer.GetSize());
 
-    if (mSampleBuffer.GetSize() > (from_offset - to_offset)) {
+    uint32_t size = mSampleBuffer.GetSize() - from_offset;
+    if (size > 0)
         memmove(mSampleBuffer.GetBytes() + to_offset, mSampleBuffer.GetBytes() + from_offset, size);
-        mSampleBuffer.SetSize(mSampleBuffer.GetSize() - (from_offset - to_offset));
-    } else {
-        mSampleBuffer.SetSize(0);
-    }
+    mSampleBuffer.SetSize(to_offset + size);
 }
 

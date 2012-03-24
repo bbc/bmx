@@ -64,7 +64,7 @@ uint32_t AVCIRawEssenceReader::ReadSamples(uint32_t num_samples)
         return 0;
 
     // shift data from previous read to start of sample data
-    ShiftSampleData(0, mSampleDataSize, mSampleBuffer.GetSize() - mSampleDataSize);
+    ShiftSampleData(0, mSampleDataSize);
     mSampleDataSize = 0;
     mNumSamples = 0;
 
