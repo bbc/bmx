@@ -58,15 +58,15 @@ public:
     virtual void SetEssenceParser(EssenceParser *essence_parser);
     void SetCheckMaxSampleSize(uint32_t size);
 
-    uint32_t GetFixedSampleSize() const { return mFixedSampleSize; }
+    uint32_t GetFixedSampleSize() const     { return mFixedSampleSize; }
     EssenceParser* GetEssenceParser() const { return mEssenceParser; }
 
 public:
     virtual uint32_t ReadSamples(uint32_t num_samples);
 
-    virtual const unsigned char* GetSampleData() const { return mSampleData.GetBytes(); }
-    uint32_t GetSampleDataSize() const { return mSampleDataSize; }
-    uint32_t GetNumSamples() const { return mNumSamples; }
+    virtual const unsigned char* GetSampleData() const  { return mSampleData.GetBytes(); }
+    uint32_t GetSampleDataSize() const                  { return mSampleDataSize; }
+    uint32_t GetNumSamples() const                      { return mNumSamples; }
     uint32_t GetSampleSize() const;
 
     virtual void Reset();
