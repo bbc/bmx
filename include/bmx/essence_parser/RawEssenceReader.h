@@ -76,7 +76,7 @@ public:
 
 protected:
     bool ReadAndParseSample();
-    bool ReadBytes(uint32_t size, uint32_t *num_read_out);
+    uint32_t ReadBytes(uint32_t size);
     void ShiftSampleData(uint32_t to_offset, uint32_t from_offset, uint32_t size);
 
 protected:

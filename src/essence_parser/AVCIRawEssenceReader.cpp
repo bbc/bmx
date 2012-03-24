@@ -76,10 +76,8 @@ uint32_t AVCIRawEssenceReader::ReadSamples(uint32_t num_samples)
     else
         read_size = mFixedSampleSize - mSampleData.GetSize();
 
-    uint32_t num_read;
-    if (!ReadBytes(read_size, &num_read) ||
-        mSampleData.GetSize() < mFixedSampleSize - AVCI_HEADER_SIZE)
-    {
+    ReadBytes(read_size);
+    if (mSampleData.GetSize() < mFixedSampleSize - AVCI_HEADER_SIZE) {
         mLastSampleRead = true;
         return 0;
     }
@@ -89,8 +87,7 @@ uint32_t AVCIRawEssenceReader::ReadSamples(uint32_t num_samples)
 
     if (mAVCIParser->HaveSequenceParameterSet()) {
         if (mSampleData.GetSize() < mFixedSampleSize) {
-            uint32_t num_extra_read = 0;
-            if (!ReadBytes(AVCI_HEADER_SIZE, &num_extra_read) || num_extra_read != AVCI_HEADER_SIZE) {
+            if (ReadBytes(AVCI_HEADER_SIZE) != AVCI_HEADER_SIZE) {
                 mLastSampleRead = true;
                 return 0;
             }

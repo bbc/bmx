@@ -128,12 +128,7 @@ uint32_t RawEssenceReader::ReadSamples(uint32_t num_samples)
                 break;
         }
     } else {
-        uint32_t num_read;
-        if (!ReadBytes(mFixedSampleSize * num_samples - mSampleData.GetSize(), &num_read)) {
-            mLastSampleRead = true;
-            return 0;
-        }
-
+        ReadBytes(mFixedSampleSize * num_samples - mSampleData.GetSize());
         if (mSampleData.GetSize() < mFixedSampleSize * num_samples)
             mLastSampleRead = true;
 
@@ -169,7 +164,7 @@ int64_t RawEssenceReader::GetNumRemFixedSizeSamples() const
     if (mMaxReadLength > 0 && end_offset > mStartOffset + mMaxReadLength)
         end_offset = mStartOffset + mMaxReadLength;
 
-    int64_t num_samples = (end_offset - start_offset) / mFixedSampleSize;
+    int64_t num_samples = (end_offset  start_offset) / mFixedSampleSize;
 
     return (num_samples < 0 ? 0 : num_samples);
 }
@@ -203,12 +198,7 @@ bool RawEssenceReader::ReadAndParseSample()
     if (!mReadFirstSample) {
         // find the start of the first sample
 
-        if (!ReadBytes(PARSE_FRAME_START_SIZE, &num_read)) {
-            mLastSampleRead = true;
-            return false;
-        }
-        sample_num_read += num_read;
-
+        sample_num_read += ReadBytes(PARSE_FRAME_START_SIZE);
         uint32_t offset = mEssenceParser->ParseFrameStart(mSampleData.GetBytes() + sample_start_offset, sample_num_read);
         if (offset == ESSENCE_PARSER_NULL_OFFSET) {
             log_warn("Failed to find start of raw essence sample\n");
@@ -224,11 +214,7 @@ bool RawEssenceReader::ReadAndParseSample()
 
         mReadFirstSample = true;
     } else {
-        if (!ReadBytes(READ_BLOCK_SIZE, &num_read)) {
-            mLastSampleRead = true;
-            return false;
-        }
-        sample_num_read += num_read;
+        sample_num_read += ReadBytes(READ_BLOCK_SIZE);
     }
 
     uint32_t sample_size = 0;
@@ -240,14 +226,11 @@ bool RawEssenceReader::ReadAndParseSample()
         BMX_CHECK_M(mMaxSampleSize == 0 || mSampleData.GetSize() - sample_start_offset <= mMaxSampleSize,
                    ("Max raw sample size (%u) exceeded", mMaxSampleSize));
 
-        if (!ReadBytes(READ_BLOCK_SIZE, &num_read)) {
-            mLastSampleRead = true;
-            return false;
-        }
-        sample_num_read += num_read;
-
+        num_read = ReadBytes(READ_BLOCK_SIZE);
         if (num_read == 0)
             break;
+
+        sample_num_read += num_read;
     }
 
     if (sample_size == 0) {
@@ -269,30 +252,25 @@ bool RawEssenceReader::ReadAndParseSample()
     return true;
 }
 
-bool RawEssenceReader::ReadBytes(uint32_t size, uint32_t *num_read_out)
+uint32_t RawEssenceReader::ReadBytes(uint32_t size)
 {
     BMX_ASSERT(mMaxReadLength == 0 || mTotalReadLength <= mMaxReadLength);
 
     uint32_t actual_size = size;
     if (mMaxReadLength > 0 && mTotalReadLength + size > mMaxReadLength)
         actual_size = (uint32_t)(mMaxReadLength - mTotalReadLength);
-    if (actual_size == 0) {
-        *num_read_out = 0;
-        return true;
-    }
+    if (actual_size == 0)
+        return 0;
 
     mSampleData.Grow(actual_size);
     uint32_t num_read = (uint32_t)fread(mSampleData.GetBytesAvailable(), 1, actual_size, mRawInput);
-    if (ferror(mRawInput)) {
-        log_warn("Failed to read from raw file: %s\n", strerror(errno));
-        return false;
-    }
-    mTotalReadLength += num_read;
+    if (num_read < actual_size && ferror(mRawInput))
+        log_error("Failed to read from raw file: %s\n", strerror(errno));
 
+    mTotalReadLength += num_read;
     mSampleData.IncrementSize(num_read);
 
-    *num_read_out = num_read;
-    return true;
+    return num_read;
 }
 
 void RawEssenceReader::ShiftSampleData(uint32_t to_offset, uint32_t from_offset, uint32_t size)
