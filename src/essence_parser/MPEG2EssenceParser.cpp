@@ -116,7 +116,9 @@ uint32_t MPEG2EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t 
 {
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
     BMX_CHECK(mOffset <= data_size);
-    BMX_CHECK(data_size >= 4);
+
+    if (data_size < 4)
+        return ESSENCE_PARSER_NULL_OFFSET;
 
     while (mOffset < data_size) {
         mState = (mState << 8) | data[mOffset];
