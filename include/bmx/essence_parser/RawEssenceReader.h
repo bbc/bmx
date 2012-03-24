@@ -64,7 +64,7 @@ public:
 public:
     virtual uint32_t ReadSamples(uint32_t num_samples);
 
-    virtual const unsigned char* GetSampleData() const  { return mSampleData.GetBytes(); }
+    virtual const unsigned char* GetSampleData() const  { return mSampleBuffer.GetBytes(); }
     uint32_t GetSampleDataSize() const                  { return mSampleDataSize; }
     uint32_t GetNumSamples() const                      { return mNumSamples; }
     uint32_t GetSampleSize() const;
@@ -87,7 +87,7 @@ protected:
     uint32_t mFixedSampleSize;
     EssenceParser *mEssenceParser;
 
-    ByteArray mSampleData;
+    ByteArray mSampleBuffer;
     uint32_t mSampleDataSize;
     uint32_t mNumSamples;
     bool mReadFirstSample;

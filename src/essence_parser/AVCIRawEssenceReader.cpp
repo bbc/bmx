@@ -64,7 +64,7 @@ uint32_t AVCIRawEssenceReader::ReadSamples(uint32_t num_samples)
         return 0;
 
     // shift data from previous read to start of sample data
-    ShiftSampleData(0, mSampleDataSize, mSampleData.GetSize() - mSampleDataSize);
+    ShiftSampleData(0, mSampleDataSize, mSampleBuffer.GetSize() - mSampleDataSize);
     mSampleDataSize = 0;
     mNumSamples = 0;
 
@@ -72,21 +72,21 @@ uint32_t AVCIRawEssenceReader::ReadSamples(uint32_t num_samples)
     // read same size as previous frame assuming the size remains constant after the second frame
     uint32_t read_size;
     if (mLastSampleSize > 0)
-        read_size = mLastSampleSize - mSampleData.GetSize();
+        read_size = mLastSampleSize - mSampleBuffer.GetSize();
     else
-        read_size = mFixedSampleSize - mSampleData.GetSize();
+        read_size = mFixedSampleSize - mSampleBuffer.GetSize();
 
     ReadBytes(read_size);
-    if (mSampleData.GetSize() < mFixedSampleSize - AVCI_HEADER_SIZE) {
+    if (mSampleBuffer.GetSize() < mFixedSampleSize - AVCI_HEADER_SIZE) {
         mLastSampleRead = true;
         return 0;
     }
 
 
-    mAVCIParser->ParseFrameInfo(mSampleData.GetBytes(), mSampleData.GetSize());
+    mAVCIParser->ParseFrameInfo(mSampleBuffer.GetBytes(), mSampleBuffer.GetSize());
 
     if (mAVCIParser->HaveSequenceParameterSet()) {
-        if (mSampleData.GetSize() < mFixedSampleSize) {
+        if (mSampleBuffer.GetSize() < mFixedSampleSize) {
             if (ReadBytes(AVCI_HEADER_SIZE) != AVCI_HEADER_SIZE) {
                 mLastSampleRead = true;
                 return 0;
