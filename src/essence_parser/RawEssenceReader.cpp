@@ -275,7 +275,6 @@ uint32_t RawEssenceReader::ReadBytes(uint32_t size)
 
 void RawEssenceReader::ShiftSampleData(uint32_t to_offset, uint32_t from_offset, uint32_t size)
 {
-    BMX_ASSERT(mSampleData.GetSize() >= (from_offset - to_offset));
     BMX_ASSERT(from_offset + size <= mSampleData.GetSize());
 
     if (mSampleData.GetSize() > (from_offset - to_offset)) {
