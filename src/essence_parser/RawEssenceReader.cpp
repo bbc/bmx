@@ -69,7 +69,6 @@ RawEssenceReader::RawEssenceReader(FILE *raw_input)
     mNumSamples = 0;
     mReadFirstSample = false;
     mLastSampleRead = false;
-    mSampleDataOffset = 0;
 
     mSampleData.SetAllocBlockSize(READ_BLOCK_SIZE);
 }
@@ -146,29 +145,6 @@ uint32_t RawEssenceReader::GetSampleSize() const
     return mSampleDataSize / mNumSamples;
 }
 
-int64_t RawEssenceReader::GetNumRemFixedSizeSamples() const
-{
-    BMX_CHECK(mFixedSampleSize > 0);
-
-#if defined(_WIN32)
-    struct _stati64 stat_buf;
-    if (_fstati64(_fileno(mRawInput), &stat_buf) < 0)
-#else
-    struct stat stat_buf;
-    if (fstat(fileno(mRawInput), &stat_buf) < 0)
-#endif
-        throw BMXException("Failed to stat raw file", strerror(errno));
-
-    int64_t start_offset = mSampleDataOffset + mSampleDataSize;
-    int64_t end_offset = stat_buf.st_size;
-    if (mMaxReadLength > 0 && end_offset > mStartOffset + mMaxReadLength)
-        end_offset = mStartOffset + mMaxReadLength;
-
-    int64_t num_samples = (end_offset  start_offset) / mFixedSampleSize;
-
-    return (num_samples < 0 ? 0 : num_samples);
-}
-
 void RawEssenceReader::Reset()
 {
 #if defined(_WIN32)
@@ -178,7 +154,6 @@ void RawEssenceReader::Reset()
 #endif
         throw BMXException("Failed to seek to raw file start offset 0x%"PRIx64": %s", mStartOffset, strerror(errno));
 
-    mSampleDataOffset = mStartOffset;
     mTotalReadLength = 0;
     mSampleData.SetSize(0);
     mSampleDataSize = 0;
@@ -283,8 +258,5 @@ void RawEssenceReader::ShiftSampleData(uint32_t to_offset, uint32_t from_offset,
     } else {
         mSampleData.SetSize(0);
     }
-
-    if (to_offset == 0)
-        mSampleDataOffset += from_offset;
 }
 

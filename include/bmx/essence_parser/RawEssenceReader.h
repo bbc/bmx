@@ -68,9 +68,6 @@ public:
     uint32_t GetSampleDataSize() const { return mSampleDataSize; }
     uint32_t GetNumSamples() const { return mNumSamples; }
     uint32_t GetSampleSize() const;
-    int64_t GetSampleDataOffset() const { return mSampleDataOffset; }
-
-    int64_t GetNumRemFixedSizeSamples() const;
 
     virtual void Reset();
 
@@ -95,7 +92,6 @@ protected:
     uint32_t mNumSamples;
     bool mReadFirstSample;
     bool mLastSampleRead;
-    int64_t mSampleDataOffset;
 };
 
 
