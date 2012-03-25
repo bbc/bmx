@@ -555,7 +555,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\bmx\mxf_helper\UncMXFDescriptorHelper.h"
+				RelativePath="..\..\..\include\bmx\mxf_helper\UncCDCIMXFDescriptorHelper.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\bmx\mxf_helper\UncRGBAMXFDescriptorHelper.h"
 				>
 			</File>
 			<File
@@ -1005,7 +1009,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\mxf_helper\UncMXFDescriptorHelper.cpp"
+				RelativePath="..\..\..\src\mxf_helper\UncCDCIMXFDescriptorHelper.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\mxf_helper\UncRGBAMXFDescriptorHelper.cpp"
 				>
 			</File>
 			<File

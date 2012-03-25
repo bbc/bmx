@@ -412,6 +412,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --unc_1080i <name>      Raw uncompressed HD 1080i UYVY 422 video input file\n");
     fprintf(stderr, "  --unc_1080p <name>      Raw uncompressed HD 1080p UYVY 422 video input file\n");
     fprintf(stderr, "  --unc_720p <name>       Raw uncompressed HD 720p UYVY 422 video input file\n");
+    fprintf(stderr, "  --avid_alpha <name>             Raw Avid alpha component SD video input file\n");
+    fprintf(stderr, "  --avid_alpha_1080i <name>       Raw Avid alpha component HD 1080i video input file\n");
+    fprintf(stderr, "  --avid_alpha_1080p <name>       Raw Avid alpha component HD 1080p video input file\n");
+    fprintf(stderr, "  --avid_alpha_720p <name>        Raw Avid alpha component HD 720p video input file\n");
     fprintf(stderr, "  --mpeg2lg <name>                Raw MPEG-2 Long GOP video input file\n");
     fprintf(stderr, "  --mpeg2lg_422p_hl_1080i <name>  Raw MPEG-2 Long GOP 422P@HL 1080i video input file\n");
     fprintf(stderr, "  --mpeg2lg_422p_hl_1080p <name>  Raw MPEG-2 Long GOP 422P@HL 1080p video input file\n");
@@ -1524,6 +1528,58 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--avid_alpha") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVID_ALPHA_SD;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avid_alpha_1080i") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVID_ALPHA_HD_1080I;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avid_alpha_1080p") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVID_ALPHA_HD_1080P;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avid_alpha_720p") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVID_ALPHA_HD_720P;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--mpeg2lg") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -2614,6 +2670,16 @@ int main(int argc, const char** argv)
                     if (input->input_height > 0)
                         input->track->SetInputHeight(input->input_height);
                     break;
+                case AVID_ALPHA_SD:
+                case AVID_ALPHA_HD_1080I:
+                case AVID_ALPHA_HD_1080P:
+                case AVID_ALPHA_HD_720P:
+                    input->track->SetAspectRatio(input->aspect_ratio);
+                    if (input->afd)
+                        input->track->SetAFD(input->afd);
+                    if (input->input_height > 0)
+                        input->track->SetInputHeight(input->input_height);
+                    break;
                 case MPEG2LG_422P_HL_1080I:
                 case MPEG2LG_422P_HL_1080P:
                 case MPEG2LG_422P_HL_720P:
@@ -2706,6 +2772,10 @@ int main(int argc, const char** argv)
                 case AVID_10BIT_UNC_HD_1080I:
                 case AVID_10BIT_UNC_HD_1080P:
                 case AVID_10BIT_UNC_HD_720P:
+                case AVID_ALPHA_SD:
+                case AVID_ALPHA_HD_1080I:
+                case AVID_ALPHA_HD_1080P:
+                case AVID_ALPHA_HD_720P:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
                     if (input->raw_reader->GetFixedSampleSize() == 0)

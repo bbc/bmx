@@ -1735,6 +1735,18 @@ int main(int argc, const char** argv)
                         output_track.track->SetComponentDepth(input_picture_info->component_depth);
                         output_track.track->SetInputHeight(input_picture_info->stored_height);
                         break;
+                    case AVID_ALPHA_SD:
+                    case AVID_ALPHA_HD_1080I:
+                    case AVID_ALPHA_HD_1080P:
+                    case AVID_ALPHA_HD_720P:
+                        if (user_aspect_ratio_set)
+                            output_track.track->SetAspectRatio(user_aspect_ratio);
+                        else
+                            output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
+                        if (afd)
+                            output_track.track->SetAFD(afd);
+                        output_track.track->SetInputHeight(input_picture_info->stored_height);
+                        break;
                     case MPEG2LG_422P_HL_1080I:
                     case MPEG2LG_422P_HL_1080P:
                     case MPEG2LG_422P_HL_720P:

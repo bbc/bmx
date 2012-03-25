@@ -11,6 +11,7 @@ libmxfhelper_la_SOURCES = \
 	PictureMXFDescriptorHelper.cpp \
 	SoundMXFDescriptorHelper.cpp \
 	UncCDCIMXFDescriptorHelper.cpp \
+	UncRGBAMXFDescriptorHelper.cpp \
 	VC3MXFDescriptorHelper.cpp \
 	WaveMXFDescriptorHelper.cpp
 

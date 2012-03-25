@@ -91,6 +91,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_helper/PictureMXFDescriptorHelper.h \
 	bmx/mxf_helper/SoundMXFDescriptorHelper.h \
 	bmx/mxf_helper/UncCDCIMXFDescriptorHelper.h \
+	bmx/mxf_helper/UncRGBAMXFDescriptorHelper.h \
 	bmx/mxf_helper/VC3MXFDescriptorHelper.h \
 	bmx/mxf_helper/WaveMXFDescriptorHelper.h \
 	bmx/mxf_reader/EssenceChunkHelper.h \
