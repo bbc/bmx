@@ -274,28 +274,34 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
             GetEditUnitGroup(mPosition, num_samples - total_num_samples, &file_position, &size, &num_cont_samples);
 
         if (frame) {
-            file_position += mImageStartOffset;
-            size -= mImageStartOffset;
+            BMX_CHECK(size >= mImageStartOffset);
 
             if (current_file_position != file_position)
                 mxf_file->seek(file_position, SEEK_SET);
             current_file_position = file_position;
 
-            if (frame->IsEmpty()) {
-                frame->ec_position         = mPosition;
-                frame->temporal_reordering = mIndexTableHelper.GetTemporalReordering(0);
-                frame->cp_file_position    = current_file_position;
-                frame->file_position       = current_file_position;
-            }
-
             BMX_CHECK(size <= UINT32_MAX);
-
             frame->Grow((uint32_t)size);
             uint32_t num_read = mxf_file->read(frame->GetBytesAvailable(), (uint32_t)size);
             current_file_position += num_read;
             BMX_CHECK(num_read == size);
+
+            if (mImageStartOffset > 0) {
+                memmove(frame->GetBytesAvailable(),
+                        frame->GetBytesAvailable() + mImageStartOffset,
+                        size - mImageStartOffset);
+                size -= mImageStartOffset;
+            }
+
             frame->IncrementSize((uint32_t)size);
             frame->num_samples += num_cont_samples;
+
+            if (frame->IsEmpty()) {
+                frame->ec_position         = mPosition;
+                frame->temporal_reordering = mIndexTableHelper.GetTemporalReordering(0);
+                frame->cp_file_position    = current_file_position - size;
+                frame->file_position       = frame->cp_file_position;
+            }
         } else {
             mxf_file->seek(file_position + size, SEEK_SET);
             current_file_position = file_position + size;
