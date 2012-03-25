@@ -95,6 +95,7 @@ MXFPictureTrackInfo::MXFPictureTrackInfo()
 {
     is_picture = true;
 
+    is_cdci = true;
     picture_essence_coding_label = g_Null_UL;
     signal_standard = 0;
     stored_width = 0;
@@ -103,13 +104,13 @@ MXFPictureTrackInfo::MXFPictureTrackInfo()
     display_height = 0;
     display_x_offset = 0;
     display_y_offset = 0;
+    aspect_ratio = ZERO_RATIONAL;
+    frame_layout = 0xff;
+    afd = 0;
     horiz_subsampling = 0;
     vert_subsampling = 1;
     component_depth = 0;
-    aspect_ratio = ZERO_RATIONAL;
-    frame_layout = 0xff;
     color_siting = MXF_COLOR_SITING_UNKNOWN;
-    afd = 0;
     d10_frame_size = 0;
     have_avci_header = false;
 };
@@ -121,6 +122,7 @@ bool MXFPictureTrackInfo::IsCompatible(const MXFTrackInfo *right) const
         return false;
 
     return MXFTrackInfo::IsCompatible(right) &&
+           is_cdci                       == picture_right->is_cdci &&
            picture_essence_coding_label  == picture_right->picture_essence_coding_label &&
            signal_standard               == picture_right->signal_standard &&
            stored_width                  == picture_right->stored_width &&
@@ -129,15 +131,16 @@ bool MXFPictureTrackInfo::IsCompatible(const MXFTrackInfo *right) const
            display_height                == picture_right->display_height &&
            display_x_offset              == picture_right->display_x_offset &&
            display_y_offset              == picture_right->display_y_offset &&
-           horiz_subsampling             == picture_right->horiz_subsampling &&
-           vert_subsampling              == picture_right->vert_subsampling &&
-           component_depth               == picture_right->component_depth &&
            aspect_ratio                  == picture_right->aspect_ratio &&
            frame_layout                  == picture_right->frame_layout &&
-           color_siting                  == picture_right->color_siting &&
            afd                           == picture_right->afd &&
-           d10_frame_size                == picture_right->d10_frame_size &&
-           have_avci_header              == picture_right->have_avci_header;
+           (!is_cdci ||
+               (component_depth          == picture_right->component_depth &&
+                horiz_subsampling        == picture_right->horiz_subsampling &&
+                vert_subsampling         == picture_right->vert_subsampling &&
+                color_siting             == picture_right->color_siting &&
+                d10_frame_size           == picture_right->d10_frame_size &&
+                have_avci_header         == picture_right->have_avci_header));
 }
 
 MXFTrackInfo* MXFPictureTrackInfo::Clone() const
@@ -146,6 +149,7 @@ MXFTrackInfo* MXFPictureTrackInfo::Clone() const
 
     MXFTrackInfo::Clone(clone);
 
+    clone->is_cdci                       = is_cdci;
     clone->picture_essence_coding_label  = picture_essence_coding_label;
     clone->signal_standard               = signal_standard;
     clone->stored_width                  = stored_width;
@@ -154,13 +158,13 @@ MXFTrackInfo* MXFPictureTrackInfo::Clone() const
     clone->display_height                = display_height;
     clone->display_x_offset              = display_x_offset;
     clone->display_y_offset              = display_y_offset;
+    clone->aspect_ratio                  = aspect_ratio;
+    clone->frame_layout                  = frame_layout;
+    clone->afd                           = afd;
     clone->horiz_subsampling             = horiz_subsampling;
     clone->vert_subsampling              = vert_subsampling;
     clone->component_depth               = component_depth;
-    clone->aspect_ratio                  = aspect_ratio;
-    clone->frame_layout                  = frame_layout;
     clone->color_siting                  = color_siting;
-    clone->afd                           = afd;
     clone->d10_frame_size                = d10_frame_size;
     clone->have_avci_header              = have_avci_header;
 

@@ -257,34 +257,36 @@ static void print_track_info(const MXFTrackInfo *track_info)
         printf("  Picture coding label : %s\n", get_label_string(picture_info->picture_essence_coding_label, string_buffer));
         printf("  Signal standard      : %u (%s)\n", picture_info->signal_standard, get_signal_standard_string(picture_info->signal_standard));
         printf("  Frame layout         : %u (%s)\n", picture_info->frame_layout, get_frame_layout_string(picture_info->frame_layout));
-        printf("  Color siting         : %u (%s)\n", picture_info->color_siting, get_color_siting_string(picture_info->color_siting));
         printf("  Stored dimensions    : %ux%u\n", picture_info->stored_width, picture_info->stored_height);
         printf("  Display dimensions   : %ux%u\n", picture_info->display_width, picture_info->display_height);
         printf("  Display x offset     : %u\n", picture_info->display_x_offset);
         printf("  Display y offset     : %u\n", picture_info->display_y_offset);
-        printf("  Horiz subsampling    : %u\n", picture_info->horiz_subsampling);
-        printf("  Vert subsampling     : %u\n", picture_info->vert_subsampling);
-        printf("  Component depth      : %u\n", picture_info->component_depth);
         printf("  Aspect ratio         : %s\n", get_rational_string(picture_info->aspect_ratio, string_buffer));
         printf("  AFD                  : ");
         if (picture_info->afd)
             printf("%u\n", picture_info->afd);
         else
             printf("(not set)\n");
-        if (track_info->essence_type == D10_30 ||
-            track_info->essence_type == D10_40 ||
-            track_info->essence_type == D10_50)
-        {
-            printf("  Frame size           : %u\n", picture_info->d10_frame_size);
-        }
-        if (track_info->essence_type == AVCI100_1080I ||
-            track_info->essence_type == AVCI100_1080P ||
-            track_info->essence_type == AVCI100_720P ||
-            track_info->essence_type == AVCI50_1080I ||
-            track_info->essence_type == AVCI50_1080P ||
-            track_info->essence_type == AVCI50_720P)
-        {
-            printf("  AVCI header          : %s\n", picture_info->have_avci_header ? "true" : "false");
+        if (picture_info->is_cdci) {
+            printf("  Component depth      : %u\n", picture_info->component_depth);
+            printf("  Horiz subsampling    : %u\n", picture_info->horiz_subsampling);
+            printf("  Vert subsampling     : %u\n", picture_info->vert_subsampling);
+            printf("  Color siting         : %u (%s)\n", picture_info->color_siting, get_color_siting_string(picture_info->color_siting));
+            if (track_info->essence_type == D10_30 ||
+                track_info->essence_type == D10_40 ||
+                track_info->essence_type == D10_50)
+            {
+                printf("  Frame size           : %u\n", picture_info->d10_frame_size);
+            }
+            if (track_info->essence_type == AVCI100_1080I ||
+                track_info->essence_type == AVCI100_1080P ||
+                track_info->essence_type == AVCI100_720P ||
+                track_info->essence_type == AVCI50_1080I ||
+                track_info->essence_type == AVCI50_1080P ||
+                track_info->essence_type == AVCI50_720P)
+            {
+                printf("  AVCI header          : %s\n", picture_info->have_avci_header ? "true" : "false");
+            }
         }
     } else if (sound_info) {
         printf("  Sampling rate        : %s\n", get_rational_string(sound_info->sampling_rate, string_buffer));

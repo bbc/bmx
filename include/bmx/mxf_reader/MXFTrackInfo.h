@@ -84,6 +84,8 @@ public:
     virtual MXFTrackInfo* Clone() const;
 
 public:
+    bool is_cdci;
+
     mxfUL picture_essence_coding_label;
     uint8_t signal_standard;
     uint32_t stored_width;
@@ -92,13 +94,15 @@ public:
     uint32_t display_height;
     uint32_t display_x_offset;
     uint32_t display_y_offset;
-    uint32_t horiz_subsampling;
-    uint32_t vert_subsampling;
-    uint32_t component_depth;
     mxfRational aspect_ratio;
     uint8_t frame_layout;
-    uint8_t color_siting;
     uint8_t afd;
+
+    // CDCI only
+    uint32_t component_depth;
+    uint32_t horiz_subsampling;
+    uint32_t vert_subsampling;
+    uint8_t color_siting;
     uint32_t d10_frame_size;
     bool have_avci_header;
 };

@@ -1304,6 +1304,7 @@ void MXFFileReader::ProcessPictureDescriptor(FileDescriptor *file_descriptor, MX
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(file_descriptor);
     if (cdci_descriptor) {
+        picture_track_info->is_cdci = true;
         if (cdci_descriptor->haveComponentDepth())
             picture_track_info->component_depth = cdci_descriptor->getComponentDepth();
         if (cdci_descriptor->haveHorizontalSubsampling())
@@ -1320,6 +1321,8 @@ void MXFFileReader::ProcessPictureDescriptor(FileDescriptor *file_descriptor, MX
             picture_track_info->horiz_subsampling = 4;
             picture_track_info->vert_subsampling = 1;
         }
+    } else {
+        picture_track_info->is_cdci = false;
     }
 }
 
