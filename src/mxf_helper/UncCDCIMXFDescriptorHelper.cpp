@@ -408,15 +408,19 @@ void UncCDCIMXFDescriptorHelper::UpdateFileDescriptor()
 
 uint32_t UncCDCIMXFDescriptorHelper::GetImageAlignmentOffset()
 {
-    return (mFlavour == AVID_FLAVOUR ? AVID_IMAGE_ALIGNMENT : 0);
+    if (mImageAlignmentOffsetSet)
+        return mImageAlignmentOffset;
+    else
+        return (mFlavour == AVID_FLAVOUR ? AVID_IMAGE_ALIGNMENT : 0);
 }
 
 uint32_t UncCDCIMXFDescriptorHelper::GetImageStartOffset()
 {
-    if (mFlavour != AVID_FLAVOUR)
-        return 0;
+    if (mImageStartOffsetSet)
+        return mImageStartOffset;
 
-    return (AVID_IMAGE_ALIGNMENT - (GetSampleSize(0) % AVID_IMAGE_ALIGNMENT)) % AVID_IMAGE_ALIGNMENT;
+    uint32_t image_alignment = GetImageAlignmentOffset();
+    return (image_alignment - (GetSampleSize(0) % image_alignment)) % image_alignment;
 }
 
 uint32_t UncCDCIMXFDescriptorHelper::GetSampleSize()

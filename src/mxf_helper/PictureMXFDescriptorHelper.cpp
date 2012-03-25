@@ -167,6 +167,12 @@ PictureMXFDescriptorHelper::PictureMXFDescriptorHelper()
     mAspectRatio = ASPECT_RATIO_16_9;
     mAFD = 0;
     mAvidResolutionId = 0;
+    mImageAlignmentOffset = 0;
+    mImageAlignmentOffsetSet = false;
+    mImageStartOffset = 0;
+    mImageStartOffsetSet = false;
+    mImageEndOffset = 0;
+    mImageEndOffsetSet = false;
 }
 
 PictureMXFDescriptorHelper::~PictureMXFDescriptorHelper()
@@ -189,6 +195,24 @@ void PictureMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxf
         mAFD = picture_descriptor->getActiveFormatDescriptor();
     else
         mAFD = 0;
+
+    if (picture_descriptor->haveImageAlignmentOffset())
+        mImageAlignmentOffset = picture_descriptor->getImageAlignmentOffset();
+    else
+        mImageAlignmentOffset = 0;
+    mImageAlignmentOffsetSet = true;
+
+    if (picture_descriptor->haveImageStartOffset())
+        mImageStartOffset = picture_descriptor->getImageStartOffset();
+    else
+        mImageStartOffset = 0;
+    mImageStartOffsetSet = true;
+
+    if (picture_descriptor->haveImageEndOffset())
+        mImageEndOffset = picture_descriptor->getImageEndOffset();
+    else
+        mImageEndOffset = 0;
+    mImageEndOffsetSet = true;
 }
 
 void PictureMXFDescriptorHelper::SetAspectRatio(mxfRational aspect_ratio)

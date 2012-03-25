@@ -70,8 +70,9 @@ public:
     virtual void UpdateFileDescriptor();
 
 public:
-    virtual uint32_t GetImageAlignmentOffset()  { return 0; }
-    virtual uint32_t GetImageStartOffset()      { return 0; }
+    virtual uint32_t GetImageAlignmentOffset()  { return mImageAlignmentOffset; }
+    virtual uint32_t GetImageStartOffset()      { return mImageStartOffset; }
+    virtual uint32_t GetImageEndOffset()        { return mImageEndOffset; }
     virtual uint32_t GetSampleSize()            { return 0; }
 
 public:
@@ -103,6 +104,12 @@ protected:
     mxfRational mAspectRatio;
     uint8_t mAFD;
     int32_t mAvidResolutionId;
+    uint32_t mImageAlignmentOffset;
+    bool mImageAlignmentOffsetSet;
+    uint32_t mImageStartOffset;
+    bool mImageStartOffsetSet;
+    uint32_t mImageEndOffset;
+    bool mImageEndOffsetSet;
 };
 
 
