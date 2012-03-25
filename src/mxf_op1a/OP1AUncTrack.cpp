@@ -51,7 +51,7 @@ OP1AUncTrack::OP1AUncTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
                            mxfRational frame_rate, EssenceType essence_type)
 : OP1APictureTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
 {
-    mUncDescriptorHelper = dynamic_cast<UncMXFDescriptorHelper*>(mDescriptorHelper);
+    mUncDescriptorHelper = dynamic_cast<UncCDCIMXFDescriptorHelper*>(mDescriptorHelper);
     BMX_ASSERT(mUncDescriptorHelper);
 
     mUncDescriptorHelper->SetComponentDepth(8);

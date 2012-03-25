@@ -33,7 +33,7 @@
 #define __BMX_AVID_UNC_TRACK_H__
 
 #include <bmx/avid_mxf/AvidPictureTrack.h>
-#include <bmx/mxf_helper/UncMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/UncCDCIMXFDescriptorHelper.h>
 
 
 
@@ -59,7 +59,7 @@ public:
     virtual uint32_t GetImageStartOffset();
 
 private:
-    UncMXFDescriptorHelper *mUncDescriptorHelper;
+    UncCDCIMXFDescriptorHelper *mUncDescriptorHelper;
     bool mIsAvid10Bit;
     uint32_t mInputHeight;
     uint32_t mInputSampleSize;

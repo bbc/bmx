@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_UNC_MXF_DESCRIPTOR_HELPER_H__
-#define __BMX_UNC_MXF_DESCRIPTOR_HELPER_H__
+#ifndef __BMX_UNC_CDCI_MXF_DESCRIPTOR_HELPER_H__
+#define __BMX_UNC_CDCI_MXF_DESCRIPTOR_HELPER_H__
 
 
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
@@ -41,7 +41,7 @@ namespace bmx
 {
 
 
-class UncMXFDescriptorHelper : public PictureMXFDescriptorHelper
+class UncCDCIMXFDescriptorHelper : public PictureMXFDescriptorHelper
 {
 public:
     static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
@@ -51,8 +51,8 @@ private:
     static size_t GetEssenceIndex(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
 
 public:
-    UncMXFDescriptorHelper();
-    virtual ~UncMXFDescriptorHelper();
+    UncCDCIMXFDescriptorHelper();
+    virtual ~UncCDCIMXFDescriptorHelper();
 
 public:
     // initialize from existing descriptor

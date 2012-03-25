@@ -33,7 +33,7 @@
 #define __BMX_AS02_UNC_TRACK_H__
 
 #include <bmx/as02/AS02PictureTrack.h>
-#include <bmx/mxf_helper/UncMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/UncCDCIMXFDescriptorHelper.h>
 
 
 
@@ -51,7 +51,7 @@ public:
     void SetComponentDepth(uint32_t depth);             // default 8; alternative is 10
 
 private:
-    UncMXFDescriptorHelper *mUncDescriptorHelper;
+    UncCDCIMXFDescriptorHelper *mUncDescriptorHelper;
 };
 
 

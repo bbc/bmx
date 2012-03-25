@@ -33,7 +33,7 @@
 #include "config.h"
 #endif
 
-#include <bmx/mxf_helper/UncMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/UncCDCIMXFDescriptorHelper.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -116,7 +116,7 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
 
 
 
-EssenceType UncMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
+EssenceType UncCDCIMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     size_t essence_index = GetEssenceIndex(file_descriptor, alternative_ec_label);
     if (essence_index == (size_t)(-1))
@@ -125,7 +125,7 @@ EssenceType UncMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
     return SUPPORTED_ESSENCE[essence_index].essence_type;
 }
 
-bool UncMXFDescriptorHelper::IsSupported(EssenceType essence_type)
+bool UncCDCIMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
     for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
@@ -136,7 +136,7 @@ bool UncMXFDescriptorHelper::IsSupported(EssenceType essence_type)
     return false;
 }
 
-size_t UncMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
+size_t UncCDCIMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     mxfRational sample_rate = file_descriptor->getSampleRate();
     mxfUL ec_label = file_descriptor->getEssenceContainer();
@@ -163,7 +163,7 @@ size_t UncMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descriptor, 
     return (size_t)(-1);
 }
 
-UncMXFDescriptorHelper::UncMXFDescriptorHelper()
+UncCDCIMXFDescriptorHelper::UncCDCIMXFDescriptorHelper()
 : PictureMXFDescriptorHelper()
 {
     mEssenceIndex = 0;
@@ -179,11 +179,11 @@ UncMXFDescriptorHelper::UncMXFDescriptorHelper()
     SetDefaultDimensions();
 }
 
-UncMXFDescriptorHelper::~UncMXFDescriptorHelper()
+UncCDCIMXFDescriptorHelper::~UncCDCIMXFDescriptorHelper()
 {
 }
 
-void UncMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
+void UncCDCIMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
 {
     PictureMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
 
@@ -267,7 +267,7 @@ void UncMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL a
     }
 }
 
-void UncMXFDescriptorHelper::SetComponentDepth(uint32_t depth)
+void UncCDCIMXFDescriptorHelper::SetComponentDepth(uint32_t depth)
 {
     BMX_ASSERT(!mFileDescriptor);
     BMX_CHECK(depth == 8 || depth == 10);
@@ -275,7 +275,7 @@ void UncMXFDescriptorHelper::SetComponentDepth(uint32_t depth)
     mComponentDepth = depth;
 }
 
-void UncMXFDescriptorHelper::SetStoredDimensions(uint32_t width, uint32_t height)
+void UncCDCIMXFDescriptorHelper::SetStoredDimensions(uint32_t width, uint32_t height)
 {
     mStoredWidth         = width;
     mStoredHeight        = height;
@@ -283,7 +283,7 @@ void UncMXFDescriptorHelper::SetStoredDimensions(uint32_t width, uint32_t height
     SetDefaultDimensions();
 }
 
-void UncMXFDescriptorHelper::SetDisplayDimensions(uint32_t width, uint32_t height, int32_t x_offset, int32_t y_offset)
+void UncCDCIMXFDescriptorHelper::SetDisplayDimensions(uint32_t width, uint32_t height, int32_t x_offset, int32_t y_offset)
 {
     mDisplayWidth         = width;
     mDisplayHeight        = height;
@@ -293,7 +293,7 @@ void UncMXFDescriptorHelper::SetDisplayDimensions(uint32_t width, uint32_t heigh
     SetDefaultDimensions();
 }
 
-void UncMXFDescriptorHelper::SetSampledDimensions(uint32_t width, uint32_t height, int32_t x_offset, int32_t y_offset)
+void UncCDCIMXFDescriptorHelper::SetSampledDimensions(uint32_t width, uint32_t height, int32_t x_offset, int32_t y_offset)
 {
     mSampledWidth         = width;
     mSampledHeight        = height;
@@ -303,14 +303,14 @@ void UncMXFDescriptorHelper::SetSampledDimensions(uint32_t width, uint32_t heigh
     SetDefaultDimensions();
 }
 
-void UncMXFDescriptorHelper::SetVideoLineMap(int32_t field1, int32_t field2)
+void UncCDCIMXFDescriptorHelper::SetVideoLineMap(int32_t field1, int32_t field2)
 {
     mVideoLineMap[0] = field1;
     mVideoLineMap[1] = field2;
     mVideoLineMapSet = true;
 }
 
-void UncMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
+void UncCDCIMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 {
     BMX_ASSERT(!mFileDescriptor);
 
@@ -319,7 +319,7 @@ void UncMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
     UpdateEssenceIndex();
 }
 
-void UncMXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
+void UncCDCIMXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 {
     BMX_ASSERT(!mFileDescriptor);
 
@@ -328,7 +328,7 @@ void UncMXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
     UpdateEssenceIndex();
 }
 
-void UncMXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
+void UncCDCIMXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
 {
     BMX_ASSERT(!mFileDescriptor);
 
@@ -337,7 +337,7 @@ void UncMXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
     UpdateEssenceIndex();
 }
 
-FileDescriptor* UncMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata)
+FileDescriptor* UncCDCIMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata)
 {
     BMX_CHECK(UpdateEssenceIndex());
 
@@ -346,7 +346,7 @@ FileDescriptor* UncMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetada
     return mFileDescriptor;
 }
 
-void UncMXFDescriptorHelper::UpdateFileDescriptor()
+void UncCDCIMXFDescriptorHelper::UpdateFileDescriptor()
 {
     PictureMXFDescriptorHelper::UpdateFileDescriptor();
 
@@ -406,12 +406,12 @@ void UncMXFDescriptorHelper::UpdateFileDescriptor()
         cdci_descriptor->setSampledYOffset(mSampledYOffset);
 }
 
-uint32_t UncMXFDescriptorHelper::GetImageAlignmentOffset()
+uint32_t UncCDCIMXFDescriptorHelper::GetImageAlignmentOffset()
 {
     return (mFlavour == AVID_FLAVOUR ? AVID_IMAGE_ALIGNMENT : 0);
 }
 
-uint32_t UncMXFDescriptorHelper::GetImageStartOffset()
+uint32_t UncCDCIMXFDescriptorHelper::GetImageStartOffset()
 {
     if (mFlavour != AVID_FLAVOUR)
         return 0;
@@ -419,12 +419,12 @@ uint32_t UncMXFDescriptorHelper::GetImageStartOffset()
     return (AVID_IMAGE_ALIGNMENT - (GetSampleSize(0) % AVID_IMAGE_ALIGNMENT)) % AVID_IMAGE_ALIGNMENT;
 }
 
-uint32_t UncMXFDescriptorHelper::GetSampleSize()
+uint32_t UncCDCIMXFDescriptorHelper::GetSampleSize()
 {
     return GetSampleSize(0);
 }
 
-uint32_t UncMXFDescriptorHelper::GetSampleSize(uint32_t input_height)
+uint32_t UncCDCIMXFDescriptorHelper::GetSampleSize(uint32_t input_height)
 {
     uint32_t height = input_height;
     if (height == 0)
@@ -438,12 +438,12 @@ uint32_t UncMXFDescriptorHelper::GetSampleSize(uint32_t input_height)
         return mStoredWidth / 48 * 128 * height;
 }
 
-mxfUL UncMXFDescriptorHelper::ChooseEssenceContainerUL() const
+mxfUL UncCDCIMXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
     return SUPPORTED_ESSENCE[mEssenceIndex].ec_label;
 }
 
-bool UncMXFDescriptorHelper::UpdateEssenceIndex()
+bool UncCDCIMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
     for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
@@ -465,7 +465,7 @@ bool UncMXFDescriptorHelper::UpdateEssenceIndex()
     return false;
 }
 
-void UncMXFDescriptorHelper::SetDefaultDimensions()
+void UncCDCIMXFDescriptorHelper::SetDefaultDimensions()
 {
     if (!mStoredDimensionsSet) {
         if (mComponentDepth == 8 || SUPPORTED_ESSENCE[mEssenceIndex].is_avid_10bit)

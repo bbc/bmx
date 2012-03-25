@@ -48,7 +48,7 @@ using namespace mxfpp;
 AvidUncTrack::AvidUncTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, File *file)
 : AvidPictureTrack(clip, track_index, essence_type, file)
 {
-    mUncDescriptorHelper = dynamic_cast<UncMXFDescriptorHelper*>(mDescriptorHelper);
+    mUncDescriptorHelper = dynamic_cast<UncCDCIMXFDescriptorHelper*>(mDescriptorHelper);
     BMX_ASSERT(mUncDescriptorHelper);
 
     if (essence_type == AVID_10BIT_UNC_SD ||

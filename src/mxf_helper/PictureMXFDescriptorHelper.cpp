@@ -39,7 +39,7 @@
 #include <bmx/mxf_helper/D10MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/DVMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/AVCIMXFDescriptorHelper.h>
-#include <bmx/mxf_helper/UncMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/UncCDCIMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/MPEG2LGMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/VC3MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/MJPEGMXFDescriptorHelper.h>
@@ -71,7 +71,7 @@ EssenceType PictureMXFDescriptorHelper::IsSupported(FileDescriptor *file_descrip
     essence_type = AVCIMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)
         return essence_type;
-    essence_type = UncMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+    essence_type = UncCDCIMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)
         return essence_type;
     essence_type = MPEG2LGMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
@@ -97,8 +97,8 @@ PictureMXFDescriptorHelper* PictureMXFDescriptorHelper::Create(FileDescriptor *f
         helper = new DVMXFDescriptorHelper();
     else if (AVCIMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
         helper = new AVCIMXFDescriptorHelper();
-    else if (UncMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
-        helper = new UncMXFDescriptorHelper();
+    else if (UncCDCIMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
+        helper = new UncCDCIMXFDescriptorHelper();
     else if (MPEG2LGMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
         helper = new MPEG2LGMXFDescriptorHelper();
     else if (VC3MXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
@@ -118,7 +118,7 @@ bool PictureMXFDescriptorHelper::IsSupported(EssenceType essence_type)
     return D10MXFDescriptorHelper::IsSupported(essence_type) ||
            DVMXFDescriptorHelper::IsSupported(essence_type) ||
            AVCIMXFDescriptorHelper::IsSupported(essence_type) ||
-           UncMXFDescriptorHelper::IsSupported(essence_type) ||
+           UncCDCIMXFDescriptorHelper::IsSupported(essence_type) ||
            MPEG2LGMXFDescriptorHelper::IsSupported(essence_type) ||
            VC3MXFDescriptorHelper::IsSupported(essence_type) ||
            MJPEGMXFDescriptorHelper::IsSupported(essence_type);
@@ -135,8 +135,8 @@ MXFDescriptorHelper* PictureMXFDescriptorHelper::Create(EssenceType essence_type
         helper = new DVMXFDescriptorHelper();
     else if (AVCIMXFDescriptorHelper::IsSupported(essence_type))
         helper = new AVCIMXFDescriptorHelper();
-    else if (UncMXFDescriptorHelper::IsSupported(essence_type))
-        helper = new UncMXFDescriptorHelper();
+    else if (UncCDCIMXFDescriptorHelper::IsSupported(essence_type))
+        helper = new UncCDCIMXFDescriptorHelper();
     else if (MPEG2LGMXFDescriptorHelper::IsSupported(essence_type))
         helper = new MPEG2LGMXFDescriptorHelper();
     else if (VC3MXFDescriptorHelper::IsSupported(essence_type))

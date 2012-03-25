@@ -10,7 +10,7 @@ libmxfhelper_la_SOURCES = \
 	MXFFileFactory.cpp \
 	PictureMXFDescriptorHelper.cpp \
 	SoundMXFDescriptorHelper.cpp \
-	UncMXFDescriptorHelper.cpp \
+	UncCDCIMXFDescriptorHelper.cpp \
 	VC3MXFDescriptorHelper.cpp \
 	WaveMXFDescriptorHelper.cpp
 
