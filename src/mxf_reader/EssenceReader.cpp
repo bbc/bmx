@@ -61,6 +61,7 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
     mFileReader = file_reader;
     mPosition = 0;
     mImageStartOffset = 0;
+    mImageEndOffset = 0;
 
     // read ImageStartOffset used in Avid uncompressed video and the
     // FirstFrameOffset Avid extension property
@@ -75,10 +76,9 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
             if (picture_helper->HaveAvidFirstFrameOffset())
                 avid_first_frame_offset = picture_helper->GetAvidFirstFrameOffset();
 
-            GenericPictureEssenceDescriptor *picture_descriptor =
-                dynamic_cast<GenericPictureEssenceDescriptor*>(picture_helper->GetFileDescriptor());
-            if (picture_descriptor->haveImageStartOffset())
-                mImageStartOffset = picture_descriptor->getImageStartOffset();
+            uint32_t alignment = picture_helper->GetImageAlignmentOffset();
+            mImageStartOffset = picture_helper->GetImageStartOffset();
+            mImageEndOffset = picture_helper->GetImageEndOffset();
         }
     }
 
@@ -268,13 +268,13 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
         // get maximum number of contiguous samples that can be read in one go
         uint32_t num_cont_samples;
         int64_t file_position, size;
-        if (mImageStartOffset)
+        if (mImageStartOffset || mImageEndOffset)
             GetEditUnitGroup(mPosition, 1, &file_position, &size, &num_cont_samples);
         else
             GetEditUnitGroup(mPosition, num_samples - total_num_samples, &file_position, &size, &num_cont_samples);
 
         if (frame) {
-            BMX_CHECK(size >= mImageStartOffset);
+            BMX_CHECK(size >= mImageStartOffset + mImageEndOffset);
 
             if (current_file_position != file_position)
                 mxf_file->seek(file_position, SEEK_SET);
@@ -286,6 +286,7 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
             current_file_position += num_read;
             BMX_CHECK(num_read == size);
 
+            size -= mImageEndOffset;
             if (mImageStartOffset > 0) {
                 memmove(frame->GetBytesAvailable(),
                         frame->GetBytesAvailable() + mImageStartOffset,
@@ -299,7 +300,7 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
             if (frame->IsEmpty()) {
                 frame->ec_position         = mPosition;
                 frame->temporal_reordering = mIndexTableHelper.GetTemporalReordering(0);
-                frame->cp_file_position    = current_file_position - size;
+                frame->cp_file_position    = current_file_position - mImageEndOffset - size;
                 frame->file_position       = frame->cp_file_position;
             }
         } else {

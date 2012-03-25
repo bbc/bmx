@@ -85,6 +85,7 @@ private:
     int64_t mReadDuration;
     int64_t mPosition;
     uint32_t mImageStartOffset;
+    uint32_t mImageEndOffset;
 
     std::vector<Frame*> mTrackFrames;
 };
