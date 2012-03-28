@@ -247,6 +247,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\bmx\avid_mxf\AvidAlphaTrack.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\include\bmx\avid_mxf\AvidAVCITrack.h"
 				>
 			</File>
@@ -714,6 +718,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\writer_helper\AVCIWriterHelper.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\avid_mxf\AvidAlphaTrack.cpp"
 				>
 			</File>
 			<File

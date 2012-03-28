@@ -1,6 +1,7 @@
 noinst_LTLIBRARIES = libavidmxf.la
 
 libavidmxf_la_SOURCES = \
+	AvidAlphaTrack.cpp \
 	AvidAVCITrack.cpp \
 	AvidClip.cpp \
 	AvidD10Track.cpp \

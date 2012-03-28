@@ -47,6 +47,7 @@
 #include <bmx/avid_mxf/AvidUncTrack.h>
 #include <bmx/avid_mxf/AvidVC3Track.h>
 #include <bmx/avid_mxf/AvidPCMTrack.h>
+#include <bmx/avid_mxf/AvidAlphaTrack.h>
 #include <bmx/avid_mxf/AvidClip.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/BMXException.h>
@@ -126,6 +127,10 @@ static const AvidSampleRateSupport AVID_SAMPLE_RATE_SUPPORT[] =
     {AVID_10BIT_UNC_HD_1080I,  {{25, 1}, {30000, 1001}, {0, 0}}},
     {AVID_10BIT_UNC_HD_1080P,  {{25, 1}, {30000, 1001}, {0, 0}}},
     {AVID_10BIT_UNC_HD_720P,   {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {AVID_ALPHA_SD,            {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVID_ALPHA_HD_1080I,      {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVID_ALPHA_HD_1080P,      {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {AVID_ALPHA_HD_720P,       {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {WAVE_PCM,                 {{48000, 1}, {0, 0}}},
 };
 
@@ -206,6 +211,11 @@ AvidTrack* AvidTrack::OpenNew(AvidClip *clip, File *file, uint32_t track_index, 
         case AVID_10BIT_UNC_HD_1080P:
         case AVID_10BIT_UNC_HD_720P:
             return new AvidUncTrack(clip, track_index, essence_type, file);
+        case AVID_ALPHA_SD:
+        case AVID_ALPHA_HD_1080I:
+        case AVID_ALPHA_HD_1080P:
+        case AVID_ALPHA_HD_720P:
+            return new AvidAlphaTrack(clip, track_index, essence_type, file);
         case WAVE_PCM:
             return new AvidPCMTrack(clip, track_index, essence_type, file);
         default:

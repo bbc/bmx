@@ -59,6 +59,7 @@ nobase_library_include_HEADERS = \
 	bmx/d10_mxf/D10MPEGTrack.h \
 	bmx/d10_mxf/D10PCMTrack.h \
 	bmx/d10_mxf/D10Track.h \
+	bmx/avid_mxf/AvidAlphaTrack.h \
 	bmx/avid_mxf/AvidAVCITrack.h \
 	bmx/avid_mxf/AvidClip.h \
 	bmx/avid_mxf/AvidD10Track.h \
