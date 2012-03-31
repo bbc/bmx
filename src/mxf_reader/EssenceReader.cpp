@@ -79,7 +79,7 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
             uint32_t alignment = picture_helper->GetImageAlignmentOffset();
             mImageStartOffset = picture_helper->GetImageStartOffset();
             mImageEndOffset = picture_helper->GetImageEndOffset();
-            if (alignment != 0 && mImageStartOffset == 0 && mImageEndOffset == 0) {
+            if (alignment > 1 && mImageStartOffset == 0 && mImageEndOffset == 0) {
                 // Avid uncompressed Alpha file was found to have ImageAlignmentOffset set to 8192 but
                 // the ImageEndOffset property was not set
                 mImageEndOffset = (alignment - (picture_helper->GetSampleSize() % alignment)) % alignment;

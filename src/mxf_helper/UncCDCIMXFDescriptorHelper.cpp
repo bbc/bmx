@@ -420,7 +420,10 @@ uint32_t UncCDCIMXFDescriptorHelper::GetImageStartOffset()
         return mImageStartOffset;
 
     uint32_t image_alignment = GetImageAlignmentOffset();
-    return (image_alignment - (GetSampleSize(0) % image_alignment)) % image_alignment;
+    if (image_alignment <= 1)
+        return 0;
+    else
+        return (image_alignment - (GetSampleSize(0) % image_alignment)) % image_alignment;
 }
 
 uint32_t UncCDCIMXFDescriptorHelper::GetSampleSize()
