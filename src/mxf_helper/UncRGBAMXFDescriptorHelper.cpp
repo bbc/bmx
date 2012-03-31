@@ -332,14 +332,18 @@ uint32_t UncRGBAMXFDescriptorHelper::GetImageAlignmentOffset()
 {
     if (mImageAlignmentOffsetSet)
         return mImageAlignmentOffset;
+    else if (mFlavour == AVID_FLAVOUR)
+        return AVID_IMAGE_ALIGNMENT;
     else
-        return (mFlavour == AVID_FLAVOUR ? AVID_IMAGE_ALIGNMENT : 0);
+        return 0;
 }
 
 uint32_t UncRGBAMXFDescriptorHelper::GetImageEndOffset()
 {
     if (mImageEndOffsetSet)
         return mImageEndOffset;
+    else if (mFlavour != AVID_FLAVOUR)
+        return 0;
 
     uint32_t image_alignment = GetImageAlignmentOffset();
     if (image_alignment <= 1)
