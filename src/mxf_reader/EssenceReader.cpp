@@ -81,12 +81,12 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
             mImageEndOffset = picture_helper->GetImageEndOffset();
             if (alignment != 0 && mImageStartOffset == 0 && mImageEndOffset == 0) {
                 // Avid uncompressed Alpha file was found to have ImageAlignmentOffset set to 8192 but
-                // the ImageStartOffset property was missing
-                mImageStartOffset = (alignment - (picture_helper->GetSampleSize() % alignment)) % alignment;
-                if (mImageStartOffset != 0) {
+                // the ImageEndOffset property was not set
+                mImageEndOffset = (alignment - (picture_helper->GetSampleSize() % alignment)) % alignment;
+                if (mImageEndOffset != 0) {
                     log_warn("File with a non-zero ImageAlignmentOffset is missing a non-zero "
-                             "ImageStartOffset or ImageEndOffset. Assuming ImageStartOffset %u\n",
-                             mImageStartOffset);
+                             "ImageStartOffset or ImageEndOffset. Assuming ImageEndOffset %u\n",
+                             mImageEndOffset);
                 }
             }
         }
