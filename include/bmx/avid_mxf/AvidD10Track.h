@@ -49,8 +49,14 @@ public:
 
     void SetSampleSize(uint32_t size);
 
+public:
+    virtual void PrepareWrite();
+    virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
+
 private:
     D10MXFDescriptorHelper *mD10DescriptorHelper;
+    uint32_t mInputSampleSize;
+    uint32_t mPaddingSize;
 };
 
 
