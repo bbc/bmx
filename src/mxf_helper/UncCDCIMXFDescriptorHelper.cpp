@@ -413,7 +413,7 @@ uint32_t UncCDCIMXFDescriptorHelper::GetImageAlignmentOffset()
     else if (mFlavour == AVID_FLAVOUR)
         return AVID_IMAGE_ALIGNMENT;
     else
-        return 0;
+        return 1;
 }
 
 uint32_t UncCDCIMXFDescriptorHelper::GetImageStartOffset()

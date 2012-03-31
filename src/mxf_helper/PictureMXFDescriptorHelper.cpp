@@ -167,7 +167,7 @@ PictureMXFDescriptorHelper::PictureMXFDescriptorHelper()
     mAspectRatio = ASPECT_RATIO_16_9;
     mAFD = 0;
     mAvidResolutionId = 0;
-    mImageAlignmentOffset = 0;
+    mImageAlignmentOffset = 1;
     mImageAlignmentOffsetSet = false;
     mImageStartOffset = 0;
     mImageStartOffsetSet = false;
@@ -199,7 +199,7 @@ void PictureMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxf
     if (picture_descriptor->haveImageAlignmentOffset())
         mImageAlignmentOffset = picture_descriptor->getImageAlignmentOffset();
     else
-        mImageAlignmentOffset = 0;
+        mImageAlignmentOffset = 1;
     mImageAlignmentOffsetSet = true;
 
     if (picture_descriptor->haveImageStartOffset())
@@ -248,7 +248,7 @@ void PictureMXFDescriptorHelper::UpdateFileDescriptor()
         picture_descriptor->setActiveFormatDescriptor(mAFD);
 
     if (mFlavour == AVID_FLAVOUR) {
-        if (GetImageAlignmentOffset() > 0)
+        if (GetImageAlignmentOffset() > 1)
             picture_descriptor->setImageAlignmentOffset(GetImageAlignmentOffset());
         if (GetImageStartOffset() > 0)
             picture_descriptor->setImageStartOffset(GetImageStartOffset());
