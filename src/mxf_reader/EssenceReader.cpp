@@ -300,7 +300,7 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
             if (mImageStartOffset > 0) {
                 memmove(frame->GetBytesAvailable(),
                         frame->GetBytesAvailable() + mImageStartOffset,
-                        size - mImageStartOffset);
+                        (uint32_t)(size - mImageStartOffset));
                 size -= mImageStartOffset;
             }
 
