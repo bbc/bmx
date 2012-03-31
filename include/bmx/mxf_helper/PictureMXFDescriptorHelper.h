@@ -73,6 +73,9 @@ public:
     virtual uint32_t GetImageAlignmentOffset()  { return mImageAlignmentOffset; }
     virtual uint32_t GetImageStartOffset()      { return mImageStartOffset; }
     virtual uint32_t GetImageEndOffset()        { return mImageEndOffset; }
+    virtual uint32_t GetEditUnitSize()          { return GetImageStartOffset() +
+                                                         GetSampleSize() +
+                                                         GetImageEndOffset(); }
     virtual uint32_t GetSampleSize()            { return 0; }
 
 public:

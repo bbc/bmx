@@ -72,7 +72,7 @@ public:
 
 public:
     virtual uint32_t GetImageAlignmentOffset();
-    virtual uint32_t GetImageStartOffset();
+    virtual uint32_t GetImageEndOffset();
     virtual uint32_t GetSampleSize();
 
     uint32_t GetSampleSize(uint32_t input_height);

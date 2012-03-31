@@ -71,6 +71,7 @@ AvidUncTrack::AvidUncTrack(AvidClip *clip, uint32_t track_index, EssenceType ess
 
     mInputHeight = 0;
     mInputSampleSize = 0;
+    mImageStartOffset = 0;
     mPadding = 0;
     mPaddingSize = 0;
     mSkipSize = 0;
@@ -100,6 +101,7 @@ void AvidUncTrack::PrepareWrite()
     AvidTrack::PrepareWrite();
 
     mInputSampleSize = mUncDescriptorHelper->GetSampleSize(mInputHeight);
+    mImageStartOffset = mUncDescriptorHelper->GetImageStartOffset();
 
     if (mInputSampleSize > mSampleSize)
         mSkipSize = mInputSampleSize - mSampleSize;
@@ -188,10 +190,5 @@ void AvidUncTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32
             mContainerDuration++;
         }
     }
-}
-
-uint32_t AvidUncTrack::GetImageStartOffset()
-{
-    return mUncDescriptorHelper->GetImageStartOffset();
 }
 

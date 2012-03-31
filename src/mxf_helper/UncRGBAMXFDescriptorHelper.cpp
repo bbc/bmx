@@ -336,10 +336,10 @@ uint32_t UncRGBAMXFDescriptorHelper::GetImageAlignmentOffset()
         return (mFlavour == AVID_FLAVOUR ? AVID_IMAGE_ALIGNMENT : 0);
 }
 
-uint32_t UncRGBAMXFDescriptorHelper::GetImageStartOffset()
+uint32_t UncRGBAMXFDescriptorHelper::GetImageEndOffset()
 {
-    if (mImageStartOffsetSet)
-        return mImageStartOffset;
+    if (mImageEndOffsetSet)
+        return mImageEndOffset;
 
     uint32_t image_alignment = GetImageAlignmentOffset();
     return (image_alignment - (GetSampleSize(0) % image_alignment)) % image_alignment;

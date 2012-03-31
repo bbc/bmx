@@ -252,7 +252,8 @@ void PictureMXFDescriptorHelper::UpdateFileDescriptor()
             picture_descriptor->setImageAlignmentOffset(GetImageAlignmentOffset());
         if (GetImageStartOffset() > 0)
             picture_descriptor->setImageStartOffset(GetImageStartOffset());
-        SetAvidFrameSampleSize(GetImageStartOffset() + GetSampleSize());
+        // not setting ImageEndOffset because Avid alpha channel sample files did not have it set
+        SetAvidFrameSampleSize(GetEditUnitSize());
         if (mAvidResolutionId != 0)
             SetAvidResolutionID(mAvidResolutionId);
     }

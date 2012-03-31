@@ -58,6 +58,7 @@ AvidAlphaTrack::AvidAlphaTrack(AvidClip *clip, uint32_t track_index, EssenceType
 
     mInputHeight = 0;
     mInputSampleSize = 0;
+    mImageEndOffset = 0;
     mPaddingSize = 0;
     mSkipSize = 0;
 }
@@ -81,6 +82,7 @@ void AvidAlphaTrack::PrepareWrite()
     AvidTrack::PrepareWrite();
 
     mInputSampleSize = mRGBADescriptorHelper->GetSampleSize(mInputHeight);
+    mImageEndOffset = mRGBADescriptorHelper->GetImageEndOffset();
 
     if (mInputSampleSize > mSampleSize)
         mSkipSize = mInputSampleSize - mSampleSize;
@@ -100,21 +102,21 @@ void AvidAlphaTrack::WriteSamples(const unsigned char *data, uint32_t size, uint
     const uint32_t sample_input_size = mSampleSize - mPaddingSize;
     uint32_t i;
     for (i = 0; i < num_samples; i++) {
-        if (mImageStartOffset + mPaddingSize > 0) {
-            mMXFFile->writeZeros(mImageStartOffset + mPaddingSize);
-            mContainerSize += mImageStartOffset + mPaddingSize;
+        if (mPaddingSize > 0) {
+            mMXFFile->writeZeros(mPaddingSize);
+            mContainerSize += mPaddingSize;
         }
 
         BMX_CHECK(mMXFFile->write(sample_data + mSkipSize, sample_input_size) == sample_input_size);
         mContainerSize += sample_input_size;
         sample_data += mSkipSize + sample_input_size;
 
+        if (mImageEndOffset > 0) {
+            mMXFFile->writeZeros(mImageEndOffset);
+            mContainerSize += mImageEndOffset;
+        }
+
         mContainerDuration++;
     }
-}
-
-uint32_t AvidAlphaTrack::GetImageStartOffset()
-{
-    return mRGBADescriptorHelper->GetImageStartOffset();
 }
 

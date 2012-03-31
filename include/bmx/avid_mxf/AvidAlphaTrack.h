@@ -58,12 +58,14 @@ public:
 
     virtual bool IsAlpha() const { return true; }
 
-    virtual uint32_t GetImageStartOffset();
+protected:
+    virtual uint32_t GetEditUnitSize() const { return mSampleSize + mImageEndOffset; }
 
 private:
     UncRGBAMXFDescriptorHelper *mRGBADescriptorHelper;
     uint32_t mInputHeight;
     uint32_t mInputSampleSize;
+    uint32_t mImageEndOffset;
     uint32_t mPaddingSize;
     uint32_t mSkipSize;
 };

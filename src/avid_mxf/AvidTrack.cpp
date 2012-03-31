@@ -233,7 +233,6 @@ AvidTrack::AvidTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_t
     mSourceRefPackageUID = g_Null_UMID;
     mSourceRefTrackId = 0;
     mSampleSize = 0;
-    mImageStartOffset = 0;
     mTrackNumber = 0;
     memset(&mEssenceElementKey, 0, sizeof(mEssenceElementKey));
     mBodySID = 1;
@@ -288,7 +287,6 @@ void AvidTrack::SetSourceRef(mxfUMID ref_package_uid, uint32_t ref_track_id)
 void AvidTrack::PrepareWrite()
 {
     mSampleSize = GetSampleSize();
-    mImageStartOffset = GetImageStartOffset();
 
     CreateHeaderMetadata();
     CreateFile();
@@ -301,15 +299,9 @@ void AvidTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t 
     BMX_CHECK(size > 0 && num_samples > 0);
     BMX_CHECK(size >= num_samples * mSampleSize);
 
-    if (mImageStartOffset > 0) {
-        mMXFFile->writeZeros(mImageStartOffset);
-        mContainerSize += mImageStartOffset;
-    }
-
     uint32_t write_size = num_samples * mSampleSize;
     BMX_CHECK(mMXFFile->write(data, write_size) == write_size);
     mContainerSize += write_size;
-
     mContainerDuration += num_samples;
 }
 
@@ -432,7 +424,6 @@ pair<mxfUMID, uint32_t> AvidTrack::GetSourceReference() const
 
 void AvidTrack::WriteCBEIndexTable(Partition *partition)
 {
-    BMX_ASSERT(mSampleSize > 0);
     BMX_ASSERT(!mCBEIndexSegment);
 
     mxfUUID uuid;
@@ -443,7 +434,7 @@ void AvidTrack::WriteCBEIndexTable(Partition *partition)
     mCBEIndexSegment->setIndexEditRate(GetSampleRate());
     mCBEIndexSegment->setIndexSID(mIndexSID);
     mCBEIndexSegment->setBodySID(mBodySID);
-    mCBEIndexSegment->setEditUnitByteCount(mImageStartOffset + mSampleSize);
+    mCBEIndexSegment->setEditUnitByteCount(GetEditUnitSize());
     mCBEIndexSegment->setIndexDuration(mContainerDuration);
 
     KAGFillerWriter kag_filler_writer(partition);

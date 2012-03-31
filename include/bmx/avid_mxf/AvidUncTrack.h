@@ -56,13 +56,15 @@ public:
     virtual void PrepareWrite();
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
 
-    virtual uint32_t GetImageStartOffset();
+protected:
+    virtual uint32_t GetEditUnitSize() const { return mImageStartOffset + mSampleSize; }
 
 private:
     UncCDCIMXFDescriptorHelper *mUncDescriptorHelper;
     bool mIsAvid10Bit;
     uint32_t mInputHeight;
     uint32_t mInputSampleSize;
+    uint32_t mImageStartOffset;
     unsigned char *mPadding;
     uint32_t mPaddingSize;
     uint32_t mSkipSize;

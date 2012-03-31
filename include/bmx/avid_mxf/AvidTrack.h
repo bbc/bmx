@@ -96,7 +96,7 @@ public:
 protected:
     AvidTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *mxf_file);
 
-    virtual uint32_t GetImageStartOffset() { return 0; }
+    virtual uint32_t GetEditUnitSize() const { return mSampleSize; }
 
     virtual bool HaveCBEIndexTable() { return mSampleSize > 0; }
     virtual void WriteCBEIndexTable(mxfpp::Partition *partition);
@@ -116,7 +116,6 @@ protected:
 
     mxfUL mEssenceContainerUL;
     uint32_t mSampleSize;
-    uint32_t mImageStartOffset;
     uint32_t mTrackNumber;
     mxfKey mEssenceElementKey;
     uint32_t mIndexSID;
