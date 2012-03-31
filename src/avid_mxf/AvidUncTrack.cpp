@@ -143,14 +143,9 @@ void AvidUncTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32
         const uint32_t msb_input_size = mMSBSampleSize - mPaddingSize;
         uint32_t i;
         for (i = 0; i < num_samples; i++) {
-            if (mImageStartOffset > 0) {
-                mMXFFile->writeZeros(mImageStartOffset);
-                mContainerSize += mImageStartOffset;
-            }
-
-            if (mLSBPaddingSize > 0) {
-                mMXFFile->writeZeros(mLSBPaddingSize);
-                mContainerSize += mLSBPaddingSize;
+            if (mImageStartOffset + mLSBPaddingSize > 0) {
+                mMXFFile->writeZeros(mImageStartOffset + mLSBPaddingSize);
+                mContainerSize += mImageStartOffset + mLSBPaddingSize;
             }
 
             BMX_CHECK(mMXFFile->write(sample_data + mLSBSkipSize, lsb_input_size) == lsb_input_size);
