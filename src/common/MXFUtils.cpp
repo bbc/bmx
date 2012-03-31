@@ -311,7 +311,9 @@ MXFMD5WrapperFile* bmx::md5_wrap_mxf_file(MXFFile *target)
     {
         // using malloc() because mxf_file_close will call free()
         BMX_CHECK((md5_mxf_file = (MXFFile*)malloc(sizeof(MXFFile))) != 0);
+        memset(md5_mxf_file, 0, sizeof(MXFFile));
         BMX_CHECK((md5_mxf_file->sysData = (MXFFileSysData*)malloc(sizeof(MXFFileSysData))) != 0);
+        memset(md5_mxf_file->sysData, 0, sizeof(MXFFileSysData));
 
         md5_mxf_file->sysData->target       = target;
         md5_mxf_file->sysData->position     = mxf_file_tell(target);
