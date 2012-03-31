@@ -94,6 +94,7 @@ typedef enum
     TYPE_VC3_720P_1251,
     TYPE_VC3_720P_1252,
     TYPE_VC3_1080P_1253,
+    TYPE_AVID_ALPHA_HD_1080I,
     TYPE_END,
 } EssenceType;
 
@@ -455,6 +456,20 @@ static void write_vc3(FILE *file, int type, unsigned int duration)
     write_data(file, duration * frame_size);
 }
 
+static void write_avid_alpha(FILE *file, int type, unsigned int duration)
+{
+    uint32_t frame_size;
+    switch (type)
+    {
+        case TYPE_AVID_ALPHA_HD_1080I:
+        default:
+            frame_size = 1920 * 1080;
+            break;
+    }
+
+    write_data(file, duration * frame_size);
+}
+
 
 static void print_usage(const char *cmd)
 {
@@ -500,6 +515,7 @@ static void print_usage(const char *cmd)
     fprintf(stderr, " 38: VC3/DNxHD 1251 1280x720p 220/185/110/90 Mbps\n");
     fprintf(stderr, " 39: VC3/DNxHD 1252 1280x720p 220/185/110/90 Mbps\n");
     fprintf(stderr, " 40: VC3/DNxHD 1253 1920x1080p 45/36 Mbps\n");
+    fprintf(stderr, " 41: AVID Alpha HD 1080I\n");
 }
 
 int main(int argc, const char **argv)
@@ -649,6 +665,9 @@ int main(int argc, const char **argv)
         case TYPE_VC3_720P_1252:
         case TYPE_VC3_1080P_1253:
             write_vc3(file, type, duration);
+            break;
+        case TYPE_AVID_ALPHA_HD_1080I:
+            write_avid_alpha(file, type, duration);
             break;
         case TYPE_UNKNOWN:
         case TYPE_END:

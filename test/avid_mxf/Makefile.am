@@ -31,7 +31,8 @@ TESTS = \
 	vc3_720p_1250.test \
 	vc3_720p_1251.test \
 	vc3_720p_1252.test \
-	vc3_1080p_1253.test
+	vc3_1080p_1253.test \
+	avid_alpha_1080i25.test
 
 
 EXTRA_DIST = \
@@ -68,6 +69,7 @@ EXTRA_DIST = \
 	vc3_720p_1251.test \
 	vc3_720p_1252.test \
 	vc3_1080p_1253.test \
+	avid_alpha_1080i25.test \
 	d10_30.md5s \
 	d10_40.md5s \
 	d10_50.md5s \
@@ -101,6 +103,7 @@ EXTRA_DIST = \
 	vc3_720p_1251.md5s \
 	vc3_720p_1252.md5s \
 	vc3_1080p_1253.md5s \
+	avid_alpha_1080i25.md5s \
 	check.sh \
 	create.sh \
 	samples.sh
@@ -142,6 +145,7 @@ create-data:
 	${srcdir}/create.sh ${srcdir} 38 vc3_720p_1251
 	${srcdir}/create.sh ${srcdir} 39 vc3_720p_1252
 	${srcdir}/create.sh ${srcdir} 40 vc3_1080p_1253
+	${srcdir}/create.sh ${srcdir} 41 avid_alpha_1080i 25
 
 
 .PHONY: create-samples
@@ -179,4 +183,5 @@ create-samples:
 	${srcdir}/samples.sh 38 vc3_720p_1251
 	${srcdir}/samples.sh 39 vc3_720p_1252
 	${srcdir}/samples.sh 40 vc3_1080p_1253
+	${srcdir}/samples.sh 41 avid_alpha_1080i 25
 
