@@ -53,6 +53,7 @@
 #include <bmx/avid_mxf/AvidVC3Track.h>
 #include <bmx/avid_mxf/AvidAVCITrack.h>
 #include <bmx/avid_mxf/AvidUncTrack.h>
+#include <bmx/avid_mxf/AvidAlphaTrack.h>
 #include <bmx/avid_mxf/AvidPCMTrack.h>
 #include <bmx/d10_mxf/D10MPEGTrack.h>
 #include <bmx/d10_mxf/D10PCMTrack.h>
@@ -534,8 +535,11 @@ void ClipWriterTrack::SetInputHeight(uint32_t height)
         case CW_AVID_CLIP_TYPE:
         {
             AvidUncTrack *unc_track = dynamic_cast<AvidUncTrack*>(mAvidTrack);
+            AvidAlphaTrack *alpha_track = dynamic_cast<AvidAlphaTrack*>(mAvidTrack);
             if (unc_track)
                 unc_track->SetInputHeight(height);
+            else if (alpha_track)
+                alpha_track->SetInputHeight(height);
             break;
         }
         case CW_WAVE_CLIP_TYPE:
