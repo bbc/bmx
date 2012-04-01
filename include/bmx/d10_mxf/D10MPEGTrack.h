@@ -50,18 +50,21 @@ public:
     virtual void SetOutputTrackNumber(uint32_t track_number);
 
 public:
-    void SetAspectRatio(mxfRational aspect_ratio);  // default 16/9
-    void SetSampleSize(uint32_t size);
-    void SetAFD(uint8_t afd);                       // default not set
+    void SetAspectRatio(mxfRational aspect_ratio);                  // default 16/9
+    void SetSampleSize(uint32_t size, bool remove_excess_padding);  // default max sample size
+    void SetAFD(uint8_t afd);                                       // default not set
 
 public:
     mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
 
 protected:
     virtual void PrepareWrite();
+    virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
 
 private:
     D10MXFDescriptorHelper *mD10DescriptorHelper;
+    uint32_t mInputSampleSize;
+    bool mRemoveExcessPadding;
 };
 
 

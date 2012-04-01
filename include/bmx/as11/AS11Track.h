@@ -66,12 +66,12 @@ public:
     void SetOutputTrackNumber(uint32_t track_number);
 
     // Picture properties
-    void SetAspectRatio(Rational aspect_ratio);             // default 16/9
-    void SetComponentDepth(uint32_t depth);                 // default 8; alternative is 10
-    void SetSampleSize(uint32_t size);                      // D10 sample size
-    void SetAVCIMode(OP1AAVCIMode mode);                    // default OP1A_AVCI_ALL_FRAME_HEADER_MODE
+    void SetAspectRatio(Rational aspect_ratio);                     // default 16/9
+    void SetComponentDepth(uint32_t depth);                         // default 8; alternative is 10
+    void SetSampleSize(uint32_t size, bool remove_excess_padding);  // D10 sample size
+    void SetAVCIMode(OP1AAVCIMode mode);                            // default OP1A_AVCI_ALL_FRAME_HEADER_MODE
     void SetAVCIHeader(const unsigned char *data, uint32_t size);
-    void SetAFD(uint8_t afd);                               // default not set
+    void SetAFD(uint8_t afd);                                       // default not set
 
     // Sound properties
     void SetSamplingRate(Rational sampling_rate);   // default 48000/1

@@ -150,7 +150,7 @@ void AS11Track::SetComponentDepth(uint32_t depth)
     }
 }
 
-void AS11Track::SetSampleSize(uint32_t size)
+void AS11Track::SetSampleSize(uint32_t size, bool remove_excess_padding)
 {
     switch (mClipType)
     {
@@ -158,14 +158,14 @@ void AS11Track::SetSampleSize(uint32_t size)
         {
             OP1AD10Track *d10_track = dynamic_cast<OP1AD10Track*>(mOP1ATrack);
             if (d10_track)
-                d10_track->SetSampleSize(size);
+                d10_track->SetSampleSize(size, remove_excess_padding);
             break;
         }
         case AS11_D10_CLIP_TYPE:
         {
             D10MPEGTrack *d10_track = dynamic_cast<D10MPEGTrack*>(mD10Track);
             if (d10_track)
-                d10_track->SetSampleSize(size);
+                d10_track->SetSampleSize(size, remove_excess_padding);
             break;
         }
         case AS11_UNKNOWN_CLIP_TYPE:

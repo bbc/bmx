@@ -121,6 +121,7 @@ typedef struct
     uint32_t component_depth;
     uint32_t input_height;
     bool have_avci_header;
+    bool no_d10_depad;
 
     // sound
     Rational sampling_rate;
@@ -384,6 +385,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --maxlen <bytes>        Maximum number of bytes to read from next input/track's file\n");
     fprintf(stderr, "  --track-num <num>       Set the output track number. Default track number equals last track number of same picture/sound type + 1\n");
     fprintf(stderr, "                          For as11d10/d10 the track number must be > 0 and <= 8 because the AES-3 channel index equals track number - 1\n");
+    fprintf(stderr, "  --no-d10-depad          Don't reduce the size of the D-10 frame to the maximum size\n");
+    fprintf(stderr, "                          Use this option if there are non-zero bytes beyond the maximum size\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02:\n");
     fprintf(stderr, "    --trk-out-start <offset>   Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
@@ -1266,6 +1269,11 @@ int main(int argc, const char** argv)
                 return 1;
             }
             cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--no-d10-depad") == 0)
+        {
+            input.no_d10_depad = true;
             continue; // skip input reset at the end
         }
         else if (strcmp(argv[cmdln_index], "--dv") == 0)
@@ -2633,7 +2641,7 @@ int main(int argc, const char** argv)
                     if (input->afd)
                         input->track->SetAFD(input->afd);
                     if (input->raw_reader->GetFixedSampleSize() != 0)
-                        input->track->SetSampleSize(input->raw_reader->GetFixedSampleSize());
+                        input->track->SetSampleSize(input->raw_reader->GetFixedSampleSize(), !input->no_d10_depad);
                     break;
                 case AVCI100_1080I:
                 case AVCI100_1080P:

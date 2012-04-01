@@ -713,3 +713,25 @@ void bmx::encode_smpte_timecode(Timecode timecode, bool field_mark, unsigned cha
         memset(&smpte_tc[4], 0, size - 4);
 }
 
+bool bmx::check_excess_d10_padding(const unsigned char *data, uint32_t data_size, uint32_t target_size)
+{
+    // a minimum of 3 bytes would be sufficient for an MPEG-2 frame where marker bits
+    // prevent start code byte sequences (0x000001) appearing in the bitstream and extra
+    // padding bytes are only present at the end of the frame.
+    // 4 bytes are checked below. The data at the end is also checked in case the frame was
+    // parsed incorrectly.
+
+    uint32_t c;
+    uint32_t i;
+    for (i = target_size, c = 0; i < data_size && c < 4; i++, c++) {
+        if (data[i])
+            return false;
+    }
+    for (i = data_size, c = 0; i > target_size && i > 0 && c < 4; i--, c++) {
+        if (data[i - 1])
+            return false;
+    }
+
+    return true;
+}
+

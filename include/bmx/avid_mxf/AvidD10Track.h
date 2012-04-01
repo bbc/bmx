@@ -47,7 +47,7 @@ public:
     AvidD10Track(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file);
     virtual ~AvidD10Track();
 
-    void SetSampleSize(uint32_t size);
+    void SetSampleSize(uint32_t size, bool remove_excess_padding);
 
 public:
     virtual void PrepareWrite();
@@ -56,7 +56,7 @@ public:
 private:
     D10MXFDescriptorHelper *mD10DescriptorHelper;
     uint32_t mInputSampleSize;
-    uint32_t mPaddingSize;
+    bool mRemoveExcessPadding;
 };
 
 

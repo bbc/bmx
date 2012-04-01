@@ -114,6 +114,8 @@ void decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_tc, u
                            Timecode *timecode, bool *field_mark);
 void encode_smpte_timecode(Timecode timecode, bool field_mark, unsigned char *smpte_tc, unsigned int size);
 
+bool check_excess_d10_padding(const unsigned char *data, uint32_t data_size, uint32_t target_size);
+
 
 };
 

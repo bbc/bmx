@@ -62,7 +62,7 @@ public:
     virtual void SetOutputTrackNumber(uint32_t track_number);
 
 public:
-    void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
+    virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
 
 public:
     uint32_t GetTrackIndex() const { return mTrackIndex; }

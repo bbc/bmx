@@ -325,6 +325,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          Use this option for files with broken timecode\n");
     fprintf(stderr, "  --no-precharge          Don't output clip/track with precharge. Adjust the start position and duration instead\n");
     fprintf(stderr, "  --no-rollout            Don't output clip/track with rollout. Adjust the duration instead\n");
+    fprintf(stderr, "  --no-d10-depad          Don't reduce the size of the D-10 frame to the maximum size\n");
+    fprintf(stderr, "                          Use this option if there are non-zero bytes beyond the maximum size\n");
     fprintf(stderr, "  --rw-intl               Interleave input reads with output writes\n");
     fprintf(stderr, "  --rw-intl-size          The interleave size. Default is %u\n", DEFAULT_RW_INTL_SIZE);
     fprintf(stderr, "                          Value must be a multiple of the system page size, %u\n", mxf_get_system_page_size());
@@ -454,6 +456,7 @@ int main(int argc, const char** argv)
     bool tp_uid_set = false;
     Timestamp tp_created;
     bool tp_created_set = false;
+    bool no_d10_depad = false;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -612,6 +615,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--no-rollout") == 0)
         {
             no_rollout = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--no-d10-depad") == 0)
+        {
+            no_d10_depad = true;
         }
         else if (strcmp(argv[cmdln_index], "--rw-intl") == 0)
         {
@@ -1694,7 +1701,7 @@ int main(int argc, const char** argv)
                         if (afd)
                             output_track.track->SetAFD(afd);
                         BMX_ASSERT(input_picture_info->d10_frame_size != 0);
-                        output_track.track->SetSampleSize(input_picture_info->d10_frame_size);
+                        output_track.track->SetSampleSize(input_picture_info->d10_frame_size, !no_d10_depad);
                         break;
                     case AVCI100_1080I:
                     case AVCI100_1080P:

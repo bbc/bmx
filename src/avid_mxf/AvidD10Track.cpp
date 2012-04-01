@@ -34,6 +34,7 @@
 #endif
 
 #include <bmx/avid_mxf/AvidD10Track.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -53,7 +54,7 @@ AvidD10Track::AvidD10Track(AvidClip *clip, uint32_t track_index, EssenceType ess
     BMX_ASSERT(mD10DescriptorHelper);
 
     mInputSampleSize = 0;
-    mPaddingSize = 0;
+    mRemoveExcessPadding = false;
 
     mTrackNumber = MXF_D10_PICTURE_TRACK_NUM(0x01);
     mEssenceElementKey = VIDEO_ELEMENT_KEY;
@@ -63,26 +64,31 @@ AvidD10Track::~AvidD10Track()
 {
 }
 
-void AvidD10Track::SetSampleSize(uint32_t size)
+void AvidD10Track::SetSampleSize(uint32_t size, bool remove_excess_padding)
 {
     mInputSampleSize = size;
+    mRemoveExcessPadding = remove_excess_padding;
 }
 
 void AvidD10Track::PrepareWrite()
 {
-    uint32_t max_sample_size = mD10DescriptorHelper->GetSampleSize();
+    uint32_t sample_size = mD10DescriptorHelper->GetMaxSampleSize();
     if (mInputSampleSize == 0) {
-        mInputSampleSize = max_sample_size;
-    } else if (mInputSampleSize < max_sample_size) {
-        mD10DescriptorHelper->SetSampleSize(max_sample_size);
-        mPaddingSize = max_sample_size - mInputSampleSize;
-    } else if (mInputSampleSize > max_sample_size) {
-        log_warn("Input D-10 sample size %u is larger than 4k aligned Avid sample size %u\n",
-                 mInputSampleSize, max_sample_size);
-        mD10DescriptorHelper->SetSampleSize(mInputSampleSize);
+        mInputSampleSize = sample_size;
+    } else if (mInputSampleSize > sample_size) {
+        if (mRemoveExcessPadding) {
+            log_info("Removing %u excess padding bytes from D-10 frame\n", mInputSampleSize - sample_size);
+        } else {
+            log_warn("Input D-10 sample size %u is larger than 4k aligned Avid sample size %u\n",
+                     mInputSampleSize, sample_size);
+            sample_size = mInputSampleSize;
+        }
+    } else if (mInputSampleSize < sample_size) {
+        log_info("Adding %u padding bytes to D-10 frame\n", sample_size - mInputSampleSize);
     }
+    mD10DescriptorHelper->SetSampleSize(sample_size);
 
-    AvidTrack::PrepareWrite();
+    AvidPictureTrack::PrepareWrite();
 }
 
 void AvidD10Track::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
@@ -91,24 +97,28 @@ void AvidD10Track::WriteSamples(const unsigned char *data, uint32_t size, uint32
     BMX_CHECK(size > 0 && num_samples > 0);
     BMX_CHECK(size >= num_samples * mInputSampleSize);
 
-    if (mPaddingSize > 0) {
+    if (mInputSampleSize < mSampleSize) {
         const unsigned char *sample_data = data;
         uint32_t i;
         for (i = 0; i < num_samples; i++) {
             BMX_CHECK(mMXFFile->write(sample_data, mInputSampleSize) == mInputSampleSize);
-            mContainerSize += mInputSampleSize;
+            mMXFFile->writeZeros(mSampleSize - mInputSampleSize);
+            mContainerSize += mSampleSize;
             sample_data += mInputSampleSize;
-
-            mMXFFile->writeZeros(mPaddingSize);
-            mContainerSize += mPaddingSize;
-
             mContainerDuration++;
         }
+    } else if (mInputSampleSize > mSampleSize) {
+        const unsigned char *sample_data = data;
+        uint32_t i;
+        for (i = 0; i < num_samples; i++) {
+            BMX_CHECK_M(check_excess_d10_padding(sample_data, mInputSampleSize, mSampleSize),
+                        ("Failed to remove D-10 frame padding bytes; found non-zero bytes"));
+
+            AvidPictureTrack::WriteSamples(sample_data, mSampleSize, 1);
+            sample_data += mInputSampleSize;
+        }
     } else {
-        uint32_t write_size = num_samples * mInputSampleSize;
-        BMX_CHECK(mMXFFile->write(data, write_size) == write_size);
-        mContainerSize += write_size;
-        mContainerDuration += num_samples;
+        AvidPictureTrack::WriteSamples(data, size, num_samples);
     }
 }
 

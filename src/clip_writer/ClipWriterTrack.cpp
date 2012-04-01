@@ -292,7 +292,7 @@ void ClipWriterTrack::SetComponentDepth(uint32_t depth)
     }
 }
 
-void ClipWriterTrack::SetSampleSize(uint32_t size)
+void ClipWriterTrack::SetSampleSize(uint32_t size, bool remove_excess_padding)
 {
     switch (mClipType)
     {
@@ -300,34 +300,34 @@ void ClipWriterTrack::SetSampleSize(uint32_t size)
         {
             AS02D10Track *d10_track = dynamic_cast<AS02D10Track*>(mAS02Track);
             if (d10_track)
-                d10_track->SetSampleSize(size);
+                d10_track->SetSampleSize(size, remove_excess_padding);
             break;
         }
         case CW_AS11_OP1A_CLIP_TYPE:
         case CW_AS11_D10_CLIP_TYPE:
         {
-            mAS11Track->SetSampleSize(size);
+            mAS11Track->SetSampleSize(size, remove_excess_padding);
             break;
         }
         case CW_OP1A_CLIP_TYPE:
         {
             OP1AD10Track *d10_track = dynamic_cast<OP1AD10Track*>(mOP1ATrack);
             if (d10_track)
-                d10_track->SetSampleSize(size);
+                d10_track->SetSampleSize(size, remove_excess_padding);
             break;
         }
         case CW_AVID_CLIP_TYPE:
         {
             AvidD10Track *d10_track = dynamic_cast<AvidD10Track*>(mAvidTrack);
             if (d10_track)
-                d10_track->SetSampleSize(size);
+                d10_track->SetSampleSize(size, remove_excess_padding);
             break;
         }
         case CW_D10_CLIP_TYPE:
         {
             D10MPEGTrack *mpeg_track = dynamic_cast<D10MPEGTrack*>(mD10Track);
             if (mpeg_track)
-                mpeg_track->SetSampleSize(size);
+                mpeg_track->SetSampleSize(size, remove_excess_padding);
             break;
         }
         case CW_WAVE_CLIP_TYPE:
