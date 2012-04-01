@@ -98,7 +98,7 @@ uint32_t AvidUncTrack::GetInputSampleSize()
 
 void AvidUncTrack::PrepareWrite()
 {
-    AvidTrack::PrepareWrite();
+    AvidPictureTrack::PrepareWrite();
 
     mInputSampleSize = mUncDescriptorHelper->GetSampleSize(mInputHeight);
     mImageStartOffset = mUncDescriptorHelper->GetImageStartOffset();
