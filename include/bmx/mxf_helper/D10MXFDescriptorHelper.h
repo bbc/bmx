@@ -68,6 +68,7 @@ public:
 
 public:
     virtual uint32_t GetSampleSize();
+    uint32_t GetMaxSampleSize();
 
 protected:
     virtual mxfUL ChooseEssenceContainerUL() const;

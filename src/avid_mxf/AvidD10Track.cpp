@@ -70,18 +70,19 @@ void AvidD10Track::SetSampleSize(uint32_t size)
 
 void AvidD10Track::PrepareWrite()
 {
-    AvidTrack::PrepareWrite();
-
+    uint32_t max_sample_size = mD10DescriptorHelper->GetSampleSize();
     if (mInputSampleSize == 0) {
-        mInputSampleSize = mSampleSize;
-    } else if (mInputSampleSize < mSampleSize) {
-        mPaddingSize = mSampleSize - mInputSampleSize;
-    } else if (mInputSampleSize > mSampleSize) {
+        mInputSampleSize = max_sample_size;
+    } else if (mInputSampleSize < max_sample_size) {
+        mD10DescriptorHelper->SetSampleSize(max_sample_size);
+        mPaddingSize = max_sample_size - mInputSampleSize;
+    } else if (mInputSampleSize > max_sample_size) {
         log_warn("Input D-10 sample size %u is larger than 4k aligned Avid sample size %u\n",
-                 mInputSampleSize, mSampleSize);
+                 mInputSampleSize, max_sample_size);
+        mD10DescriptorHelper->SetSampleSize(mInputSampleSize);
     }
 
-    BMX_CHECK(mSampleSize > 0 && mInputSampleSize > 0);
+    AvidTrack::PrepareWrite();
 }
 
 void AvidD10Track::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)

@@ -263,6 +263,11 @@ uint32_t D10MXFDescriptorHelper::GetSampleSize()
     return SUPPORTED_ESSENCE[mEssenceIndex].sample_size;
 }
 
+uint32_t D10MXFDescriptorHelper::GetMaxSampleSize()
+{
+    return SUPPORTED_ESSENCE[mEssenceIndex].sample_size;
+}
+
 mxfUL D10MXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
     return SUPPORTED_ESSENCE[mEssenceIndex].ec_label;
