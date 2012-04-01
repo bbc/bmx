@@ -109,12 +109,12 @@ void AvidUncTrack::PrepareWrite()
         mPaddingSize = mSampleSize - mInputSampleSize;
 
     if (mIsAvid10Bit) {
-        mLSBSkipSize = mSkipSize / 5;
-        mSkipSize -= mLSBSkipSize;
-        mLSBPaddingSize = mPaddingSize / 5;
-        mPaddingSize -= mLSBPaddingSize;
-        mLSBSampleSize = mSampleSize / 5;
-        mMSBSampleSize = mSampleSize - mLSBSampleSize;
+        mLSBSkipSize     = mSkipSize / 5;
+        mSkipSize       -= mLSBSkipSize;
+        mLSBPaddingSize  = mPaddingSize / 5;
+        mPaddingSize    -= mLSBPaddingSize;
+        mLSBSampleSize   = mSampleSize / 5;
+        mMSBSampleSize   = mSampleSize - mLSBSampleSize;
     }
 
     if (mPaddingSize > 0) {
