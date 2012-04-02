@@ -285,6 +285,7 @@ SourcePackage* AvidClip::CreateDefaultImportSource(string uri, string name,
 {
     mxfUMID import_package_uid;
     mxf_generate_aafsdk_umid(&import_package_uid);
+    int64_t import_duration = 120 * 60 * 60 * get_rounded_tc_base(mClipFrameRate);
 
     // Preface - ContentStorage - import SourcePackage
     SourcePackage *import_package = new SourcePackage(mHeaderMetadata);
@@ -316,13 +317,13 @@ SourcePackage* AvidClip::CreateDefaultImportSource(string uri, string name,
         Sequence *sequence = new Sequence(mHeaderMetadata);
         track->setSequence(sequence);
         sequence->setDataDefinition(is_video ? MXF_DDEF_L(Picture) : MXF_DDEF_L(Sound));
-        sequence->setDuration(-1); // updated when writing completed
+        sequence->setDuration(import_duration);
 
         // Preface - ContentStorage - import SourcePackage - Timeline Track - Sequence - SourceClip
         SourceClip *source_clip = new SourceClip(mHeaderMetadata);
         sequence->appendStructuralComponents(source_clip);
         source_clip->setDataDefinition(is_video ? MXF_DDEF_L(Picture) : MXF_DDEF_L(Sound));
-        source_clip->setDuration(-1); // updated when writing completed
+        source_clip->setDuration(import_duration);
         source_clip->setStartPosition(0);
         source_clip->setSourcePackageID(g_Null_UMID);
         source_clip->setSourceTrackID(0);
@@ -335,6 +336,29 @@ SourcePackage* AvidClip::CreateDefaultImportSource(string uri, string name,
         track_id++;
     }
 
+    // Preface - ContentStorage - import SourcePackage - timecode Timeline Track
+    Track *tc_track = new Track(mHeaderMetadata);
+    import_package->appendTracks(tc_track);
+    tc_track->setTrackName("TC1");
+    tc_track->setTrackID(track_id);
+    tc_track->setTrackNumber(1);
+    tc_track->setEditRate(mClipFrameRate);
+    tc_track->setOrigin(0);
+
+    // Preface - ContentStorage - import SourcePackage - timecode Timeline Track - Sequence
+    Sequence *sequence = new Sequence(mHeaderMetadata);
+    tc_track->setSequence(sequence);
+    sequence->setDataDefinition(MXF_DDEF_L(Timecode));
+    sequence->setDuration(import_duration);
+
+    // Preface - ContentStorage - import SourcePackage - Timecode Track - TimecodeComponent
+    TimecodeComponent *tc_component = new TimecodeComponent(mHeaderMetadata);
+    sequence->appendStructuralComponents(tc_component);
+    tc_component->setDataDefinition(MXF_DDEF_L(Timecode));
+    tc_component->setDuration(import_duration);
+    tc_component->setRoundedTimecodeBase(get_rounded_tc_base(mClipFrameRate));
+    tc_component->setDropFrame(false);
+    tc_component->setStartTimecode(0);
 
     // Preface - ContentStorage - import SourcePackage - ImportDescriptor
     GenericDescriptor *import_descriptor = dynamic_cast<GenericDescriptor*>(
