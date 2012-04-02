@@ -42,6 +42,7 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_reader/MXFGroupReader.h>
@@ -104,7 +105,41 @@ static const uint32_t DEFAULT_RW_INTL_SIZE  = (64 * 1024);
 
 extern bool BMX_REGRESSION_TEST;
 
+string PathToUri(string path)
+{
+    stringstream s;
 
+    // try to determine if path is unc or local path
+    if(path.find("\\\\") == 0)
+        s << "file:/";
+    else
+        s << "file:///";
+    
+    for (size_t i = 0; i < path.size(); i++) {
+        char c = path[i];
+        if(c > 0 && (isalnum(c) || c == '-' || c == '_' || c == '.' || c == ':' || c =='/'))
+            s << c;
+        else if (c == '\\')
+            s << "/";
+        else {
+            char buf[4];
+            sprintf(buf, "%%%.2x", c & 0xff);
+            s << buf;
+        }
+    }
+    return s.str();
+}
+
+string GetFileNameWithoutExtension(string path)
+{
+    string s;
+    size_t i;
+    i = path.find_last_of("/\\");
+    s = path.substr(i+1);
+    i = s.find_last_of(".");
+    s = s.substr(0,i);
+    return s;
+}
 
 class TranswrapFileFactory : public MXFFileFactory
 {
@@ -1536,22 +1571,22 @@ int main(int argc, const char** argv)
             if (mp_created_set)
                 avid_clip->SetMaterialPackageCreationDate(mp_created);
 
+            uint32_t num_picture_tracks = 0;
+            uint32_t num_sound_tracks = 0;
+            for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+                MXFTrackReader *input_track_reader = reader->GetTrackReader(i);
+                if (!input_track_reader->IsEnabled())
+                    continue;
+
+                const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
+                const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
+
+                if (input_sound_info)
+                    num_sound_tracks += input_sound_info->channel_count;
+                else
+                    num_picture_tracks++;
+            }
             if (tape_name) {
-                uint32_t num_picture_tracks = 0;
-                uint32_t num_sound_tracks = 0;
-                for (i = 0; i < reader->GetNumTrackReaders(); i++) {
-                    MXFTrackReader *input_track_reader = reader->GetTrackReader(i);
-                    if (!input_track_reader->IsEnabled())
-                        continue;
-
-                    const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
-                    const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
-
-                    if (input_sound_info)
-                        num_sound_tracks += input_sound_info->channel_count;
-                    else
-                        num_picture_tracks++;
-                }
                 tape_package = avid_clip->CreateDefaultTapeSource(tape_name, num_picture_tracks, num_sound_tracks);
 
                 if (tp_uid_set)
@@ -1560,12 +1595,17 @@ int main(int argc, const char** argv)
                     tape_package->setPackageCreationDate(tp_created);
                     tape_package->setPackageModifiedDate(tp_created);
                 }
-
-                tape_package_picture_refs = avid_clip->GetPictureSourceReferences(tape_package);
-                BMX_ASSERT(tape_package_picture_refs.size() == num_picture_tracks);
-                tape_package_sound_refs = avid_clip->GetSoundSourceReferences(tape_package);
-                BMX_ASSERT(tape_package_sound_refs.size() == num_sound_tracks);
+            } else {
+                tape_package = avid_clip->CreateDefaultImportSource(PathToUri(input_filenames[0]),
+                    GetFileNameWithoutExtension(input_filenames[0]), num_picture_tracks, num_sound_tracks);
+                if(reader->GetMaterialPackageUID() != g_Null_UMID)
+                    tape_package->setPackageUID(reader->GetMaterialPackageUID());
             }
+            tape_package_picture_refs = avid_clip->GetPictureSourceReferences(tape_package);
+            BMX_ASSERT(tape_package_picture_refs.size() == num_picture_tracks);
+            tape_package_sound_refs = avid_clip->GetSoundSourceReferences(tape_package);
+            BMX_ASSERT(tape_package_sound_refs.size() == num_sound_tracks);
+
         } else if (clip_type == CW_D10_CLIP_TYPE) {
             D10File *d10_clip = clip->GetD10Clip();
 
