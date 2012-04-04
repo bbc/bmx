@@ -689,7 +689,7 @@ void AS11Helper::Complete()
         }
         if (mHaveUKDPPTotalProgrammeDuration) {
             if (dpp_framework->GetTotalProgrammeDuration() < mClip->GetTotalSegmentDuration()) {
-                log_warn("UKDPPTotalProgrammeDuration value %u is less than duration of parts in this file %u\n",
+                log_warn("UKDPPTotalProgrammeDuration value %"PRId64" is less than duration of parts in this file %"PRId64"\n",
                          dpp_framework->GetTotalProgrammeDuration(), mClip->GetTotalSegmentDuration());
             }
         } else {
