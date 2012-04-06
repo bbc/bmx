@@ -402,8 +402,12 @@ string bmx::strip_name(string filename)
     else if ((sep_index = filename.find_last_of(":")) != string::npos)
         return filename.substr(0, sep_index + 1);
 #else
-    if ((sep_index = filename.find_last_of("/")) != string::npos)
-        return filename.substr(0, sep_index);
+    if ((sep_index = filename.find_last_of("/")) != string::npos) {
+        if (sep_index == 0)
+            return filename.substr(0, sep_index + 1);
+        else
+            return filename.substr(0, sep_index);
+    }
 #endif
     else
         return "";
