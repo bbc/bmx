@@ -2344,7 +2344,7 @@ int main(int argc, const char** argv)
                                 }
                             } else {
                                 log_error("Unexpected MPEG-2 Long GOP horizontal size %u; expected 1920 or 1440 or 1280\n",
-                                          mpeg2_parser->GetVerticalSize());
+                                          mpeg2_parser->GetHorizontalSize());
                                 throw false;
                             }
                         } else {
@@ -2383,7 +2383,7 @@ int main(int argc, const char** argv)
                                 }
                             } else {
                                 log_error("Unexpected MPEG-2 Long GOP horizontal size %u; expected 1920 or 1440\n",
-                                          mpeg2_parser->GetVerticalSize());
+                                          mpeg2_parser->GetHorizontalSize());
                                 throw false;
                             }
                         }
