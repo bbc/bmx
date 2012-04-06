@@ -1535,6 +1535,7 @@ int main(int argc, const char** argv)
             if (mp_created_set)
                 avid_clip->SetMaterialPackageCreationDate(mp_created);
 
+            if (tape_name || input_filenames.size() == 1) {
             uint32_t num_picture_tracks = 0;
             uint32_t num_sound_tracks = 0;
             for (i = 0; i < reader->GetNumTrackReaders(); i++) {
@@ -1572,6 +1573,7 @@ int main(int argc, const char** argv)
             BMX_ASSERT(physical_package_picture_refs.size() == num_picture_tracks);
             physical_package_sound_refs = avid_clip->GetSoundSourceReferences(physical_package);
             BMX_ASSERT(physical_package_sound_refs.size() == num_sound_tracks);
+            }
 
         } else if (clip_type == CW_D10_CLIP_TYPE) {
             D10File *d10_clip = clip->GetD10Clip();
