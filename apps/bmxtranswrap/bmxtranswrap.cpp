@@ -1765,8 +1765,10 @@ int main(int argc, const char** argv)
                     case MPEG2LG_422P_HL_1080I:
                     case MPEG2LG_422P_HL_1080P:
                     case MPEG2LG_422P_HL_720P:
-                    case MPEG2LG_MP_HL_1080I:
-                    case MPEG2LG_MP_HL_1080P:
+                    case MPEG2LG_MP_HL_1920_1080I:
+                    case MPEG2LG_MP_HL_1920_1080P:
+                    case MPEG2LG_MP_HL_1440_1080I:
+                    case MPEG2LG_MP_HL_1440_1080P:
                     case MPEG2LG_MP_HL_720P:
                     case MPEG2LG_MP_H14_1080I:
                     case MPEG2LG_MP_H14_1080P:
