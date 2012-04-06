@@ -1454,9 +1454,9 @@ int main(int argc, const char** argv)
                 break;
         }
 
-        SourcePackage *tape_package = 0;
-        vector<pair<mxfUMID, uint32_t> > tape_package_picture_refs;
-        vector<pair<mxfUMID, uint32_t> > tape_package_sound_refs;
+        SourcePackage *physical_package = 0;
+        vector<pair<mxfUMID, uint32_t> > physical_package_picture_refs;
+        vector<pair<mxfUMID, uint32_t> > physical_package_sound_refs;
 
         if (!start_timecode.IsInvalid())
             clip->SetStartTimecode(start_timecode);
@@ -1551,27 +1551,27 @@ int main(int argc, const char** argv)
                     num_picture_tracks++;
             }
             if (tape_name) {
-                tape_package = avid_clip->CreateDefaultTapeSource(tape_name, num_picture_tracks, num_sound_tracks);
+                physical_package = avid_clip->CreateDefaultTapeSource(tape_name, num_picture_tracks, num_sound_tracks);
 
                 if (tp_uid_set)
-                    tape_package->setPackageUID(tp_uid);
+                    physical_package->setPackageUID(tp_uid);
                 if (tp_created_set) {
-                    tape_package->setPackageCreationDate(tp_created);
-                    tape_package->setPackageModifiedDate(tp_created);
+                    physical_package->setPackageCreationDate(tp_created);
+                    physical_package->setPackageModifiedDate(tp_created);
                 }
             } else {
                 string name = strip_suffix(strip_path(input_filenames[0]));
                 URI uri;
                 uri.ParseFilename(input_filenames[0]);
-                tape_package = avid_clip->CreateDefaultImportSource(uri.ToString(), name,
-                                                                    num_picture_tracks, num_sound_tracks);
+                physical_package = avid_clip->CreateDefaultImportSource(uri.ToString(), name,
+                                                                        num_picture_tracks, num_sound_tracks);
                 if (reader->GetMaterialPackageUID() != g_Null_UMID)
-                    tape_package->setPackageUID(reader->GetMaterialPackageUID());
+                    physical_package->setPackageUID(reader->GetMaterialPackageUID());
             }
-            tape_package_picture_refs = avid_clip->GetPictureSourceReferences(tape_package);
-            BMX_ASSERT(tape_package_picture_refs.size() == num_picture_tracks);
-            tape_package_sound_refs = avid_clip->GetSoundSourceReferences(tape_package);
-            BMX_ASSERT(tape_package_sound_refs.size() == num_sound_tracks);
+            physical_package_picture_refs = avid_clip->GetPictureSourceReferences(physical_package);
+            BMX_ASSERT(physical_package_picture_refs.size() == num_picture_tracks);
+            physical_package_sound_refs = avid_clip->GetSoundSourceReferences(physical_package);
+            BMX_ASSERT(physical_package_sound_refs.size() == num_sound_tracks);
 
         } else if (clip_type == CW_D10_CLIP_TYPE) {
             D10File *d10_clip = clip->GetD10Clip();
@@ -1664,16 +1664,15 @@ int main(int argc, const char** argv)
                 } else if (clip_type == CW_AVID_CLIP_TYPE) {
                     AvidTrack *avid_track = output_track.track->GetAvidTrack();
 
-                    if (tape_package) {
+                    if (physical_package) {
                         if (input_track_info->is_picture) {
-                            avid_track->SetSourceRef(tape_package_picture_refs[picture_track_count].first,
-                                                     tape_package_picture_refs[picture_track_count].second);
+                            avid_track->SetSourceRef(physical_package_picture_refs[picture_track_count].first,
+                                                     physical_package_picture_refs[picture_track_count].second);
                         } else {
-                            avid_track->SetSourceRef(tape_package_sound_refs[sound_track_count].first,
-                                                     tape_package_sound_refs[sound_track_count].second);
+                            avid_track->SetSourceRef(physical_package_sound_refs[sound_track_count].first,
+                                                     physical_package_sound_refs[sound_track_count].second);
                         }
                     }
-                    // TODO: Import source package
                 }
 
                 switch (output_track.essence_type)
