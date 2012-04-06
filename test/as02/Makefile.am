@@ -21,7 +21,7 @@ TESTS = \
 	unc_1080i.test \
 	unc_1080p.test \
 	mpeg2lg_422p_hl_1080i.test \
-	mpeg2lg_mp_hl_1080i.test \
+	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test
 
 
@@ -49,7 +49,7 @@ EXTRA_DIST = \
 	unc_720p.test \
 	unc.test \
 	mpeg2lg_422p_hl_1080i.test \
-	mpeg2lg_mp_hl_1080i.test \
+	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test \
 	avci100_1080i.md5s \
 	avci100_1080p.md5s \
@@ -73,7 +73,7 @@ EXTRA_DIST = \
 	unc_720p.md5s \
 	unc.md5s \
 	mpeg2lg_422p_hl_1080i.md5s \
-	mpeg2lg_mp_hl_1080i.md5s \
+	mpeg2lg_mp_hl_1920_1080i.md5s \
 	mpeg2lg_mp_h14_1080i.md5s \
 	check.sh \
 	create.sh \
@@ -102,7 +102,7 @@ create-data:
 	${srcdir}/create.sh ${srcdir} 13 d10_30
 	${srcdir}/create.sh ${srcdir} 14 mpeg2lg_422p_hl_1080i
 	${srcdir}/create.sh ${srcdir} 15 mpeg2lg_mp_h14_1080i
-	${srcdir}/create.sh ${srcdir} 16 mpeg2lg_mp_hl_1080i
+	${srcdir}/create.sh ${srcdir} 16 mpeg2lg_mp_hl_1920_1080i
 	${srcdir}/create.sh ${srcdir} 17 unc
 	${srcdir}/create.sh ${srcdir} 18 unc_1080i
 	${srcdir}/create.sh ${srcdir} 19 unc_1080p
@@ -131,7 +131,7 @@ create-samples:
 	${srcdir}/samples.sh 13 d10_30
 	${srcdir}/samples.sh 14 mpeg2lg_422p_hl_1080i
 	${srcdir}/samples.sh 15 mpeg2lg_mp_h14_1080i
-	${srcdir}/samples.sh 16 mpeg2lg_mp_hl_1080i
+	${srcdir}/samples.sh 16 mpeg2lg_mp_hl_1920_1080i
 	${srcdir}/samples.sh 17 unc
 	${srcdir}/samples.sh 18 unc_1080i
 	${srcdir}/samples.sh 19 unc_1080p

@@ -8,7 +8,7 @@ TESTS = \
 	dvbased25.test \
 	iecdv25.test \
 	mpeg2lg_422p_hl_1080i.test \
-	mpeg2lg_mp_hl_1080i.test \
+	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test \
 	avci100_1080i.test \
 	avci100_1080p.test \
@@ -45,7 +45,7 @@ EXTRA_DIST = \
 	dvbased25.test \
 	iecdv25.test \
 	mpeg2lg_422p_hl_1080i.test \
-	mpeg2lg_mp_hl_1080i.test \
+	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test \
 	avci100_1080i.test \
 	avci100_1080p.test \
@@ -79,7 +79,7 @@ EXTRA_DIST = \
 	dvbased25.md5s \
 	iecdv25.md5s \
 	mpeg2lg_422p_hl_1080i.md5s \
-	mpeg2lg_mp_hl_1080i.md5s \
+	mpeg2lg_mp_hl_1920_1080i.md5s \
 	mpeg2lg_mp_h14_1080i.md5s \
 	avci100_1080i.md5s \
 	avci100_1080p.md5s \
@@ -119,7 +119,7 @@ create-data:
 	${srcdir}/create.sh ${srcdir} 6 dv100_720p 25
 	${srcdir}/create.sh ${srcdir} 14 mpeg2lg_422p_hl_1080i
 	${srcdir}/create.sh ${srcdir} 15 mpeg2lg_mp_h14_1080i
-	${srcdir}/create.sh ${srcdir} 16 mpeg2lg_mp_hl_1080i
+	${srcdir}/create.sh ${srcdir} 16 mpeg2lg_mp_hl_1920_1080i
 	${srcdir}/create.sh ${srcdir} 11 d10_50
 	${srcdir}/create.sh ${srcdir} 12 d10_40
 	${srcdir}/create.sh ${srcdir} 13 d10_30
@@ -157,7 +157,7 @@ create-samples:
 	${srcdir}/samples.sh 6 dv100_720p 25
 	${srcdir}/samples.sh 14 mpeg2lg_422p_hl_1080i
 	${srcdir}/samples.sh 15 mpeg2lg_mp_h14_1080i
-	${srcdir}/samples.sh 16 mpeg2lg_mp_hl_1080i
+	${srcdir}/samples.sh 16 mpeg2lg_mp_hl_1920_1080i
 	${srcdir}/samples.sh 11 d10_50
 	${srcdir}/samples.sh 12 d10_40
 	${srcdir}/samples.sh 13 d10_30
