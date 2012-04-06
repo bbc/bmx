@@ -233,7 +233,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
     cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
     if (mEssenceType == MPEG2LG_422P_HL_720P ||
-        mEssenceType == MPEG2LG_MP_HL_720P) 
+        mEssenceType == MPEG2LG_MP_HL_720P)
     {
         cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_SMPTE296M);
     }

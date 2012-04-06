@@ -2313,7 +2313,7 @@ int main(int argc, const char** argv)
                                         log_error("Unexpected MPEG-2 Long GOP profile and level %u\n",
                                                   mpeg2_parser->GetProfileAndLevel());
                                         throw false;
-                                } 
+                                }
                             } else if (mpeg2_parser->GetHorizontalSize() == 1440) {
                                 switch (mpeg2_parser->GetProfileAndLevel())
                                 {
