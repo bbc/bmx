@@ -42,7 +42,6 @@
 
 #include <string>
 #include <vector>
-#include <sstream>
 
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_reader/MXFGroupReader.h>
@@ -105,41 +104,6 @@ static const uint32_t DEFAULT_RW_INTL_SIZE  = (64 * 1024);
 
 extern bool BMX_REGRESSION_TEST;
 
-string PathToUri(string path)
-{
-    stringstream s;
-
-    // try to determine if path is unc or local path
-    if(path.find("\\\\") == 0)
-        s << "file:/";
-    else
-        s << "file:///";
-    
-    for (size_t i = 0; i < path.size(); i++) {
-        char c = path[i];
-        if(c > 0 && (isalnum(c) || c == '-' || c == '_' || c == '.' || c == ':' || c =='/'))
-            s << c;
-        else if (c == '\\')
-            s << "/";
-        else {
-            char buf[4];
-            sprintf(buf, "%%%.2x", c & 0xff);
-            s << buf;
-        }
-    }
-    return s.str();
-}
-
-string GetFileNameWithoutExtension(string path)
-{
-    string s;
-    size_t i;
-    i = path.find_last_of("/\\");
-    s = path.substr(i+1);
-    i = s.find_last_of(".");
-    s = s.substr(0,i);
-    return s;
-}
 
 class TranswrapFileFactory : public MXFFileFactory
 {
@@ -1596,9 +1560,12 @@ int main(int argc, const char** argv)
                     tape_package->setPackageModifiedDate(tp_created);
                 }
             } else {
-                tape_package = avid_clip->CreateDefaultImportSource(PathToUri(input_filenames[0]),
-                    GetFileNameWithoutExtension(input_filenames[0]), num_picture_tracks, num_sound_tracks);
-                if(reader->GetMaterialPackageUID() != g_Null_UMID)
+                string name = strip_suffix(strip_path(input_filenames[0]));
+                URI uri;
+                uri.ParseFilename(input_filenames[0]);
+                tape_package = avid_clip->CreateDefaultImportSource(uri.ToString(), name,
+                                                                    num_picture_tracks, num_sound_tracks);
+                if (reader->GetMaterialPackageUID() != g_Null_UMID)
                     tape_package->setPackageUID(reader->GetMaterialPackageUID());
             }
             tape_package_picture_refs = avid_clip->GetPictureSourceReferences(tape_package);
