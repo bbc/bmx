@@ -336,30 +336,6 @@ SourcePackage* AvidClip::CreateDefaultImportSource(string uri, string name,
         track_id++;
     }
 
-    // Preface - ContentStorage - import SourcePackage - timecode Timeline Track
-    Track *tc_track = new Track(mHeaderMetadata);
-    import_package->appendTracks(tc_track);
-    tc_track->setTrackName("TC1");
-    tc_track->setTrackID(track_id);
-    tc_track->setTrackNumber(1);
-    tc_track->setEditRate(mClipFrameRate);
-    tc_track->setOrigin(0);
-
-    // Preface - ContentStorage - import SourcePackage - timecode Timeline Track - Sequence
-    Sequence *sequence = new Sequence(mHeaderMetadata);
-    tc_track->setSequence(sequence);
-    sequence->setDataDefinition(MXF_DDEF_L(Timecode));
-    sequence->setDuration(import_duration);
-
-    // Preface - ContentStorage - import SourcePackage - Timecode Track - TimecodeComponent
-    TimecodeComponent *tc_component = new TimecodeComponent(mHeaderMetadata);
-    sequence->appendStructuralComponents(tc_component);
-    tc_component->setDataDefinition(MXF_DDEF_L(Timecode));
-    tc_component->setDuration(import_duration);
-    tc_component->setRoundedTimecodeBase(get_rounded_tc_base(mClipFrameRate));
-    tc_component->setDropFrame(false);
-    tc_component->setStartTimecode(0);
-
     // Preface - ContentStorage - import SourcePackage - ImportDescriptor
     GenericDescriptor *import_descriptor = dynamic_cast<GenericDescriptor*>(
         mHeaderMetadata->createAndWrap(&MXF_SET_K(ImportDescriptor)));
