@@ -1536,43 +1536,43 @@ int main(int argc, const char** argv)
                 avid_clip->SetMaterialPackageCreationDate(mp_created);
 
             if (tape_name || input_filenames.size() == 1) {
-            uint32_t num_picture_tracks = 0;
-            uint32_t num_sound_tracks = 0;
-            for (i = 0; i < reader->GetNumTrackReaders(); i++) {
-                MXFTrackReader *input_track_reader = reader->GetTrackReader(i);
-                if (!input_track_reader->IsEnabled())
-                    continue;
+                uint32_t num_picture_tracks = 0;
+                uint32_t num_sound_tracks = 0;
+                for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+                    MXFTrackReader *input_track_reader = reader->GetTrackReader(i);
+                    if (!input_track_reader->IsEnabled())
+                        continue;
 
-                const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
-                const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
+                    const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
+                    const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
 
-                if (input_sound_info)
-                    num_sound_tracks += input_sound_info->channel_count;
-                else
-                    num_picture_tracks++;
-            }
-            if (tape_name) {
-                physical_package = avid_clip->CreateDefaultTapeSource(tape_name, num_picture_tracks, num_sound_tracks);
-
-                if (tp_uid_set)
-                    physical_package->setPackageUID(tp_uid);
-                if (tp_created_set) {
-                    physical_package->setPackageCreationDate(tp_created);
-                    physical_package->setPackageModifiedDate(tp_created);
+                    if (input_sound_info)
+                        num_sound_tracks += input_sound_info->channel_count;
+                    else
+                        num_picture_tracks++;
                 }
-            } else {
-                string name = strip_suffix(strip_path(input_filenames[0]));
-                URI uri;
-                uri.ParseFilename(input_filenames[0]);
-                physical_package = avid_clip->CreateDefaultImportSource(uri.ToString(), name,
-                                                                        num_picture_tracks, num_sound_tracks);
-                if (reader->GetMaterialPackageUID() != g_Null_UMID)
-                    physical_package->setPackageUID(reader->GetMaterialPackageUID());
-            }
-            physical_package_picture_refs = avid_clip->GetPictureSourceReferences(physical_package);
-            BMX_ASSERT(physical_package_picture_refs.size() == num_picture_tracks);
-            physical_package_sound_refs = avid_clip->GetSoundSourceReferences(physical_package);
-            BMX_ASSERT(physical_package_sound_refs.size() == num_sound_tracks);
+                if (tape_name) {
+                    physical_package = avid_clip->CreateDefaultTapeSource(tape_name, num_picture_tracks, num_sound_tracks);
+
+                    if (tp_uid_set)
+                        physical_package->setPackageUID(tp_uid);
+                    if (tp_created_set) {
+                        physical_package->setPackageCreationDate(tp_created);
+                        physical_package->setPackageModifiedDate(tp_created);
+                    }
+                } else {
+                    string name = strip_suffix(strip_path(input_filenames[0]));
+                    URI uri;
+                    uri.ParseFilename(input_filenames[0]);
+                    physical_package = avid_clip->CreateDefaultImportSource(uri.ToString(), name,
+                                                                            num_picture_tracks, num_sound_tracks);
+                    if (reader->GetMaterialPackageUID() != g_Null_UMID)
+                        physical_package->setPackageUID(reader->GetMaterialPackageUID());
+                }
+                physical_package_picture_refs = avid_clip->GetPictureSourceReferences(physical_package);
+                BMX_ASSERT(physical_package_picture_refs.size() == num_picture_tracks);
+                physical_package_sound_refs = avid_clip->GetSoundSourceReferences(physical_package);
+                BMX_ASSERT(physical_package_sound_refs.size() == num_sound_tracks);
             }
 
         } else if (clip_type == CW_D10_CLIP_TYPE) {
