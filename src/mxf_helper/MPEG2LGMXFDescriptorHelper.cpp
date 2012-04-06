@@ -229,9 +229,8 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     MPEGVideoDescriptor *mpeg_descriptor = dynamic_cast<MPEGVideoDescriptor*>(mFileDescriptor);
     BMX_ASSERT(mFlavour == AVID_FLAVOUR || mpeg_descriptor);
 
-    SetCodingEquations(ITUR_BT709_CODING_EQ);
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
-    cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
+    SetCodingEquations(ITUR_BT709_CODING_EQ);
     if (mEssenceType == MPEG2LG_422P_HL_720P ||
         mEssenceType == MPEG2LG_MP_HL_720P)
     {
@@ -241,6 +240,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     {
         cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_SMPTE274M);
     }
+    cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
     if (mEssenceType == MPEG2LG_422P_HL_1080I ||
         mEssenceType == MPEG2LG_422P_HL_1080P ||
         mEssenceType == MPEG2LG_422P_HL_720P)
