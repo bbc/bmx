@@ -401,10 +401,13 @@ string bmx::strip_name(string filename)
 string bmx::strip_suffix(string filename)
 {
     size_t suffix_index;
-    if ((suffix_index = filename.rfind(".")) != string::npos)
+    if ((suffix_index = filename.rfind(".")) != string::npos &&
+        filename.find("/", suffix_index + 1) == string::npos)
+    {
         return filename.substr(0, suffix_index);
-    else
+    } else {
         return filename;
+    }
 }
 
 string bmx::get_abs_cwd()
