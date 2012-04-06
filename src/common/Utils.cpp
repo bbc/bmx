@@ -383,7 +383,11 @@ int64_t bmx::convert_duration_higher(int64_t duration, int64_t position, const s
 string bmx::strip_path(string filename)
 {
     size_t sep_index;
-    if ((sep_index = filename.rfind("/")) != string::npos)
+#if defined(_WIN32)
+    if ((sep_index = filename.find_last_of("/\\:")) != string::npos)
+#else
+    if ((sep_index = filename.find_last_of("/")) != string::npos)
+#endif
         return filename.substr(sep_index + 1);
     else
         return filename;
@@ -392,8 +396,15 @@ string bmx::strip_path(string filename)
 string bmx::strip_name(string filename)
 {
     size_t sep_index;
-    if ((sep_index = filename.rfind("/")) != string::npos)
+#if defined(_WIN32)
+    if ((sep_index = filename.find_last_of("/\\")) != string::npos)
         return filename.substr(0, sep_index);
+    else if ((sep_index = filename.find_last_of(":")) != string::npos)
+        return filename.substr(0, sep_index + 1);
+#else
+    if ((sep_index = filename.find_last_of("/")) != string::npos)
+        return filename.substr(0, sep_index);
+#endif
     else
         return "";
 }
@@ -401,13 +412,21 @@ string bmx::strip_name(string filename)
 string bmx::strip_suffix(string filename)
 {
     size_t suffix_index;
-    if ((suffix_index = filename.rfind(".")) != string::npos &&
-        filename.find("/", suffix_index + 1) == string::npos)
+#if defined(_WIN32)
+    if ((suffix_index = filename.find_last_of(".")) != string::npos &&
+        filename.find_first_of("/\\:", suffix_index + 1) == string::npos)
     {
         return filename.substr(0, suffix_index);
-    } else {
-        return filename;
     }
+#else
+    if ((suffix_index = filename.find_last_of(".")) != string::npos &&
+        filename.find_first_of("/", suffix_index + 1) == string::npos)
+    {
+        return filename.substr(0, suffix_index);
+    }
+#endif
+    else
+        return filename;
 }
 
 string bmx::get_abs_cwd()
