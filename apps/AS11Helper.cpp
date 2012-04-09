@@ -586,10 +586,10 @@ bool AS11Helper::ParseSegmentationFile(const char *filename, Rational frame_rate
             segment.start.Init(frame_rate, false, som_h, som_m, som_s, som_f);
             segment.duration     = 0;
             if (!xc) {
-                segment.duration = dur_h * 60 * 60 * rounded_rate +
-                                   dur_m * 60 * rounded_rate +
-                                   dur_s * rounded_rate +
-                                   dur_f;
+                segment.duration = (int64_t)dur_h * 60 * 60 * rounded_rate +
+                                   (int64_t)dur_m * 60 * rounded_rate +
+                                   (int64_t)dur_s * rounded_rate +
+                                   (int64_t)dur_f;
             }
             mSegments.push_back(segment);
 
