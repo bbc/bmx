@@ -43,6 +43,7 @@
 #include <bmx/as11/AS11DMS.h>
 #include <bmx/as11/UKDPPDMS.h>
 #include "AppUtils.h"
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -196,6 +197,27 @@ static bool parse_int64(string value, int64_t *int64_value)
     return false;
 }
 
+static bool parse_duration(string value, Rational frame_rate, int64_t *int64_value)
+{
+    if (value.find(":") == string::npos) {
+        if (sscanf(value.c_str(), "%"PRId64"", int64_value) == 1)
+            return true;
+    } else {
+        int hour, min, sec, frame;
+        if (sscanf(value.c_str(), "%d:%d:%d:%d", &hour, &min, &sec, &frame) == 4) {
+            uint16_t rounded_rate = get_rounded_tc_base(frame_rate);
+            *int64_value = (int64_t)hour * 60 * 60 * rounded_rate +
+                           (int64_t)min * 60 * rounded_rate +
+                           (int64_t)sec * rounded_rate +
+                           (int64_t)frame;
+            return true;
+        }
+    }
+
+    log_warn("Invalid duration/position value '%s'\n", value.c_str());
+    return false;
+}
+
 static bool parse_as11_timestamp(string value, mxfTimestamp *timestamp_value)
 {
     int year;
@@ -282,9 +304,10 @@ static size_t get_utf8_clip_len(const char *u8_str, size_t max_unicode_len)
 
 
 
-FrameworkHelper::FrameworkHelper(DataModel *data_model, DMFramework *framework)
+FrameworkHelper::FrameworkHelper(DataModel *data_model, DMFramework *framework, Rational frame_rate)
 {
     mFramework = framework;
+    mFrameRate = frame_rate;
     BMX_ASSERT(data_model->findSetDef(framework->getKey(), &mSetDef));
 
     const FrameworkInfo *framework_info = FRAMEWORK_INFO;
@@ -365,6 +388,17 @@ bool FrameworkHelper::SetProperty(string name, string value)
         }
         case MXF_POSITION_TYPE:
         case MXF_LENGTH_TYPE:
+        {
+            int64_t int64_value = 0;
+            if (!parse_duration(value, mFrameRate, &int64_value)) {
+                log_warn("Invalid framework property value %s::%s '%s'\n",  mFrameworkInfo->name, name.c_str(),
+                         value.c_str());
+                return false;
+            }
+
+            mFramework->setInt64Item(&c_item_def->key, int64_value);
+            break;
+        }
         case MXF_INT64_TYPE:
         {
             int64_t int64_value = 0;
@@ -626,7 +660,8 @@ void AS11Helper::InsertFrameworks(AS11Clip *as11_clip)
         if (mFrameworkProperties[i].type == AS11_CORE_FRAMEWORK_TYPE) {
             if (!mAS11FrameworkHelper) {
                 mAS11FrameworkHelper = new FrameworkHelper(mClip->GetDataModel(),
-                                                           new AS11CoreFramework(mClip->GetHeaderMetadata()));
+                                                           new AS11CoreFramework(mClip->GetHeaderMetadata()),
+                                                           as11_clip->GetFrameRate());
             }
             if (!mAS11FrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value)) {
                 log_warn("Failed to set AS11CoreFramework property '%s' to '%s'\n",
@@ -635,7 +670,8 @@ void AS11Helper::InsertFrameworks(AS11Clip *as11_clip)
         } else {
             if (!mUKDPPFrameworkHelper) {
                 mUKDPPFrameworkHelper = new FrameworkHelper(mClip->GetDataModel(),
-                                                            new UKDPPFramework(mClip->GetHeaderMetadata()));
+                                                            new UKDPPFramework(mClip->GetHeaderMetadata()),
+                                                            as11_clip->GetFrameRate());
             }
             if (!mUKDPPFrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value)) {
                 log_warn("Failed to set UKDPPCoreFramework property '%s' to '%s'\n",

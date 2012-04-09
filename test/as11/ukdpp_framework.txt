@@ -12,8 +12,8 @@ FPAVersion: 1.0 alpha
 SecondaryAudioLanguage: eng
 TertiaryAudioLanguage: eng
 AudioLoudnessStandard: 0
-LineUpStart: 0
-IdentClockStart: 5
+LineUpStart: 00:00:00:00
+IdentClockStart: 00:00:00:05
 AudioDescriptionPresent: false
 OpenCaptionsPresent: false
 SigningPresent: 1
