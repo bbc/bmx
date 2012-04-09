@@ -146,7 +146,7 @@ static const char* AUDIO_LOUDNESS_STANDARD_STR[] =
 
 static const char* AUDIO_DESCRIPTION_TYPE_STR[] =
 {
-    "Control Data Narration",
+    "Control Data / Narration",
     "A/D Mix",
 };
 
