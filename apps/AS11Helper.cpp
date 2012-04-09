@@ -663,20 +663,18 @@ void AS11Helper::InsertFrameworks(AS11Clip *as11_clip)
                                                            new AS11CoreFramework(mClip->GetHeaderMetadata()),
                                                            as11_clip->GetFrameRate());
             }
-            if (!mAS11FrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value)) {
-                log_warn("Failed to set AS11CoreFramework property '%s' to '%s'\n",
-                         mFrameworkProperties[i].name.c_str(), mFrameworkProperties[i].value.c_str());
-            }
+            BMX_CHECK_M(mAS11FrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value),
+                        ("Failed to set AS11CoreFramework property '%s' to '%s'\n",
+                         mFrameworkProperties[i].name.c_str(), mFrameworkProperties[i].value.c_str()));
         } else {
             if (!mUKDPPFrameworkHelper) {
                 mUKDPPFrameworkHelper = new FrameworkHelper(mClip->GetDataModel(),
                                                             new UKDPPFramework(mClip->GetHeaderMetadata()),
                                                             as11_clip->GetFrameRate());
             }
-            if (!mUKDPPFrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value)) {
-                log_warn("Failed to set UKDPPCoreFramework property '%s' to '%s'\n",
-                         mFrameworkProperties[i].name.c_str(), mFrameworkProperties[i].value.c_str());
-            }
+            BMX_CHECK_M(mUKDPPFrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value),
+                        ("Failed to set UKDPPCoreFramework property '%s' to '%s'\n",
+                         mFrameworkProperties[i].name.c_str(), mFrameworkProperties[i].value.c_str()));
         }
     }
 
@@ -716,18 +714,17 @@ void AS11Helper::Complete()
         // calculate or check total number of parts and programme duration
         UKDPPFramework *dpp_framework = dynamic_cast<UKDPPFramework*>(mUKDPPFrameworkHelper->GetFramework());
         if (mHaveUKDPPTotalNumberOfParts) {
-            if (mClip->GetTotalSegments() != dpp_framework->GetTotalNumberOfParts()) {
-                log_warn("UKDPPTotalNumberOfParts value %u does not equal actual total part count %u\n",
-                         dpp_framework->GetTotalNumberOfParts(), mClip->GetTotalSegments());
-            }
+            BMX_CHECK_M(mClip->GetTotalSegments() == dpp_framework->GetTotalNumberOfParts(),
+                        ("UKDPPTotalNumberOfParts value %u does not equal actual total part count %u\n",
+                         dpp_framework->GetTotalNumberOfParts(), mClip->GetTotalSegments()));
         } else {
             dpp_framework->SetTotalNumberOfParts(mClip->GetTotalSegments());
         }
         if (mHaveUKDPPTotalProgrammeDuration) {
-            if (dpp_framework->GetTotalProgrammeDuration() < mClip->GetTotalSegmentDuration()) {
-                log_warn("UKDPPTotalProgrammeDuration value %"PRId64" is less than duration of parts in this file %"PRId64"\n",
-                         dpp_framework->GetTotalProgrammeDuration(), mClip->GetTotalSegmentDuration());
-            }
+            BMX_CHECK_M(dpp_framework->GetTotalProgrammeDuration() >= mClip->GetTotalSegmentDuration(),
+                        ("UKDPPTotalProgrammeDuration value %"PRId64" is less than duration of parts in this "
+                         "file %"PRId64"\n",
+                         dpp_framework->GetTotalProgrammeDuration(), mClip->GetTotalSegmentDuration()));
         } else {
             dpp_framework->SetTotalProgrammeDuration(mClip->GetTotalSegmentDuration());
         }
