@@ -38,35 +38,33 @@
 #include <exception>
 
 
-#define BMX_EXCEPTION(err) \
-    do \
-    { \
-        bmx::log_error_nl err; \
-        bmx::log_error("    near %s:%d\n", __FILE__, __LINE__); \
-        throw BMXException err; \
+#define BMX_EXCEPTION(err)                                          \
+    do {                                                            \
+        bmx::log_error_nl err;                                      \
+        bmx::log_error("    near %s:%d\n", __FILE__, __LINE__);     \
+        throw BMXException err;                                     \
     } while (0)
 
-#define BMX_CHECK(cond) \
-    do { \
-    if (!(cond)) \
-        BMX_EXCEPTION(("'%s' check failed", #cond)); \
+#define BMX_CHECK(cond)                                     \
+    do {                                                    \
+        if (!(cond))                                        \
+            BMX_EXCEPTION(("'%s' check failed", #cond));    \
     } while (0)
 
-#define BMX_CHECK_M(cond, err) \
-    do { \
-    if (!(cond)) \
-        BMX_EXCEPTION(err); \
+#define BMX_CHECK_M(cond, err)      \
+    do {                            \
+        if (!(cond))                \
+            BMX_EXCEPTION(err);     \
     } while (0)
 
 #if defined(NDEBUG)
-#define BMX_ASSERT(cond) \
-    do { \
-    if (!(cond)) \
-        BMX_EXCEPTION(("'%s' assertion failed", #cond)); \
+#define BMX_ASSERT(cond)                                        \
+    do {                                                        \
+        if (!(cond))                                            \
+            BMX_EXCEPTION(("'%s' assertion failed", #cond));    \
     } while (0)
 #else
-#define BMX_ASSERT(cond) \
-    assert(cond)
+#define BMX_ASSERT(cond)    assert(cond)
 #endif
 
 
