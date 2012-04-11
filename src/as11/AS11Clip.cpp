@@ -452,13 +452,9 @@ void AS11Clip::CompleteSegmentation(bool with_filler)
     if (clip_duration < 0)
         clip_duration = GetDuration();
 
-    if (mSegmentationSequence->getDuration() >= clip_duration) {
-        if (mSegmentationSequence->getDuration() > clip_duration) {
-            log_warn("AS-11 segmentation duration (%"PRId64") exceeds package duration (%"PRId64")\n",
-                     mSegmentationSequence->getDuration(), clip_duration);
-        }
-        return;
-    }
+    BMX_CHECK_M(mSegmentationSequence->getDuration() <= clip_duration,
+                ("AS-11 segmentation duration (%"PRId64") exceeds package duration (%"PRId64")\n",
+                 mSegmentationSequence->getDuration(), clip_duration));
 
     HeaderMetadata *header_metadata = GetHeaderMetadata();
     BMX_ASSERT(header_metadata);
