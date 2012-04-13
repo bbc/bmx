@@ -192,7 +192,7 @@ void AS02Version::CreateHeaderMetadata()
     Preface *preface = new Preface(mHeaderMetadata);
     preface->setLastModifiedDate(mCreationDate);
     preface->setVersion(259);   // v1.3 - smpte 377-1
-    preface->setOperationalPattern(MXF_OP_L(1b, MultiTrack_Stream_External));
+    preface->setOperationalPattern(MXF_OP_L(1b, UniTrack_NonStream_External));
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         preface->appendEssenceContainers(*iter);
@@ -315,7 +315,7 @@ void AS02Version::CreateFile()
     header_partition.setIndexSID(0);
     header_partition.setBodySID(0);
     header_partition.setKagSize(1);
-    header_partition.setOperationalPattern(&MXF_OP_L(1b, MultiTrack_Stream_External));
+    header_partition.setOperationalPattern(&MXF_OP_L(1b, UniTrack_NonStream_External));
     header_partition.write(mMXFFile);
     header_partition.fillToKag(mMXFFile);
 
