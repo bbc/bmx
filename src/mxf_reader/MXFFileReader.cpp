@@ -1054,7 +1054,8 @@ MXFTrackReader* MXFFileReader::GetExternalTrackReader(SourceClip *mp_source_clip
         locators = descriptor->getLocators();
     vector<ResolvedPackage> resolved_packages = mPackageResolver->ResolveSourceClip(mp_source_clip, locators);
     if (resolved_packages.empty()) {
-        log_warn("Failed to resolve external essence\n");
+        log_warn("Failed to resolve external essence (SourcePackageID: %s, SourceTrackID: %u)\n",
+                 get_umid_string(mp_source_clip->getSourcePackageID()).c_str(), mp_source_clip->getSourceTrackID());
         return 0;
     }
 
@@ -1067,13 +1068,19 @@ MXFTrackReader* MXFFileReader::GetExternalTrackReader(SourceClip *mp_source_clip
             break;
         }
     }
-    if (!resolved_package)
+    if (!resolved_package) {
+        log_warn("Failed to resolve external essence (SourcePackageID: %s, SourceTrackID: %u)\n",
+                 get_umid_string(mp_source_clip->getSourcePackageID()).c_str(), mp_source_clip->getSourceTrackID());
         return 0;
+    }
 
     MXFTrackReader *external_track_reader =
         resolved_package->file_reader->GetInternalTrackReaderById(resolved_package->track_id);
-    if (!external_track_reader)
+    if (!external_track_reader) {
+        log_warn("Failed to resolve track in external essence (SourcePackageID: %s, SourceTrackID: %u)\n",
+                 get_umid_string(mp_source_clip->getSourcePackageID()).c_str(), mp_source_clip->getSourceTrackID());
         return 0;
+    }
 
     // don't support tracks referenced by multiple material tracks
     for (i = 0; i < mTrackReaders.size(); i++) {
