@@ -637,6 +637,26 @@ string bmx::get_timecode_string(Timecode timecode)
     return buffer;
 }
 
+string bmx::get_umid_string(UMID umid)
+{
+    static const char hex_chars[] = "0123456789abcdef";
+    char buffer[128];
+    int offset = 0;
+
+    int i, j;
+    for (i = 0; i < 32; i += 4) {
+        if (i != 0)
+            buffer[offset++] = '.';
+        for (j = 0; j < 4; j++) {
+            buffer[offset++] = hex_chars[((&umid.octet0)[i + j] >> 4) & 0x0f];
+            buffer[offset++] = hex_chars[ (&umid.octet0)[i + j]       & 0x0f];
+        }
+    }
+    buffer[offset] = '\0';
+
+    return buffer;
+}
+
 bmx::Rational bmx::normalize_rate(Rational rate)
 {
     if (rate.numerator == 0 || rate.denominator == 0)

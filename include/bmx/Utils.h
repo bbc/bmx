@@ -107,6 +107,7 @@ std::string get_generic_duration_string_2(int64_t count, Rational rate);
 Rational convert_int_to_rational(int32_t value);
 
 std::string get_timecode_string(Timecode timecode);
+std::string get_umid_string(UMID umid);
 
 Rational normalize_rate(Rational rate);
 
