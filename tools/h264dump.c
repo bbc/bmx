@@ -48,17 +48,60 @@
 #define PRINT_UINT(name)        printf("%*c " name ": %"PRIu64"\n", context->indent * 4, ' ', context->value)
 #define PRINT_INT(name)         printf("%*c " name ": %"PRId64"\n", context->indent * 4, ' ', context->svalue)
 
-#define CHK(cmd)                                                                \
-    if (!(cmd))                                                                 \
-    {                                                                           \
-        fprintf(stderr, "'%s' check failed at line %d\n", #cmd, __LINE__);      \
-        return 0;                                                               \
-    }
+#define ARRAY_SIZE(array)       (sizeof(array) / sizeof((array)[0]))
+
+#define CHK(cmd)                                                                    \
+    do {                                                                            \
+        if (!(cmd)) {                                                               \
+            fprintf(stderr, "'%s' check failed at line %d\n", #cmd, __LINE__);      \
+            return 0;                                                               \
+        }                                                                           \
+    } while (0)
 
 
 #define EXTENDED_SAR            255
 
 
+typedef enum
+{
+    CODED_SLICE_NON_IDR_PICT        = 1,
+    CODED_SLICE_DATA_PART_A         = 2,
+    CODED_SLICE_DATA_PART_B         = 3,
+    CODED_SLICE_DATA_PART_C         = 4,
+    CODED_SLICE_IDR_PICT            = 5,
+    SEI                             = 6,
+    SEQUENCE_PARAMETER_SET          = 7,
+    PICTURE_PARAMETER_SET           = 8,
+    ACCESS_UNIT_DELIMITER           = 9,
+    END_OF_SEQUENCE                 = 10,
+    END_OF_STREAM                   = 11,
+    FILLER                          = 12,
+    SEQUENCE_PARAMETER_SET_EXT      = 13,
+    PREFIX_NAL_UNIT                 = 14,
+    SUBSET_SEQUENCE_PARAMETER_SET   = 15,
+    CODED_SLICE_AUX_NO_PART         = 19,
+    CODED_SLICE_EXT                 = 20,
+} NALUnitType;
+
+typedef enum
+{
+    P_SLICE     = 0,
+    B_SLICE     = 1,
+    I_SLICE     = 2,
+    SP_SLICE    = 3,
+    SI_SLICE    = 4,
+    P_SLICE_2   = 5,
+    B_SLICE_2   = 6,
+    I_SLICE_2   = 7,
+    SP_SLICE_2  = 8,
+    SI_SLICE_2  = 9,
+} SliceType;
+
+#define IS_P(t)     ((t) == P_SLICE  || (t) == P_SLICE_2)
+#define IS_B(t)     ((t) == B_SLICE  || (t) == B_SLICE_2)
+#define IS_I(t)     ((t) == I_SLICE  || (t) == I_SLICE_2)
+#define IS_SP(t)    ((t) == SP_SLICE || (t) == SP_SLICE_2)
+#define IS_SI(t)    ((t) == SI_SLICE || (t) == SI_SLICE_2)
 
 typedef struct
 {
@@ -92,6 +135,28 @@ typedef struct
     uint8_t dpb_removal_delay_length_minus1;
     uint8_t pict_struct_present_flag;
     uint8_t time_offset_length;
+    uint8_t separate_colour_plane_flag;
+    uint64_t log2_max_frame_num_minus4;
+    uint8_t frame_mbs_only_flag;
+    uint8_t nal_unit_type;
+    uint64_t pic_order_cnt_type;
+    uint64_t log2_max_pic_order_cnt_lsb_minus4;
+    uint8_t bottom_field_pic_order_in_frame_present_flag;
+    uint8_t delta_pic_order_always_zero_flag;
+    uint8_t redundant_pic_cnt_present_flag;
+    uint64_t slice_type;
+    uint8_t weighted_pred_flag;
+    uint8_t weighted_bipred_idc;
+    uint8_t nal_ref_idc;
+    uint64_t num_ref_idx_l0_active_minus1;
+    uint64_t num_ref_idx_l1_active_minus1;
+    uint8_t entropy_coding_mode_flag;
+    uint8_t deblocking_filter_control_present_flag;
+    uint64_t num_slice_groups_minus1;
+    uint64_t slice_group_map_type;
+    uint64_t pic_width_in_mbs_minus1;
+    uint64_t pic_height_in_map_units_minus1;
+    uint64_t slice_group_change_rate_minus1;
 
     int indent;
 } ParseContext;
@@ -188,7 +253,7 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
     context->data_pos = 0;
 
     state = 0xffffff00;
-    while (state != 0x000001 && state != 0x00000001) {
+    while ((state & 0x00ffffff) != 0x000001) {
         if (!load_byte(context, &byte))
             return 0;
         state = (state << 8) | byte;
@@ -205,16 +270,16 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
     context->nal_size = 0;
 
     state = 0xffffff00;
-    while (state != 0x000001 && state != 0x000000) {
+    while ((state & 0x00ffffff) != 0x000001 && (state & 0x00ffffff) != 0x000000) {
         if (!load_byte(context, &byte))
             break;
         state = (state << 8) | byte;
     }
 
     context->num_bytes_in_nal_unit = context->data_pos - context->nal_start;
-    if (state == 0x000001 || state == 0x000000) {
+    if ((state & 0x00ffffff) == 0x000001 || (state & 0x00ffffff) == 0x000000) {
         context->num_bytes_in_nal_unit -= 3;
-        if (state == 0x000000) {
+        if ((state & 0x00ffffff) == 0x000000) {
             while (state != 0x00000001) {
                 if (!load_byte(context, &byte))
                     break;
@@ -224,12 +289,12 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
     }
 
     context->nal_size = context->data_pos - context->nal_start;
-    if (state == 0x000001 || state == 0x00000001) {
+    if ((state & 0x00ffffff) == 0x000001) {
         context->nal_size -= 3;
         if (load_byte(context, &byte)) {
             context->data_pos--;
             nal_unit_type = byte & 0x1f;
-            /* TODO: this is incomplete. Need to get the last VCL unit. See section 7.4.1.2.3  and B.1.2 */
+            /* TODO: this is incomplete. Need to get the last VCL unit. See section 7.4.1.2.3 and B.1.2 */
             if ((nal_unit_type == 7 || nal_unit_type == 8) || nal_unit_type == 9) {
                 if (state != 0x00000001)
                     fprintf(stderr, "Warning: missing zero_byte before start_code_prefix_one_3bytes\n");
@@ -397,7 +462,7 @@ static int more_rbsp_data(ParseContext *context)
         bit_pos--;
     }
 
-    return (bit_pos >= context->bit_pos);
+    return (b && bit_pos >= context->bit_pos);
 }
 
 static int rbsp_trailing_bits(ParseContext *context)
@@ -413,7 +478,7 @@ static int rbsp_trailing_bits(ParseContext *context)
     }
 
     if (!valid)
-        fprintf(stderr, "Warning: invalid rbsp_trailing_bits\n");
+        fprintf(stderr, "Warning: invalid rbsp_trailing_bits)\n");
 
     return 1;
 }
@@ -490,7 +555,7 @@ static void print_profile_and_flags(ParseContext *context, uint8_t profile_idc, 
 
     const char *profile_str = "unknown";
     size_t i;
-    for (i = 0; i < sizeof(PROFILE_NAMES) / sizeof(PROFILE_NAMES[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(PROFILE_NAMES); i++) {
         if (profile_idc == PROFILE_NAMES[i].profile_idc &&
             (PROFILE_NAMES[i].flags == 0 || (flags & PROFILE_NAMES[i].flags)))
         {
@@ -527,7 +592,7 @@ static void print_chroma_format(ParseContext *context, uint8_t chroma_format_idc
         "4:4:4",
     };
 
-    if (chroma_format_idc < sizeof(CHROMA_FORMAT_STRINGS) / sizeof(CHROMA_FORMAT_STRINGS[0])) {
+    if (chroma_format_idc < ARRAY_SIZE(CHROMA_FORMAT_STRINGS)) {
         printf("%*c chroma_format_idc: %u (%s)\n", context->indent * 4, ' ', chroma_format_idc,
                CHROMA_FORMAT_STRINGS[chroma_format_idc]);
     } else {
@@ -558,7 +623,7 @@ static void print_aspect_ratio(ParseContext *context, uint8_t aspect_ratio_idc)
         "2:1",
     };
 
-    if (aspect_ratio_idc < sizeof(SAMPLE_ASPECT_RATIO_STRINGS) / sizeof(SAMPLE_ASPECT_RATIO_STRINGS[0])) {
+    if (aspect_ratio_idc < ARRAY_SIZE(SAMPLE_ASPECT_RATIO_STRINGS)) {
         printf("%*c aspect_ratio_idc: %u (%s)\n", context->indent * 4, ' ', aspect_ratio_idc,
                SAMPLE_ASPECT_RATIO_STRINGS[aspect_ratio_idc]);
     } else if (aspect_ratio_idc == EXTENDED_SAR) {
@@ -601,11 +666,53 @@ static void print_pict_struct(ParseContext *context, uint8_t pict_struct)
         "frame tripling",
     };
 
-    if (pict_struct < sizeof(PICT_STRUCT_STRINGS) / sizeof(PICT_STRUCT_STRINGS[0])) {
+    if (pict_struct < ARRAY_SIZE(PICT_STRUCT_STRINGS)) {
         printf("%*c pict_struct: %u (%s)\n", context->indent * 4, ' ', pict_struct,
                PICT_STRUCT_STRINGS[pict_struct]);
     } else {
         printf("%*c pict_struct: %u (reserved)\n", context->indent * 4, ' ', pict_struct);
+    }
+}
+
+static void print_primary_pic_type(ParseContext *context, uint8_t type)
+{
+    static const char *PRIMARY_PIC_TYPES[] =
+    {
+        "I",
+        "P, I",
+        "P, B, I",
+        "SI",
+        "SP, SI",
+        "I, SI",
+        "P, I, SP, SI",
+        "P, B, I, SP, SI"
+    };
+
+    printf("%*c primary_pic_type: %u (%s)\n", context->indent * 4, ' ', type,
+           PRIMARY_PIC_TYPES[type]);
+}
+
+static void print_slice_type(ParseContext *context, uint64_t type)
+{
+    static const char *SLICE_TYPES[] =
+    {
+        "P",
+        "B",
+        "I",
+        "SP",
+        "SI",
+        "P",
+        "B",
+        "I",
+        "SP",
+        "SI",
+    };
+
+    if (type < ARRAY_SIZE(SLICE_TYPES)) {
+        printf("%*c slice_type: %"PRIu64" (%s)\n", context->indent * 4, ' ', type,
+               SLICE_TYPES[type]);
+    } else {
+        printf("%*c slice_type: %"PRIu64" (unknown)\n", context->indent * 4, ' ', type);
     }
 }
 
@@ -807,6 +914,375 @@ static int scaling_list(ParseContext *context, uint32_t dim)
     return 1;
 }
 
+static int ref_pic_list_mvc_modification(ParseContext *context)
+{
+    uint64_t modification_of_pic_nums_idc;
+
+    printf("%*c ref_pic_list_mvc_modification:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    if (context->slice_type % 5 != 2 && context->slice_type % 5 != 4) {
+        u(1); PRINT_UINT("ref_pic_list_modification_flag_l0");
+        if (context->value) {
+            do {
+                ue(); PRINT_UINT("modification_of_pic_nums_idc");
+                modification_of_pic_nums_idc = context->value;
+                if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1) {
+                    ue(); PRINT_UINT("abs_diff_pic_num_minus1");
+                } else if (modification_of_pic_nums_idc == 2) {
+                    ue(); PRINT_UINT("long_term_pic_num");
+                } else if (modification_of_pic_nums_idc == 4 || modification_of_pic_nums_idc == 5) {
+                    ue(); PRINT_UINT("abs_diff_view_idx_minus1");
+                }
+            } while (modification_of_pic_nums_idc != 3);
+        }
+    }
+    if (context->slice_type % 5 == 1) {
+        u(1); PRINT_UINT("ref_pic_list_modification_flag_l1");
+        if (context->value) {
+            do {
+                ue(); PRINT_UINT("modification_of_pic_nums_idc");
+                modification_of_pic_nums_idc = context->value;
+                if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1) {
+                    ue(); PRINT_UINT("abs_diff_pic_num_minus1");
+                } else if (modification_of_pic_nums_idc == 2) {
+                    ue(); PRINT_UINT("long_term_pic_num");
+                } else if (modification_of_pic_nums_idc == 4 || modification_of_pic_nums_idc == 5) {
+                    ue(); PRINT_UINT("abs_diff_view_idx_minus1");
+                }
+            } while (modification_of_pic_nums_idc != 3);
+        }
+    }
+
+    context->indent--;
+    return 1;
+}
+
+static int ref_pic_list_modification(ParseContext *context)
+{
+    uint64_t modification_of_pic_nums_idc;
+
+    printf("%*c ref_pic_list_modification:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    if (context->slice_type % 5 != 2 && context->slice_type % 5 != 4) {
+        u(1); PRINT_UINT("ref_pic_list_modification_flag_l0");
+        if (context->value) {
+            do {
+                ue(); PRINT_UINT("modification_of_pic_nums_idc");
+                modification_of_pic_nums_idc = context->value;
+                if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1) {
+                    ue(); PRINT_UINT("abs_diff_pic_num_minus1");
+                } else if (modification_of_pic_nums_idc == 2) {
+                    ue(); PRINT_UINT("long_term_pic_num");
+                }
+            } while (modification_of_pic_nums_idc != 3);
+        }
+    }
+    if (context->slice_type % 5 == 1) {
+        u(1); PRINT_UINT("ref_pic_list_modification_flag_l1");
+        if (context->value) {
+            do {
+                ue(); PRINT_UINT("modification_of_pic_nums_idc");
+                modification_of_pic_nums_idc = context->value;
+                if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1) {
+                    ue(); PRINT_UINT("abs_diff_pic_num_minus1");
+                } else if (modification_of_pic_nums_idc == 2) {
+                    ue(); PRINT_UINT("long_term_pic_num");
+                }
+            } while (modification_of_pic_nums_idc != 3);
+        }
+    }
+
+    context->indent--;
+    return 1;
+}
+
+static int pred_weight_table(ParseContext *context)
+{
+    uint64_t i;
+
+    printf("%*c pred_weight_table:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    ue(); PRINT_UINT("luma_log2_weight_denom");
+    if (context->chroma_array_type != 0) {
+        ue(); PRINT_UINT("chroma_log2_weight_denom");
+    }
+    for (i = 0; i <= context->num_ref_idx_l0_active_minus1; i++) {
+        u(1); PRINT_UINT("luma_weight_l0_flag");
+        if (context->value) {
+            context->indent++;
+            se(); printf("%*c luma_weight_l0[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
+            se(); printf("%*c luma_offset_l0[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
+            context->indent--;
+        }
+        if (context->chroma_array_type != 0) {
+            u(1); PRINT_UINT("chroma_weight_l0_flag");
+            if (context->value) {
+                int j;
+                context->indent++;
+                for (j = 0; j < 2; j++) {
+                    se(); printf("%*c chroma_weight_l0[%"PRIu64"][%d]: %"PRId64"\n", context->indent * 4, ' ', i, j, context->value);
+                    se(); printf("%*c chroma_offset_l0[%"PRIu64"][%d]: %"PRId64"\n", context->indent * 4, ' ', i, j, context->value);
+                }
+                context->indent--;
+            }
+        }
+    }
+    if (context->slice_type % 5 == 1) {
+        for (i = 0; i <= context->num_ref_idx_l1_active_minus1; i++) {
+            u(1); PRINT_UINT("luma_weight_l1_flag");
+            if (context->value) {
+                context->indent++;
+                se(); printf("%*c luma_weight_l1[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
+                se(); printf("%*c luma_offset_l1[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
+                context->indent--;
+            }
+            if (context->chroma_array_type != 0) {
+                u(1); PRINT_UINT("chroma_weight_l1_flag");
+                if (context->value) {
+                    int j;
+                    context->indent++;
+                    for (j = 0; j < 2; j++) {
+                        se(); printf("%*c chroma_weight_l1[%"PRIu64"][%d]: %"PRId64"\n", context->indent * 4, ' ', i, j, context->value);
+                        se(); printf("%*c chroma_offset_l1[%"PRIu64"][%d]: %"PRId64"\n", context->indent * 4, ' ', i, j, context->value);
+                    }
+                    context->indent--;
+                }
+            }
+        }
+    }
+
+    context->indent--;
+    return 1;
+}
+
+static int dec_ref_pic_marking(ParseContext *context)
+{
+    uint8_t idr_pic_flag = (context->nal_unit_type == 5 ? 1 : 0);
+
+    printf("%*c dec_ref_pic_marking:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    if (idr_pic_flag) {
+        u(1); PRINT_UINT("no_output_of_prior_pics_flag");
+        u(1); PRINT_UINT("long_term_reference_flag");
+    } else {
+        u(1); PRINT_UINT("adaptive_ref_pic_marking_mode_flag");
+        if (context->value) {
+            uint64_t memory_management_control_operation;
+            do {
+                ue(); PRINT_UINT("memory_management_control_operation");
+                memory_management_control_operation = context->value;
+                if (memory_management_control_operation == 1 ||
+                    memory_management_control_operation == 3)
+                {
+                    ue(); PRINT_UINT("difference_of_pic_nums_minus1");
+                }
+                if (memory_management_control_operation == 2)
+                {
+                    ue(); PRINT_UINT("long_term_pic_num");
+                }
+                if (memory_management_control_operation == 3 ||
+                    memory_management_control_operation == 6)
+                {
+                    ue(); PRINT_UINT("long_term_frame_idx");
+                }
+                if (memory_management_control_operation == 4)
+                {
+                    ue(); PRINT_UINT("max_long_term_frame_idx_plus1");
+                }
+            } while (memory_management_control_operation != 0);
+        }
+    }
+
+    context->indent--;
+    return 1;
+}
+
+static int slice_header(ParseContext *context)
+{
+    uint8_t field_pic_flag = 0;
+    uint8_t idr_pic_flag = (context->nal_unit_type == 5 ? 1 : 0);
+
+    printf("%*c slice_header:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    ue(); PRINT_UINT("first_mb_in_slice");
+    ue(); print_slice_type(context, context->value);
+    context->slice_type = context->value;
+    ue(); PRINT_UINT("pic_parameter_set_id");
+    if (context->separate_colour_plane_flag == 1) {
+        u(2); PRINT_UINT("colour_plane_id");
+    }
+    u(context->log2_max_frame_num_minus4 + 4); PRINT_UINT("frame_num");
+    if (!context->frame_mbs_only_flag) {
+        u(1); PRINT_UINT("field_pic_flag");
+        field_pic_flag = (uint8_t)context->value;
+        if (context->value) {
+            u(1); PRINT_UINT("bottom_field_flag");
+        }
+    }
+    if (idr_pic_flag) {
+        ue(); PRINT_UINT("idr_pic_id");
+    }
+    if (context->pic_order_cnt_type == 0) {
+        u(context->log2_max_pic_order_cnt_lsb_minus4 + 4); PRINT_UINT("pic_order_cnt_lsb");
+        if (context->bottom_field_pic_order_in_frame_present_flag && !field_pic_flag) {
+            se(); PRINT_INT("delta_pic_order_cnt_bottom");
+        }
+    }
+    if (context->pic_order_cnt_type == 1 && !context->delta_pic_order_always_zero_flag) {
+        se(); PRINT_INT("delta_pic_order_cnt[0]");
+        if (context->bottom_field_pic_order_in_frame_present_flag && !field_pic_flag) {
+            se(); PRINT_INT("delta_pic_order_cnt[1]");
+        }
+    }
+    if (context->redundant_pic_cnt_present_flag) {
+        ue(); PRINT_UINT("redundant_pic_cnt");
+    }
+    if (IS_B(context->slice_type)) {
+        u(1); PRINT_UINT("direct_spatial_mv_pred_flag");
+    }
+    if (IS_P(context->slice_type) || IS_SP(context->slice_type) || IS_B(context->slice_type)) {
+        u(1); PRINT_UINT("num_ref_idx_active_override_flag");
+        if (context->value) {
+            ue(); PRINT_UINT("num_ref_idx_l0_active_minus1");
+            context->num_ref_idx_l0_active_minus1 = context->value;
+            if (IS_B(context->slice_type)) {
+                ue(); PRINT_UINT("num_ref_idx_l1_active_minus1");
+                context->num_ref_idx_l1_active_minus1 = context->value;
+            }
+        }
+    }
+    if (context->nal_unit_type == 20) {
+        CHK(ref_pic_list_mvc_modification(context));
+    } else {
+        CHK(ref_pic_list_modification(context));
+    }
+    if ((context->weighted_pred_flag && (IS_P(context->slice_type) || IS_SP(context->slice_type))) ||
+        (context->weighted_bipred_idc == 1 && IS_B(context->slice_type)))
+    {
+        CHK(pred_weight_table(context));
+    }
+    if (context->nal_ref_idc != 0) {
+        CHK(dec_ref_pic_marking(context));
+    }
+    if (context->entropy_coding_mode_flag && !IS_I(context->slice_type) && !IS_SI(context->slice_type)) {
+        ue(); PRINT_UINT("cabac_init_idc");
+    }
+    se(); PRINT_INT("slice_qp_delta");
+    if (IS_SP(context->slice_type) || IS_SI(context->slice_type)) {
+        if (IS_SP(context->slice_type)) {
+            u(1); PRINT_UINT("sp_for_switch_flag");
+        }
+        se(); PRINT_INT("slice_qs_delta");
+    }
+    if (context->deblocking_filter_control_present_flag) {
+        ue(); PRINT_UINT("disable_deblocking_filter_idc");
+        if (context->value != 1) {
+            se(); PRINT_INT("slice_alpha_c0_offset_div2");
+            se(); PRINT_INT("slice_beta_offset_div2");
+        }
+    }
+    if (context->num_slice_groups_minus1 > 0 &&
+        context->slice_group_map_type >= 3 && context->slice_group_map_type <= 5)
+    {
+        uint64_t pic_size_in_map_units = (context->pic_width_in_mbs_minus1 + 1) *
+                                            (context->pic_height_in_map_units_minus1 + 1);
+        uint8_t bit_count = get_bits_required(pic_size_in_map_units / (context->slice_group_change_rate_minus1 + 1) + 1);
+        u(bit_count); PRINT_UINT("slice_group_change_cycle");
+    }
+
+    context->indent--;
+    return 1;
+}
+
+static int slice_data(ParseContext *context)
+{
+    printf("%*c slice_data:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    printf("%*c ...\n", context->indent * 4, ' ');
+
+    context->indent--;
+    return 1;
+}
+
+static int slice_layer_without_partitioning(ParseContext *context)
+{
+    printf("%*c slice_layer_without_partitioning:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    CHK(slice_header(context));
+    CHK(slice_data(context));
+
+    // TODO: uncomment when slice_data implemented
+    //CHK(rbsp_trailing_bits(context));
+
+    context->indent--;
+    return 1;
+}
+
+static int slice_data_partition_a_layer(ParseContext *context)
+{
+    printf("%*c slice_data_partition_a_layer:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    CHK(slice_header(context));
+    ue(); PRINT_UINT("slice_id");
+    CHK(slice_data(context));
+
+    // TODO: uncomment when slice_data implemented
+    //CHK(rbsp_trailing_bits(context));
+
+    context->indent--;
+    return 1;
+}
+
+static int slice_data_partition_b_layer(ParseContext *context)
+{
+    printf("%*c slice_data_partition_a_layer:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    ue(); PRINT_UINT("slice_id");
+    if (context->separate_colour_plane_flag == 1) {
+        u(2); PRINT_UINT("colour_plane_id");
+    }
+    if (context->redundant_pic_cnt_present_flag) {
+        ue(); PRINT_UINT("redundant_pic_cnt");
+    }
+    CHK(slice_data(context));
+
+    // TODO: uncomment when slice_data implemented
+    //CHK(rbsp_trailing_bits(context));
+
+    context->indent--;
+    return 1;
+}
+
+static int slice_data_partition_c_layer(ParseContext *context)
+{
+    printf("%*c slice_data_partition_a_layer:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    ue(); PRINT_UINT("slice_id");
+    if (context->separate_colour_plane_flag == 1) {
+        u(2); PRINT_UINT("colour_plane_id");
+    }
+    if (context->redundant_pic_cnt_present_flag) {
+        ue(); PRINT_UINT("redundant_pic_cnt");
+    }
+    CHK(slice_data(context));
+
+    // TODO: uncomment when slice_data implemented
+    //CHK(rbsp_trailing_bits(context));
+
+    context->indent--;
+    return 1;
+}
+
 static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
 {
     printf("%*c pic_timing (type=%"PRIu64", size=%"PRIu64"):\n", context->indent * 4, ' ', payload_type, payload_size);
@@ -985,7 +1461,6 @@ static int sei(ParseContext *context)
 static int sequence_parameter_set_data(ParseContext *context)
 {
     uint8_t constraint_flags;
-    uint64_t pict_order_cnt_type;
 
     printf("%*c sequence_parameter_set:\n", context->indent * 4, ' ');
     context->indent++;
@@ -1011,6 +1486,7 @@ static int sequence_parameter_set_data(ParseContext *context)
         context->chroma_format_idc = context->value;
         if (context->chroma_format_idc == 3) {
             u(1); PRINT_UINT("separate_colour_plane_flag");
+            context->separate_colour_plane_flag = (uint8_t)context->value;
             if (context->value == 0)
                 context->chroma_array_type = context->chroma_format_idc;
             else
@@ -1040,30 +1516,36 @@ static int sequence_parameter_set_data(ParseContext *context)
         }
     }
     ue(); PRINT_UINT("log2_max_frame_num_minus4");
-    ue(); PRINT_UINT("pict_order_cnt_type");
-    pict_order_cnt_type = context->value;
-    if (pict_order_cnt_type == 0) {
+    context->log2_max_frame_num_minus4 = context->value;
+    ue(); PRINT_UINT("pic_order_cnt_type");
+    context->pic_order_cnt_type = context->value;
+    if (context->pic_order_cnt_type == 0) {
         ue(); PRINT_UINT("log2_max_pic_order_cnt_lsb_minus4");
-    } else if (pict_order_cnt_type == 1) {
+        context->log2_max_pic_order_cnt_lsb_minus4 = context->value;
+    } else if (context->pic_order_cnt_type == 1) {
         uint64_t num_ref_frames_in_pic_order_cnt_cycle;
         uint64_t i;
 
         u(1); PRINT_UINT("delta_pic_order_always_zero_flag");
-        se(); PRINT_UINT("offset_for_non_ref_pic");
-        se(); PRINT_UINT("offset_for_top_to_bottom_field");
+        context->delta_pic_order_always_zero_flag = (uint8_t)context->value;
+        se(); PRINT_INT("offset_for_non_ref_pic");
+        se(); PRINT_INT("offset_for_top_to_bottom_field");
         ue(); PRINT_UINT("num_ref_frames_in_pic_order_cnt_cycle");
         num_ref_frames_in_pic_order_cnt_cycle = context->value;
         context->indent++;
         for (i = 0; i < num_ref_frames_in_pic_order_cnt_cycle; i++) {
-            se(); PRINT_UINT("offset_for_ref_frame");
+            se(); PRINT_INT("offset_for_ref_frame");
         }
         context->indent--;
     }
     ue(); PRINT_UINT("max_num_ref_frames");
     u(1); PRINT_UINT("gaps_in_frame_num_value_allowed_flag");
     ue(); PRINT_UINT("pic_width_in_mbs_minus1");
+    context->pic_width_in_mbs_minus1 = context->value;
     ue(); PRINT_UINT("pic_height_in_map_units_minus1");
+    context->pic_height_in_map_units_minus1 = context->value;
     u(1); PRINT_UINT("frame_mbs_only_flag");
+    context->frame_mbs_only_flag = (uint8_t)context->value;
     if (!context->value) {
         u(1); PRINT_UINT("mb_adaptive_frame_field_flag");
     }
@@ -1098,60 +1580,74 @@ static int sequence_parameter_set(ParseContext *context)
 
 static int picture_parameter_set(ParseContext *context)
 {
-    uint64_t num_slice_groups_minus1;
-
     printf("%*c picture_parameter_set:\n", context->indent * 4, ' ');
     context->indent++;
 
     ue(); PRINT_UINT("pic_parameter_set_id");
     ue(); PRINT_UINT("seq_parameter_set_id");
     u(1); PRINT_UINT("entropy_coding_mode_flag");
+    context->entropy_coding_mode_flag = (uint8_t)context->value;
     u(1); PRINT_UINT("bottom_field_pic_order_in_frame_present_flag");
+    context->bottom_field_pic_order_in_frame_present_flag = (uint8_t)context->value;
     ue(); PRINT_UINT("num_slice_groups_minus1");
-    num_slice_groups_minus1 = context->value;
+    context->num_slice_groups_minus1 = context->value;
     if (context->value > 0) {
-        uint64_t slice_group_map_type;
         uint64_t i;
 
         ue(); PRINT_UINT("slice_group_map_type");
-        slice_group_map_type = context->value;
+        context->slice_group_map_type = context->value;
 
         context->indent++;
-        if (slice_group_map_type == 0) {
-            for (i = 0; i <= num_slice_groups_minus1; i++) {
-                ue(); PRINT_UINT("run_length_minus1");
+        if (context->slice_group_map_type == 0)
+        {
+            for (i = 0; i <= context->num_slice_groups_minus1; i++) {
+                ue(); printf("%*c run_length_minus1[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
             }
-        } else if (slice_group_map_type == 2) {
-            for (i = 0; i < num_slice_groups_minus1; i++) {
-                ue(); PRINT_UINT("top_left");
-                ue(); PRINT_UINT("bottom_right");
+        }
+        else if (context->slice_group_map_type == 2)
+        {
+            for (i = 0; i < context->num_slice_groups_minus1; i++) {
+                ue(); printf("%*c top_left[%"PRIu64"]    : %"PRId64"\n", context->indent * 4, ' ', i, context->value);
+                ue(); printf("%*c bottom_right[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
             }
-        } else if (slice_group_map_type == 3 || slice_group_map_type == 4 || slice_group_map_type == 5) {
+        }
+        else if (context->slice_group_map_type == 3 ||
+                 context->slice_group_map_type == 4 ||
+                 context->slice_group_map_type == 5)
+        {
             u(1); PRINT_UINT("slice_group_change_direction_flag");
             ue(); PRINT_UINT("slice_group_change_rate_minus1");
-        } else if (slice_group_map_type == 6) {
+            context->slice_group_change_rate_minus1 = context->value;
+        }
+        else if (context->slice_group_map_type == 6)
+        {
             uint64_t pic_size_in_map_units_minus1;
 
             ue(); PRINT_UINT("pic_size_in_map_units_minus1");
             pic_size_in_map_units_minus1 = context->value;
             context->indent++;
             for (i = 0; i <= pic_size_in_map_units_minus1; i++) {
-                u(get_bits_required(num_slice_groups_minus1 + 1)); PRINT_UINT("slice_group_id");
+                u(get_bits_required(context->num_slice_groups_minus1 + 1));
+                printf("%*c slice_group_id[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
             }
             context->indent--;
         }
         context->indent--;
     }
-    ue(); PRINT_UINT("num_ref_idx_10_default_active_minus1");
-    ue(); PRINT_UINT("num_ref_idx_11_default_active_minus1");
+    ue(); PRINT_UINT("num_ref_idx_l0_default_active_minus1");
+    ue(); PRINT_UINT("num_ref_idx_l1_default_active_minus1");
     u(1); PRINT_UINT("weighted_pred_flag");
+    context->weighted_pred_flag = (uint8_t)context->value;
     u(2); PRINT_UINT("weighted_bipred_idc");
+    context->weighted_bipred_idc = (uint8_t)context->value;
     se(); PRINT_INT("pic_init_qp_minus26");
     se(); PRINT_INT("pic_init_qs_minus26");
     se(); PRINT_INT("chroma_qp_index_offset");
     u(1); PRINT_UINT("deblocking_filter_control_present_flag");
+    context->deblocking_filter_control_present_flag = (uint8_t)context->value;
     u(1); PRINT_UINT("constrained_intra_pred_flag");
     u(1); PRINT_UINT("redundant_pic_cnt_present_flag");
+    context->redundant_pic_cnt_present_flag = (uint8_t)context->value;
     if (more_rbsp_data(context)) {
         uint64_t transform_8x8_mode_flag;
 
@@ -1178,6 +1674,19 @@ static int picture_parameter_set(ParseContext *context)
         }
         se(); PRINT_INT("second_chroma_qp_index_offset");
     }
+
+    CHK(rbsp_trailing_bits(context));
+
+    context->indent--;
+    return 1;
+}
+
+static int access_unit_delimiter(ParseContext *context)
+{
+    printf("%*c access_unit_delimiter:\n", context->indent * 4, ' ');
+    context->indent++;
+
+    u(3); print_primary_pic_type(context, (uint8_t)context->value);
 
     CHK(rbsp_trailing_bits(context));
 
@@ -1482,7 +1991,6 @@ static int nal_unit_header_mvc_extension(ParseContext *context)
 
 static int parse_nal_unit(ParseContext *context)
 {
-    uint8_t nal_unit_type;
     uint64_t bit_pos;
 
     printf("NAL: pos=%"PRId64", start=%u, size=%u\n",
@@ -1492,11 +2000,12 @@ static int parse_nal_unit(ParseContext *context)
 
     f(1); PRINT_UINT("forbidden_zero_bit");
     u(2); PRINT_UINT("nal_ref_idc");
+    context->nal_ref_idc = (uint8_t)context->value;
     u(5); print_nal_unit_type(context);
-    nal_unit_type = (uint8_t)context->value;
+    context->nal_unit_type = (uint8_t)context->value;
 
     bit_pos = context->bit_pos;
-    if (nal_unit_type == 14 || nal_unit_type == 20) {
+    if (context->nal_unit_type == 14 || context->nal_unit_type == 20) {
         u(1); PRINT_UINT("svc_extension_flag");
         if (context->value) {
             CHK(nal_unit_header_svc_extension(context));
@@ -1508,23 +2017,44 @@ static int parse_nal_unit(ParseContext *context)
     CHK(context->bit_pos <= bit_pos);
     context->bit_pos = bit_pos;
 
-    switch (nal_unit_type)
+    switch (context->nal_unit_type)
     {
-        case 6:
+        case CODED_SLICE_NON_IDR_PICT:
+            CHK(slice_layer_without_partitioning(context));
+            break;
+        case CODED_SLICE_DATA_PART_A:
+            CHK(slice_data_partition_a_layer(context));
+            break;
+        case CODED_SLICE_DATA_PART_B:
+            CHK(slice_data_partition_b_layer(context));
+            break;
+        case CODED_SLICE_DATA_PART_C:
+            CHK(slice_data_partition_c_layer(context));
+            break;
+        case CODED_SLICE_IDR_PICT:
+            CHK(slice_layer_without_partitioning(context));
+            break;
+        case SEI:
             CHK(sei(context));
             break;
-        case 7:
+        case SEQUENCE_PARAMETER_SET:
             CHK(sequence_parameter_set(context));
             break;
-        case 8:
+        case PICTURE_PARAMETER_SET:
             CHK(picture_parameter_set(context));
             break;
-        case 13:
+        case ACCESS_UNIT_DELIMITER:
+            CHK(access_unit_delimiter(context));
+            break;
+        case SEQUENCE_PARAMETER_SET_EXT:
             CHK(sequence_parameter_set_extension(context));
             break;
-        case 15:
+        case SUBSET_SEQUENCE_PARAMETER_SET:
             CHK(subset_sequence_parameter_set(context));
             break;
+        case END_OF_SEQUENCE:
+        case END_OF_STREAM:
+        case FILLER:
         default:
             break;
     }
