@@ -1217,11 +1217,13 @@ bool MXFFileReader::GetReferencedPackage(Preface *preface, Track *track, int64_t
     } else {
         SourcePackage *source_package = dynamic_cast<SourcePackage*>(ref_package);
         if (source_package && source_package->haveDescriptor()) {
-            GenericDescriptor *descriptor = source_package->getDescriptor();
-            if (package_type == FILE_SOURCE_PACKAGE_TYPE)
-                type_match = (dynamic_cast<FileDescriptor*>(descriptor) != 0);
-            else
-                type_match = mDataModel->isSubclassOf(descriptor, &MXF_SET_K(PhysicalDescriptor));
+            GenericDescriptor *descriptor = source_package->getDescriptorLight();
+            if (descriptor) {
+                if (package_type == FILE_SOURCE_PACKAGE_TYPE)
+                    type_match = (dynamic_cast<FileDescriptor*>(descriptor) != 0);
+                else
+                    type_match = mDataModel->isSubclassOf(descriptor, &MXF_SET_K(PhysicalDescriptor));
+            }
         }
     }
     if (!type_match) {

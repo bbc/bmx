@@ -92,7 +92,8 @@ void DefaultMXFPackageResolver::ExtractResolvedPackages(MXFFileReader *file_read
 
         SourcePackage *source_package = dynamic_cast<SourcePackage*>(packages[i]);
         if (source_package &&
-            source_package->haveDescriptor() && dynamic_cast<FileDescriptor*>(source_package->getDescriptor()))
+            source_package->haveDescriptor() &&
+            dynamic_cast<FileDescriptor*>(source_package->getDescriptorLight()))
         {
             resolved_package.is_file_source_package = true;
 
