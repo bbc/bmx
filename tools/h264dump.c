@@ -716,6 +716,27 @@ static void print_slice_type(ParseContext *context, uint64_t type)
     }
 }
 
+static void print_scaling_list_flag_and_index(ParseContext *context, const char *flag_name, uint8_t flag, uint8_t index)
+{
+    static const char *SCALING_LIST_NAMES[] =
+    {
+        "SI_4x4_Intra_Y",
+        "SI_4x4_Intra_Cb",
+        "SI_4x4_Intra_Cr",
+        "SI_4x4_Inter_Y",
+        "SI_4x4_Inter_Cb",
+        "SI_4x4_Inter_Cr",
+        "SI_8x8_Intra_Y",
+        "SI_8x8_Inter_Y",
+        "SI_8x8_Intra_Cb",
+        "SI_8x8_Inter_Cb",
+        "SI_8x8_Intra_Cr",
+        "SI_8x8_Inter_Cr",
+    };
+
+    printf("%*c %s[%u]: %u (%s)\n", context->indent * 4, ' ', flag_name, index, flag, SCALING_LIST_NAMES[index]);
+}
+
 static void print_uuid(ParseContext *context, uint64_t uuid_high, uint64_t uuid_low)
 {
     int i;
@@ -890,26 +911,52 @@ static int vui_parameters(ParseContext *context)
     return 1;
 }
 
-static int scaling_list(ParseContext *context, uint32_t dim)
+static int scaling_list(ParseContext *context, int is_8x8)
 {
-    uint8_t last_scale = 8, next_scale = 8;
-    uint32_t list_size = dim * dim;
-    uint8_t i;
+    static const uint8_t dezigzag_8x8[64] =
+    {
+         0,  1,  8, 16,  9,  2,  3, 10,
+        17, 24, 32, 25, 18, 11,  4,  5,
+        12, 19, 26, 33, 40, 48, 41, 34,
+        27, 20, 13,  6,  7, 14, 21, 28,
+        35, 42, 49, 56, 57, 50, 43, 36,
+        29, 22, 15, 23, 30, 37, 44, 51,
+        58, 59, 52, 45, 38, 31, 39, 46,
+        53, 60, 61, 54, 47, 55, 62, 63
+    };
+    static const uint8_t dezigzag_4x4[16] =
+    {
+        0,  1,  4,  8,
+        5,  2,  3,  6,
+        9, 12, 13, 10,
+        7, 11, 14, 15
+    };
 
-    for (i = 0; i < list_size; i++) {
+    uint8_t matrix[64];
+    const uint8_t *dezigzag = (is_8x8 ? dezigzag_8x8 : dezigzag_4x4);
+    uint8_t last_scale = 8, next_scale = 8;
+    int dim = (is_8x8 ? 8 : 4);
+    int size = dim * dim;
+    int i;
+
+    for (i = 0; i < size; i++) {
         if (next_scale != 0) {
             se();
             next_scale = (uint8_t)((last_scale + context->svalue + 256) % 256);
         }
         last_scale = (next_scale == 0 ? last_scale : next_scale);
-
-        if (i % dim == 0)
-            printf("%*c %02x", context->indent * 4, ' ', last_scale);
-        else if ((i + 1) % dim == 0)
-            printf(" %02x\n", last_scale);
-        else
-            printf(" %02x", last_scale);
+        matrix[dezigzag[i]] = last_scale;
     }
+
+    for (i = 0; i < size; i++) {
+        if (i % dim == 0) {
+            if (i != 0)
+                printf("\n");
+            printf("%*c", context->indent * 4, ' ');
+        }
+        printf(" %02x", matrix[i]);
+    }
+    printf("\n");
 
     return 1;
 }
@@ -1501,13 +1548,14 @@ static int sequence_parameter_set_data(ParseContext *context)
 
             context->indent++;
             for (i = 0; i < ((context->chroma_format_idc != 3) ? 8 : 12); i++) {
-                u(1); PRINT_UINT("seq_scaling_list_present_flag");
+                u(1); print_scaling_list_flag_and_index(context, "seq_scaling_list_present_flag",
+                                                        (uint8_t)context->value, i);
                 if (context->value) {
                     context->indent++;
                     if (i < 6) {
-                        CHK(scaling_list(context, 4));
+                        CHK(scaling_list(context, 0));
                     } else {
-                        CHK(scaling_list(context, 8));
+                        CHK(scaling_list(context, 1));
                     }
                     context->indent--;
                 }
@@ -1655,17 +1703,18 @@ static int picture_parameter_set(ParseContext *context)
         transform_8x8_mode_flag = context->value;
         u(1); PRINT_UINT("pic_scaling_matrix_present_flag");
         if (context->value) {
-            uint64_t i;
+            uint8_t i;
 
             context->indent++;
             for (i = 0; i < 6 + (context->chroma_format_idc != 3 ? 2 : 6) * transform_8x8_mode_flag; i++) {
-                u(1); PRINT_UINT("pic_scaling_present_flag");
+                u(1); print_scaling_list_flag_and_index(context, "pic_scaling_present_flag",
+                                                        (uint8_t)context->value, i);
                 if (context->value) {
                     context->indent++;
                     if (i < 6) {
-                        CHK(scaling_list(context, 4));
+                        CHK(scaling_list(context, 0));
                     } else {
-                        CHK(scaling_list(context, 8));
+                        CHK(scaling_list(context, 1));
                     }
                     context->indent--;
                 }
