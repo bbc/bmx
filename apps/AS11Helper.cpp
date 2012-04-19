@@ -664,7 +664,7 @@ void AS11Helper::InsertFrameworks(AS11Clip *as11_clip)
                                                            as11_clip->GetFrameRate());
             }
             BMX_CHECK_M(mAS11FrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value),
-                        ("Failed to set AS11CoreFramework property '%s' to '%s'\n",
+                        ("Failed to set AS11CoreFramework property '%s' to '%s'",
                          mFrameworkProperties[i].name.c_str(), mFrameworkProperties[i].value.c_str()));
         } else {
             if (!mUKDPPFrameworkHelper) {
@@ -673,7 +673,7 @@ void AS11Helper::InsertFrameworks(AS11Clip *as11_clip)
                                                             as11_clip->GetFrameRate());
             }
             BMX_CHECK_M(mUKDPPFrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value),
-                        ("Failed to set UKDPPCoreFramework property '%s' to '%s'\n",
+                        ("Failed to set UKDPPCoreFramework property '%s' to '%s'",
                          mFrameworkProperties[i].name.c_str(), mFrameworkProperties[i].value.c_str()));
         }
     }
@@ -715,7 +715,7 @@ void AS11Helper::Complete()
         UKDPPFramework *dpp_framework = dynamic_cast<UKDPPFramework*>(mUKDPPFrameworkHelper->GetFramework());
         if (mHaveUKDPPTotalNumberOfParts) {
             BMX_CHECK_M(mClip->GetTotalSegments() == dpp_framework->GetTotalNumberOfParts(),
-                        ("UKDPPTotalNumberOfParts value %u does not equal actual total part count %u\n",
+                        ("UKDPPTotalNumberOfParts value %u does not equal actual total part count %u",
                          dpp_framework->GetTotalNumberOfParts(), mClip->GetTotalSegments()));
         } else {
             dpp_framework->SetTotalNumberOfParts(mClip->GetTotalSegments());
@@ -723,7 +723,7 @@ void AS11Helper::Complete()
         if (mHaveUKDPPTotalProgrammeDuration) {
             BMX_CHECK_M(dpp_framework->GetTotalProgrammeDuration() >= mClip->GetTotalSegmentDuration(),
                         ("UKDPPTotalProgrammeDuration value %"PRId64" is less than duration of parts in this "
-                         "file %"PRId64"\n",
+                         "file %"PRId64,
                          dpp_framework->GetTotalProgrammeDuration(), mClip->GetTotalSegmentDuration()));
         } else {
             dpp_framework->SetTotalProgrammeDuration(mClip->GetTotalSegmentDuration());

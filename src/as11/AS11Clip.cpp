@@ -453,7 +453,7 @@ void AS11Clip::CompleteSegmentation(bool with_filler)
         clip_duration = GetDuration();
 
     BMX_CHECK_M(mSegmentationSequence->getDuration() <= clip_duration,
-                ("AS-11 segmentation duration (%"PRId64") exceeds package duration (%"PRId64")\n",
+                ("AS-11 segmentation duration (%"PRId64") exceeds package duration (%"PRId64")",
                  mSegmentationSequence->getDuration(), clip_duration));
     if (mSegmentationSequence->getDuration() == clip_duration)
         return;
