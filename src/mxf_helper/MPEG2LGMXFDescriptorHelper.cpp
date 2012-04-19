@@ -135,11 +135,9 @@ size_t MPEG2LGMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descript
     if (pic_descriptor->haveStoredWidth())
         stored_width = pic_descriptor->getStoredWidth();
 
-    uint8_t frame_layout = 255;
+    uint8_t frame_layout = MXF_SEPARATE_FIELDS;
     if (pic_descriptor->haveFrameLayout())
         frame_layout = pic_descriptor->getFrameLayout();
-    else
-        frame_layout = MXF_SEPARATE_FIELDS;
 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
