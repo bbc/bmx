@@ -166,9 +166,10 @@ UncRGBAMXFDescriptorHelper::~UncRGBAMXFDescriptorHelper()
 {
 }
 
-void UncRGBAMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
+void UncRGBAMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16_t mxf_version,
+                                            mxfUL alternative_ec_label)
 {
-    PictureMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
+    PictureMXFDescriptorHelper::Initialize(file_descriptor, mxf_version, alternative_ec_label);
 
     mEssenceIndex = GetEssenceIndex(file_descriptor, alternative_ec_label);
     BMX_ASSERT(mEssenceIndex != (size_t)(-1));

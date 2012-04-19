@@ -167,9 +167,10 @@ MPEG2LGMXFDescriptorHelper::~MPEG2LGMXFDescriptorHelper()
 {
 }
 
-void MPEG2LGMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
+void MPEG2LGMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16_t mxf_version,
+                                            mxfUL alternative_ec_label)
 {
-    PictureMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
+    PictureMXFDescriptorHelper::Initialize(file_descriptor, mxf_version, alternative_ec_label);
 
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     mFrameWrapped = (mxf_is_mpeg_video_ec(&ec_label, 1) || mxf_is_mpeg_video_ec(&alternative_ec_label, 1));

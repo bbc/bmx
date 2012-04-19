@@ -113,6 +113,7 @@ public:
     virtual int64_t GetFixedLeadFillerOffset() const;
 
     mxfpp::HeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }
+    uint16_t GetMXFVersion() const                   { return mMXFVersion; }
 
     std::string GetFilename() const { return mFilename; }
     const URI& GetAbsoluteURI() const { return mAbsoluteURI; }
@@ -192,6 +193,7 @@ private:
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;
 
+    uint16_t mMXFVersion;
     bool mIsClipWrapped;
     uint32_t mBodySID;
     uint32_t mIndexSID;

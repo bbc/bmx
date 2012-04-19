@@ -70,6 +70,7 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
         BMX_ASSERT(mFileReader->GetNumInternalTrackReaders() == 1);
         auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
             mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),
+            mFileReader->GetMXFVersion(),
             mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->essence_container_label));
         PictureMXFDescriptorHelper *picture_helper = dynamic_cast<PictureMXFDescriptorHelper*>(helper.get());
         if (picture_helper) {

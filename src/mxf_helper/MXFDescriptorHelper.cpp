@@ -58,13 +58,13 @@ EssenceType MXFDescriptorHelper::IsSupported(mxfpp::FileDescriptor *file_descrip
         return SoundMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
 }
 
-MXFDescriptorHelper* MXFDescriptorHelper::Create(mxfpp::FileDescriptor *file_descriptor,
+MXFDescriptorHelper* MXFDescriptorHelper::Create(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version,
                                                  mxfUL alternative_ec_label)
 {
     if (PictureMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
-        return PictureMXFDescriptorHelper::Create(file_descriptor, alternative_ec_label);
+        return PictureMXFDescriptorHelper::Create(file_descriptor, mxf_version, alternative_ec_label);
     else if (SoundMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
-        return SoundMXFDescriptorHelper::Create(file_descriptor, alternative_ec_label);
+        return SoundMXFDescriptorHelper::Create(file_descriptor, mxf_version, alternative_ec_label);
 
     BMX_ASSERT(false);
     return 0;
@@ -107,8 +107,9 @@ MXFDescriptorHelper::~MXFDescriptorHelper()
 {
 }
 
-void MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
+void MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label)
 {
+    (void)mxf_version;
     (void)alternative_ec_label;
 
     mSampleRate = file_descriptor->getSampleRate();

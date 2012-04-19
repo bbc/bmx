@@ -158,11 +158,12 @@ DVMXFDescriptorHelper::~DVMXFDescriptorHelper()
 {
 }
 
-void DVMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
+void DVMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16_t mxf_version,
+                                       mxfUL alternative_ec_label)
 {
     BMX_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
 
-    PictureMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
+    PictureMXFDescriptorHelper::Initialize(file_descriptor, mxf_version, alternative_ec_label);
 
     mxfRational sample_rate = file_descriptor->getSampleRate();
 

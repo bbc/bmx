@@ -362,7 +362,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --seg <name>                   Parse and set segmentation data from text file <name>\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02/as11op1a/as11d10/op1a/d10:\n");
-    fprintf(stderr, "    --afd <value>           Active Format Descriptor code. Default is input file's value or not set\n");
+    fprintf(stderr, "    --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default is input file's value or not set\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/as11d10/op1a/d10:\n");
     fprintf(stderr, "    --single-pass           Write file in a single pass\n");

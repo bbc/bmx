@@ -55,7 +55,8 @@ public:
 
 public:
     static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
-    static MXFDescriptorHelper* Create(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
+    static MXFDescriptorHelper* Create(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version,
+                                       mxfUL alternative_ec_label);
     static MXFDescriptorHelper* Create(EssenceType essence_type);
 
 protected:
@@ -71,7 +72,7 @@ public:
 
 public:
     // initialize from existing descriptor
-    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
+    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
 
 public:
     // configure and create new descriptor

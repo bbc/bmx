@@ -45,7 +45,8 @@ class SoundMXFDescriptorHelper : public MXFDescriptorHelper
 {
 public:
     static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
-    static SoundMXFDescriptorHelper* Create(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
+    static SoundMXFDescriptorHelper* Create(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version,
+                                            mxfUL alternative_ec_label);
 
     static bool IsSupported(EssenceType essence_type);
     static MXFDescriptorHelper* Create(EssenceType essence_type);
@@ -59,7 +60,7 @@ public:
 
 public:
     // initialize from existing descriptor
-    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
+    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
 
 public:
     // configure and create new descriptor

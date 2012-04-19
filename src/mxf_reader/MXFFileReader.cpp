@@ -143,6 +143,7 @@ MXFFileReader::MXFFileReader()
 
     mFile = 0;
     mHeaderMetadata = 0;
+    mMXFVersion = 0;
     mIsClipWrapped = false;
     mBodySID = 0;
     mIndexSID = 0;
@@ -769,6 +770,7 @@ void MXFFileReader::SetNextFrameTrackPositions()
 void MXFFileReader::ProcessMetadata(Partition *partition)
 {
     Preface *preface = mHeaderMetadata->getPreface();
+    mMXFVersion = preface->getVersion();
 
     // create track readers for each picture or sound material package track
 
@@ -1263,7 +1265,7 @@ void MXFFileReader::ProcessPictureDescriptor(FileDescriptor *file_descriptor, MX
     BMX_CHECK(picture_descriptor);
 
     PictureMXFDescriptorHelper *picture_helper =
-        PictureMXFDescriptorHelper::Create(file_descriptor, picture_track_info->essence_container_label);
+        PictureMXFDescriptorHelper::Create(file_descriptor, mMXFVersion, picture_track_info->essence_container_label);
     int32_t avid_resolution_id = 0;
     if (picture_helper->HaveAvidResolutionID())
         avid_resolution_id = picture_helper->GetAvidResolutionID();
@@ -1306,11 +1308,12 @@ void MXFFileReader::ProcessPictureDescriptor(FileDescriptor *file_descriptor, MX
     if (picture_descriptor->haveDisplayYOffset())
         picture_track_info->display_y_offset = frame_height_factor * picture_descriptor->getDisplayYOffset();
 
+    if (picture_descriptor->haveActiveFormatDescriptor()) {
+        decode_afd(picture_descriptor->getActiveFormatDescriptor(), mMXFVersion, &picture_track_info->afd,
+                   &picture_track_info->aspect_ratio);
+    }
     if (picture_descriptor->haveAspectRatio())
         picture_track_info->aspect_ratio = picture_descriptor->getAspectRatio();
-
-    if (picture_descriptor->haveActiveFormatDescriptor())
-        picture_track_info->afd = picture_descriptor->getActiveFormatDescriptor();
 
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(file_descriptor);

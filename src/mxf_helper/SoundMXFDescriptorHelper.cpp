@@ -87,7 +87,7 @@ EssenceType SoundMXFDescriptorHelper::IsSupported(FileDescriptor *file_descripto
     return SOUND_ESSENCE;
 }
 
-SoundMXFDescriptorHelper* SoundMXFDescriptorHelper::Create(FileDescriptor *file_descriptor,
+SoundMXFDescriptorHelper* SoundMXFDescriptorHelper::Create(FileDescriptor *file_descriptor, uint16_t mxf_version,
                                                            mxfUL alternative_ec_label)
 {
     SoundMXFDescriptorHelper *helper;
@@ -96,7 +96,7 @@ SoundMXFDescriptorHelper* SoundMXFDescriptorHelper::Create(FileDescriptor *file_
     else
         helper = new SoundMXFDescriptorHelper();
 
-    helper->Initialize(file_descriptor, alternative_ec_label);
+    helper->Initialize(file_descriptor, mxf_version, alternative_ec_label);
 
     return helper;
 }
@@ -146,9 +146,10 @@ SoundMXFDescriptorHelper::~SoundMXFDescriptorHelper()
 {
 }
 
-void SoundMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
+void SoundMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16_t mxf_version,
+                                          mxfUL alternative_ec_label)
 {
-    MXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
+    MXFDescriptorHelper::Initialize(file_descriptor, mxf_version, alternative_ec_label);
 
     GenericSoundEssenceDescriptor *sound_descriptor =
         dynamic_cast<GenericSoundEssenceDescriptor*>(file_descriptor);

@@ -44,6 +44,7 @@
 #include <bmx/mxf_helper/MPEG2LGMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/VC3MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/MJPEGMXFDescriptorHelper.h>
+#include <bmx/MXFUtils.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -91,7 +92,7 @@ EssenceType PictureMXFDescriptorHelper::IsSupported(FileDescriptor *file_descrip
     return PICTURE_ESSENCE;
 }
 
-PictureMXFDescriptorHelper* PictureMXFDescriptorHelper::Create(FileDescriptor *file_descriptor,
+PictureMXFDescriptorHelper* PictureMXFDescriptorHelper::Create(FileDescriptor *file_descriptor, uint16_t mxf_version,
                                                                mxfUL alternative_ec_label)
 {
     PictureMXFDescriptorHelper *helper;
@@ -114,7 +115,7 @@ PictureMXFDescriptorHelper* PictureMXFDescriptorHelper::Create(FileDescriptor *f
     else
         helper = new PictureMXFDescriptorHelper();
 
-    helper->Initialize(file_descriptor, alternative_ec_label);
+    helper->Initialize(file_descriptor, mxf_version, alternative_ec_label);
 
     return helper;
 }
@@ -179,22 +180,23 @@ PictureMXFDescriptorHelper::~PictureMXFDescriptorHelper()
 {
 }
 
-void PictureMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
+void PictureMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16_t mxf_version,
+                                            mxfUL alternative_ec_label)
 {
-    MXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
+    MXFDescriptorHelper::Initialize(file_descriptor, mxf_version, alternative_ec_label);
 
     GenericPictureEssenceDescriptor *picture_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     BMX_ASSERT(picture_descriptor);
 
+    if (picture_descriptor->haveActiveFormatDescriptor()) {
+        decode_afd(picture_descriptor->getActiveFormatDescriptor(), mxf_version, &mAFD, &mAspectRatio);
+    } else {
+        mAFD = 0;
+        mAspectRatio = ZERO_RATIONAL;
+    }
+
     if (picture_descriptor->haveAspectRatio())
         mAspectRatio = picture_descriptor->getAspectRatio();
-    else
-        mAspectRatio = ZERO_RATIONAL;
-
-    if (picture_descriptor->haveActiveFormatDescriptor())
-        mAFD = picture_descriptor->getActiveFormatDescriptor();
-    else
-        mAFD = 0;
 
     if (picture_descriptor->haveImageAlignmentOffset())
         mImageAlignmentOffset = picture_descriptor->getImageAlignmentOffset();
@@ -245,7 +247,7 @@ void PictureMXFDescriptorHelper::UpdateFileDescriptor()
 
     picture_descriptor->setAspectRatio(mAspectRatio);
     if (mAFD)
-        picture_descriptor->setActiveFormatDescriptor(mAFD);
+        picture_descriptor->setActiveFormatDescriptor(encode_afd(mAFD, mAspectRatio));
 
     if (mFlavour == AVID_FLAVOUR) {
         if (GetImageAlignmentOffset() > 1)

@@ -304,6 +304,31 @@ string bmx::get_track_name(bool is_video, uint32_t track_number)
     return buffer;
 }
 
+void bmx::decode_afd(uint8_t afd, uint16_t mxf_version, uint8_t *code, Rational *aspect_ratio)
+{
+    if (mxf_version < 259 && !(afd & 0x20) && !(afd & 0x40)) { // < 1.3 and bit 5 and 6 equal 0
+        *code = afd & 0x0f;
+        if (aspect_ratio)
+            *aspect_ratio = ZERO_RATIONAL;
+    } else {
+        *code = (afd >> 3) & 0x0f;
+        if (aspect_ratio) {
+            if (afd & 0x04)
+                *aspect_ratio = ASPECT_RATIO_16_9;
+            else
+                *aspect_ratio = ASPECT_RATIO_4_3;
+        }
+    }
+}
+
+uint8_t bmx::encode_afd(uint8_t code, Rational aspect_ratio)
+{
+    if (aspect_ratio.numerator == 0)
+        return code & 0x0f;
+    else
+        return ((code & 0x0f) << 3) | ((aspect_ratio == ASPECT_RATIO_16_9) << 2);
+}
+
 MXFMD5WrapperFile* bmx::md5_wrap_mxf_file(MXFFile *target)
 {
     MXFFile *md5_mxf_file = 0;

@@ -57,6 +57,9 @@ int64_t convert_tc_offset(mxfRational in_edit_rate, int64_t in_offset, uint16_t 
 
 std::string get_track_name(bool is_video, uint32_t track_number);
 
+void decode_afd(uint8_t afd, uint16_t mxf_version, uint8_t *code, Rational *aspect_ratio);
+uint8_t encode_afd(uint8_t code, Rational aspect_ratio);
+
 
 MXFMD5WrapperFile* md5_wrap_mxf_file(MXFFile *target);
 MXFFile* md5_wrap_get_file(MXFMD5WrapperFile *md5_wrapper_file);

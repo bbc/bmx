@@ -56,7 +56,7 @@ public:
 
 public:
     // initialize from existing descriptor
-    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
+    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
 
 public:
     // configure and create new descriptor

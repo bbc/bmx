@@ -373,7 +373,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "\n");
     fprintf(stderr, "Input Options (must precede the input to which it applies):\n");
     fprintf(stderr, "  -a <n:d>                Image aspect ratio. Either 4:3 or 16:9. Default parsed or 16:9\n");
-    fprintf(stderr, "  --afd <value>           Active Format Descriptor code. Default not set\n");
+    fprintf(stderr, "  --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default not set\n");
     fprintf(stderr, "  -c <depth>              Component depth for uncompressed/DV100 video. Either 8 or 10. Default parsed or 8\n");
     fprintf(stderr, "  --height                Height of input uncompressed video data. Default is the production aperture height, except for PAL (592) and NTSC (496)\n");
     fprintf(stderr, "  -s <bps>                Audio sampling rate numerator. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);

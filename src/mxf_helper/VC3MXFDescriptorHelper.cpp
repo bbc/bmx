@@ -151,11 +151,12 @@ VC3MXFDescriptorHelper::~VC3MXFDescriptorHelper()
 {
 }
 
-void VC3MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
+void VC3MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16_t mxf_version,
+                                        mxfUL alternative_ec_label)
 {
     BMX_ASSERT(IsSupported(file_descriptor, alternative_ec_label));
 
-    PictureMXFDescriptorHelper::Initialize(file_descriptor, alternative_ec_label);
+    PictureMXFDescriptorHelper::Initialize(file_descriptor, mxf_version, alternative_ec_label);
 
     if (IsAvidDNxHD(file_descriptor, alternative_ec_label, &mEssenceIndex)) {
         mFrameWrapped = false;
