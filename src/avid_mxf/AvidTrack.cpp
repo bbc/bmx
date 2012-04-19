@@ -465,7 +465,7 @@ void AvidTrack::CreateHeaderMetadata()
     Preface *preface = new Preface(mHeaderMetadata);
     preface->setInt16Item(&MXF_ITEM_K(Preface, ByteOrder), 0x4949); // little-endian
     preface->setUInt32Item(&MXF_ITEM_K(Preface, ObjectModelVersion), 1);
-    preface->setVersion(0x0101); // AAF SDK version 1.1
+    preface->setVersion(MXF_PREFACE_VER(1, 1)); // AAF SDK version
     preface->setLastModifiedDate(mClip->mCreationDate);
     preface->setOperationalPattern(MXF_OP_L(atom, NTracks_NSourceClips));
     preface->appendEssenceContainers(mEssenceContainerUL);

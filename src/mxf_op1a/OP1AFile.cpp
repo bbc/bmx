@@ -505,7 +505,7 @@ void OP1AFile::CreateHeaderMetadata()
     // Preface
     Preface *preface = new Preface(mHeaderMetadata);
     preface->setLastModifiedDate(mCreationDate);
-    preface->setVersion((mFlavour & OP1A_377_2004_FLAVOUR) ? 258 : 259);
+    preface->setVersion((mFlavour & OP1A_377_2004_FLAVOUR) ? MXF_PREFACE_VER(1, 2) : MXF_PREFACE_VER(1, 3));
     preface->setOperationalPattern(MXF_OP_L(1a, MultiTrack_Stream_Internal));
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)

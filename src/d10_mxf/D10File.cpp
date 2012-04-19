@@ -400,7 +400,7 @@ void D10File::CreateHeaderMetadata()
     // Preface
     Preface *preface = new Preface(mHeaderMetadata);
     preface->setLastModifiedDate(mCreationDate);
-    preface->setVersion(258);   // v1.2 - smpte 377-2004
+    preface->setVersion(MXF_PREFACE_VER(1, 2));
     preface->setOperationalPattern(MXF_OP_L(1a, MultiTrack_Stream_Internal));
     preface->appendEssenceContainers(mEssenceContainerUL);
     preface->setDMSchemes(vector<mxfUL>());

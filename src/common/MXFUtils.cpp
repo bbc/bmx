@@ -306,7 +306,7 @@ string bmx::get_track_name(bool is_video, uint32_t track_number)
 
 void bmx::decode_afd(uint8_t afd, uint16_t mxf_version, uint8_t *code, Rational *aspect_ratio)
 {
-    if (mxf_version < 259 && !(afd & 0x20) && !(afd & 0x40)) { // < 1.3 and bit 5 and 6 equal 0
+    if (mxf_version < MXF_PREFACE_VER(1, 3) && !(afd & 0x20) && !(afd & 0x40)) {
         *code = afd & 0x0f;
         if (aspect_ratio)
             *aspect_ratio = ZERO_RATIONAL;

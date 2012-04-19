@@ -191,7 +191,7 @@ void AS02Version::CreateHeaderMetadata()
     // Preface
     Preface *preface = new Preface(mHeaderMetadata);
     preface->setLastModifiedDate(mCreationDate);
-    preface->setVersion(259);   // v1.3 - smpte 377-1
+    preface->setVersion(MXF_PREFACE_VER(1, 3));
     preface->setOperationalPattern(MXF_OP_L(1b, UniTrack_NonStream_External));
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)

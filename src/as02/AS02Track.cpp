@@ -556,7 +556,7 @@ void AS02Track::CreateHeaderMetadata()
     // Preface
     Preface *preface = new Preface(mHeaderMetadata);
     preface->setLastModifiedDate(mClip->mCreationDate);
-    preface->setVersion(259);   // v1.3 - smpte 377-1
+    preface->setVersion(MXF_PREFACE_VER(1, 3));
     preface->setOperationalPattern(MXF_OP_L(1a, UniTrack_Stream_Internal));
     preface->appendEssenceContainers(GetEssenceContainerUL());
     preface->setDMSchemes(vector<mxfUL>());
