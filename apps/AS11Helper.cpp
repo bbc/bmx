@@ -130,6 +130,16 @@ static const FrameworkInfo FRAMEWORK_INFO[] =
 
 
 
+static string get_short_name(string name)
+{
+    if (name.compare(0, strlen("AS11"), "AS11") == 0)
+        return name.substr(strlen("AS11"));
+    else if (name.compare(0, strlen("UKDPP"), "UKDPP") == 0)
+        return name.substr(strlen("UKDPP"));
+    else
+        return name;
+}
+
 static string trim_string(string value)
 {
     size_t start;
@@ -327,9 +337,10 @@ FrameworkHelper::~FrameworkHelper()
 
 bool FrameworkHelper::SetProperty(string name, string value)
 {
+    string short_name = get_short_name(name);
     const PropertyInfo *property_info = mFrameworkInfo->property_info;
     while (property_info->name) {
-        if (name == property_info->name)
+        if (short_name == property_info->name)
             break;
         property_info++;
     }
@@ -626,7 +637,7 @@ bool AS11Helper::HaveProgrammeTitle() const
     size_t i;
     for (i = 0; i < mFrameworkProperties.size(); i++) {
         if (mFrameworkProperties[i].type == AS11_CORE_FRAMEWORK_TYPE &&
-            mFrameworkProperties[i].name == "ProgrammeTitle")
+            get_short_name(mFrameworkProperties[i].name) == "ProgrammeTitle")
         {
             return true;
         }
@@ -640,7 +651,7 @@ string AS11Helper::GetProgrammeTitle() const
     size_t i;
     for (i = 0; i < mFrameworkProperties.size(); i++) {
         if (mFrameworkProperties[i].type == AS11_CORE_FRAMEWORK_TYPE &&
-            mFrameworkProperties[i].name == "ProgrammeTitle")
+            get_short_name(mFrameworkProperties[i].name) == "ProgrammeTitle")
         {
             return mFrameworkProperties[i].value;
         }
