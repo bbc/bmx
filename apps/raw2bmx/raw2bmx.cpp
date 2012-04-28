@@ -290,9 +290,11 @@ static bool parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type
 static string get_version_info()
 {
     char buffer[256];
-    sprintf(buffer, "raw2bmx, %s v%s (%s %s)", get_bmx_library_name().c_str(),
-                                               get_bmx_version_string().c_str(),
-                                               __DATE__, __TIME__);
+    sprintf(buffer, "raw2bmx, %s v%s, %s %s (scm %s)",
+            get_bmx_library_name().c_str(),
+            get_bmx_version_string().c_str(),
+            __DATE__, __TIME__,
+            get_bmx_scm_version_string().c_str());
     return buffer;
 }
 

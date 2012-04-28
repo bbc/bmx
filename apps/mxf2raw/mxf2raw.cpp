@@ -361,9 +361,11 @@ static string create_raw_filename(string prefix, bool is_video, uint32_t index, 
 static string get_version_info()
 {
     char buffer[256];
-    sprintf(buffer, "mxf2raw, %s v%s (%s %s)", get_bmx_library_name().c_str(),
-                                               get_bmx_version_string().c_str(),
-                                               __DATE__, __TIME__);
+    sprintf(buffer, "mxf2raw, %s v%s, %s %s (scm %s)",
+            get_bmx_library_name().c_str(),
+            get_bmx_version_string().c_str(),
+            __DATE__, __TIME__,
+            get_bmx_scm_version_string().c_str());
     return buffer;
 }
 

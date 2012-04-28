@@ -391,6 +391,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\scm_version.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\include\bmx\KLVParser.h"
 				>
 			</File>

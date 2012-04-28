@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#include "scm_version.h"
+
 #include <cstdio>
 
 #include <bmx/Version.h>
@@ -77,6 +79,14 @@ string bmx::get_bmx_version_string()
     }
 }
 
+string bmx::get_bmx_scm_version_string()
+{
+    if (BMX_REGRESSION_TEST)
+        return "regtest-head";
+    else
+        return BMX_SCM_VERSION;
+}
+
 string bmx::get_bmx_build_string()
 {
     if (BMX_REGRESSION_TEST)
@@ -107,5 +117,18 @@ mxfProductVersion bmx::get_bmx_mxf_product_version()
         return REGTEST_MXF_PRODUCT_VERSION;
     else
         return BMX_MXF_PRODUCT_VERSION;
+}
+
+string bmx::get_bmx_mxf_version_string()
+{
+    if (BMX_REGRESSION_TEST) {
+        return "0.0.0";
+    } else {
+        char buffer[64];
+        sprintf(buffer, "%d.%d.%d (scm %s)",
+                BMX_VERSION_MAJOR, BMX_VERSION_MINOR, BMX_VERSION_MICRO,
+                BMX_SCM_VERSION);
+        return buffer;
+    }
 }
 

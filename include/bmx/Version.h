@@ -61,11 +61,13 @@ namespace bmx
 
 std::string get_bmx_library_name();
 std::string get_bmx_version_string();
+std::string get_bmx_scm_version_string();
 std::string get_bmx_build_string();
 
 std::string get_bmx_company_name();
 UUID get_bmx_product_uid();
 mxfProductVersion get_bmx_mxf_product_version();
+std::string get_bmx_mxf_version_string();
 
 
 };

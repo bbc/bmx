@@ -90,7 +90,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mCompanyName = get_bmx_company_name();
     mProductName = get_bmx_library_name();
     mProductVersion = get_bmx_mxf_product_version();
-    mVersionString = get_bmx_version_string();
+    mVersionString = get_bmx_mxf_version_string();
     mProductUID = get_bmx_product_uid();
     mReserveMinBytes = 8192;
     mInputDuration = -1;

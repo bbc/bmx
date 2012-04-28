@@ -102,7 +102,7 @@ AS11Clip::AS11Clip(OP1AFile *clip)
     mSegmentationSequence = 0;
 
     mOP1AClip->SetProductInfo(get_bmx_company_name(), get_bmx_library_name(), get_bmx_mxf_product_version(),
-                              get_bmx_version_string(), get_bmx_product_uid());
+                              get_bmx_mxf_version_string(), get_bmx_product_uid());
 }
 
 AS11Clip::AS11Clip(D10File *clip)
@@ -113,7 +113,7 @@ AS11Clip::AS11Clip(D10File *clip)
     mSegmentationSequence = 0;
 
     mD10Clip->SetProductInfo(get_bmx_company_name(), get_bmx_library_name(), get_bmx_mxf_product_version(),
-                             get_bmx_version_string(), get_bmx_product_uid());
+                             get_bmx_mxf_version_string(), get_bmx_product_uid());
 }
 
 AS11Clip::~AS11Clip()
