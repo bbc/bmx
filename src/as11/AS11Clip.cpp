@@ -525,6 +525,22 @@ Rational AS11Clip::GetFrameRate() const
     return ZERO_RATIONAL;
 }
 
+Timecode AS11Clip::GetStartTimecode() const
+{
+    switch (mType)
+    {
+        case AS11_OP1A_CLIP_TYPE:
+            return mOP1AClip->GetStartTimecode();
+        case AS11_D10_CLIP_TYPE:
+            return mD10Clip->GetStartTimecode();
+        case AS11_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return Timecode();
+}
+
 int64_t AS11Clip::GetDuration() const
 {
     switch (mType)

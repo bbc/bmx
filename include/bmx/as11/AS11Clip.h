@@ -111,6 +111,8 @@ public:
 public:
     Rational GetFrameRate() const;
 
+    Timecode GetStartTimecode() const;
+
     int64_t GetDuration() const;
 
     int64_t GetInputDuration() const;

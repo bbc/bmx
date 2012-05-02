@@ -226,7 +226,26 @@ static bool parse_duration(string value, Rational frame_rate, int64_t *int64_val
         }
     }
 
-    log_warn("Invalid duration/position value '%s'\n", value.c_str());
+    log_warn("Invalid duration value '%s'\n", value.c_str());
+    return false;
+}
+
+static bool parse_position(string value, Timecode start_timecode, Rational frame_rate, int64_t *int64_value)
+{
+    if (value.find(":") == string::npos) {
+        if (sscanf(value.c_str(), "%"PRId64"", int64_value) == 1)
+            return true;
+    } else {
+        int hour, min, sec, frame;
+        char c;
+        if (sscanf(value.c_str(), "%d:%d:%d%c%d", &hour, &min, &sec, &c, &frame) == 5) {
+            Timecode tc(frame_rate, (c != ':'), hour, min, sec, frame);
+            *int64_value = tc.GetOffset() - start_timecode.GetOffset();
+            return true;
+        }
+    }
+
+    log_warn("Invalid position value '%s'\n", value.c_str());
     return false;
 }
 
@@ -316,9 +335,11 @@ static size_t get_utf8_clip_len(const char *u8_str, size_t max_unicode_len)
 
 
 
-FrameworkHelper::FrameworkHelper(DataModel *data_model, DMFramework *framework, Rational frame_rate)
+FrameworkHelper::FrameworkHelper(DataModel *data_model, DMFramework *framework, Timecode start_timecode,
+                                 Rational frame_rate)
 {
     mFramework = framework;
+    mStartTimecode = start_timecode;
     mFrameRate = frame_rate;
     BMX_ASSERT(data_model->findSetDef(framework->getKey(), &mSetDef));
 
@@ -400,6 +421,17 @@ bool FrameworkHelper::SetProperty(string name, string value)
             break;
         }
         case MXF_POSITION_TYPE:
+        {
+            int64_t int64_value = 0;
+            if (!parse_position(value, mStartTimecode, mFrameRate, &int64_value)) {
+                log_warn("Invalid framework property value %s::%s '%s'\n",  mFrameworkInfo->name, name.c_str(),
+                         value.c_str());
+                return false;
+            }
+
+            mFramework->setInt64Item(&c_item_def->key, int64_value);
+            break;
+        }
         case MXF_LENGTH_TYPE:
         {
             int64_t int64_value = 0;
@@ -674,6 +706,7 @@ void AS11Helper::InsertFrameworks(AS11Clip *as11_clip)
             if (!mAS11FrameworkHelper) {
                 mAS11FrameworkHelper = new FrameworkHelper(mClip->GetDataModel(),
                                                            new AS11CoreFramework(mClip->GetHeaderMetadata()),
+                                                           as11_clip->GetStartTimecode(),
                                                            as11_clip->GetFrameRate());
             }
             BMX_CHECK_M(mAS11FrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value),
@@ -683,6 +716,7 @@ void AS11Helper::InsertFrameworks(AS11Clip *as11_clip)
             if (!mUKDPPFrameworkHelper) {
                 mUKDPPFrameworkHelper = new FrameworkHelper(mClip->GetDataModel(),
                                                             new UKDPPFramework(mClip->GetHeaderMetadata()),
+                                                            as11_clip->GetStartTimecode(),
                                                             as11_clip->GetFrameRate());
             }
             BMX_CHECK_M(mUKDPPFrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value),

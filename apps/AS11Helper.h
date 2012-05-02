@@ -77,7 +77,8 @@ typedef struct
 class FrameworkHelper
 {
 public:
-    FrameworkHelper(mxfpp::DataModel *data_model, mxfpp::DMFramework *framework, Rational frame_rate);
+    FrameworkHelper(mxfpp::DataModel *data_model, mxfpp::DMFramework *framework, Timecode start_timecode,
+                    Rational frame_rate);
     ~FrameworkHelper();
 
     bool SetProperty(std::string name, std::string value);
@@ -86,6 +87,7 @@ public:
 
 private:
     mxfpp::DMFramework *mFramework;
+    Timecode mStartTimecode;
     Rational mFrameRate;
     mxfpp::SetDef *mSetDef;
     const FrameworkInfo *mFrameworkInfo;
