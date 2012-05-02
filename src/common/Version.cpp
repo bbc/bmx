@@ -33,7 +33,7 @@
 #include "config.h"
 #endif
 
-#include "scm_version.h"
+#include "bmx_scm_version.h"
 
 #include <cstdio>
 

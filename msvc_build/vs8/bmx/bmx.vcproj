@@ -391,7 +391,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\scm_version.h"
+				RelativePath="..\..\..\bmx_scm_version.h"
 				>
 			</File>
 			<File

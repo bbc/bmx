@@ -5,7 +5,7 @@
 # Get the git version if possible and store it in $GITFILE if it differs to
 # the one contained already.
 
-SCM_VER_FILE="scm_version.h"
+SCM_VER_FILE="bmx_scm_version.h"
 
 GIT_VER=""
 if command -v git \&>/dev/null; then
