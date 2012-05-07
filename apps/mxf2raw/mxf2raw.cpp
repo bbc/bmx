@@ -42,8 +42,10 @@
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_reader/MXFGroupReader.h>
 #include <bmx/mxf_reader/MXFSequenceReader.h>
+#include <bmx/mxf_reader/MXFFrameMetadata.h>
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/MD5.h>
+#include <bmx/CRC32.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Version.h>
 #include "AS11Info.h"
@@ -397,6 +399,7 @@ static void usage(const char *cmd)
 #if defined(_WIN32)
     fprintf(stderr, " --no-seq-scan         Do not set the sequential scan hint for optimizing file caching\n");
 #endif
+    fprintf(stderr, " --check-crc32         Check frame's essence data using CRC-32 frame metadata if available\n");
 }
 
 int main(int argc, const char** argv)
@@ -421,6 +424,7 @@ int main(int argc, const char** argv)
 #if defined(_WIN32)
     int file_flags = MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
 #endif
+    bool check_crc32 = false;
     int cmdln_index;
 
 
@@ -552,6 +556,11 @@ int main(int argc, const char** argv)
             file_flags &= ~MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
         }
 #endif
+        else if (strcmp(argv[cmdln_index], "--check-crc32") == 0)
+        {
+            check_crc32 = true;
+            do_read = true;
+        }
         else
         {
             break;
@@ -869,6 +878,8 @@ int main(int argc, const char** argv)
 
             // read data
             bmx::ByteArray sound_buffer;
+            int64_t crc32_error_count = 0;
+            int64_t crc32_check_count = 0;
             int64_t total_num_read = 0;
             while (true)
             {
@@ -891,6 +902,32 @@ int main(int argc, const char** argv)
 
                         if (calc_md5)
                             md5_update(&md5_contexts[i], frame->GetBytes(), frame->GetSize());
+
+                        if (check_crc32) {
+                            const vector<FrameMetadata*> *metadata = frame->GetMetadata(SYSTEM_SCHEME_1_FMETA_ID);
+                            if (metadata) {
+                                size_t i;
+                                for (i = 0; i < metadata->size(); i++) {
+                                    const SystemScheme1Metadata *ss1_meta =
+                                        dynamic_cast<const SystemScheme1Metadata*>((*metadata)[i]);
+                                    if (ss1_meta->GetType() != SystemScheme1Metadata::APP_CHECKSUM)
+                                        continue;
+
+                                    const SS1APPChecksum *checksum = dynamic_cast<const SS1APPChecksum*>(ss1_meta);
+
+                                    uint32_t crc32;
+                                    crc32_init(&crc32);
+                                    crc32_update(&crc32, frame->GetBytes(), frame->GetSize());
+                                    crc32_final(&crc32);
+
+                                    if (crc32 != checksum->mCRC32)
+                                        crc32_error_count++;
+                                    crc32_check_count++;
+
+                                    break;
+                                }
+                            }
+                        }
 
                         if (prefix) {
                             const MXFSoundTrackInfo *sound_info =
@@ -949,6 +986,19 @@ int main(int argc, const char** argv)
             log_info("Read %"PRId64" samples (%s)\n",
                      total_num_read,
                      get_generic_duration_string_2(total_num_read, sample_rate).c_str());
+
+            if (check_crc32 && total_num_read > 0) {
+                if (crc32_error_count > 0) {
+                    log_error("CRC-32 check: FAILED (%"PRId64" of %"PRId64" track frames failed)\n",
+                              crc32_error_count, crc32_check_count);
+                    throw false;
+                }
+
+                if (crc32_check_count == 0)
+                    log_info("CRC-32 check: not done (no CRC-32 frame metadata)\n");
+                else
+                    log_info("CRC-32 check: PASSED (%"PRId64" track frames checked)\n", crc32_check_count);
+            }
 
             if (calc_md5) {
                 unsigned char digest[16];
