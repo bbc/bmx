@@ -33,6 +33,10 @@
 #define __BMX_FRAME_H__
 
 
+#include <map>
+#include <vector>
+#include <string>
+
 #include <bmx/BMXTypes.h>
 #include <bmx/ByteArray.h>
 
@@ -45,11 +49,24 @@ namespace bmx
 {
 
 
+class FrameMetadata
+{
+public:
+    FrameMetadata(const char *id);
+    virtual ~FrameMetadata();
+
+    const char* GetId() const { return mId; }
+
+protected:
+    const char *mId;
+};
+
+
 class Frame
 {
 public:
     Frame();
-    virtual ~Frame() {};
+    virtual ~Frame();
 
     virtual uint32_t GetSize() const = 0;
     virtual const unsigned char* GetBytes() const = 0;
@@ -62,6 +79,10 @@ public:
 
 public:
     bool IsEmpty() const { return num_samples == 0; }
+
+    const std::map<std::string, std::vector<FrameMetadata*> >& GetMetadata() const { return mMetadata; }
+    const std::vector<FrameMetadata*>* GetMetadata(std::string id) const;
+    void InsertMetadata(FrameMetadata *metadata);
 
 public:
     int64_t position;
@@ -78,6 +99,9 @@ public:
 
     int64_t cp_file_position;
     int64_t file_position;
+
+protected:
+    std::map<std::string, std::vector<FrameMetadata*> > mMetadata;
 };
 
 

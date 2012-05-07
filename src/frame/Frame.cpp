@@ -42,6 +42,17 @@ using namespace bmx;
 
 
 
+FrameMetadata::FrameMetadata(const char *id)
+{
+    mId = id;
+}
+
+FrameMetadata::~FrameMetadata()
+{
+}
+
+
+
 Frame::Frame()
 {
     position = NULL_FRAME_POSITION;
@@ -55,6 +66,30 @@ Frame::Frame()
     flags = 0;
     cp_file_position = 0;
     file_position = 0;
+}
+
+Frame::~Frame()
+{
+    map<string, vector<FrameMetadata*> >::const_iterator iter;
+    for (iter = mMetadata.begin(); iter != mMetadata.end(); iter++) {
+        size_t i;
+        for (i = 0; i < iter->second.size(); i++)
+            delete iter->second[i];
+    }
+}
+
+const vector<FrameMetadata*>* Frame::GetMetadata(std::string id) const
+{
+    map<string, vector<FrameMetadata*> >::const_iterator result = mMetadata.find(id);
+    if (result == mMetadata.end())
+        return 0;
+
+    return &result->second;
+}
+
+void Frame::InsertMetadata(FrameMetadata *metadata)
+{
+    mMetadata[metadata->GetId()].push_back(metadata);
 }
 
 
