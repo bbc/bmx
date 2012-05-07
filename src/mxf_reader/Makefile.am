@@ -3,10 +3,12 @@ noinst_LTLIBRARIES = libmxfreader.la
 libmxfreader_la_SOURCES = \
 	EssenceChunkHelper.cpp \
 	EssenceReader.cpp \
+	FrameMetadataReader.cpp \
 	IndexTableHelper.cpp \
 	MXFFileReader.cpp \
 	MXFFileTrackReader.cpp \
 	MXFFrameBuffer.cpp \
+	MXFFrameMetadata.cpp \
 	MXFGroupReader.cpp \
 	MXFIndexEntryExt.cpp \
 	MXFPackageResolver.cpp \

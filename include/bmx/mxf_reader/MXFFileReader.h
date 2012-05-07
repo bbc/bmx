@@ -60,6 +60,7 @@ public:
     friend class IndexTableHelper;
     friend class EssenceChunkHelper;
     friend class MXFFileTrackReader;
+    friend class FrameMetadataReader;
 
 public:
     typedef enum

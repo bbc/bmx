@@ -59,6 +59,7 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
 : mEssenceChunkHelper(file_reader), mIndexTableHelper(file_reader)
 {
     mFileReader = file_reader;
+    mFrameMetadataReader = new FrameMetadataReader(file_reader);
     mPosition = 0;
     mImageStartOffset = 0;
     mImageEndOffset = 0;
@@ -138,6 +139,7 @@ EssenceReader::~EssenceReader()
     size_t i;
     for (i = 0; i < mTrackFrames.size(); i++)
         delete mTrackFrames[i];
+    delete mFrameMetadataReader;
 }
 
 void EssenceReader::SetReadLimits(int64_t start_position, int64_t duration)
@@ -159,6 +161,7 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
         delete mTrackFrames[i];
     mTrackFrames.clear();
     mTrackFrames.assign(mFileReader->GetNumInternalTrackReaders(), 0);
+    mFrameMetadataReader->Reset();
 
     // check read limits
     if (mReadDuration == 0 ||
@@ -216,6 +219,8 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
     // complete and push frames
     for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
         if (mTrackFrames[i]) {
+            mFrameMetadataReader->InsertFrameMetadata(mTrackFrames[i],
+                    mFileReader->GetInternalTrackReader(i)->GetTrackInfo()->file_track_number);
             mFileReader->GetInternalTrackReader(i)->GetFrameBuffer()->PushFrame(mTrackFrames[i]);
             mTrackFrames[i] = 0;
         }
@@ -348,7 +353,9 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
             mxf_file->readKL(&key, &llen, &len);
             cp_num_read += mxfKey_extlen + llen;
 
-            if (mxf_is_gc_essence_element(&key) || mxf_avid_is_essence_element(&key)) {
+            bool processed_metadata = mFrameMetadataReader->ProcessFrameMetadata(&key, len);
+
+            if (!processed_metadata && (mxf_is_gc_essence_element(&key) || mxf_avid_is_essence_element(&key))) {
                 uint32_t track_number = mxf_get_track_number(&key);
                 MXFTrackReader *track_reader = 0;
                 Frame *frame = 0;
@@ -389,7 +396,7 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                 } else {
                     mxf_file->skip(len);
                 }
-            } else {
+            } else if (!processed_metadata) {
                 mxf_file->skip(len);
             }
 

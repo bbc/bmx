@@ -722,6 +722,14 @@ void bmx::decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_
     timecode->Init(frame_rate, drop_frame, hour, min, sec, frame);
 }
 
+bmx::Timecode bmx::decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_tc, unsigned int size)
+{
+    Timecode timecode;
+    bool field_mark;
+    decode_smpte_timecode(frame_rate, smpte_tc, size, &timecode, &field_mark);
+    return timecode;
+}
+
 void bmx::encode_smpte_timecode(Timecode timecode, bool field_mark, unsigned char *smpte_tc, unsigned int size)
 {
     // see SMPTE 12M-1-2008 and SMPTE 331M-2004 section 8.2 for details

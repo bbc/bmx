@@ -383,6 +383,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\bmx\mxf_reader\FrameMetadataReader.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\include\bmx\mxf_reader\IndexTableHelper.h"
 				>
 			</File>
@@ -444,6 +448,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\include\bmx\mxf_reader\MXFFrameBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\bmx\mxf_reader\MXFFrameMetadata.h"
 				>
 			</File>
 			<File
@@ -857,6 +865,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\mxf_reader\FrameMetadataReader.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\mxf_reader\IndexTableHelper.cpp"
 				>
 			</File>
@@ -910,6 +922,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\mxf_reader\MXFFrameBuffer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\mxf_reader\MXFFrameMetadata.cpp"
 				>
 			</File>
 			<File

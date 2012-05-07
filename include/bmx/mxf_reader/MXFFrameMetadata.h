@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2012, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,16 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_ESSENCE_READER_H__
-#define __BMX_ESSENCE_READER_H__
+#ifndef __BMX_MXF_FRAME_METADATA_H__
+#define __BMX_MXF_FRAME_METADATA_H__
 
-
-#include <vector>
 
 #include <bmx/frame/Frame.h>
-#include <bmx/mxf_reader/FrameMetadataReader.h>
-#include <bmx/mxf_reader/EssenceChunkHelper.h>
-#include <bmx/mxf_reader/IndexTableHelper.h>
 
 
 
@@ -46,51 +41,85 @@ namespace bmx
 {
 
 
-class MXFFileReader;
+extern const char *SYSTEM_SCHEME_1_FMETA_ID;
+extern const char *SDTI_CP_SYSTEM_METADATA_FMETA_ID;
+extern const char *SDTI_CP_PACKAGE_METADATA_FMETA_ID;
 
 
-class EssenceReader
+class SystemScheme1Metadata : public FrameMetadata
 {
 public:
-    EssenceReader(MXFFileReader *file_reader);
-    ~EssenceReader();
+    typedef enum
+    {
+        TIMECODE_ARRAY,
+        APP_CHECKSUM,
+    } Type;
 
-    void SetReadLimits(int64_t start_position, int64_t duration);
+public:
+    SystemScheme1Metadata(Type type);
+    virtual ~SystemScheme1Metadata();
 
-    uint32_t Read(uint32_t num_samples);
-    void Seek(int64_t position);
-
-    mxfRational GetEditRate();
-    int64_t GetPosition() { return mPosition; }
-
-    int64_t GetIndexedDuration() const { return mIndexTableHelper.GetDuration(); }
-    bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position);
-
-    int64_t LegitimisePosition(int64_t position);
+    Type GetType() const { return mType; }
 
 private:
-    void ReadClipWrappedSamples(uint32_t num_samples);
-    void ReadFrameWrappedSamples(uint32_t num_samples);
+    Type mType;
+};
 
-    void GetEditUnit(int64_t position, int64_t *file_position, int64_t *size);
-    void GetEditUnitGroup(int64_t position, uint32_t max_samples, int64_t *file_position, int64_t *size,
-                          uint32_t *num_samples);
+
+class SS1TimecodeArray : public SystemScheme1Metadata
+{
+public:
+    SS1TimecodeArray(Rational frame_rate, bool is_bbc_preservation_file);
+    virtual ~SS1TimecodeArray();
+
+    bool IsBBCAPPTimecodeArray() const;
+    Timecode GetVITC() const;
+    Timecode GetLTC() const;
+
+public:
+    std::vector<SMPTE12MTimecode> mS12MTimecodes;
 
 private:
-    MXFFileReader *mFileReader;
+    Rational mFrameRate;
+    bool mIsBBCPreservationFile;
+};
 
-    EssenceChunkHelper mEssenceChunkHelper;
-    IndexTableHelper mIndexTableHelper;
 
-    FrameMetadataReader *mFrameMetadataReader;
+class SS1APPChecksum : public SystemScheme1Metadata
+{
+public:
+    SS1APPChecksum(uint32_t crc32);
+    virtual ~SS1APPChecksum();
 
-    int64_t mReadStartPosition;
-    int64_t mReadDuration;
-    int64_t mPosition;
-    uint32_t mImageStartOffset;
-    uint32_t mImageEndOffset;
+public:
+    uint32_t mCRC32;
+};
 
-    std::vector<Frame*> mTrackFrames;
+
+
+class SDTICPSystemMetadata : public FrameMetadata
+{
+public:
+    SDTICPSystemMetadata();
+    virtual ~SDTICPSystemMetadata();
+
+public:
+    Rational mCPRate;
+    bool mHaveUserTimecode;
+    SMPTE12MTimecode mUserTimecode;
+};
+
+
+class SDTICPPackageMetadata : public FrameMetadata
+{
+public:
+    SDTICPPackageMetadata();
+    virtual ~SDTICPPackageMetadata();
+
+public:
+    bool mHaveUMID;
+    ExtendedUMID mUMID;
+    std::string mEssenceMark;
 };
 
 

@@ -97,10 +97,12 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_helper/WaveMXFDescriptorHelper.h \
 	bmx/mxf_reader/EssenceChunkHelper.h \
 	bmx/mxf_reader/EssenceReader.h \
+	bmx/mxf_reader/FrameMetadataReader.h \
 	bmx/mxf_reader/IndexTableHelper.h \
 	bmx/mxf_reader/MXFFileReader.h \
 	bmx/mxf_reader/MXFFileTrackReader.h \
 	bmx/mxf_reader/MXFFrameBuffer.h \
+	bmx/mxf_reader/MXFFrameMetadata.h \
 	bmx/mxf_reader/MXFGroupReader.h \
 	bmx/mxf_reader/MXFIndexEntryExt.h \
 	bmx/mxf_reader/MXFPackageResolver.h \

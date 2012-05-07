@@ -69,10 +69,16 @@ typedef enum
 } Color;
 
 
-typedef mxfRational   Rational;
-typedef mxfTimestamp  Timestamp;
-typedef mxfUUID       UUID;
-typedef mxfUMID       UMID;
+typedef mxfRational         Rational;
+typedef mxfTimestamp        Timestamp;
+typedef mxfUUID             UUID;
+typedef mxfUMID             UMID;
+typedef mxfExtendedUMID     ExtendedUMID;
+
+typedef struct
+{
+    unsigned char bytes[8];
+} SMPTE12MTimecode;
 
 
 static const Rational FRAME_RATE_23976  = {24000, 1001};
