@@ -57,21 +57,6 @@ Frame::Frame()
     file_position = 0;
 }
 
-void Frame::CopyMetadataTo(Frame *to_frame) const
-{
-    to_frame->position             = position;
-    to_frame->track_position       = track_position;
-    to_frame->ec_position          = ec_position;
-    to_frame->first_sample_offset  = first_sample_offset;
-    to_frame->num_samples          = num_samples;
-    to_frame->temporal_reordering  = temporal_reordering;
-    to_frame->temporal_offset      = temporal_offset;
-    to_frame->key_frame_offset     = key_frame_offset;
-    to_frame->flags                = flags;
-    to_frame->cp_file_position     = cp_file_position;
-    to_frame->file_position        = file_position;
-}
-
 
 
 DefaultFrame::DefaultFrame()

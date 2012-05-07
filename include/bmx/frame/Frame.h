@@ -60,8 +60,6 @@ public:
     virtual void SetSize(uint32_t size) = 0;
     virtual void IncrementSize(uint32_t inc) = 0;
 
-    virtual void CopyMetadataTo(Frame *to_frame) const;
-
 public:
     bool IsEmpty() const { return num_samples == 0; }
 
