@@ -137,6 +137,7 @@ private:
     mxfUUID mProductUID;
     std::map<std::string, std::string> mUserComments;
     std::vector<AvidLocator> mLocators;
+    bool mMaxLocatorsExceeded;
 
     mxfTimestamp mCreationDate;
     mxfUUID mGenerationUID;

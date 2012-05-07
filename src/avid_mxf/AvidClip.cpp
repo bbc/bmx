@@ -102,6 +102,7 @@ AvidClip::AvidClip(mxfRational frame_rate, MXFFileFactory *file_factory, bool ta
     mProductVersion = get_bmx_mxf_product_version();
     mVersionString = get_bmx_mxf_version_string();
     mProductUID = get_bmx_product_uid();
+    mMaxLocatorsExceeded = false;
     mxf_get_timestamp_now(&mCreationDate);
     mxf_generate_uuid(&mGenerationUID);
     mxf_generate_aafsdk_umid(&mMaterialPackageUID);
@@ -186,7 +187,14 @@ void AvidClip::SetUserComment(string name, string value)
 
 void AvidClip::AddLocator(AvidLocator locator)
 {
-    mLocators.push_back(locator);
+    if (!mMaxLocatorsExceeded) {
+        if (mLocators.size() == MAX_LOCATORS) {
+            log_warn("Maximum locators, %u, exceeded.\n", MAX_LOCATORS);
+            mMaxLocatorsExceeded = true;
+        } else {
+            mLocators.push_back(locator);
+        }
+    }
 }
 
 SourcePackage* AvidClip::CreateDefaultTapeSource(string name, uint32_t num_video_tracks, uint32_t num_audio_tracks)
