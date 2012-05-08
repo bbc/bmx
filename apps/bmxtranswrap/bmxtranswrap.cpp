@@ -1327,7 +1327,6 @@ int main(int argc, const char** argv)
             output_duration = reader->GetDuration() - read_start;
         }
 
-        int16_t unsupported_precharge = 0;
         int16_t precharge = 0;
         int16_t rollout = 0;
         if (output_duration > 0) {
@@ -1343,7 +1342,6 @@ int main(int argc, const char** argv)
                          precharge);
                 output_duration += (- precharge);
                 read_start += precharge;
-                unsupported_precharge = precharge;
                 precharge = 0;
             }
             if (rollout != 0 && (no_rollout || clip_type == CW_AVID_CLIP_TYPE)) {
@@ -1945,7 +1943,7 @@ int main(int argc, const char** argv)
                             dynamic_cast<const SDTICPPackageMetadata*>((*metadata)[0]);
                         if (!pkg_metadata->mEssenceMark.empty()) {
                             AvidLocator locator;
-                            locator.position = -unsupported_precharge + frame->position;
+                            locator.position = frame->position - (read_start + precharge);
                             if (pkg_metadata->mEssenceMark[0] == '_')
                                 locator.color = COLOR_RED;
                             else
