@@ -1881,9 +1881,15 @@ int main(int argc, const char** argv)
         vector<uint32_t> sample_sequence;
         uint32_t sample_sequence_offset = 0;
         uint32_t max_samples_per_read = 1;
-        sample_sequence = output_tracks[0].track->GetShiftedSampleSequence();
-        if (is_sound_frame_rate && sample_sequence.size() == 1 && sample_sequence[0] == 1)
-            max_samples_per_read = 1920;
+        if (is_sound_frame_rate) {
+            // read sample sequence required for output frame rate
+            sample_sequence = output_tracks[0].track->GetShiftedSampleSequence();
+            if (sample_sequence.size() == 1 && sample_sequence[0] == 1)
+                max_samples_per_read = 1920; // improve efficiency and read multiple samples
+        } else {
+            // read 1 input frame
+            sample_sequence.push_back(1);
+        }
         BMX_ASSERT(max_samples_per_read == 1 || (precharge == 0 && rollout == 0));
 
 
