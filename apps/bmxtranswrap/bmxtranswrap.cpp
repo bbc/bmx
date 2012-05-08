@@ -1900,7 +1900,7 @@ int main(int argc, const char** argv)
         int64_t duration_at_rollout_start = -1;
         int64_t container_duration;
         int64_t prev_container_duration = -1;
-        int64_t last_ess_mark_pos = -1;
+        int64_t last_ess_mark_pos = INT64_MIN;
         bmx::ByteArray sound_buffer;
         while (total_read < read_duration) {
             uint32_t num_read = read_samples(reader, sample_sequence, &sample_sequence_offset, max_samples_per_read);
