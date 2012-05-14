@@ -318,17 +318,21 @@ static size_t get_utf8_code_len(const char *u8_code)
     return -1;
 }
 
-static size_t get_utf8_clip_len(const char *u8_str, size_t max_unicode_len)
+static size_t get_utf8_clip_len(const char *u8_str, size_t max_unicode_len, bool *invalid, bool *truncated)
 {
+    *invalid = false;
     size_t unicode_len = 0;
     size_t len = 0;
     while (u8_str[len] && unicode_len < max_unicode_len) {
         size_t code_len = get_utf8_code_len(&u8_str[len]);
-        if (code_len == (size_t)(-1))
+        if (code_len == (size_t)(-1)) {
+            *invalid = true;
             break;
+        }
         len += code_len;
         unicode_len++;
     }
+    *truncated = (u8_str[len] != 0);
 
     return len;
 }
@@ -380,20 +384,22 @@ bool FrameworkHelper::SetProperty(string name, string value)
     {
         case MXF_UTF16STRING_TYPE:
         {
-            if (value.empty()) {
-                log_warn("Ignoring empty string property %s::%s\n", mFrameworkInfo->name, name.c_str());
-            } else {
-                size_t clip_len = get_utf8_clip_len(value.c_str(), 127);
-                if (clip_len == 0) {
-                    log_warn("Ignoring invalid UTF-8 string property %s::%s\n", mFrameworkInfo->name, name.c_str());
+            bool invalid = false;
+            bool truncated = false;
+            size_t clip_len = get_utf8_clip_len(value.c_str(), 127, &invalid, &truncated);
+            if (truncated) {
+                if (invalid) {
+                    log_warn("Truncating string property %s::%s to %zu chars because it contains invalid UTF-8 data\n",
+                             mFrameworkInfo->name, name.c_str(), clip_len);
                 } else {
-                    if (value.size() > clip_len) {
-                        log_warn("Clipping string property %s::%s because it's length exceeds 127 unicode chars\n",
-                                 mFrameworkInfo->name, name.c_str());
-                    }
-                    mFramework->setStringItem(&c_item_def->key, value.substr(0, clip_len));
+                    log_warn("Truncating string property %s::%s because it's length exceeds 127 unicode chars\n",
+                             mFrameworkInfo->name, name.c_str());
                 }
             }
+            if (clip_len == 0)
+                log_warn("Ignoring empty string property %s::%s\n", mFrameworkInfo->name, name.c_str());
+            else
+                mFramework->setStringItem(&c_item_def->key, value.substr(0, clip_len));
             break;
         }
         case MXF_UINT8_TYPE:
