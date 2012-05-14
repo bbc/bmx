@@ -951,6 +951,18 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
     BMX_CHECK(fsp_track);
 
 
+    // set file's edit rate
+
+    Rational fsp_edit_rate = normalize_rate(fsp_track->getEditRate());
+    if (mSampleRate.numerator == 0) {
+        mSampleRate = fsp_edit_rate;
+    } else if (mSampleRate != fsp_edit_rate) {
+        BMX_EXCEPTION(("FSP track edit rate %d/%d does not match existing edit rate %d/%d",
+                       fsp_edit_rate.numerator, fsp_edit_rate.denominator,
+                       mSampleRate.numerator, mSampleRate.denominator));
+    }
+
+
     // get track origin (pre-charge)
 
     int64_t origin = fsp_track->getOrigin();
@@ -989,15 +1001,17 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
                 break;
             }
         }
-
-        mSampleRate = normalize_rate(mult_desc->getSampleRate());
     } else {
         file_desc = dynamic_cast<FileDescriptor*>(file_source_package->getDescriptor());
-        BMX_CHECK(file_desc);
-
-        mSampleRate = normalize_rate(file_desc->getSampleRate());
     }
     BMX_CHECK(file_desc);
+
+    Rational desc_sample_rate = normalize_rate(file_desc->getSampleRate());
+    if (desc_sample_rate != fsp_edit_rate) {
+        log_info("FSP track edit rate %d/%d does not equal descriptor sample rate %d/%d\n",
+                 fsp_edit_rate.numerator, fsp_edit_rate.denominator,
+                 desc_sample_rate.numerator, desc_sample_rate.denominator);
+    }
 
 
     // fill in track info
@@ -1024,6 +1038,12 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
         track_info->file_track_id = fsp_track->getTrackID();
     track_info->file_track_number = fsp_track->getTrackNumber();
     BMX_CHECK(track_info->file_track_number != 0);
+
+    if (fsp_edit_rate != track_info->edit_rate) {
+        log_warn("Unsupported FSP track edit rate %d/%d that does not equal MP track edit rate %d/%d\n",
+                 fsp_edit_rate.numerator, fsp_edit_rate.denominator,
+                 track_info->edit_rate.numerator, track_info->edit_rate.denominator);
+    }
 
     // use the essence container label in the partition to workaround issue with Avid files where
     // the essence container label in the descriptor is a generic KLV label
