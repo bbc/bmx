@@ -351,6 +351,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            The header and body partitions will be incomplete\n");
     fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is assumed)\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "  op1a:\n");
+    fprintf(stderr, "    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support\n");
+    fprintf(stderr, "                                separate partitions for header metadata, index tables, essence container data and footer\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "  as11d10/d10:\n");
     fprintf(stderr, "    --d10-mute <flags>      Indicate using a string of 8 '0' or '1' which sound channels should be muted. The lsb is the rightmost digit\n");
     fprintf(stderr, "    --d10-invalid <flags>   Indicate using a string of 8 '0' or '1' which sound channels should be flagged invalid. The lsb is the rightmost digit\n");
@@ -503,6 +507,7 @@ int main(int argc, const char** argv)
     bool tp_uid_set = false;
     Timestamp tp_created;
     bool tp_created_set = false;
+    bool min_part = false;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -810,6 +815,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--file-md5") == 0)
         {
             file_md5 = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--min-part") == 0)
+        {
+            min_part = true;
         }
         else if (strcmp(argv[cmdln_index], "--d10-mute") == 0)
         {
@@ -2461,6 +2470,8 @@ int main(int argc, const char** argv)
         int flavour = 0;
         if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_OP1A_CLIP_TYPE) {
             flavour = OP1A_DEFAULT_FLAVOUR;
+            if (clip_type == CW_OP1A_CLIP_TYPE && min_part)
+                flavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
             if (file_md5)
                 flavour |= OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
