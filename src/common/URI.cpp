@@ -87,17 +87,32 @@ void URIStr::Clear()
 
 URI::URI()
 {
+#if defined(_WIN32)
+    mWindowsNameConvert = true;
+#else
+    mWindowsNameConvert = false;
+#endif
     memset(&mUriUri, 0, sizeof(mUriUri));
 }
 
 URI::URI(const char *uri_str)
 {
+#if defined(_WIN32)
+    mWindowsNameConvert = true;
+#else
+    mWindowsNameConvert = false;
+#endif
     memset(&mUriUri, 0, sizeof(mUriUri));
     BMX_CHECK(Parse(uri_str));
 }
 
 URI::URI(string uri_str)
 {
+#if defined(_WIN32)
+    mWindowsNameConvert = true;
+#else
+    mWindowsNameConvert = false;
+#endif
     memset(&mUriUri, 0, sizeof(mUriUri));
     BMX_CHECK(Parse(uri_str.c_str()));
 }
@@ -111,6 +126,11 @@ URI::URI(const URI &uri)
 URI::~URI()
 {
     Clear();
+}
+
+void URI::SetWindowsNameConvert(bool windows_name_convert)
+{
+    mWindowsNameConvert = windows_name_convert;
 }
 
 bool URI::Parse(const char *uri_str)
@@ -151,20 +171,17 @@ bool URI::ParseFilename(string filename)
     URIStr uri_str;
     size_t uri_str_size;
 
-#if defined(_WIN32)
-    uri_str_size = 8 + 3 * filename.size() + 1;
-#else
     uri_str_size = 7 + 3 * filename.size() + 1;
-#endif
+    if (mWindowsNameConvert)
+        uri_str_size += 1;
 
     uri_str.Allocate(uri_str_size);
 
     int result;
-#if defined(_WIN32)
-    result = uriWindowsFilenameToUriStringA(filename.c_str(), uri_str.GetStr());
-#else
-    result = uriUnixFilenameToUriStringA(filename.c_str(), uri_str.GetStr());
-#endif
+    if (mWindowsNameConvert)
+        result = uriWindowsFilenameToUriStringA(filename.c_str(), uri_str.GetStr());
+    else
+        result = uriUnixFilenameToUriStringA(filename.c_str(), uri_str.GetStr());
     if (result)
         return false;
 
@@ -176,24 +193,23 @@ bool URI::ParseFilename(string filename)
 
 bool URI::ParseDirectory(string dirname)
 {
-#if defined(_WIN32)
-    if (dirname.empty() ||
-        (dirname[dirname.size() - 1] != '\\' && dirname[dirname.size() - 1] != '/'))
-    {
-        return ParseFilename(dirname + "\\");
+    if (mWindowsNameConvert) {
+        if (dirname.empty() ||
+            (dirname[dirname.size() - 1] != '\\' && dirname[dirname.size() - 1] != '/'))
+        {
+            return ParseFilename(dirname + "\\");
+        }
+    } else {
+        if (dirname.empty() || dirname[dirname.size() - 1] != '/')
+            return ParseFilename(dirname + "/");
     }
-#else
-    if (dirname.empty() || dirname[dirname.size() - 1] != '/')
-    {
-        return ParseFilename(dirname + "/");
-    }
-#endif
 
     return ParseFilename(dirname);
 }
 
 void URI::Copy(const URI &uri)
 {
+    mWindowsNameConvert = uri.mWindowsNameConvert;
     Parse(uri.ToString());
 }
 
@@ -277,11 +293,10 @@ string URI::ToFilename() const
     filename.Allocate(uri_str.size() + 1);
 
     int result;
-#if defined(_WIN32)
-    result = uriUriStringToWindowsFilenameA(uri_str.c_str(), filename.GetStr());
-#else
-    result = uriUriStringToUnixFilenameA(uri_str.c_str(), filename.GetStr());
-#endif
+    if (mWindowsNameConvert)
+        result = uriUriStringToWindowsFilenameA(uri_str.c_str(), filename.GetStr());
+    else
+        result = uriUriStringToUnixFilenameA(uri_str.c_str(), filename.GetStr());
     if (result)
         return 0;
 

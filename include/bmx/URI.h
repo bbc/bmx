@@ -73,6 +73,8 @@ public:
     URI(const URI &uri);
     ~URI();
 
+    void SetWindowsNameConvert(bool windows_name_convert);
+
     bool Parse(const char *uri_str);
     bool Parse(std::string uri_str);
     bool ParseFilename(std::string filename);
@@ -104,6 +106,7 @@ private:
 private:
     UriUriA mUriUri;
     URIStr mSourceStr;
+    bool mWindowsNameConvert;
 };
 
 
