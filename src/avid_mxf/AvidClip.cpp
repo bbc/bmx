@@ -112,7 +112,7 @@ AvidClip::AvidClip(mxfRational frame_rate, MXFFileFactory *file_factory, bool ta
     mHeaderMetadata = 0;
     mContentStorage = 0;
     mMaterialPackage = 0;
-    mHaveImportSourceTimecodeTrack = false;
+    mHavePhysSourceTimecodeTrack = false;
     mMaterialTimecodeComponent = 0;
     mLocatorDescribedTrackId = 0;
 
@@ -284,7 +284,7 @@ SourcePackage* AvidClip::CreateDefaultTapeSource(string name, uint32_t num_video
     tape_descriptor->setInt32Item(&MXF_ITEM_K(TapeDescriptor, ColorFrame), 0);
 
 
-    RegisterTapeSource(tape_package);
+    RegisterPhysicalSource(tape_package);
 
     return tape_package;
 }
@@ -383,7 +383,7 @@ SourcePackage* AvidClip::CreateDefaultImportSource(string uri, string name,
     }
 
 
-    RegisterImportSource(import_package);
+    RegisterPhysicalSource(import_package);
 
     return import_package;
 }
@@ -398,13 +398,9 @@ vector<pair<mxfUMID, uint32_t> > AvidClip::GetSoundSourceReferences(mxfpp::Sourc
     return GetSourceReferences(source_package, false);
 }
 
-void AvidClip::RegisterTapeSource(SourcePackage *source_package)
+void AvidClip::RegisterPhysicalSource(SourcePackage *source_package)
 {
-    mTapeSourcePackages.push_back(source_package);
-}
-
-void AvidClip::RegisterImportSource(SourcePackage *source_package)
-{
+    mHavePhysSourceTimecodeTrack = false;
     vector<GenericTrack*> tracks = source_package->getTracks();
     size_t i;
     for (i = 0; i < tracks.size(); i++) {
@@ -415,12 +411,12 @@ void AvidClip::RegisterImportSource(SourcePackage *source_package)
         StructuralComponent *track_sequence = track->getSequence();
         mxfUL data_def = track_sequence->getDataDefinition();
         if (mxf_is_timecode(&data_def)) {
-            mHaveImportSourceTimecodeTrack = true;
+            mHavePhysSourceTimecodeTrack = true;
             break;
         }
     }
 
-    mImportSourcePackages.push_back(source_package);
+    mPhysicalSourcePackage = source_package;
 }
 
 AvidTrack* AvidClip::CreateTrack(EssenceType essence_type)
@@ -476,7 +472,8 @@ void AvidClip::PrepareWrite()
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite();
 
-    SetPhysicalSourceStartTimecode();
+    if (mHavePhysSourceTimecodeTrack)
+        SetPhysicalSourceStartTimecode();
 }
 
 void AvidClip::WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples)
@@ -582,8 +579,7 @@ void AvidClip::CreateMaterialPackage()
 
     // add a timecode track to the material package if needed
     if (mStartTimecodeSet &&
-        (!mHaveImportSourceTimecodeTrack || mImportSourcePackages.empty()) &&
-        mTapeSourcePackages.empty())
+        (!mPhysicalSourcePackage || !mHavePhysSourceTimecodeTrack))
     {
         // Preface - ContentStorage - MaterialPackage - timecode Timeline Track
         Track *tc_track = new Track(mHeaderMetadata);
@@ -753,7 +749,8 @@ void AvidClip::UpdateHeaderMetadata()
         mMaterialTimecodeComponent->setDropFrame(mStartTimecode.IsDropFrame());
         mMaterialTimecodeComponent->setStartTimecode(mStartTimecode.GetOffset());
     }
-    SetPhysicalSourceStartTimecode();
+    if (mHavePhysSourceTimecodeTrack)
+        SetPhysicalSourceStartTimecode();
 }
 
 void AvidClip::UpdateTrackDurations(AvidTrack *avid_track, Track *track, mxfRational edit_rate, int64_t duration)

@@ -362,6 +362,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "  avid:\n");
     fprintf(stderr, "    --project <name>        Set the Avid project name\n");
     fprintf(stderr, "    --tape <name>           Source tape name\n");
+    fprintf(stderr, "    --import <name>         Source import name. <name> is one of the following:\n");
+    fprintf(stderr, "                              - a file URL starting with 'file://'\n");
+    fprintf(stderr, "                              - an absolute Windows (starts with '[A-Z]:') or *nix (starts with '/') filename\n");
+    fprintf(stderr, "                              - a relative filename, which will be converted to an absolute filename\n");
     fprintf(stderr, "    --comment <string>      Add 'Comments' user comment to the MaterialPackage\n");
     fprintf(stderr, "    --desc <string>         Add 'Descript' user comment to the MaterialPackage\n");
     fprintf(stderr, "    --tag <name> <value>    Add <name> user comment to the MaterialPackage. Option can be used multiple times\n");
@@ -488,6 +492,7 @@ int main(int argc, const char** argv)
     const char *shim_annot = 0;
     const char *project_name = 0;
     const char *tape_name = 0;
+    const char *import_name = 0;
     map<string, string> user_comments;
     vector<LocatorOption> locators;
     AS11Helper as11_helper;
@@ -876,6 +881,17 @@ int main(int argc, const char** argv)
                 return 1;
             }
             tape_name = argv[cmdln_index + 1];
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--import") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            import_name = argv[cmdln_index + 1];
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--comment") == 0)
@@ -2530,9 +2546,9 @@ int main(int argc, const char** argv)
 
         // initialize clip properties
 
-        SourcePackage *tape_package = 0;
-        vector<pair<mxfUMID, uint32_t> > tape_package_picture_refs;
-        vector<pair<mxfUMID, uint32_t> > tape_package_sound_refs;
+        SourcePackage *physical_package = 0;
+        vector<pair<mxfUMID, uint32_t> > physical_package_picture_refs;
+        vector<pair<mxfUMID, uint32_t> > physical_package_sound_refs;
 
         clip->SetStartTimecode(start_timecode);
         if (clip_name)
@@ -2602,7 +2618,7 @@ int main(int argc, const char** argv)
             if (mp_created_set)
                 avid_clip->SetMaterialPackageCreationDate(mp_created);
 
-            if (tape_name) {
+            if (tape_name || import_name) {
                 uint32_t num_picture_tracks = 0;
                 uint32_t num_sound_tracks = 0;
                 for (i = 0; i < inputs.size(); i++) {
@@ -2611,19 +2627,30 @@ int main(int argc, const char** argv)
                     else
                         num_picture_tracks++;
                 }
-                tape_package = avid_clip->CreateDefaultTapeSource(tape_name, num_picture_tracks, num_sound_tracks);
+                if (tape_name) {
+                    physical_package = avid_clip->CreateDefaultTapeSource(tape_name,
+                                                                          num_picture_tracks, num_sound_tracks);
 
-                if (tp_uid_set)
-                    tape_package->setPackageUID(tp_uid);
-                if (tp_created_set) {
-                    tape_package->setPackageCreationDate(tp_created);
-                    tape_package->setPackageModifiedDate(tp_created);
+                    if (tp_uid_set)
+                        physical_package->setPackageUID(tp_uid);
+                    if (tp_created_set) {
+                        physical_package->setPackageCreationDate(tp_created);
+                        physical_package->setPackageModifiedDate(tp_created);
+                    }
+                } else {
+                    URI uri;
+                    if (!parse_avid_import_name(import_name, &uri)) {
+                        log_error("Failed to parse import name '%s'\n", import_name);
+                        throw false;
+                    }
+                    physical_package = avid_clip->CreateDefaultImportSource(uri.ToString(), uri.GetLastSegment(),
+                                                                            num_picture_tracks, num_sound_tracks,
+                                                                            false);
                 }
-
-                tape_package_picture_refs = avid_clip->GetPictureSourceReferences(tape_package);
-                BMX_ASSERT(tape_package_picture_refs.size() == num_picture_tracks);
-                tape_package_sound_refs = avid_clip->GetSoundSourceReferences(tape_package);
-                BMX_ASSERT(tape_package_sound_refs.size() == num_sound_tracks);
+                physical_package_picture_refs = avid_clip->GetPictureSourceReferences(physical_package);
+                BMX_ASSERT(physical_package_picture_refs.size() == num_picture_tracks);
+                physical_package_sound_refs = avid_clip->GetSoundSourceReferences(physical_package);
+                BMX_ASSERT(physical_package_sound_refs.size() == num_sound_tracks);
             }
         } else if (clip_type == CW_D10_CLIP_TYPE) {
             D10File *d10_clip = clip->GetD10Clip();
@@ -2684,30 +2711,15 @@ int main(int argc, const char** argv)
                     as02_pict_track->SetPartitionInterval(partition_interval);
             } else if (clip_type == CW_AVID_CLIP_TYPE) {
                 AvidTrack *avid_track = input->track->GetAvidTrack();
-                AvidClip *avid_clip = clip->GetAvidClip();
 
-                if (tape_package) {
+                if (physical_package) {
                     if (is_picture) {
-                        avid_track->SetSourceRef(tape_package_picture_refs[picture_track_count].first,
-                                                 tape_package_picture_refs[picture_track_count].second);
+                        avid_track->SetSourceRef(physical_package_picture_refs[picture_track_count].first,
+                                                 physical_package_picture_refs[picture_track_count].second);
                     } else {
-                        avid_track->SetSourceRef(tape_package_sound_refs[sound_track_count].first,
-                                                 tape_package_sound_refs[sound_track_count].second);
+                        avid_track->SetSourceRef(physical_package_sound_refs[sound_track_count].first,
+                                                 physical_package_sound_refs[sound_track_count].second);
                     }
-                } else {
-                    vector<pair<mxfUMID, uint32_t> > source_refs;
-                    string name = strip_path(input->filename);
-                    URI uri;
-                    uri.ParseFilename(input->filename);
-                    if (is_picture) {
-                        SourcePackage *import_package = avid_clip->CreateDefaultImportSource(uri.ToString(), name, 1, 0, false);
-                        source_refs = avid_clip->GetPictureSourceReferences(import_package);
-                    } else {
-                        SourcePackage *import_package = avid_clip->CreateDefaultImportSource(uri.ToString(), name, 0, 1, false);
-                        source_refs = avid_clip->GetSoundSourceReferences(import_package);
-                    }
-                    BMX_ASSERT(source_refs.size() == 1);
-                    avid_track->SetSourceRef(source_refs[0].first, source_refs[0].second);
                 }
             }
 

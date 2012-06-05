@@ -311,6 +311,39 @@ bool bmx::parse_umid(const char *umid_str, UMID *umid_out)
     return true;
 }
 
+bool bmx::parse_avid_import_name(const char *import_name, URI *uri)
+{
+    if (strncmp(import_name, "file://", strlen("file://")) == 0)
+    {
+        return uri->Parse(import_name);
+    }
+    else if (((import_name[0] >= 'A' && import_name[0] <= 'Z') ||
+                 (import_name[0] >= 'a' && import_name[0] <= 'z')) &&
+             import_name[1] == ':')
+    {
+        uri->SetWindowsNameConvert(true);
+        return uri->ParseFilename(import_name);
+    }
+    else if (import_name[0] == '/')
+    {
+        uri->SetWindowsNameConvert(false);
+        return uri->ParseFilename(import_name);
+    }
+    else
+    {
+        if (!uri->ParseFilename(import_name))
+            return false;
+
+        if (uri->IsRelative()) {
+            URI base_uri;
+            base_uri.ParseDirectory(get_abs_cwd());
+            uri->MakeAbsolute(base_uri);
+        }
+
+        return true;
+    }
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture)
 {

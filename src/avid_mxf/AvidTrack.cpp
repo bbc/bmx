@@ -534,23 +534,12 @@ void AvidTrack::CreateHeaderMetadata()
     ess_container_data->setIndexSID(mIndexSID);
     ess_container_data->setBodySID(mBodySID);
 
-    // add referenced tape or import source package
-    size_t i;
-    for (i = 0; i < mClip->mTapeSourcePackages.size(); i++) {
-        if (mClip->mTapeSourcePackages[i]->getPackageUID() == mSourceRefPackageUID) {
-            mRefSourcePackage = dynamic_cast<SourcePackage*>(mClip->mTapeSourcePackages[i]->clone(mHeaderMetadata));
-            content_storage->appendPackages(mRefSourcePackage);
-            break;
-        }
-    }
-    if (!mRefSourcePackage) {
-        for (i = 0; i < mClip->mImportSourcePackages.size(); i++) {
-            if (mClip->mImportSourcePackages[i]->getPackageUID() == mSourceRefPackageUID) {
-                mRefSourcePackage = dynamic_cast<SourcePackage*>(mClip->mImportSourcePackages[i]->clone(mHeaderMetadata));
-                content_storage->appendPackages(mRefSourcePackage);
-                break;
-            }
-        }
+    // add referenced physical source package
+    if (mClip->mPhysicalSourcePackage &&
+        mClip->mPhysicalSourcePackage->getPackageUID() == mSourceRefPackageUID)
+    {
+        mRefSourcePackage = dynamic_cast<SourcePackage*>(mClip->mPhysicalSourcePackage->clone(mHeaderMetadata));
+        content_storage->appendPackages(mRefSourcePackage);
     }
 
     // Preface - Identification

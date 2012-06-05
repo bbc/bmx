@@ -94,8 +94,7 @@ public:
     mxfpp::DataModel* GetDataModel() const { return mDataModel; }
     mxfpp::AvidHeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }
     mxfpp::ContentStorage* GetContentStorage() const { return mContentStorage; }
-    void RegisterTapeSource(mxfpp::SourcePackage *source_package);
-    void RegisterImportSource(mxfpp::SourcePackage *source_package);
+    void RegisterPhysicalSource(mxfpp::SourcePackage *source_package);
 
 public:
     AvidTrack* CreateTrack(EssenceType essence_type);
@@ -150,9 +149,8 @@ private:
     mxfpp::AvidHeaderMetadata *mHeaderMetadata;
     mxfpp::ContentStorage *mContentStorage;
     mxfpp::MaterialPackage *mMaterialPackage;
-    std::vector<mxfpp::SourcePackage*> mTapeSourcePackages;
-    std::vector<mxfpp::SourcePackage*> mImportSourcePackages;
-    bool mHaveImportSourceTimecodeTrack;
+    mxfpp::SourcePackage* mPhysicalSourcePackage;
+    bool mHavePhysSourceTimecodeTrack;
     mxfpp::TimecodeComponent *mMaterialTimecodeComponent;
 
     uint32_t mLocatorDescribedTrackId;
