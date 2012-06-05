@@ -2747,21 +2747,21 @@ int main(int argc, const char** argv)
                     if (force_no_avci_head) {
                         input->track->SetAVCIMode(AVCI_NO_FRAME_HEADER_MODE);
                     } else {
-                    if (allow_no_avci_head)
-                        input->track->SetAVCIMode(AVCI_NO_OR_ALL_FRAME_HEADER_MODE);
-                    else
-                        input->track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
+                        if (allow_no_avci_head)
+                            input->track->SetAVCIMode(AVCI_NO_OR_ALL_FRAME_HEADER_MODE);
+                        else
+                            input->track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
 
-                    if (have_avci_header_data(input->essence_type, frame_rate, avci_header_inputs)) {
-                        if (!read_avci_header_data(input->essence_type, frame_rate, avci_header_inputs,
-                                                   avci_header_data, sizeof(avci_header_data)))
-                        {
-                            log_error("Failed to read AVC-Intra header data from input file for %s\n",
-                                      essence_type_to_string(input->essence_type));
-                            throw false;
+                        if (have_avci_header_data(input->essence_type, frame_rate, avci_header_inputs)) {
+                            if (!read_avci_header_data(input->essence_type, frame_rate, avci_header_inputs,
+                                                       avci_header_data, sizeof(avci_header_data)))
+                            {
+                                log_error("Failed to read AVC-Intra header data from input file for %s\n",
+                                          essence_type_to_string(input->essence_type));
+                                throw false;
+                            }
+                            input->track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
                         }
-                        input->track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
-                    }
                     }
                     break;
                 case UNC_SD:
