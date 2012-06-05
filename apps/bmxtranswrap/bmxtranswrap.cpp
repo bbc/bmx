@@ -1765,22 +1765,22 @@ int main(int argc, const char** argv)
                                 output_track.track->SetAVCIMode(AVCI_NO_OR_ALL_FRAME_HEADER_MODE);
                             else
                                 output_track.track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
-                            if (input_track_reader->HaveAVCIHeader()) {
+
+                            if (input_track_reader->HaveAVCIHeader())
+                            {
                                 output_track.track->SetAVCIHeader(input_track_reader->GetAVCIHeader(), AVCI_HEADER_SIZE);
-                            } else {
-                                if (!read_avci_header_data(input_track_info->essence_type, input_picture_info->edit_rate,
-                                                           avci_header_inputs, avci_header_data, sizeof(avci_header_data)))
-                                {
-                                    if (!allow_no_avci_head) {
-                                        log_error("Failed to read AVC-Intra header data from input file for %s\n",
-                                                  essence_type_to_string(input_track_info->essence_type));
-                                        throw false;
-                                    }
-                                }
-                                else
-                                {
-                                    output_track.track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
-                                }
+                            }
+                            else if (read_avci_header_data(input_track_info->essence_type,
+                                                           input_picture_info->edit_rate, avci_header_inputs,
+                                                           avci_header_data, sizeof(avci_header_data)))
+                            {
+                                output_track.track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
+                            }
+                            else if (!allow_no_avci_head)
+                            {
+                                log_error("Failed to read AVC-Intra header data from input file for %s\n",
+                                          essence_type_to_string(input_track_info->essence_type));
+                                throw false;
                             }
                         }
                         break;
