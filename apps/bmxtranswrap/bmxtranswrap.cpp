@@ -1604,7 +1604,8 @@ int main(int argc, const char** argv)
                     URI uri;
                     uri.ParseFilename(input_filenames[0]);
                     physical_package = avid_clip->CreateDefaultImportSource(uri.ToString(), name,
-                                                                            num_picture_tracks, num_sound_tracks);
+                                                                            num_picture_tracks, num_sound_tracks,
+                                                                            false);
                     if (reader->GetMaterialPackageUID() != g_Null_UMID)
                         physical_package->setPackageUID(reader->GetMaterialPackageUID());
                 }

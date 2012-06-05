@@ -2700,10 +2700,10 @@ int main(int argc, const char** argv)
                     URI uri;
                     uri.ParseFilename(input->filename);
                     if (is_picture) {
-                        SourcePackage *import_package = avid_clip->CreateDefaultImportSource(uri.ToString(), name, 1, 0);
+                        SourcePackage *import_package = avid_clip->CreateDefaultImportSource(uri.ToString(), name, 1, 0, false);
                         source_refs = avid_clip->GetPictureSourceReferences(import_package);
                     } else {
-                        SourcePackage *import_package = avid_clip->CreateDefaultImportSource(uri.ToString(), name, 0, 1);
+                        SourcePackage *import_package = avid_clip->CreateDefaultImportSource(uri.ToString(), name, 0, 1, false);
                         source_refs = avid_clip->GetSoundSourceReferences(import_package);
                     }
                     BMX_ASSERT(source_refs.size() == 1);

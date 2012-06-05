@@ -112,6 +112,7 @@ AvidClip::AvidClip(mxfRational frame_rate, MXFFileFactory *file_factory, bool ta
     mHeaderMetadata = 0;
     mContentStorage = 0;
     mMaterialPackage = 0;
+    mHaveImportSourceTimecodeTrack = false;
     mMaterialTimecodeComponent = 0;
     mLocatorDescribedTrackId = 0;
 
@@ -289,7 +290,8 @@ SourcePackage* AvidClip::CreateDefaultTapeSource(string name, uint32_t num_video
 }
 
 SourcePackage* AvidClip::CreateDefaultImportSource(string uri, string name,
-                                                   uint32_t num_video_tracks, uint32_t num_audio_tracks)
+                                                   uint32_t num_video_tracks, uint32_t num_audio_tracks,
+                                                   bool timecode_track)
 {
     mxfUMID import_package_uid;
     mxf_generate_aafsdk_umid(&import_package_uid);
@@ -344,6 +346,32 @@ SourcePackage* AvidClip::CreateDefaultImportSource(string uri, string name,
         track_id++;
     }
 
+    if (timecode_track) {
+        // Preface - ContentStorage - import SourcePackage - timecode Timeline Track
+        Track *tc_track = new Track(mHeaderMetadata);
+        import_package->appendTracks(tc_track);
+        tc_track->setTrackName("TC1");
+        tc_track->setTrackID(track_id);
+        tc_track->setTrackNumber(1);
+        tc_track->setEditRate(mClipFrameRate);
+        tc_track->setOrigin(0);
+
+        // Preface - ContentStorage - import SourcePackage - timecode Timeline Track - Sequence
+        Sequence *sequence = new Sequence(mHeaderMetadata);
+        tc_track->setSequence(sequence);
+        sequence->setDataDefinition(MXF_DDEF_L(Timecode));
+        sequence->setDuration(import_duration);
+
+        // Preface - ContentStorage - import SourcePackage - Timecode Track - TimecodeComponent
+        TimecodeComponent *tc_component = new TimecodeComponent(mHeaderMetadata);
+        sequence->appendStructuralComponents(tc_component);
+        tc_component->setDataDefinition(MXF_DDEF_L(Timecode));
+        tc_component->setDuration(import_duration);
+        tc_component->setRoundedTimecodeBase(get_rounded_tc_base(mClipFrameRate));
+        tc_component->setDropFrame(false);
+        tc_component->setStartTimecode(0);
+    }
+
     // Preface - ContentStorage - import SourcePackage - ImportDescriptor
     GenericDescriptor *import_descriptor = dynamic_cast<GenericDescriptor*>(
         mHeaderMetadata->createAndWrap(&MXF_SET_K(ImportDescriptor)));
@@ -377,6 +405,21 @@ void AvidClip::RegisterTapeSource(SourcePackage *source_package)
 
 void AvidClip::RegisterImportSource(SourcePackage *source_package)
 {
+    vector<GenericTrack*> tracks = source_package->getTracks();
+    size_t i;
+    for (i = 0; i < tracks.size(); i++) {
+        Track *track = dynamic_cast<Track*>(tracks[i]);
+        if (!track)
+            continue;
+
+        StructuralComponent *track_sequence = track->getSequence();
+        mxfUL data_def = track_sequence->getDataDefinition();
+        if (mxf_is_timecode(&data_def)) {
+            mHaveImportSourceTimecodeTrack = true;
+            break;
+        }
+    }
+
     mImportSourcePackages.push_back(source_package);
 }
 
@@ -433,7 +476,7 @@ void AvidClip::PrepareWrite()
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite();
 
-    SetTapeStartTimecode();
+    SetPhysicalSourceStartTimecode();
 }
 
 void AvidClip::WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples)
@@ -539,7 +582,8 @@ void AvidClip::CreateMaterialPackage()
 
     // add a timecode track to the material package if needed
     if (mStartTimecodeSet &&
-        (!mImportSourcePackages.empty() || mTapeSourcePackages.empty()))
+        (!mHaveImportSourceTimecodeTrack || mImportSourcePackages.empty()) &&
+        mTapeSourcePackages.empty())
     {
         // Preface - ContentStorage - MaterialPackage - timecode Timeline Track
         Track *tc_track = new Track(mHeaderMetadata);
@@ -567,37 +611,37 @@ void AvidClip::CreateMaterialPackage()
     }
 }
 
-void AvidClip::SetTapeStartTimecode()
+void AvidClip::SetPhysicalSourceStartTimecode()
 {
-    // set start position in file source package source clips that reference a tape source package
+    // set start position in file source package source clips that reference a physical source package
     size_t i;
     for (i = 0; i < mTracks.size(); i++) {
         SourcePackage *ref_source_package = mTracks[i]->GetRefSourcePackage();
         if (!ref_source_package ||
             !ref_source_package->haveDescriptor() ||
-            !mTracks[i]->GetDataModel()->isSubclassOf(ref_source_package->getDescriptor(), &MXF_SET_K(TapeDescriptor)))
+            !mTracks[i]->GetDataModel()->isSubclassOf(ref_source_package->getDescriptor(), &MXF_SET_K(PhysicalDescriptor)))
         {
             continue;
         }
 
-        // get tape package start timecode
-        Timecode tape_start_timecode;
-        if (!GetStartTimecode(ref_source_package, &tape_start_timecode))
+        // get physical package start timecode
+        Timecode phys_start_timecode;
+        if (!GetStartTimecode(ref_source_package, &phys_start_timecode))
             continue;
 
         // convert to a offset at clip frame rate
         uint16_t rounded_clip_tc_base = get_rounded_tc_base(mClipFrameRate);
-        int64_t tape_tc_start_offset = convert_position(tape_start_timecode.GetOffset(),
+        int64_t phys_tc_start_offset = convert_position(phys_start_timecode.GetOffset(),
                                                         rounded_clip_tc_base,
-                                                        tape_start_timecode.GetRoundedTCBase(),
+                                                        phys_start_timecode.GetRoundedTCBase(),
                                                         ROUND_AUTO);
         int64_t clip_tc_start_offset = convert_position(mStartTimecode.GetOffset(),
                                                         rounded_clip_tc_base,
                                                         mStartTimecode.GetRoundedTCBase(),
                                                         ROUND_AUTO);
-        int64_t start_position = clip_tc_start_offset - tape_tc_start_offset;
+        int64_t start_position = clip_tc_start_offset - phys_tc_start_offset;
         if (start_position < 0) {
-            // tape's start timecode was > start timecode
+            // physical source's start timecode was > start timecode
             log_warn("Not setting start timecode in file source package because start position was negative\n");
             continue;
         }
@@ -709,7 +753,7 @@ void AvidClip::UpdateHeaderMetadata()
         mMaterialTimecodeComponent->setDropFrame(mStartTimecode.IsDropFrame());
         mMaterialTimecodeComponent->setStartTimecode(mStartTimecode.GetOffset());
     }
-    SetTapeStartTimecode();
+    SetPhysicalSourceStartTimecode();
 }
 
 void AvidClip::UpdateTrackDurations(AvidTrack *avid_track, Track *track, mxfRational edit_rate, int64_t duration)
