@@ -1,0 +1,111 @@
+bmx TODO Features
+-----------------
+
+(list is in no particular order)
+
+
+1. add support for general purpose user and application tags, similar to
+AAF/Avid TaggedValues
+
+2. add support for reading MXF files that have no index table
+
+3. add support for KLV raw essence input. This allows MXF files to be
+treated as raw essence, e.g. is useful if it doesn't have an index table
+
+4. add support for edit-while-record Avid MXF flavour
+
+5. add OP label info to mxf2raw -i output
+
+6. add Avid, preservation format, etc. metadata output to mxf2raw
+
+7. add essence group detection (e.g. DV, MPEG-2, MJPEG, VC3) to provide more
+info than "unknown essence". Supports apps where specific essence type
+info is not required, e.g. FFmpeg decoder
+
+8. determine clip/frame wrapping type by analyzing the file structure
+
+9. read and display material package timecode in avidmxfinfo
+
+10. add general support for setting track id and numbers for material packages.
+Setting output track numbers is currently supported, but not setting track ids.
+
+11. add general support for setting track id and numbers for physical source
+packages. Particulary useful if need to match the ids from an existing source
+package when supporting Avid source file relinking
+
+12. h264dump: remove need to buffer the complete NAL unit. This will also serve
+to help start implementing a parser in the bmx library
+
+13. implement more complete h264 / AVCI essence parser in bmx library
+
+14. need to investigate whether Avid supports multiple marks per position
+
+15. might be worth raising the gcc warning level to catch potential errors and
+catch warnings that Visual C++ would emit
+
+16. maybe better to drop the autoconf test framework and instead go with
+a native test script. This would also allow easier implementation of specialised
+tests
+
+17. implement setting track number in the Wave writer
+
+18. add support for multi-channel raw pcm input in raw2bmx
+
+19. add option to disable audio inputs, or more generally, add ability to map
+audio inputs to audio outputs
+
+20. add support for clip-wrapped audio in the OP-1A writer
+
+21. investigate I/O performance for frame wrapped essence reading. Might be
+better to read a content package in a single read
+
+22. investigate performance improvements resulting from avoiding copies and
+using data buffer array structures
+
+23. investigate support for non-zero start position in Avid clips, e.g. this
+was found in Avid generated files when creating a sub-clip of an XDCAM clip.
+
+24. cleanup commandline usage texts. Limit commandline usage widths to 80
+chars.
+
+25. investigate improving / cleaning-up libMXF file structure, particularly to
+help writing wrappers
+
+26. use the memory file output in more writers to ensure external readers
+always see complete header partitions
+
+27. factorize common code in bmxtranswrap and raw2bmx
+
+28. add frame rate information to the Frame class so that the positions / num
+samples can be interpreted correctly with local information
+
+29. add requested num samples for Frame class so that client knows that
+there are less samples than requested without having to remember this elsewhere
+
+30. reduce the number of regression tests if some are redundant / equivalent to
+other tests
+
+31. add Avid uncompressed 10-bit / v210 / 16-bit YUV / v216 conversion
+functions
+
+32. optimize index table reading to avoid realloc and use linked list instead
+
+33. add option to set the start timecode in the OP-1A file source package. The
+material package start timecode could default to the file source package
+timecode
+
+34. add display dimension parsing to MPEG-2 video essence parser
+
+35. add general purpose GetTrack/ClipInfo methods and data structures similar
+to MXFTrackInfo when writing a file
+
+36. support sound quantization other than 16 and 24-bit in apps
+
+37. optimize searches in MXF essence reading by using STL algorithms for
+example
+
+38. implement support for reading and storing dark metadata
+
+39. add option to write audio at video frame rate in clip wrapped file
+
+40. add support for XDCAM overcrank files

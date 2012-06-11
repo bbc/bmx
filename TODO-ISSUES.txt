@@ -1,0 +1,70 @@
+bmx TODO Issues
+---------------
+
+(list is in no particular order)
+
+
+1. transwrapping from and to an audio only clip doesn't work if the number
+of samples is not a multiple 1920 for the default frame rate 25Hz. bmxtranswrap
+shouldn't require A/V framing when dealing with audio only files
+
+2. an AS-02 clip with precharge (in the MPEG-2 LG track) is incorrectly assumed
+to have 0 (available) precharge when there is a PCM track, even though the audio
+track has essence data available before the origin. A distinction should be made
+between amount of precharge and having essence data available for precharge
+
+3. h264dump: must store separate SPS and PPS information sets to support
+multiple identifiers in bitstream
+
+4. h264dump: better determination of whether a 3 or 4 zero byte is required in
+the start prefix
+
+5. mxf2raw should get the duration before setting the read boundaries because
+"mxf2raw --dur 1" reports a duration equal 1; the actual input duration makes
+more sense because --dur only defines how much essence data should be read
+
+6. the variable name SampleRate is probably wrong; EditRate would be more
+correct.
+
+7. tracks with different precharge and rollout, e.g. Avid XDCAM and PCM audio,
+are not supported
+
+8. fix clip duration calculated in avidmxfinfo. It should equal the minimum
+track duration. Also check what Avid reports.
+
+9. the MXF sequence reader could produce multiple frames if the track's
+essence data spans multiple files. These frames should be merged into one to
+avoid placing the burden on the reader client
+
+10. might be better to not set the start timecode by default
+
+11. check that the MXF package duration is calculated correctly and whether
+it makes sense to include unsupported tracks in the calculation
+
+12. add 29.97/59.94Hz support to create test essence to enable better
+regression testing coverage
+
+13. don't require the D10 bit rate to be exact, e.g. if >45Mbps then is D10-50
+
+14. add regression tests for Avid MJPEG
+
+15. check duration update code in the Avid writer. Updating down the package
+chain is probably the wrong way to do it; it should go up
+
+16. improve MXF package resolver, e.g. when to keep open or close, circular
+references, create a new reader when the same file is used in multiple resolves
+
+17. check aspect ratio is always 16:9 for HD essence types
+
+18. fail gracefully or ignore when encountering tracks with dark references
+
+19. improve support for audio files with non-default audio sequences start
+
+20. need to investigate whether _setmode(handle, _O_BINARY) is required on
+Windows when passing data through stdout/stdin because they default to text mode
+
+21. add regression tests using real world test files
+
+22. some mxf_fill_to_kag calls in libMXF++'s Partition are not required
+
+23. improve timecode handling in avidmxfinfo, e.g. drop-frame
