@@ -48,6 +48,7 @@
 #else
 #include <uuid/uuid.h>
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 
 #include <algorithm>
