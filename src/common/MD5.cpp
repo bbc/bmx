@@ -305,8 +305,8 @@ void bmx::md5_final(unsigned char digest[16], MD5Context *ctx)
     byte_reverse(ctx->in, 14);
 
     /* Append length in bits and transform */
-    ((uint32_t *) ctx->in)[14] = ctx->bits[0];
-    ((uint32_t *) ctx->in)[15] = ctx->bits[1];
+    memcpy(&ctx->in[14 * sizeof(uint32_t)], &ctx->bits[0], sizeof(uint32_t));
+    memcpy(&ctx->in[15 * sizeof(uint32_t)], &ctx->bits[1], sizeof(uint32_t));
 
     md5_transform(ctx->buf, (uint32_t *) ctx->in);
     byte_reverse((unsigned char *) ctx->buf, 4);
