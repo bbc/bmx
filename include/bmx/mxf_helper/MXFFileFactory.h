@@ -44,6 +44,8 @@ namespace bmx
 class MXFFileFactory
 {
 public:
+    virtual ~MXFFileFactory() {}
+
     virtual mxfpp::File* OpenNew(std::string filename) = 0;
     virtual mxfpp::File* OpenRead(std::string filename) = 0;
     virtual mxfpp::File* OpenModify(std::string filename) = 0;
@@ -53,6 +55,8 @@ public:
 class DefaultMXFFileFactory : public MXFFileFactory
 {
 public:
+    virtual ~DefaultMXFFileFactory() {}
+
     virtual mxfpp::File* OpenNew(std::string filename);
     virtual mxfpp::File* OpenRead(std::string filename);
     virtual mxfpp::File* OpenModify(std::string filename);

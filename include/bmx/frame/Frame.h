@@ -108,6 +108,8 @@ protected:
 class FrameFactory
 {
 public:
+    virtual ~FrameFactory() {};
+
     virtual Frame* CreateFrame() = 0;
 };
 
@@ -135,6 +137,8 @@ private:
 class DefaultFrameFactory : public FrameFactory
 {
 public:
+    virtual ~DefaultFrameFactory() {};
+
     virtual Frame* CreateFrame();
 };
 
