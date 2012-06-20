@@ -112,6 +112,7 @@ AvidClip::AvidClip(mxfRational frame_rate, MXFFileFactory *file_factory, bool ta
     mHeaderMetadata = 0;
     mContentStorage = 0;
     mMaterialPackage = 0;
+    mPhysicalSourcePackage = 0;
     mHavePhysSourceTimecodeTrack = false;
     mMaterialTimecodeComponent = 0;
     mLocatorDescribedTrackId = 0;
