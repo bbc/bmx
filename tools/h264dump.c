@@ -484,7 +484,7 @@ static int rbsp_trailing_bits(ParseContext *context)
     }
 
     if (!valid)
-        fprintf(stderr, "Warning: invalid rbsp_trailing_bits)\n");
+        fprintf(stderr, "Warning: invalid rbsp_trailing_bits\n");
 
     return 1;
 }
