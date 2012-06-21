@@ -115,7 +115,6 @@ typedef struct
     uint32_t data_pos;
 
     uint32_t nal_start;
-    uint32_t num_bytes_in_nal_unit;
     uint32_t nal_size;
 
     uint64_t bit_pos;
@@ -244,6 +243,7 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
     uint32_t rem_size;
     uint32_t state;
     uint8_t nal_unit_type;
+    uint32_t num_nal_unit_parse_bytes;
 
     rem_size = context->data_size - (context->nal_start + context->nal_size);
     if (rem_size > 0)
@@ -276,16 +276,16 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
         state = (state << 8) | byte;
     }
 
-    context->num_bytes_in_nal_unit = context->data_pos - context->nal_start;
+    num_nal_unit_parse_bytes = context->data_pos - context->nal_start;
     if ((state & 0x00ffffff) == 0x000001 || (state & 0x00ffffff) == 0x000000) {
-        context->num_bytes_in_nal_unit -= 3;
+        num_nal_unit_parse_bytes -= 3;
         if ((state & 0x00ffffff) == 0x000000) {
             /* add a byte to the NAL unit bytes as a workaround for the missing sequence parameter set
                stop bit in Avid Transfer Manager AVCI files. The last couple of properties in the SPS are
                zero and the last byte is wrongly assumed to be padding because of the missing stop bit.
                This results in not be enough bits being available and parsing fails */
             if (state != 0x00000001)
-                context->num_bytes_in_nal_unit++;
+                num_nal_unit_parse_bytes++;
             while (state != 0x00000001) {
                 if (!load_byte(context, &byte))
                     break;
@@ -311,7 +311,7 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
     }
 
     context->bit_pos = context->nal_start * 8;
-    context->end_bit_pos = context->nal_start * 8 + context->num_bytes_in_nal_unit * 8;
+    context->end_bit_pos = context->nal_start * 8 + num_nal_unit_parse_bytes * 8;
 
     return 1;
 }
