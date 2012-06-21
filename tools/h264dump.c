@@ -280,6 +280,12 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
     if ((state & 0x00ffffff) == 0x000001 || (state & 0x00ffffff) == 0x000000) {
         context->num_bytes_in_nal_unit -= 3;
         if ((state & 0x00ffffff) == 0x000000) {
+            /* add a byte to the NAL unit bytes as a workaround for the missing sequence parameter set
+               stop bit in Avid Transfer Manager AVCI files. The last couple of properties in the SPS are
+               zero and the last byte is wrongly assumed to be padding because of the missing stop bit.
+               This results in not be enough bits being available and parsing fails */
+            if (state != 0x00000001)
+                context->num_bytes_in_nal_unit++;
             while (state != 0x00000001) {
                 if (!load_byte(context, &byte))
                     break;
