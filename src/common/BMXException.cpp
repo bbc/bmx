@@ -37,6 +37,7 @@
 #include <cstdio>
 
 #include <bmx/BMXException.h>
+#include <bmx/Utils.h>
 
 using namespace std;
 using namespace bmx;
@@ -55,11 +56,7 @@ BMXException::BMXException(const char *format, ...)
 
     va_list varg;
     va_start(varg, format);
-#if defined(_MSC_VER)
-    _vsnprintf(message, sizeof(message), format, varg);
-#else
-    vsnprintf(message, sizeof(message), format, varg);
-#endif
+    bmx_vsnprintf(message, sizeof(message), format, varg);
     va_end(varg);
 
     mMessage = message;

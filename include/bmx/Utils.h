@@ -33,6 +33,8 @@
 #define __BMX_UTILS_H__
 
 
+#include <cstdarg>
+
 #include <string>
 #include <vector>
 
@@ -117,6 +119,9 @@ Timecode decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_t
 void encode_smpte_timecode(Timecode timecode, bool field_mark, unsigned char *smpte_tc, unsigned int size);
 
 bool check_excess_d10_padding(const unsigned char *data, uint32_t data_size, uint32_t target_size);
+
+void bmx_snprintf(char *str, size_t size, const char *format, ...);
+void bmx_vsnprintf(char *str, size_t size, const char *format, va_list ap);
 
 
 };

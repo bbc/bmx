@@ -790,3 +790,27 @@ bool bmx::check_excess_d10_padding(const unsigned char *data, uint32_t data_size
     return true;
 }
 
+void bmx::bmx_snprintf(char *str, size_t size, const char *format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    bmx_vsnprintf(str, size, format, ap);
+    va_end(ap);
+}
+
+void bmx::bmx_vsnprintf(char *str, size_t size, const char *format, va_list ap)
+{
+#if defined(_MSC_VER)
+    int res = _vsnprintf(str, size, format, ap);
+    if (str && size > 0) {
+        if (res == -1 && errno == EINVAL)
+            str[0] = 0;
+        else
+            str[size - 1] = 0;
+    }
+#else
+    if (vsnprintf(str, size, format, ap) < 0 && str && size > 0)
+        str[0] = 0;
+#endif
+}
+
