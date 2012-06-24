@@ -94,6 +94,7 @@ std::string get_abs_cwd();
 std::string get_abs_filename(std::string base_dir, std::string filename);
 
 bool check_file_exists(std::string filename);
+bool check_is_dir(std::string name);
 
 Timestamp generate_timestamp_now();
 

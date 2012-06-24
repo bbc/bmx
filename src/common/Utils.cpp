@@ -40,6 +40,8 @@
 #include <cstdio>
 #include <cerrno>
 
+#include <sys/stat.h>
+#include <sys/types.h>
 #if defined(_WIN32)
 #include <sys/timeb.h>
 #include <time.h>
@@ -490,6 +492,19 @@ bool bmx::check_file_exists(string filename)
 
     fclose(file);
     return true;
+}
+
+bool bmx::check_is_dir(string name)
+{
+    struct stat buf;
+    if (stat(name.c_str(), &buf) != 0)
+        return false;
+
+#if defined(_MSC_VER)
+    return ((buf.st_mode & _S_IFMT) == _S_IFDIR);
+#else
+    return S_ISDIR(buf.st_mode);
+#endif
 }
 
 bmx::Timestamp bmx::generate_timestamp_now()

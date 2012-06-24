@@ -36,9 +36,6 @@
 #include <cstring>
 #include <cerrno>
 #include <cstdio>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 #if defined(_WIN32)
@@ -61,21 +58,6 @@ static const char MANIFEST_NAME[]       = "manifest.xml";
 static const char SHIM_NAME[]           = "shim.xml";
 
 static const char MEDIA_SUBDIR_NAME[]   = "media";
-
-
-
-static bool check_is_dir(string name)
-{
-    struct stat buf;
-    if (stat(name.c_str(), &buf) != 0)
-        return false;
-
-#if defined(_MSC_VER)
-    return ((buf.st_mode & _S_IFMT) == _S_IFDIR);
-#else
-    return S_ISDIR(buf.st_mode);
-#endif
-}
 
 
 
