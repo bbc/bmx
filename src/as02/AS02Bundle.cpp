@@ -75,8 +75,6 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory,
             root_filepath.append(root_directory);
         }
     }
-    if (!check_ends_with_dir_separator(root_filepath))
-        root_filepath.append("/");
 
     if (create_directory) {
 #if defined(_WIN32)
@@ -92,6 +90,9 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory,
     } else if (!check_is_dir(root_filepath)) {
         throw BMXException("Bundle root directory '%s' does not exist", root_filepath.c_str());
     }
+
+    if (!check_ends_with_dir_separator(root_filepath))
+        root_filepath.append("/");
 
     string sub_dir;
     sub_dir.reserve(root_filepath.size() + sizeof(MEDIA_SUBDIR_NAME));
