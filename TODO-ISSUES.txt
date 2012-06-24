@@ -69,8 +69,4 @@ Windows when passing data through stdout/stdin because they default to text mode
 
 23. improve timecode handling in avidmxfinfo, e.g. drop-frame
 
-24. AS02Bundle::OpenNew does not implement a check for a Windows absolute path
-which means an absolute path to the current working directory is wrongly
-prepended to the bundle directory name.
-
 25. older versions of git do not have a '--dirty' commandline option.

@@ -65,15 +65,17 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory,
                                 MXFFileFactory *file_factory, bool take_factory_ownership)
 {
     string root_filepath;
-    if (root_directory.empty() || root_directory[0] != '/') {
-        root_filepath = get_abs_cwd();
-        if (!root_directory.empty())
-            root_filepath.append("/").append(root_directory);
-    } else {
+    if (check_is_abs_path(root_directory)) {
         root_filepath = root_directory;
+    } else {
+        root_filepath = get_abs_cwd();
+        if (!root_directory.empty()) {
+            if (!check_ends_with_dir_separator(root_filepath))
+                root_filepath.append("/");
+            root_filepath.append(root_directory);
+        }
     }
-
-    if (root_filepath[root_filepath.size() - 1] != '/')
+    if (!check_ends_with_dir_separator(root_filepath))
         root_filepath.append("/");
 
     if (create_directory) {
@@ -115,7 +117,7 @@ AS02Bundle::AS02Bundle(string root_filepath, MXFFileFactory *file_factory, bool 
     mFileFactory = file_factory;
     mOwnFileFactory = take_factory_ownership;
 
-    BMX_ASSERT(!root_filepath.empty() && root_filepath[root_filepath.size() - 1] == '/');
+    BMX_ASSERT(!root_filepath.empty() && check_ends_with_dir_separator(root_filepath));
     mBundleName = strip_path(root_filepath.substr(0, root_filepath.size() - 1));
     BMX_CHECK_M(!mBundleName.empty(), ("Empty bundle name"));
 

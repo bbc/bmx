@@ -507,6 +507,30 @@ bool bmx::check_is_dir(string name)
 #endif
 }
 
+bool bmx::check_is_abs_path(string name)
+{
+#if defined(_WIN32)
+    if (((name[0] >= 'A' && name[0] <= 'Z') || (name[0] >= 'a' && name[0] <= 'z')) &&
+          name[1] == ':')
+    {
+        return true;
+    }
+#else
+    if (name[0] == '/')
+        return true;
+#endif
+    return false;
+}
+
+bool bmx::check_ends_with_dir_separator(string name)
+{
+#if defined(_WIN32)
+    return !name.empty() && (name[name.size() - 1] == '/' || name[name.size() - 1] == '\\');
+#else
+    return !name.empty() && name[name.size() - 1] == '/';
+#endif
+}
+
 bmx::Timestamp bmx::generate_timestamp_now()
 {
     Timestamp now;
