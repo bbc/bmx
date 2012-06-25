@@ -68,5 +68,3 @@ Windows when passing data through stdout/stdin because they default to text mode
 22. some mxf_fill_to_kag calls in libMXF++'s Partition are not required
 
 23. improve timecode handling in avidmxfinfo, e.g. drop-frame
-
-25. older versions of git do not have a '--dirty' commandline option.

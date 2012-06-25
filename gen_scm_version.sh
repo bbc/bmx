@@ -9,7 +9,11 @@ SCM_VER_FILE="bmx_scm_version.h"
 
 GIT_VER=""
 if command -v git \&>/dev/null; then
-    GIT_VER=`git describe --dirty 2>/dev/null`
+  git update-index --refresh --unmerged -q &>/dev/null
+  GIT_VER=`git describe 2>/dev/null`
+  if test -n "$GIT_VER" && ! git diff-index --quiet HEAD --; then
+    GIT_VER="$GIT_VER"-dirty
+  fi
 fi
 if test -z "$GIT_VER"; then
 	exit 0
