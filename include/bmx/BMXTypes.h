@@ -35,13 +35,6 @@
 
 #include <libMXF++/MXFTypes.h>
 
-#if defined(_MSC_VER)
-// MXFTypes / mxf_types.h defines the fixed width integer types but not the format specifiers from inttypes.h
-#define PRId64  "I64d"
-#define PRIu64  "I64u"
-#define PRIx64  "I64x"
-#endif
-
 
 
 namespace bmx
