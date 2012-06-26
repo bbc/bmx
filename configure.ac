@@ -228,6 +228,7 @@ AC_CONFIG_FILES([
 	test/mxf_reader/Makefile
 	test/d10_mxf/Makefile
 	test/wave/Makefile
+	test/essence_parser/Makefile
 	apps/Makefile
 	apps/mxf2raw/Makefile
 	apps/raw2bmx/Makefile
