@@ -116,12 +116,11 @@ public:
     : exception()
     {
         char message[1024];
-        int res;
 
         va_list varg;
         va_start(varg, format);
 #if defined(_MSC_VER)
-        res = _vsnprintf(message, sizeof(message), format, varg);
+        int res = _vsnprintf(message, sizeof(message), format, varg);
         if (res == -1 && errno == EINVAL)
             message[0] = 0;
         else
