@@ -51,6 +51,7 @@ typedef __int64             int64_t;
 
 #define PRId64  "I64d"
 #define PRIu64  "I64u"
+#define PRIx64  "I64x"
 
 #if defined(_WIN64)
 #define PRIszt  "I64u"
