@@ -70,6 +70,24 @@ if test x"$prefix" != x"NONE"; then
 	CFLAGS="${CFLAGS} -L${prefix}/lib -I${prefix}/include"
 fi
 
+dnl Check for UUID generation library
+case "$host" in
+	*-*-*mingw*) os=win ;;
+	*-*-darwin*) os=mac ;;
+esac
+if test x"$os" = xwin; then
+	AC_CHECK_HEADER([windows.h],
+					[UUIDLIB="-lole32"],
+					AC_MSG_ERROR(No windows uuid generation function))
+elif test x"$os" = xmac; then
+	UUIDLIB=""
+else
+	AC_CHECK_LIB([uuid], [uuid_generate],
+			     [UUIDLIB="-luuid"],
+			     AC_MSG_ERROR(No uuid generation function))
+fi
+AC_SUBST(UUIDLIB)
+
 AC_CHECK_LIB(uriparser,uriParseUriA,,
 	[AC_MSG_ERROR([liburiparser not found])])
 if test x"$prefix" = x"NONE"; then
@@ -172,7 +190,7 @@ BMX_CFLAGS="${WARN_CFLAGS} ${LIBMXF_CFLAGS} ${LIBMXFPP_CFLAGS} \
 	${LIBURIPARSER_CFLAGS} -I\$(top_srcdir)/include"
 AC_SUBST(BMX_CFLAGS)
 
-BMX_LIBADDLIBS="${LIBURIPARSER_LIBS} ${LIBMXF_LIBS} ${LIBMXFPP_LIBS}"
+BMX_LIBADDLIBS="${$UUIDLIB} ${LIBURIPARSER_LIBS} ${LIBMXF_LIBS} ${LIBMXFPP_LIBS}"
 AC_SUBST(BMX_LIBADDLIBS)
 
 BMX_LDADDLIBS="${BMX_LIBADDLIBS} \
@@ -190,9 +208,9 @@ AC_SUBST(pkgconfigdir)
 dnl add libraries to pkg config "Libs:" for static-only builds
 if test x"$enable_shared" = xyes; then
 	PC_ADD_LIBS=
-	PC_ADD_PRIVATE_LIBS="${LIBURIPARSER_LIBS}"
+	PC_ADD_PRIVATE_LIBS="${UUIDLIB} ${LIBURIPARSER_LIBS}"
 else
-	PC_ADD_LIBS="${LIBURIPARSER_LIBS}"
+	PC_ADD_LIBS="${UUIDLIB} ${LIBURIPARSER_LIBS}"
 	PC_ADD_PRIVATE_LIBS=
 fi
 AC_SUBST(PC_ADD_LIBS)
