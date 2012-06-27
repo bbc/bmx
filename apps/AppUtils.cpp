@@ -336,7 +336,7 @@ bool bmx::parse_avid_import_name(const char *import_name, URI *uri)
 
         if (uri->IsRelative()) {
             URI base_uri;
-            base_uri.ParseDirectory(get_abs_cwd());
+            base_uri.ParseDirectory(get_cwd());
             uri->MakeAbsolute(base_uri);
         }
 

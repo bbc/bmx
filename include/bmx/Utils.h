@@ -90,7 +90,7 @@ std::string strip_path(std::string filename);
 std::string strip_name(std::string filename);
 std::string strip_suffix(std::string filename);
 
-std::string get_abs_cwd();
+std::string get_cwd();
 std::string get_abs_filename(std::string base_dir, std::string filename);
 
 bool check_file_exists(std::string filename);

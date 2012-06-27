@@ -243,7 +243,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
         BMX_CHECK(mAbsoluteURI.ParseFilename(filename));
         if (mAbsoluteURI.IsRelative()) {
             URI base_uri;
-            BMX_CHECK(base_uri.ParseDirectory(get_abs_cwd()));
+            BMX_CHECK(base_uri.ParseDirectory(get_cwd()));
             mAbsoluteURI.MakeAbsolute(base_uri);
         }
 

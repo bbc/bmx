@@ -66,9 +66,9 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory,
 {
     string root_filepath;
     if (check_ends_with_dir_separator(root_directory))
-        root_filepath = get_abs_filename(get_abs_cwd(), root_directory.substr(0, root_directory.size() - 1));
+        root_filepath = get_abs_filename(get_cwd(), root_directory.substr(0, root_directory.size() - 1));
     else
-        root_filepath = get_abs_filename(get_abs_cwd(), root_directory);
+        root_filepath = get_abs_filename(get_cwd(), root_directory);
 
     if (create_directory) {
 #if defined(_WIN32)

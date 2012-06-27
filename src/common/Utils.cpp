@@ -436,11 +436,11 @@ string bmx::strip_suffix(string filename)
         return filename;
 }
 
-string bmx::get_abs_cwd()
+string bmx::get_cwd()
 {
 #define MAX_REASONABLE_PATH_SIZE    (10 * 1024)
 
-    string abs_cwd;
+    string cwd;
     char *temp_path;
     size_t path_size = 1024;
     while (true) {
@@ -463,10 +463,10 @@ string bmx::get_abs_cwd()
         }
         path_size += 1024;
     }
-    abs_cwd = temp_path;
+    cwd = temp_path;
     delete [] temp_path;
 
-    return abs_cwd;
+    return cwd;
 }
 
 string bmx::get_abs_filename(string base_dir, string filename)
