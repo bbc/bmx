@@ -38,6 +38,15 @@
 #include <uriparser/Uri.h>
 
 
+#if defined(_WIN32)
+#define DIR_SEPARATOR_C     '\\'
+#define DIR_SEPARATOR_S     "\\"
+#else
+#define DIR_SEPARATOR_C     '/'
+#define DIR_SEPARATOR_S     "/"
+#endif
+
+
 
 namespace bmx
 {

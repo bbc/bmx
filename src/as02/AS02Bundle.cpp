@@ -87,7 +87,7 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory,
 
     string sub_dir;
     sub_dir.reserve(root_filepath.size() + 1 + sizeof(MEDIA_SUBDIR_NAME));
-    sub_dir.append(root_filepath).append("/").append(MEDIA_SUBDIR_NAME);
+    sub_dir.append(root_filepath).append(DIR_SEPARATOR_S).append(MEDIA_SUBDIR_NAME);
 #if defined(_WIN32)
     if (_mkdir(sub_dir.c_str()) != 0) {
 #else
@@ -130,7 +130,7 @@ string AS02Bundle::CreatePrimaryVersionFilepath(string *rel_uri_out)
     // 'primary' version has same name as bundle
     string result;
     result.reserve(mRootFilepath.size() + 1 + mBundleName.size() + 4);
-    result.append(mRootFilepath).append("/").append(mBundleName).append(".mxf");
+    result.append(mRootFilepath).append(DIR_SEPARATOR_S).append(mBundleName).append(".mxf");
     if (rel_uri_out) {
         URI rel_uri;
         rel_uri.ParseFilename(mBundleName + ".mxf");
@@ -144,7 +144,7 @@ string AS02Bundle::CreateVersionFilepath(string name, string *rel_uri_out)
 {
     string result;
     result.reserve(mRootFilepath.size() + 1 + name.size() + 4);
-    result.append(mRootFilepath).append("/").append(name).append(".mxf");
+    result.append(mRootFilepath).append(DIR_SEPARATOR_S).append(name).append(".mxf");
     if (rel_uri_out) {
         URI rel_uri;
         rel_uri.ParseFilename(name + ".mxf");
@@ -166,10 +166,11 @@ string AS02Bundle::CreateEssenceComponentFilepath(string version_filename, bool 
 
     string result;
     result.reserve(mRootFilepath.size() + 1 + sizeof(MEDIA_SUBDIR_NAME) + 1 + version_name.size() + sizeof(suffix));
-    result.append(mRootFilepath).append("/").append(MEDIA_SUBDIR_NAME).append("/").append(version_name).append(suffix);
+    result.append(mRootFilepath).append(DIR_SEPARATOR_S).append(MEDIA_SUBDIR_NAME).append(DIR_SEPARATOR_S).
+           append(version_name).append(suffix);
     if (rel_uri_out) {
         URI rel_uri;
-        rel_uri.ParseFilename(string(MEDIA_SUBDIR_NAME).append("/").append(version_name).append(suffix));
+        rel_uri.ParseFilename(string(MEDIA_SUBDIR_NAME).append(DIR_SEPARATOR_S).append(version_name).append(suffix));
         *rel_uri_out = rel_uri.ToString();
     }
 
@@ -185,16 +186,16 @@ string AS02Bundle::CompleteFilepath(string rel_uri_in)
 
     string comp_filepath;
     comp_filepath.reserve(mRootFilepath.size() + 1 + filename.size());
-    comp_filepath.append(mRootFilepath).append("/").append(filename);
+    comp_filepath.append(mRootFilepath).append(DIR_SEPARATOR_S).append(filename);
 
     return comp_filepath;
 }
 
 void AS02Bundle::FinalizeBundle()
 {
-    mShim.Write(mRootFilepath + "/" + SHIM_NAME);
+    mShim.Write(mRootFilepath + DIR_SEPARATOR_S + SHIM_NAME);
     mManifest.RegisterFile(SHIM_NAME, SHIM_FILE_ROLE);
 
-    mManifest.Write(this, mRootFilepath + "/" + MANIFEST_NAME);
+    mManifest.Write(this, mRootFilepath + DIR_SEPARATOR_S + MANIFEST_NAME);
 }
 
