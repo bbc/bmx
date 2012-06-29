@@ -109,3 +109,7 @@ example
 39. add option to write audio at video frame rate in clip wrapped file
 
 40. add support for XDCAM overcrank files
+
+41. add WAVE output option to mxf2raw
+
+42. add WAVE input option to bmxtranswrap
