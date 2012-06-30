@@ -189,6 +189,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\apps\mxf2raw\APPInfoOutput.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\apps\mxf2raw\AS11Info.cpp"
 				>
 			</File>
@@ -208,6 +212,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\apps\AS11Helper.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\apps\mxf2raw\APPInfoOutput.h"
 				>
 			</File>
 			<File
