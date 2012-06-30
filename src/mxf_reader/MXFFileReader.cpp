@@ -232,9 +232,9 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
             THROW_RESULT(MXF_RESULT_INVALID_FILE);
         Partition &header_partition = file->getPartition(0);
 
-        if (!is_op_atom(header_partition.getOperationalPattern()) &&
-            !is_op_1a(header_partition.getOperationalPattern()) &&
-            !is_op_1b(header_partition.getOperationalPattern()))
+        if (!mxf_is_op_atom(header_partition.getOperationalPattern()) &&
+            !mxf_is_op_1a(header_partition.getOperationalPattern()) &&
+            !mxf_is_op_1b(header_partition.getOperationalPattern()))
         {
             THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
         }
@@ -250,7 +250,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
         // TODO: require a table that maps essence container labels to wrapping type
 
         // guess the wrapping type based on the OP
-        mIsClipWrapped = is_op_atom(header_partition.getOperationalPattern());
+        mIsClipWrapped = mxf_is_op_atom(header_partition.getOperationalPattern());
 
         // change frame wrapped guess if file is op1a containing clip wrapped pcm audio
         if (!mIsClipWrapped) {
@@ -844,7 +844,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         // using origin to indicate precharge.
         if (mp_source_clip->getStartPosition() != 0) {
             mxfUL op = preface->getOperationalPattern();
-            BMX_CHECK_M(is_op_atom(&op) && mp_source_clip->getStartPosition() >= 0,
+            BMX_CHECK_M(mxf_is_op_atom(&op) && mp_source_clip->getStartPosition() >= 0,
                         ("Non-zero material package source clip start position is not supported"));
         }
 
@@ -1047,7 +1047,7 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
 
     // use the essence container label in the partition to workaround issue with Avid files where
     // the essence container label in the descriptor is a generic KLV label
-    if (is_op_atom(partition->getOperationalPattern())) {
+    if (mxf_is_op_atom(partition->getOperationalPattern())) {
         vector<mxfUL> ec_labels = partition->getEssenceContainers();
         if (ec_labels.size() == 1)
             track_info->essence_container_label = ec_labels[0];
