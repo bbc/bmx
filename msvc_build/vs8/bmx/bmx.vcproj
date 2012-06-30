@@ -431,6 +431,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\bmx\mxf_reader\MXFAPPInfo.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\include\bmx\mxf_helper\MXFDescriptorHelper.h"
 				>
 			</File>
@@ -902,6 +906,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\writer_helper\MPEG2LGWriterHelper.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\mxf_reader\MXFAPPInfo.cpp"
 				>
 			</File>
 			<File
