@@ -47,9 +47,9 @@ using namespace bmx;
 
 
 
-void stdio_vlog2(LogLevel level, const char *source, const char *format, va_list p_arg);
-void stdio_vlog(LogLevel level, const char *format, va_list p_arg);
-void stdio_log(LogLevel level, const char *format, ...);
+static void stdio_vlog2(LogLevel level, const char *source, const char *format, va_list p_arg);
+static void stdio_vlog(LogLevel level, const char *format, va_list p_arg);
+static void stdio_log(LogLevel level, const char *format, ...);
 
 log_func bmx::log = stdio_log;
 vlog_func bmx::vlog = stdio_vlog;
@@ -86,7 +86,7 @@ static void log_message(FILE *file, LogLevel level, const char *source, const ch
     vfprintf(file, format, p_arg);
 }
 
-void stdio_vlog2(LogLevel level, const char *source, const char *format, va_list p_arg)
+static void stdio_vlog2(LogLevel level, const char *source, const char *format, va_list p_arg)
 {
     if (level < LOG_LEVEL)
         return;
@@ -97,12 +97,12 @@ void stdio_vlog2(LogLevel level, const char *source, const char *format, va_list
         log_message(stdout, level, source, format, p_arg);
 }
 
-void stdio_vlog(LogLevel level, const char *format, va_list p_arg)
+static void stdio_vlog(LogLevel level, const char *format, va_list p_arg)
 {
     stdio_vlog2(level, 0, format, p_arg);
 }
 
-void stdio_log(LogLevel level, const char *format, ...)
+static void stdio_log(LogLevel level, const char *format, ...)
 {
     va_list p_arg;
 

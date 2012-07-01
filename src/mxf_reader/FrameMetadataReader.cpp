@@ -60,7 +60,7 @@ static const mxfKey ESSENCE_MARK_UTF16_KEY =
 
 
 
-string convert_utf16_string(const unsigned char *utf16_str_in, uint16_t size_in)
+static string convert_utf16_string(const unsigned char *utf16_str_in, uint16_t size_in)
 {
     uint16_t utf16_size = mxf_get_utf16string_size(utf16_str_in, size_in);
     mxfUTF16Char *utf16_str = new mxfUTF16Char[utf16_size];

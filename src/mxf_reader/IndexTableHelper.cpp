@@ -62,9 +62,9 @@ using namespace mxfpp;
 
 
 
-int add_frame_offset_index_entry(void *data, uint32_t num_entries, MXFIndexTableSegment *segment,
-                                 int8_t temporal_offset, int8_t key_frame_offset, uint8_t flags,
-                                 uint64_t stream_offset, uint32_t *slice_offset, mxfRational *pos_table)
+static int add_frame_offset_index_entry(void *data, uint32_t num_entries, MXFIndexTableSegment *segment,
+                                        int8_t temporal_offset, int8_t key_frame_offset, uint8_t flags,
+                                        uint64_t stream_offset, uint32_t *slice_offset, mxfRational *pos_table)
 {
     IndexTableHelperSegment *helper = static_cast<IndexTableHelperSegment*>(data);
 
