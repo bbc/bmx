@@ -42,7 +42,10 @@
 using namespace std;
 
 
+namespace bmx
+{
 bool BMX_REGRESSION_TEST = false;
+};
 
 
 static const char* BMX_COMPANY_NAME = "BBC";

@@ -144,7 +144,10 @@ static const char DEFAULT_BEXT_ORIGINATOR[] = "bmx";
 static const Rational DEFAULT_SAMPLING_RATE = SAMPLING_RATE_48K;
 
 
+namespace bmx
+{
 extern bool BMX_REGRESSION_TEST;
+};
 
 
 

@@ -51,7 +51,10 @@ using namespace bmx;
 #define STRING_SIZE(var)   (sizeof(var) - 1)
 
 
+namespace bmx
+{
 extern bool BMX_REGRESSION_TEST;
+};
 
 
 

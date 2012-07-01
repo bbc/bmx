@@ -103,7 +103,10 @@ static const char DEFAULT_BEXT_ORIGINATOR[] = "bmx";
 static const uint32_t DEFAULT_RW_INTL_SIZE  = (64 * 1024);
 
 
+namespace bmx
+{
 extern bool BMX_REGRESSION_TEST;
+};
 
 
 class TranswrapFileFactory : public MXFFileFactory
