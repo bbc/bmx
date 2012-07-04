@@ -1440,6 +1440,20 @@ static int user_data_unregistered(ParseContext *context, uint64_t payload_type, 
     return 1;
 }
 
+static int recovery_point(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
+{
+    printf("%*c recovery_point (type=%"PRIu64", size=%"PRIu64"):\n", context->indent * 4, ' ', payload_type, payload_size);
+    context->indent++;
+
+    ue(); PRINT_UINT("recovery_frame_count");
+    u(1); PRINT_UINT("exact_match_flag");
+    u(1); PRINT_UINT("broken_link_flag");
+    u(2); PRINT_UINT("changing_slice_group_idc");
+
+    context->indent--;
+    return 1;
+}
+
 static int sei_payload(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
 {
     uint64_t next_bit_pos = context->bit_pos + payload_size * 8;
@@ -1449,6 +1463,8 @@ static int sei_payload(ParseContext *context, uint64_t payload_type, uint64_t pa
         CHK(pic_timing(context, payload_type, payload_size));
     } else if (payload_type == 5) {
         CHK(user_data_unregistered(context, payload_type, payload_size));
+    } else if (payload_type == 6) {
+        CHK(recovery_point(context, payload_type, payload_size));
     } else {
         printf("%*c payload (type=%"PRIu64", size=%"PRIu64")\n", context->indent * 4, ' ', payload_type, payload_size);
         context->indent++;
