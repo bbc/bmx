@@ -1420,8 +1420,76 @@ static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t pay
     return 1;
 }
 
+static int x264_sei_version(ParseContext *context, uint64_t data_size)
+{
+    uint32_t i;
+    char line[512];
+    size_t str_size = 0;
+    int parse_options = 0;
+
+    /* payload data is ascii text. A " - " is used to separate parts of the text.
+       The last part is "options:" which contains a set of name/value separated by a ' ' */
+
+    printf("%*c x264_sei_version:\n", context->indent * 4, ' ');
+    context->indent++;
+
+#define PRINT_LINE(end_off)                                 \
+    line[str_size - end_off] = 0;                           \
+    printf("%*c %s\n", context->indent * 4, ' ', line);     \
+    str_size = 0;
+
+    for (i = 0; i < data_size; i++) {
+        u(8); line[str_size] = (char)context->value;
+        str_size++;
+
+        if (!line[str_size - 1]) {
+            str_size--;
+            i++;
+            break;
+        }
+
+        if (parse_options) {
+            if (parse_options == 1) {
+                if (line[str_size - 1] == ' ') {
+                    str_size = 0;
+                } else {
+                    parse_options = 2;
+                }
+            } else if (line[str_size - 1] == ' ') {
+                PRINT_LINE(1)
+                parse_options = 1;
+            }
+        } else {
+            if (str_size >= 3 && strncmp(&line[str_size - 3], " - ", 3) == 0) {
+                PRINT_LINE(3)
+            } else if (str_size >= 8 && strncmp(&line[str_size - 8], "options:", 8) == 0) {
+                PRINT_LINE(0)
+                parse_options = 1;
+                context->indent++;
+            }
+        }
+
+        if (str_size == sizeof(line) - 1) {
+            PRINT_LINE(0)
+        }
+    }
+    if (str_size > 0) {
+        PRINT_LINE(0)
+    }
+    if (i < data_size)
+        CHK(skip_bits(context, (data_size - i) * 8));
+
+    if (parse_options)
+        context->indent--;
+    context->indent--;
+
+    return 1;
+}
+
 static int user_data_unregistered(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
 {
+    static const uint64_t X264_USER_DATA_ID_HIGH = UINT64_C(0xdc45e9bde6d948b7);
+    static const uint64_t X264_USER_DATA_ID_LOW  = UINT64_C(0x962cd820d923eeef);
     uint64_t uuid_high, uuid_low;
 
     printf("%*c user_data_unregistered (type=%"PRIu64", size=%"PRIu64"):\n", context->indent * 4, ' ', payload_type, payload_size);
@@ -1431,10 +1499,14 @@ static int user_data_unregistered(ParseContext *context, uint64_t payload_type, 
     u(64); uuid_low = context->value;
     print_uuid(context, uuid_high, uuid_low);
 
-    printf("%*c user_data:\n", context->indent * 4, ' ');
-    context->indent++;
-    CHK(read_and_print_bytes(context, payload_size - 16));
-    context->indent--;
+    if (uuid_high == X264_USER_DATA_ID_HIGH && uuid_low == X264_USER_DATA_ID_LOW) {
+        CHK(x264_sei_version(context, payload_size - 16));
+    } else {
+        printf("%*c user_data:\n", context->indent * 4, ' ');
+        context->indent++;
+        CHK(read_and_print_bytes(context, payload_size - 16));
+        context->indent--;
+    }
 
     context->indent--;
     return 1;
