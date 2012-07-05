@@ -1301,8 +1301,7 @@ int main(int argc, const char** argv)
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              input_track_info->edit_rate.numerator, input_track_info->edit_rate.denominator,
-                             frame_rate.numerator, frame_rate.denominator,
-                             ClipWriter::ClipWriterTypeToString(clip_type).c_str());
+                             frame_rate.numerator, frame_rate.denominator);
                     is_supported = false;
                 } else if (!ClipWriterTrack::IsSupported(clip_type, input_track_info->essence_type, frame_rate)) {
                     log_warn("Track %"PRIszt" essence type '%s' @%d/%d fps not supported by clip type '%s'\n",
