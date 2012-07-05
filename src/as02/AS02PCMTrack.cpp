@@ -36,6 +36,7 @@
 #include <bmx/as02/AS02PCMTrack.h>
 #include <bmx/as02/AS02Clip.h>
 #include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 

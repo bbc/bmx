@@ -56,6 +56,7 @@
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/URI.h>
 #include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
 #include <bmx/Version.h>
 #include "../AppUtils.h"
 #include "../AS11Helper.h"

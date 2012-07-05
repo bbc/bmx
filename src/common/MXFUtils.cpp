@@ -41,6 +41,7 @@
 
 #include <bmx/MD5.h>
 #include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
 #include <bmx/Logging.h>
 #include <bmx/BMXException.h>
 

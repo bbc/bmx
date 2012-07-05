@@ -35,6 +35,7 @@
 
 #include <bmx/d10_mxf/D10PCMTrack.h>
 #include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 

@@ -42,6 +42,7 @@
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
 #include <bmx/MD5.h>
 #include <bmx/Version.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 

@@ -34,12 +34,10 @@
 
 
 #include <string>
-#include <vector>
 
 #include <mxf/mxf_file.h>
 
 #include <bmx/BMXTypes.h>
-#include <bmx/Utils.h>
 
 
 

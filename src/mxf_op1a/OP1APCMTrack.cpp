@@ -35,6 +35,7 @@
 
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 

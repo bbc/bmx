@@ -39,6 +39,7 @@
 
 #include <bmx/avid_mxf/AvidClip.h>
 #include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
 #include <bmx/Version.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
