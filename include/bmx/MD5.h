@@ -32,8 +32,6 @@
 #ifndef __BMX_MD5_H__
 #define __BMX_MD5_H__
 
-#include <cstddef> // for size_t
-
 #include <string>
 
 #include <bmx/BMXTypes.h>
