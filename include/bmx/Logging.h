@@ -32,7 +32,7 @@
 #ifndef __BMX_LOGGING_H__
 #define __BMX_LOGGING_H__
 
-#include <stdarg.h>
+#include <cstdarg>
 
 #include <string>
 
