@@ -1271,8 +1271,7 @@ int main(int argc, const char** argv)
             }
             else if (input_track_info->essence_type == D10_AES3_PCM)
             {
-                if (input_sound_info->sampling_rate.numerator != 48000 ||
-                    input_sound_info->sampling_rate.denominator != 1)
+                if (input_sound_info->sampling_rate != SAMPLING_RATE_48K)
                 {
                     log_warn("Track %"PRIszt" essence type D-10 AES-3 audio sampling rate %d/%d not supported\n",
                              i,

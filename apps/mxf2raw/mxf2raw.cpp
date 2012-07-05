@@ -933,7 +933,7 @@ int main(int argc, const char** argv)
 
             // choose number of samples to read in one go
             uint32_t max_samples_per_read = 1;
-            if (!have_video && sample_rate.numerator == 48000 && sample_rate.denominator == 1)
+            if (!have_video && sample_rate == SAMPLING_RATE_48K)
                 max_samples_per_read = 1920;
 
             // read data

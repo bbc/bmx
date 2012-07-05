@@ -77,7 +77,7 @@ AS02PCMTrack::~AS02PCMTrack()
 
 void AS02PCMTrack::SetSamplingRate(mxfRational sampling_rate)
 {
-    BMX_CHECK(sampling_rate.numerator == 48000 && sampling_rate.denominator == 1);
+    BMX_CHECK(sampling_rate == SAMPLING_RATE_48K);
 
     mWaveDescriptorHelper->SetSamplingRate(sampling_rate);
     mWaveDescriptorHelper->SetSampleRate(mWaveDescriptorHelper->GetSamplingRate());
