@@ -1,9 +1,9 @@
 #!/bin/sh
 
 # check for libtoolize on Linux and glibtoolize on Mac
-if command -v libtoolize \&>/dev/null; then
+if command -v libtoolize >/dev/null 2>&1; then
   lt=libtoolize
-elif command -v glibtoolize \&>/dev/null; then
+elif command -v glibtoolize >/dev/null 2>&1; then
   lt=glibtoolize
 else
   echo "ERROR: libtoolize or glibtoolize not found"
