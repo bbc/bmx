@@ -36,6 +36,7 @@ nobase_library_include_HEADERS = \
 	bmx/as11/AS11Clip.h \
 	bmx/as11/AS11DMS.h \
 	bmx/as11/AS11CoreFramework.h \
+	bmx/as11/AS11Info.h \
 	bmx/as11/AS11SegmentationFramework.h \
 	bmx/as11/AS11Track.h \
 	bmx/as11/UKDPPDMS.h \

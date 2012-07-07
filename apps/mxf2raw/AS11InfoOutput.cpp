@@ -37,12 +37,10 @@
 
 #include <cstdio>
 
-#include <AS11Info.h>
+#include "AS11InfoOutput.h"
+#include <bmx/as11/AS11Info.h>
 #include <bmx/as11/AS11DMS.h>
 #include <bmx/as11/UKDPPDMS.h>
-#include <bmx/as11/AS11CoreFramework.h>
-#include <bmx/as11/AS11SegmentationFramework.h>
-#include <bmx/as11/UKDPPFramework.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -197,93 +195,6 @@ static char* get_date_string(mxfTimestamp timestamp)
     return buf;
 }
 
-
-static vector<DMFramework*> get_static_frameworks(MaterialPackage *mp)
-{
-    vector<DMFramework*> frameworks;
-
-    // expect to find Static DM Track -> Sequence -> DM Segment -> DM Framework
-
-    vector<GenericTrack*> tracks = mp->getTracks();
-    size_t i;
-    for (i = 0; i < tracks.size(); i++) {
-        StaticTrack *st = dynamic_cast<StaticTrack*>(tracks[i]);
-        if (!st)
-            continue;
-
-        StructuralComponent *sc = st->getSequence();
-        if (!sc || sc->getDataDefinition() != MXF_DDEF_L(DescriptiveMetadata))
-            continue;
-
-        Sequence *seq = dynamic_cast<Sequence*>(sc);
-        DMSegment *seg = dynamic_cast<DMSegment*>(sc);
-        if (!seq && !seg)
-            continue;
-
-        if (seq) {
-            vector<StructuralComponent*> scs = seq->getStructuralComponents();
-            if (scs.size() != 1)
-                continue;
-
-            seg = dynamic_cast<DMSegment*>(scs[0]);
-            if (!seg)
-                continue;
-        }
-
-        if (!seg->haveDMFramework())
-            continue;
-
-        DMFramework *framework = seg->getDMFrameworkLight();
-        if (framework)
-            frameworks.push_back(framework);
-    }
-
-    return frameworks;
-}
-
-static vector<StructuralComponent*> get_segmentation(MaterialPackage *mp, Rational *edit_rate)
-{
-    // expect to find DM Track -> Sequence -> (Filler | DM Segment -> AS11 Segmentation Framework)+
-
-    vector<GenericTrack*> tracks = mp->getTracks();
-    size_t i;
-    for (i = 0; i < tracks.size(); i++) {
-        Track *tt = dynamic_cast<Track*>(tracks[i]);
-        if (!tt)
-            continue;
-
-        StructuralComponent *sc = tt->getSequence();
-        if (!sc || sc->getDataDefinition() != MXF_DDEF_L(DescriptiveMetadata))
-            continue;
-
-        Sequence *seq = dynamic_cast<Sequence*>(sc);
-        if (!seq)
-            continue;
-
-        vector<StructuralComponent*> scs = seq->getStructuralComponents();
-        if (scs.empty())
-            continue;
-
-        size_t j;
-        for (j = 0; j < scs.size(); j++) {
-            DMSegment *seg = dynamic_cast<DMSegment*>(scs[j]);
-            if ((!seg && *scs[j]->getKey() != MXF_SET_K(Filler)) ||
-                (seg && !seg->haveDMFramework()) ||
-                (seg && !dynamic_cast<AS11SegmentationFramework*>(seg->getDMFrameworkLight())))
-            {
-                break;
-            }
-        }
-        if (j >= scs.size()) {
-            *edit_rate = tt->getEditRate();
-            return scs;
-        }
-    }
-
-    return vector<StructuralComponent*>();
-}
-
-
 static void print_core_framework(AS11CoreFramework *cf)
 {
     printf("  AS-11 Core Framework:\n");
@@ -418,21 +329,14 @@ static void print_segmentation_framework(DMSegment *seg, Timecode start_timecode
 
 void bmx::as11_register_extensions(MXFFileReader *file_reader)
 {
-    AS11DMS::RegisterExtensions(file_reader->GetDataModel());
-    UKDPPDMS::RegisterExtensions(file_reader->GetDataModel());
+    AS11Info::RegisterExtensions(file_reader->GetDataModel());
 }
 
 void bmx::as11_print_info(MXFFileReader *file_reader)
 {
-    HeaderMetadata *header_metadata = file_reader->GetHeaderMetadata();
-
-    AS11CoreFramework::RegisterObjectFactory(header_metadata);
-    AS11SegmentationFramework::RegisterObjectFactory(header_metadata);
-    UKDPPFramework::RegisterObjectFactory(header_metadata);
-
-    MaterialPackage *mp = file_reader->GetHeaderMetadata()->getPreface()->findMaterialPackage();
-    if (!mp) {
-        log_warn("No material package found\n");
+    AS11Info info;
+    if (!info.Read(file_reader->GetHeaderMetadata())) {
+        log_warn("No AS-11 info present in file\n");
         return;
     }
 
@@ -440,41 +344,31 @@ void bmx::as11_print_info(MXFFileReader *file_reader)
     Timecode start_timecode = file_reader->GetMaterialTimecode(0);
     BMX_CHECK(file_reader->GetFixedLeadFillerOffset() == 0);
 
-    vector<DMFramework*> static_frameworks = get_static_frameworks(mp);
-
-    Rational segmentation_rate;
-    vector<StructuralComponent*> segmentation = get_segmentation(mp, &segmentation_rate);
-
-    if (!segmentation.empty() && segmentation_rate != frame_rate) {
+    if (!info.segmentation.empty() && info.segmentation_rate != frame_rate) {
         log_warn("AS-11 segmentation track edit rate %d/%d != frame rate %d/%d\n",
-                 segmentation_rate.numerator, segmentation_rate.denominator,
+                 info.segmentation_rate.numerator, info.segmentation_rate.denominator,
                  frame_rate.numerator, frame_rate.denominator);
     }
 
 
     printf("AS-11 Information:\n");
 
-    size_t i;
-    for (i = 0; i < static_frameworks.size(); i++) {
-        AS11CoreFramework *cf = dynamic_cast<AS11CoreFramework*>(static_frameworks[i]);
-        UKDPPFramework *udf = dynamic_cast<UKDPPFramework*>(static_frameworks[i]);
+    if (info.core)
+        print_core_framework(info.core);
+    if (info.ukdpp)
+        print_uk_dpp_framework(info.ukdpp, start_timecode, frame_rate);
 
-        if (cf)
-            print_core_framework(cf);
-        else if (udf)
-            print_uk_dpp_framework(udf, start_timecode, frame_rate);
-    }
-
-    if (!segmentation.empty()) {
+    if (!info.segmentation.empty()) {
         printf("  Segmentation:\n");
         printf("      PartNo/Total   SOM          Duration\n");
 
         int64_t offset = 0;
-        for (i = 0; i < segmentation.size(); i++) {
-            DMSegment *seg = dynamic_cast<DMSegment*>(segmentation[i]);
+        size_t i;
+        for (i = 0; i < info.segmentation.size(); i++) {
+            DMSegment *seg = dynamic_cast<DMSegment*>(info.segmentation[i]);
             if (seg)
-                print_segmentation_framework(seg, start_timecode, offset, segmentation_rate);
-            offset += segmentation[i]->getDuration();
+                print_segmentation_framework(seg, start_timecode, offset, info.segmentation_rate);
+            offset += info.segmentation[i]->getDuration();
         }
     }
 

@@ -49,7 +49,7 @@
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/Version.h>
-#include "AS11Info.h"
+#include "AS11InfoOutput.h"
 #include "APPInfoOutput.h"
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>

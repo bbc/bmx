@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __AS11_INFO_H__
-#define __AS11_INFO_H__
+#ifndef __AS11_INFO_OUTPUT_H__
+#define __AS11_INFO_OUTPUT_H__
 
 
 #include <bmx/mxf_reader/MXFFileReader.h>
