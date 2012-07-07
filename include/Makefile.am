@@ -1,4 +1,4 @@
-library_includedir = $(includedir)/libbmx-@BMX_MAJORMINOR@
+library_includedir = $(includedir)/bmx-@BMX_MAJORMINOR@
 nobase_library_include_HEADERS = \
 	bmx/ByteArray.h \
 	bmx/CRC32.h \

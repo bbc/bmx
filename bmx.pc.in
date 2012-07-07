@@ -3,10 +3,10 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: libbmx-@BMX_MAJORMINOR@
+Name: bmx-@BMX_MAJORMINOR@
 Description: Library and utilities to read and write broadcasting media files
 Version: @VERSION@
 Requires: libMXF-@LIBMXF_MAJORMINOR@ libMXF++-@LIBMXFPP_MAJORMINOR@
 Libs: -L${libdir} -lbmx-@BMX_MAJORMINOR@ @PC_ADD_LIBS@
 Libs.private: @PC_ADD_PRIVATE_LIBS@
-Cflags: -I${includedir}/libbmx-@BMX_MAJORMINOR@
+Cflags: -I${includedir}/bmx-@BMX_MAJORMINOR@

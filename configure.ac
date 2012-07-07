@@ -254,7 +254,7 @@ AC_CONFIG_FILES([
 	tools/Makefile
 	msvc_build/Makefile
 	msvc_build/vs8/Makefile
-    libbmx.pc])
+    bmx.pc])
 
 AC_OUTPUT
 
