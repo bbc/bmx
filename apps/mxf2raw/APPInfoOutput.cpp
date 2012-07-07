@@ -39,6 +39,7 @@
 
 #include "APPInfoOutput.h"
 #include <bmx/mxf_reader/MXFAPPInfo.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -56,6 +57,8 @@ static char* get_date_string(mxfTimestamp timestamp)
 
 static void print_infax_data(const InfaxData *data)
 {
+    Rational sec_rate = {1, 1};
+
     printf("      Format            : %s\n", data->format);
     printf("      ProgrammeTitle    : %s\n", data->progTitle);
     printf("      EpisodeTitle      : %s\n", data->epTitle);
@@ -67,7 +70,7 @@ static void print_infax_data(const InfaxData *data)
     printf("      StockDate         : %s\n", get_date_string(data->stockDate));
     printf("      SpoolDescriptor   : %s\n", data->spoolDesc);
     printf("      Memo              : %s\n", data->memo);
-    printf("      Duration          : %"PRId64" sec\n", data->duration);
+    printf("      Duration          : %s\n", get_duration_string(data->duration, sec_rate).c_str());
     printf("      SpoolNumber       : %s\n", data->spoolNo);
     printf("      AccessionNumber   : %s\n", data->accNo);
     printf("      CatalogueDetail   : %s\n", data->catDetail);
@@ -113,6 +116,7 @@ void bmx::app_print_events(MXFFileReader *file_reader, int event_mask_in)
     MXFAPPInfo info;
     int event_mask = event_mask_in;
     size_t i;
+    Rational frame_rate = file_reader->GetSampleRate();
 
     if ((event_mask & DIGIBETA_DROPOUT_MASK) && !info.ReadDigiBetaDropouts(file_reader->GetHeaderMetadata())) {
         log_warn("Failed to read APP Digibeta dropout events\n");
@@ -136,20 +140,22 @@ void bmx::app_print_events(MXFFileReader *file_reader, int event_mask_in)
         printf("APP DigiBeta Dropouts:\n");
         printf("  Count     : %"PRIszt"\n", info.num_digibeta_dropouts);
         printf("  Dropouts  :\n");
-        printf("    %10s:%10s %10s\n", "num", "frame", "strength");
+        printf("    %10s:%14s %10s\n", "num", "frame", "strength");
         for (i = 0; i < info.num_digibeta_dropouts; i++) {
-            printf("    %10"PRIszt":%10"PRId64" %10d\n",
-                   i, info.digibeta_dropouts[i].position, info.digibeta_dropouts[i].strength);
+            printf("    %10"PRIszt":%14s %10d\n",
+                   i, get_duration_string(info.digibeta_dropouts[i].position, frame_rate).c_str(),
+                   info.digibeta_dropouts[i].strength);
         }
     }
     if (event_mask & PSE_FAILURE_MASK) {
         printf("APP PSE Failures:\n");
         printf("  Count     : %"PRIszt"\n", info.num_pse_failures);
         printf("  Failures  :\n");
-        printf("    %10s: %10s%10s%10s%10s%10s\n",
+        printf("    %10s:%14s%10s%10s%10s%10s\n",
                "num", "frame", "red", "spatial", "lumin", "ext");
         for (i = 0; i < info.num_pse_failures; i++) {
-            printf("    %10"PRIszt": %10"PRId64, i, info.pse_failures[i].position);
+            printf("    %10"PRIszt":%14s",
+                   i, get_duration_string(info.pse_failures[i].position, frame_rate).c_str());
             if (info.pse_failures[i].redFlash > 0)
                 printf("%10.1f", info.pse_failures[i].redFlash / 1000.0);
             else
@@ -172,10 +178,11 @@ void bmx::app_print_events(MXFFileReader *file_reader, int event_mask_in)
         printf("APP Timecode Breaks:\n");
         printf("  Count     : %"PRIszt"\n", info.num_timecode_breaks);
         printf("  Breaks    :\n");
-        printf("    %10s:%10s %10s\n",
+        printf("    %10s:%14s %10s\n",
                "num", "frame", "type");
         for (i = 0; i < info.num_timecode_breaks; i++) {
-            printf("    %10"PRIszt":%10"PRId64, i, info.timecode_breaks[i].position);
+            printf("    %10"PRIszt":%14s",
+                   i, get_duration_string(info.timecode_breaks[i].position, frame_rate).c_str());
             switch (info.timecode_breaks[i].timecodeType)
             {
                 case TIMECODE_BREAK_VITC:
@@ -194,9 +201,10 @@ void bmx::app_print_events(MXFFileReader *file_reader, int event_mask_in)
         printf("APP VTR Errors:\n");
         printf("  Count     : %"PRIszt"\n", info.num_vtr_errors);
         printf("  Errors    :\n");
-        printf("    %10s:%10s %10s    %s\n", "num", "frame", "code", "description");
+        printf("    %10s:%14s %10s    %s\n", "num", "frame", "code", "description");
         for (i = 0; i < info.num_vtr_errors; i++) {
-            printf("    %10"PRIszt":%10"PRId64, i, info.vtr_errors[i].position);
+            printf("    %10"PRIszt":%14s",
+                   i, get_duration_string(info.vtr_errors[i].position, frame_rate).c_str());
             printf(" %8s%02x", "0x", info.vtr_errors[i].errorCode);
             if (info.vtr_errors[i].errorCode == 0x00) {
                 printf("    No error\n");
