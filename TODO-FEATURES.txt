@@ -111,3 +111,9 @@ example
 41. add WAVE output option to mxf2raw
 
 42. add WAVE input option to bmxtranswrap
+
+43. add metadata-only mode to MXFReader and mxf2raw
+
+44. allow partition selection in MXFReader and mxf2raw
+
+45. support reading growing MXF files
