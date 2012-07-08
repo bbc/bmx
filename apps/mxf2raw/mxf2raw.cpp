@@ -51,6 +51,7 @@
 #include <bmx/Version.h>
 #include "AS11InfoOutput.h"
 #include "APPInfoOutput.h"
+#include "AvidInfoOutput.h"
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -430,6 +431,7 @@ static void usage(const char *cmd)
     fprintf(stderr, " --app-events <mask>   Print Archive Preservation Project events metadata to stdout (single file only)\n");
     fprintf(stderr, "                         <mask> is a sequence of event types (e.g. dtv) identified using the following characters:\n");
     fprintf(stderr, "                            d=digibeta dropout, p=PSE failure, t=timecode break, v=VTR error\n");
+    fprintf(stderr, " --avid                Print Avid metadata to stdout (single file only)\n");
 }
 
 int main(int argc, const char** argv)
@@ -457,6 +459,7 @@ int main(int argc, const char** argv)
     bool check_crc32 = false;
     bool do_print_app = false;
     int app_events_mask = 0;
+    bool do_print_avid = false;
     int cmdln_index;
 
 
@@ -613,6 +616,10 @@ int main(int argc, const char** argv)
             }
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--avid") == 0)
+        {
+            do_print_avid = true;
+        }
         else
         {
             break;
@@ -751,6 +758,7 @@ int main(int argc, const char** argv)
                 as11_register_extensions(file_reader);
             if (do_print_app || app_events_mask)
                 app_register_extensions(file_reader);
+            // avid extensions are already registered by the MXFReader
             OPEN_FILE(file_reader, 0)
 
             reader = file_reader;
@@ -843,6 +851,8 @@ int main(int argc, const char** argv)
                 app_print_info(file_reader);
             if (app_events_mask)
                 app_print_events(file_reader, app_events_mask);
+            if (do_print_avid)
+                avid_print_info(file_reader);
         }
 
 

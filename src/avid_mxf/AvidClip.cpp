@@ -37,14 +37,17 @@
 
 #include <algorithm>
 
+#include <libMXF++/MXF.h>
+
+#include <mxf/mxf_avid.h>
+
 #include <bmx/avid_mxf/AvidClip.h>
+#include "AvidRGBColors.h"
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/Version.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
-
-#include <mxf/mxf_avid.h>
 
 using namespace std;
 using namespace bmx;
@@ -57,20 +60,6 @@ using namespace mxfpp;
 
 static uint32_t DM_TRACK_ID     = 1000;
 static uint32_t DM_TRACK_NUMBER = 1;
-
-
-// AVID RGB values matching color names defined in enum Color
-static const RGBColor AVID_RGB_COLORS[] =
-{
-    {65534, 65535, 65535}, // white
-    {41471, 12134, 6564 }, // red
-    {58981, 58981, 6553 }, // yellow
-    {13107, 52428, 13107}, // green
-    {13107, 52428, 52428}, // cyan
-    {13107, 13107, 52428}, // blue
-    {52428, 13107, 52428}, // magenta
-    {0    , 0    , 0    }  // black
-};
 
 
 

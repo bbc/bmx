@@ -5,6 +5,8 @@ mxf2raw_SOURCES = \
 	APPInfoOutput.h \
 	AS11InfoOutput.cpp \
 	AS11InfoOutput.h \
+	AvidInfoOutput.cpp \
+	AvidInfoOutput.h \
 	mxf2raw.cpp
 
 mxf2raw_CXXFLAGS = $(BMX_CFLAGS)

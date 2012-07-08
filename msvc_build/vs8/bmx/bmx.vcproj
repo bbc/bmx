@@ -298,6 +298,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\include\bmx\as11\AS11Info.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\include\bmx\as11\AS11SegmentationFramework.h"
 					>
 				</File>
@@ -342,6 +346,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\include\bmx\avid_mxf\AvidInfo.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\include\bmx\avid_mxf\AvidMJPEGTrack.h"
 					>
 				</File>
@@ -358,7 +366,15 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\src\avid_mxf\AvidRGBColors.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\include\bmx\avid_mxf\AvidTrack.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\avid_mxf\AvidTypes.h"
 					>
 				</File>
 				<File
@@ -768,6 +784,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\src\as11\AS11Info.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\src\as11\AS11SegmentationFramework.cpp"
 					>
 				</File>
@@ -805,6 +825,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\avid_mxf\AvidDVTrack.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\avid_mxf\AvidInfo.cpp"
 					>
 				</File>
 				<File

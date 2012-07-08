@@ -6,10 +6,12 @@ libavidmxf_la_SOURCES = \
 	AvidClip.cpp \
 	AvidD10Track.cpp \
 	AvidDVTrack.cpp \
+	AvidInfo.cpp \
 	AvidMJPEGTrack.cpp \
 	AvidMPEG2LGTrack.cpp \
 	AvidPCMTrack.cpp \
 	AvidPictureTrack.cpp \
+	AvidRGBColors.h \
 	AvidTrack.cpp \
 	AvidUncTrack.cpp \
 	AvidVC3Track.cpp

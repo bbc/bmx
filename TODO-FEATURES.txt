@@ -16,8 +16,6 @@ treated as raw essence, e.g. is useful if it doesn't have an index table
 
 5. add OP label info to mxf2raw -i output
 
-6. add Avid metadata output to mxf2raw
-
 7. add essence group detection (e.g. DV, MPEG-2, MJPEG, VC3) to provide more
 info than "unknown essence". Supports apps where specific essence type
 info is not required, e.g. FFmpeg decoder

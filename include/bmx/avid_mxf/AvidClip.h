@@ -41,20 +41,12 @@
 
 #include <bmx/avid_mxf/AvidTrack.h>
 #include <bmx/mxf_helper/MXFFileFactory.h>
-#include <bmx/BMXTypes.h>
+#include <bmx/avid_mxf/AvidTypes.h>
 
 
 
 namespace bmx
 {
-
-
-typedef struct
-{
-    int64_t position;
-    Color color;
-    std::string comment;
-} AvidLocator;
 
 
 class AvidClip
