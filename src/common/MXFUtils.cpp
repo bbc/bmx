@@ -330,6 +330,33 @@ uint8_t bmx::encode_afd(uint8_t code, Rational aspect_ratio)
         return ((code & 0x0f) << 3) | ((aspect_ratio == ASPECT_RATIO_16_9) << 2);
 }
 
+string bmx::convert_utf16_string(const mxfUTF16Char *utf16_str)
+{
+    size_t utf8_size = mxf_utf16_to_utf8(0, utf16_str, 0);
+    if (utf8_size == (size_t)(-1))
+        return "";
+    utf8_size += 1;
+    char *utf8_str = new char[utf8_size];
+    mxf_utf16_to_utf8(utf8_str, utf16_str, utf8_size);
+
+    string result = utf8_str;
+    delete [] utf8_str;
+
+    return result;
+}
+
+string bmx::convert_utf16_string(const unsigned char *utf16_str_in, uint16_t size_in)
+{
+    uint16_t utf16_size = mxf_get_utf16string_size(utf16_str_in, size_in);
+    mxfUTF16Char *utf16_str = new mxfUTF16Char[utf16_size];
+    mxf_get_utf16string(utf16_str_in, size_in, utf16_str);
+
+    string result = convert_utf16_string(utf16_str);
+    delete [] utf16_str;
+
+    return result;
+}
+
 MXFMD5WrapperFile* bmx::md5_wrap_mxf_file(MXFFile *target)
 {
     MXFFile *md5_mxf_file = 0;

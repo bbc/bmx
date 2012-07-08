@@ -40,6 +40,7 @@
 
 #include <bmx/mxf_reader/FrameMetadataReader.h>
 #include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/ByteArray.h>
 #include <bmx/BMXException.h>
@@ -57,30 +58,6 @@ static const mxfKey ESSENCE_MARK_ISO7BIT_KEY =
     {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x05, 0x03, 0x01, 0x02, 0x0a, 0x02, 0x00, 0x00, 0x00};
 static const mxfKey ESSENCE_MARK_UTF16_KEY =
     {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x05, 0x03, 0x01, 0x02, 0x0a, 0x02, 0x01, 0x00, 0x00};
-
-
-
-static string convert_utf16_string(const unsigned char *utf16_str_in, uint16_t size_in)
-{
-    uint16_t utf16_size = mxf_get_utf16string_size(utf16_str_in, size_in);
-    mxfUTF16Char *utf16_str = new mxfUTF16Char[utf16_size];
-    mxf_get_utf16string(utf16_str_in, size_in, utf16_str);
-
-    size_t utf8_size = mxf_utf16_to_utf8(0, utf16_str, 0);
-    if (utf8_size == (size_t)(-1)) {
-        delete [] utf16_str;
-        return "";
-    }
-    utf8_size += 1;
-    char *utf8_str = new char[utf8_size];
-    mxf_utf16_to_utf8(utf8_str, utf16_str, utf8_size);
-
-    string result = utf8_str;
-    delete [] utf16_str;
-    delete [] utf8_str;
-
-    return result;
-}
 
 
 
