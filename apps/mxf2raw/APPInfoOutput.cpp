@@ -95,16 +95,16 @@ void bmx::app_print_info(MXFFileReader *file_reader)
 
     printf("APP Information:\n");
 
-    printf("  Original Filename  : %s\n", info.original_filename.c_str());
-    printf("  Event Counts       :\n");
-    printf("      VTR Errors         : %u\n", info.vtr_error_count);
-    printf("      PSE Failures       : %u\n", info.pse_failure_count);
-    printf("      Digibeta Dropouts  : %u\n", info.digibeta_dropout_count);
-    printf("      Timecode Breaks    : %u\n", info.timecode_break_count);
-    printf("  Source Infax Data  :\n");
+    printf("  Original filename  : %s\n", info.original_filename.c_str());
+    printf("  Event counts       :\n");
+    printf("      VTR errors         : %u\n", info.vtr_error_count);
+    printf("      PSE failures       : %u\n", info.pse_failure_count);
+    printf("      Digibeta dropouts  : %u\n", info.digibeta_dropout_count);
+    printf("      Timecode breaks    : %u\n", info.timecode_break_count);
+    printf("  Source Infax data  :\n");
     if (info.source_record)
         print_infax_data(info.source_record);
-    printf("  LTO Infax Data     :\n");
+    printf("  LTO Infax data     :\n");
     if (info.lto_record)
         print_infax_data(info.lto_record);
 
@@ -137,7 +137,7 @@ void bmx::app_print_events(MXFFileReader *file_reader, int event_mask_in)
 
 
     if (event_mask & DIGIBETA_DROPOUT_MASK) {
-        printf("APP DigiBeta Dropouts:\n");
+        printf("APP Digibeta dropouts:\n");
         printf("  Count     : %"PRIszt"\n", info.num_digibeta_dropouts);
         printf("  Dropouts  :\n");
         printf("    %10s:%14s %10s\n", "num", "frame", "strength");
@@ -148,7 +148,7 @@ void bmx::app_print_events(MXFFileReader *file_reader, int event_mask_in)
         }
     }
     if (event_mask & PSE_FAILURE_MASK) {
-        printf("APP PSE Failures:\n");
+        printf("APP PSE failures:\n");
         printf("  Count     : %"PRIszt"\n", info.num_pse_failures);
         printf("  Failures  :\n");
         printf("    %10s:%14s%10s%10s%10s%10s\n",
@@ -175,7 +175,7 @@ void bmx::app_print_events(MXFFileReader *file_reader, int event_mask_in)
         }
     }
     if (event_mask & TIMECODE_BREAK_MASK) {
-        printf("APP Timecode Breaks:\n");
+        printf("APP timecode breaks:\n");
         printf("  Count     : %"PRIszt"\n", info.num_timecode_breaks);
         printf("  Breaks    :\n");
         printf("    %10s:%14s %10s\n",
@@ -198,7 +198,7 @@ void bmx::app_print_events(MXFFileReader *file_reader, int event_mask_in)
         }
     }
     if (event_mask & VTR_ERROR_MASK) {
-        printf("APP VTR Errors:\n");
+        printf("APP VTR errors:\n");
         printf("  Count     : %"PRIszt"\n", info.num_vtr_errors);
         printf("  Errors    :\n");
         printf("    %10s:%14s %10s    %s\n", "num", "frame", "code", "description");
