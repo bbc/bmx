@@ -262,7 +262,7 @@ AvidTaggedValue* AvidInfo::GetAvidTaggedValue(MetadataSet *tag_set)
 {
     mxfUTF16Char *name, *value;
     if (!mxf_avid_read_string_tagged_value(tag_set->getCMetadataSet(), &name, &value))
-        return false;
+        return 0;
 
     AvidTaggedValue *tag = new AvidTaggedValue;
     tag->name  = convert_utf16_string(name);
