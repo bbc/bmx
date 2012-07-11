@@ -68,3 +68,11 @@ Windows when passing data through stdout/stdin because they default to text mode
 22. some mxf_fill_to_kag calls in libMXF++'s Partition are not required
 
 23. improve timecode handling in avidmxfinfo, e.g. drop-frame
+
+24. need to check that the file has a footer to help diagnose incomplete files,
+    e.g. file transfer incomplete. Might require an option to enable this check
+    to allow support of growing files.
+
+25. improve error messages resulting from reading a non-MXF file. If the header
+    partition can't be read then report that the file is not an MXF file if
+    the first 16 bytes is not the pack key; otherwise report it is corrupted
