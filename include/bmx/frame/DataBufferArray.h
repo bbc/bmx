@@ -48,7 +48,7 @@ typedef struct
 
 
 uint32_t dba_get_total_size(const CDataBuffer *data_array, uint32_t array_size);
-
+void dba_copy_data(unsigned char *dest, uint32_t dest_size, const CDataBuffer *data_array, uint32_t array_size);
 
 
 };

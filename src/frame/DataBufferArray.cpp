@@ -35,6 +35,8 @@
 
 #define __STDC_LIMIT_MACROS
 
+#include <cstring>
+
 #include <bmx/frame/DataBufferArray.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -54,5 +56,16 @@ uint32_t bmx::dba_get_total_size(const CDataBuffer *data_array, uint32_t array_s
     BMX_CHECK(total_size <= UINT32_MAX);
 
     return (uint32_t)total_size;
+}
+
+void bmx::dba_copy_data(unsigned char *dest, uint32_t dest_size, const CDataBuffer *data_array, uint32_t array_size)
+{
+    uint64_t total_size = 0;
+    uint32_t i;
+    for (i = 0; i < array_size; i++) {
+        BMX_CHECK(total_size + data_array[i].size <= dest_size);
+        memcpy(&dest[total_size], data_array[i].data, data_array[i].size);
+        total_size += data_array[i].size;
+    }
 }
 

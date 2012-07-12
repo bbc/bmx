@@ -182,11 +182,10 @@ uint32_t OP1AContentPackageElementData::WriteSamples(const unsigned char *data, 
 
 void OP1AContentPackageElementData::WriteSample(const CDataBuffer *data_array, uint32_t array_size)
 {
-    mData.Grow(dba_get_total_size(data_array, array_size));
-
-    uint32_t i;
-    for (i = 0; i < array_size; i++)
-        mData.Append(data_array[i].data, data_array[i].size);
+    uint32_t size = dba_get_total_size(data_array, array_size);
+    mData.Grow(size);
+    dba_copy_data(mData.GetBytesAvailable(), mData.GetSizeAvailable(), data_array, array_size);
+    mData.IncrementSize(size);
 
     mNumSamplesWritten++;
 }
