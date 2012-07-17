@@ -117,3 +117,7 @@ example
 44. allow partition selection in MXFReader and mxf2raw
 
 45. support reading growing MXF files
+
+46. add support for Sony XDCAM OP-1A flavour
+
+47. add support for an OP-1A flavour that is Avid AMA link compatible
