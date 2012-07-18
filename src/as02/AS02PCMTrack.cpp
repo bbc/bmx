@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#include <cstdio>
+
 #include <bmx/as02/AS02PCMTrack.h>
 #include <bmx/as02/AS02Clip.h>
 #include <bmx/MXFUtils.h>

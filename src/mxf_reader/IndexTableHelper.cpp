@@ -35,6 +35,8 @@
 
 #define __STDC_FORMAT_MACROS
 
+#include <cstdio>
+
 #include <memory>
 
 #include <libMXF++/MXF.h>

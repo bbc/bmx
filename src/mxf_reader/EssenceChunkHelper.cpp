@@ -35,6 +35,8 @@
 
 #define __STDC_FORMAT_MACROS
 
+#include <cstdio>
+
 #include <libMXF++/MXF.h>
 
 #include <bmx/mxf_reader/EssenceChunkHelper.h>

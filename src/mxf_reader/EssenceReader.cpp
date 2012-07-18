@@ -37,6 +37,7 @@
 #define __STDC_LIMIT_MACROS
 
 #include <cstring>
+#include <cstdio>
 
 #include <memory>
 
