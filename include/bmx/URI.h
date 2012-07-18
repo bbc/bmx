@@ -35,8 +35,6 @@
 
 #include <string>
 
-#include <uriparser/Uri.h>
-
 
 #if defined(_WIN32)
 #define DIR_SEPARATOR_C     '\\'
@@ -44,6 +42,10 @@
 #else
 #define DIR_SEPARATOR_C     '/'
 #define DIR_SEPARATOR_S     "/"
+#endif
+
+#ifndef BMXURIInternal
+#define BMXURIInternal      void
 #endif
 
 
@@ -71,6 +73,7 @@ public:
 private:
     char *mStr;
 };
+
 
 
 class URI
@@ -113,7 +116,7 @@ private:
     void Clear();
 
 private:
-    UriUriA mUriUri;
+    BMXURIInternal *mUriUri;
     URIStr mSourceStr;
     bool mWindowsNameConvert;
 };

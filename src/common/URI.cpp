@@ -33,6 +33,12 @@
 #include "config.h"
 #endif
 
+#include <cstring>
+
+#include <uriparser/Uri.h>
+
+#define BMXURIInternal      UriUriA
+
 #include <bmx/URI.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -92,7 +98,8 @@ URI::URI()
 #else
     mWindowsNameConvert = false;
 #endif
-    memset(&mUriUri, 0, sizeof(mUriUri));
+    mUriUri = new UriUriA;
+    memset(mUriUri, 0, sizeof(*mUriUri));
 }
 
 URI::URI(const char *uri_str)
@@ -102,7 +109,8 @@ URI::URI(const char *uri_str)
 #else
     mWindowsNameConvert = false;
 #endif
-    memset(&mUriUri, 0, sizeof(mUriUri));
+    mUriUri = new UriUriA;
+    memset(mUriUri, 0, sizeof(*mUriUri));
     BMX_CHECK(Parse(uri_str));
 }
 
@@ -113,19 +121,22 @@ URI::URI(string uri_str)
 #else
     mWindowsNameConvert = false;
 #endif
-    memset(&mUriUri, 0, sizeof(mUriUri));
+    mUriUri = new UriUriA;
+    memset(mUriUri, 0, sizeof(*mUriUri));
     BMX_CHECK(Parse(uri_str.c_str()));
 }
 
 URI::URI(const URI &uri)
 {
-    memset(&mUriUri, 0, sizeof(mUriUri));
+    mUriUri = new UriUriA;
+    memset(mUriUri, 0, sizeof(*mUriUri));
     Copy(uri);
 }
 
 URI::~URI()
 {
     Clear();
+    delete mUriUri;
 }
 
 void URI::SetWindowsNameConvert(bool windows_name_convert)
@@ -143,14 +154,14 @@ bool URI::Parse(const char *uri_str)
     mSourceStr.Copy(uri_str);
 
     UriParserStateA state;
-    state.uri = &mUriUri;
+    state.uri = mUriUri;
     int result = uriParseUriA(&state, mSourceStr.GetCStr());
     if (result) {
         Clear();
         return false;
     }
 
-    result = uriNormalizeSyntaxA(&mUriUri);
+    result = uriNormalizeSyntaxA(mUriUri);
     if (result) {
         Clear();
         return false;
@@ -221,7 +232,7 @@ bool URI::MakeAbsolute(const URI &base_uri)
         return true;
 
     URI abs_uri;
-    int result = uriAddBaseUriA(&abs_uri.mUriUri, &mUriUri, &base_uri.mUriUri);
+    int result = uriAddBaseUriA(abs_uri.mUriUri, mUriUri, base_uri.mUriUri);
     if (result)
         return false;
 
@@ -238,7 +249,7 @@ bool URI::MakeRelative(const URI &base_uri)
         return true;
 
     URI rel_uri;
-    int result = uriRemoveBaseUriA(&rel_uri.mUriUri, &mUriUri, &base_uri.mUriUri, 0);
+    int result = uriRemoveBaseUriA(rel_uri.mUriUri, mUriUri, base_uri.mUriUri, 0);
     if (result)
         return false;
     if (!rel_uri.IsRelative())
@@ -251,31 +262,31 @@ bool URI::MakeRelative(const URI &base_uri)
 
 bool URI::IsRelative() const
 {
-    return !mUriUri.scheme.first;
+    return !mUriUri->scheme.first;
 }
 
 bool URI::IsAbsolute() const
 {
-    return mUriUri.scheme.first;
+    return mUriUri->scheme.first;
 }
 
 bool URI::IsAbsFile() const
 {
-    return mUriUri.scheme.first && mUriUri.scheme.afterLast &&
-           strncmp(mUriUri.scheme.first, "file", mUriUri.scheme.afterLast - mUriUri.scheme.first) == 0;
+    return mUriUri->scheme.first && mUriUri->scheme.afterLast &&
+           strncmp(mUriUri->scheme.first, "file", mUriUri->scheme.afterLast - mUriUri->scheme.first) == 0;
 }
 
 string URI::ToString() const
 {
     int uri_str_len;
-    int result = uriToStringCharsRequiredA(&mUriUri, &uri_str_len);
+    int result = uriToStringCharsRequiredA(mUriUri, &uri_str_len);
     if (result)
         return "";
 
     URIStr uri_str;
     uri_str.Allocate(uri_str_len + 1);
 
-    result = uriToStringA(uri_str.GetStr(), &mUriUri, uri_str_len + 1, 0);
+    result = uriToStringA(uri_str.GetStr(), mUriUri, uri_str_len + 1, 0);
     if (result)
         return "";
 
@@ -306,7 +317,7 @@ string URI::ToFilename() const
 size_t URI::GetNumSegments() const
 {
     size_t size = 0;
-    UriPathSegmentA *segment = mUriUri.pathHead;
+    UriPathSegmentA *segment = mUriUri->pathHead;
     while (segment) {
         segment = segment->next;
         size++;
@@ -318,7 +329,7 @@ size_t URI::GetNumSegments() const
 string URI::GetSegment(size_t index) const
 {
     size_t count = 0;
-    UriPathSegmentA *segment = mUriUri.pathHead;
+    UriPathSegmentA *segment = mUriUri->pathHead;
     while (count < index && segment) {
         segment = segment->next;
         count++;
@@ -334,9 +345,9 @@ string URI::GetSegment(size_t index) const
 string URI::GetLastSegment() const
 {
     string segment_string;
-    if (mUriUri.pathTail && mUriUri.pathTail->text.first && mUriUri.pathTail->text.afterLast) {
-        segment_string.assign(mUriUri.pathTail->text.first,
-                              mUriUri.pathTail->text.afterLast - mUriUri.pathTail->text.first);
+    if (mUriUri->pathTail && mUriUri->pathTail->text.first && mUriUri->pathTail->text.afterLast) {
+        segment_string.assign(mUriUri->pathTail->text.first,
+                              mUriUri->pathTail->text.afterLast - mUriUri->pathTail->text.first);
     }
 
     return segment_string;
@@ -345,9 +356,9 @@ string URI::GetLastSegment() const
 string URI::GetFirstSegment() const
 {
     string segment_string;
-    if (mUriUri.pathHead && mUriUri.pathHead->text.first && mUriUri.pathHead->text.afterLast) {
-        segment_string.assign(mUriUri.pathHead->text.first,
-                              mUriUri.pathHead->text.afterLast - mUriUri.pathHead->text.first);
+    if (mUriUri->pathHead && mUriUri->pathHead->text.first && mUriUri->pathHead->text.afterLast) {
+        segment_string.assign(mUriUri->pathHead->text.first,
+                              mUriUri->pathHead->text.afterLast - mUriUri->pathHead->text.first);
     }
 
     return segment_string;
@@ -355,7 +366,7 @@ string URI::GetFirstSegment() const
 
 bool URI::operator==(const URI &right) const
 {
-    return uriEqualsUriA(&mUriUri, &right.mUriUri);
+    return uriEqualsUriA(mUriUri, right.mUriUri);
 }
 
 URI& URI::operator=(const URI &right)
@@ -366,8 +377,8 @@ URI& URI::operator=(const URI &right)
 
 void URI::Clear()
 {
-    uriFreeUriMembersA(&mUriUri);
-    memset(&mUriUri, 0, sizeof(mUriUri));
+    uriFreeUriMembersA(mUriUri);
+    memset(mUriUri, 0, sizeof(*mUriUri));
 
     mSourceStr.Clear();
 }
