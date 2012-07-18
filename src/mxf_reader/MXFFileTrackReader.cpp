@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#include <cstring>
+
 #include <bmx/mxf_reader/MXFFileTrackReader.h>
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/essence_parser/AVCIEssenceParser.h>
