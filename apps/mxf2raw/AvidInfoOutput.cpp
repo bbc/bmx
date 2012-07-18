@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#include <cstdio>
+
 #include "AvidInfoOutput.h"
 #include <bmx/avid_mxf/AvidInfo.h>
 #include <bmx/Utils.h>
