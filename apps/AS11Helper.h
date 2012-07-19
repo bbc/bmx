@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __AS11_HELPER_H__
-#define __AS11_HELPER_H__
+#ifndef AS11_HELPER_H_
+#define AS11_HELPER_H_
 
 #include <string>
 #include <vector>

@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AS11_CLIP_H__
-#define __BMX_AS11_CLIP_H__
+#ifndef BMX_AS11_CLIP_H_
+#define BMX_AS11_CLIP_H_
 
 
 #include <bmx/mxf_op1a/OP1AFile.h>

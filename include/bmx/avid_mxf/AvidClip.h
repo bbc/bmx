@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AVID_CLIP_H__
-#define __BMX_AVID_CLIP_H__
+#ifndef BMX_AVID_CLIP_H_
+#define BMX_AVID_CLIP_H_
 
 
 #include <string>

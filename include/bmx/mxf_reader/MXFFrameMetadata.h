@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_MXF_FRAME_METADATA_H__
-#define __BMX_MXF_FRAME_METADATA_H__
+#ifndef BMX_MXF_FRAME_METADATA_H_
+#define BMX_MXF_FRAME_METADATA_H_
 
 
 #include <bmx/frame/Frame.h>

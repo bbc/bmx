@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_ESSENCE_CHUNK_HELPER_H__
-#define __BMX_ESSENCE_CHUNK_HELPER_H__
+#ifndef BMX_ESSENCE_CHUNK_HELPER_H_
+#define BMX_ESSENCE_CHUNK_HELPER_H_
 
 #include <vector>
 

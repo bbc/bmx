@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AVID_VC3_TRACK_H__
-#define __BMX_AVID_VC3_TRACK_H__
+#ifndef BMX_AVID_VC3_TRACK_H_
+#define BMX_AVID_VC3_TRACK_H_
 
 #include <bmx/avid_mxf/AvidPictureTrack.h>
 

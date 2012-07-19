@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_XML_WRITER_H__
-#define __BMX_XML_WRITER_H__
+#ifndef BMX_XML_WRITER_H_
+#define BMX_XML_WRITER_H_
 
 #include <cstdio>
 

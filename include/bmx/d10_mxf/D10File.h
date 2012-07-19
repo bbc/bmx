@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_D10_FILE_H__
-#define __BMX_D10_FILE_H__
+#ifndef BMX_D10_FILE_H_
+#define BMX_D10_FILE_H_
 
 #include <vector>
 

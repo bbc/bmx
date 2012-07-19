@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __AVID_INFO_OUTPUT_H__
-#define __AVID_INFO_OUTPUT_H__
+#ifndef AVID_INFO_OUTPUT_H_
+#define AVID_INFO_OUTPUT_H_
 
 
 #include <bmx/mxf_reader/MXFFileReader.h>

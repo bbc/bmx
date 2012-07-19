@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_MD5_H__
-#define __BMX_MD5_H__
+#ifndef BMX_MD5_H_
+#define BMX_MD5_H_
 
 #include <string>
 

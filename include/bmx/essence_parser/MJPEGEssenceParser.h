@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_MJPEG_ESSENCE_PARSER_H__
-#define __BMX_MJPEG_ESSENCE_PARSER_H__
+#ifndef BMX_MJPEG_ESSENCE_PARSER_H_
+#define BMX_MJPEG_ESSENCE_PARSER_H_
 
 
 #include <bmx/essence_parser/EssenceParser.h>

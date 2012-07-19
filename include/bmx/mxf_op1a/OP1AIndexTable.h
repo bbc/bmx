@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_OP1A_INDEX_TABLE_H__
-#define __BMX_OP1A_INDEX_TABLE_H__
+#ifndef BMX_OP1A_INDEX_TABLE_H_
+#define BMX_OP1A_INDEX_TABLE_H_
 
 #include <vector>
 

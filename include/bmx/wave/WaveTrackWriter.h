@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_WAVE_TRACK_WRITER_H__
-#define __BMX_WAVE_TRACK_WRITER_H__
+#ifndef BMX_WAVE_TRACK_WRITER_H_
+#define BMX_WAVE_TRACK_WRITER_H_
 
 
 #include <bmx/wave/WaveIO.h>

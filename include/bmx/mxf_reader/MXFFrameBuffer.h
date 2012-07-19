@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_MXF_FRAME_BUFFER_H__
-#define __BMX_MXF_FRAME_BUFFER_H__
+#ifndef BMX_MXF_FRAME_BUFFER_H_
+#define BMX_MXF_FRAME_BUFFER_H_
 
 #include <bmx/frame/FrameBuffer.h>
 

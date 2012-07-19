@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_UTILS_H__
-#define __BMX_UTILS_H__
+#ifndef BMX_UTILS_H_
+#define BMX_UTILS_H_
 
 
 #include <cstdarg>

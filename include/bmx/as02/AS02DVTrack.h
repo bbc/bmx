@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AS02_DV_TRACK_H__
-#define __BMX_AS02_DV_TRACK_H__
+#ifndef BMX_AS02_DV_TRACK_H_
+#define BMX_AS02_DV_TRACK_H_
 
 #include <bmx/as02/AS02PictureTrack.h>
 #include <bmx/mxf_helper/DVMXFDescriptorHelper.h>

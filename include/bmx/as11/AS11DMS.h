@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AS11_DMS_H__
-#define __BMX_AS11_DMS_H__
+#ifndef BMX_AS11_DMS_H_
+#define BMX_AS11_DMS_H_
 
 
 #include <libMXF++/DataModel.h>

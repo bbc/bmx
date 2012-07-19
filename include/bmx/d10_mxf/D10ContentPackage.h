@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_D10_CONTENT_PACKAGE_H__
-#define __BMX_D10_CONTENT_PACKAGE_H__
+#ifndef BMX_D10_CONTENT_PACKAGE_H_
+#define BMX_D10_CONTENT_PACKAGE_H_
 
 #include <vector>
 #include <deque>

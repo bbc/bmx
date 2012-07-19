@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_WAVE_BEXT_H__
-#define __BMX_WAVE_BEXT_H__
+#ifndef BMX_WAVE_BEXT_H_
+#define BMX_WAVE_BEXT_H_
 
 
 #include <vector>

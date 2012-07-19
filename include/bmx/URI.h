@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_URI_H__
-#define __BMX_URI_H__
+#ifndef BMX_URI_H_
+#define BMX_URI_H_
 
 
 #include <string>

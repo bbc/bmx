@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AS11_INFO_H__
-#define __BMX_AS11_INFO_H__
+#ifndef BMX_AS11_INFO_H_
+#define BMX_AS11_INFO_H_
 
 
 #include <bmx/BMXTypes.h>

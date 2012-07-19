@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __APP_INFO_OUTPUT_H__
-#define __APP_INFO_OUTPUT_H__
+#ifndef APP_INFO_OUTPUT_H_
+#define APP_INFO_OUTPUT_H_
 
 
 #include <bmx/mxf_reader/MXFFileReader.h>

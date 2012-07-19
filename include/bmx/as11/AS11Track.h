@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AS11_TRACK_H__
-#define __BMX_AS11_TRACK_H__
+#ifndef BMX_AS11_TRACK_H_
+#define BMX_AS11_TRACK_H_
 
 
 #include <bmx/mxf_op1a/OP1ATrack.h>

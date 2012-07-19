@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_KLV_PARSER_H__
-#define __BMX_KLV_PARSER_H__
+#ifndef BMX_KLV_PARSER_H_
+#define BMX_KLV_PARSER_H_
 
 
 #include <bmx/BMXTypes.h>

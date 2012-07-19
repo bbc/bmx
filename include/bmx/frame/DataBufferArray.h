@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_DATA_BUFFER_ARRAY_H__
-#define __BMX_DATA_BUFFER_ARRAY_H__
+#ifndef BMX_DATA_BUFFER_ARRAY_H_
+#define BMX_DATA_BUFFER_ARRAY_H_
 
 #include <bmx/BMXTypes.h>
 

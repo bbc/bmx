@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_UK_DPP_FRAMEWORK_H__
-#define __BMX_UK_DPP_FRAMEWORK_H__
+#ifndef BMX_UK_DPP_FRAMEWORK_H_
+#define BMX_UK_DPP_FRAMEWORK_H_
 
 
 #include <libMXF++/metadata/DMFramework.h>

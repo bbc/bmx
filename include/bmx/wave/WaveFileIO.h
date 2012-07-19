@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_WAVE_FILE_IO_H__
-#define __BMX_WAVE_FILE_IO_H__
+#ifndef BMX_WAVE_FILE_IO_H_
+#define BMX_WAVE_FILE_IO_H_
 
 
 #include <string>

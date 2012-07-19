@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_MXF_FILE_TRACK_READER_H__
-#define __BMX_MXF_FILE_TRACK_READER_H__
+#ifndef BMX_MXF_FILE_TRACK_READER_H_
+#define BMX_MXF_FILE_TRACK_READER_H_
 
 
 #include <bmx/mxf_reader/MXFTrackReader.h>

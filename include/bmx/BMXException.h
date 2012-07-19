@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_EXCEPTION_H__
-#define __BMX_EXCEPTION_H__
+#ifndef BMX_EXCEPTION_H_
+#define BMX_EXCEPTION_H_
 
 #include <cassert>
 

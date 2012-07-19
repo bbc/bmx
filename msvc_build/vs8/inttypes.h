@@ -1,5 +1,5 @@
-#ifndef __INTTYPES_H__
-#define __INTTYPES_H__
+#ifndef INTTYPES_H_
+#define INTTYPES_H_
 
 /* subset of C99 inttypes.h for Microsoft Visual Studio build */
 

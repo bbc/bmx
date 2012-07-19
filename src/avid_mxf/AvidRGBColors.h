@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AVID_RGB_COLORS_H__
-#define __BMX_AVID_RGB_COLORS_H__
+#ifndef BMX_AVID_RGB_COLORS_H_
+#define BMX_AVID_RGB_COLORS_H_
 
 
 

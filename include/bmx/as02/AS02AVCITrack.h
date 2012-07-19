@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AS02_AVCI_TRACK_H__
-#define __BMX_AS02_AVCI_TRACK_H__
+#ifndef BMX_AS02_AVCI_TRACK_H_
+#define BMX_AS02_AVCI_TRACK_H_
 
 #include <bmx/mxf_helper/AVCIMXFDescriptorHelper.h>
 #include <bmx/writer_helper/AVCIWriterHelper.h>

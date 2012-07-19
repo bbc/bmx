@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_SOUND_MXF_DESCRIPTOR_HELPER_H__
-#define __BMX_SOUND_MXF_DESCRIPTOR_HELPER_H__
+#ifndef BMX_SOUND_MXF_DESCRIPTOR_HELPER_H_
+#define BMX_SOUND_MXF_DESCRIPTOR_HELPER_H_
 
 
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>

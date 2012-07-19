@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_CRC32_H__
-#define __BMX_CRC32_H__
+#ifndef BMX_CRC32_H_
+#define BMX_CRC32_H_
 
 #include <string>
 

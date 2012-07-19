@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AS02_MANIFEST_H__
-#define __BMX_AS02_MANIFEST_H__
+#ifndef BMX_AS02_MANIFEST_H_
+#define BMX_AS02_MANIFEST_H_
 
 #include <string>
 #include <vector>

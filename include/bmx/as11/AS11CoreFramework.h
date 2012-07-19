@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AS11_CORE_FRAMEWORK_H__
-#define __BMX_AS11_CORE_FRAMEWORK_H__
+#ifndef BMX_AS11_CORE_FRAMEWORK_H_
+#define BMX_AS11_CORE_FRAMEWORK_H_
 
 
 #include <libMXF++/metadata/DMFramework.h>

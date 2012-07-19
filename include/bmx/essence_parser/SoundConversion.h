@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AUDIO_CONVERSION_H__
-#define __BMX_AUDIO_CONVERSION_H__
+#ifndef BMX_AUDIO_CONVERSION_H_
+#define BMX_AUDIO_CONVERSION_H_
 
 
 #include <bmx/BMXTypes.h>

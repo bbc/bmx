@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_VERSION_H__
-#define __BMX_VERSION_H__
+#ifndef BMX_VERSION_H_
+#define BMX_VERSION_H_
 
 
 #include <string>

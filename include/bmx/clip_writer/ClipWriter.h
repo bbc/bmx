@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_CLIP_WRITER_H__
-#define __BMX_CLIP_WRITER_H__
+#ifndef BMX_CLIP_WRITER_H_
+#define BMX_CLIP_WRITER_H_
 
 
 #include <bmx/as02/AS02Clip.h>

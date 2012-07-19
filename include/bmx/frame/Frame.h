@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_FRAME_H__
-#define __BMX_FRAME_H__
+#ifndef BMX_FRAME_H_
+#define BMX_FRAME_H_
 
 
 #include <map>

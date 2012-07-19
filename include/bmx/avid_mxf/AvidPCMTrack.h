@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AVID_PCM_TRACK_H__
-#define __BMX_AVID_PCM_TRACK_H__
+#ifndef BMX_AVID_PCM_TRACK_H_
+#define BMX_AVID_PCM_TRACK_H_
 
 #include <bmx/avid_mxf/AvidTrack.h>
 #include <bmx/mxf_helper/WaveMXFDescriptorHelper.h>

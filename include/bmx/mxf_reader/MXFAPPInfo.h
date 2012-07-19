@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_MXF_APP_INFO_H__
-#define __BMX_MXF_APP_INFO_H__
+#ifndef BMX_MXF_APP_INFO_H_
+#define BMX_MXF_APP_INFO_H_
 
 
 #include <libMXF++/MXF.h>

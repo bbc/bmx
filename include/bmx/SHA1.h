@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_SHA1_H__
-#define __BMX_SHA1_H__
+#ifndef BMX_SHA1_H_
+#define BMX_SHA1_H_
 
 #include <string>
 

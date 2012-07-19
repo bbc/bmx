@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_MXF_INDEX_ENTRY_EXT_H__
-#define __BMX_MXF_INDEX_ENTRY_EXT_H__
+#ifndef BMX_MXF_INDEX_ENTRY_EXT_H_
+#define BMX_MXF_INDEX_ENTRY_EXT_H_
 
 
 #include <bmx/BMXTypes.h>

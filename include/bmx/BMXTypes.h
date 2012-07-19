@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_TYPES_H__
-#define __BMX_TYPES_H__
+#ifndef BMX_TYPES_H_
+#define BMX_TYPES_H_
 
 
 #include <libMXF++/MXFTypes.h>

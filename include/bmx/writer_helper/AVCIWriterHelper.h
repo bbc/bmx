@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_AVCI_WRITER_HELPER_H__
-#define __BMX_AVCI_WRITER_HELPER_H__
+#ifndef BMX_AVCI_WRITER_HELPER_H_
+#define BMX_AVCI_WRITER_HELPER_H_
 
 #include <bmx/frame/DataBufferArray.h>
 #include <bmx/essence_parser/AVCIEssenceParser.h>

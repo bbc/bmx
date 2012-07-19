@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_MXF_PACKAGE_RESOLVER_H__
-#define __BMX_MXF_PACKAGE_RESOLVER_H__
+#ifndef BMX_MXF_PACKAGE_RESOLVER_H_
+#define BMX_MXF_PACKAGE_RESOLVER_H_
 
 
 #include <vector>

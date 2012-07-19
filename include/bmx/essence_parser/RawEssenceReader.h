@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_RAW_ESSENCE_READER_H__
-#define __BMX_RAW_ESSENCE_READER_H__
+#ifndef BMX_RAW_ESSENCE_READER_H_
+#define BMX_RAW_ESSENCE_READER_H_
 
 
 #include <cstdio>

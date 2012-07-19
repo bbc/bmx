@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __BMX_DV_ESSENCE_PARSER_H__
-#define __BMX_DV_ESSENCE_PARSER_H__
+#ifndef BMX_DV_ESSENCE_PARSER_H_
+#define BMX_DV_ESSENCE_PARSER_H_
 
 
 #include <bmx/essence_parser/EssenceParser.h>
