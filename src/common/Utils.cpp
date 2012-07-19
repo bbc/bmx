@@ -175,7 +175,7 @@ bool bmx::get_sample_sequence(Rational lower_edit_rate, Rational higher_edit_rat
             } else {
                 // try known sample sequences
                 size_t i;
-                for (i = 0; i < ARRAY_SIZE(SAMPLE_SEQUENCES); i++) {
+                for (i = 0; i < BMX_ARRAY_SIZE(SAMPLE_SEQUENCES); i++) {
                     if (lower_edit_rate == SAMPLE_SEQUENCES[i].lower_edit_rate &&
                         higher_edit_rate == SAMPLE_SEQUENCES[i].higher_edit_rate)
                     {

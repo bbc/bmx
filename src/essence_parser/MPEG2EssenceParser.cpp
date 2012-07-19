@@ -175,7 +175,7 @@ void MPEG2EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data
             uint8_t aspect_ratio_info = get_bits(data, data_size, (offset - 3) * 8 + 56, 4);
             mHaveKnownAspectRatio = false;
             mAspectRatio = ZERO_RATIONAL;
-            for (i = 0; i < ARRAY_SIZE(ASPECT_RATIO_MAP); i++) {
+            for (i = 0; i < BMX_ARRAY_SIZE(ASPECT_RATIO_MAP); i++) {
                 if (aspect_ratio_info == ASPECT_RATIO_MAP[i].info) {
                     mHaveKnownAspectRatio = true;
                     mAspectRatio = ASPECT_RATIO_MAP[i].aspect_ratio;
@@ -185,7 +185,7 @@ void MPEG2EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data
 
             uint8_t frame_rate_code = get_bits(data, data_size, (offset - 3) * 8 + 60, 4);
             mFrameRate = ZERO_RATIONAL;
-            for (i = 0; i < ARRAY_SIZE(FRAME_RATE_MAP); i++) {
+            for (i = 0; i < BMX_ARRAY_SIZE(FRAME_RATE_MAP); i++) {
                 if (frame_rate_code == FRAME_RATE_MAP[i].code) {
                     mFrameRate = FRAME_RATE_MAP[i].frame_rate;
                     break;

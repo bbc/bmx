@@ -74,7 +74,7 @@ EssenceType SoundMXFDescriptorHelper::IsSupported(FileDescriptor *file_descripto
 
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label))
             return SUPPORTED_ESSENCE[i].essence_type;
     }
@@ -104,7 +104,7 @@ SoundMXFDescriptorHelper* SoundMXFDescriptorHelper::Create(FileDescriptor *file_
 bool SoundMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -157,14 +157,14 @@ void SoundMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint1
 
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label)) {
             mEssenceType = SUPPORTED_ESSENCE[i].essence_type;
             mFrameWrapped = SUPPORTED_ESSENCE[i].frame_wrapped;
             break;
         }
     }
-    if (i >= ARRAY_SIZE(SUPPORTED_ESSENCE))
+    if (i >= BMX_ARRAY_SIZE(SUPPORTED_ESSENCE))
         mEssenceType = SOUND_ESSENCE;
 
     if (sound_descriptor->haveAudioSamplingRate())

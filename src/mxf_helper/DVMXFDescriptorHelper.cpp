@@ -111,7 +111,7 @@ EssenceType DVMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)))
         {
             // legacy Avid files use the wrong essence container label
@@ -139,7 +139,7 @@ EssenceType DVMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, 
 bool DVMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -173,7 +173,7 @@ void DVMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16_t
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)))
         {
             // legacy Avid files use the wrong essence container label
@@ -194,7 +194,7 @@ void DVMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16_t
             break;
         }
     }
-    if (i < ARRAY_SIZE(SUPPORTED_ESSENCE)) {
+    if (i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE)) {
         mEssenceIndex = i;
         mEssenceType = SUPPORTED_ESSENCE[i].essence_type;
         mFrameWrapped = SUPPORTED_ESSENCE[i].frame_wrapped;
@@ -292,7 +292,7 @@ mxfUL DVMXFDescriptorHelper::ChooseEssenceContainerUL() const
 void DVMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate &&
             SUPPORTED_ESSENCE[i].frame_wrapped == mFrameWrapped)
@@ -302,6 +302,6 @@ void DVMXFDescriptorHelper::UpdateEssenceIndex()
             break;
         }
     }
-    BMX_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+    BMX_CHECK(i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 

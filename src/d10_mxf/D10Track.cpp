@@ -71,7 +71,7 @@ static const D10SampleRateSupport D10_SAMPLE_RATE_SUPPORT[] =
 bool D10Track::IsSupported(EssenceType essence_type, mxfRational sample_rate)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(D10_SAMPLE_RATE_SUPPORT); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(D10_SAMPLE_RATE_SUPPORT); i++) {
         if (essence_type == D10_SAMPLE_RATE_SUPPORT[i].essence_type) {
             size_t j = 0;
             while (D10_SAMPLE_RATE_SUPPORT[i].sample_rate[j].numerator) {

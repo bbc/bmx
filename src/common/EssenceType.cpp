@@ -113,7 +113,7 @@ static const EssenceTypeStringMap ESSENCE_TYPE_STRING_MAP[] =
 
 const char* bmx::essence_type_to_string(EssenceType essence_type)
 {
-    BMX_ASSERT((size_t)essence_type < ARRAY_SIZE(ESSENCE_TYPE_STRING_MAP));
+    BMX_ASSERT((size_t)essence_type < BMX_ARRAY_SIZE(ESSENCE_TYPE_STRING_MAP));
     BMX_ASSERT(ESSENCE_TYPE_STRING_MAP[essence_type].essence_type == essence_type);
 
     return ESSENCE_TYPE_STRING_MAP[essence_type].str;

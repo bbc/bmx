@@ -98,7 +98,7 @@ EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor
 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
             SUPPORTED_ESSENCE[i].sample_rate == sample_rate)
         {
@@ -112,7 +112,7 @@ EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor
 bool AVCIMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -146,7 +146,7 @@ void AVCIMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
             SUPPORTED_ESSENCE[i].sample_rate == sample_rate)
         {
@@ -304,7 +304,7 @@ mxfUL AVCIMXFDescriptorHelper::ChooseEssenceContainerUL() const
 void AVCIMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate)
         {
@@ -313,6 +313,6 @@ void AVCIMXFDescriptorHelper::UpdateEssenceIndex()
             break;
         }
     }
-    BMX_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+    BMX_CHECK(i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 

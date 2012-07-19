@@ -147,7 +147,7 @@ uint32_t VC3EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
     uint32_t compression_id = get_uint32(data + 40);
 
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(COMPRESSION_PARAMETERS); i++)
+    for (i = 0; i < BMX_ARRAY_SIZE(COMPRESSION_PARAMETERS); i++)
     {
         if (compression_id == COMPRESSION_PARAMETERS[i].compression_id) {
             if (data_size >= COMPRESSION_PARAMETERS[i].frame_size)
@@ -172,12 +172,12 @@ void VC3EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
     // compression id
     mCompressionId = get_uint32(data + 40);
     size_t param_index;
-    for (param_index = 0; param_index < ARRAY_SIZE(COMPRESSION_PARAMETERS); param_index++)
+    for (param_index = 0; param_index < BMX_ARRAY_SIZE(COMPRESSION_PARAMETERS); param_index++)
     {
         if (mCompressionId == COMPRESSION_PARAMETERS[param_index].compression_id)
             break;
     }
-    BMX_CHECK(param_index < ARRAY_SIZE(COMPRESSION_PARAMETERS));
+    BMX_CHECK(param_index < BMX_ARRAY_SIZE(COMPRESSION_PARAMETERS));
 
     // coding control A
     uint32_t ffc_bits = get_bits(data, data_size, 5 * 8 + 6, 2);

@@ -121,7 +121,7 @@ static string get_track_clip_name(string &clip_name, bool is_video, uint32_t tra
 bool AS02Track::IsSupported(EssenceType essence_type, mxfRational sample_rate)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(AS02_SAMPLE_RATE_SUPPORT); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(AS02_SAMPLE_RATE_SUPPORT); i++) {
         if (essence_type == AS02_SAMPLE_RATE_SUPPORT[i].essence_type) {
             size_t j = 0;
             while (AS02_SAMPLE_RATE_SUPPORT[i].sample_rate[j].numerator) {

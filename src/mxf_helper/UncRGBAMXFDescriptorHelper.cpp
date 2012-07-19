@@ -102,7 +102,7 @@ EssenceType UncRGBAMXFDescriptorHelper::IsSupported(FileDescriptor *file_descrip
 bool UncRGBAMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -134,7 +134,7 @@ size_t UncRGBAMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descript
         frame_layout = rgba_descriptor->getFrameLayout();
 
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label) &&
             sample_rate == SUPPORTED_ESSENCE[i].sample_rate &&
             display_width == SUPPORTED_ESSENCE[i].display_width &&
@@ -385,7 +385,7 @@ mxfUL UncRGBAMXFDescriptorHelper::ChooseEssenceContainerUL() const
 bool UncRGBAMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate)
         {

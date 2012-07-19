@@ -170,7 +170,7 @@ static const char* get_audio_track_layout_string(uint8_t audio_track_layout)
     if (audio_track_layout == 255)
         return "undefined";
     else
-        return get_enum_string(audio_track_layout, AUDIO_TRACK_LAYOUT_STR, ARRAY_SIZE(AUDIO_TRACK_LAYOUT_STR));
+        return get_enum_string(audio_track_layout, AUDIO_TRACK_LAYOUT_STR, BMX_ARRAY_SIZE(AUDIO_TRACK_LAYOUT_STR));
 }
 
 static const char* get_bool_string(bool value)
@@ -210,7 +210,7 @@ static void print_core_framework(AS11CoreFramework *cf)
     if (cf->HaveClosedCaptionsType()) {
         printf("      ClosedCaptionsType        : %u (%s)\n",
                cf->GetClosedCaptionsType(),
-               get_enum_string(cf->GetClosedCaptionsType(), CAPTIONS_TYPE_STR, ARRAY_SIZE(CAPTIONS_TYPE_STR)));
+               get_enum_string(cf->GetClosedCaptionsType(), CAPTIONS_TYPE_STR, BMX_ARRAY_SIZE(CAPTIONS_TYPE_STR)));
     }
     if (cf->HaveClosedCaptionsLanguage())
         printf("      ClosedCaptionsLanguage    : %s\n", cf->GetClosedCaptionsLanguage().c_str());
@@ -237,14 +237,14 @@ static void print_uk_dpp_framework(UKDPPFramework *udf, Timecode start_timecode,
     if (udf->Have3DType()) {
         printf("      ThreeDType                : %u (%s)\n",
            udf->Get3DType(),
-           get_enum_string(udf->Get3DType(), T3D_TYPE_STR, ARRAY_SIZE(T3D_TYPE_STR)));
+           get_enum_string(udf->Get3DType(), T3D_TYPE_STR, BMX_ARRAY_SIZE(T3D_TYPE_STR)));
     }
     if (udf->HaveProductPlacement())
         printf("      ProductPlacement          : %s\n", get_bool_string(udf->GetProductPlacement()));
     if (udf->HaveFPAPass()) {
         printf("      FPAPass                   : %u (%s)\n",
                udf->GetFPAPass(),
-               get_enum_string(udf->GetFPAPass(), FPA_PASS_STR, ARRAY_SIZE(FPA_PASS_STR)));
+               get_enum_string(udf->GetFPAPass(), FPA_PASS_STR, BMX_ARRAY_SIZE(FPA_PASS_STR)));
     }
     if (udf->HaveFPAManufacturer())
         printf("      FPAManufacturer           : %s\n", udf->GetFPAManufacturer().c_str());
@@ -257,7 +257,7 @@ static void print_uk_dpp_framework(UKDPPFramework *udf, Timecode start_timecode,
     printf("      AudioLoudnessStandard     : %u (%s)\n",
            udf->GetAudioLoudnessStandard(),
            get_enum_string(udf->GetAudioLoudnessStandard(), AUDIO_LOUDNESS_STANDARD_STR,
-                           ARRAY_SIZE(AUDIO_LOUDNESS_STANDARD_STR)));
+                           BMX_ARRAY_SIZE(AUDIO_LOUDNESS_STANDARD_STR)));
     if (udf->HaveAudioComments())
         printf("      AudioComments             : %s\n", udf->GetAudioComments().c_str());
 
@@ -282,23 +282,23 @@ static void print_uk_dpp_framework(UKDPPFramework *udf, Timecode start_timecode,
         printf("      AudioDescriptionType      : %u (%s)\n",
                udf->GetAudioDescriptionType(),
                get_enum_string(udf->GetAudioDescriptionType(), AUDIO_DESCRIPTION_TYPE_STR,
-                               ARRAY_SIZE(AUDIO_DESCRIPTION_TYPE_STR)));
+                               BMX_ARRAY_SIZE(AUDIO_DESCRIPTION_TYPE_STR)));
     }
     printf("      OpenCaptionsPresent       : %s\n", get_bool_string(udf->GetOpenCaptionsPresent()));
     if (udf->HaveOpenCaptionsType()) {
         printf("      OpenCaptionsType          : %u (%s)\n",
                udf->GetOpenCaptionsType(),
-               get_enum_string(udf->GetOpenCaptionsType(), CAPTIONS_TYPE_STR, ARRAY_SIZE(CAPTIONS_TYPE_STR)));
+               get_enum_string(udf->GetOpenCaptionsType(), CAPTIONS_TYPE_STR, BMX_ARRAY_SIZE(CAPTIONS_TYPE_STR)));
     }
     if (udf->HaveOpenCaptionsLanguage())
         printf("      OpenCaptionsLanguage      : %s\n", udf->GetOpenCaptionsLanguage().c_str());
     printf("      SigningPresent            : %u (%s)\n",
                udf->GetSigningPresent(),
-               get_enum_string(udf->GetSigningPresent(), SIGNING_PRESENT_STR, ARRAY_SIZE(SIGNING_PRESENT_STR)));
+               get_enum_string(udf->GetSigningPresent(), SIGNING_PRESENT_STR, BMX_ARRAY_SIZE(SIGNING_PRESENT_STR)));
     if (udf->HaveSignLanguage()) {
         printf("      SignLanguage              : %u (%s)\n",
                udf->GetSignLanguage(),
-               get_enum_string(udf->GetSignLanguage(), SIGN_LANGUAGE_STR, ARRAY_SIZE(SIGN_LANGUAGE_STR)));
+               get_enum_string(udf->GetSignLanguage(), SIGN_LANGUAGE_STR, BMX_ARRAY_SIZE(SIGN_LANGUAGE_STR)));
     }
     printf("      CompletionDate            : %s\n", get_date_string(udf->GetCompletionDate()));
     if (udf->HaveTextlessElementsExist())

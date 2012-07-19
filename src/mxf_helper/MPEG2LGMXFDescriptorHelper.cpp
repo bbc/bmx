@@ -105,7 +105,7 @@ EssenceType MPEG2LGMXFDescriptorHelper::IsSupported(FileDescriptor *file_descrip
 bool MPEG2LGMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -142,7 +142,7 @@ size_t MPEG2LGMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descript
 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label) &&
             SUPPORTED_ESSENCE[i].sample_rate == sample_rate &&
             SUPPORTED_ESSENCE[i].stored_width == stored_width &&
@@ -379,14 +379,14 @@ mxfUL MPEG2LGMXFDescriptorHelper::ChooseEssenceContainerUL() const
 void MPEG2LGMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate) {
             mEssenceIndex = i;
             break;
         }
     }
-    BMX_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+    BMX_CHECK(i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE));
     mAvidResolutionId = SUPPORTED_ESSENCE[i].avid_resolution_id;
 }
 

@@ -102,7 +102,7 @@ ClipWriter* ClipWriter::OpenNewWaveClip(WaveIO *file)
 string ClipWriter::ClipWriterTypeToString(ClipWriterType clip_type)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(CLIP_WRITER_TYPE_STRING_MAP); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(CLIP_WRITER_TYPE_STRING_MAP); i++) {
         if (clip_type == CLIP_WRITER_TYPE_STRING_MAP[i].type)
             return CLIP_WRITER_TYPE_STRING_MAP[i].str;
     }

@@ -85,7 +85,7 @@ AS11Clip* AS11Clip::OpenNewD10Clip(int flavour, File *file, Rational frame_rate)
 string AS11Clip::AS11ClipTypeToString(AS11ClipType clip_type)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(AS11_CLIP_TYPE_STRING_MAP); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(AS11_CLIP_TYPE_STRING_MAP); i++) {
         if (clip_type == AS11_CLIP_TYPE_STRING_MAP[i].type)
             return AS11_CLIP_TYPE_STRING_MAP[i].str;
     }

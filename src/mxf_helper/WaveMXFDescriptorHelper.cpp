@@ -67,7 +67,7 @@ EssenceType WaveMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor
 {
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label))
             return SUPPORTED_ESSENCE[i].essence_type;
     }
@@ -78,7 +78,7 @@ EssenceType WaveMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor
 bool WaveMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -106,14 +106,14 @@ void WaveMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16
 
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (CompareECULs(ec_label, alternative_ec_label, SUPPORTED_ESSENCE[i].ec_label)) {
             mEssenceType = SUPPORTED_ESSENCE[i].essence_type;
             mFrameWrapped = SUPPORTED_ESSENCE[i].frame_wrapped;
             break;
         }
     }
-    BMX_ASSERT(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+    BMX_ASSERT(i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 
 void WaveMXFDescriptorHelper::SetSequenceOffset(uint8_t offset)

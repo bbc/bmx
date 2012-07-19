@@ -142,7 +142,7 @@ static const AvidSampleRateSupport AVID_SAMPLE_RATE_SUPPORT[] =
 bool AvidTrack::IsSupported(EssenceType essence_type, mxfRational sample_rate)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(AVID_SAMPLE_RATE_SUPPORT); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(AVID_SAMPLE_RATE_SUPPORT); i++) {
         if (essence_type == AVID_SAMPLE_RATE_SUPPORT[i].essence_type) {
             size_t j = 0;
             while (AVID_SAMPLE_RATE_SUPPORT[i].sample_rate[j].numerator) {

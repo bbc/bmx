@@ -85,7 +85,7 @@ static const EssenceContainerULTable ESS_CONTAINER_UL_TABLE[] =
 static mxfUL get_essence_container_ul(EssenceType essence_type, mxfRational frame_rate)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(ESS_CONTAINER_UL_TABLE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(ESS_CONTAINER_UL_TABLE); i++) {
         if (ESS_CONTAINER_UL_TABLE[i].essence_type == essence_type &&
             ESS_CONTAINER_UL_TABLE[i].frame_rate == frame_rate)
         {

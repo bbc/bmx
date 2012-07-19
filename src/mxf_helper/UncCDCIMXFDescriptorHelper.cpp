@@ -129,7 +129,7 @@ EssenceType UncCDCIMXFDescriptorHelper::IsSupported(FileDescriptor *file_descrip
 bool UncCDCIMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -143,7 +143,7 @@ size_t UncCDCIMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descript
     mxfUL ec_label = file_descriptor->getEssenceContainer();
 
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].sample_rate != sample_rate)
             continue;
 
@@ -459,7 +459,7 @@ mxfUL UncCDCIMXFDescriptorHelper::ChooseEssenceContainerUL() const
 bool UncCDCIMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate &&
             SUPPORTED_ESSENCE[i].frame_wrapped == mFrameWrapped)

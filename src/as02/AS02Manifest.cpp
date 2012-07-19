@@ -106,7 +106,7 @@ static const MICScopeNameMap MIC_SCOPE_NAME_MAP[] =
 static string get_xml_file_role_name(FileRole role)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(FILE_ROLE_NAME_MAP); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(FILE_ROLE_NAME_MAP); i++) {
         if (FILE_ROLE_NAME_MAP[i].role == role)
             return FILE_ROLE_NAME_MAP[i].name;
     }
@@ -118,7 +118,7 @@ static string get_xml_file_role_name(FileRole role)
 static string get_xml_mic_type_name(MICType type)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(MIC_TYPE_NAME_MAP); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(MIC_TYPE_NAME_MAP); i++) {
         if (MIC_TYPE_NAME_MAP[i].type == type)
             return MIC_TYPE_NAME_MAP[i].name;
     }
@@ -130,7 +130,7 @@ static string get_xml_mic_type_name(MICType type)
 static string get_xml_mic_scope_name(MICScope scope)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(MIC_SCOPE_NAME_MAP); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(MIC_SCOPE_NAME_MAP); i++) {
         if (MIC_SCOPE_NAME_MAP[i].scope == scope)
             return MIC_SCOPE_NAME_MAP[i].name;
     }

@@ -132,7 +132,7 @@ static bool compare_track_reader(const MXFTrackReader *left_reader, const MXFTra
 string MXFFileReader::ResultToString(OpenResult result)
 {
     size_t index = (size_t)(result);
-    BMX_ASSERT(index < ARRAY_SIZE(RESULT_STRINGS));
+    BMX_ASSERT(index < BMX_ARRAY_SIZE(RESULT_STRINGS));
 
     return RESULT_STRINGS[index];
 }
@@ -141,7 +141,7 @@ string MXFFileReader::ResultToString(OpenResult result)
 MXFFileReader::MXFFileReader()
 : MXFReader()
 {
-    BMX_ASSERT(MXF_RESULT_FAIL + 1 == ARRAY_SIZE(RESULT_STRINGS));
+    BMX_ASSERT(MXF_RESULT_FAIL + 1 == BMX_ARRAY_SIZE(RESULT_STRINGS));
 
     mFile = 0;
     mHeaderMetadata = 0;
@@ -1542,7 +1542,7 @@ bool MXFFileReader::HaveInterFrameEncodingTrack() const
         if (mInternalTrackReaders[i]->IsEnabled()) {
             EssenceType essence_type = mInternalTrackReaders[i]->GetTrackInfo()->essence_type;
             size_t j;
-            for (j = 0; j < ARRAY_SIZE(INTER_FRAME_ENCODING_ESSENCE_TYPES); j++) {
+            for (j = 0; j < BMX_ARRAY_SIZE(INTER_FRAME_ENCODING_ESSENCE_TYPES); j++) {
                 if (essence_type == INTER_FRAME_ENCODING_ESSENCE_TYPES[j])
                     return true;
             }

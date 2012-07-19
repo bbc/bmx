@@ -99,7 +99,7 @@ EssenceType VC3MXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label))
             return SUPPORTED_ESSENCE[i].essence_type;
     }
@@ -110,7 +110,7 @@ EssenceType VC3MXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor,
 bool VC3MXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -121,11 +121,11 @@ bool VC3MXFDescriptorHelper::IsSupported(EssenceType essence_type)
 bool VC3MXFDescriptorHelper::IsAvidDNxHD(FileDescriptor *file_descriptor, mxfUL alternative_ec_label, size_t *index)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&alternative_ec_label, &SUPPORTED_ESSENCE[i].avid_ec_label))
             break;
     }
-    if (i >= ARRAY_SIZE(SUPPORTED_ESSENCE))
+    if (i >= BMX_ARRAY_SIZE(SUPPORTED_ESSENCE))
         return false;
 
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
@@ -169,7 +169,7 @@ void VC3MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16_
         GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
         mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
         size_t i;
-        for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+        for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
             if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label)) {
                 mEssenceIndex = i;
                 mEssenceType = SUPPORTED_ESSENCE[i].essence_type;
@@ -185,14 +185,14 @@ void VC3MXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
     BMX_ASSERT(!mFileDescriptor);
 
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == essence_type) {
             mEssenceIndex = i;
             mAvidResolutionId = SUPPORTED_ESSENCE[i].resolution_id;
             break;
         }
     }
-    BMX_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+    BMX_CHECK(i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE));
 
     PictureMXFDescriptorHelper::SetEssenceType(essence_type);
 }

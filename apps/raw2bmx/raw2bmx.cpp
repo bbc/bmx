@@ -2938,7 +2938,7 @@ int main(int argc, const char** argv)
                 case WAVE_PCM:
                 {
                     vector<uint32_t> shifted_sample_sequence = input->track->GetShiftedSampleSequence();
-                    BMX_ASSERT(shifted_sample_sequence.size() < ARRAY_SIZE(input->sample_sequence));
+                    BMX_ASSERT(shifted_sample_sequence.size() < BMX_ARRAY_SIZE(input->sample_sequence));
                     memcpy(input->sample_sequence, &shifted_sample_sequence[0],
                            shifted_sample_sequence.size() * sizeof(uint32_t));
                     input->sample_sequence_size = shifted_sample_sequence.size();

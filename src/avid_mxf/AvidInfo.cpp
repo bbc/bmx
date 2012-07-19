@@ -54,20 +54,20 @@ using namespace mxfpp;
 
 static Color convert_rgb_color(const RGBColor *color)
 {
-    float diff[ARRAY_SIZE(AVID_RGB_COLORS)];
+    float diff[BMX_ARRAY_SIZE(AVID_RGB_COLORS)];
     float min_diff = -1;
     size_t min_diff_index = 0;
     size_t i;
 
     // choose the color that has minimum difference to a known color
 
-    for (i = 0; i < ARRAY_SIZE(AVID_RGB_COLORS); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(AVID_RGB_COLORS); i++) {
         diff[i] = ((float)(color->red   - AVID_RGB_COLORS[i].red)   * (float)(color->red   - AVID_RGB_COLORS[i].red) +
                    (float)(color->green - AVID_RGB_COLORS[i].green) * (float)(color->green - AVID_RGB_COLORS[i].green) +
                    (float)(color->blue  - AVID_RGB_COLORS[i].blue)  * (float)(color->blue  - AVID_RGB_COLORS[i].blue));
     }
 
-    for (i = 0; i < ARRAY_SIZE(AVID_RGB_COLORS); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(AVID_RGB_COLORS); i++) {
         if (min_diff < 0 || diff[i] < min_diff) {
             min_diff = diff[i];
             min_diff_index = i;

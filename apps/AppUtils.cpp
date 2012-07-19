@@ -98,12 +98,12 @@ static const AVCIHeaderFormatInfo AVCI_HEADER_FORMAT_INFO[] =
 
 size_t bmx::get_num_avci_header_formats()
 {
-    return ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO);
+    return BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO);
 }
 
 const char* bmx::get_avci_header_format_string(size_t index)
 {
-    BMX_ASSERT(index < ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO));
+    BMX_ASSERT(index < BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO));
     return AVCI_HEADER_FORMAT_INFO[index].format_str;
 }
 
@@ -200,7 +200,7 @@ bool bmx::parse_bool(const char *bool_str, bool *value)
 bool bmx::parse_color(const char *color_str, Color *color)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(COLOR_MAP); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(COLOR_MAP); i++) {
         if (strcmp(COLOR_MAP[i].color_str, color_str) == 0) {
             *color = COLOR_MAP[i].color;
             return true;
@@ -217,13 +217,13 @@ bool bmx::parse_avci_header(const char *format_str, const char *filename, const 
 
     if (strcmp(format_str, "all") == 0) {
         size_t i;
-        for (i = 0; i < ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO); i++)
+        for (i = 0; i < BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO); i++)
             input.formats.push_back(AVCI_HEADER_FORMAT_INFO[i].format);
     } else {
         size_t index;
         const char *format_str_ptr = format_str;
         while (format_str_ptr) {
-            if (sscanf(format_str_ptr, "%"PRIszt, &index) != 1 || index > ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO))
+            if (sscanf(format_str_ptr, "%"PRIszt, &index) != 1 || index > BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO))
                 return false;
             input.formats.push_back(AVCI_HEADER_FORMAT_INFO[index].format);
 

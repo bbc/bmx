@@ -99,7 +99,7 @@ EssenceType MJPEGMXFDescriptorHelper::IsSupported(FileDescriptor *file_descripto
 
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label)) {
             BMX_CHECK(SUPPORTED_ESSENCE[i].sample_rate == sample_rate);
             return SUPPORTED_ESSENCE[i].essence_type;
@@ -112,7 +112,7 @@ EssenceType MJPEGMXFDescriptorHelper::IsSupported(FileDescriptor *file_descripto
 bool MJPEGMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (essence_type == SUPPORTED_ESSENCE[i].essence_type)
             return true;
     }
@@ -143,7 +143,7 @@ void MJPEGMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint1
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     mxfUL pc_label = pic_descriptor->getPictureEssenceCoding();
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (mxf_equals_ul_mod_regver(&pc_label, &SUPPORTED_ESSENCE[i].pc_label)) {
             mEssenceIndex = i;
             mEssenceType = SUPPORTED_ESSENCE[i].essence_type;
@@ -236,7 +236,7 @@ mxfUL MJPEGMXFDescriptorHelper::ChooseEssenceContainerUL() const
 void MJPEGMXFDescriptorHelper::UpdateEssenceIndex()
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
         if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate)
         {
@@ -245,6 +245,6 @@ void MJPEGMXFDescriptorHelper::UpdateEssenceIndex()
             break;
         }
     }
-    BMX_CHECK(i < ARRAY_SIZE(SUPPORTED_ESSENCE));
+    BMX_CHECK(i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE));
 }
 

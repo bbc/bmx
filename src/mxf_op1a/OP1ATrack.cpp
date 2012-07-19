@@ -111,7 +111,7 @@ static const OP1ASampleRateSupport OP1A_SAMPLE_RATE_SUPPORT[] =
 bool OP1ATrack::IsSupported(EssenceType essence_type, mxfRational sample_rate)
 {
     size_t i;
-    for (i = 0; i < ARRAY_SIZE(OP1A_SAMPLE_RATE_SUPPORT); i++) {
+    for (i = 0; i < BMX_ARRAY_SIZE(OP1A_SAMPLE_RATE_SUPPORT); i++) {
         if (essence_type == OP1A_SAMPLE_RATE_SUPPORT[i].essence_type) {
             size_t j = 0;
             while (OP1A_SAMPLE_RATE_SUPPORT[i].sample_rate[j].numerator) {
