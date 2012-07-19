@@ -118,6 +118,24 @@ example
 
 45. support reading growing MXF files
 
-46. add support for Sony XDCAM OP-1A flavour
+46. add write support for Sony XDCAM OP-1A flavour
 
 47. add support for an OP-1A flavour that is Avid AMA link compatible
+
+48. create common ClipReader class and restructure MXFReader to subclass it
+    and create a raw essence clip reader.
+
+49. combine bmxtranswrap and raw2bmx into one utility that uses the ClipReader
+    class
+
+50. change ClipWriter from a wrapper to a interface super class and sub classes.
+    This will allow other ClipWriters to be added without having to modify the
+    ClipWriter class
+
+51. add support for ClipWriter and ClipReader plugins
+
+52. create a generalised data buffer structure that supports fragmented byte
+    arrays. Add methods to get and set data and avoid requiring access to a
+    non-fragmented byte array. This will avoid several memory copies which is
+    useful in applications where the performance is CPU bound rather than disk
+    bound
