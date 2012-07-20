@@ -7,6 +7,11 @@
 
 SCM_VER_FILE="bmx_scm_version.h"
 
+#for the case of out of tree builds
+abs_top_srcdir=`dirname $0`
+export GIT_DIR=${abs_top_srcdir}/.git
+export GIT_WORK_TREE=${abs_top_srcdir}/
+
 GIT_VER=""
 if command -v git >/dev/null 2>&1; then
   git update-index --refresh --unmerged -q >/dev/null 2>&1
