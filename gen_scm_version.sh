@@ -8,7 +8,7 @@
 SCM_VER_FILE="bmx_scm_version.h"
 
 #for the case of out of tree builds
-abs_top_srcdir=`dirname $0`
+abs_top_srcdir="$(cd "$(dirname "$0")" && pwd)"
 export GIT_DIR=${abs_top_srcdir}/.git
 export GIT_WORK_TREE=${abs_top_srcdir}/
 
