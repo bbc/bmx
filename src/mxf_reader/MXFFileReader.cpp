@@ -68,7 +68,7 @@ static const char *RESULT_STRINGS[] =
 {
     "success",
     "could not open file",
-    "invalid file",
+    "invalid or not an MXF file",
     "not supported",
     "header metadata not found",
     "invalid header metadata",

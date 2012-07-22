@@ -71,6 +71,3 @@ Windows when passing data through stdout/stdin because they default to text mode
     e.g. file transfer incomplete. Might require an option to enable this check
     to allow support of growing files.
 
-25. improve error messages resulting from reading a non-MXF file. If the header
-    partition can't be read then report that the file is not an MXF file if
-    the first 16 bytes is not the pack key; otherwise report it is corrupted
