@@ -1601,55 +1601,55 @@ void MXFFileReader::ExtractInfoFromFirstFrame()
 
     try
     {
-    SetTemporaryFrameBuffer(true);
+        SetTemporaryFrameBuffer(true);
 
-    mEssenceReader->Read(1);
+        mEssenceReader->Read(1);
 
-    AVCIEssenceParser avci_parser;
-    for (i = 0; i < mInternalTrackReaders.size(); i++) {
-        Frame *frame = mInternalTrackReaders[i]->GetFrameBuffer()->GetLastFrame(true);
-        if (!frame || frame->IsEmpty()) {
-            delete frame;
-            continue;
-        }
-
-        MXFTrackInfo *track_info = mInternalTrackReaders[i]->GetTrackInfo();
-        MXFPictureTrackInfo *picture_info = dynamic_cast<MXFPictureTrackInfo*>(track_info);
-        MXFSoundTrackInfo *sound_info = dynamic_cast<MXFSoundTrackInfo*>(track_info);
-
-        if (track_info->essence_type == D10_30 ||
-            track_info->essence_type == D10_40 ||
-            track_info->essence_type == D10_50)
-        {
-            if (!mIsClipWrapped)
-                picture_info->d10_frame_size = frame->GetSize();
-        }
-        else if (track_info->essence_type == D10_AES3_PCM)
-        {
-            if (frame->GetSize() >= 4)
-                sound_info->d10_aes3_valid_flags = frame->GetBytes()[3];
-        }
-        else if (track_info->essence_type == AVCI100_1080I ||
-                 track_info->essence_type == AVCI100_1080P ||
-                 track_info->essence_type == AVCI100_720P ||
-                 track_info->essence_type == AVCI50_1080I ||
-                 track_info->essence_type == AVCI50_1080P ||
-                 track_info->essence_type == AVCI50_720P)
-        {
-            avci_parser.ParseFrameInfo(frame->GetBytes(), frame->GetSize());
-            picture_info->have_avci_header = avci_parser.HaveSequenceParameterSet();
-            if (picture_info->have_avci_header) {
-                dynamic_cast<MXFFileTrackReader*>(mInternalTrackReaders[i])->SetAVCIHeader(
-                    frame->GetBytes(), frame->GetSize());
-            } else {
-                log_warn("First frame in AVC-Intra track does not have sequence and picture parameter sets\n");
+        AVCIEssenceParser avci_parser;
+        for (i = 0; i < mInternalTrackReaders.size(); i++) {
+            Frame *frame = mInternalTrackReaders[i]->GetFrameBuffer()->GetLastFrame(true);
+            if (!frame || frame->IsEmpty()) {
+                delete frame;
+                continue;
             }
+
+            MXFTrackInfo *track_info = mInternalTrackReaders[i]->GetTrackInfo();
+            MXFPictureTrackInfo *picture_info = dynamic_cast<MXFPictureTrackInfo*>(track_info);
+            MXFSoundTrackInfo *sound_info = dynamic_cast<MXFSoundTrackInfo*>(track_info);
+
+            if (track_info->essence_type == D10_30 ||
+                track_info->essence_type == D10_40 ||
+                track_info->essence_type == D10_50)
+            {
+                if (!mIsClipWrapped)
+                    picture_info->d10_frame_size = frame->GetSize();
+            }
+            else if (track_info->essence_type == D10_AES3_PCM)
+            {
+                if (frame->GetSize() >= 4)
+                    sound_info->d10_aes3_valid_flags = frame->GetBytes()[3];
+            }
+            else if (track_info->essence_type == AVCI100_1080I ||
+                     track_info->essence_type == AVCI100_1080P ||
+                     track_info->essence_type == AVCI100_720P ||
+                     track_info->essence_type == AVCI50_1080I ||
+                     track_info->essence_type == AVCI50_1080P ||
+                     track_info->essence_type == AVCI50_720P)
+            {
+                avci_parser.ParseFrameInfo(frame->GetBytes(), frame->GetSize());
+                picture_info->have_avci_header = avci_parser.HaveSequenceParameterSet();
+                if (picture_info->have_avci_header) {
+                    dynamic_cast<MXFFileTrackReader*>(mInternalTrackReaders[i])->SetAVCIHeader(
+                        frame->GetBytes(), frame->GetSize());
+                } else {
+                    log_warn("First frame in AVC-Intra track does not have sequence and picture parameter sets\n");
+                }
+            }
+
+            delete frame;
         }
 
-        delete frame;
-    }
-
-    SetTemporaryFrameBuffer(false);
+        SetTemporaryFrameBuffer(false);
     }
     catch (...)
     {
