@@ -537,8 +537,7 @@ void AS02Track::WriteCBEIndexTable(Partition *partition)
         mCBEIndexSegment->setIndexDuration(mContainerDuration);
     }
 
-    KAGFillerWriter kag_filler_writer(partition);
-    mCBEIndexSegment->write(mMXFFile, partition, &kag_filler_writer);
+    mCBEIndexSegment->write(mMXFFile, partition, 0);
 }
 
 void AS02Track::UpdateEssenceOnlyChecksum(const unsigned char *data, uint32_t size)

@@ -354,8 +354,7 @@ void D10File::CompleteWrite()
         // update and re-write the index table segment
 
         mIndexSegment->setIndexDuration(GetDuration());
-        KAGFillerWriter kag_filler_writer(&header_partition);
-        mIndexSegment->write(mMXFFile, &header_partition, &kag_filler_writer);
+        mIndexSegment->write(mMXFFile, &header_partition, 0);
 
 
         // update partition pack and flush memory writes to file
@@ -637,8 +636,7 @@ void D10File::CreateFile()
         mIndexSegment->appendDeltaEntry(0, 0, ext_delta_entries[i]);
     mIndexSegment->setEditUnitByteCount(mCPManager->GetContentPackageSize());
 
-    KAGFillerWriter kag_filler_writer(&mMXFFile->getPartition(0));
-    mIndexSegment->write(mMXFFile, &mMXFFile->getPartition(0), &kag_filler_writer);
+    mIndexSegment->write(mMXFFile, &mMXFFile->getPartition(0), 0);
 
 
     // update partition pack and flush memory writes to file

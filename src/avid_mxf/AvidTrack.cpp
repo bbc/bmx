@@ -442,8 +442,7 @@ void AvidTrack::WriteCBEIndexTable(Partition *partition)
     mCBEIndexSegment->setEditUnitByteCount(GetEditUnitSize());
     mCBEIndexSegment->setIndexDuration(mContainerDuration);
 
-    KAGFillerWriter kag_filler_writer(partition);
-    mCBEIndexSegment->write(mMXFFile, partition, &kag_filler_writer);
+    mCBEIndexSegment->write(mMXFFile, partition, 0);
 }
 
 void AvidTrack::CreateHeaderMetadata()
