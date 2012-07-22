@@ -1552,6 +1552,13 @@ bool MXFFileReader::HaveInterFrameEncodingTrack() const
     return false;
 }
 
+void MXFFileReader::SetTemporaryFrameBuffer(bool enable)
+{
+    size_t i;
+    for (i = 0; i < mInternalTrackReaders.size(); i++)
+        mInternalTrackReaders[i]->GetMXFFrameBuffer()->SetTemporaryBuffer(enable);
+}
+
 void MXFFileReader::ExtractInfoFromFirstFrame()
 {
     bool require_first_frame = false;
@@ -1590,6 +1597,11 @@ void MXFFileReader::ExtractInfoFromFirstFrame()
     }
     if (!require_first_frame)
         return;
+
+
+    try
+    {
+    SetTemporaryFrameBuffer(true);
 
     mEssenceReader->Read(1);
 
@@ -1635,6 +1647,14 @@ void MXFFileReader::ExtractInfoFromFirstFrame()
         }
 
         delete frame;
+    }
+
+    SetTemporaryFrameBuffer(false);
+    }
+    catch (...)
+    {
+        SetTemporaryFrameBuffer(false);
+        throw;
     }
 }
 

@@ -51,6 +51,8 @@ public:
     void SetNextFramePosition(int64_t position);
     void SetNextFrameTrackPosition(int64_t position);
 
+    void SetTemporaryBuffer(bool enable);
+
 public:
     virtual void SetFrameFactory(FrameFactory *frame_factory, bool take_ownership);
     virtual Frame* CreateFrame();
@@ -65,6 +67,8 @@ private:
     bool mOwnTargetBuffer;
     int64_t mNextFramePosition;
     int64_t mNextFrameTrackPosition;
+    DefaultFrameBuffer mTemporaryBuffer;
+    bool mUseTemporaryBuffer;
 };
 
 

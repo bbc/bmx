@@ -44,12 +44,14 @@ MXFFrameBuffer::MXFFrameBuffer()
     mOwnTargetBuffer = false;
     mNextFramePosition = NULL_FRAME_POSITION;
     mNextFrameTrackPosition = NULL_FRAME_POSITION;
+    mUseTemporaryBuffer = false;
 }
 
 MXFFrameBuffer::~MXFFrameBuffer()
 {
     if (mOwnTargetBuffer)
         delete mTargetBuffer;
+    mTemporaryBuffer.Clear(true);
 }
 
 void MXFFrameBuffer::SetTargetBuffer(FrameBuffer *target_buffer, bool take_ownership)
@@ -65,18 +67,28 @@ void MXFFrameBuffer::SetNextFramePosition(int64_t position)
 {
     mNextFramePosition = position;
 
-    MXFFrameBuffer *target_mxf_buffer = dynamic_cast<MXFFrameBuffer*>(mTargetBuffer);
-    if (target_mxf_buffer)
-        target_mxf_buffer->SetNextFramePosition(position);
+    if (!mUseTemporaryBuffer) {
+        MXFFrameBuffer *target_mxf_buffer = dynamic_cast<MXFFrameBuffer*>(mTargetBuffer);
+        if (target_mxf_buffer)
+            target_mxf_buffer->SetNextFramePosition(position);
+    }
 }
 
 void MXFFrameBuffer::SetNextFrameTrackPosition(int64_t position)
 {
     mNextFrameTrackPosition = position;
 
-    MXFFrameBuffer *target_mxf_buffer = dynamic_cast<MXFFrameBuffer*>(mTargetBuffer);
-    if (target_mxf_buffer)
-        target_mxf_buffer->SetNextFrameTrackPosition(position);
+    if (!mUseTemporaryBuffer) {
+        MXFFrameBuffer *target_mxf_buffer = dynamic_cast<MXFFrameBuffer*>(mTargetBuffer);
+        if (target_mxf_buffer)
+            target_mxf_buffer->SetNextFrameTrackPosition(position);
+    }
+}
+
+void MXFFrameBuffer::SetTemporaryBuffer(bool enable)
+{
+    mTemporaryBuffer.Clear(true);
+    mUseTemporaryBuffer = enable;
 }
 
 void MXFFrameBuffer::SetFrameFactory(FrameFactory *frame_factory, bool take_ownership)
@@ -86,7 +98,10 @@ void MXFFrameBuffer::SetFrameFactory(FrameFactory *frame_factory, bool take_owne
 
 Frame* MXFFrameBuffer::CreateFrame()
 {
-    return mTargetBuffer->CreateFrame();
+    if (mUseTemporaryBuffer)
+        return mTemporaryBuffer.CreateFrame();
+    else
+        return mTargetBuffer->CreateFrame();
 }
 
 void MXFFrameBuffer::PushFrame(Frame *frame)
@@ -94,26 +109,41 @@ void MXFFrameBuffer::PushFrame(Frame *frame)
     frame->position = mNextFramePosition;
     frame->track_position = mNextFrameTrackPosition;
 
-    mTargetBuffer->PushFrame(frame);
+    if (mUseTemporaryBuffer)
+        mTemporaryBuffer.PushFrame(frame);
+    else
+        mTargetBuffer->PushFrame(frame);
 }
 
 void MXFFrameBuffer::PopFrame(bool del_frame)
 {
-    mTargetBuffer->PopFrame(del_frame);
+    if (mUseTemporaryBuffer)
+        mTemporaryBuffer.PopFrame(del_frame);
+    else
+        mTargetBuffer->PopFrame(del_frame);
 }
 
 Frame* MXFFrameBuffer::GetLastFrame(bool pop)
 {
-    return mTargetBuffer->GetLastFrame(pop);
+    if (mUseTemporaryBuffer)
+        return mTemporaryBuffer.GetLastFrame(pop);
+    else
+        return mTargetBuffer->GetLastFrame(pop);
 }
 
 size_t MXFFrameBuffer::GetNumFrames() const
 {
-    return mTargetBuffer->GetNumFrames();
+    if (mUseTemporaryBuffer)
+        return mTemporaryBuffer.GetNumFrames();
+    else
+        return mTargetBuffer->GetNumFrames();
 }
 
 void MXFFrameBuffer::Clear(bool del_frames)
 {
-    mTargetBuffer->Clear(del_frames);
+    if (mUseTemporaryBuffer)
+        mTemporaryBuffer.Clear(del_frames);
+    else
+        mTargetBuffer->Clear(del_frames);
 }
 

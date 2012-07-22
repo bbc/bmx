@@ -179,6 +179,8 @@ private:
 
     bool InternalIsEnabled() const;
 
+    void SetTemporaryFrameBuffer(bool enable);
+
     void ExtractInfoFromFirstFrame();
 
 private:
