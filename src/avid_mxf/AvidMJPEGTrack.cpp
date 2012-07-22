@@ -94,7 +94,6 @@ void AvidMJPEGTrack::WriteSamples(const unsigned char *data, uint32_t size, uint
 
 void AvidMJPEGTrack::WriteVBEIndexTable(Partition *partition)
 {
-    KAGFillerWriter kag_filler_writer(partition);
     partition->markIndexStart(mMXFFile);
 
     IndexTableSegment segment;
@@ -118,7 +117,7 @@ void AvidMJPEGTrack::WriteVBEIndexTable(Partition *partition)
     segment.writeAvidIndexEntryArrayHeader(mMXFFile, 0, 0, num_index_entries);
     mMXFFile->write(mIndexSegment.GetBytes(), mIndexSegment.GetSize());
 
-    kag_filler_writer.write(mMXFFile);
+    partition->fillToKag(mMXFFile);
     partition->markIndexEnd(mMXFFile);
 }
 

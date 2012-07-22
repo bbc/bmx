@@ -143,7 +143,6 @@ void AS02MPEG2LGTrack::WriteVBEIndexTable(Partition *partition)
     if (mIndexSegments.empty())
         return;
 
-    KAGFillerWriter kag_filler_writer(partition);
     partition->markIndexStart(mMXFFile);
 
     IndexTableSegment segment;
@@ -178,7 +177,7 @@ void AS02MPEG2LGTrack::WriteVBEIndexTable(Partition *partition)
 
     mIndexStartPosition = index_start_position;
 
-    kag_filler_writer.write(mMXFFile);
+    partition->fillToKag(mMXFFile);
     partition->markIndexEnd(mMXFFile);
 }
 

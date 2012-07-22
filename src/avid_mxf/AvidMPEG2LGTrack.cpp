@@ -112,7 +112,6 @@ void AvidMPEG2LGTrack::WriteSamples(const unsigned char *data, uint32_t size, ui
 
 void AvidMPEG2LGTrack::WriteVBEIndexTable(Partition *partition)
 {
-    KAGFillerWriter kag_filler_writer(partition);
     partition->markIndexStart(mMXFFile);
 
     IndexTableSegment segment;
@@ -136,7 +135,7 @@ void AvidMPEG2LGTrack::WriteVBEIndexTable(Partition *partition)
     segment.writeAvidIndexEntryArrayHeader(mMXFFile, 0, 0, num_index_entries);
     mMXFFile->write(mIndexSegment.GetBytes(), mIndexSegment.GetSize());
 
-    kag_filler_writer.write(mMXFFile);
+    partition->fillToKag(mMXFFile);
     partition->markIndexEnd(mMXFFile);
 }
 
