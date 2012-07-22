@@ -357,7 +357,6 @@ void OP1AFile::CompleteWrite()
         index_partition.setBodySID(0);
         index_partition.setKagSize(mKAGSize);
         index_partition.write(mMXFFile);
-        index_partition.fillToKag(mMXFFile);
 
         mIndexTable->WriteSegments(mMXFFile, &index_partition, true);
     }
@@ -381,7 +380,6 @@ void OP1AFile::CompleteWrite()
     footer_partition.setBodySID(0);
     footer_partition.setKagSize(mKAGSize);
     footer_partition.write(mMXFFile);
-    footer_partition.fillToKag(mMXFFile);
 
 
     // write (complete) header metadata if it is a single pass write and the header partition is incomplete
@@ -650,7 +648,6 @@ void OP1AFile::CreateFile()
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         header_partition.addEssenceContainer(&(*iter));
     header_partition.write(mMXFFile);
-    header_partition.fillToKag(mMXFFile);
 
     mHeaderMetadataStartPos = mMXFFile->tell(); // need this position when we re-write the header metadata
     KAGFillerWriter reserve_filler_writer(&header_partition, mReserveMinBytes);
@@ -752,7 +749,6 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                     index_partition.setBodySID(0);
                     index_partition.setKagSize(mKAGSize);
                     index_partition.write(mMXFFile);
-                    index_partition.fillToKag(mMXFFile);
 
                     mCBEIndexTableStartPos = mMXFFile->tell(); // need this position when we re-write the index segment
                     mIndexTable->WriteSegments(mMXFFile, &index_partition, false);
@@ -779,7 +775,6 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                 index_partition.setBodySID(0);
                 index_partition.setKagSize(mKAGSize);
                 index_partition.write(mMXFFile);
-                index_partition.fillToKag(mMXFFile);
 
                 mIndexTable->WriteSegments(mMXFFile, &index_partition, true);
             }
@@ -799,7 +794,6 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
             ess_partition.setKagSize(mEssencePartitionKAGSize);
             ess_partition.setBodyOffset(ess_partition_body_offset);
             ess_partition.write(mMXFFile);
-            ess_partition.fillToKag(mMXFFile);
         }
 
         if (mMXFFile->isMemoryFileOpen()) {

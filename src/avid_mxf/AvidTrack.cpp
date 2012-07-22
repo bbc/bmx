@@ -573,7 +573,6 @@ void AvidTrack::CreateFile()
     header_partition.setOperationalPattern(&MXF_OP_L(atom, NTracks_NSourceClips));
     header_partition.addEssenceContainer(&mEssenceContainerUL);
     header_partition.write(mMXFFile);
-    header_partition.fillToKag(mMXFFile);
 
     mHeaderMetadataStartPos = mMXFFile->tell(); // need this position when we re-write the header metadata
     PositionFillerWriter position_filler_writer(FIXED_BODY_PP_OFFSET);

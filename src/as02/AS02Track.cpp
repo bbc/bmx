@@ -329,7 +329,6 @@ void AS02Track::CompleteWrite()
         index_partition.setIndexSID(mIndexSID);
         index_partition.setBodySID(0);
         index_partition.write(mMXFFile);
-        index_partition.fillToKag(mMXFFile);
 
         WriteVBEIndexTable(&index_partition);
     }
@@ -348,7 +347,6 @@ void AS02Track::CompleteWrite()
     footer_partition.setIndexSID(0);
     footer_partition.setBodySID(0);
     footer_partition.write(mMXFFile);
-    footer_partition.fillToKag(mMXFFile);
 
 
     // write the RIP
@@ -734,7 +732,6 @@ void AS02Track::CreateFile()
     header_partition.setOperationalPattern(&MXF_OP_L(1a, UniTrack_Stream_Internal));
     header_partition.addEssenceContainer(GetEssenceContainerUL());
     header_partition.write(mMXFFile);
-    header_partition.fillToKag(mMXFFile);
 
     mHeaderMetadataStartPos = mMXFFile->tell(); // need this position when we re-write the header metadata
     KAGFillerWriter reserve_filler_writer(&header_partition, mClip->mReserveMinBytes);
@@ -750,7 +747,6 @@ void AS02Track::CreateFile()
         index_partition.setIndexSID(mIndexSID);
         index_partition.setBodySID(0);
         index_partition.write(mMXFFile);
-        index_partition.fillToKag(mMXFFile);
 
         mIndexTableStartPos = mMXFFile->tell(); // need this position when we re-write the index segment
         WriteCBEIndexTable(&index_partition);
@@ -765,7 +761,6 @@ void AS02Track::CreateFile()
     ess_partition.setBodySID(mBodySID);
     ess_partition.setBodyOffset(0);
     ess_partition.write(mMXFFile);
-    ess_partition.fillToKag(mMXFFile);
 
 
     PreSampleWriting();

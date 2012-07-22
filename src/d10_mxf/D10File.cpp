@@ -323,7 +323,6 @@ void D10File::CompleteWrite()
     footer_partition.setIndexSID(0);
     footer_partition.setBodySID(0);
     footer_partition.write(mMXFFile);
-    footer_partition.fillToKag(mMXFFile);
 
 
     if (mInputDuration < 0) {
@@ -344,7 +343,6 @@ void D10File::CompleteWrite()
         Partition &header_partition = mMXFFile->getPartition(0);
         header_partition.setFooterPartition(footer_partition.getThisPartition());
         header_partition.write(mMXFFile);
-        header_partition.fillToKag(mMXFFile);
 
 
         // re-write the header metadata
@@ -616,7 +614,6 @@ void D10File::CreateFile()
     header_partition.setOperationalPattern(&MXF_OP_L(1a, MultiTrack_Stream_Internal));
     header_partition.addEssenceContainer(&mEssenceContainerUL);
     header_partition.write(mMXFFile);
-    header_partition.fillToKag(mMXFFile);
 
     KAGFillerWriter reserve_filler_writer(&header_partition, mReserveMinBytes);
     mHeaderMetadata->write(mMXFFile, &header_partition, &reserve_filler_writer);

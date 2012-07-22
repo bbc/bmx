@@ -317,7 +317,6 @@ void AS02Version::CreateFile()
     header_partition.setKagSize(1);
     header_partition.setOperationalPattern(&MXF_OP_L(1b, UniTrack_NonStream_External));
     header_partition.write(mMXFFile);
-    header_partition.fillToKag(mMXFFile);
 
     mHeaderMetadataStartPos = mMXFFile->tell(); // need this position when we re-write the header metadata
     KAGFillerWriter reserve_filler_writer(&header_partition, mReserveMinBytes);

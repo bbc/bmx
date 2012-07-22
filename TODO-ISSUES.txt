@@ -65,8 +65,6 @@ Windows when passing data through stdout/stdin because they default to text mode
 
 21. add regression tests using real world test files
 
-22. some mxf_fill_to_kag calls in libMXF++'s Partition are not required
-
 23. improve timecode handling in avidmxfinfo, e.g. drop-frame
 
 24. need to check that the file has a footer to help diagnose incomplete files,

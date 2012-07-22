@@ -114,7 +114,6 @@ void AS02PictureTrack::HandlePartitionInterval(bool can_start_partition)
             index_partition.setIndexSID(mIndexSID);
             index_partition.setBodySID(0);
             index_partition.write(mMXFFile);
-            index_partition.fillToKag(mMXFFile);
 
             WriteVBEIndexTable(&index_partition);
         }
@@ -126,7 +125,6 @@ void AS02PictureTrack::HandlePartitionInterval(bool can_start_partition)
         ess_partition.setBodySID(mBodySID);
         ess_partition.setBodyOffset(mContainerSize);
         ess_partition.write(mMXFFile);
-        ess_partition.fillToKag(mMXFFile);
 
         mPartitionFrameCount = 0;
     }
