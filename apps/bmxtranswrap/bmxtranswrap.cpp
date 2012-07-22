@@ -324,6 +324,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --clip <name>           Set the clip name\n");
     fprintf(stderr, "  --start <frame>         Set the start frame in input edit rate units. Default is 0\n");
     fprintf(stderr, "  --dur <frame>           Set the duration in frames in input edit rate units. Default is minimum input duration\n");
+    fprintf(stderr, "  --check-end             Check at the start that the last (start + duration - 1) frame can be read\n");
     fprintf(stderr, "  --group                 Use the group reader instead of the sequence reader\n");
     fprintf(stderr, "                          Use this option if the files have different material packages\n");
     fprintf(stderr, "                          but actually belong to the same virtual package / group\n");
@@ -425,6 +426,7 @@ int main(int argc, const char** argv)
     const char *start_timecode_str = 0;
     int64_t start = 0;
     int64_t duration = -1;
+    bool check_end = false;
     const char *clip_name = 0;
     MICType mic_type = MD5_MIC_TYPE;
     MICScope ess_component_mic_scope = ESSENCE_ONLY_MIC_SCOPE;
@@ -621,6 +623,10 @@ int main(int argc, const char** argv)
                 return 1;
             }
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--check-end") == 0)
+        {
+            check_end = true;
         }
         else if (strcmp(argv[cmdln_index], "--group") == 0)
         {
@@ -1407,6 +1413,11 @@ int main(int argc, const char** argv)
         }
 
         reader->SetReadLimits(read_start + precharge, - precharge + output_duration + rollout, true);
+
+        if (check_end && !reader->CheckReadLastFrame()) {
+            log_error("Check for last frame failed\n");
+            throw false;
+        }
 
 
         // get input start timecode

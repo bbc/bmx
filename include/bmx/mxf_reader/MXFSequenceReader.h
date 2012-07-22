@@ -86,6 +86,8 @@ public:
     virtual void SetNextFramePosition(int64_t position);
     virtual void SetNextFrameTrackPositions();
 
+    virtual void SetTemporaryFrameBuffer(bool enable);
+
 private:
     bool FindSequenceStart(const std::vector<MXFGroupReader*> &group_readers, size_t *seq_start_index) const;
 

@@ -523,3 +523,10 @@ void MXFGroupReader::SetNextFrameTrackPositions()
     }
 }
 
+void MXFGroupReader::SetTemporaryFrameBuffer(bool enable)
+{
+    size_t i;
+    for (i = 0; i < mReaders.size(); i++)
+        mReaders[i]->SetTemporaryFrameBuffer(enable);
+}
+

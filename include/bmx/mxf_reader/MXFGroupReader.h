@@ -83,6 +83,8 @@ public:
     virtual void SetNextFramePosition(int64_t position);
     virtual void SetNextFrameTrackPositions();
 
+    virtual void SetTemporaryFrameBuffer(bool enable);
+
 private:
     std::vector<bmx::MXFReader*> mReaders;
     std::vector<bmx::MXFTrackReader*> mTrackReaders;

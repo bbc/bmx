@@ -139,3 +139,29 @@ Timecode MXFReader::CreateTimecode(const Timecode *start_timecode, int64_t posit
     return timecode;
 }
 
+bool MXFReader::CheckReadLastFrame()
+{
+    if (GetReadDuration() <= 0)
+        return true;
+
+    int64_t last_pos = GetReadStartPosition() + GetReadDuration() - 1;
+    int64_t current_pos = GetPosition();
+
+    try
+    {
+        SetTemporaryFrameBuffer(true);
+        Seek(last_pos);
+        uint32_t num_read = Read(1);
+        SetTemporaryFrameBuffer(false);
+        Seek(current_pos);
+
+        return num_read == 1;
+    }
+    catch (...)
+    {
+        SetTemporaryFrameBuffer(false);
+        Seek(current_pos);
+        return false;
+    }
+}
+

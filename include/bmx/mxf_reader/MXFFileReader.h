@@ -132,6 +132,8 @@ public:
     virtual void SetNextFramePosition(int64_t position);
     virtual void SetNextFrameTrackPositions();
 
+    virtual void SetTemporaryFrameBuffer(bool enable);
+
 private:
     typedef enum
     {
@@ -178,8 +180,6 @@ private:
     bool HaveInterFrameEncodingTrack() const;
 
     bool InternalIsEnabled() const;
-
-    void SetTemporaryFrameBuffer(bool enable);
 
     void ExtractInfoFromFirstFrame();
 

@@ -63,6 +63,8 @@ public:
     virtual int64_t GetReadStartPosition() const = 0;
     virtual int64_t GetReadDuration() const = 0;
 
+    bool CheckReadLastFrame();
+
     virtual uint32_t Read(uint32_t num_samples, bool is_top = true) = 0;
 
     virtual void Seek(int64_t position) = 0;
@@ -108,6 +110,8 @@ public:
 public:
     virtual void SetNextFramePosition(int64_t position) = 0;
     virtual void SetNextFrameTrackPositions() = 0;
+
+    virtual void SetTemporaryFrameBuffer(bool enable) = 0;
 
 protected:
     mxfRational mSampleRate;

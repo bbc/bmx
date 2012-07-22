@@ -769,6 +769,13 @@ void MXFFileReader::SetNextFrameTrackPositions()
     }
 }
 
+void MXFFileReader::SetTemporaryFrameBuffer(bool enable)
+{
+    size_t i;
+    for (i = 0; i < mInternalTrackReaders.size(); i++)
+        mInternalTrackReaders[i]->GetMXFFrameBuffer()->SetTemporaryBuffer(enable);
+}
+
 void MXFFileReader::ProcessMetadata(Partition *partition)
 {
     Preface *preface = mHeaderMetadata->getPreface();
@@ -1550,13 +1557,6 @@ bool MXFFileReader::HaveInterFrameEncodingTrack() const
     }
 
     return false;
-}
-
-void MXFFileReader::SetTemporaryFrameBuffer(bool enable)
-{
-    size_t i;
-    for (i = 0; i < mInternalTrackReaders.size(); i++)
-        mInternalTrackReaders[i]->GetMXFFrameBuffer()->SetTemporaryBuffer(enable);
 }
 
 void MXFFileReader::ExtractInfoFromFirstFrame()

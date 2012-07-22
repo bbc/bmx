@@ -412,6 +412,7 @@ static void usage(const char *cmd)
     fprintf(stderr, " -d                    De-interleave multi-channel / AES-3 sound\n");
     fprintf(stderr, " --start <frame>       Set the start frame. Default is 0\n");
     fprintf(stderr, " --dur <frame>         Set the duration in frames. Default is minimum avaliable duration\n");
+    fprintf(stderr, " --check-end           Check at the start that the last (start + duration - 1) frame can be read\n");
     fprintf(stderr, " --nopc                Don't include pre-charge frames\n");
     fprintf(stderr, " --noro                Don't include roll-out frames\n");
     fprintf(stderr, " --md5                 Calculate md5 checksum of essence data\n");
@@ -444,6 +445,7 @@ int main(int argc, const char** argv)
     bool deinterleave = false;
     int64_t start = 0;
     int64_t duration = -1;
+    bool check_end = false;
     bool no_precharge = false;
     bool no_rollout = false;
     bool calc_md5 = false;
@@ -551,6 +553,10 @@ int main(int argc, const char** argv)
                 return 1;
             }
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--check-end") == 0)
+        {
+            check_end = true;
         }
         else if (strcmp(argv[cmdln_index], "--nopc") == 0)
         {
@@ -792,6 +798,11 @@ int main(int argc, const char** argv)
             max_rollout = reader->GetMaxRollout(start + output_duration - 1, false);
 
         reader->SetReadLimits(start + max_precharge, - max_precharge + output_duration + max_rollout, true);
+
+        if (check_end && !reader->CheckReadLastFrame()) {
+            log_error("Check for last frame failed\n");
+            throw false;
+        }
 
         int64_t lead_filler_offset = 0;
         if (!reader->HaveFixedLeadFillerOffset())

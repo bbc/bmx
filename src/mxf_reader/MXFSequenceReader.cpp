@@ -664,6 +664,13 @@ void MXFSequenceReader::SetNextFrameTrackPositions()
     }
 }
 
+void MXFSequenceReader::SetTemporaryFrameBuffer(bool enable)
+{
+    size_t i;
+    for (i = 0; i < mGroupSegments.size(); i++)
+        mGroupSegments[i]->SetTemporaryFrameBuffer(enable);
+}
+
 bool MXFSequenceReader::FindSequenceStart(const vector<MXFGroupReader*> &group_readers, size_t *seq_start_index_out) const
 {
     Timecode expected_start_timecode;
