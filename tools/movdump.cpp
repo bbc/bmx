@@ -735,6 +735,8 @@ static void dump_child_atom(const DumpFuncMap *dump_func_map, size_t dump_func_m
     size_t i;
     for (i = 0; i < dump_func_map_size; i++) {
         if (dump_func_map[i].type[0] == '\0' || // any type
+            (dump_func_map[i].type[0] == (char)0xa9 && dump_func_map[i].type[1] == '\0' && // any international text type
+                 CURRENT_ATOM.type[0] == (char)0xa9) ||
             memcmp(dump_func_map[i].type, CURRENT_ATOM.type, 4) == 0)
         {
             dump_func_map[i].dump();
@@ -1385,7 +1387,7 @@ static void dump_hdlr_atom()
     }
 }
 
-static void dump_stsd_tmcd_name_atom()
+static void dump_international_string_atom()
 {
     dump_atom_header();
 
@@ -1604,7 +1606,7 @@ static void dump_stbl_tmcd()
 {
     static const DumpFuncMap dump_func_map[] =
     {
-        {{'n','a','m','e'}, dump_stsd_tmcd_name_atom},
+        {{'n','a','m','e'}, dump_international_string_atom},
     };
 
     uint32_t reserved1;
@@ -2516,6 +2518,37 @@ static void dump_tkhd_atom()
     printf("\n");
 }
 
+static void dump_udta_name_atom()
+{
+    dump_atom_header();
+
+    indent();
+    printf("value: (len=%"PRId64") ", CURRENT_ATOM.rem_size);
+    dump_string(CURRENT_ATOM.rem_size, 2);
+}
+
+static void dump_udta_atom()
+{
+    static const DumpFuncMap dump_func_map[] =
+    {
+        {{'n','a','m','e'},     dump_udta_name_atom},
+        {{0xa9,'\0','\0','\0'}, dump_international_string_atom},
+    };
+
+    dump_atom_header();
+
+    while (CURRENT_ATOM.rem_size > 8) {
+        push_atom();
+
+        if (!read_atom_start())
+            break;
+
+        dump_child_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
+
+        pop_atom();
+    }
+}
+
 static void dump_trak_atom()
 {
     static const DumpFuncMap dump_func_map[] =
@@ -2526,6 +2559,7 @@ static void dump_trak_atom()
         {{'t','r','e','f'}, dump_tref_atom},
         {{'m','d','i','a'}, dump_mdia_atom},
         {{'m','e','t','a'}, dump_meta_atom},
+        {{'u','d','t','a'}, dump_udta_atom},
     };
 
     dump_container_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
@@ -2662,6 +2696,7 @@ static void dump_moov_atom()
         {{'m','v','h','d'}, dump_mvhd_atom},
         {{'t','r','a','k'}, dump_trak_atom},
         {{'m','e','t','a'}, dump_meta_atom},
+        {{'u','d','t','a'}, dump_udta_atom},
     };
 
     dump_container_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
