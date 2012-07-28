@@ -111,7 +111,6 @@ MXFPictureTrackInfo::MXFPictureTrackInfo()
     vert_subsampling = 1;
     component_depth = 0;
     color_siting = MXF_COLOR_SITING_UNKNOWN;
-    d10_frame_size = 0;
     have_avci_header = false;
 };
 
@@ -139,7 +138,6 @@ bool MXFPictureTrackInfo::IsCompatible(const MXFTrackInfo *right) const
                 horiz_subsampling        == picture_right->horiz_subsampling &&
                 vert_subsampling         == picture_right->vert_subsampling &&
                 color_siting             == picture_right->color_siting &&
-                d10_frame_size           == picture_right->d10_frame_size &&
                 have_avci_header         == picture_right->have_avci_header));
 }
 
@@ -165,7 +163,6 @@ MXFTrackInfo* MXFPictureTrackInfo::Clone() const
     clone->vert_subsampling              = vert_subsampling;
     clone->component_depth               = component_depth;
     clone->color_siting                  = color_siting;
-    clone->d10_frame_size                = d10_frame_size;
     clone->have_avci_header              = have_avci_header;
 
     return clone;

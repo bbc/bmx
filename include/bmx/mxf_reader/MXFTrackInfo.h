@@ -103,7 +103,6 @@ public:
     uint32_t horiz_subsampling;
     uint32_t vert_subsampling;
     uint8_t color_siting;
-    uint32_t d10_frame_size;
     bool have_avci_header;
 };
 

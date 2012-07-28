@@ -1565,23 +1565,8 @@ void MXFFileReader::ExtractInfoFromFirstFrame()
     size_t i;
     for (i = 0; i < mInternalTrackReaders.size(); i++) {
         MXFTrackInfo *track_info = mInternalTrackReaders[i]->GetTrackInfo();
-        MXFPictureTrackInfo *picture_info = dynamic_cast<MXFPictureTrackInfo*>(track_info);
 
-        if (track_info->essence_type == D10_30 ||
-            track_info->essence_type == D10_40 ||
-            track_info->essence_type == D10_50)
-        {
-            if (mIsClipWrapped) {
-                MXFIndexEntryExt index_entry;
-                if (mEssenceReader->GetIndexEntry(&index_entry, 0)) {
-                    BMX_CHECK(index_entry.edit_unit_size <= UINT32_MAX);
-                    picture_info->d10_frame_size = (uint32_t)index_entry.edit_unit_size;
-                }
-            } else {
-                require_first_frame = true;
-            }
-        }
-        else if (track_info->essence_type == D10_AES3_PCM)
+        if (track_info->essence_type == D10_AES3_PCM)
         {
             require_first_frame = true;
         }
@@ -1617,14 +1602,7 @@ void MXFFileReader::ExtractInfoFromFirstFrame()
             MXFPictureTrackInfo *picture_info = dynamic_cast<MXFPictureTrackInfo*>(track_info);
             MXFSoundTrackInfo *sound_info = dynamic_cast<MXFSoundTrackInfo*>(track_info);
 
-            if (track_info->essence_type == D10_30 ||
-                track_info->essence_type == D10_40 ||
-                track_info->essence_type == D10_50)
-            {
-                if (!mIsClipWrapped)
-                    picture_info->d10_frame_size = frame->GetSize();
-            }
-            else if (track_info->essence_type == D10_AES3_PCM)
+            if (track_info->essence_type == D10_AES3_PCM)
             {
                 if (frame->GetSize() >= 4)
                     sound_info->d10_aes3_valid_flags = frame->GetBytes()[3];

@@ -1310,27 +1310,17 @@ int main(int argc, const char** argv)
                     is_supported = false;
                 }
 
-                if ((input_track_info->essence_type == D10_30 ||
-                        input_track_info->essence_type == D10_40 ||
-                        input_track_info->essence_type == D10_50) &&
-                    input_picture_info->d10_frame_size == 0)
-                {
-                    log_warn("Track %"PRIszt" (essence type '%s') has zero frame size\n",
-                             i,
-                             essence_type_to_string(input_track_info->essence_type));
-                    is_supported = false;
-                }
-                else if ((input_track_info->essence_type == AVCI100_1080I ||
-                               input_track_info->essence_type == AVCI100_1080P ||
-                               input_track_info->essence_type == AVCI100_720P ||
-                               input_track_info->essence_type == AVCI50_1080I ||
-                               input_track_info->essence_type == AVCI50_1080P ||
-                               input_track_info->essence_type == AVCI50_720P) &&
-                         !force_no_avci_head &&
-                         !allow_no_avci_head &&
-                         !track_reader->HaveAVCIHeader() &&
-                         !have_avci_header_data(input_track_info->essence_type, input_track_info->edit_rate,
-                                                avci_header_inputs))
+                if ((input_track_info->essence_type == AVCI100_1080I ||
+                         input_track_info->essence_type == AVCI100_1080P ||
+                         input_track_info->essence_type == AVCI100_720P ||
+                         input_track_info->essence_type == AVCI50_1080I ||
+                         input_track_info->essence_type == AVCI50_1080P ||
+                         input_track_info->essence_type == AVCI50_720P) &&
+                    !force_no_avci_head &&
+                    !allow_no_avci_head &&
+                    !track_reader->HaveAVCIHeader() &&
+                    !have_avci_header_data(input_track_info->essence_type, input_track_info->edit_rate,
+                                           avci_header_inputs))
                 {
                     log_warn("Track %"PRIszt" (essence type '%s') does not have sequence and picture parameter sets\n",
                              i,

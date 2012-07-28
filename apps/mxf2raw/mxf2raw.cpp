@@ -277,12 +277,6 @@ static void print_track_info(const MXFTrackInfo *track_info)
             printf("  Horiz subsampling    : %u\n", picture_info->horiz_subsampling);
             printf("  Vert subsampling     : %u\n", picture_info->vert_subsampling);
             printf("  Color siting         : %u (%s)\n", picture_info->color_siting, get_color_siting_string(picture_info->color_siting));
-            if (track_info->essence_type == D10_30 ||
-                track_info->essence_type == D10_40 ||
-                track_info->essence_type == D10_50)
-            {
-                printf("  Frame size           : %u\n", picture_info->d10_frame_size);
-            }
             if (track_info->essence_type == AVCI100_1080I ||
                 track_info->essence_type == AVCI100_1080P ||
                 track_info->essence_type == AVCI100_720P ||
