@@ -107,7 +107,8 @@ void bmx::avid_print_info(MXFFileReader *file_reader)
 
     printf("Avid Information:\n");
 
-    printf("  Project name      : %s\n", info.project_name.c_str());
+    if (!info.project_name.empty())
+        printf("  Project name      : %s\n", info.project_name.c_str());
 
     if (info.have_phys_package) {
         char string_buffer[128];
