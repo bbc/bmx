@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2012, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,12 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_AS02_D10_TRACK_H_
-#define BMX_AS02_D10_TRACK_H_
+#ifndef BMX_D10_WRITER_HELPER_H_
+#define BMX_D10_WRITER_HELPER_H_
 
-#include <bmx/as02/AS02PictureTrack.h>
-#include <bmx/mxf_helper/D10MXFDescriptorHelper.h>
-#include <bmx/writer_helper/D10WriterHelper.h>
+#include <bmx/ByteArray.h>
+#include <bmx/frame/DataBufferArray.h>
 
 
 
@@ -42,25 +41,31 @@ namespace bmx
 {
 
 
-class AS02D10Track : public AS02PictureTrack
+class D10WriterHelper
 {
 public:
-    AS02D10Track(AS02Clip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file,
-                 std::string rel_uri);
-    virtual ~AS02D10Track();
+    D10WriterHelper();
+    ~D10WriterHelper();
+
+    void SetMaxSampleSize(uint32_t size);
+    void SetOutputMaxSampleSize(bool enable);
 
 public:
-    virtual void PrepareWrite();
-    virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
+    void ProcessFrame(const unsigned char *data, uint32_t size,
+                      const CDataBuffer **data_array, uint32_t *array_size);
 
 private:
-    D10MXFDescriptorHelper *mD10DescriptorHelper;
-    D10WriterHelper mWriterHelper;
+    ByteArray mZeroBuffer;
+    CDataBuffer mDataArray[2];
+    uint32_t mMaxSampleSize;
+    bool mOutputMaxSampleSize;
+    bool mHaveInfoRemovePadding;
+    bool mHaveInfoAddPadding;
 };
 
 
-};
 
+};
 
 
 #endif

@@ -34,6 +34,7 @@
 
 #include <bmx/avid_mxf/AvidPictureTrack.h>
 #include <bmx/mxf_helper/D10MXFDescriptorHelper.h>
+#include <bmx/writer_helper/D10WriterHelper.h>
 
 
 
@@ -47,16 +48,13 @@ public:
     AvidD10Track(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file);
     virtual ~AvidD10Track();
 
-    void SetSampleSize(uint32_t size, bool remove_excess_padding);
-
 public:
     virtual void PrepareWrite();
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
 
 private:
     D10MXFDescriptorHelper *mD10DescriptorHelper;
-    uint32_t mInputSampleSize;
-    bool mRemoveExcessPadding;
+    D10WriterHelper mWriterHelper;
 };
 
 

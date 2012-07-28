@@ -34,6 +34,7 @@
 
 #include <bmx/as02/AS02Track.h>
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
+#include <bmx/frame/DataBufferArray.h>
 
 
 
@@ -54,6 +55,7 @@ public:
 
 public:
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
+    virtual void WriteSample(const CDataBuffer *data_array, uint32_t array_size);
 
 protected:
     void HandlePartitionInterval(bool can_start_partition);

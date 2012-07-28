@@ -81,7 +81,6 @@ public:
     // Picture properties
     void SetAspectRatio(Rational aspect_ratio);                     // default 16/9
     void SetComponentDepth(uint32_t depth);                         // default 8; alternative is 10
-    void SetSampleSize(uint32_t size, bool remove_excess_padding);  // D10 sample size
     void SetAVCIMode(AVCIMode mode);                                // default depends on track type
     void SetAVCIHeader(const unsigned char *data, uint32_t size);
     void SetAFD(uint8_t afd);                                       // default not set

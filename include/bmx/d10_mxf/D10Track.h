@@ -37,6 +37,7 @@
 
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
 #include <bmx/d10_mxf/D10ContentPackage.h>
+#include <bmx/frame/DataBufferArray.h>
 
 
 
@@ -83,6 +84,7 @@ protected:
 protected:
     virtual void PrepareWrite() = 0;
     virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
+    virtual void WriteSampleInt(const CDataBuffer *data_array, uint32_t array_size);
 
 protected:
     D10File *mD10File;

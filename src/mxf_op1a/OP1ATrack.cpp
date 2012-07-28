@@ -373,6 +373,13 @@ void OP1ATrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
 }
 
+void OP1ATrack::WriteSampleInt(const CDataBuffer *data_array, uint32_t array_size)
+{
+    BMX_ASSERT(data_array && array_size);
+
+    mCPManager->WriteSample(mTrackIndex, data_array, array_size);
+}
+
 void OP1ATrack::CompleteEssenceKeyAndTrackNum(uint8_t track_count)
 {
     mxf_complete_essence_element_key(&mEssenceElementKey,

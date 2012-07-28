@@ -152,3 +152,10 @@ void D10Track::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
 }
 
+void D10Track::WriteSampleInt(const CDataBuffer *data_array, uint32_t array_size)
+{
+    BMX_CHECK(data_array && array_size);
+
+    mCPManager->WriteSample(mTrackIndex, data_array, array_size);
+}
+

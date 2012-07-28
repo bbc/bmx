@@ -34,6 +34,7 @@
 
 #include <bmx/d10_mxf/D10Track.h>
 #include <bmx/mxf_helper/D10MXFDescriptorHelper.h>
+#include <bmx/writer_helper/D10WriterHelper.h>
 
 
 
@@ -51,7 +52,6 @@ public:
 
 public:
     void SetAspectRatio(mxfRational aspect_ratio);                  // default 16/9
-    void SetSampleSize(uint32_t size, bool remove_excess_padding);  // default max sample size
     void SetAFD(uint8_t afd);                                       // default not set
 
 public:
@@ -63,8 +63,7 @@ protected:
 
 private:
     D10MXFDescriptorHelper *mD10DescriptorHelper;
-    uint32_t mInputSampleSize;
-    bool mRemoveExcessPadding;
+    D10WriterHelper mWriterHelper;
 };
 
 

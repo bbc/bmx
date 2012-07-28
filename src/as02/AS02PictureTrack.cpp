@@ -87,18 +87,34 @@ void AS02PictureTrack::WriteSamples(const unsigned char *data, uint32_t size, ui
     BMX_CHECK(size > 0 && num_samples > 0);
     BMX_CHECK(size >= num_samples * mSampleSize);
 
+    CDataBuffer data_array[1];
     uint32_t i;
     for (i = 0; i < num_samples; i++) {
-        HandlePartitionInterval(true);
+        data_array[0].data = (unsigned char*)&data[i * mSampleSize];
+        data_array[0].size = mSampleSize;
+        WriteSample(data_array, 1);
+    }
+}
 
-        mMXFFile->writeFixedKL(&mEssenceElementKey, mLLen, mSampleSize);
-        BMX_CHECK(mMXFFile->write(&data[i * mSampleSize], mSampleSize) == mSampleSize);
+void AS02PictureTrack::WriteSample(const CDataBuffer *data_array, uint32_t array_size)
+{
+    BMX_ASSERT(mMXFFile);
+    BMX_CHECK(data_array && array_size > 0);
 
-        mContainerDuration++;
-        mContainerSize += mxfKey_extlen + mLLen + mSampleSize;
+    HandlePartitionInterval(true);
+
+    mMXFFile->writeFixedKL(&mEssenceElementKey, mLLen, dba_get_total_size(data_array, array_size));
+    mContainerSize += mxfKey_extlen + mLLen;
+
+    uint32_t i;
+    for (i = 0; i < array_size; i++) {
+        BMX_CHECK(mMXFFile->write(data_array[i].data, data_array[i].size) == data_array[i].size);
+        mContainerSize += data_array[i].size;
+
+        UpdateEssenceOnlyChecksum(data_array[i].data, data_array[i].size);
     }
 
-    UpdateEssenceOnlyChecksum(data, num_samples * mSampleSize);
+    mContainerDuration++;
 }
 
 void AS02PictureTrack::HandlePartitionInterval(bool can_start_partition)

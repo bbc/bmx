@@ -40,6 +40,7 @@
 
 #include <bmx/BMXTypes.h>
 #include <bmx/ByteArray.h>
+#include <bmx/frame/DataBufferArray.h>
 
 
 
@@ -87,6 +88,7 @@ public:
 
     bool IsComplete(uint32_t track_index);
     uint32_t WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
+    void WriteSample(uint32_t track_index, const CDataBuffer *data_array, uint32_t array_size);
 
     bool IsComplete();
     void Write(mxfpp::File *mxf_file);
@@ -131,6 +133,7 @@ public:
 public:
     void WriteUserTimecode(Timecode user_timecode);
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
+    void WriteSample(uint32_t track_index, const CDataBuffer *data_array, uint32_t array_size);
 
 public:
     uint8_t GetSoundChannelCount() const;

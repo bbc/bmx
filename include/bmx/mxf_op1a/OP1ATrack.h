@@ -90,6 +90,7 @@ protected:
 protected:
     virtual void PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count) = 0;
     virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
+    virtual void WriteSampleInt(const CDataBuffer *data_array, uint32_t array_size);
     virtual void CompleteWrite() {}
 
     void CompleteEssenceKeyAndTrackNum(uint8_t track_count);

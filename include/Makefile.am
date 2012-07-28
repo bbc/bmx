@@ -19,6 +19,7 @@ nobase_library_include_HEADERS = \
 	bmx/frame/Frame.h \
 	bmx/frame/FrameBuffer.h \
 	bmx/writer_helper/AVCIWriterHelper.h \
+	bmx/writer_helper/D10WriterHelper.h \
 	bmx/writer_helper/MPEG2LGWriterHelper.h \
 	bmx/as02/AS02AVCITrack.h \
 	bmx/as02/AS02Bundle.h \

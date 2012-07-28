@@ -55,8 +55,7 @@ OP1AD10Track::OP1AD10Track(OP1AFile *file, uint32_t track_index, uint32_t track_
     mD10DescriptorHelper = dynamic_cast<D10MXFDescriptorHelper*>(mDescriptorHelper);
     BMX_ASSERT(mD10DescriptorHelper);
 
-    mInputSampleSize = 0;
-    mRemoveExcessPadding = false;
+    mWriterHelper.SetOutputMaxSampleSize(true);
 
     mTrackNumber = MXF_D10_PICTURE_TRACK_NUM(0x00);
     mEssenceElementKey = VIDEO_ELEMENT_KEY;
@@ -66,29 +65,11 @@ OP1AD10Track::~OP1AD10Track()
 {
 }
 
-void OP1AD10Track::SetSampleSize(uint32_t size, bool remove_excess_padding)
-{
-    mInputSampleSize = size;
-    mRemoveExcessPadding = remove_excess_padding;
-}
-
 void OP1AD10Track::PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count)
 {
     uint32_t max_sample_size = mD10DescriptorHelper->GetMaxSampleSize();
-    uint32_t sample_size = mInputSampleSize;
-    if (mInputSampleSize == 0) {
-        mInputSampleSize = max_sample_size;
-        sample_size = max_sample_size;
-    } else if (mInputSampleSize > max_sample_size) {
-        if (mRemoveExcessPadding) {
-            log_info("Removing %u excess padding bytes from D-10 frame\n", mInputSampleSize - max_sample_size);
-            sample_size = max_sample_size;
-        } else {
-            log_warn("Input D-10 sample size %u is larger than maximum sample size %u\n",
-                     mInputSampleSize, max_sample_size);
-        }
-    }
-    mD10DescriptorHelper->SetSampleSize(sample_size);
+    mWriterHelper.SetMaxSampleSize(max_sample_size);
+    mD10DescriptorHelper->SetSampleSize(max_sample_size);
 
     OP1APictureTrack::PrepareWrite(picture_track_count, sound_track_count);
 }
@@ -96,21 +77,14 @@ void OP1AD10Track::PrepareWrite(uint8_t picture_track_count, uint8_t sound_track
 void OP1AD10Track::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
     BMX_CHECK(size > 0 && num_samples > 0);
-    BMX_CHECK(size >= num_samples * mInputSampleSize);
 
-    uint32_t sample_size = mD10DescriptorHelper->GetSampleSize();
-    if (mInputSampleSize > sample_size) {
-        const unsigned char *sample_data = data;
-        uint32_t i;
-        for (i = 0; i < num_samples; i++) {
-            BMX_CHECK_M(check_excess_d10_padding(sample_data, mInputSampleSize, sample_size),
-                        ("Failed to remove D-10 frame padding bytes; found non-zero bytes"));
-
-            OP1APictureTrack::WriteSamplesInt(sample_data, sample_size, 1);
-            sample_data += mInputSampleSize;
-        }
-    } else {
-        OP1APictureTrack::WriteSamplesInt(data, size, num_samples);
+    const CDataBuffer *data_array;
+    uint32_t data_array_size;
+    uint32_t sample_size = size / num_samples;
+    uint32_t i;
+    for (i = 0; i < num_samples; i++) {
+        mWriterHelper.ProcessFrame(&data[i * sample_size], sample_size, &data_array, &data_array_size);
+        OP1APictureTrack::WriteSampleInt(data_array, data_array_size);
     }
 }
 

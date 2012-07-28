@@ -213,6 +213,20 @@ uint32_t D10ContentPackage::WriteSamples(uint32_t track_index, const unsigned ch
     return write_num_samples;
 }
 
+void D10ContentPackage::WriteSample(uint32_t track_index, const CDataBuffer *data_array, uint32_t array_size)
+{
+    // TODO: add sound support
+    BMX_ASSERT(track_index == mInfo->picture_track_index);
+
+    uint32_t size = dba_get_total_size(data_array, array_size);
+    BMX_CHECK(size == mInfo->picture_sample_size);
+
+    mPictureData.SetSize(0);
+    mPictureData.Grow(size);
+    dba_copy_data(mPictureData.GetBytesAvailable(), mPictureData.GetSizeAvailable(), data_array, array_size);
+    mPictureData.SetSize(size);
+}
+
 bool D10ContentPackage::IsComplete()
 {
     if (mInfo->have_input_user_timecode && !mUserTimecodeSet)
@@ -524,6 +538,20 @@ void D10ContentPackageManager::WriteSamples(uint32_t track_index, const unsigned
 
         cp_index++;
     }
+}
+
+void D10ContentPackageManager::WriteSample(uint32_t track_index, const CDataBuffer *data_array, uint32_t array_size)
+{
+    BMX_ASSERT(data_array && array_size);
+
+    size_t cp_index = 0;
+    while (cp_index < mContentPackages.size() && mContentPackages[cp_index]->IsComplete(track_index))
+        cp_index++;
+
+    if (cp_index >= mContentPackages.size())
+        CreateContentPackage();
+
+    mContentPackages[cp_index]->WriteSample(track_index, data_array, array_size);
 }
 
 uint8_t D10ContentPackageManager::GetSoundChannelCount() const

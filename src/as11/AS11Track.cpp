@@ -150,30 +150,6 @@ void AS11Track::SetComponentDepth(uint32_t depth)
     }
 }
 
-void AS11Track::SetSampleSize(uint32_t size, bool remove_excess_padding)
-{
-    switch (mClipType)
-    {
-        case AS11_OP1A_CLIP_TYPE:
-        {
-            OP1AD10Track *d10_track = dynamic_cast<OP1AD10Track*>(mOP1ATrack);
-            if (d10_track)
-                d10_track->SetSampleSize(size, remove_excess_padding);
-            break;
-        }
-        case AS11_D10_CLIP_TYPE:
-        {
-            D10MPEGTrack *d10_track = dynamic_cast<D10MPEGTrack*>(mD10Track);
-            if (d10_track)
-                d10_track->SetSampleSize(size, remove_excess_padding);
-            break;
-        }
-        case AS11_UNKNOWN_CLIP_TYPE:
-            BMX_ASSERT(false);
-            break;
-    }
-}
-
 void AS11Track::SetAVCIMode(OP1AAVCIMode mode)
 {
     switch (mClipType)
