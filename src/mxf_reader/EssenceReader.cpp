@@ -427,7 +427,7 @@ void EssenceReader::GetEditUnitGroup(int64_t position, uint32_t max_samples, int
 {
     BMX_CHECK(max_samples > 0);
 
-    if (!mIndexTableHelper.HaveFixedEditUnitByteCount() || max_samples == 1) {
+    if (!mIndexTableHelper.HaveConstantEditUnitSize() || max_samples == 1) {
         GetEditUnit(position, file_position, size);
         *num_samples = 1;
         return;
@@ -448,14 +448,14 @@ void EssenceReader::GetEditUnitGroup(int64_t position, uint32_t max_samples, int
     int64_t right_size;
     while (right_num_samples != left_num_samples) {
         GetEditUnit(position + right_num_samples - 1, &right_file_position, &right_size);
-        BMX_CHECK(right_size == mIndexTableHelper.GetFixedEditUnitByteCount());
+        BMX_CHECK(right_size == mIndexTableHelper.GetEditUnitSize());
 
-        if (right_file_position > first_file_position + mIndexTableHelper.GetFixedEditUnitByteCount() * (right_num_samples - 1)) {
+        if (right_file_position > first_file_position + mIndexTableHelper.GetEditUnitSize() * (right_num_samples - 1)) {
             // first to right is not contiguous - try halfway between left and right (round down)
             last_num_samples = right_num_samples;
             right_num_samples = (left_num_samples + right_num_samples) / 2;
         } else {
-            BMX_CHECK(right_file_position == first_file_position + mIndexTableHelper.GetFixedEditUnitByteCount() * (right_num_samples - 1));
+            BMX_CHECK(right_file_position == first_file_position + mIndexTableHelper.GetEditUnitSize() * (right_num_samples - 1));
             // first to right is contiguous - try halfway between right and last (round up)
             left_num_samples = right_num_samples;
             right_num_samples = (right_num_samples + last_num_samples + 1) / 2;

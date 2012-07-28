@@ -65,8 +65,8 @@ public:
     void AppendIndexEntry(uint32_t num_entries, int8_t temporal_offset, int8_t key_frame_offset, uint8_t flags,
                           uint64_t stream_offset);
 
-    bool HaveFixedEditUnitByteCount();
-    uint32_t GetFixedEditUnitByteCount();
+    bool HaveConstantEditUnitSize();
+    uint32_t GetEditUnitSize();
 
     void SetEssenceStartOffset(int64_t offset);
     int64_t GetEssenceEndOffset();
@@ -96,8 +96,8 @@ public:
     mxfRational GetEditRate();
     int64_t GetDuration() const { return mDuration; }
 
-    bool HaveFixedEditUnitByteCount() const { return mHaveFixedEditUnitByteCount; }
-    uint32_t GetFixedEditUnitByteCount() const { return mFixedEditUnitByteCount; }
+    bool HaveConstantEditUnitSize() const { return mHaveConstantEditUnitSize; }
+    uint32_t GetEditUnitSize()      const { return mEditUnitSize; }
 
     void GetEditUnit(int64_t position, int8_t *temporal_offset, int8_t *key_frame_offset, uint8_t *flags,
                      int64_t *offset, int64_t *size);
@@ -114,8 +114,8 @@ private:
     std::vector<IndexTableHelperSegment*> mSegments;
     size_t mLastEditUnitSegment;
 
-    bool mHaveFixedEditUnitByteCount;
-    uint32_t mFixedEditUnitByteCount;
+    bool mHaveConstantEditUnitSize;
+    uint32_t mEditUnitSize;
 
     int64_t mEssenceDataSize;
 

@@ -189,12 +189,12 @@ void IndexTableHelperSegment::AppendIndexEntry(uint32_t num_entries, int8_t temp
     mNumIndexEntries++;
 }
 
-bool IndexTableHelperSegment::HaveFixedEditUnitByteCount()
+bool IndexTableHelperSegment::HaveConstantEditUnitSize()
 {
     return getEditUnitByteCount() != 0;
 }
 
-uint32_t IndexTableHelperSegment::GetFixedEditUnitByteCount()
+uint32_t IndexTableHelperSegment::GetEditUnitSize()
 {
     return getEditUnitByteCount();
 }
@@ -217,8 +217,8 @@ IndexTableHelper::IndexTableHelper(MXFFileReader *file_reader)
 {
     mFileReader = file_reader;
     mLastEditUnitSegment = 0;
-    mHaveFixedEditUnitByteCount = true;
-    mFixedEditUnitByteCount = 0;
+    mHaveConstantEditUnitSize = true;
+    mEditUnitSize = 0;
     mEssenceDataSize = 0;
     mDuration = 0;
 }
@@ -285,12 +285,12 @@ bool IndexTableHelper::ExtractIndexTable()
 
             if (!mSegments.empty()) {
                 // only support all index segments with fixed edit unit byte count or all variable edit units
-                BMX_CHECK(segment->HaveFixedEditUnitByteCount() == mSegments.back()->HaveFixedEditUnitByteCount());
+                BMX_CHECK(segment->HaveConstantEditUnitSize() == mSegments.back()->HaveConstantEditUnitSize());
                 // only support contiguous index segments
                 BMX_CHECK(segment->getIndexStartPosition() == mSegments.back()->getIndexStartPosition() +
                                                                     mSegments.back()->getIndexDuration());
 
-                if (segment->HaveFixedEditUnitByteCount())
+                if (segment->HaveConstantEditUnitSize())
                     segment->SetEssenceStartOffset(mSegments.back()->GetEssenceEndOffset());
             }
             mSegments.push_back(segment.release());
@@ -306,20 +306,19 @@ bool IndexTableHelper::ExtractIndexTable()
 
     // calc total duration and determine fixed edit unit byte count
     for (i = 0; i < mSegments.size(); i++) {
-        BMX_CHECK(mSegments[i]->getIndexDuration() > 0 || mSegments[i]->HaveFixedEditUnitByteCount());
+        BMX_CHECK(mSegments[i]->getIndexDuration() > 0 || mSegments[i]->HaveConstantEditUnitSize());
         mDuration += mSegments[i]->getIndexDuration();
 
-        if (mHaveFixedEditUnitByteCount) {
-            if (!mSegments[i]->HaveFixedEditUnitByteCount() ||
-                (mFixedEditUnitByteCount != 0 &&
-                    mFixedEditUnitByteCount != mSegments[i]->GetFixedEditUnitByteCount()))
+        if (mHaveConstantEditUnitSize) {
+            if (!mSegments[i]->HaveConstantEditUnitSize() ||
+                (mEditUnitSize != 0 && mEditUnitSize != mSegments[i]->GetEditUnitSize()))
             {
-                mHaveFixedEditUnitByteCount = false;
-                mFixedEditUnitByteCount = 0;
+                mHaveConstantEditUnitSize = false;
+                mEditUnitSize = 0;
             }
             else
             {
-                mFixedEditUnitByteCount = mSegments[i]->GetFixedEditUnitByteCount();
+                mEditUnitSize = mSegments[i]->GetEditUnitSize();
             }
         }
     }
@@ -334,8 +333,8 @@ void IndexTableHelper::SetEssenceDataSize(int64_t size)
     mEssenceDataSize = size;
 
     // calc index duration if unknown
-    if (mDuration == 0 && mHaveFixedEditUnitByteCount && mFixedEditUnitByteCount > 0)
-        mDuration = size / mFixedEditUnitByteCount;
+    if (mDuration == 0 && mHaveConstantEditUnitSize && mEditUnitSize > 0)
+        mDuration = size / mEditUnitSize;
 }
 
 mxfRational IndexTableHelper::GetEditRate()
@@ -393,8 +392,8 @@ void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, in
         } else {
             *size = mEssenceDataSize - (*offset);
             /* ignores junk found at the end of Avid clip wrapped essence with fixed edit unit size */
-            if (mHaveFixedEditUnitByteCount && *size > mFixedEditUnitByteCount)
-                *size = mFixedEditUnitByteCount;
+            if (mHaveConstantEditUnitSize && *size > mEditUnitSize)
+                *size = mEditUnitSize;
         }
     }
 }
