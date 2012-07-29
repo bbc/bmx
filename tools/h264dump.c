@@ -116,6 +116,7 @@ typedef struct
 
     uint32_t nal_start;
     uint32_t nal_size;
+    uint32_t nal_padding;
 
     uint64_t bit_pos;
     uint64_t end_bit_pos;
@@ -307,6 +308,16 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
                 else
                     context->nal_size -= 1;
             }
+        }
+    }
+
+    context->nal_padding = 0;
+    if (context->nal_size > 0) {
+        const unsigned char *nal_data_start = &context->buffer[context->nal_start];
+        const unsigned char *nal_data = nal_data_start + context->nal_size - 1;
+        while (!(*nal_data) && nal_data != nal_data_start) {
+            context->nal_padding++;
+            nal_data--;
         }
     }
 
@@ -2136,8 +2147,8 @@ static int parse_nal_unit(ParseContext *context)
 {
     uint64_t bit_pos;
 
-    printf("NAL: pos=%"PRId64", start=%u, size=%u\n",
-           context->data_start_file_pos, context->nal_start, context->nal_size);
+    printf("NAL: pos=%"PRId64", start=%u, size=%u, padding=%u\n",
+           context->data_start_file_pos, context->nal_start, context->nal_size, context->nal_padding);
 
     context->indent++;
 
