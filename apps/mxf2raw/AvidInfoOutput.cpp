@@ -116,7 +116,8 @@ void bmx::avid_print_info(MXFFileReader *file_reader)
         printf("      Type            : %s\n", PACKAGE_TYPE_STRINGS[info.phys_package_type]);
         printf("      Name            : %s\n", info.phys_package_name.c_str());
         printf("      Package uid     : %s\n", get_umid_string(info.phys_package_uid, string_buffer));
-        printf("      Network locator : %s\n", info.phys_package_locator.c_str());
+        if (info.phys_package_type == IMPORT_PACKAGE_TYPE)
+            printf("      Network locator : %s\n", info.phys_package_locator.c_str());
     }
 
     Rational frame_rate = file_reader->GetSampleRate();
