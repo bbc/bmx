@@ -69,6 +69,11 @@ static bool compare_track(const AvidTrack *left, const AvidTrack *right)
            (left->IsPicture() && left->GetTrackIndex() < right->GetTrackIndex());
 }
 
+static bool compare_locator(const AvidLocator &left, const AvidLocator &right)
+{
+    return left.position < right.position;
+}
+
 
 
 AvidClip::AvidClip(mxfRational frame_rate, MXFFileFactory *file_factory, bool take_factory_ownership,
@@ -675,6 +680,9 @@ void AvidClip::UpdateHeaderMetadata()
 
         // add locators
         if (!mLocators.empty()) {
+            BMX_ASSERT(mLocators.size() <= MAX_LOCATORS);
+            stable_sort(mLocators.begin(), mLocators.end(), compare_locator);
+
             // Preface - ContentStorage - MaterialPackage - (DM) Event Track
             // EventMobSlot in Avid AAF file has no name
             // not setting EventOrigin because this results in an error in Avid MediaComposer 3.0
@@ -690,7 +698,7 @@ void AvidClip::UpdateHeaderMetadata()
             sequence->setDataDefinition(MXF_DDEF_L(DescriptiveMetadata));
 
             size_t j;
-            for (j = 0; j < mLocators.size() && j < MAX_LOCATORS; j++) {
+            for (j = 0; j < mLocators.size(); j++) {
                 // Preface - ContentStorage - MaterialPackage - (DM) Event Track - (DM) Sequence - DMSegment
                 // duration not set as in Avid sample files
                 DMSegment *segment = new DMSegment(track_header_metadata);
