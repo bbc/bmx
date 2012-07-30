@@ -87,6 +87,7 @@ void AvidInfo::RegisterExtensions(DataModel *data_model)
 
 AvidInfo::AvidInfo()
 {
+    Reset();
 }
 
 AvidInfo::~AvidInfo()
@@ -122,6 +123,13 @@ void AvidInfo::ReadInfo(HeaderMetadata *header_metadata)
             }
         }
     }
+
+    vector<SourcePackage*> file_source_packages = header_metadata->getPreface()->findFileSourcePackages();
+    if (file_source_packages.size() == 1) {
+        FileDescriptor *file_desc = dynamic_cast<FileDescriptor*>(file_source_packages[0]->getDescriptor());
+        if (file_desc && file_desc->haveItem(&MXF_ITEM_K(GenericPictureEssenceDescriptor, ResolutionID)))
+            resolution_id = file_desc->getInt32Item(&MXF_ITEM_K(GenericPictureEssenceDescriptor, ResolutionID));
+    }
 }
 
 void AvidInfo::Reset()
@@ -136,6 +144,7 @@ void AvidInfo::Reset()
     phys_package_name.clear();
     phys_package_locator.clear();
     phys_package_uid = g_Null_UMID;
+    resolution_id = 0;
 }
 
 void AvidInfo::GetMaterialPackageAttrs(MaterialPackage *mp)

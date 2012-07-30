@@ -77,6 +77,7 @@ public:
     std::string phys_package_name;
     std::string phys_package_locator;
     UMID phys_package_uid;
+    int32_t resolution_id;
 };
 
 
