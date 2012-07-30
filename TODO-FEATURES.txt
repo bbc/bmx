@@ -36,8 +36,6 @@ to help start implementing a parser in the bmx library
 
 13. implement more complete h264 / AVCI essence parser in bmx library
 
-14. need to investigate whether Avid supports multiple marks per position
-
 15. might be worth raising the gcc warning level to catch potential errors and
 catch warnings that Visual C++ would emit
 
