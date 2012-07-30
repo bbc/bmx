@@ -1242,7 +1242,6 @@ int main(int argc, const char** argv)
             const MXFTrackInfo *input_track_info = track_reader->GetTrackInfo();
 
             const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
-            const MXFPictureTrackInfo *input_picture_info = dynamic_cast<const MXFPictureTrackInfo*>(input_track_info);
 
             bool is_supported = true;
             if (input_track_info->essence_type == WAVE_PCM)
