@@ -2532,7 +2532,7 @@ static void dump_udta_atom()
     static const DumpFuncMap dump_func_map[] =
     {
         {{'n','a','m','e'},     dump_udta_name_atom},
-        {{0xa9,'\0','\0','\0'}, dump_international_string_atom},
+        {{(char)0xa9,'\0','\0','\0'}, dump_international_string_atom},
     };
 
     dump_atom_header();
