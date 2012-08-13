@@ -166,6 +166,16 @@ public:
     void WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition, bool final_write);
 
 private:
+    void CreateDeltaEntries(std::vector<uint32_t> &element_sizes);
+    void CheckDeltaEntries(std::vector<uint32_t> &element_sizes);
+
+    void UpdateCBEIndex(uint32_t size, std::vector<uint32_t> &element_sizes);
+    void UpdateVBEIndex(std::vector<uint32_t> &element_sizes);
+
+    void WriteCBESegments(mxfpp::File *mxf_file, bool final_write);
+    void WriteVBESegments(mxfpp::File *mxf_file);
+
+private:
     uint32_t mIndexSID;
     uint32_t mBodySID;
     mxfRational mEditRate;

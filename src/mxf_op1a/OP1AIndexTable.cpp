@@ -377,127 +377,17 @@ bool OP1AIndexTable::CanStartPartition()
 
 void OP1AIndexTable::UpdateIndex(uint32_t size, vector<uint32_t> element_sizes)
 {
-    // create or check delta entries
     BMX_ASSERT(element_sizes.size() == mIndexElements.size());
-    if (mDuration == 0 || (mAVCIFirstIndexSegment && mDuration == 1)) {
-        // create delta entries
 
-        mDeltaEntries.clear();
+    if (mDuration == 0 || (mAVCIFirstIndexSegment && mDuration == 1))
+        CreateDeltaEntries(element_sizes);
+    else
+        CheckDeltaEntries(element_sizes);
 
-        uint8_t prev_slice_offset = 0;
-        uint32_t element_delta = 0;
-        size_t i;
-        for (i = 0; i < mIndexElements.size(); i++) {
-            if (mIndexElements[i]->slice_offset != prev_slice_offset)
-                element_delta = 0;
-
-            OP1ADeltaEntry entry;
-            entry.pos_table_index = (mIndexElements[i]->apply_temporal_reordering ? -1 : 0);
-            entry.slice = mIndexElements[i]->slice_offset;
-            entry.element_delta = element_delta;
-            mDeltaEntries.push_back(entry);
-
-            prev_slice_offset = mIndexElements[i]->slice_offset;
-            element_delta += element_sizes[i];
-
-            if (mIndexElements[i]->is_cbe)
-                mIndexElements[i]->element_size = element_sizes[i];
-        }
-        if (mDeltaEntries.size() == 1 &&
-            mDeltaEntries[0].pos_table_index == 0 &&
-            mDeltaEntries[0].slice == 0 &&
-            mDeltaEntries[0].element_delta == 0)
-        {
-            // no need for delta entry array
-            mDeltaEntries.clear();
-        }
-
-        if (mIsCBE) {
-            size_t i;
-            for (i = 0; i < mDeltaEntries.size(); i++) {
-                if (mAVCIFirstIndexSegment && mDuration == 0) {
-                    mAVCIFirstIndexSegment->GetSegment()->appendDeltaEntry(mDeltaEntries[i].pos_table_index,
-                                                                           mDeltaEntries[i].slice,
-                                                                           mDeltaEntries[i].element_delta);
-                } else {
-                    mIndexSegments[0]->GetSegment()->appendDeltaEntry(mDeltaEntries[i].pos_table_index,
-                                                                      mDeltaEntries[i].slice,
-                                                                      mDeltaEntries[i].element_delta);
-                }
-            }
-        }
-    } else {
-        // check delta entries remain constant
-
-        size_t i;
-        for (i = 0; i < mIndexElements.size(); i++) {
-            if (mIndexElements[i]->is_cbe) {
-                BMX_CHECK_M(mIndexElements[i]->element_size == element_sizes[i],
-                           ("Fixed size content package element data size changed"));
-            }
-        }
-    }
-
-    // update index table entries and/or duration
-    if (mIsCBE) {
-        if (mDuration == 0 && mAVCIFirstIndexSegment) {
-            mAVCIFirstIndexSegment->AddCBEIndexEntries(size, 1);
-            mIndexSegments[0]->GetSegment()->setIndexStartPosition(1);
-        } else {
-            // delete first avci index segment if the edit unit size is the same as non-first edit units
-            // e.g. the avci sequence and picture parameter sets are included in every frame
-            if (mDuration == 1 && mAVCIFirstIndexSegment &&
-                mAVCIFirstIndexSegment->GetSegment()->getEditUnitByteCount() == size)
-            {
-                size_t i;
-                for (i = 0; i < mIndexElements.size(); i++) {
-                    if (mIndexElements[i]->is_cbe &&
-                        mIndexElements[i]->element_size != element_sizes[i])
-                    {
-                        break;
-                    }
-                }
-                if (i >= mIndexElements.size()) {
-                    delete mAVCIFirstIndexSegment;
-                    mAVCIFirstIndexSegment = 0;
-
-                    mIndexSegments[0]->GetSegment()->setIndexStartPosition(0);
-                    mIndexSegments[0]->AddCBEIndexEntries(size, 1);
-                }
-            }
-
-            mIndexSegments[0]->AddCBEIndexEntries(size, 1);
-        }
-    } else {
-        bool can_start_partition = CanStartPartition(); // check before any TakeIndexEntry calls
-
-        uint32_t slice_cp_offset = 0;
-        vector<uint32_t> slice_cp_offsets;
-        uint8_t prev_slice_offset = 0;
-        OP1AIndexEntry entry;
-        size_t i;
-        for (i = 0; i < mIndexElements.size(); i++) {
-            // get non-default entry if exists
-            OP1AIndexEntry element_entry;
-            if (mIndexElements[i]->TakeIndexEntry(mDuration, &element_entry) && !element_entry.IsDefault()) {
-                BMX_CHECK(entry.IsCompatible(element_entry));
-                entry = element_entry;
-            }
-
-            if (mIndexElements[i]->slice_offset != prev_slice_offset) {
-                slice_cp_offsets.push_back(slice_cp_offset);
-                prev_slice_offset = mIndexElements[i]->slice_offset;
-            }
-            slice_cp_offset += element_sizes[i];
-        }
-
-        if (mIndexSegments.empty() || mIndexSegments.back()->RequireNewSegment(can_start_partition)) {
-            mIndexSegments.push_back(new OP1AIndexTableSegment(mIndexSID, mBodySID, mEditRate, mDuration,
-                                                               mIndexEntrySize, mSliceCount));
-        }
-
-        mIndexSegments.back()->AddIndexEntry(&entry, mStreamOffset, slice_cp_offsets);
-    }
+    if (mIsCBE)
+        UpdateCBEIndex(size, element_sizes);
+    else
+        UpdateVBEIndex(element_sizes);
 
     mDuration++;
     mStreamOffset += size;
@@ -527,61 +417,194 @@ bool OP1AIndexTable::HaveSegments()
     return mIsCBE || (!mIndexSegments.empty() && mIndexSegments[0]->GetDuration() > 0);
 }
 
-void OP1AIndexTable::WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition, bool final_write)
+void OP1AIndexTable::WriteSegments(File *mxf_file, Partition *partition, bool final_write)
 {
     BMX_ASSERT(HaveSegments());
     BMX_ASSERT(mDuration > 0);
 
     partition->markIndexStart(mxf_file);
 
-    if (mIsCBE) {
-        if (mAVCIFirstIndexSegment) {
-            BMX_CHECK(mxf_write_index_table_segment(mxf_file->getCFile(),
-                                                    mAVCIFirstIndexSegment->GetSegment()->getCIndexTableSegment()));
-        }
-        if (!mAVCIFirstIndexSegment || mDuration > 1) {
-            int64_t orig_duration = mIndexSegments[0]->GetSegment()->getIndexDuration();
-            if (mInputDuration >= 0) {
-                BMX_ASSERT(mInputDuration >= mDuration);
-                if (mAVCIFirstIndexSegment)
-                    mIndexSegments[0]->GetSegment()->setIndexDuration(mInputDuration - 1);
-                else
-                    mIndexSegments[0]->GetSegment()->setIndexDuration(mInputDuration);
-            } else if (!final_write) {
-                mIndexSegments[0]->GetSegment()->setIndexDuration(0); // duration is completed at the final write
-            }
-            BMX_CHECK(mxf_write_index_table_segment(mxf_file->getCFile(),
-                                                    mIndexSegments[0]->GetSegment()->getCIndexTableSegment()));
-            mIndexSegments[0]->GetSegment()->setIndexDuration(orig_duration);
-        }
-    } else {
-        BMX_ASSERT(mInputDuration < 0);
-        size_t i;
-        for (i = 0; i < mIndexSegments.size(); i++) {
-            IndexTableSegment *segment = mIndexSegments[i]->GetSegment();
-            ByteArray *entries = mIndexSegments[i]->GetEntries();
-
-            segment->writeHeader(mxf_file, (uint32_t)mDeltaEntries.size(), (uint32_t)segment->getIndexDuration());
-
-            if (!mDeltaEntries.empty()) {
-                segment->writeDeltaEntryArrayHeader(mxf_file, (uint32_t)mDeltaEntries.size());
-                size_t j;
-                for (j = 0; j < mDeltaEntries.size(); j++) {
-                    segment->writeDeltaEntry(mxf_file, mDeltaEntries[j].pos_table_index, mDeltaEntries[j].slice,
-                                             mDeltaEntries[j].element_delta);
-                }
-            }
-
-            segment->writeIndexEntryArrayHeader(mxf_file, mSliceCount, 0, (uint32_t)segment->getIndexDuration());
-            mxf_file->write(entries->GetBytes(), entries->GetSize());
-
-            delete mIndexSegments[i];
-        }
-        mIndexSegments.clear();
-    }
+    if (mIsCBE)
+        WriteCBESegments(mxf_file, final_write);
+    else
+        WriteVBESegments(mxf_file);
 
     partition->fillToKag(mxf_file);
-
     partition->markIndexEnd(mxf_file);
+}
+
+void OP1AIndexTable::CreateDeltaEntries(vector<uint32_t> &element_sizes)
+{
+    mDeltaEntries.clear();
+
+    uint8_t prev_slice_offset = 0;
+    uint32_t element_delta = 0;
+    size_t i;
+    for (i = 0; i < mIndexElements.size(); i++) {
+        if (mIndexElements[i]->slice_offset != prev_slice_offset)
+            element_delta = 0;
+
+        OP1ADeltaEntry entry;
+        entry.pos_table_index = (mIndexElements[i]->apply_temporal_reordering ? -1 : 0);
+        entry.slice = mIndexElements[i]->slice_offset;
+        entry.element_delta = element_delta;
+        mDeltaEntries.push_back(entry);
+
+        prev_slice_offset = mIndexElements[i]->slice_offset;
+        element_delta += element_sizes[i];
+
+        if (mIndexElements[i]->is_cbe)
+            mIndexElements[i]->element_size = element_sizes[i];
+    }
+    if (mDeltaEntries.size() == 1 &&
+        mDeltaEntries[0].pos_table_index == 0 &&
+        mDeltaEntries[0].slice == 0 &&
+        mDeltaEntries[0].element_delta == 0)
+    {
+        // no need for delta entry array
+        mDeltaEntries.clear();
+    }
+
+    if (mIsCBE) {
+        size_t i;
+        for (i = 0; i < mDeltaEntries.size(); i++) {
+            if (mAVCIFirstIndexSegment && mDuration == 0) {
+                mAVCIFirstIndexSegment->GetSegment()->appendDeltaEntry(mDeltaEntries[i].pos_table_index,
+                                                                       mDeltaEntries[i].slice,
+                                                                       mDeltaEntries[i].element_delta);
+            } else {
+                mIndexSegments[0]->GetSegment()->appendDeltaEntry(mDeltaEntries[i].pos_table_index,
+                                                                  mDeltaEntries[i].slice,
+                                                                  mDeltaEntries[i].element_delta);
+            }
+        }
+    }
+}
+
+void OP1AIndexTable::CheckDeltaEntries(vector<uint32_t> &element_sizes)
+{
+    size_t i;
+    for (i = 0; i < mIndexElements.size(); i++) {
+        if (mIndexElements[i]->is_cbe) {
+            BMX_CHECK_M(mIndexElements[i]->element_size == element_sizes[i],
+                       ("Fixed size content package element data size changed"));
+        }
+    }
+}
+
+void OP1AIndexTable::UpdateCBEIndex(uint32_t size, vector<uint32_t> &element_sizes)
+{
+    if (mDuration == 0 && mAVCIFirstIndexSegment) {
+        mAVCIFirstIndexSegment->AddCBEIndexEntries(size, 1);
+        mIndexSegments[0]->GetSegment()->setIndexStartPosition(1);
+    } else {
+        // delete first avci index segment if the edit unit size is the same as non-first edit units
+        // e.g. the avci sequence and picture parameter sets are included in every frame
+        if (mDuration == 1 && mAVCIFirstIndexSegment &&
+            mAVCIFirstIndexSegment->GetSegment()->getEditUnitByteCount() == size)
+        {
+            size_t i;
+            for (i = 0; i < mIndexElements.size(); i++) {
+                if (mIndexElements[i]->is_cbe &&
+                    mIndexElements[i]->element_size != element_sizes[i])
+                {
+                    break;
+                }
+            }
+            if (i >= mIndexElements.size()) {
+                delete mAVCIFirstIndexSegment;
+                mAVCIFirstIndexSegment = 0;
+
+                mIndexSegments[0]->GetSegment()->setIndexStartPosition(0);
+                mIndexSegments[0]->AddCBEIndexEntries(size, 1);
+            }
+        }
+
+        mIndexSegments[0]->AddCBEIndexEntries(size, 1);
+    }
+}
+
+void OP1AIndexTable::UpdateVBEIndex(vector<uint32_t> &element_sizes)
+{
+    bool can_start_partition = CanStartPartition(); // check before any TakeIndexEntry calls
+
+    uint32_t slice_cp_offset = 0;
+    vector<uint32_t> slice_cp_offsets;
+    uint8_t prev_slice_offset = 0;
+    OP1AIndexEntry entry;
+    size_t i;
+    for (i = 0; i < mIndexElements.size(); i++) {
+        // get non-default entry if exists
+        OP1AIndexEntry element_entry;
+        if (mIndexElements[i]->TakeIndexEntry(mDuration, &element_entry) && !element_entry.IsDefault()) {
+            BMX_CHECK(entry.IsCompatible(element_entry));
+            entry = element_entry;
+        }
+
+        if (mIndexElements[i]->slice_offset != prev_slice_offset) {
+            slice_cp_offsets.push_back(slice_cp_offset);
+            prev_slice_offset = mIndexElements[i]->slice_offset;
+        }
+        slice_cp_offset += element_sizes[i];
+    }
+
+    if (mIndexSegments.empty() || mIndexSegments.back()->RequireNewSegment(can_start_partition)) {
+        mIndexSegments.push_back(new OP1AIndexTableSegment(mIndexSID, mBodySID, mEditRate, mDuration,
+                                                           mIndexEntrySize, mSliceCount));
+    }
+
+    mIndexSegments.back()->AddIndexEntry(&entry, mStreamOffset, slice_cp_offsets);
+}
+
+void OP1AIndexTable::WriteCBESegments(File *mxf_file, bool final_write)
+{
+    if (mAVCIFirstIndexSegment) {
+        BMX_CHECK(mxf_write_index_table_segment(mxf_file->getCFile(),
+                                                mAVCIFirstIndexSegment->GetSegment()->getCIndexTableSegment()));
+    }
+
+    if (!mAVCIFirstIndexSegment || mDuration > 1) {
+        int64_t orig_duration = mIndexSegments[0]->GetSegment()->getIndexDuration();
+        if (mInputDuration >= 0) {
+            BMX_ASSERT(mInputDuration >= mDuration);
+            if (mAVCIFirstIndexSegment)
+                mIndexSegments[0]->GetSegment()->setIndexDuration(mInputDuration - 1);
+            else
+                mIndexSegments[0]->GetSegment()->setIndexDuration(mInputDuration);
+        } else if (!final_write) {
+            mIndexSegments[0]->GetSegment()->setIndexDuration(0); // duration is completed at the final write
+        }
+        BMX_CHECK(mxf_write_index_table_segment(mxf_file->getCFile(),
+                                                mIndexSegments[0]->GetSegment()->getCIndexTableSegment()));
+        mIndexSegments[0]->GetSegment()->setIndexDuration(orig_duration);
+    }
+}
+
+void OP1AIndexTable::WriteVBESegments(File *mxf_file)
+{
+    BMX_ASSERT(mInputDuration < 0);
+    size_t i;
+    for (i = 0; i < mIndexSegments.size(); i++) {
+        IndexTableSegment *segment = mIndexSegments[i]->GetSegment();
+        ByteArray *entries = mIndexSegments[i]->GetEntries();
+
+        segment->writeHeader(mxf_file, (uint32_t)mDeltaEntries.size(), (uint32_t)segment->getIndexDuration());
+
+        if (!mDeltaEntries.empty()) {
+            segment->writeDeltaEntryArrayHeader(mxf_file, (uint32_t)mDeltaEntries.size());
+            size_t j;
+            for (j = 0; j < mDeltaEntries.size(); j++) {
+                segment->writeDeltaEntry(mxf_file, mDeltaEntries[j].pos_table_index, mDeltaEntries[j].slice,
+                                         mDeltaEntries[j].element_delta);
+            }
+        }
+
+        segment->writeIndexEntryArrayHeader(mxf_file, mSliceCount, 0, (uint32_t)segment->getIndexDuration());
+        mxf_file->write(entries->GetBytes(), entries->GetSize());
+
+        delete mIndexSegments[i];
+    }
+
+    mIndexSegments.clear();
 }
 
