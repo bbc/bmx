@@ -186,6 +186,10 @@ public:
     void CompleteWrite();
 
 private:
+    size_t GetCurrentContentPackage(uint32_t track_index);
+    size_t CreateContentPackage();
+
+private:
     mxfpp::File *mMXFFile;
     OP1AIndexTable *mIndexTable;
     uint32_t mKAGSize;

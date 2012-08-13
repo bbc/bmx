@@ -540,11 +540,7 @@ void OP1AContentPackageManager::WriteSamples(uint32_t track_index, const unsigne
     BMX_ASSERT(data && size && num_samples);
     BMX_ASSERT(mElementTrackIndexMap.find(track_index) != mElementTrackIndexMap.end());
 
-    size_t cp_index = 0;
-    if (mFrameWrapped) {
-        while (cp_index < mContentPackages.size() && mContentPackages[cp_index]->IsReady(track_index))
-            cp_index++;
-    }
+    size_t cp_index = GetCurrentContentPackage(track_index);
 
     uint32_t sample_size = mElementTrackIndexMap[track_index]->sample_size;
     if (sample_size == 0)
@@ -555,17 +551,8 @@ void OP1AContentPackageManager::WriteSamples(uint32_t track_index, const unsigne
     uint32_t rem_size = sample_size * num_samples;
     uint32_t rem_num_samples = num_samples;
     while (rem_num_samples > 0) {
-        if (cp_index >= mContentPackages.size()) {
-            if (mFreeContentPackages.empty()) {
-                BMX_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
-                mContentPackages.push_back(new OP1AContentPackage(mMXFFile, mIndexTable, mElements,
-                                                                  mPosition + cp_index));
-            } else {
-                mContentPackages.push_back(mFreeContentPackages.back());
-                mFreeContentPackages.pop_back();
-                mContentPackages.back()->Reset(mPosition + cp_index);
-            }
-        }
+        if (cp_index >= mContentPackages.size())
+            cp_index = CreateContentPackage();
 
         uint32_t num_written = mContentPackages[cp_index]->WriteSamples(track_index, data_ptr, rem_size, rem_num_samples);
         rem_num_samples -= num_written;
@@ -581,22 +568,10 @@ void OP1AContentPackageManager::WriteSample(uint32_t track_index, const CDataBuf
 {
     BMX_ASSERT(data_array && array_size);
 
-    size_t cp_index = 0;
-    if (mFrameWrapped) {
-        while (cp_index < mContentPackages.size() && mContentPackages[cp_index]->IsReady(track_index))
-            cp_index++;
-    }
+    size_t cp_index = GetCurrentContentPackage(track_index);
 
-    if (cp_index >= mContentPackages.size()) {
-        if (mFreeContentPackages.empty()) {
-            BMX_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
-            mContentPackages.push_back(new OP1AContentPackage(mMXFFile, mIndexTable, mElements, mPosition + cp_index));
-        } else {
-            mContentPackages.push_back(mFreeContentPackages.back());
-            mFreeContentPackages.pop_back();
-            mContentPackages.back()->Reset(mPosition + cp_index);
-        }
-    }
+    if (cp_index >= mContentPackages.size())
+        cp_index = CreateContentPackage();
 
     mContentPackages[cp_index]->WriteSample(track_index, data_array, array_size);
 }
@@ -646,5 +621,35 @@ void OP1AContentPackageManager::CompleteWrite()
 {
     if (!mFrameWrapped && !mContentPackages.empty())
         mContentPackages.front()->CompleteWrite();
+}
+
+size_t OP1AContentPackageManager::GetCurrentContentPackage(uint32_t track_index)
+{
+    size_t cp_index = 0;
+    if (mFrameWrapped) {
+        while (cp_index < mContentPackages.size() &&
+               mContentPackages[cp_index]->IsReady(track_index))
+        {
+            cp_index++;
+        }
+    }
+
+    return cp_index;
+}
+
+size_t OP1AContentPackageManager::CreateContentPackage()
+{
+    size_t cp_index = mContentPackages.size();
+
+    if (mFreeContentPackages.empty()) {
+        BMX_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
+        mContentPackages.push_back(new OP1AContentPackage(mMXFFile, mIndexTable, mElements, mPosition + cp_index));
+    } else {
+        mContentPackages.push_back(mFreeContentPackages.back());
+        mFreeContentPackages.pop_back();
+        mContentPackages.back()->Reset(mPosition + cp_index);
+    }
+
+    return cp_index;
 }
 
