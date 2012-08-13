@@ -522,7 +522,10 @@ void OP1AFile::CreateHeaderMetadata()
     Preface *preface = new Preface(mHeaderMetadata);
     preface->setLastModifiedDate(mCreationDate);
     preface->setVersion((mFlavour & OP1A_377_2004_FLAVOUR) ? MXF_PREFACE_VER(1, 2) : MXF_PREFACE_VER(1, 3));
-    preface->setOperationalPattern(MXF_OP_L(1a, MultiTrack_Stream_Internal));
+    if (mTracks.size() <= 1)
+        preface->setOperationalPattern(MXF_OP_L(1a, UniTrack_Stream_Internal));
+    else
+        preface->setOperationalPattern(MXF_OP_L(1a, MultiTrack_Stream_Internal));
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         preface->appendEssenceContainers(*iter);
@@ -661,7 +664,10 @@ void OP1AFile::CreateFile()
     else
         header_partition.setBodySID(0);
     header_partition.setKagSize(mKAGSize);
-    header_partition.setOperationalPattern(&MXF_OP_L(1a, MultiTrack_Stream_Internal));
+    if (mTracks.size() <= 1)
+        header_partition.setOperationalPattern(&MXF_OP_L(1a, UniTrack_Stream_Internal));
+    else
+        header_partition.setOperationalPattern(&MXF_OP_L(1a, MultiTrack_Stream_Internal));
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         header_partition.addEssenceContainer(&(*iter));
