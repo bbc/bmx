@@ -702,6 +702,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\include\bmx\writer_helper\D10WriterHelper.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\include\bmx\writer_helper\MPEG2LGWriterHelper.h"
 					>
 				</File>
@@ -1229,6 +1233,10 @@
 				>
 				<File
 					RelativePath="..\..\..\src\writer_helper\AVCIWriterHelper.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\writer_helper\D10WriterHelper.cpp"
 					>
 				</File>
 				<File
