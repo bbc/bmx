@@ -40,6 +40,7 @@
 #include <algorithm>
 
 #include <bmx/mxf_op1a/OP1AFile.h>
+#include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
 #include <bmx/MD5.h>
 #include <bmx/Version.h>
@@ -86,6 +87,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mFlavour = flavour;
     mMXFFile = mxf_file;
     mFrameRate = frame_rate;
+    mEditRate = frame_rate;
     mStartTimecode = Timecode(frame_rate, false);
     mCompanyName = get_bmx_company_name();
     mProductName = get_bmx_library_name();
@@ -98,6 +100,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mxf_generate_uuid(&mGenerationUID);
     mxf_generate_umid(&mMaterialPackageUID);
     mxf_generate_umid(&mFileSourcePackageUID);
+    mFrameWrapped = true;
     mOutputStartOffset = 0;
     mOutputEndOffset = 0;
     mPictureTrackCount = 0;
@@ -119,7 +122,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mMXFMD5WrapperFile = 0;
 
     mIndexTable = new OP1AIndexTable(INDEX_SID, BODY_SID, frame_rate);
-    mCPManager = new OP1AContentPackageManager(mEssencePartitionKAGSize, MIN_LLEN);
+    mCPManager = new OP1AContentPackageManager(mMXFFile, mIndexTable, mEssencePartitionKAGSize, MIN_LLEN);
 
     if (flavour & OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR) {
         mMXFMD5WrapperFile = md5_wrap_mxf_file(mMXFFile->getCFile());
@@ -200,6 +203,13 @@ void OP1AFile::SetPartitionInterval(int64_t frame_count)
     mPartitionInterval = frame_count;
 }
 
+void OP1AFile::SetClipWrapped(bool enable)
+{
+    BMX_CHECK(mTracks.empty());
+    mFrameWrapped = !enable;
+    mCPManager->SetClipWrapped(enable);
+}
+
 void OP1AFile::SetOutputStartOffset(int64_t offset)
 {
     BMX_CHECK(offset >= 0);
@@ -218,7 +228,7 @@ OP1ATrack* OP1AFile::CreateTrack(EssenceType essence_type)
 {
     uint32_t track_id;
     uint8_t track_type_number;
-    if ((essence_type == WAVE_PCM)) {
+    if (essence_type == WAVE_PCM) {
         track_id = FIRST_SOUND_TRACK_ID + mSoundTrackCount;
         track_type_number = mSoundTrackCount;
         mSoundTrackCount++;
@@ -228,9 +238,17 @@ OP1ATrack* OP1AFile::CreateTrack(EssenceType essence_type)
         mPictureTrackCount++;
     }
 
-    mTracks.push_back(OP1ATrack::Create(this, (uint32_t)mTracks.size(), track_id, track_type_number, mFrameRate,
+    BMX_CHECK_M(mFrameWrapped || (mTracks.empty() && mSoundTrackCount == 1),
+                ("OP-1A clip wrapping only supported for a single sound track"));
+
+    mTracks.push_back(OP1ATrack::Create(this, (uint32_t)mTracks.size(), track_id, track_type_number, mEditRate,
                                         essence_type));
     mTrackMap[mTracks.back()->GetTrackIndex()] = mTracks.back();
+
+    if (!mFrameWrapped) {
+        mEditRate = mTracks.back()->GetEditRate();
+        mIndexTable->SetEditRate(mEditRate);
+    }
 
     return mTracks.back();
 }
@@ -544,7 +562,7 @@ void OP1AFile::CreateHeaderMetadata()
     timecode_track->setTrackName(TIMECODE_TRACK_NAME);
     timecode_track->setTrackID(TIMECODE_TRACK_ID);
     timecode_track->setTrackNumber(0);
-    timecode_track->setEditRate(mFrameRate);
+    timecode_track->setEditRate(mEditRate);
     timecode_track->setOrigin(0);
 
     // Preface - ContentStorage - MaterialPackage - Timecode Track - Sequence
@@ -575,7 +593,7 @@ void OP1AFile::CreateHeaderMetadata()
     timecode_track->setTrackName(TIMECODE_TRACK_NAME);
     timecode_track->setTrackID(TIMECODE_TRACK_ID);
     timecode_track->setTrackNumber(0);
-    timecode_track->setEditRate(mFrameRate);
+    timecode_track->setEditRate(mEditRate);
     timecode_track->setOrigin(source_track_origin);
 
     // Preface - ContentStorage - SourcePackage - Timecode Track - Sequence
@@ -599,7 +617,7 @@ void OP1AFile::CreateHeaderMetadata()
     if (mTracks.size() > 1) {
         MultipleDescriptor *mult_descriptor = new MultipleDescriptor(mHeaderMetadata);
         mFileSourcePackage->setDescriptor(mult_descriptor);
-        mult_descriptor->setSampleRate(mFrameRate);
+        mult_descriptor->setSampleRate(mEditRate);
         mult_descriptor->setEssenceContainer(MXF_EC_L(MultipleWrappings));
         if (mSupportCompleteSinglePass)
             mult_descriptor->setContainerDuration(mInputDuration);
@@ -734,7 +752,7 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
 
             if (mIndexTable->IsCBE()) {
                 // make sure edit unit byte count and delta entries are known
-                mCPManager->UpdateIndexTable(mIndexTable, mCPManager->HaveContentPackages(2) ? 2 : 1);
+                mCPManager->UpdateIndexTable(mCPManager->HaveContentPackages(2) ? 2 : 1);
 
                 if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR)) {
                     mCBEIndexTableStartPos = mMXFFile->tell(); // need this position when we re-write the index segment
@@ -801,15 +819,19 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
             mMXFFile->closeMemoryFile();
         }
 
-        mCPManager->WriteNextContentPackage(mMXFFile, mIndexTable);
+        mCPManager->WriteNextContentPackage();
 
         if (mPartitionInterval > 0)
             mPartitionFrameCount++;
     }
 
-    if (end_of_samples && mMXFFile->isMemoryFileOpen()) {
-        UpdateFirstPartitions();
-        mMXFFile->closeMemoryFile();
+    if (end_of_samples) {
+        mCPManager->CompleteWrite();
+
+        if (mMXFFile->isMemoryFileOpen()) {
+            UpdateFirstPartitions();
+            mMXFFile->closeMemoryFile();
+        }
     }
 }
 

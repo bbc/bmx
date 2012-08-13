@@ -357,6 +357,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  op1a:\n");
     fprintf(stderr, "    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support\n");
     fprintf(stderr, "                                separate partitions for header metadata, index tables, essence container data and footer\n");
+    fprintf(stderr, "    --clip-wrap             Use clip wrapping for a single sound track\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11d10/d10:\n");
     fprintf(stderr, "    --d10-mute <flags>      Indicate using a string of 8 '0' or '1' which sound channels should be muted. The lsb is the rightmost digit\n");
@@ -516,6 +517,7 @@ int main(int argc, const char** argv)
     Timestamp tp_created;
     bool tp_created_set = false;
     bool min_part = false;
+    bool clip_wrap = false;
     bool allow_no_avci_head = false;
     bool force_no_avci_head = false;
     int value, num, den;
@@ -829,6 +831,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--min-part") == 0)
         {
             min_part = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--clip-wrap") == 0)
+        {
+            clip_wrap = true;
         }
         else if (strcmp(argv[cmdln_index], "--d10-mute") == 0)
         {
@@ -2589,6 +2595,7 @@ int main(int argc, const char** argv)
         } else if (clip_type == CW_OP1A_CLIP_TYPE) {
             OP1AFile *op1a_clip = clip->GetOP1AClip();
 
+            op1a_clip->SetClipWrapped(clip_wrap);
             op1a_clip->SetPartitionInterval(partition_interval);
             op1a_clip->SetOutputStartOffset(output_start_offset);
             op1a_clip->SetOutputEndOffset(- output_end_offset);

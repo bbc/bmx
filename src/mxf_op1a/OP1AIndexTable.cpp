@@ -213,7 +213,7 @@ void OP1AIndexTableSegment::UpdateIndexEntry(int64_t segment_position, int8_t te
     mxf_set_int8(temporal_offset, &mEntries.GetBytes()[segment_position * mIndexEntrySize]);
 }
 
-void OP1AIndexTableSegment::AddCBEIndexEntry(uint32_t edit_unit_byte_count)
+void OP1AIndexTableSegment::AddCBEIndexEntries(uint32_t edit_unit_byte_count, uint32_t num_entries)
 {
     if (mSegment.getEditUnitByteCount() == 0) {
         mSegment.setEditUnitByteCount(edit_unit_byte_count);
@@ -222,7 +222,7 @@ void OP1AIndexTableSegment::AddCBEIndexEntry(uint32_t edit_unit_byte_count)
                    ("Failed to index variable content package size in CBE index table"));
     }
 
-    mSegment.incrementIndexDuration();
+    mSegment.setIndexDuration(mSegment.getIndexDuration() + num_entries);
 }
 
 uint32_t OP1AIndexTableSegment::GetDuration() const
@@ -232,11 +232,11 @@ uint32_t OP1AIndexTableSegment::GetDuration() const
 
 
 
-OP1AIndexTable::OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRational frame_rate)
+OP1AIndexTable::OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRational edit_rate)
 {
     mIndexSID = index_sid;
     mBodySID = body_sid;
-    mFrameRate = frame_rate;
+    mEditRate = edit_rate;
     mInputDuration = -1;
     mIsCBE = true;
     mHaveAVCI = false;
@@ -256,6 +256,12 @@ OP1AIndexTable::~OP1AIndexTable()
     delete mAVCIFirstIndexSegment;
     for (i = 0; i < mIndexSegments.size(); i++)
         delete mIndexSegments[i];
+}
+
+void OP1AIndexTable::SetEditRate(mxfRational edit_rate)
+{
+    BMX_ASSERT(mIndexSegments.empty());
+    mEditRate = edit_rate;
 }
 
 void OP1AIndexTable::SetInputDuration(int64_t duration)
@@ -302,10 +308,10 @@ void OP1AIndexTable::PrepareWrite()
     }
     BMX_ASSERT(!mIsCBE || mSliceCount == 0);
 
-    mIndexSegments.push_back(new OP1AIndexTableSegment(mIndexSID, mBodySID, mFrameRate, 0, mIndexEntrySize,
+    mIndexSegments.push_back(new OP1AIndexTableSegment(mIndexSID, mBodySID, mEditRate, 0, mIndexEntrySize,
                                                        mSliceCount));
     if (RequireIndexTableSegmentPair())
-        mAVCIFirstIndexSegment = new OP1AIndexTableSegment(mIndexSID, mBodySID, mFrameRate, 0, mIndexEntrySize,
+        mAVCIFirstIndexSegment = new OP1AIndexTableSegment(mIndexSID, mBodySID, mEditRate, 0, mIndexEntrySize,
                                                            mSliceCount);
 }
 
@@ -435,7 +441,7 @@ void OP1AIndexTable::UpdateIndex(uint32_t size, vector<uint32_t> element_sizes)
     // update index table entries and/or duration
     if (mIsCBE) {
         if (mDuration == 0 && mAVCIFirstIndexSegment) {
-            mAVCIFirstIndexSegment->AddCBEIndexEntry(size);
+            mAVCIFirstIndexSegment->AddCBEIndexEntries(size, 1);
             mIndexSegments[0]->GetSegment()->setIndexStartPosition(1);
         } else {
             // delete first avci index segment if the edit unit size is the same as non-first edit units
@@ -456,11 +462,11 @@ void OP1AIndexTable::UpdateIndex(uint32_t size, vector<uint32_t> element_sizes)
                     mAVCIFirstIndexSegment = 0;
 
                     mIndexSegments[0]->GetSegment()->setIndexStartPosition(0);
-                    mIndexSegments[0]->AddCBEIndexEntry(size);
+                    mIndexSegments[0]->AddCBEIndexEntries(size, 1);
                 }
             }
 
-            mIndexSegments[0]->AddCBEIndexEntry(size);
+            mIndexSegments[0]->AddCBEIndexEntries(size, 1);
         }
     } else {
         bool can_start_partition = CanStartPartition(); // check before any TakeIndexEntry calls
@@ -486,7 +492,7 @@ void OP1AIndexTable::UpdateIndex(uint32_t size, vector<uint32_t> element_sizes)
         }
 
         if (mIndexSegments.empty() || mIndexSegments.back()->RequireNewSegment(can_start_partition)) {
-            mIndexSegments.push_back(new OP1AIndexTableSegment(mIndexSID, mBodySID, mFrameRate, mDuration,
+            mIndexSegments.push_back(new OP1AIndexTableSegment(mIndexSID, mBodySID, mEditRate, mDuration,
                                                                mIndexEntrySize, mSliceCount));
         }
 
@@ -494,6 +500,25 @@ void OP1AIndexTable::UpdateIndex(uint32_t size, vector<uint32_t> element_sizes)
     }
 
     mDuration++;
+    mStreamOffset += size;
+}
+
+void OP1AIndexTable::UpdateIndex(uint32_t size, uint32_t num_samples)
+{
+    if (num_samples == 1) {
+        vector<uint32_t> element_sizes;
+        element_sizes.push_back(size);
+        UpdateIndex(size, element_sizes);
+        return;
+    }
+
+    BMX_ASSERT(mIndexElements.size() == 1);
+    BMX_ASSERT(mIsCBE);
+    BMX_ASSERT(num_samples > 0 && size % num_samples == 0);
+
+    mIndexSegments[0]->AddCBEIndexEntries(size / num_samples, num_samples);
+
+    mDuration += num_samples;
     mStreamOffset += size;
 }
 

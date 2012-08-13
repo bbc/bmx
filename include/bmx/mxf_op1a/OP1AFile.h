@@ -79,6 +79,7 @@ public:
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);                // default 8192
     void SetPartitionInterval(int64_t frame_count);                     // default 0 (single partition)
     void SetInputDuration(int64_t duration);                            // single pass flavours only
+    void SetClipWrapped(bool enable);                                   // default false (frame wrapped)
 
 public:
     void SetOutputStartOffset(int64_t offset);
@@ -96,7 +97,9 @@ public:
     mxfpp::HeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }
     mxfpp::DataModel* GetDataModel() const { return mDataModel; }
 
-    mxfRational GetFrameRate() const { return mFrameRate; }
+    bool IsFrameWrapped() const { return mFrameWrapped; }
+
+    mxfRational GetFrameRate() const { return mEditRate; }
 
     Timecode GetStartTimecode() const { return mStartTimecode; }
 
@@ -130,6 +133,7 @@ private:
 
     std::string mClipName;
     mxfRational mFrameRate;
+    mxfRational mEditRate;
     Timecode mStartTimecode;
     std::string mCompanyName;
     std::string mProductName;
@@ -142,6 +146,7 @@ private:
     mxfUUID mGenerationUID;
     mxfUMID mMaterialPackageUID;
     mxfUMID mFileSourcePackageUID;
+    bool mFrameWrapped;
 
     int64_t mOutputStartOffset;
     int64_t mOutputEndOffset;

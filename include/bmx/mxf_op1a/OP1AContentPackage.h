@@ -63,18 +63,26 @@ public:
     OP1AContentPackageElement(uint32_t track_index_, mxfKey element_key_,
                               uint32_t kag_size_, uint8_t min_llen_,
                               std::vector<uint32_t> sample_sequence_, uint32_t sample_size_);
+    OP1AContentPackageElement(uint32_t track_index_, mxfKey element_key_,
+                              uint32_t kag_size_, uint8_t min_llen_, uint8_t essence_llen_);
 
     uint32_t GetNumSamples(int64_t position) const;
 
-    uint32_t GetKAGAlignedSize(uint32_t data_size);
+    uint32_t GetKAGAlignedSize(uint32_t klv_size);
+    uint32_t GetKAGFillSize(int64_t klv_size);
+
+    void WriteKL(mxfpp::File *mxf_file, int64_t essence_len);
+    void WriteFill(mxfpp::File *mxf_file, int64_t essence_len);
 
 public:
     uint32_t track_index;
     mxfKey element_key;
     uint32_t kag_size;
     uint8_t min_llen;
+    uint8_t essence_llen;
     bool is_picture;
     bool is_cbe;
+    bool is_frame_wrapped;
 
     // sound
     std::vector<uint32_t> sample_sequence;
@@ -90,44 +98,56 @@ public:
 class OP1AContentPackageElementData
 {
 public:
-    OP1AContentPackageElementData(OP1AContentPackageElement *element, int64_t position);
+    OP1AContentPackageElementData(mxfpp::File *mxf_file, OP1AIndexTable *index_table,
+                                  OP1AContentPackageElement *element, int64_t position);
 
     uint32_t WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
     void WriteSample(const CDataBuffer *data_array, uint32_t array_size);
 
-    bool IsComplete() const;
+    bool IsReady() const;
+
     uint32_t GetWriteSize() const;
-    void Write(mxfpp::File *mxf_file);
+    uint32_t GetNumSamplesWritten() const { return mNumSamplesWritten; }
+    uint32_t Write();
+    void CompleteWrite();
 
     void Reset(int64_t new_position);
 
 private:
+    mxfpp::File *mMXFFile;
+    OP1AIndexTable *mIndexTable;
     OP1AContentPackageElement *mElement;
     ByteArray mData;
     uint32_t mNumSamples;
     uint32_t mNumSamplesWritten;
+    int64_t mTotalWriteSize;
+    int64_t mElementStartPos;
 };
 
 
 class OP1AContentPackage
 {
 public:
-    OP1AContentPackage(std::vector<OP1AContentPackageElement*> elements, int64_t position);
+    OP1AContentPackage(mxfpp::File *mxf_file, OP1AIndexTable *index_table,
+                       std::vector<OP1AContentPackageElement*> elements, int64_t position);
     ~OP1AContentPackage();
 
     void Reset(int64_t new_position);
 
 public:
-    bool IsComplete(uint32_t track_index);
+    bool IsReady(uint32_t track_index);
     uint32_t WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
     void WriteSample(uint32_t track_index, const CDataBuffer *data_array, uint32_t array_size);
 
 public:
-    bool IsComplete();
-    void UpdateIndexTable(OP1AIndexTable *index_table);
-    void Write(mxfpp::File *mxf_file);
+    bool IsReady();
+    void UpdateIndexTable();
+    uint32_t Write();
+    void CompleteWrite();
 
 private:
+    OP1AIndexTable *mIndexTable;
+    bool mFrameWrapped;
     std::vector<OP1AContentPackageElementData*> mElementData;
     std::map<uint32_t, OP1AContentPackageElementData*> mElementTrackIndexMap;
     bool mHaveUpdatedIndexTable;
@@ -137,14 +157,17 @@ private:
 class OP1AContentPackageManager
 {
 public:
-    OP1AContentPackageManager(uint32_t kag_size, uint8_t min_llen);
+    OP1AContentPackageManager(mxfpp::File *mxf_file, OP1AIndexTable *index_table, uint32_t kag_size, uint8_t min_llen);
     ~OP1AContentPackageManager();
+
+    void SetClipWrapped(bool enable);
 
     void RegisterPictureTrackElement(uint32_t track_index, mxfKey element_key, bool is_cbe);
     void RegisterAVCITrackElement(uint32_t track_index, mxfKey element_key,
                                   uint32_t first_sample_size, uint32_t nonfirst_sample_size);
     void RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,
                                    std::vector<uint32_t> sample_sequence, uint32_t sample_size);
+    void RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key, uint8_t element_llen);
 
     void PrepareWrite();
 
@@ -157,12 +180,17 @@ public:
 
     bool HaveContentPackage() const;
     bool HaveContentPackages(size_t num) const;
-    void UpdateIndexTable(OP1AIndexTable *index_table, size_t num_content_packages);
-    void WriteNextContentPackage(mxfpp::File *mxf_file, OP1AIndexTable *index_table);
+    void UpdateIndexTable(size_t num_content_packages);
+    void WriteNextContentPackage();
+
+    void CompleteWrite();
 
 private:
+    mxfpp::File *mMXFFile;
+    OP1AIndexTable *mIndexTable;
     uint32_t mKAGSize;
     uint8_t mMinLLen;
+    bool mFrameWrapped;
 
     std::vector<OP1AContentPackageElement*> mElements;
     std::map<uint32_t, OP1AContentPackageElement*> mElementTrackIndexMap;

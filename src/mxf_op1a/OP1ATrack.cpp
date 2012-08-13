@@ -196,6 +196,7 @@ OP1ATrack::OP1ATrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, ui
     mTrackTypeNumber = track_type_number;
     mIsPicture = true;
     mFrameRate = frame_rate;
+    mEditRate = frame_rate;
     mTrackNumber = 0;
     mHaveLowerLevelSourcePackage = false;
     mLowerLevelSourcePackage = 0;
@@ -205,7 +206,7 @@ OP1ATrack::OP1ATrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, ui
     mEssenceType = essence_type;
     mDescriptorHelper = MXFDescriptorHelper::Create(essence_type);
     mDescriptorHelper->SetFlavour(MXFDescriptorHelper::SMPTE_377_1_FLAVOUR);
-    mDescriptorHelper->SetFrameWrapped(true);
+    mDescriptorHelper->SetFrameWrapped(file->IsFrameWrapped());
     mDescriptorHelper->SetSampleRate(frame_rate);
 }
 
@@ -294,7 +295,7 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     track->setTrackName(get_track_name(mIsPicture, mOutputTrackNumber));
     track->setTrackID(mTrackId);
     track->setTrackNumber(mOutputTrackNumber);
-    track->setEditRate(mFrameRate);
+    track->setEditRate(mEditRate);
     track->setOrigin(0);
 
     // Preface - ContentStorage - MaterialPackage - Timeline Track - Sequence
@@ -319,7 +320,7 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     track->setTrackName(get_track_name(mIsPicture, mOutputTrackNumber));
     track->setTrackID(mTrackId);
     track->setTrackNumber(mTrackNumber);
-    track->setEditRate(mFrameRate);
+    track->setEditRate(mEditRate);
     track->setOrigin(source_track_origin);
 
     // Preface - ContentStorage - SourcePackage - Timeline Track - Sequence

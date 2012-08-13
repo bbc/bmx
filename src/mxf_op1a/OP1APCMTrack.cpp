@@ -34,6 +34,7 @@
 #endif
 
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
+#include <bmx/mxf_op1a/OP1AFile.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -44,7 +45,9 @@ using namespace bmx;
 using namespace mxfpp;
 
 
-static const mxfKey AUDIO_ELEMENT_KEY = MXF_AES3BWF_EE_K(0x01, MXF_BWF_FRAME_WRAPPED_EE_TYPE, 0x00);
+static const mxfKey AUDIO_ELEMENT_FW_KEY    = MXF_AES3BWF_EE_K(0x01, MXF_BWF_FRAME_WRAPPED_EE_TYPE, 0x00);
+static const mxfKey AUDIO_ELEMENT_CW_KEY    = MXF_AES3BWF_EE_K(0x01, MXF_BWF_CLIP_WRAPPED_EE_TYPE, 0x00);
+static const uint8_t AUDIO_ELEMENT_CW_LLEN  = 8;
 
 
 
@@ -61,9 +64,19 @@ OP1APCMTrack::OP1APCMTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
     mWaveDescriptorHelper->SetQuantizationBits(16);
     mWaveDescriptorHelper->SetChannelCount(1);
 
+    if (!mOP1AFile->IsFrameWrapped()) {
+        mEditRate = mWaveDescriptorHelper->GetSamplingRate();
+        mWaveDescriptorHelper->SetSampleRate(mEditRate);
+    }
+
     mIsPicture = false;
-    mTrackNumber = MXF_AES3BWF_TRACK_NUM(0x01, MXF_BWF_FRAME_WRAPPED_EE_TYPE, 0x00);
-    mEssenceElementKey = AUDIO_ELEMENT_KEY;
+    if (mOP1AFile->IsFrameWrapped()) {
+        mTrackNumber = MXF_AES3BWF_TRACK_NUM(0x01, MXF_BWF_FRAME_WRAPPED_EE_TYPE, 0x00);
+        mEssenceElementKey = AUDIO_ELEMENT_FW_KEY;
+    } else {
+        mTrackNumber = MXF_AES3BWF_TRACK_NUM(0x01, MXF_BWF_CLIP_WRAPPED_EE_TYPE, 0x00);
+        mEssenceElementKey = AUDIO_ELEMENT_CW_KEY;
+    }
 
     SetSampleSequence();
 }
@@ -77,6 +90,11 @@ void OP1APCMTrack::SetSamplingRate(mxfRational sampling_rate)
     BMX_CHECK(sampling_rate == SAMPLING_RATE_48K);
 
     mWaveDescriptorHelper->SetSamplingRate(sampling_rate);
+
+    if (!mOP1AFile->IsFrameWrapped()) {
+        mEditRate = sampling_rate;
+        mDescriptorHelper->SetSampleRate(sampling_rate);
+    }
 
     SetSampleSequence();
 }
@@ -129,8 +147,13 @@ void OP1APCMTrack::PrepareWrite(uint8_t picture_track_count, uint8_t sound_track
 
     CompleteEssenceKeyAndTrackNum(sound_track_count);
 
-    mCPManager->RegisterSoundTrackElement(mTrackIndex, mEssenceElementKey,
-                                          GetShiftedSampleSequence(), mWaveDescriptorHelper->GetSampleSize());
+    if (mOP1AFile->IsFrameWrapped()) {
+        mCPManager->RegisterSoundTrackElement(mTrackIndex, mEssenceElementKey,
+                                              GetShiftedSampleSequence(), mWaveDescriptorHelper->GetSampleSize());
+    } else {
+        mCPManager->RegisterSoundTrackElement(mTrackIndex, mEssenceElementKey, AUDIO_ELEMENT_CW_LLEN);
+    }
+
     mIndexTable->RegisterSoundTrackElement(mTrackIndex);
 }
 

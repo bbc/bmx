@@ -77,6 +77,8 @@ public:
 
     uint32_t GetSampleSize();
 
+    mxfRational GetEditRate() const { return mEditRate; }
+
     int64_t GetDuration() const;
     int64_t GetContainerDuration() const;
 
@@ -108,6 +110,7 @@ protected:
     bool mOutputTrackNumberSet;
     bool mIsPicture;
     mxfRational mFrameRate;
+    mxfRational mEditRate;
     uint32_t mTrackNumber;
     mxfKey mEssenceElementKey;
     uint8_t mTrackTypeNumber;

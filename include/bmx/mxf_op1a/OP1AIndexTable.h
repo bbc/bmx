@@ -103,7 +103,7 @@ private:
 class OP1AIndexTableSegment
 {
 public:
-    OP1AIndexTableSegment(uint32_t index_sid, uint32_t body_sid, mxfRational frame_rate, int64_t start_position,
+    OP1AIndexTableSegment(uint32_t index_sid, uint32_t body_sid, mxfRational edit_rate, int64_t start_position,
                            uint32_t index_entry_size, uint32_t slice_count);
     ~OP1AIndexTableSegment();
 
@@ -111,7 +111,7 @@ public:
     void AddIndexEntry(const OP1AIndexEntry *entry, int64_t stream_offset, std::vector<uint32_t> slice_cp_offsets);
     void UpdateIndexEntry(int64_t segment_position, int8_t temporal_offset);
 
-    void AddCBEIndexEntry(uint32_t edit_unit_byte_count);
+    void AddCBEIndexEntries(uint32_t edit_unit_byte_count, uint32_t num_entries);
 
     uint32_t GetDuration() const;
 
@@ -128,8 +128,10 @@ private:
 class OP1AIndexTable
 {
 public:
-    OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRational frame_rate);
+    OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRational edit_rate);
     ~OP1AIndexTable();
+
+    void SetEditRate(mxfRational edit_rate);
 
     void RegisterPictureTrackElement(uint32_t track_index, bool is_cbe, bool apply_temporal_reordering);
     void RegisterAVCITrackElement(uint32_t track_index);
@@ -157,6 +159,7 @@ public:
     bool CanStartPartition();
 
     void UpdateIndex(uint32_t size, std::vector<uint32_t> element_sizes);
+    void UpdateIndex(uint32_t size, uint32_t num_samples);
 
 public:
     bool HaveSegments();
@@ -165,7 +168,7 @@ public:
 private:
     uint32_t mIndexSID;
     uint32_t mBodySID;
-    mxfRational mFrameRate;
+    mxfRational mEditRate;
 
     int64_t mInputDuration;
 
