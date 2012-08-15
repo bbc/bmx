@@ -426,6 +426,8 @@ static void usage(const char *cmd)
     fprintf(stderr, " --app-events <mask>   Print Archive Preservation Project events metadata to stdout (single file only)\n");
     fprintf(stderr, "                         <mask> is a sequence of event types (e.g. dtv) identified using the following characters:\n");
     fprintf(stderr, "                            d=digibeta dropout, p=PSE failure, t=timecode break, v=VTR error\n");
+    fprintf(stderr, " --no-app-events-tc    Don't extract timecodes from the essence container to associate with the\n");
+    fprintf(stderr, "                          Archive Preservation Project events metadata\n");
     fprintf(stderr, " --avid                Print Avid metadata to stdout (single file only)\n");
 }
 
@@ -455,6 +457,7 @@ int main(int argc, const char** argv)
     bool check_crc32 = false;
     bool do_print_app = false;
     int app_events_mask = 0;
+    bool extract_app_events_tc = true;
     bool do_print_avid = false;
     int cmdln_index;
 
@@ -616,6 +619,10 @@ int main(int argc, const char** argv)
             }
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--no-app-events-tc") == 0)
+        {
+            extract_app_events_tc = false;
+        }
         else if (strcmp(argv[cmdln_index], "--avid") == 0)
         {
             do_print_avid = true;
@@ -725,6 +732,7 @@ int main(int argc, const char** argv)
         throw false;                                                                    \
     }
 
+        APPInfoOutput app_output;
         vector<MXFMD5WrapperFile*> md5_wrap_files;
         MXFReader *reader;
         MXFFileReader *file_reader = 0;
@@ -757,7 +765,7 @@ int main(int argc, const char** argv)
             if (do_print_as11)
                 as11_register_extensions(file_reader);
             if (do_print_app || app_events_mask)
-                app_register_extensions(file_reader);
+                app_output.RegisterExtensions(file_reader);
             // avid extensions are already registered by the MXFReader
             OPEN_FILE(file_reader, 0)
 
@@ -852,10 +860,13 @@ int main(int argc, const char** argv)
         if (file_reader) {
             if (do_print_as11)
                 as11_print_info(file_reader);
-            if (do_print_app)
-                app_print_info(file_reader);
-            if (app_events_mask)
-                app_print_events(file_reader, app_events_mask);
+            if (do_print_app || app_events_mask) {
+                app_output.ExtractInfo(app_events_mask);
+                if (do_print_app)
+                    app_output.PrintInfo();
+                if (app_events_mask && !extract_app_events_tc)
+                    app_output.PrintEvents();
+            }
             if (do_print_avid)
                 avid_print_info(file_reader);
         }
@@ -963,6 +974,7 @@ int main(int argc, const char** argv)
                     break;
                 total_num_read += num_read;
 
+                bool have_app_tc = false;
                 int file_count = 0;
                 size_t i;
                 for (i = 0; i < reader->GetNumTrackReaders(); i++) {
@@ -999,6 +1011,26 @@ int main(int argc, const char** argv)
                                         crc32_error_count++;
                                     crc32_check_count++;
 
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!have_app_tc && file_reader && app_events_mask && extract_app_events_tc) {
+                            const vector<FrameMetadata*> *metadata = frame->GetMetadata(SYSTEM_SCHEME_1_FMETA_ID);
+                            if (metadata) {
+                                size_t i;
+                                for (i = 0; i < metadata->size(); i++) {
+                                    const SystemScheme1Metadata *ss1_meta =
+                                        dynamic_cast<const SystemScheme1Metadata*>((*metadata)[i]);
+                                    if (ss1_meta->GetType() != SystemScheme1Metadata::TIMECODE_ARRAY)
+                                        continue;
+
+                                    const SS1TimecodeArray *tc_array = dynamic_cast<const SS1TimecodeArray*>(ss1_meta);
+                                    app_output.AddEventTimecodes(frame->position, tc_array->GetVITC(),
+                                                                 tc_array->GetLTC());
+
+                                    have_app_tc = true;
                                     break;
                                 }
                             }
@@ -1107,6 +1139,21 @@ int main(int argc, const char** argv)
                 md5_wrap_finalize(md5_wrap_files[i], digest);
                 log_info("File MD5: %s %s\n", filenames[i], md5_digest_str(digest).c_str());
             }
+        }
+
+        if (file_reader && app_events_mask && extract_app_events_tc) {
+            file_reader->SetReadLimits();
+            // enabling just 1 track is sufficient to get the timecode metadata
+            bool have_track = false;
+            size_t i;
+            for (i = file_reader->GetNumTrackReaders(); i > 0; i--) {
+                if (!have_track && file_reader->GetTrackReader(i - 1)->IsEnabled())
+                    have_track = true;
+                else
+                    file_reader->GetTrackReader(i - 1)->SetEnable(false);
+            }
+            app_output.CompleteEventTimecodes();
+            app_output.PrintEvents();
         }
 
 

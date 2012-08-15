@@ -32,8 +32,10 @@
 #ifndef APP_INFO_OUTPUT_H_
 #define APP_INFO_OUTPUT_H_
 
+#include <vector>
 
 #include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/mxf_reader/MXFAPPInfo.h>
 
 
 #define DIGIBETA_DROPOUT_MASK   0x01
@@ -47,9 +49,41 @@ namespace bmx
 {
 
 
-void app_register_extensions(MXFFileReader *file_reader);
-void app_print_info(MXFFileReader *file_reader);
-void app_print_events(MXFFileReader *file_reader, int event_mask);
+class APPInfoOutput
+{
+public:
+    APPInfoOutput();
+    ~APPInfoOutput();
+
+    void RegisterExtensions(MXFFileReader *file_reader);
+    void ExtractInfo(int event_mask);
+
+    void AddEventTimecodes(int64_t position, Timecode vitc, Timecode ltc);
+    void CompleteEventTimecodes();
+
+    void PrintInfo();
+    void PrintEvents();
+
+private:
+    typedef struct
+    {
+        ArchiveTimecode vitc;
+        ArchiveTimecode ltc;
+    } APPTimecodeInfo;
+
+private:
+    MXFFileReader *mFileReader;
+    MXFAPPInfo mInfo;
+
+    std::vector<APPTimecodeInfo> mPSEFailureTimecodes;
+    size_t mPSEFailureTCIndex;
+    std::vector<APPTimecodeInfo> mVTRErrorTimecodes;
+    size_t mVTRErrorTCIndex;
+    std::vector<APPTimecodeInfo> mDigiBetaDropoutTimecodes;
+    size_t mDigiBetaDropoutTCIndex;
+    std::vector<APPTimecodeInfo> mTimecodeBreakTimecodes;
+    size_t mTimecodeBreakTCIndex;
+};
 
 
 
