@@ -91,10 +91,17 @@ public:
     ~IndexTableHelper();
 
     bool ExtractIndexTable();
+
+    void SetEditRate(Rational edit_rate);
+    void SetConstantEditUnitSize(Rational edit_rate, uint32_t size);
+
     void SetEssenceDataSize(int64_t size);
 
-    mxfRational GetEditRate();
-    int64_t GetDuration() const { return mDuration; }
+public:
+    bool IsComplete() const { return mIsComplete; }
+
+    Rational GetEditRate() const { return mEditRate; }
+    int64_t GetDuration() const  { return mDuration; }
 
     bool HaveConstantEditUnitSize() const { return mHaveConstantEditUnitSize; }
     uint32_t GetEditUnitSize()      const { return mEditUnitSize; }
@@ -111,6 +118,8 @@ public:
 private:
     MXFFileReader *mFileReader;
 
+    bool mIsComplete;
+
     std::vector<IndexTableHelperSegment*> mSegments;
     size_t mLastEditUnitSegment;
 
@@ -119,6 +128,7 @@ private:
 
     int64_t mEssenceDataSize;
 
+    Rational mEditRate;
     int64_t mDuration;
 };
 

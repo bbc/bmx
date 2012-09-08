@@ -392,7 +392,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
             ExtractInfoFromFirstFrame();
 
         // do some checks, set read limits to [0+precharge, duration+rollout) and seek to start (0+precharge)
-        if (mEssenceReader && mEssenceReader->GetIndexedDuration() < mDuration) {
+        if (mIndexSID && mEssenceReader && mEssenceReader->GetIndexedDuration() < mDuration) {
             log_warn("Essence index duration %"PRId64" is less than track duration %"PRId64"\n",
                      mEssenceReader->GetIndexedDuration(), mDuration);
         }
@@ -940,12 +940,11 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         if (mBodySID == 0)
             THROW_RESULT(MXF_RESULT_NO_ESSENCE);
 
-        // require index table
         mIndexSID = 0;
         if (single_ess_data->haveIndexSID())
             mIndexSID = single_ess_data->getIndexSID();
         if (mIndexSID == 0)
-            THROW_RESULT(MXF_RESULT_NO_ESSENCE_INDEX);
+            log_warn("Essence container has no index table (IndexSID is 0)\n");
     }
 }
 

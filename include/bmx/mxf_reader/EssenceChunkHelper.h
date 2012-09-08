@@ -66,7 +66,13 @@ public:
     void ExtractEssenceChunkIndex(uint32_t avid_first_frame_offset);
 
     int64_t GetEssenceDataSize() const;
-    void GetEditUnit(int64_t index_offset, int64_t index_size, int64_t *file_position);
+    int64_t GetFilePosition(int64_t index_offset, int64_t index_size);
+    int64_t GetFilePosition(int64_t index_offset);
+    int64_t GetMaxContiguousSize(int64_t file_position);
+
+private:
+    void IndexOffsetUpdate(int64_t index_offset);
+    void FilePositionUpdate(int64_t file_position);
 
 private:
     MXFFileReader *mFileReader;

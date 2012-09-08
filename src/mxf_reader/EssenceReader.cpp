@@ -44,7 +44,9 @@
 #include <bmx/mxf_reader/EssenceReader.h>
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/SoundMXFDescriptorHelper.h>
 #include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -64,33 +66,43 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
     mPosition = 0;
     mImageStartOffset = 0;
     mImageEndOffset = 0;
+    mCachedKey = g_Null_Key;
+    mCachedLLen = 0;
+    mCachedLen = 0;
+    mHaveCachedKL = false;
+
+    auto_ptr<MXFDescriptorHelper> helper;
+    PictureMXFDescriptorHelper *picture_helper = 0;;
+    SoundMXFDescriptorHelper *sound_helper = 0;;
+    if (mFileReader->IsClipWrapped()) {
+        BMX_ASSERT(mFileReader->GetNumInternalTrackReaders() == 1);
+        helper.reset(MXFDescriptorHelper::Create(
+            mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),
+            mFileReader->GetMXFVersion(),
+            mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->essence_container_label));
+        picture_helper = dynamic_cast<PictureMXFDescriptorHelper*>(helper.get());
+        sound_helper = dynamic_cast<SoundMXFDescriptorHelper*>(helper.get());
+    }
+
 
     // read ImageStartOffset used in Avid uncompressed video and the
     // FirstFrameOffset Avid extension property
     int32_t avid_first_frame_offset = 0;
-    if (mFileReader->IsClipWrapped()) {
-        BMX_ASSERT(mFileReader->GetNumInternalTrackReaders() == 1);
-        auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
-            mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),
-            mFileReader->GetMXFVersion(),
-            mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->essence_container_label));
-        PictureMXFDescriptorHelper *picture_helper = dynamic_cast<PictureMXFDescriptorHelper*>(helper.get());
-        if (picture_helper) {
-            if (picture_helper->HaveAvidFirstFrameOffset())
-                avid_first_frame_offset = picture_helper->GetAvidFirstFrameOffset();
+    if (mFileReader->IsClipWrapped() && picture_helper) {
+        if (picture_helper->HaveAvidFirstFrameOffset())
+            avid_first_frame_offset = picture_helper->GetAvidFirstFrameOffset();
 
-            uint32_t alignment = picture_helper->GetImageAlignmentOffset();
-            mImageStartOffset = picture_helper->GetImageStartOffset();
-            mImageEndOffset = picture_helper->GetImageEndOffset();
-            if (alignment > 1 && mImageStartOffset == 0 && mImageEndOffset == 0) {
-                // Avid uncompressed Alpha file was found to have ImageAlignmentOffset set to 8192 but
-                // the ImageEndOffset property was not set
-                mImageEndOffset = (alignment - (picture_helper->GetSampleSize() % alignment)) % alignment;
-                if (mImageEndOffset != 0) {
-                    log_warn("File with a non-zero ImageAlignmentOffset is missing a non-zero "
-                             "ImageStartOffset or ImageEndOffset. Assuming ImageEndOffset %u\n",
-                             mImageEndOffset);
-                }
+        uint32_t alignment = picture_helper->GetImageAlignmentOffset();
+        mImageStartOffset = picture_helper->GetImageStartOffset();
+        mImageEndOffset = picture_helper->GetImageEndOffset();
+        if (alignment > 1 && mImageStartOffset == 0 && mImageEndOffset == 0) {
+            // Avid uncompressed Alpha file was found to have ImageAlignmentOffset set to 8192 but
+            // the ImageEndOffset property was not set
+            mImageEndOffset = (alignment - (picture_helper->GetSampleSize() % alignment)) % alignment;
+            if (mImageEndOffset != 0) {
+                log_warn("File with a non-zero ImageAlignmentOffset is missing a non-zero "
+                         "ImageStartOffset or ImageEndOffset. Assuming ImageEndOffset %u\n",
+                         mImageEndOffset);
             }
         }
     }
@@ -99,28 +111,104 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
     mEssenceChunkHelper.ExtractEssenceChunkIndex(avid_first_frame_offset);
 
     // extract essence container index
-    if (mIndexTableHelper.ExtractIndexTable()) {
-        BMX_CHECK(mIndexTableHelper.GetEditRate() == mFileReader->mSampleRate);
-        mIndexTableHelper.SetEssenceDataSize(mEssenceChunkHelper.GetEssenceDataSize());
-
-        // check there is sufficient essence container data
-        if (mIndexTableHelper.GetDuration() > 0) {
-            int64_t last_unit_offset, last_unit_size;
-            mIndexTableHelper.GetEditUnit(mIndexTableHelper.GetDuration() - 1, &last_unit_offset, &last_unit_size);
-            BMX_CHECK_M(mEssenceChunkHelper.GetEssenceDataSize() >= last_unit_offset + last_unit_size,
-                       ("Last edit unit (offset %"PRId64", size %"PRId64") not available in "
-                            "essence container (size %"PRId64")",
-                        last_unit_offset, last_unit_size, mEssenceChunkHelper.GetEssenceDataSize()));
+    if (mFileReader->mIndexSID) {
+        if (!mIndexTableHelper.ExtractIndexTable() &&
+            mEssenceChunkHelper.GetEssenceDataSize() > 0)
+        {
+            BMX_EXCEPTION(("Missing index table segments for essence data with size %"PRId64,
+                           mEssenceChunkHelper.GetEssenceDataSize()));
         }
     } else {
-        BMX_CHECK_M(mEssenceChunkHelper.GetEssenceDataSize() == 0,
-                    ("Missing index table segments for essence data with size %"PRId64,
-                     mEssenceChunkHelper.GetEssenceDataSize()));
+        vector<uint32_t> sample_sequence;
+        if (mFileReader->IsClipWrapped()) {
+            switch (helper->GetEssenceType())
+            {
+                case IEC_DV25:
+                case DVBASED_DV25:
+                case DV50:
+                case DV100_1080I:
+                case DV100_720P:
+                case UNC_SD:
+                case UNC_HD_1080I:
+                case UNC_HD_1080P:
+                case UNC_HD_720P:
+                case AVID_10BIT_UNC_SD:
+                case AVID_10BIT_UNC_HD_1080I:
+                case AVID_10BIT_UNC_HD_1080P:
+                case AVID_10BIT_UNC_HD_720P:
+                case AVID_ALPHA_SD:
+                case AVID_ALPHA_HD_1080I:
+                case AVID_ALPHA_HD_1080P:
+                case AVID_ALPHA_HD_720P:
+                case VC3_1080P_1235:
+                case VC3_1080P_1237:
+                case VC3_1080P_1238:
+                case VC3_1080I_1241:
+                case VC3_1080I_1242:
+                case VC3_1080I_1243:
+                case VC3_720P_1250:
+                case VC3_720P_1251:
+                case VC3_720P_1252:
+                case VC3_1080P_1253:
+                    mIndexTableHelper.SetConstantEditUnitSize(mFileReader->GetSampleRate(),
+                                                              picture_helper->GetEditUnitSize());
+                    break;
+                case WAVE_PCM:
+                    if (sound_helper->GetSamplingRate() == mFileReader->GetSampleRate())
+                    {
+                        mIndexTableHelper.SetConstantEditUnitSize(mFileReader->GetSampleRate(),
+                                                                  sound_helper->GetSampleSize());
+                    }
+                    else if (get_sample_sequence(mFileReader->GetSampleRate(),
+                                                 sound_helper->GetSamplingRate(),
+                                                 &sample_sequence) &&
+                             sample_sequence.size() == 1)
+                    {
+                        mIndexTableHelper.SetConstantEditUnitSize(mFileReader->GetSampleRate(),
+                                                                  sample_sequence[0] * sound_helper->GetSampleSize());
+                    }
+                    else
+                    {
+                        // TODO: support sample sequences > 1 using special index table segment
+                        // TODO: will fail later on
+                        log_warn("Unsupported clip wrapped WAVE PCM rates with missing index table\n");
+                        mIndexTableHelper.SetEditRate(mFileReader->GetSampleRate());
+                    }
+                    break;
+                default:
+                    // TODO: use essence parsers to dynamically index data
+                    // TODO: will fail later on
+                    log_warn("Unsupported clip wrapped essence data with missing index table\n");
+                    mIndexTableHelper.SetEditRate(mFileReader->GetSampleRate());
+                    break;
+            }
+        } else {
+            mIndexTableHelper.SetEditRate(mFileReader->GetSampleRate());
+        }
     }
+    BMX_CHECK(mIndexTableHelper.GetEditRate() == mFileReader->GetSampleRate());
+    mIndexTableHelper.SetEssenceDataSize(mEssenceChunkHelper.GetEssenceDataSize());
+
+    // check there is sufficient essence container data
+    if (mIndexTableHelper.GetDuration() > 0) {
+        int64_t last_unit_offset, last_unit_size;
+        mIndexTableHelper.GetEditUnit(mIndexTableHelper.GetDuration() - 1, &last_unit_offset, &last_unit_size);
+        BMX_CHECK_M(mEssenceChunkHelper.GetEssenceDataSize() >= last_unit_offset + last_unit_size,
+                   ("Last edit unit (offset %"PRId64", size %"PRId64") not available in "
+                        "essence container (size %"PRId64")",
+                    last_unit_offset, last_unit_size, mEssenceChunkHelper.GetEssenceDataSize()));
+    }
+
 
     // set read limits
     mReadStartPosition = 0;
-    mReadDuration = mIndexTableHelper.GetDuration();
+    if (mIndexTableHelper.IsComplete())
+        mReadDuration = mIndexTableHelper.GetDuration();
+    else
+        mReadDuration = INT64_MAX;
+
+    // set file position at essence data start
+    Seek(0);
 
 #if 0
     {
@@ -148,8 +236,10 @@ void EssenceReader::SetReadLimits(int64_t start_position, int64_t duration)
     BMX_CHECK(duration >= 0);
 
     mReadStartPosition = LegitimisePosition(start_position);
-    if (duration == 0)
+    if (duration == 0 || (mIndexTableHelper.IsComplete() && mIndexTableHelper.GetDuration() == 0))
         mReadDuration = 0;
+    else if (!mIndexTableHelper.IsComplete())
+        mReadDuration = duration;
     else
         mReadDuration = LegitimisePosition(start_position + duration - 1) - mReadStartPosition + 1;
 }
@@ -197,13 +287,15 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
 
     // add information for first sample in frame
 
-    int64_t index_offset, index_size;
-    int8_t temporal_offset;
-    int8_t key_frame_offset;
-    uint8_t flags;
-
-    mIndexTableHelper.GetEditUnit(start_position, &temporal_offset, &key_frame_offset,
-                                  &flags, &index_offset, &index_size);
+    int64_t index_offset = 0;
+    int64_t index_size = 0;
+    int8_t temporal_offset = 0;
+    int8_t key_frame_offset = 0;
+    uint8_t flags = 0;
+    if (HaveEditUnit(start_position)) {
+        mIndexTableHelper.GetEditUnit(start_position, &temporal_offset, &key_frame_offset,
+                                      &flags, &index_offset, &index_size);
+    }
 
     Frame *frame;
     for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
@@ -238,9 +330,14 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
 void EssenceReader::Seek(int64_t position)
 {
     if (position >= 0 && position < mReadStartPosition + mReadDuration) {
-        int64_t file_position, size;
-        GetEditUnit(position, &file_position, &size);
-        mFileReader->mFile->seek(file_position, SEEK_SET);
+        if (!mIndexTableHelper.IsComplete() &&
+            position != 0 && position >= mIndexTableHelper.GetDuration())
+        {
+            BMX_EXCEPTION(("Seeking beyond indexed essence data for incomplete index table not yet supported"));
+        }
+
+        mFileReader->mFile->seek(GetFilePosition(position), SEEK_SET);
+        mHaveCachedKL = false;
     }
 
     mPosition = position;
@@ -254,7 +351,7 @@ mxfRational EssenceReader::GetEditRate()
 bool EssenceReader::GetIndexEntry(MXFIndexEntryExt *entry, int64_t position)
 {
     if (mIndexTableHelper.GetIndexEntry(entry, position)) {
-        mEssenceChunkHelper.GetEditUnit(entry->container_offset, entry->edit_unit_size, &entry->file_offset);
+        entry->file_offset = mEssenceChunkHelper.GetFilePosition(entry->container_offset, entry->edit_unit_size);
         return true;
     }
 
@@ -340,18 +437,45 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
     int64_t current_file_position = mxf_file->tell();
     uint32_t i;
     for (i = 0; i < num_samples; i++) {
-        int64_t cp_file_position, size;
-        GetEditUnit(mPosition, &cp_file_position, &size);
-        if (current_file_position != cp_file_position)
-            mxf_file->seek(cp_file_position, SEEK_SET);
-        current_file_position = cp_file_position;
+        int64_t cp_file_position;
+        int64_t size = 0;
+        int64_t max_size = 0;
+        if (HaveEditUnit(mPosition)) {
+            GetEditUnit(mPosition, &cp_file_position, &size);
+            if (current_file_position != cp_file_position) {
+                mxf_file->seek(cp_file_position, SEEK_SET);
+                current_file_position = cp_file_position;
+            }
+            max_size = size;
+        } else {
+            BMX_ASSERT(!mIndexTableHelper.IsComplete());
+            // TODO: deal with multiple ess partitions which result in GetMaxContiguousSize failure
+            max_size = mEssenceChunkHelper.GetMaxContiguousSize(current_file_position);
+            cp_file_position = current_file_position;
+        }
 
-        mxfKey key;
+        mxfKey key, first_key;
         uint8_t llen;
         uint64_t len;
         int64_t cp_num_read = 0;
-        while (cp_num_read < size) {
-            mxf_file->readKL(&key, &llen, &len);
+        while (cp_num_read < max_size) {
+            if (mHaveCachedKL) {
+                key = mCachedKey;
+                llen = mCachedLLen;
+                len = mCachedLen;
+                mHaveCachedKL = false;
+            } else {
+                mxf_file->readKL(&key, &llen, &len);
+            }
+            if (cp_num_read == 0) {
+                first_key = key;
+            } else if (size == 0 && mxf_equals_key(&key, &first_key)) {
+                mCachedKey = key;
+                mCachedLLen = llen;
+                mCachedLen = len;
+                mHaveCachedKL = true;
+                break;
+            }
             cp_num_read += mxfKey_extlen + llen;
 
             bool processed_metadata = mFrameMetadataReader->ProcessFrameMetadata(&key, len);
@@ -370,10 +494,12 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                         BMX_CHECK(cp_num_read <= UINT32_MAX);
 
                         frame->ec_position         = start_position;
-                        frame->temporal_reordering =
-                            mIndexTableHelper.GetTemporalReordering((uint32_t)(cp_num_read - (mxfKey_extlen + llen)));
                         frame->cp_file_position    = cp_file_position;
                         frame->file_position       = cp_file_position + cp_num_read;
+                        if (HaveEditUnit(start_position)) {
+                            frame->temporal_reordering =
+                                mIndexTableHelper.GetTemporalReordering((uint32_t)(cp_num_read - (mxfKey_extlen + llen)));
+                        }
 
                         enabled_track_readers[track_number] = track_reader;
                     } else {
@@ -403,14 +529,20 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
 
             cp_num_read += len;
         }
-        BMX_CHECK_M(cp_num_read == size,
-                   ("Read content package size (0x%"PRIx64") does not match size in index (0x%"PRIx64") "
-                    "at file position 0x%"PRIx64,
-                        cp_num_read, size, current_file_position + cp_num_read));
+        if (size != 0 && cp_num_read != size) {
+           BMX_EXCEPTION(("Read content package size (0x%"PRIx64") does not match size in index (0x%"PRIx64") "
+                          "at file position 0x%"PRIx64,
+                          cp_num_read, size, current_file_position + cp_num_read));
+        }
 
-        current_file_position += size;
+        current_file_position += cp_num_read;
         mPosition++;
     }
+}
+
+bool EssenceReader::HaveEditUnit(int64_t position)
+{
+    return position >= 0 && position < mIndexTableHelper.GetDuration();
 }
 
 void EssenceReader::GetEditUnit(int64_t position, int64_t *file_position, int64_t *size)
@@ -418,7 +550,7 @@ void EssenceReader::GetEditUnit(int64_t position, int64_t *file_position, int64_
     int64_t index_offset, index_size;
     mIndexTableHelper.GetEditUnit(position, &index_offset, &index_size);
 
-    mEssenceChunkHelper.GetEditUnit(index_offset, index_size, file_position);
+    *file_position = mEssenceChunkHelper.GetFilePosition(index_offset, index_size);
     *size = index_size;
 }
 
@@ -465,5 +597,10 @@ void EssenceReader::GetEditUnitGroup(int64_t position, uint32_t max_samples, int
     *file_position = first_file_position;
     *size = first_size * left_num_samples;
     *num_samples = left_num_samples;
+}
+
+int64_t EssenceReader::GetFilePosition(int64_t position)
+{
+    return mEssenceChunkHelper.GetFilePosition(mIndexTableHelper.GetEditUnitOffset(position));
 }
 

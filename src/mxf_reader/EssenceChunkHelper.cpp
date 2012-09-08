@@ -185,12 +185,57 @@ int64_t EssenceChunkHelper::GetEssenceDataSize() const
     return mEssenceChunks.back().offset + mEssenceChunks.back().size;
 }
 
-void EssenceChunkHelper::GetEditUnit(int64_t index_offset, int64_t index_size, int64_t *file_position)
+int64_t EssenceChunkHelper::GetFilePosition(int64_t index_offset, int64_t index_size)
+{
+    IndexOffsetUpdate(index_offset);
+
+    if (mEssenceChunks[mLastEssenceChunk].offset > index_offset ||
+        mEssenceChunks[mLastEssenceChunk].offset + mEssenceChunks[mLastEssenceChunk].size < index_offset + index_size)
+    {
+        BMX_EXCEPTION(("Failed to find indexed edit unit (off=0x%"PRIx64",size=0x%"PRIx64") in essence data",
+                      index_offset, index_size));
+    }
+
+    return mEssenceChunks[mLastEssenceChunk].file_position +
+                (index_offset - mEssenceChunks[mLastEssenceChunk].offset);
+}
+
+int64_t EssenceChunkHelper::GetFilePosition(int64_t index_offset)
+{
+    IndexOffsetUpdate(index_offset);
+
+    if (mEssenceChunks[mLastEssenceChunk].offset > index_offset ||
+        mEssenceChunks[mLastEssenceChunk].offset + mEssenceChunks[mLastEssenceChunk].size < index_offset)
+    {
+        BMX_EXCEPTION(("Failed to find indexed file position (off=0x%"PRIx64") in essence data",
+                      index_offset));
+    }
+
+    return mEssenceChunks[mLastEssenceChunk].file_position +
+                (index_offset - mEssenceChunks[mLastEssenceChunk].offset);
+}
+
+int64_t EssenceChunkHelper::GetMaxContiguousSize(int64_t file_position)
+{
+    FilePositionUpdate(file_position);
+
+    if (mEssenceChunks[mLastEssenceChunk].file_position > file_position ||
+        mEssenceChunks[mLastEssenceChunk].file_position + mEssenceChunks[mLastEssenceChunk].size < file_position)
+    {
+        BMX_EXCEPTION(("Failed to find file position (off=0x%"PRIx64") in essence data",
+                      file_position));
+    }
+
+    return mEssenceChunks[mLastEssenceChunk].file_position + mEssenceChunks[mLastEssenceChunk].size - file_position;
+}
+
+void EssenceChunkHelper::IndexOffsetUpdate(int64_t index_offset)
 {
     BMX_CHECK(!mEssenceChunks.empty());
 
     // TODO: use binary search
-    if (mEssenceChunks[mLastEssenceChunk].offset > index_offset) {
+    if (mEssenceChunks[mLastEssenceChunk].offset > index_offset)
+    {
         // edit unit is in chunk before mLastEssenceChunk
         size_t i;
         for (i = mLastEssenceChunk; i > 0; i--) {
@@ -199,7 +244,10 @@ void EssenceChunkHelper::GetEditUnit(int64_t index_offset, int64_t index_size, i
                 break;
             }
         }
-    } else if (mEssenceChunks[mLastEssenceChunk].offset + mEssenceChunks[mLastEssenceChunk].size <= index_offset) {
+    }
+    else if (mEssenceChunks[mLastEssenceChunk].offset +
+                    mEssenceChunks[mLastEssenceChunk].size <= index_offset)
+    {
         // edit unit is in chunk after mLastEssenceChunk
         size_t i;
         for (i = mLastEssenceChunk + 1; i < mEssenceChunks.size(); i++) {
@@ -209,13 +257,35 @@ void EssenceChunkHelper::GetEditUnit(int64_t index_offset, int64_t index_size, i
             }
         }
     }
+}
 
-    BMX_CHECK_M(mEssenceChunks[mLastEssenceChunk].offset <= index_offset &&
-               mEssenceChunks[mLastEssenceChunk].offset + mEssenceChunks[mLastEssenceChunk].size >= index_offset + index_size,
-               ("Failed to find indexed edit unit (off=0x%"PRIx64",size=0x%"PRIx64") in essence data",
-                   index_offset, index_size));
+void EssenceChunkHelper::FilePositionUpdate(int64_t file_position)
+{
+    BMX_CHECK(!mEssenceChunks.empty());
 
-    (*file_position) = mEssenceChunks[mLastEssenceChunk].file_position +
-                        (index_offset - mEssenceChunks[mLastEssenceChunk].offset);
+    // TODO: use binary search
+    if (mEssenceChunks[mLastEssenceChunk].file_position > file_position)
+    {
+        // edit unit is in chunk before mLastEssenceChunk
+        size_t i;
+        for (i = mLastEssenceChunk; i > 0; i--) {
+            if (mEssenceChunks[i - 1].file_position <= file_position) {
+                mLastEssenceChunk = i - 1;
+                break;
+            }
+        }
+    }
+    else if (mEssenceChunks[mLastEssenceChunk].file_position +
+                 mEssenceChunks[mLastEssenceChunk].size <= file_position)
+    {
+        // edit unit is in chunk after mLastEssenceChunk
+        size_t i;
+        for (i = mLastEssenceChunk + 1; i < mEssenceChunks.size(); i++) {
+            if (mEssenceChunks[i].file_position + mEssenceChunks[i].size > file_position) {
+                mLastEssenceChunk = i;
+                break;
+            }
+        }
+    }
 }
 

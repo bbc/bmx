@@ -216,10 +216,12 @@ int64_t IndexTableHelperSegment::GetEssenceEndOffset()
 IndexTableHelper::IndexTableHelper(MXFFileReader *file_reader)
 {
     mFileReader = file_reader;
+    mIsComplete = false;
     mLastEditUnitSegment = 0;
     mHaveConstantEditUnitSize = true;
     mEditUnitSize = 0;
     mEssenceDataSize = 0;
+    mEditRate = ZERO_RATIONAL;
     mDuration = 0;
 }
 
@@ -236,6 +238,8 @@ bool IndexTableHelper::ExtractIndexTable()
     uint8_t llen;
     uint64_t len;
     File *mxf_file = mFileReader->mFile;
+
+    mIsComplete = true;
 
     const vector<Partition*> &partitions = mFileReader->mFile->getPartitions();
     size_t i;
@@ -304,6 +308,8 @@ bool IndexTableHelper::ExtractIndexTable()
     if (mSegments.empty())
         return false;
 
+    mEditRate = mSegments[0]->getIndexEditRate();
+
     // calc total duration and determine fixed edit unit byte count
     for (i = 0; i < mSegments.size(); i++) {
         BMX_CHECK(mSegments[i]->getIndexDuration() > 0 || mSegments[i]->HaveConstantEditUnitSize());
@@ -326,21 +332,36 @@ bool IndexTableHelper::ExtractIndexTable()
     return true;
 }
 
+void IndexTableHelper::SetEditRate(Rational edit_rate)
+{
+    BMX_ASSERT(mSegments.empty());
+
+    mEditRate = edit_rate;
+    mEditUnitSize = 0;
+    mHaveConstantEditUnitSize = false;
+}
+
+void IndexTableHelper::SetConstantEditUnitSize(Rational edit_rate, uint32_t size)
+{
+    BMX_ASSERT(mSegments.empty());
+
+    mSegments.push_back(new IndexTableHelperSegment());
+    IndexTableHelperSegment *segment = mSegments.back();
+    segment->setIndexEditRate(edit_rate);
+    segment->setEditUnitByteCount(size);
+
+    mEditRate = edit_rate;
+    mEditUnitSize = size;
+    mHaveConstantEditUnitSize = true;
+}
+
 void IndexTableHelper::SetEssenceDataSize(int64_t size)
 {
-    BMX_ASSERT(!mSegments.empty());
-
     mEssenceDataSize = size;
 
     // calc index duration if unknown
     if (mDuration == 0 && mHaveConstantEditUnitSize && mEditUnitSize > 0)
         mDuration = size / mEditUnitSize;
-}
-
-mxfRational IndexTableHelper::GetEditRate()
-{
-    BMX_ASSERT(!mSegments.empty());
-    return mSegments[0]->getIndexEditRate();
 }
 
 void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, int8_t *key_frame_offset, uint8_t *flags,
@@ -408,6 +429,9 @@ void IndexTableHelper::GetEditUnit(int64_t position, int64_t *offset, int64_t *s
 
 int64_t IndexTableHelper::GetEditUnitOffset(int64_t position)
 {
+    if (position == 0)
+        return 0;
+
     int8_t temporal_offset;
     int8_t key_frame_offset;
     uint8_t flags;

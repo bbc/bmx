@@ -7,8 +7,6 @@ bmx TODO Features
 1. add support for general purpose user and application tags, similar to
 AAF/Avid TaggedValues
 
-2. add support for reading MXF files that have no index table
-
 3. add support for KLV raw essence input. This allows MXF files to be
 treated as raw essence, e.g. is useful if it doesn't have an index table
 
@@ -137,3 +135,9 @@ example
     non-fragmented byte array. This will avoid several memory copies which is
     useful in applications where the performance is CPU bound rather than disk
     bound
+
+53. Support clip wrapped WAVE PCM files with no index table and varying number
+    of samples per edit unit
+
+54. Support clip wrapped files with no index table and varying edit units size.
+    Use available essence parsers

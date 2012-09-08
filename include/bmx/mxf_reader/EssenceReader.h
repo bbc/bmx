@@ -72,9 +72,11 @@ private:
     void ReadClipWrappedSamples(uint32_t num_samples);
     void ReadFrameWrappedSamples(uint32_t num_samples);
 
+    bool HaveEditUnit(int64_t position);
     void GetEditUnit(int64_t position, int64_t *file_position, int64_t *size);
     void GetEditUnitGroup(int64_t position, uint32_t max_samples, int64_t *file_position, int64_t *size,
                           uint32_t *num_samples);
+    int64_t GetFilePosition(int64_t position);
 
 private:
     MXFFileReader *mFileReader;
@@ -91,6 +93,11 @@ private:
     uint32_t mImageEndOffset;
 
     std::vector<Frame*> mTrackFrames;
+
+    mxfKey mCachedKey;
+    uint8_t mCachedLLen;
+    uint64_t mCachedLen;
+    bool mHaveCachedKL;
 };
 
 
