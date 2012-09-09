@@ -220,7 +220,9 @@ uint32_t WaveReader::Read(uint32_t num_samples)
 
         frame->SetSize(read_num_samples * mTracks[i]->GetBlockAlign());
 
+        frame->edit_rate            = mSamplingRate;
         frame->position             = mPosition;
+        frame->track_edit_rate      = mSamplingRate;
         frame->track_position       = mPosition;
         frame->first_sample_offset  = first_sample_offset;
         frame->num_samples          = read_num_samples;

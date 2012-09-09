@@ -68,9 +68,6 @@ always see complete header partitions
 
 27. factorize common code in bmxtranswrap and raw2bmx
 
-28. add frame rate information to the Frame class so that the positions / num
-samples can be interpreted correctly with local information
-
 29. add requested num samples for Frame class so that client knows that
 there are less samples than requested without having to remember this elsewhere
 

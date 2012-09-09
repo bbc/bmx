@@ -42,7 +42,9 @@ MXFFrameBuffer::MXFFrameBuffer()
 {
     mTargetBuffer = 0;
     mOwnTargetBuffer = false;
+    mNextFrameEditRate = ZERO_RATIONAL;
     mNextFramePosition = NULL_FRAME_POSITION;
+    mNextFrameTrackEditRate = ZERO_RATIONAL;
     mNextFrameTrackPosition = NULL_FRAME_POSITION;
     mUseTemporaryBuffer = false;
 }
@@ -63,25 +65,27 @@ void MXFFrameBuffer::SetTargetBuffer(FrameBuffer *target_buffer, bool take_owner
     mOwnTargetBuffer = take_ownership;
 }
 
-void MXFFrameBuffer::SetNextFramePosition(int64_t position)
+void MXFFrameBuffer::SetNextFramePosition(Rational edit_rate, int64_t position)
 {
+    mNextFrameEditRate = edit_rate;
     mNextFramePosition = position;
 
     if (!mUseTemporaryBuffer) {
         MXFFrameBuffer *target_mxf_buffer = dynamic_cast<MXFFrameBuffer*>(mTargetBuffer);
         if (target_mxf_buffer)
-            target_mxf_buffer->SetNextFramePosition(position);
+            target_mxf_buffer->SetNextFramePosition(edit_rate, position);
     }
 }
 
-void MXFFrameBuffer::SetNextFrameTrackPosition(int64_t position)
+void MXFFrameBuffer::SetNextFrameTrackPosition(Rational edit_rate, int64_t position)
 {
+    mNextFrameTrackEditRate = edit_rate;
     mNextFrameTrackPosition = position;
 
     if (!mUseTemporaryBuffer) {
         MXFFrameBuffer *target_mxf_buffer = dynamic_cast<MXFFrameBuffer*>(mTargetBuffer);
         if (target_mxf_buffer)
-            target_mxf_buffer->SetNextFrameTrackPosition(position);
+            target_mxf_buffer->SetNextFrameTrackPosition(edit_rate, position);
     }
 }
 
@@ -106,8 +110,10 @@ Frame* MXFFrameBuffer::CreateFrame()
 
 void MXFFrameBuffer::PushFrame(Frame *frame)
 {
-    frame->position = mNextFramePosition;
-    frame->track_position = mNextFrameTrackPosition;
+    frame->edit_rate       = mNextFrameEditRate;
+    frame->position        = mNextFramePosition;
+    frame->track_edit_rate = mNextFrameTrackEditRate;
+    frame->track_position  = mNextFrameTrackPosition;
 
     if (mUseTemporaryBuffer)
         mTemporaryBuffer.PushFrame(frame);

@@ -288,7 +288,7 @@ uint32_t MXFGroupReader::Read(uint32_t num_samples, bool is_top)
     int64_t current_position = GetPosition();
 
     if (is_top) {
-        SetNextFramePosition(current_position);
+        SetNextFramePosition(mSampleRate, current_position);
         SetNextFrameTrackPositions();
     }
 
@@ -505,12 +505,12 @@ int16_t MXFGroupReader::GetTrackRollout(size_t track_index, int64_t clip_positio
     return clip_rollout;
 }
 
-void MXFGroupReader::SetNextFramePosition(int64_t position)
+void MXFGroupReader::SetNextFramePosition(Rational edit_rate, int64_t position)
 {
     size_t i;
     for (i = 0; i < mReaders.size(); i++) {
         if (mReaders[i]->IsEnabled())
-            mReaders[i]->SetNextFramePosition(position);
+            mReaders[i]->SetNextFramePosition(edit_rate, position);
     }
 }
 

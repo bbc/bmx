@@ -92,7 +92,7 @@ public:
 
 public:
     virtual MXFFrameBuffer* GetMXFFrameBuffer() = 0;
-    virtual void SetNextFramePosition(int64_t position) = 0;
+    virtual void SetNextFramePosition(Rational edit_rate, int64_t position) = 0;
 };
 
 

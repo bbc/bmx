@@ -85,7 +85,10 @@ public:
     void InsertMetadata(FrameMetadata *metadata);
 
 public:
+    Rational edit_rate;
     int64_t position;
+
+    Rational track_edit_rate;
     int64_t track_position;
     int64_t ec_position;
 

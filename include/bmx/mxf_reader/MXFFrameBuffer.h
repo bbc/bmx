@@ -48,8 +48,8 @@ public:
 
     void SetTargetBuffer(FrameBuffer *target_buffer, bool take_ownership);
 
-    void SetNextFramePosition(int64_t position);
-    void SetNextFrameTrackPosition(int64_t position);
+    void SetNextFramePosition(Rational edit_rate, int64_t position);
+    void SetNextFrameTrackPosition(Rational edit_rate, int64_t position);
 
     void SetTemporaryBuffer(bool enable);
 
@@ -65,7 +65,9 @@ public:
 private:
     FrameBuffer *mTargetBuffer;
     bool mOwnTargetBuffer;
+    Rational mNextFrameEditRate;
     int64_t mNextFramePosition;
+    Rational mNextFrameTrackEditRate;
     int64_t mNextFrameTrackPosition;
     DefaultFrameBuffer mTemporaryBuffer;
     bool mUseTemporaryBuffer;

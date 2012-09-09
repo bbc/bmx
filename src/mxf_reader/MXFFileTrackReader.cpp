@@ -143,9 +143,9 @@ int16_t MXFFileTrackReader::GetRollout(int64_t position, bool limit_to_available
     return mFileReader->GetInternalRollout(position, limit_to_available);
 }
 
-void MXFFileTrackReader::SetNextFramePosition(int64_t position)
+void MXFFileTrackReader::SetNextFramePosition(Rational edit_rate, int64_t position)
 {
-    mFileReader->SetNextFramePosition(position);
+    mFileReader->SetNextFramePosition(edit_rate, position);
 }
 
 void MXFFileTrackReader::SetAVCIHeader(const unsigned char *frame_data, uint32_t frame_data_size)

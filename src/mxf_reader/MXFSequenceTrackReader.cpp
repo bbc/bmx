@@ -257,7 +257,7 @@ uint32_t MXFSequenceTrackReader::Read(uint32_t num_samples, bool is_top)
         return 0;
 
     if (is_top) {
-        mSequenceReader->SetNextFramePosition(mPosition);
+        mSequenceReader->SetNextFramePosition(mSampleRate, mPosition);
         mSequenceReader->SetNextFrameTrackPositions();
     }
 
@@ -335,9 +335,9 @@ int16_t MXFSequenceTrackReader::GetRollout(int64_t position, bool limit_to_avail
     return segment->GetRollout(segment_position, limit_to_available);
 }
 
-void MXFSequenceTrackReader::SetNextFramePosition(int64_t position)
+void MXFSequenceTrackReader::SetNextFramePosition(Rational edit_rate, int64_t position)
 {
-    mSequenceReader->SetNextFramePosition(position);
+    mSequenceReader->SetNextFramePosition(edit_rate, position);
 }
 
 SourcePackage* MXFSequenceTrackReader::GetFileSourcePackage() const

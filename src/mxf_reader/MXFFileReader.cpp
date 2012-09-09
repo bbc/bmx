@@ -497,7 +497,7 @@ uint32_t MXFFileReader::Read(uint32_t num_samples, bool is_top)
     int64_t current_position = GetPosition();
 
     if (is_top) {
-        SetNextFramePosition(current_position);
+        SetNextFramePosition(mSampleRate, current_position);
         SetNextFrameTrackPositions();
     }
 
@@ -749,12 +749,12 @@ int16_t MXFFileReader::GetTrackRollout(size_t track_index, int64_t clip_position
     return clip_rollout;
 }
 
-void MXFFileReader::SetNextFramePosition(int64_t position)
+void MXFFileReader::SetNextFramePosition(Rational edit_rate, int64_t position)
 {
     size_t i;
     for (i = 0; i < mTrackReaders.size(); i++) {
         if (mTrackReaders[i]->IsEnabled())
-            mTrackReaders[i]->GetMXFFrameBuffer()->SetNextFramePosition(position);
+            mTrackReaders[i]->GetMXFFrameBuffer()->SetNextFramePosition(edit_rate, position);
     }
 }
 
@@ -764,7 +764,7 @@ void MXFFileReader::SetNextFrameTrackPositions()
     for (i = 0; i < mTrackReaders.size(); i++) {
         if (mTrackReaders[i]->IsEnabled()) {
             mTrackReaders[i]->GetMXFFrameBuffer()->SetNextFrameTrackPosition(
-                mTrackReaders[i]->GetPosition());
+                mTrackReaders[i]->GetSampleRate(), mTrackReaders[i]->GetPosition());
         }
     }
 }

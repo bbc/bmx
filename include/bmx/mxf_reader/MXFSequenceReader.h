@@ -83,7 +83,7 @@ public:
     virtual int16_t GetTrackRollout(size_t track_index, int64_t clip_position, int16_t clip_rollout) const;
 
 public:
-    virtual void SetNextFramePosition(int64_t position);
+    virtual void SetNextFramePosition(Rational edit_rate, int64_t position);
     virtual void SetNextFrameTrackPositions();
 
     virtual void SetTemporaryFrameBuffer(bool enable);

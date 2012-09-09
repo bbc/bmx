@@ -97,7 +97,7 @@ public:
 
 public:
     virtual MXFFrameBuffer* GetMXFFrameBuffer() { return &mFrameBuffer; }
-    virtual void SetNextFramePosition(int64_t position);
+    virtual void SetNextFramePosition(Rational edit_rate, int64_t position);
 
 private:
     void GetSegmentPosition(int64_t position, MXFTrackReader **segment, int64_t *segment_position) const;

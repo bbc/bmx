@@ -55,7 +55,9 @@ FrameMetadata::~FrameMetadata()
 
 Frame::Frame()
 {
+    edit_rate = ZERO_RATIONAL;
     position = NULL_FRAME_POSITION;
+    track_edit_rate = ZERO_RATIONAL;
     track_position = NULL_FRAME_POSITION;
     ec_position = NULL_FRAME_POSITION;
     first_sample_offset = 0;
