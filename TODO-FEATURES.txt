@@ -77,7 +77,8 @@ other tests
 31. add Avid uncompressed 10-bit / v210 / 16-bit YUV / v216 conversion
 functions
 
-32. optimize index table reading to avoid realloc and use linked list instead
+32. optimize index table creation (e.g. OP1AIndexTable) to avoid realloc and
+use a linked list for example
 
 33. add option to set the start timecode in the OP-1A file source package. The
 material package start timecode could default to the file source package
