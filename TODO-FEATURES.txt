@@ -48,8 +48,6 @@ tests
 19. add option to disable audio inputs, or more generally, add ability to map
 audio inputs to audio outputs
 
-20. add support for clip-wrapped audio in the OP-1A writer
-
 21. investigate I/O performance for frame wrapped essence reading. Might be
 better to read a content package in a single read
 
