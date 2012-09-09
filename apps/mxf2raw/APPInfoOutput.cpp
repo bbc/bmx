@@ -282,7 +282,7 @@ void APPInfoOutput::PrintInfo()
 
 void APPInfoOutput::PrintEvents()
 {
-    Rational frame_rate = mFileReader->GetSampleRate();
+    Rational frame_rate = mFileReader->GetEditRate();
     size_t i;
 
     if (mInfo.num_digibeta_dropouts > 0) {

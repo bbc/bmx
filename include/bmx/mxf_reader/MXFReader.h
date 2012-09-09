@@ -75,7 +75,7 @@ public:
     virtual int16_t GetMaxPrecharge(int64_t position, bool limit_to_available) const = 0;
     virtual int16_t GetMaxRollout(int64_t position, bool limit_to_available) const = 0;
 
-    mxfRational GetSampleRate() const { return mSampleRate; }
+    mxfRational GetEditRate() const   { return mEditRate; }
     int64_t GetDuration() const       { return mDuration; }
 
 public:
@@ -114,7 +114,7 @@ public:
     virtual void SetTemporaryFrameBuffer(bool enable) = 0;
 
 protected:
-    mxfRational mSampleRate;
+    mxfRational mEditRate;
     int64_t mDuration;
 
     Timecode *mMaterialStartTimecode;

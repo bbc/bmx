@@ -340,7 +340,7 @@ void bmx::as11_print_info(MXFFileReader *file_reader)
         return;
     }
 
-    Rational frame_rate = file_reader->GetSampleRate();
+    Rational frame_rate = file_reader->GetEditRate();
     Timecode start_timecode = file_reader->GetMaterialTimecode(0);
     BMX_CHECK(file_reader->GetFixedLeadFillerOffset() == 0);
 

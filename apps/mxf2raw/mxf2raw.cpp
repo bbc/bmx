@@ -773,7 +773,7 @@ int main(int argc, const char** argv)
         }
 
 
-        mxfRational sample_rate = reader->GetSampleRate();
+        mxfRational sample_rate = reader->GetEditRate();
 
 
         // set read limits

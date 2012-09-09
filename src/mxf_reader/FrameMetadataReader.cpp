@@ -353,7 +353,7 @@ FrameMetadataReader::FrameMetadataReader(MXFFileReader *file_reader)
         }
     }
 
-    mReaders.push_back(new SystemScheme1Reader(file_reader->mFile, file_reader->GetSampleRate(),
+    mReaders.push_back(new SystemScheme1Reader(file_reader->mFile, file_reader->GetEditRate(),
                                                is_bbc_preservation_file));
     mReaders.push_back(new SDTICPSystemMetadataReader(file_reader->mFile));
     mReaders.push_back(new SDTICPPackageMetadataReader(file_reader->mFile));

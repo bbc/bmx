@@ -122,7 +122,7 @@ void bmx::avid_print_info(MXFFileReader *file_reader)
             printf("      Network locator : %s\n", info.phys_package_locator.c_str());
     }
 
-    Rational frame_rate = file_reader->GetSampleRate();
+    Rational frame_rate = file_reader->GetEditRate();
     size_t i;
 
     if (!info.user_comments.empty()) {

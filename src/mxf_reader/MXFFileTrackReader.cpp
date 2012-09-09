@@ -118,9 +118,9 @@ int64_t MXFFileTrackReader::GetPosition() const
     return mFileReader->GetPosition();
 }
 
-mxfRational MXFFileTrackReader::GetSampleRate() const
+mxfRational MXFFileTrackReader::GetEditRate() const
 {
-    return mFileReader->GetSampleRate();
+    return mFileReader->GetEditRate();
 }
 
 int64_t MXFFileTrackReader::GetDuration() const

@@ -74,7 +74,7 @@ public:
     virtual void Seek(int64_t position);
 
     virtual int64_t GetPosition() const       { return mPosition; }
-    virtual mxfRational GetSampleRate() const { return mSampleRate; }
+    virtual mxfRational GetEditRate() const   { return mEditRate; }
     virtual int64_t GetDuration() const       { return mDuration; }
 
     virtual bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position = CURRENT_POSITION_VALUE) const;
@@ -116,7 +116,7 @@ private:
     int64_t mReadStartPosition;
     int64_t mReadDuration;
 
-    mxfRational mSampleRate;
+    mxfRational mEditRate;
     int64_t mPosition;
     int64_t mDuration;
 

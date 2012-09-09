@@ -150,21 +150,21 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
                 case VC3_720P_1251:
                 case VC3_720P_1252:
                 case VC3_1080P_1253:
-                    mIndexTableHelper.SetConstantEditUnitSize(mFileReader->GetSampleRate(),
+                    mIndexTableHelper.SetConstantEditUnitSize(mFileReader->GetEditRate(),
                                                               picture_helper->GetEditUnitSize());
                     break;
                 case WAVE_PCM:
-                    if (sound_helper->GetSamplingRate() == mFileReader->GetSampleRate())
+                    if (sound_helper->GetSamplingRate() == mFileReader->GetEditRate())
                     {
-                        mIndexTableHelper.SetConstantEditUnitSize(mFileReader->GetSampleRate(),
+                        mIndexTableHelper.SetConstantEditUnitSize(mFileReader->GetEditRate(),
                                                                   sound_helper->GetSampleSize());
                     }
-                    else if (get_sample_sequence(mFileReader->GetSampleRate(),
+                    else if (get_sample_sequence(mFileReader->GetEditRate(),
                                                  sound_helper->GetSamplingRate(),
                                                  &sample_sequence) &&
                              sample_sequence.size() == 1)
                     {
-                        mIndexTableHelper.SetConstantEditUnitSize(mFileReader->GetSampleRate(),
+                        mIndexTableHelper.SetConstantEditUnitSize(mFileReader->GetEditRate(),
                                                                   sample_sequence[0] * sound_helper->GetSampleSize());
                     }
                     else
@@ -172,21 +172,21 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader)
                         // TODO: support sample sequences > 1 using special index table segment
                         // TODO: will fail later on
                         log_warn("Unsupported clip wrapped WAVE PCM rates with missing index table\n");
-                        mIndexTableHelper.SetEditRate(mFileReader->GetSampleRate());
+                        mIndexTableHelper.SetEditRate(mFileReader->GetEditRate());
                     }
                     break;
                 default:
                     // TODO: use essence parsers to dynamically index data
                     // TODO: will fail later on
                     log_warn("Unsupported clip wrapped essence data with missing index table\n");
-                    mIndexTableHelper.SetEditRate(mFileReader->GetSampleRate());
+                    mIndexTableHelper.SetEditRate(mFileReader->GetEditRate());
                     break;
             }
         } else {
-            mIndexTableHelper.SetEditRate(mFileReader->GetSampleRate());
+            mIndexTableHelper.SetEditRate(mFileReader->GetEditRate());
         }
     }
-    BMX_CHECK(mIndexTableHelper.GetEditRate() == mFileReader->GetSampleRate());
+    BMX_CHECK(mIndexTableHelper.GetEditRate() == mFileReader->GetEditRate());
     mIndexTableHelper.SetEssenceDataSize(mEssenceChunkHelper.GetEssenceDataSize());
 
     // check there is sufficient essence container data

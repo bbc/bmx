@@ -122,18 +122,18 @@ bool MXFGroupReader::Finalize()
             throw false;
         }
 
-        // the lowest input sample rate is the group sample rate
-        float lowest_sample_rate = 1000000.0;
+        // the lowest input edit rate is the group edit rate
+        float lowest_edit_rate = 1000000.0;
         size_t i;
         for (i = 0; i < mReaders.size(); i++) {
-            float member_sample_rate = mReaders[i]->GetSampleRate().numerator /
-                                        (float)mReaders[i]->GetSampleRate().denominator;
-            if (member_sample_rate < lowest_sample_rate) {
-                mSampleRate = mReaders[i]->GetSampleRate();
-                lowest_sample_rate = member_sample_rate;
+            float member_edit_rate = mReaders[i]->GetEditRate().numerator /
+                                        (float)mReaders[i]->GetEditRate().denominator;
+            if (member_edit_rate < lowest_edit_rate) {
+                mEditRate = mReaders[i]->GetEditRate();
+                lowest_edit_rate = member_edit_rate;
             }
         }
-        BMX_CHECK(mSampleRate.numerator != 0);
+        BMX_CHECK(mEditRate.numerator != 0);
 
 
         // create temporary group track readers and sort according to material package, data kind, track number and track id
@@ -158,11 +158,11 @@ bool MXFGroupReader::Finalize()
         // are read for each group sample. They are also used for converting position and durations
         for (i = 0; i < mReaders.size(); i++) {
             vector<uint32_t> sample_sequence;
-            if (!get_sample_sequence(mSampleRate, mReaders[i]->GetSampleRate(), &sample_sequence)) {
-                mxfRational member_sample_rate = mReaders[i]->GetSampleRate();
-                log_error("Incompatible group sample rate (%d/%d) and member sample rate (%d/%d)\n",
-                          mSampleRate.numerator, mSampleRate.denominator,
-                          member_sample_rate.numerator, member_sample_rate.denominator);
+            if (!get_sample_sequence(mEditRate, mReaders[i]->GetEditRate(), &sample_sequence)) {
+                mxfRational member_edit_rate = mReaders[i]->GetEditRate();
+                log_error("Incompatible group edit rate (%d/%d) and member edit rate (%d/%d)\n",
+                          mEditRate.numerator, mEditRate.denominator,
+                          member_edit_rate.numerator, member_edit_rate.denominator);
                 throw false;
             }
 
@@ -288,7 +288,7 @@ uint32_t MXFGroupReader::Read(uint32_t num_samples, bool is_top)
     int64_t current_position = GetPosition();
 
     if (is_top) {
-        SetNextFramePosition(mSampleRate, current_position);
+        SetNextFramePosition(mEditRate, current_position);
         SetNextFrameTrackPositions();
     }
 
@@ -360,9 +360,9 @@ int16_t MXFGroupReader::GetMaxPrecharge(int64_t position, bool limit_to_availabl
 
         int16_t precharge = mReaders[i]->GetMaxPrecharge(CONVERT_GROUP_POS(position), limit_to_available);
         if (precharge != 0) {
-            BMX_CHECK_M(mReaders[i]->GetSampleRate() == mSampleRate,
+            BMX_CHECK_M(mReaders[i]->GetEditRate() == mEditRate,
                         ("Currently only support precharge in group members if "
-                         "member sample rate equals group sample rate"));
+                         "member edit rate equals group edit rate"));
             if (precharge < max_precharge)
                 max_precharge = precharge;
         }
@@ -394,9 +394,9 @@ int16_t MXFGroupReader::GetMaxRollout(int64_t position, bool limit_to_available)
 
         int16_t rollout = mReaders[i]->GetMaxRollout(CONVERT_GROUP_POS(position + 1) - 1, limit_to_available);
         if (rollout != 0) {
-            BMX_CHECK_M(mReaders[i]->GetSampleRate() == mSampleRate,
+            BMX_CHECK_M(mReaders[i]->GetEditRate() == mEditRate,
                         ("Currently only support rollout in group members if "
-                         "member sample rate equals group sample rate"));
+                         "member edit rate equals group edit rate"));
             if (rollout > max_rollout)
                 max_rollout = rollout;
         }
@@ -482,9 +482,9 @@ int16_t MXFGroupReader::GetTrackPrecharge(size_t track_index, int64_t clip_posit
 
     MXFTrackReader *track_reader = GetTrackReader(track_index);
 
-    BMX_CHECK_M(track_reader->GetSampleRate() == mSampleRate,
+    BMX_CHECK_M(track_reader->GetEditRate() == mEditRate,
                 ("Currently only support precharge in group members if "
-                 "member sample rate equals group sample rate"));
+                 "member edit rate equals group edit rate"));
     (void)clip_position;
 
     return clip_precharge;
@@ -497,9 +497,9 @@ int16_t MXFGroupReader::GetTrackRollout(size_t track_index, int64_t clip_positio
 
     MXFTrackReader *track_reader = GetTrackReader(track_index);
 
-    BMX_CHECK_M(track_reader->GetSampleRate() == mSampleRate,
+    BMX_CHECK_M(track_reader->GetEditRate() == mEditRate,
                 ("Currently only support rollout in group members if "
-                 "member sample rate equals group sample rate"));
+                 "member edit rate equals group edit rate"));
     (void)clip_position;
 
     return clip_rollout;

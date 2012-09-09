@@ -60,7 +60,7 @@ MXFSequenceTrackReader::MXFSequenceTrackReader(MXFSequenceReader *sequence_reade
     mIsEnabled = true;
     mReadStartPosition = 0;
     mReadDuration = 0;
-    mSampleRate = ZERO_RATIONAL;
+    mEditRate = ZERO_RATIONAL;
     mPosition = 0;
     mDuration = 0;
 
@@ -108,7 +108,7 @@ void MXFSequenceTrackReader::AppendSegment(MXFTrackReader *segment)
         mTrackInfo = segment->GetTrackInfo()->Clone();
         mFileDescriptor = segment->GetFileDescriptor();
         mFileSourcePackage = segment->GetFileSourcePackage();
-        mSampleRate = segment->GetSampleRate();
+        mEditRate = segment->GetEditRate();
         mDuration = segment->GetDuration();
     } else {
         // not valid because multiple segments means there are multiple file source packages
@@ -134,7 +134,7 @@ void MXFSequenceTrackReader::AppendSegment(MXFTrackReader *segment)
         if (segment_track_info->file_track_number != mTrackInfo->file_track_number)
             mTrackInfo->file_track_number = 0;
 
-        BMX_ASSERT(segment->GetSampleRate() == mTrackInfo->edit_rate);
+        BMX_ASSERT(segment->GetEditRate() == mTrackInfo->edit_rate);
         mTrackInfo->duration += segment->GetDuration();
         mDuration += segment->GetDuration();
     }
@@ -257,7 +257,7 @@ uint32_t MXFSequenceTrackReader::Read(uint32_t num_samples, bool is_top)
         return 0;
 
     if (is_top) {
-        mSequenceReader->SetNextFramePosition(mSampleRate, mPosition);
+        mSequenceReader->SetNextFramePosition(mEditRate, mPosition);
         mSequenceReader->SetNextFrameTrackPositions();
     }
 

@@ -69,7 +69,7 @@ public:
     virtual void Seek(int64_t position) = 0;
 
     virtual int64_t GetPosition() const = 0;
-    virtual mxfRational GetSampleRate() const = 0;
+    virtual mxfRational GetEditRate() const = 0;
     virtual int64_t GetDuration() const = 0;
 
     virtual bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position = CURRENT_POSITION_VALUE) const = 0;

@@ -1221,7 +1221,7 @@ int main(int argc, const char** argv)
             reader = file_reader;
         }
 
-        Rational frame_rate = reader->GetSampleRate();
+        Rational frame_rate = reader->GetEditRate();
 
 
         // check whether the frame rate is a sound sampling rate

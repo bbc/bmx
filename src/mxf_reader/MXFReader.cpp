@@ -49,7 +49,7 @@ using namespace mxfpp;
 
 MXFReader::MXFReader()
 {
-    mSampleRate = ZERO_RATIONAL;
+    mEditRate = ZERO_RATIONAL;
     mDuration = 0;
     mMaterialStartTimecode = 0;
     mFileSourceStartTimecode = 0;
@@ -74,7 +74,7 @@ void MXFReader::ClearFrameBuffers(bool del_frames)
 Timecode MXFReader::GetMaterialTimecode(int64_t position) const
 {
     if (!HaveMaterialTimecode())
-        return Timecode(get_rounded_tc_base(mSampleRate), false);
+        return Timecode(get_rounded_tc_base(mEditRate), false);
 
     return CreateTimecode(mMaterialStartTimecode, position);
 }
@@ -82,7 +82,7 @@ Timecode MXFReader::GetMaterialTimecode(int64_t position) const
 Timecode MXFReader::GetFileSourceTimecode(int64_t position) const
 {
     if (!HaveFileSourceTimecode())
-        return Timecode(get_rounded_tc_base(mSampleRate), false);
+        return Timecode(get_rounded_tc_base(mEditRate), false);
 
     return CreateTimecode(mFileSourceStartTimecode, position);
 }
@@ -90,7 +90,7 @@ Timecode MXFReader::GetFileSourceTimecode(int64_t position) const
 Timecode MXFReader::GetPhysicalSourceTimecode(int64_t position) const
 {
     if (!HavePhysicalSourceTimecode())
-        return Timecode(get_rounded_tc_base(mSampleRate), false);
+        return Timecode(get_rounded_tc_base(mEditRate), false);
 
     return CreateTimecode(mPhysicalSourceStartTimecode, position);
 }
@@ -109,7 +109,7 @@ Timecode MXFReader::GetPlayoutTimecode(int64_t position) const
     else if (HavePhysicalSourceTimecode())
         return GetPhysicalSourceTimecode(position);
 
-    return Timecode(get_rounded_tc_base(mSampleRate), false);
+    return Timecode(get_rounded_tc_base(mEditRate), false);
 }
 
 bool MXFReader::HaveSourceTimecode() const
@@ -124,7 +124,7 @@ Timecode MXFReader::GetSourceTimecode(int64_t position) const
     else if (HavePhysicalSourceTimecode())
         return GetPhysicalSourceTimecode(position);
 
-    return Timecode(get_rounded_tc_base(mSampleRate), false);
+    return Timecode(get_rounded_tc_base(mEditRate), false);
 }
 
 Timecode MXFReader::CreateTimecode(const Timecode *start_timecode, int64_t position) const
@@ -134,7 +134,7 @@ Timecode MXFReader::CreateTimecode(const Timecode *start_timecode, int64_t posit
         offset = GetPosition();
 
     Timecode timecode(*start_timecode);
-    timecode.AddOffset(offset, mSampleRate);
+    timecode.AddOffset(offset, mEditRate);
 
     return timecode;
 }

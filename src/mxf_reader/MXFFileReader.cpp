@@ -312,21 +312,21 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
         if (mIsClipWrapped && mInternalTrackReaders.size() > 1)
             THROW_RESULT(MXF_RESULT_NOT_SUPPORTED); // only support single track for clip-wrapped essence
 
-        // set clip sample rate if not set (ie. essence is external)
-        if (mSampleRate.numerator == 0) {
+        // set clip edit rate if not set (ie. essence is external)
+        if (mEditRate.numerator == 0) {
             BMX_ASSERT(mInternalTrackReaders.empty());
-            // the lowest external sample rate is the clip sample rate
-            float lowest_sample_rate = 1000000.0;
+            // the lowest external edit rate is the clip edit rate
+            float lowest_edit_rate = 1000000.0;
             size_t i;
             for (i = 0; i < mTrackReaders.size(); i++) {
-                float track_sample_rate = mTrackReaders[i]->GetSampleRate().numerator /
-                                            (float)mTrackReaders[i]->GetSampleRate().denominator;
-                if (track_sample_rate < lowest_sample_rate) {
-                    mSampleRate = mTrackReaders[i]->GetSampleRate();
-                    lowest_sample_rate = track_sample_rate;
+                float track_edit_rate = mTrackReaders[i]->GetEditRate().numerator /
+                                            (float)mTrackReaders[i]->GetEditRate().denominator;
+                if (track_edit_rate < lowest_edit_rate) {
+                    mEditRate = mTrackReaders[i]->GetEditRate();
+                    lowest_edit_rate = track_edit_rate;
                 }
             }
-            BMX_CHECK(mSampleRate.numerator != 0);
+            BMX_CHECK(mEditRate.numerator != 0);
         } else {
             BMX_ASSERT(!mInternalTrackReaders.empty());
         }
@@ -334,11 +334,11 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
         // extract the sample sequences for each external reader
         for (i = 0; i < mExternalReaders.size(); i++) {
             vector<uint32_t> sample_sequence;
-            if (!get_sample_sequence(mSampleRate, mExternalReaders[i]->GetSampleRate(), &sample_sequence)) {
-                mxfRational external_sample_rate = mExternalReaders[i]->GetSampleRate();
-                log_error("Incompatible clip sample rate (%d/%d) for referenced file (%d/%d)\n",
-                          mSampleRate.numerator, mSampleRate.denominator,
-                          external_sample_rate.numerator, external_sample_rate.denominator);
+            if (!get_sample_sequence(mEditRate, mExternalReaders[i]->GetEditRate(), &sample_sequence)) {
+                mxfRational external_edit_rate = mExternalReaders[i]->GetEditRate();
+                log_error("Incompatible clip edit rate (%d/%d) for referenced file (%d/%d)\n",
+                          mEditRate.numerator, mEditRate.denominator,
+                          external_edit_rate.numerator, external_edit_rate.denominator);
                 THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
             }
 
@@ -351,7 +351,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
         for (i = 0; i < mInternalTrackReaders.size(); i++) {
             int64_t track_duration = convert_duration(mInternalTrackReaders[i]->GetTrackInfo()->edit_rate,
                                                       mInternalTrackReaders[i]->GetTrackInfo()->duration,
-                                                      mSampleRate,
+                                                      mEditRate,
                                                       ROUND_AUTO);
             if (mDuration < 0 || track_duration < mDuration)
                 mDuration = track_duration;
@@ -384,7 +384,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
         if (!mInternalTrackReaders.empty()) {
             mEssenceReader = new EssenceReader(this);
             if (mEssenceReader->GetIndexedDuration() > 0)
-                BMX_CHECK(mEssenceReader->GetEditRate() == mSampleRate);
+                BMX_CHECK(mEssenceReader->GetEditRate() == mEditRate);
         }
 
         // extract info from first frame if required
@@ -497,7 +497,7 @@ uint32_t MXFFileReader::Read(uint32_t num_samples, bool is_top)
     int64_t current_position = GetPosition();
 
     if (is_top) {
-        SetNextFramePosition(mSampleRate, current_position);
+        SetNextFramePosition(mEditRate, current_position);
         SetNextFrameTrackPositions();
     }
 
@@ -595,9 +595,9 @@ int16_t MXFFileReader::GetMaxPrecharge(int64_t position, bool limit_to_available
         int16_t ext_reader_precharge = mExternalReaders[i]->GetMaxPrecharge(CONVERT_INTERNAL_POS(target_position),
                                                                             limit_to_available);
         if (ext_reader_precharge != 0) {
-            BMX_CHECK_M(mExternalReaders[i]->GetSampleRate() == mSampleRate,
+            BMX_CHECK_M(mExternalReaders[i]->GetEditRate() == mEditRate,
                        ("Currently only support precharge in external reader if "
-                        "external reader sample rate equals group sample rate"));
+                        "external reader edit rate equals group edit rate"));
             if (ext_reader_precharge < precharge)
                 precharge = ext_reader_precharge;
         }
@@ -642,9 +642,9 @@ int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available) 
         int16_t ext_reader_rollout = mExternalReaders[i]->GetMaxRollout(CONVERT_INTERNAL_POS(target_position + 1) - 1,
                                                                         limit_to_available);
         if (ext_reader_rollout != 0) {
-            BMX_CHECK_M(mExternalReaders[i]->GetSampleRate() == mSampleRate,
+            BMX_CHECK_M(mExternalReaders[i]->GetEditRate() == mEditRate,
                        ("Currently only support rollout in external reader if "
-                        "external reader sample rate equals group sample rate"));
+                        "external reader edit rate equals group edit rate"));
             if (ext_reader_rollout > rollout)
                 rollout = ext_reader_rollout;
         }
@@ -672,7 +672,7 @@ bool MXFFileReader::HaveFixedLeadFillerOffset() const
         // note that edit_rate and lead_filler_offset are from this MXF file's material package
         int64_t offset = convert_position(mTrackReaders[i]->GetTrackInfo()->edit_rate,
                                           mTrackReaders[i]->GetTrackInfo()->lead_filler_offset,
-                                          mSampleRate,
+                                          mEditRate,
                                           ROUND_UP);
         if (i == 0)
             fixed_offset = offset;
@@ -691,7 +691,7 @@ int64_t MXFFileReader::GetFixedLeadFillerOffset() const
         // note that edit_rate and lead_filler_offset are from this MXF file's material package
         int64_t offset = convert_position(mTrackReaders[i]->GetTrackInfo()->edit_rate,
                                           mTrackReaders[i]->GetTrackInfo()->lead_filler_offset,
-                                          mSampleRate,
+                                          mEditRate,
                                           ROUND_UP);
         if (i == 0)
             fixed_offset = offset;
@@ -726,9 +726,9 @@ int16_t MXFFileReader::GetTrackPrecharge(size_t track_index, int64_t clip_positi
 
     MXFTrackReader *track_reader = GetTrackReader(track_index);
 
-    BMX_CHECK_M(track_reader->GetSampleRate() == mSampleRate,
+    BMX_CHECK_M(track_reader->GetEditRate() == mEditRate,
                ("Currently only support precharge in external reader if "
-                "external reader sample rate equals group sample rate"));
+                "external reader edit rate equals group edit rate"));
     (void)clip_position;
 
     return clip_precharge;
@@ -741,9 +741,9 @@ int16_t MXFFileReader::GetTrackRollout(size_t track_index, int64_t clip_position
 
     MXFTrackReader *track_reader = GetTrackReader(track_index);
 
-    BMX_CHECK_M(track_reader->GetSampleRate() == mSampleRate,
+    BMX_CHECK_M(track_reader->GetEditRate() == mEditRate,
                ("Currently only support rollout in external reader if "
-                "external reader sample rate equals group sample rate"));
+                "external reader edit rate equals group edit rate"));
     (void)clip_position;
 
     return clip_rollout;
@@ -764,7 +764,7 @@ void MXFFileReader::SetNextFrameTrackPositions()
     for (i = 0; i < mTrackReaders.size(); i++) {
         if (mTrackReaders[i]->IsEnabled()) {
             mTrackReaders[i]->GetMXFFrameBuffer()->SetNextFrameTrackPosition(
-                mTrackReaders[i]->GetSampleRate(), mTrackReaders[i]->GetPosition());
+                mTrackReaders[i]->GetEditRate(), mTrackReaders[i]->GetPosition());
         }
     }
 }
@@ -962,12 +962,12 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
     // set file's edit rate
 
     Rational fsp_edit_rate = normalize_rate(fsp_track->getEditRate());
-    if (mSampleRate.numerator == 0) {
-        mSampleRate = fsp_edit_rate;
-    } else if (mSampleRate != fsp_edit_rate) {
+    if (mEditRate.numerator == 0) {
+        mEditRate = fsp_edit_rate;
+    } else if (mEditRate != fsp_edit_rate) {
         BMX_EXCEPTION(("FSP track edit rate %d/%d does not match existing edit rate %d/%d",
                        fsp_edit_rate.numerator, fsp_edit_rate.denominator,
-                       mSampleRate.numerator, mSampleRate.denominator));
+                       mEditRate.numerator, mEditRate.denominator));
     }
 
 
