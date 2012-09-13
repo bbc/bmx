@@ -70,13 +70,13 @@ typedef struct
 {
     mxfRational lower_edit_rate;
     mxfRational higher_edit_rate;
-    uint32_t sample_sequence[11];
+    uint32_t sample_sequence[6];
 } SampleSequence;
 
 static const SampleSequence SAMPLE_SEQUENCES[] =
 {
-    {{30000, 1001}, {48000,1}, {1602, 1601, 1602, 1601, 1602, 0,   0,   0,   0,   0,   0}},
-    {{60000, 1001}, {48000,1}, {801,  801,  801,  800,  801,  801, 801, 800, 801, 801, 0}},
+    {{30000, 1001}, {48000,1}, {1602, 1601, 1602, 1601, 1602, 0}},
+    {{60000, 1001}, {48000,1}, { 801,  801,  800,  801,  801, 0}},
 };
 
 
