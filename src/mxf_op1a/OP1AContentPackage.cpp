@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#include <cstdio>
+
 #include <algorithm>
 
 #include <bmx/mxf_op1a/OP1AContentPackage.h>
