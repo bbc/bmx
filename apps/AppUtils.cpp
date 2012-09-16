@@ -348,7 +348,7 @@ bool bmx::parse_avid_import_name(const char *import_name, URI *uri)
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture)
 {
     char buffer[16];
-    sprintf(buffer, "_%s%u.mxf", (is_picture ? "v" : "a"), track_number);
+    bmx_snprintf(buffer, sizeof(buffer), "_%s%u.mxf", (is_picture ? "v" : "a"), track_number);
 
     string filename = prefix;
     return filename.append(buffer);

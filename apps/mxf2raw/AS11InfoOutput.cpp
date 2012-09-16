@@ -184,14 +184,14 @@ static const char* get_bool_string(bool value)
 static const char* get_rational_string(mxfRational ratio)
 {
     static char buf[32];
-    sprintf(buf, "%d/%d", ratio.numerator, ratio.denominator);
+    bmx_snprintf(buf, sizeof(buf), "%d/%d", ratio.numerator, ratio.denominator);
     return buf;
 }
 
 static char* get_date_string(mxfTimestamp timestamp)
 {
     static char buf[64];
-    sprintf(buf, "%d-%02u-%02u", timestamp.year, timestamp.month, timestamp.day);
+    bmx_snprintf(buf, sizeof(buf), "%d-%02u-%02u", timestamp.year, timestamp.month, timestamp.day);
     return buf;
 }
 
@@ -316,7 +316,7 @@ static void print_segmentation_framework(DMSegment *seg, Timecode start_timecode
     AS11SegmentationFramework *framework = dynamic_cast<AS11SegmentationFramework*>(seg->getDMFramework());
 
     char part_str[12];
-    sprintf(part_str, "%u/%u", framework->GetPartNumber(), framework->GetPartTotal());
+    bmx_snprintf(part_str, sizeof(part_str), "%u/%u", framework->GetPartNumber(), framework->GetPartTotal());
 
     Timecode som = start_timecode;
     som.AddOffset(offset, edit_rate);

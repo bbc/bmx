@@ -41,6 +41,7 @@
 #include <bmx/as02/AS02Version.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
 #include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -66,7 +67,7 @@ static const char AUDIO_TRACK_NAME_PREFIX[] = "Audio";
 static string get_version_track_name(const char *prefix, int count)
 {
     char buffer[32];
-    sprintf(buffer, "%s%d", prefix, count + 1);
+    bmx_snprintf(buffer, sizeof(buffer), "%s%d", prefix, count + 1);
     return buffer;
 }
 

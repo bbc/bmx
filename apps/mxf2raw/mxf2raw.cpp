@@ -65,9 +65,9 @@ using namespace mxfpp;
 
 
 
-static char* get_label_string(mxfUL label, char *buf)
+static char* get_label_string(mxfUL label, char *buf, size_t buf_size)
 {
-    sprintf(buf,
+    bmx_snprintf(buf, buf_size,
             "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x",
             label.octet0,  label.octet1,  label.octet2,  label.octet3,
             label.octet4,  label.octet5,  label.octet6,  label.octet7,
@@ -77,14 +77,14 @@ static char* get_label_string(mxfUL label, char *buf)
     return buf;
 }
 
-static char* get_uuid_string(mxfUUID uuid, char *buf)
+static char* get_uuid_string(mxfUUID uuid, char *buf, size_t buf_size)
 {
-    return get_label_string(*(mxfUL*)&uuid, buf);
+    return get_label_string(*(mxfUL*)&uuid, buf, buf_size);
 }
 
-static char* get_umid_string(mxfUMID umid, char *buf)
+static char* get_umid_string(mxfUMID umid, char *buf, size_t buf_size)
 {
-    sprintf(buf,
+    bmx_snprintf(buf, buf_size,
             "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x."
             "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x",
             umid.octet0,  umid.octet1,  umid.octet2,  umid.octet3,
@@ -99,22 +99,22 @@ static char* get_umid_string(mxfUMID umid, char *buf)
     return buf;
 }
 
-static char* get_rational_string(mxfRational rat, char *buf)
+static char* get_rational_string(mxfRational rat, char *buf, size_t buf_size)
 {
-    sprintf(buf, "%d/%d", rat.numerator, rat.denominator);
+    bmx_snprintf(buf, buf_size, "%d/%d", rat.numerator, rat.denominator);
     return buf;
 }
 
-static char* get_timestamp_string(mxfTimestamp timestamp, char *buf)
+static char* get_timestamp_string(mxfTimestamp timestamp, char *buf, size_t buf_size)
 {
-    sprintf(buf, "%d-%02u-%02u %02u:%02u:%02u.%03u",
+    bmx_snprintf(buf, buf_size, "%d-%02u-%02u %02u:%02u:%02u.%03u",
             timestamp.year, timestamp.month, timestamp.day,
             timestamp.hour, timestamp.min, timestamp.sec, timestamp.qmsec * 4);
 
     return buf;
 }
 
-static char* get_product_version_string(mxfProductVersion version, char *buf)
+static char* get_product_version_string(mxfProductVersion version, char *buf, size_t buf_size)
 {
     const char *release_string;
     switch (version.release)
@@ -142,7 +142,7 @@ static char* get_product_version_string(mxfProductVersion version, char *buf)
             break;
     }
 
-    sprintf(buf, "%u.%u.%u.%u.%u (%s)",
+    bmx_snprintf(buf, buf_size, "%u.%u.%u.%u.%u (%s)",
             version.major, version.minor, version.patch, version.build, version.release, release_string);
 
     return buf;
@@ -223,8 +223,10 @@ static const char* get_color_siting_string(uint8_t color_siting)
     return "not recognized";
 }
 
-static const char* get_d10_sound_flags(uint8_t flags, char *buf)
+static const char* get_d10_sound_flags(uint8_t flags, char *buf, size_t buf_size)
 {
+    BMX_ASSERT(buf_size >= 10);
+
     uint8_t i;
     for (i = 0; i < 8; i++) {
         if (flags & (1 << i))
@@ -240,33 +242,33 @@ static const char* get_d10_sound_flags(uint8_t flags, char *buf)
 
 static void print_track_info(const MXFTrackInfo *track_info)
 {
-    char string_buffer[128];
+    char buf[128];
 
     const MXFPictureTrackInfo *picture_info = dynamic_cast<const MXFPictureTrackInfo*>(track_info);
     const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
 
     printf("  Essence kind         : %s\n", (picture_info ? "Picture" : (sound_info ? "Sound" : "Unknown")));
     printf("  Essence type         : %s\n", essence_type_to_string(track_info->essence_type));
-    printf("  Essence label        : %s\n", get_label_string(track_info->essence_container_label, string_buffer));
-    printf("  Material package uid : %s\n", get_umid_string(track_info->material_package_uid, string_buffer));
+    printf("  Essence label        : %s\n", get_label_string(track_info->essence_container_label, buf, sizeof(buf)));
+    printf("  Material package uid : %s\n", get_umid_string(track_info->material_package_uid, buf, sizeof(buf)));
     printf("  Material track id    : %u\n", track_info->material_track_id);
     printf("  Material track number: %u\n", track_info->material_track_number);
-    printf("  File package uid     : %s\n", get_umid_string(track_info->file_package_uid, string_buffer));
+    printf("  File package uid     : %s\n", get_umid_string(track_info->file_package_uid, buf, sizeof(buf)));
     printf("  File track id        : %u\n", track_info->file_track_id);
     printf("  File track number    : 0x%08x\n", track_info->file_track_number);
-    printf("  Edit rate            : %s\n", get_rational_string(track_info->edit_rate, string_buffer));
+    printf("  Edit rate            : %s\n", get_rational_string(track_info->edit_rate, buf, sizeof(buf)));
     printf("  Duration             : %"PRId64"\n", track_info->duration);
     printf("  Lead filler offset   : %"PRId64"\n", track_info->lead_filler_offset);
 
     if (picture_info) {
-        printf("  Picture coding label : %s\n", get_label_string(picture_info->picture_essence_coding_label, string_buffer));
+        printf("  Picture coding label : %s\n", get_label_string(picture_info->picture_essence_coding_label, buf, sizeof(buf)));
         printf("  Signal standard      : %u (%s)\n", picture_info->signal_standard, get_signal_standard_string(picture_info->signal_standard));
         printf("  Frame layout         : %u (%s)\n", picture_info->frame_layout, get_frame_layout_string(picture_info->frame_layout));
         printf("  Stored dimensions    : %ux%u\n", picture_info->stored_width, picture_info->stored_height);
         printf("  Display dimensions   : %ux%u\n", picture_info->display_width, picture_info->display_height);
         printf("  Display x offset     : %u\n", picture_info->display_x_offset);
         printf("  Display y offset     : %u\n", picture_info->display_y_offset);
-        printf("  Aspect ratio         : %s\n", get_rational_string(picture_info->aspect_ratio, string_buffer));
+        printf("  Aspect ratio         : %s\n", get_rational_string(picture_info->aspect_ratio, buf, sizeof(buf)));
         printf("  AFD                  : ");
         if (picture_info->afd)
             printf("%u\n", picture_info->afd);
@@ -288,12 +290,14 @@ static void print_track_info(const MXFTrackInfo *track_info)
             }
         }
     } else if (sound_info) {
-        printf("  Sampling rate        : %s\n", get_rational_string(sound_info->sampling_rate, string_buffer));
+        printf("  Sampling rate        : %s\n", get_rational_string(sound_info->sampling_rate, buf, sizeof(buf)));
         printf("  Bits per sample      : %u\n", sound_info->bits_per_sample);
         printf("  Block align          : %u\n", sound_info->block_align);
         printf("  Channel count        : %u\n", sound_info->channel_count);
-        if (track_info->essence_type == D10_AES3_PCM)
-            printf("  D10 AES3 valid flags : %s\n", get_d10_sound_flags(sound_info->d10_aes3_valid_flags, string_buffer));
+        if (track_info->essence_type == D10_AES3_PCM) {
+            printf("  D10 AES3 valid flags : %s\n", get_d10_sound_flags(sound_info->d10_aes3_valid_flags, buf,
+                                                                        sizeof(buf)));
+        }
         printf("  Sequence offset      : %u\n", sound_info->sequence_offset);
         printf("  Locked               : %s\n", (sound_info->locked_set ? (sound_info->locked ? "true" : "false") : "(not set)"));
         printf("  Audio ref level      : ");
@@ -311,22 +315,23 @@ static void print_track_info(const MXFTrackInfo *track_info)
 
 static void print_identification_info(Identification *identification)
 {
-    char string_buffer[128];
+    char buf[128];
 
-    printf("      Generation UID    : %s\n", get_uuid_string(identification->getThisGenerationUID(), string_buffer));
+    printf("      Generation UID    : %s\n", get_uuid_string(identification->getThisGenerationUID(), buf, sizeof(buf)));
     printf("      Company name      : %s\n", identification->getCompanyName().c_str());
     printf("      Product name      : %s\n", identification->getProductName().c_str());
     printf("      Product version   : ");
     if (identification->haveProductVersion())
-        printf("%s\n", get_product_version_string(identification->getProductVersion(), string_buffer));
+        printf("%s\n", get_product_version_string(identification->getProductVersion(), buf, sizeof(buf)));
     else
         printf("(not set)\n");
     printf("      Version string    : %s\n", identification->getVersionString().c_str());
-    printf("      Product UID       : %s\n", get_uuid_string(identification->getProductUID(), string_buffer));
-    printf("      Modification date : %s\n", get_timestamp_string(identification->getModificationDate(), string_buffer));
+    printf("      Product UID       : %s\n", get_uuid_string(identification->getProductUID(), buf, sizeof(buf)));
+    printf("      Modification date : %s\n", get_timestamp_string(identification->getModificationDate(), buf,
+                                                                  sizeof(buf)));
     printf("      Toolkit version   : ");
     if (identification->haveToolkitVersion())
-        printf("%s\n", get_product_version_string(identification->getToolkitVersion(), string_buffer));
+        printf("%s\n", get_product_version_string(identification->getToolkitVersion(), buf, sizeof(buf)));
     else
         printf("(not set)\n");
     printf("      Platform          : ");

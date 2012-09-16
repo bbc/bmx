@@ -36,8 +36,10 @@
 #define __STDC_FORMAT_MACROS
 
 #include <cstdio>
+#include <cstring>
 
 #include <bmx/XMLUtils.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -57,7 +59,7 @@ string bmx::get_xml_bool_str(bool value)
 string bmx::get_xml_uint64_str(uint64_t value)
 {
     char buf[32];
-    sprintf(buf, "%"PRIu64"", value);
+    bmx_snprintf(buf, sizeof(buf), "%"PRIu64"", value);
 
     return buf;
 }
@@ -65,7 +67,7 @@ string bmx::get_xml_uint64_str(uint64_t value)
 string bmx::get_xml_timestamp_str(Timestamp timestamp)
 {
     char buf[64];
-    sprintf(buf, "%04d-%02u-%02uT%02u:%02u:%02uZ",
+    bmx_snprintf(buf, sizeof(buf), "%04d-%02u-%02uT%02u:%02u:%02uZ",
             timestamp.year, timestamp.month, timestamp.day,
             timestamp.hour, timestamp.min, timestamp.sec);
 
@@ -75,7 +77,7 @@ string bmx::get_xml_timestamp_str(Timestamp timestamp)
 string bmx::get_xml_uuid_str(UUID value)
 {
     char buf[64];
-    sprintf(buf, "urn:uuid:%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+    bmx_snprintf(buf, sizeof(buf), "urn:uuid:%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
             value.octet0,  value.octet1,  value.octet2,  value.octet3,
             value.octet4,  value.octet5,
             value.octet6,  value.octet7,
@@ -89,9 +91,12 @@ string bmx::get_xml_umid_str(UMID value)
 {
     static const char hex_chars[] = "0123456789abcdef";
     char buf[128];
-    int offset = sprintf(buf, "urn:smpte:umid:");
+    size_t offset;
 
-    int i, j;
+    bmx_snprintf(buf, sizeof(buf), "urn:smpte:umid:");
+    offset = strlen(buf);
+
+    size_t i, j;
     for (i = 0; i < 32; i += 4) {
         if (i != 0)
             buf[offset++] = '.';

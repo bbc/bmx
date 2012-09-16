@@ -66,9 +66,9 @@ static const char *PACKAGE_TYPE_STRINGS[] =
 };
 
 
-static char* get_umid_string(UMID umid, char *buf)
+static char* get_umid_string(UMID umid, char *buf, size_t buf_size)
 {
-    sprintf(buf,
+    bmx_snprintf(buf, buf_size,
             "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x."
             "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x",
             umid.octet0,  umid.octet1,  umid.octet2,  umid.octet3,
@@ -113,11 +113,11 @@ void bmx::avid_print_info(MXFFileReader *file_reader)
         printf("  Resolution id     : %d\n", info.resolution_id);
 
     if (info.have_phys_package) {
-        char string_buffer[128];
+        char buf[128];
         printf("  Physical package  :\n");
         printf("      Type            : %s\n", PACKAGE_TYPE_STRINGS[info.phys_package_type]);
         printf("      Name            : %s\n", info.phys_package_name.c_str());
-        printf("      Package uid     : %s\n", get_umid_string(info.phys_package_uid, string_buffer));
+        printf("      Package uid     : %s\n", get_umid_string(info.phys_package_uid, buf, sizeof(buf)));
         if (info.phys_package_type == IMPORT_PACKAGE_TYPE)
             printf("      Network locator : %s\n", info.phys_package_locator.c_str());
     }

@@ -428,7 +428,7 @@ AvidTrack* AvidClip::CreateTrack(EssenceType essence_type)
     }
 
     char buffer[16];
-    sprintf(buffer, "_%s%u.mxf", (is_picture ? "v" : "a"), track_number);
+    bmx_snprintf(buffer, sizeof(buffer), "_%s%u.mxf", (is_picture ? "v" : "a"), track_number);
 
     string filename = mFilenamePrefix;
     filename.append(buffer);

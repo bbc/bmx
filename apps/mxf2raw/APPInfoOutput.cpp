@@ -53,7 +53,7 @@ using namespace bmx;
 static char* get_date_string(mxfTimestamp timestamp)
 {
     static char buf[64];
-    sprintf(buf, "%d-%02u-%02u", timestamp.year, timestamp.month, timestamp.day);
+    bmx_snprintf(buf, sizeof(buf), "%d-%02u-%02u", timestamp.year, timestamp.month, timestamp.day);
     return buf;
 }
 
@@ -61,9 +61,9 @@ static char* get_timecode_string(ArchiveTimecode &timecode)
 {
     static char buf[64];
     if (timecode.hour == INVALID_TIMECODE_HOUR) {
-        sprintf(buf, "<unknown>");
+        bmx_snprintf(buf, sizeof(buf), "<unknown>");
     } else {
-        sprintf(buf, "%02u:%02u:%02u%c%02u", timecode.hour, timecode.min, timecode.sec,
+        bmx_snprintf(buf, sizeof(buf), "%02u:%02u:%02u%c%02u", timecode.hour, timecode.min, timecode.sec,
                 (timecode.dropFrame ? ';' : ':'), timecode.frame);
     }
     return buf;

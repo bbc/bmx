@@ -617,7 +617,7 @@ string bmx::get_duration_string(int64_t count, Rational rate)
     min %= 60;
 
     char buffer[64];
-    sprintf(buffer, "%02"PRId64":%02d:%02d:%02d", hour, (int)min, (int)sec, (int)frame);
+    bmx_snprintf(buffer, sizeof(buffer), "%02"PRId64":%02d:%02d:%02d", hour, (int)min, (int)sec, (int)frame);
 
     return buffer;
 }
@@ -637,7 +637,7 @@ string bmx::get_generic_duration_string(int64_t count, Rational rate)
     int64_t sec_frac = 100 * (msec % 1000) / 1000;
 
     char buffer[64];
-    sprintf(buffer, "%02"PRId64":%02d:%02d.%02d", hour, (int)min, (int)sec, (int)sec_frac);
+    bmx_snprintf(buffer, sizeof(buffer), "%02"PRId64":%02d:%02d.%02d", hour, (int)min, (int)sec, (int)sec_frac);
 
     return buffer;
 }
@@ -657,7 +657,7 @@ string bmx::get_generic_duration_string_2(int64_t count, Rational rate)
     min %= 60;
 
     char buffer[64];
-    sprintf(buffer, "%02"PRId64":%02d:%02d:%02d @%ufps", hour, (int)min, (int)sec, (int)frame, rounded_rate);
+    bmx_snprintf(buffer, sizeof(buffer), "%02"PRId64":%02d:%02d:%02d @%ufps", hour, (int)min, (int)sec, (int)frame, rounded_rate);
 
     return buffer;
 }
@@ -671,7 +671,7 @@ bmx::Rational bmx::convert_int_to_rational(int32_t value)
 string bmx::get_timecode_string(Timecode timecode)
 {
     char buffer[64];
-    sprintf(buffer, "%02d:%02d:%02d%c%02d",
+    bmx_snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d%c%02d",
             timecode.GetHour(),
             timecode.GetMin(),
             timecode.GetSec(),
@@ -862,12 +862,12 @@ string bmx::bmx_strerror(int errnum)
 
 #ifdef HAVE_STRERROR_R
     if (strerror_r(errnum, buf, sizeof(buf)) != 0)
-        snprintf(buf, sizeof(buf), "unknown error code %d", errnum);
+        bmx_snprintf(buf, sizeof(buf), "unknown error code %d", errnum);
 #elif defined(_MSC_VER)
     if (strerror_s(buf, sizeof(buf), errnum) != 0)
-        snprintf(buf, sizeof(buf), "unknown error code %d", errnum);
+        bmx_snprintf(buf, sizeof(buf), "unknown error code %d", errnum);
 #else
-    snprintf(buf, sizeof(buf), "error code %d", errnum);
+    bmx_snprintf(buf, sizeof(buf), "error code %d", errnum);
 #endif
 
     return buf;

@@ -38,6 +38,7 @@
 #include <cstdio>
 
 #include <bmx/Version.h>
+#include <bmx/Utils.h>
 
 using namespace std;
 
@@ -77,7 +78,7 @@ string bmx::get_bmx_version_string()
         return "0.0.0";
     } else {
         char buffer[32];
-        sprintf(buffer, "%d.%d.%d", BMX_VERSION_MAJOR, BMX_VERSION_MINOR, BMX_VERSION_MICRO);
+        bmx_snprintf(buffer, sizeof(buffer), "%d.%d.%d", BMX_VERSION_MAJOR, BMX_VERSION_MINOR, BMX_VERSION_MICRO);
         return buffer;
     }
 }
@@ -128,7 +129,7 @@ string bmx::get_bmx_mxf_version_string()
         return "0.0.0";
     } else {
         char buffer[64];
-        sprintf(buffer, "%d.%d.%d (scm %s)",
+        bmx_snprintf(buffer, sizeof(buffer), "%d.%d.%d (scm %s)",
                 BMX_VERSION_MAJOR, BMX_VERSION_MINOR, BMX_VERSION_MICRO,
                 BMX_SCM_VERSION);
         return buffer;

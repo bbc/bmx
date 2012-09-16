@@ -301,7 +301,7 @@ int64_t bmx::convert_tc_offset(mxfRational in_edit_rate, int64_t in_offset, uint
 string bmx::get_track_name(bool is_video, uint32_t track_number)
 {
     char buffer[32];
-    sprintf(buffer, "%s%d", (is_video ? "V" : "A"), track_number);
+    bmx_snprintf(buffer, sizeof(buffer), "%s%d", (is_video ? "V" : "A"), track_number);
     return buffer;
 }
 

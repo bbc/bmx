@@ -219,10 +219,12 @@ void WaveBEXT::Write(WaveIO *output)
     output->Write((const unsigned char*)mOriginatorReference, STRING_SIZE(mOriginatorReference));
 
     char buffer[32];
-    sprintf(buffer, "%04u-%02u-%02u", mOriginatorTimestamp.year, mOriginatorTimestamp.month, mOriginatorTimestamp.day);
+    bmx_snprintf(buffer, sizeof(buffer), "%04u-%02u-%02u", mOriginatorTimestamp.year, mOriginatorTimestamp.month,
+                 mOriginatorTimestamp.day);
     output->Write((const unsigned char*)buffer, 10);
 
-    sprintf(buffer, "%02u:%02u:%02u", mOriginatorTimestamp.hour, mOriginatorTimestamp.min, mOriginatorTimestamp.sec);
+    bmx_snprintf(buffer, sizeof(buffer), "%02u:%02u:%02u", mOriginatorTimestamp.hour, mOriginatorTimestamp.min,
+                 mOriginatorTimestamp.sec);
     output->Write((const unsigned char*)buffer, 8);
 
     output->WriteUInt64(mTimeReference);

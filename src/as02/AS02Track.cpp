@@ -111,7 +111,7 @@ static const AS02SampleRateSupport AS02_SAMPLE_RATE_SUPPORT[] =
 static string get_track_clip_name(string &clip_name, bool is_video, uint32_t track_number)
 {
     char buffer[16];
-    sprintf(buffer, "__track_%s%u", is_video ? "v" : "a", track_number);
+    bmx_snprintf(buffer, sizeof(buffer), "__track_%s%u", is_video ? "v" : "a", track_number);
 
     return clip_name + buffer;
 }

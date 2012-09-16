@@ -164,7 +164,7 @@ string AS02Bundle::CreateEssenceComponentFilepath(string version_filename, bool 
     BMX_CHECK(track_number > 0);
 
     char suffix[32];
-    sprintf(suffix, "%s%u.mxf", (is_video ? "_v" : "_a"), track_number - 1);
+    bmx_snprintf(suffix, sizeof(suffix), "%s%u.mxf", (is_video ? "_v" : "_a"), track_number - 1);
 
     string version_name = strip_suffix(version_filename);
 
