@@ -64,7 +64,7 @@ static char* get_timecode_string(ArchiveTimecode &timecode)
         bmx_snprintf(buf, sizeof(buf), "<unknown>");
     } else {
         bmx_snprintf(buf, sizeof(buf), "%02u:%02u:%02u%c%02u", timecode.hour, timecode.min, timecode.sec,
-                (timecode.dropFrame ? ';' : ':'), timecode.frame);
+                     (timecode.dropFrame ? ';' : ':'), timecode.frame);
     }
     return buf;
 }

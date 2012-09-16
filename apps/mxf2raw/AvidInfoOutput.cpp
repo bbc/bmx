@@ -69,16 +69,16 @@ static const char *PACKAGE_TYPE_STRINGS[] =
 static char* get_umid_string(UMID umid, char *buf, size_t buf_size)
 {
     bmx_snprintf(buf, buf_size,
-            "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x."
-            "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x",
-            umid.octet0,  umid.octet1,  umid.octet2,  umid.octet3,
-            umid.octet4,  umid.octet5,  umid.octet6,  umid.octet7,
-            umid.octet8,  umid.octet9,  umid.octet10, umid.octet11,
-            umid.octet12, umid.octet13, umid.octet14, umid.octet15,
-            umid.octet16, umid.octet17, umid.octet18, umid.octet19,
-            umid.octet20, umid.octet21, umid.octet22, umid.octet23,
-            umid.octet24, umid.octet25, umid.octet26, umid.octet27,
-            umid.octet28, umid.octet29, umid.octet30, umid.octet31);
+                 "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x."
+                 "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x",
+                 umid.octet0,  umid.octet1,  umid.octet2,  umid.octet3,
+                 umid.octet4,  umid.octet5,  umid.octet6,  umid.octet7,
+                 umid.octet8,  umid.octet9,  umid.octet10, umid.octet11,
+                 umid.octet12, umid.octet13, umid.octet14, umid.octet15,
+                 umid.octet16, umid.octet17, umid.octet18, umid.octet19,
+                 umid.octet20, umid.octet21, umid.octet22, umid.octet23,
+                 umid.octet24, umid.octet25, umid.octet26, umid.octet27,
+                 umid.octet28, umid.octet29, umid.octet30, umid.octet31);
 
     return buf;
 }

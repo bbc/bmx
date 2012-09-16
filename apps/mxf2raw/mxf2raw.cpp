@@ -68,11 +68,11 @@ using namespace mxfpp;
 static char* get_label_string(mxfUL label, char *buf, size_t buf_size)
 {
     bmx_snprintf(buf, buf_size,
-            "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x",
-            label.octet0,  label.octet1,  label.octet2,  label.octet3,
-            label.octet4,  label.octet5,  label.octet6,  label.octet7,
-            label.octet8,  label.octet9,  label.octet10, label.octet11,
-            label.octet12, label.octet13, label.octet14, label.octet15);
+                 "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x",
+                 label.octet0,  label.octet1,  label.octet2,  label.octet3,
+                 label.octet4,  label.octet5,  label.octet6,  label.octet7,
+                 label.octet8,  label.octet9,  label.octet10, label.octet11,
+                 label.octet12, label.octet13, label.octet14, label.octet15);
 
     return buf;
 }
@@ -85,16 +85,16 @@ static char* get_uuid_string(mxfUUID uuid, char *buf, size_t buf_size)
 static char* get_umid_string(mxfUMID umid, char *buf, size_t buf_size)
 {
     bmx_snprintf(buf, buf_size,
-            "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x."
-            "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x",
-            umid.octet0,  umid.octet1,  umid.octet2,  umid.octet3,
-            umid.octet4,  umid.octet5,  umid.octet6,  umid.octet7,
-            umid.octet8,  umid.octet9,  umid.octet10, umid.octet11,
-            umid.octet12, umid.octet13, umid.octet14, umid.octet15,
-            umid.octet16, umid.octet17, umid.octet18, umid.octet19,
-            umid.octet20, umid.octet21, umid.octet22, umid.octet23,
-            umid.octet24, umid.octet25, umid.octet26, umid.octet27,
-            umid.octet28, umid.octet29, umid.octet30, umid.octet31);
+                 "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x."
+                 "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x",
+                 umid.octet0,  umid.octet1,  umid.octet2,  umid.octet3,
+                 umid.octet4,  umid.octet5,  umid.octet6,  umid.octet7,
+                 umid.octet8,  umid.octet9,  umid.octet10, umid.octet11,
+                 umid.octet12, umid.octet13, umid.octet14, umid.octet15,
+                 umid.octet16, umid.octet17, umid.octet18, umid.octet19,
+                 umid.octet20, umid.octet21, umid.octet22, umid.octet23,
+                 umid.octet24, umid.octet25, umid.octet26, umid.octet27,
+                 umid.octet28, umid.octet29, umid.octet30, umid.octet31);
 
     return buf;
 }
@@ -108,8 +108,8 @@ static char* get_rational_string(mxfRational rat, char *buf, size_t buf_size)
 static char* get_timestamp_string(mxfTimestamp timestamp, char *buf, size_t buf_size)
 {
     bmx_snprintf(buf, buf_size, "%d-%02u-%02u %02u:%02u:%02u.%03u",
-            timestamp.year, timestamp.month, timestamp.day,
-            timestamp.hour, timestamp.min, timestamp.sec, timestamp.qmsec * 4);
+                 timestamp.year, timestamp.month, timestamp.day,
+                 timestamp.hour, timestamp.min, timestamp.sec, timestamp.qmsec * 4);
 
     return buf;
 }
@@ -143,7 +143,7 @@ static char* get_product_version_string(mxfProductVersion version, char *buf, si
     }
 
     bmx_snprintf(buf, buf_size, "%u.%u.%u.%u.%u (%s)",
-            version.major, version.minor, version.patch, version.build, version.release, release_string);
+                 version.major, version.minor, version.patch, version.build, version.release, release_string);
 
     return buf;
 }

@@ -672,11 +672,11 @@ string bmx::get_timecode_string(Timecode timecode)
 {
     char buffer[64];
     bmx_snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d%c%02d",
-            timecode.GetHour(),
-            timecode.GetMin(),
-            timecode.GetSec(),
-            timecode.IsDropFrame() ? ';' : ':',
-            timecode.GetFrame());
+                 timecode.GetHour(),
+                 timecode.GetMin(),
+                 timecode.GetSec(),
+                 timecode.IsDropFrame() ? ';' : ':',
+                 timecode.GetFrame());
     return buffer;
 }
 

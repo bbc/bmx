@@ -68,8 +68,8 @@ string bmx::get_xml_timestamp_str(Timestamp timestamp)
 {
     char buf[64];
     bmx_snprintf(buf, sizeof(buf), "%04d-%02u-%02uT%02u:%02u:%02uZ",
-            timestamp.year, timestamp.month, timestamp.day,
-            timestamp.hour, timestamp.min, timestamp.sec);
+                 timestamp.year, timestamp.month, timestamp.day,
+                 timestamp.hour, timestamp.min, timestamp.sec);
 
     return buf;
 }
@@ -78,11 +78,11 @@ string bmx::get_xml_uuid_str(UUID value)
 {
     char buf[64];
     bmx_snprintf(buf, sizeof(buf), "urn:uuid:%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-            value.octet0,  value.octet1,  value.octet2,  value.octet3,
-            value.octet4,  value.octet5,
-            value.octet6,  value.octet7,
-            value.octet8,  value.octet9,
-            value.octet10, value.octet11, value.octet12, value.octet13, value.octet14, value.octet15);
+                 value.octet0,  value.octet1,  value.octet2,  value.octet3,
+                 value.octet4,  value.octet5,
+                 value.octet6,  value.octet7,
+                 value.octet8,  value.octet9,
+                 value.octet10, value.octet11, value.octet12, value.octet13, value.octet14, value.octet15);
 
     return buf;
 }

@@ -130,8 +130,8 @@ string bmx::get_bmx_mxf_version_string()
     } else {
         char buffer[64];
         bmx_snprintf(buffer, sizeof(buffer), "%d.%d.%d (scm %s)",
-                BMX_VERSION_MAJOR, BMX_VERSION_MINOR, BMX_VERSION_MICRO,
-                BMX_SCM_VERSION);
+                     BMX_VERSION_MAJOR, BMX_VERSION_MINOR, BMX_VERSION_MICRO,
+                     BMX_SCM_VERSION);
         return buffer;
     }
 }
