@@ -42,6 +42,7 @@
 #include <cerrno>
 
 #include <bmx/wave/WaveFileIO.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -54,7 +55,7 @@ WaveFileIO* WaveFileIO::OpenRead(string filename)
 {
     FILE *file = fopen(filename.c_str(), "rb");
     if (!file)
-        BMX_EXCEPTION(("Failed to open wave file '%s' for reading: %s", filename.c_str(), strerror(errno)));
+        BMX_EXCEPTION(("Failed to open wave file '%s' for reading: %s", filename.c_str(), bmx_strerror(errno).c_str()));
 
     return new WaveFileIO(file, true);
 }
@@ -63,7 +64,7 @@ WaveFileIO* WaveFileIO::OpenNew(string filename)
 {
     FILE *file = fopen(filename.c_str(), "wb");
     if (!file)
-        BMX_EXCEPTION(("Failed to open wave file '%s' for writing: %s", filename.c_str(), strerror(errno)));
+        BMX_EXCEPTION(("Failed to open wave file '%s' for writing: %s", filename.c_str(), bmx_strerror(errno).c_str()));
 
     return new WaveFileIO(file, false);
 }
@@ -85,7 +86,7 @@ uint32_t WaveFileIO::Read(unsigned char *data, uint32_t size)
 {
     size_t result = fread(data, 1, size, mFile);
     if (result != size && ferror(mFile))
-        log_error("Failed to read %u bytes: %s\n", size, strerror(errno));
+        log_error("Failed to read %u bytes: %s\n", size, bmx_strerror(errno).c_str());
 
     return (uint32_t)result;
 }
@@ -101,7 +102,7 @@ uint32_t WaveFileIO::Write(const unsigned char *data, uint32_t size)
 
     size_t result = fwrite(data, 1, size, mFile);
     if (result != size)
-        log_error("Failed to write %u bytes: %s\n", size, strerror(errno));
+        log_error("Failed to write %u bytes: %s\n", size, bmx_strerror(errno).c_str());
 
     return (uint32_t)result;
 }

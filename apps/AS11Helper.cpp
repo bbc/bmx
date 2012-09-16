@@ -532,7 +532,7 @@ bool AS11Helper::ParseFrameworkFile(const char *type_str, const char *filename)
 
     FILE *file = fopen(filename, "rb");
     if (!file) {
-        fprintf(stderr, "Failed to open file '%s': %s\n", filename, strerror(errno));
+        fprintf(stderr, "Failed to open file '%s': %s\n", filename, bmx_strerror(errno).c_str());
         return false;
     }
 
@@ -585,7 +585,7 @@ bool AS11Helper::ParseSegmentationFile(const char *filename, Rational frame_rate
 
     FILE *file = fopen(filename, "rb");
     if (!file) {
-        fprintf(stderr, "Failed to open file '%s': %s\n", filename, strerror(errno));
+        fprintf(stderr, "Failed to open file '%s': %s\n", filename, bmx_strerror(errno).c_str());
         return false;
     }
 

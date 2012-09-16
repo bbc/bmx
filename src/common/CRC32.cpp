@@ -38,6 +38,7 @@
 #include <cerrno>
 
 #include <bmx/CRC32.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -151,7 +152,7 @@ string bmx::crc32_calc_file(string filename)
 {
     FILE *file = fopen(filename.c_str(), "rb");
     if (!file) {
-        log_warn("Failed to open file '%s' to calc crc32: %s\n", filename.c_str(), strerror(errno));
+        log_warn("Failed to open file '%s' to calc crc32: %s\n", filename.c_str(), bmx_strerror(errno).c_str());
         return "";
     }
 
@@ -163,7 +164,8 @@ string bmx::crc32_calc_file(string filename)
     while (num_read == sizeof(buffer)) {
         num_read = fread(buffer, 1, sizeof(buffer), file);
         if (num_read != sizeof(buffer) && ferror(file)) {
-            log_warn("Failed to read from file '%s' to calc crc32: %s\n", filename.c_str(), strerror(errno));
+            log_warn("Failed to read from file '%s' to calc crc32: %s\n",
+                     filename.c_str(), bmx_strerror(errno).c_str());
             return "";
         }
 

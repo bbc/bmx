@@ -126,6 +126,8 @@ bool check_excess_d10_padding(const unsigned char *data, uint32_t data_size, uin
 void bmx_snprintf(char *str, size_t size, const char *format, ...);
 void bmx_vsnprintf(char *str, size_t size, const char *format, va_list ap);
 
+std::string bmx_strerror(int errnum);
+
 
 };
 

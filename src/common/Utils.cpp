@@ -33,6 +33,9 @@
 #include "config.h"
 #endif
 
+// ensure strerror_r is the XSI compliant version and not the GNU version
+#undef _GNU_SOURCE
+
 #define __STDC_FORMAT_MACROS
 #define __STDC_LIMIT_MACROS
 
@@ -456,10 +459,10 @@ string bmx::get_cwd()
 
         delete [] temp_path;
         if (errno != ERANGE) {
-            throw BMXException("Failed to get current working directory: %s", strerror(errno));
+            throw BMXException("Failed to get current working directory: %s", bmx_strerror(errno).c_str());
         } else if (path_size >= MAX_REASONABLE_PATH_SIZE) {
             throw BMXException("Maximum path size (%d) for current working directory exceeded",
-                               MAX_REASONABLE_PATH_SIZE, strerror(errno));
+                               MAX_REASONABLE_PATH_SIZE, bmx_strerror(errno).c_str());
         }
         path_size += 1024;
     }
@@ -851,5 +854,22 @@ void bmx::bmx_vsnprintf(char *str, size_t size, const char *format, va_list ap)
     if (vsnprintf(str, size, format, ap) < 0 && str && size > 0)
         str[0] = 0;
 #endif
+}
+
+string bmx::bmx_strerror(int errnum)
+{
+    char buf[128];
+
+#ifdef HAVE_STRERROR_R
+    if (strerror_r(errnum, buf, sizeof(buf)) != 0)
+        snprintf(buf, sizeof(buf), "unknown error code %d", errnum);
+#elif defined(_MSC_VER)
+    if (strerror_s(buf, sizeof(buf), errnum) != 0)
+        snprintf(buf, sizeof(buf), "unknown error code %d", errnum);
+#else
+    snprintf(buf, sizeof(buf), "error code %d", errnum);
+#endif
+
+    return buf;
 }
 

@@ -912,7 +912,7 @@ int main(int argc, const char** argv)
                         FILE *raw_file = fopen(raw_filename.c_str(), "wb");
                         if (!raw_file) {
                             log_error("Failed to open raw file '%s': %s\n",
-                                      raw_filename.c_str(), strerror(errno));
+                                      raw_filename.c_str(), bmx_strerror(errno).c_str());
                             throw false;
                         }
                         raw_files.push_back(raw_file);
@@ -928,7 +928,7 @@ int main(int argc, const char** argv)
                                 FILE *raw_file = fopen(raw_filename.c_str(), "wb");
                                 if (!raw_file) {
                                     log_error("Failed to open raw file '%s': %s\n",
-                                              raw_filename.c_str(), strerror(errno));
+                                              raw_filename.c_str(), bmx_strerror(errno).c_str());
                                     throw false;
                                 }
                                 raw_files.push_back(raw_file);
@@ -939,7 +939,7 @@ int main(int argc, const char** argv)
                             FILE *raw_file = fopen(raw_filename.c_str(), "wb");
                             if (!raw_file) {
                                 log_error("Failed to open raw file '%s': %s\n",
-                                          raw_filename.c_str(), strerror(errno));
+                                          raw_filename.c_str(), bmx_strerror(errno).c_str());
                                 throw false;
                             }
                             raw_files.push_back(raw_file);
@@ -1060,7 +1060,7 @@ int main(int argc, const char** argv)
                                                                             raw_files[file_count]);
                                     if (num_written != 1) {
                                         log_error("Failed to write to raw file '%s': %s\n",
-                                                  raw_filenames[file_count].c_str(), strerror(errno));
+                                                  raw_filenames[file_count].c_str(), bmx_strerror(errno).c_str());
                                         throw false;
                                     }
                                     file_count++;
@@ -1071,7 +1071,7 @@ int main(int argc, const char** argv)
                                                                         raw_files[file_count]);
                                 if (num_written != 1) {
                                     log_error("Failed to write to raw file '%s': %s\n",
-                                              raw_filenames[file_count].c_str(), strerror(errno));
+                                              raw_filenames[file_count].c_str(), bmx_strerror(errno).c_str());
                                     throw false;
                                 }
                                 file_count++;

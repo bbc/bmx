@@ -33,6 +33,7 @@
 #include <cerrno>
 
 #include <bmx/XMLWriter.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -55,7 +56,7 @@ XMLWriter* XMLWriter::Open(string filename)
 {
     FILE *xml_file = fopen(filename.c_str(), "wb");
     if (!xml_file) {
-        log_error("Failed to open XML file '%s' for writing: %s\n", filename.c_str(), strerror(errno));
+        log_error("Failed to open XML file '%s' for writing: %s\n", filename.c_str(), bmx_strerror(errno).c_str());
         return 0;
     }
 
@@ -550,6 +551,6 @@ void XMLWriter::Write(const string &data)
 void XMLWriter::Write(const char *data, size_t len)
 {
     if (fwrite(data, 1, len, mXMLFile) != len)
-        log_error("XML fwrite failed: %s\n", strerror(errno));
+        log_error("XML fwrite failed: %s\n", bmx_strerror(errno).c_str());
 }
 

@@ -76,8 +76,10 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory,
 #else
         if (mkdir(root_filepath.c_str(), 0777) != 0) {
 #endif
-            if (errno != EEXIST)
-                throw BMXException("Failed to create bundle directory '%s': %s", root_filepath.c_str(), strerror(errno));
+            if (errno != EEXIST) {
+                throw BMXException("Failed to create bundle directory '%s': %s",
+                                   root_filepath.c_str(), bmx_strerror(errno).c_str());
+            }
             if (!check_is_dir(root_filepath))
                 throw BMXException("Bundle directory name '%s' clashes with non-directory file", root_filepath.c_str());
         }
@@ -93,8 +95,10 @@ AS02Bundle* AS02Bundle::OpenNew(string root_directory, bool create_directory,
 #else
     if (mkdir(sub_dir.c_str(), 0777) != 0) {
 #endif
-        if (errno != EEXIST)
-            throw BMXException("Failed to create bundle media sub-directory '%s': %s", sub_dir.c_str(), strerror(errno));
+        if (errno != EEXIST) {
+            throw BMXException("Failed to create bundle media sub-directory '%s': %s",
+                               sub_dir.c_str(), bmx_strerror(errno).c_str());
+        }
         if (!check_is_dir(sub_dir))
             throw BMXException("Media sub-directory '%s' clashes with non-directory file", sub_dir.c_str());
     }

@@ -255,7 +255,7 @@ void AS02ManifestFile::CompleteInfo(AS02Bundle *bundle, MICType default_mic_type
             if (stat(complete_path.c_str(), &stat_buf) == 0)
                 mSize = stat_buf.st_size;
             else
-                log_warn("Failed to stat '%s' for size: %s\n", complete_path.c_str(), strerror(errno));
+                log_warn("Failed to stat '%s' for size: %s\n", complete_path.c_str(), bmx_strerror(errno).c_str());
         }
 
         // calculate checksum for entire files if not done so already

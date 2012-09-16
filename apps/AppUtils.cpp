@@ -401,7 +401,7 @@ bool bmx::read_avci_header_data(EssenceType essence_type, Rational sample_rate,
     FILE *file = fopen(avci_header_inputs[i].filename, "rb");
     if (!file) {
         log_error("Failed to open AVC-Intra header data input file '%s': %s\n",
-                  avci_header_inputs[i].filename, strerror(errno));
+                  avci_header_inputs[i].filename, bmx_strerror(errno).c_str());
         return false;
     }
 
@@ -412,7 +412,7 @@ bool bmx::read_avci_header_data(EssenceType essence_type, Rational sample_rate,
     if (fseeko(file, offset, SEEK_SET) != 0) {
 #endif
         log_error("Failed to seek to offset %"PRId64" in AVC-Intra header data input file '%s': %s\n",
-                  offset, avci_header_inputs[i].filename, strerror(errno));
+                  offset, avci_header_inputs[i].filename, bmx_strerror(errno).c_str());
         fclose(file);
         return false;
     }

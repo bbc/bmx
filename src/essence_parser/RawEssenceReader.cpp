@@ -44,6 +44,7 @@
 #endif
 
 #include <bmx/essence_parser/RawEssenceReader.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -148,11 +149,13 @@ uint32_t RawEssenceReader::GetSampleSize() const
 void RawEssenceReader::Reset()
 {
 #if defined(_WIN32)
-    if (_fseeki64(mRawInput, mStartOffset, SEEK_SET) != 0)
+    if (_fseeki64(mRawInput, mStartOffset, SEEK_SET) != 0) {
 #else
-    if (fseeko(mRawInput, mStartOffset, SEEK_SET) != 0)
+    if (fseeko(mRawInput, mStartOffset, SEEK_SET) != 0) {
 #endif
-        throw BMXException("Failed to seek to raw file start offset 0x%"PRIx64": %s", mStartOffset, strerror(errno));
+        throw BMXException("Failed to seek to raw file start offset 0x%"PRIx64": %s",
+                           mStartOffset, bmx_strerror(errno).c_str());
+    }
 
     mTotalReadLength = 0;
     mSampleBuffer.SetSize(0);
@@ -240,7 +243,7 @@ uint32_t RawEssenceReader::ReadBytes(uint32_t size)
     mSampleBuffer.Grow(actual_size);
     uint32_t num_read = (uint32_t)fread(mSampleBuffer.GetBytesAvailable(), 1, actual_size, mRawInput);
     if (num_read < actual_size && ferror(mRawInput))
-        log_error("Failed to read from raw file: %s\n", strerror(errno));
+        log_error("Failed to read from raw file: %s\n", bmx_strerror(errno).c_str());
 
     mTotalReadLength += num_read;
     mSampleBuffer.IncrementSize(num_read);

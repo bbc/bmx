@@ -41,6 +41,7 @@
 #include <cerrno>
 
 #include <bmx/Logging.h>
+#include <bmx/Utils.h>
 
 using namespace std;
 using namespace bmx;
@@ -155,7 +156,7 @@ bool bmx::open_log_file(string filename)
 
     LOG_FILE = fopen(filename.c_str(), "wb");
     if (!LOG_FILE) {
-        fprintf(stderr, "Failed to open log file '%s': %s\n", filename.c_str(), strerror(errno));
+        fprintf(stderr, "Failed to open log file '%s': %s\n", filename.c_str(), bmx_strerror(errno).c_str());
         return false;
     }
 

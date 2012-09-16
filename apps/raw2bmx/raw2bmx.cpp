@@ -189,7 +189,7 @@ static bool open_raw_reader(RawInput *input)
 
     FILE *raw_file = fopen(input->filename, "rb");
     if (!raw_file) {
-        log_error("Failed to open input file '%s': %s\n", input->filename, strerror(errno));
+        log_error("Failed to open input file '%s': %s\n", input->filename, bmx_strerror(errno).c_str());
         return false;
     }
 
