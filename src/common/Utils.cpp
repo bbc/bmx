@@ -33,9 +33,6 @@
 #include "config.h"
 #endif
 
-// ensure strerror_r is the XSI compliant version and not the GNU version
-#undef _GNU_SOURCE
-
 #define __STDC_FORMAT_MACROS
 #define __STDC_LIMIT_MACROS
 
@@ -861,8 +858,16 @@ string bmx::bmx_strerror(int errnum)
     char buf[128];
 
 #ifdef HAVE_STRERROR_R
+
+#ifdef _GNU_SOURCE
+    const char *err_str = strerror_r(errnum, buf, sizeof(buf));
+    if (err_str != buf)
+        bmx_snprintf(buf, sizeof(buf), err_str);
+#else
     if (strerror_r(errnum, buf, sizeof(buf)) != 0)
         bmx_snprintf(buf, sizeof(buf), "unknown error code %d", errnum);
+#endif
+
 #elif defined(_MSC_VER)
     if (strerror_s(buf, sizeof(buf), errnum) != 0)
         bmx_snprintf(buf, sizeof(buf), "unknown error code %d", errnum);
