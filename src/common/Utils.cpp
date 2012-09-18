@@ -862,7 +862,7 @@ string bmx::bmx_strerror(int errnum)
 #ifdef _GNU_SOURCE
     const char *err_str = strerror_r(errnum, buf, sizeof(buf));
     if (err_str != buf)
-        bmx_snprintf(buf, sizeof(buf), err_str);
+        bmx_snprintf(buf, sizeof(buf), "%s", err_str);
 #else
     if (strerror_r(errnum, buf, sizeof(buf)) != 0)
         bmx_snprintf(buf, sizeof(buf), "unknown error code %d", errnum);
