@@ -94,11 +94,11 @@ static const EssenceType INTER_FRAME_ENCODING_ESSENCE_TYPES[] =
 };
 
 
-#define THROW_RESULT(result) \
-{ \
-    log_warn("Open error '%s' near %s:%d\n", #result, __FILE__, __LINE__); \
-    throw result; \
-}
+#define THROW_RESULT(result)                                                        \
+    do {                                                                            \
+        log_warn("Open error '%s' near %s:%d\n", #result, __FILE__, __LINE__);      \
+        throw result;                                                               \
+    } while (0)
 
 
 
