@@ -58,8 +58,8 @@
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/Version.h>
-#include "../AppUtils.h"
-#include "../AS11Helper.h"
+#include <bmx/apps/AppUtils.h>
+#include <bmx/apps/AS11Helper.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 

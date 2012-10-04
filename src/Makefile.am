@@ -1,5 +1,5 @@
 SUBDIRS = common frame essence_parser writer_helper mxf_helper \
-	mxf_reader as02 mxf_op1a d10_mxf as11 avid_mxf wave clip_writer
+	mxf_reader as02 mxf_op1a d10_mxf as11 avid_mxf wave clip_writer apps
 # mov_writer mov_reader mxf_atom
 
 
@@ -9,6 +9,7 @@ libbmx_@BMX_MAJORMINOR@_la_SOURCES =
 libbmx_@BMX_MAJORMINOR@_la_LDFLAGS = \
 	-version-info $(BMX_LIBVERSION)
 libbmx_@BMX_MAJORMINOR@_la_LIBADD = \
+	apps/libapps.la \
 	common/libcommon.la \
 	frame/libframe.la \
 	essence_parser/libessenceparser.la \

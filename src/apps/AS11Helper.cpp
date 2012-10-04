@@ -39,10 +39,10 @@
 #include <cstring>
 #include <cerrno>
 
-#include <AS11Helper.h>
+#include <bmx/apps/AS11Helper.h>
 #include <bmx/as11/AS11DMS.h>
 #include <bmx/as11/UKDPPDMS.h>
-#include "AppUtils.h"
+#include <bmx/apps/AppUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>

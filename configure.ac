@@ -225,6 +225,7 @@ AC_CONFIG_FILES([
 	Makefile
 	include/Makefile
 	src/Makefile
+	src/apps/Makefile
 	src/common/Makefile
 	src/frame/Makefile
 	src/essence_parser/Makefile

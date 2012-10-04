@@ -39,7 +39,7 @@
 #include <cstring>
 #include <cerrno>
 
-#include "AppUtils.h"
+#include <bmx/apps/AppUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
