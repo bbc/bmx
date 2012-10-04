@@ -108,6 +108,16 @@ uint32_t MXFFileTrackReader::Read(uint32_t num_samples, bool is_top)
     return mFileReader->Read(num_samples, is_top);
 }
 
+bool MXFFileTrackReader::ReadError() const
+{
+    return mFileReader->ReadError();
+}
+
+string MXFFileTrackReader::ReadErrorMessage() const
+{
+    return mFileReader->ReadErrorMessage();
+}
+
 void MXFFileTrackReader::Seek(int64_t position)
 {
     mFileReader->Seek(position);
@@ -126,6 +136,11 @@ mxfRational MXFFileTrackReader::GetEditRate() const
 int64_t MXFFileTrackReader::GetDuration() const
 {
     return mFileReader->GetDuration();
+}
+
+int64_t MXFFileTrackReader::GetOrigin() const
+{
+    return mFileReader->GetOrigin();
 }
 
 bool MXFFileTrackReader::GetIndexEntry(MXFIndexEntryExt *entry, int64_t position) const

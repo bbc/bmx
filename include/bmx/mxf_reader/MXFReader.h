@@ -57,6 +57,8 @@ public:
     virtual ~MXFReader();
 
 public:
+    virtual bool IsComplete() const = 0;
+
     virtual void GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const = 0;
     virtual void SetReadLimits() = 0;
     virtual void SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position) = 0;
@@ -66,6 +68,8 @@ public:
     bool CheckReadLastFrame();
 
     virtual uint32_t Read(uint32_t num_samples, bool is_top = true) = 0;
+    virtual bool ReadError() const               { return mReadError; }
+    virtual std::string ReadErrorMessage() const { return mReadErrorMessage; }
 
     virtual void Seek(int64_t position) = 0;
     void ClearFrameBuffers(bool del_frames);
@@ -77,6 +81,7 @@ public:
 
     mxfRational GetEditRate() const   { return mEditRate; }
     int64_t GetDuration() const       { return mDuration; }
+    int64_t GetOrigin() const         { return mOrigin; }
 
 public:
     virtual bool HaveFixedLeadFillerOffset() const = 0;
@@ -116,6 +121,10 @@ public:
 protected:
     mxfRational mEditRate;
     int64_t mDuration;
+    int64_t mOrigin;
+
+    bool mReadError;
+    std::string mReadErrorMessage;
 
     Timecode *mMaterialStartTimecode;
     Timecode *mFileSourceStartTimecode;

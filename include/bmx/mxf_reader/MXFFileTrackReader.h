@@ -60,11 +60,14 @@ public:
     virtual int64_t GetReadDuration() const;
 
     virtual uint32_t Read(uint32_t num_samples, bool is_top = true);
+    virtual bool ReadError() const;
+    virtual std::string ReadErrorMessage() const;
     virtual void Seek(int64_t position);
 
     virtual int64_t GetPosition() const;
     virtual mxfRational GetEditRate() const;
     virtual int64_t GetDuration() const;
+    virtual int64_t GetOrigin() const;
 
     virtual bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position = CURRENT_POSITION_VALUE) const;
 

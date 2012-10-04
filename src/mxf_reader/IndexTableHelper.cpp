@@ -34,8 +34,10 @@
 #endif
 
 #define __STDC_FORMAT_MACROS
+#define __STDC_LIMIT_MACROS
 
 #include <cstdio>
+#include <cstring>
 
 #include <memory>
 
@@ -57,10 +59,16 @@ using namespace mxfpp;
 // temporal offset (1) + key frame offset (1) + flags (1) + stream offset (8)
 #define INTERNAL_INDEX_ENTRY_SIZE   11
 
+#define RUNTIME_INDEX_SEGMENT_SIZE  1500
+
 #define GET_TEMPORAL_OFFSET(pos)    (*((int8_t*)&mIndexEntries[(pos) * INTERNAL_INDEX_ENTRY_SIZE]))
 #define GET_KEY_FRAME_OFFSET(pos)   (*((int8_t*)&mIndexEntries[(pos) * INTERNAL_INDEX_ENTRY_SIZE + 1]))
 #define GET_FLAGS(pos)              (*((uint8_t*)&mIndexEntries[(pos) * INTERNAL_INDEX_ENTRY_SIZE + 2]))
 #define GET_STREAM_OFFSET(pos)      (*((int64_t*)&mIndexEntries[(pos) * INTERNAL_INDEX_ENTRY_SIZE + 3]))
+
+#define SEG_END(seg)    (seg->getIndexStartPosition() + seg->getIndexDuration())
+#define SEG_START(seg)  (seg->getIndexStartPosition())
+#define SEG_DUR(seg)    (seg->getIndexDuration())
 
 
 
@@ -74,7 +82,10 @@ static int add_frame_offset_index_entry(void *data, uint32_t num_entries, MXFInd
     (void)slice_offset;
     (void)pos_table;
 
-    helper->AppendIndexEntry(num_entries, temporal_offset, key_frame_offset, flags, stream_offset);
+    // file offsets use int64_t whilst the index segment stream offset is uint64_t
+    BMX_CHECK(stream_offset <= INT64_MAX);
+
+    helper->AppendIndexEntry(num_entries, temporal_offset, key_frame_offset, flags, (int64_t)stream_offset);
 
     return 1;
 }
@@ -85,12 +96,14 @@ IndexTableHelperSegment::IndexTableHelperSegment()
 : IndexTableSegment()
 {
     mIndexEntries = 0;
-    mNumIndexEntries = 0;
     mAllocIndexEntries = 0;
+    mNumIndexEntries = 0;
+    mEntriesStart = 0;
     mHaveExtraIndexEntries = false;
     mHavePairedIndexEntries = false;
     mIndexEndOffset = 0;
     mEssenceStartOffset = 0;
+    mIsFileIndexSegment = false;
 }
 
 IndexTableHelperSegment::~IndexTableHelperSegment()
@@ -100,14 +113,16 @@ IndexTableHelperSegment::~IndexTableHelperSegment()
 
 void IndexTableHelperSegment::ParseIndexTableSegment(File *file, uint64_t segment_len)
 {
+    mIsFileIndexSegment = true;
+
     // free existing segment which will be replaced
     mxf_free_index_table_segment(&_cSegment);
 
     // use Avid function to support non-standard Avid index table segments
     BMX_CHECK(mxf_avid_read_index_table_segment_2(file->getCFile(), segment_len,
-                                                 mxf_default_add_delta_entry, 0,
-                                                 add_frame_offset_index_entry, this,
-                                                 &_cSegment));
+                                                  mxf_default_add_delta_entry, 0,
+                                                  add_frame_offset_index_entry, this,
+                                                  &_cSegment));
     setIndexEditRate(normalize_rate(getIndexEditRate()));
 
     // samples files produced by Ardendo product 'ardftp' had an invalid index duration -1
@@ -147,44 +162,49 @@ int IndexTableHelperSegment::GetEditUnit(int64_t position, int8_t *temporal_offs
 
     int64_t rel_position = position - getIndexStartPosition();
     if (mNumIndexEntries == 0) {
-        *temporal_offset = 0;
+        *temporal_offset  = 0;
         *key_frame_offset = 0;
-        *flags = 0x80; // reference frame
-        *stream_offset = mEssenceStartOffset + rel_position * getEditUnitByteCount();
+        *flags            = 0x80; // reference frame
+        *stream_offset    = mEssenceStartOffset + rel_position * getEditUnitByteCount();
     } else {
         if (mHavePairedIndexEntries)
             rel_position *= 2;
 
-        *temporal_offset = GET_TEMPORAL_OFFSET(rel_position);
-        if (mHavePairedIndexEntries)
-            *temporal_offset /= 2;
+        *temporal_offset  = GET_TEMPORAL_OFFSET(rel_position);
         *key_frame_offset = GET_KEY_FRAME_OFFSET(rel_position);
-        if (mHavePairedIndexEntries)
+        *flags            = GET_FLAGS(rel_position);
+        *stream_offset    = GET_STREAM_OFFSET(rel_position);
+
+        if (mHavePairedIndexEntries) {
+            *temporal_offset  /= 2;
             *key_frame_offset /= 2;
-        *flags = GET_FLAGS(rel_position);
-        *stream_offset = GET_STREAM_OFFSET(rel_position);
+        }
     }
 
     return 0;
 }
 
+bool IndexTableHelperSegment::CanAppendIndexEntry() const
+{
+    return mEntriesStart + mNumIndexEntries < mAllocIndexEntries;
+}
+
 void IndexTableHelperSegment::AppendIndexEntry(uint32_t num_entries, int8_t temporal_offset, int8_t key_frame_offset,
-                                               uint8_t flags, uint64_t stream_offset)
+                                               uint8_t flags, int64_t stream_offset)
 {
     if (!mIndexEntries) {
+        BMX_CHECK(num_entries > 0);
         mIndexEntries = new unsigned char[INTERNAL_INDEX_ENTRY_SIZE * num_entries];
         mAllocIndexEntries = num_entries;
-        mNumIndexEntries = 0;
     }
-    BMX_ASSERT(mNumIndexEntries < mAllocIndexEntries);
 
-    // file offsets use int64_t whilst the index segment stream offset is uint64_t
-    BMX_CHECK((stream_offset & 0x8000000000000000LL) == 0);
+    BMX_CHECK(CanAppendIndexEntry());
 
-    GET_TEMPORAL_OFFSET(mNumIndexEntries) = temporal_offset;
-    GET_KEY_FRAME_OFFSET(mNumIndexEntries) = key_frame_offset;
-    GET_FLAGS(mNumIndexEntries) = flags;
-    GET_STREAM_OFFSET(mNumIndexEntries) = (int64_t)stream_offset;
+    int64_t entry_pos = mEntriesStart + mNumIndexEntries;
+    GET_TEMPORAL_OFFSET(entry_pos)  = temporal_offset;
+    GET_KEY_FRAME_OFFSET(entry_pos) = key_frame_offset;
+    GET_FLAGS(entry_pos)            = flags;
+    GET_STREAM_OFFSET(entry_pos)    = stream_offset;
 
     mNumIndexEntries++;
 }
@@ -211,11 +231,59 @@ int64_t IndexTableHelperSegment::GetEssenceEndOffset()
     return mEssenceStartOffset + getEditUnitByteCount() * getIndexDuration();
 }
 
+void IndexTableHelperSegment::SetHavePairedIndexEntries()
+{
+    mHavePairedIndexEntries = true;
+}
+
+void IndexTableHelperSegment::UpdateStartPosition(int64_t position)
+{
+    BMX_ASSERT(mNumIndexEntries > 0);
+    BMX_ASSERT(position >= getIndexStartPosition());
+    BMX_ASSERT(position - getIndexStartPosition() < getIndexDuration());
+
+    uint32_t diff_entries = (uint32_t)(getIndexStartPosition() - position);
+    if (mHavePairedIndexEntries)
+        diff_entries *= 2;
+    mEntriesStart += diff_entries;
+    setIndexStartPosition(position);
+}
+
+void IndexTableHelperSegment::UpdateDuration(int64_t duration)
+{
+    BMX_ASSERT(mNumIndexEntries > 0);
+    BMX_ASSERT(duration > 0 && duration <= getIndexDuration());
+
+    uint32_t diff_entries = (uint32_t)(getIndexDuration() - duration);
+    if (mHavePairedIndexEntries)
+        diff_entries *= 2;
+    mNumIndexEntries -= diff_entries;
+    setIndexDuration(duration);
+}
+
+void IndexTableHelperSegment::CopyIndexEntries(const IndexTableHelperSegment *from_segment, uint32_t duration)
+{
+    BMX_ASSERT(!mIndexEntries);
+    BMX_ASSERT(from_segment->mIndexEntries);
+
+    uint32_t num_entries = duration;
+    if (from_segment->mHavePairedIndexEntries)
+        num_entries *= 2;
+
+    mIndexEntries = new unsigned char[INTERNAL_INDEX_ENTRY_SIZE * num_entries];
+    memcpy(mIndexEntries, from_segment->mIndexEntries, INTERNAL_INDEX_ENTRY_SIZE * num_entries);
+    mAllocIndexEntries = num_entries;
+    mNumIndexEntries = num_entries;
+    mHavePairedIndexEntries = from_segment->mHavePairedIndexEntries;
+}
+
+
 
 
 IndexTableHelper::IndexTableHelper(MXFFileReader *file_reader)
 {
     mFileReader = file_reader;
+    mFile = file_reader->mFile;
     mIsComplete = false;
     mLastEditUnitSegment = 0;
     mHaveConstantEditUnitSize = true;
@@ -237,99 +305,76 @@ bool IndexTableHelper::ExtractIndexTable()
     mxfKey key;
     uint8_t llen;
     uint64_t len;
-    File *mxf_file = mFileReader->mFile;
-
-    mIsComplete = true;
 
     const vector<Partition*> &partitions = mFileReader->mFile->getPartitions();
     size_t i;
     for (i = 0; i < partitions.size(); i++) {
-        if (partitions[i]->getIndexSID() != mFileReader->mIndexSID)
+        const Partition *partition = partitions[i];
+
+        if (partition->getIndexSID() != mFileReader->mIndexSID)
             continue;
 
         // find the start of the first index table segment
-        mxf_file->seek(partitions[i]->getThisPartition(), SEEK_SET);
-        mxf_file->readKL(&key, &llen, &len);
-        mxf_file->skip(len);
+        mFile->seek(partition->getThisPartition(), SEEK_SET);
+        mFile->readKL(&key, &llen, &len);
+        mFile->skip(len);
         while (true)
         {
-            mxf_file->readNextNonFillerKL(&key, &llen, &len);
+            mFile->readNextNonFillerKL(&key, &llen, &len);
 
-            if (mxf_is_partition_pack(&key))
+            if (mxf_is_partition_pack(&key) || mxf_is_index_table_segment(&key))
                 break;
-
-            if (mxf_is_index_table_segment(&key))
-                break;
-
-            if (mxf_is_header_metadata(&key) && partitions[i]->getHeaderByteCount() > 0)
-                mxf_file->skip(partitions[i]->getHeaderByteCount() - (mxfKey_extlen + llen));
+            else if (mxf_is_header_metadata(&key) && partition->getHeaderByteCount() > mxfKey_extlen + llen + len)
+                mFile->skip(partition->getHeaderByteCount() - (mxfKey_extlen + llen));
             else
-                mxf_file->skip(len);
+                mFile->skip(len);
         }
 
         // parse the index table segments
-        while (mxf_is_index_table_segment(&key)) {
-
-            auto_ptr<IndexTableHelperSegment> segment(new IndexTableHelperSegment());
-            segment->ParseIndexTableSegment(mxf_file, len);
-
-            // remove existing segments that have a start position <= this segment's start position
-            size_t j;
-            for (j = 0; j < mSegments.size(); j++) {
-                if (segment->getIndexStartPosition() <= mSegments[j]->getIndexStartPosition()) {
-                    // segment has been replaced
-                    BMX_CHECK(segment->getIndexStartPosition() == mSegments[j]->getIndexStartPosition());
+        if (mxf_is_index_table_segment(&key)) {
+            uint64_t num_read = mxfKey_extlen + llen;
+            uint64_t index_byte_count = partition->getIndexByteCount();
+            while (true)
+            {
+                if (mxf_is_index_table_segment(&key)) {
+                    ReadIndexTableSegment(len);
+                } else if (mxf_is_filler(&key)) {
+                    mFile->skip(len);
+                } else {
+                    num_read -= mxfKey_extlen + llen;
                     break;
                 }
+                num_read += len;
+
+                if (index_byte_count > 0 && num_read >= index_byte_count)
+                    break;
+                if (index_byte_count == 0 && i == partitions.size() - 1 && mFile->tell() >= mFile->size())
+                    break;
+
+                mFile->readKL(&key, &llen, &len);
+                num_read += mxfKey_extlen + llen;
             }
-            while (j < mSegments.size()) {
-                delete mSegments[j];
-                mSegments.erase(mSegments.begin() + j);
+            if (index_byte_count > 0 && num_read != index_byte_count) {
+                log_warn("Index byte count %"PRIu64" does not equal value in partition pack %"PRIu64"\n",
+                         num_read, index_byte_count);
             }
-
-            if (!mSegments.empty()) {
-                // only support all index segments with fixed edit unit byte count or all variable edit units
-                BMX_CHECK(segment->HaveConstantEditUnitSize() == mSegments.back()->HaveConstantEditUnitSize());
-                // only support contiguous index segments
-                BMX_CHECK(segment->getIndexStartPosition() == mSegments.back()->getIndexStartPosition() +
-                                                                    mSegments.back()->getIndexDuration());
-
-                if (segment->HaveConstantEditUnitSize())
-                    segment->SetEssenceStartOffset(mSegments.back()->GetEssenceEndOffset());
-            }
-            mSegments.push_back(segment.release());
-
-            if (mxf_file->tell() >= mxf_file->size())
-                break;
-
-            mxf_file->readNextNonFillerKL(&key, &llen, &len);
-        }
-    }
-    if (mSegments.empty())
-        return false;
-
-    mEditRate = mSegments[0]->getIndexEditRate();
-
-    // calc total duration and determine fixed edit unit byte count
-    for (i = 0; i < mSegments.size(); i++) {
-        BMX_CHECK(mSegments[i]->getIndexDuration() > 0 || mSegments[i]->HaveConstantEditUnitSize());
-        mDuration += mSegments[i]->getIndexDuration();
-
-        if (mHaveConstantEditUnitSize) {
-            if (!mSegments[i]->HaveConstantEditUnitSize() ||
-                (mEditUnitSize != 0 && mEditUnitSize != mSegments[i]->GetEditUnitSize()))
-            {
-                mHaveConstantEditUnitSize = false;
-                mEditUnitSize = 0;
-            }
-            else
-            {
-                mEditUnitSize = mSegments[i]->GetEditUnitSize();
-            }
+        } else {
+            log_warn("Failed to find an index table segment in partition with IndexSID = %u\n", mFileReader->mIndexSID);
         }
     }
 
-    return true;
+    mIsComplete = true;
+
+    return !mSegments.empty();
+}
+
+void IndexTableHelper::SetEssenceDataSize(int64_t size)
+{
+    mEssenceDataSize = size;
+
+    // calc index duration if unknown
+    if (mDuration == 0 && mHaveConstantEditUnitSize && mEditUnitSize > 0)
+        mDuration = size / mEditUnitSize;
 }
 
 void IndexTableHelper::SetEditRate(Rational edit_rate)
@@ -355,13 +400,74 @@ void IndexTableHelper::SetConstantEditUnitSize(Rational edit_rate, uint32_t size
     mHaveConstantEditUnitSize = true;
 }
 
-void IndexTableHelper::SetEssenceDataSize(int64_t size)
+void IndexTableHelper::ReadIndexTableSegment(uint64_t len)
 {
-    mEssenceDataSize = size;
+    auto_ptr<IndexTableHelperSegment> new_segment(new IndexTableHelperSegment());
+    new_segment->ParseIndexTableSegment(mFileReader->mFile, len);
 
-    // calc index duration if unknown
-    if (mDuration == 0 && mHaveConstantEditUnitSize && mEditUnitSize > 0)
-        mDuration = size / mEditUnitSize;
+    if (new_segment->HaveConstantEditUnitSize())
+        InsertCBEIndexSegment(new_segment.release());
+    else
+        InsertVBEIndexSegment(new_segment.release());
+
+    if (mSegments.size() == 1)
+        mEditRate = mSegments.back()->getIndexEditRate();
+}
+
+void IndexTableHelper::UpdateIndex(int64_t position, int64_t essence_offset, int64_t size)
+{
+    BMX_ASSERT(position <= mDuration);
+
+    // TODO: size might be useful
+    (void)size;
+
+    if (position < mDuration ||
+        (mDuration == 0 && mHaveConstantEditUnitSize && mEditUnitSize > 0))
+    {
+        return;
+    }
+
+    if (mHaveConstantEditUnitSize && mEditUnitSize > 0) {
+        BMX_EXCEPTION(("Index table with constant edit unit size and duration %"PRId64
+                       " does not cover position %"PRId64, mDuration, position));
+    }
+
+    if (!mSegments.empty() &&
+        !mSegments.back()->IsFileIndexSegment() &&
+        mSegments.back()->CanAppendIndexEntry())
+    {
+        mSegments.back()->AppendIndexEntry(0, 0, 0, 0, essence_offset);
+        if (mSegments.back()->HavePairedIndexEntries())
+            mSegments.back()->AppendIndexEntry(0, 0, 0, 0, essence_offset);
+        mSegments.back()->incrementIndexDuration();
+    }
+    else
+    {
+        auto_ptr<IndexTableHelperSegment> segment(new IndexTableHelperSegment());
+        segment->setIndexEditRate(mEditRate);
+        segment->setIndexStartPosition(position);
+        segment->setIndexDuration(1);
+        segment->AppendIndexEntry(RUNTIME_INDEX_SEGMENT_SIZE, 0, 0, 0, essence_offset);
+        if (!mSegments.empty() && mSegments.back()->HavePairedIndexEntries())
+            mSegments.back()->AppendIndexEntry(0, 0, 0, 0, essence_offset);
+
+        mSegments.push_back(segment.release());
+    }
+
+    mDuration++;
+}
+
+void IndexTableHelper::SetIsComplete()
+{
+    mIsComplete = true;
+
+    // recalculate mDuration if SetEssenceDataSize was called before the index table segment was read
+    SetEssenceDataSize(mEssenceDataSize);
+}
+
+bool IndexTableHelper::HaveEditUnit(int64_t position) const
+{
+    return !mSegments.empty() && position >= 0 && position < mDuration;
 }
 
 void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, int8_t *key_frame_offset, uint8_t *flags,
@@ -411,6 +517,8 @@ void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, in
         } else if (mSegments.back()->HaveExtraIndexEntries()) {
             *size = mSegments.back()->GetIndexEndOffset() - (*offset);
         } else {
+            if (mEssenceDataSize == 0)
+                BMX_EXCEPTION(("Unknown size for last index edit unit because essence container size is unknown"));
             *size = mEssenceDataSize - (*offset);
             /* ignores junk found at the end of Avid clip wrapped essence with fixed edit unit size */
             if (mHaveConstantEditUnitSize && *size > mEditUnitSize)
@@ -427,6 +535,11 @@ void IndexTableHelper::GetEditUnit(int64_t position, int64_t *offset, int64_t *s
     GetEditUnit(position, &temporal_offset, &key_frame_offset, &flags, offset, size);
 }
 
+bool IndexTableHelper::HaveEditUnitOffset(int64_t position) const
+{
+    return position == 0 || (!mSegments.empty() && position >= 0 && position < mDuration);
+}
+
 int64_t IndexTableHelper::GetEditUnitOffset(int64_t position)
 {
     if (position == 0)
@@ -439,6 +552,24 @@ int64_t IndexTableHelper::GetEditUnitOffset(int64_t position)
     GetEditUnit(position, &temporal_offset, &key_frame_offset, &flags, &offset, 0);
 
     return offset;
+}
+
+bool IndexTableHelper::HaveEditUnitSize(int64_t position) const
+{
+    if (mHaveConstantEditUnitSize && mEditUnitSize > 0)
+        return true;
+    else if (mSegments.empty())
+        return false;
+    else if (!HaveEditUnitOffset(position))
+        return false;
+    else if (HaveEditUnitOffset(position + 1))
+        return true;
+    else if (mSegments.back()->HaveExtraIndexEntries())
+        return true;
+    else if (mEssenceDataSize != 0)
+        return true;
+    else
+        return false;
 }
 
 bool IndexTableHelper::GetTemporalReordering(uint32_t delta)
@@ -458,5 +589,143 @@ bool IndexTableHelper::GetIndexEntry(MXFIndexEntryExt *entry, int64_t position)
     GetEditUnit(position, &entry->temporal_offset, &entry->key_frame_offset, &entry->flags,
                 &entry->container_offset, &entry->edit_unit_size);
     return true;
+}
+
+void IndexTableHelper::InsertCBEIndexSegment(IndexTableHelperSegment *new_segment_in)
+{
+    IndexTableHelperSegment *new_segment = new_segment_in;
+
+    if (!mSegments.empty() && !mSegments.back()->HaveConstantEditUnitSize()) {
+        if (mSegments.size() > 1 || !mSegments.back()->IsFileIndexSegment())
+            BMX_EXCEPTION(("Can't mix VBE and CBE index table segments"));
+
+        if (SEG_DUR(new_segment) > 0 && SEG_DUR(new_segment) < SEG_DUR(mSegments.front())) {
+            // ignore new segment if it covers less edit units than the runtime generated index segment
+            delete new_segment;
+        } else {
+            if (SEG_START(new_segment) != 0)
+                BMX_EXCEPTION(("Sparse index table is not supported"));
+
+            delete mSegments.front();
+            mSegments.clear();
+            mSegments.push_back(new_segment);
+
+            mDuration = new_segment->getIndexDuration();
+            mHaveConstantEditUnitSize = true;
+            mEditUnitSize = new_segment->GetEditUnitSize();
+        }
+    } else {
+        if (!mSegments.empty()) {
+            if (SEG_DUR(mSegments.back()) == 0) {
+                // ignore new segment that follows one with unspecified duration
+                delete new_segment;
+                new_segment = 0;
+            } else if (SEG_START(new_segment) < SEG_END(mSegments.back())) {
+                // ignore new segment that overlaps with existing segments
+                delete new_segment;
+                new_segment = 0;
+            } else {
+                if (mHaveConstantEditUnitSize && mEditUnitSize > 0 &&
+                    mEditUnitSize != new_segment->GetEditUnitSize())
+                {
+                    mHaveConstantEditUnitSize = false;
+                    mEditUnitSize = 0;
+                }
+                new_segment->SetEssenceStartOffset(mSegments.back()->GetEssenceEndOffset());
+            }
+        }
+
+        if (new_segment) {
+            if (( mSegments.empty() && SEG_START(new_segment) != 0) ||
+                (!mSegments.empty() && SEG_START(new_segment) != SEG_END(mSegments.back())))
+            {
+                // TODO: add support for sparse index tables
+                BMX_EXCEPTION(("Sparse index table is not supported"));
+            }
+            mSegments.push_back(new_segment);
+
+            if (mSegments.size() == 1)
+            {
+                mHaveConstantEditUnitSize = true;
+                mEditUnitSize = new_segment->GetEditUnitSize();
+            }
+            else if (mHaveConstantEditUnitSize && mEditUnitSize > 0 &&
+                     new_segment->GetEditUnitSize() != mEditUnitSize)
+            {
+                mHaveConstantEditUnitSize = false;
+                mEditUnitSize = 0;
+            }
+            mDuration += new_segment->getIndexDuration();
+        }
+    }
+}
+
+void IndexTableHelper::InsertVBEIndexSegment(IndexTableHelperSegment *new_segment)
+{
+    // update or remove existing segments
+    int64_t new_duration = 0;
+    vector<IndexTableHelperSegment*>::iterator iter = mSegments.begin();
+    while (iter != mSegments.end()) {
+        IndexTableHelperSegment *segment = *iter;
+        bool deleted_segment = false;
+
+        if (SEG_END(segment) > SEG_START(new_segment) && SEG_START(segment) < SEG_END(new_segment)) {
+            // existing and new segment overlap
+            if (SEG_START(segment) >= SEG_START(new_segment) && SEG_END(segment) <= SEG_END(new_segment)) {
+                // existing segment if completely covered by new segment
+                delete segment;
+                iter = mSegments.erase(iter);
+                deleted_segment = true;
+            } else if (SEG_START(segment) < SEG_START(new_segment) && SEG_END(segment) > SEG_END(new_segment)) {
+                // existing segment covers and is larger than new segment
+                iter = mSegments.insert(iter, CreateStartSegment(segment,
+                                                                 SEG_START(new_segment) - SEG_START(segment)));
+                segment->UpdateStartPosition(SEG_START(new_segment));
+            } else if (SEG_START(segment) < SEG_START(new_segment)) {
+                // existing segment starts before new segment
+                segment->UpdateDuration(SEG_START(new_segment) - SEG_START(segment));
+            } else {
+                // existing segment ends after new segment
+                segment->UpdateStartPosition(SEG_END(new_segment));
+            }
+        } else if (SEG_START(segment) >= SEG_END(new_segment)) {
+            // existing (shortened) segment is after new segment
+            iter = mSegments.insert(iter, new_segment);
+            break;
+        }
+
+        if (!deleted_segment) {
+            new_duration += (*iter)->getIndexDuration();
+            iter++;
+        }
+    }
+    if (iter == mSegments.end()) {
+        if (( mSegments.empty() && SEG_START(new_segment) != 0) ||
+            (!mSegments.empty() && SEG_START(new_segment) != SEG_END(mSegments.back())))
+        {
+            // TODO: add support for sparse index tables
+            BMX_EXCEPTION(("Sparse index table is not supported"));
+        }
+        mSegments.push_back(new_segment);
+        new_duration += new_segment->getIndexDuration();
+    } else {
+        while (iter != mSegments.end()) {
+            new_duration += (*iter)->getIndexDuration();
+            iter++;
+        }
+    }
+
+    mDuration = new_duration;
+}
+
+IndexTableHelperSegment* IndexTableHelper::CreateStartSegment(IndexTableHelperSegment *segment, uint32_t duration)
+{
+    auto_ptr<IndexTableHelperSegment> new_segment(new IndexTableHelperSegment());
+    new_segment->setIndexEditRate(segment->getIndexEditRate());
+    new_segment->setIndexStartPosition(segment->getIndexStartPosition());
+    new_segment->setIndexDuration(duration);
+    new_segment->CopyIndexEntries(segment, duration);
+
+    return new_segment.release();
 }
 

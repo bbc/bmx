@@ -52,6 +52,8 @@ public:
     bool Finalize();
 
 public:
+    virtual bool IsComplete() const;
+
     virtual void GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const;
     virtual void SetReadLimits();
     virtual void SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position);
@@ -84,6 +86,11 @@ public:
     virtual void SetNextFrameTrackPositions();
 
     virtual void SetTemporaryFrameBuffer(bool enable);
+
+private:
+    void StartRead();
+    void CompleteRead();
+    void AbortRead();
 
 private:
     std::vector<bmx::MXFReader*> mReaders;

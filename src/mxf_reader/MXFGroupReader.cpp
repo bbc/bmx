@@ -98,7 +98,7 @@ MXFGroupReader::MXFGroupReader()
 : MXFReader()
 {
     mReadStartPosition = 0;
-    mReadDuration = 0;
+    mReadDuration = -1;
 }
 
 MXFGroupReader::~MXFGroupReader()
@@ -174,10 +174,22 @@ bool MXFGroupReader::Finalize()
         // group duration is the minimum member duration
         mDuration = -1;
         for (i = 0; i < mReaders.size(); i++) {
-            int64_t member_duration = CONVERT_MEMBER_DUR(mReaders[i]->GetDuration());
+            if (mReaders[i]->GetDuration() < 0) {
+                mDuration = -1;
+                break;
+            }
 
+            int64_t member_duration = CONVERT_MEMBER_DUR(mReaders[i]->GetDuration());
             if (mDuration < 0 || member_duration < mDuration)
                 mDuration = member_duration;
+        }
+
+        // group origin is the maximum member origin
+        mOrigin = 0;
+        for (i = 0; i < mReaders.size(); i++) {
+            int64_t member_origin = CONVERT_MEMBER_POS(mReaders[i]->GetOrigin());
+            if (member_origin > mOrigin)
+                mOrigin = member_origin;
         }
 
 
@@ -213,17 +225,20 @@ bool MXFGroupReader::Finalize()
             }
         }
 
-        if (GetMaxPrecharge(0, true) != GetMaxPrecharge(0, false)) {
-            log_warn("Possibly not enough precharge available in group (available=%d, required=%d)\n",
-                     GetMaxPrecharge(0, true), GetMaxPrecharge(0, false));
-        }
-        if (GetMaxRollout(mDuration - 1, true) != GetMaxRollout(mDuration - 1, false)) {
-            log_warn("Possibly not enough rollout available in group (available=%d, required=%d)\n",
-                     GetMaxRollout(mDuration - 1, true), GetMaxRollout(mDuration - 1, false));
-        }
+        if (IsComplete()) {
+            if (GetMaxPrecharge(0, true) != GetMaxPrecharge(0, false)) {
+                log_warn("Possibly not enough precharge available in group (available=%d, required=%d)\n",
+                         GetMaxPrecharge(0, true), GetMaxPrecharge(0, false));
+            }
+            if (GetMaxRollout(mDuration - 1, true) != GetMaxRollout(mDuration - 1, false)) {
+                log_warn("Possibly not enough rollout available in group (available=%d, required=%d)\n",
+                         GetMaxRollout(mDuration - 1, true), GetMaxRollout(mDuration - 1, false));
+            }
 
-        // set default group read limits
-        SetReadLimits();
+            SetReadLimits();
+        } else if (mDuration > 0) {
+            SetReadLimits(- mOrigin, mOrigin + mDuration, false);
+        }
 
         return true;
     }
@@ -242,6 +257,17 @@ bool MXFGroupReader::Finalize()
 
         return false;
     }
+}
+
+bool MXFGroupReader::IsComplete() const
+{
+    size_t i;
+    for (i = 0; i < mReaders.size(); i++) {
+        if (!mReaders[i]->IsComplete())
+            return false;
+    }
+
+    return true;
 }
 
 void MXFGroupReader::GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const
@@ -285,43 +311,71 @@ void MXFGroupReader::SetReadLimits(int64_t start_position, int64_t duration, boo
 
 uint32_t MXFGroupReader::Read(uint32_t num_samples, bool is_top)
 {
+    mReadError = false;
+    mReadErrorMessage.clear();
+
     int64_t current_position = GetPosition();
 
-    if (is_top) {
-        SetNextFramePosition(mEditRate, current_position);
-        SetNextFrameTrackPositions();
+    StartRead();
+    try
+    {
+        if (is_top) {
+            SetNextFramePosition(mEditRate, current_position);
+            SetNextFrameTrackPositions();
+        }
+
+        uint32_t max_read_num_samples = 0;
+        size_t i;
+        for (i = 0; i < mReaders.size(); i++) {
+            if (!mReaders[i]->IsEnabled())
+                continue;
+
+            int64_t member_current_position = CONVERT_GROUP_POS(current_position);
+
+            // ensure external reader is in sync
+            if (mReaders[i]->GetPosition() != member_current_position)
+                mReaders[i]->Seek(member_current_position);
+
+
+            uint32_t member_num_samples = (uint32_t)convert_duration_higher(num_samples,
+                                                                            current_position,
+                                                                            mSampleSequences[i],
+                                                                            mSampleSequenceSizes[i]);
+
+            uint32_t member_num_read = mReaders[i]->Read(member_num_samples, false);
+            if (member_num_read < member_num_samples && mReaders[i]->ReadError())
+                throw BMXException(mReaders[i]->ReadErrorMessage());
+
+            uint32_t group_num_read = (uint32_t)convert_duration_lower(member_num_read,
+                                                                       member_current_position,
+                                                                       mSampleSequences[i],
+                                                                       mSampleSequenceSizes[i]);
+
+            if (group_num_read > max_read_num_samples)
+                max_read_num_samples = group_num_read;
+        }
+
+        CompleteRead();
+
+        return max_read_num_samples;
+    }
+    catch (const MXFException &ex)
+    {
+        mReadErrorMessage = ex.getMessage();
+    }
+    catch (const BMXException &ex)
+    {
+        mReadErrorMessage = ex.what();
+    }
+    catch (...)
+    {
     }
 
-    uint32_t max_read_num_samples = 0;
-    size_t i;
-    for (i = 0; i < mReaders.size(); i++) {
-        if (!mReaders[i]->IsEnabled())
-            continue;
+    mReadError = true;
+    AbortRead();
+    Seek(current_position);
 
-        int64_t member_current_position = CONVERT_GROUP_POS(current_position);
-
-        // ensure external reader is in sync
-        if (mReaders[i]->GetPosition() != member_current_position)
-            mReaders[i]->Seek(member_current_position);
-
-
-        uint32_t member_num_samples = (uint32_t)convert_duration_higher(num_samples,
-                                                                        current_position,
-                                                                        mSampleSequences[i],
-                                                                        mSampleSequenceSizes[i]);
-
-        uint32_t member_num_read = mReaders[i]->Read(member_num_samples, false);
-
-        uint32_t group_num_read = (uint32_t)convert_duration_lower(member_num_read,
-                                                                   member_current_position,
-                                                                   mSampleSequences[i],
-                                                                   mSampleSequenceSizes[i]);
-
-        if (group_num_read > max_read_num_samples)
-            max_read_num_samples = group_num_read;
-    }
-
-    return max_read_num_samples;
+    return 0;
 }
 
 void MXFGroupReader::Seek(int64_t position)
@@ -528,5 +582,32 @@ void MXFGroupReader::SetTemporaryFrameBuffer(bool enable)
     size_t i;
     for (i = 0; i < mReaders.size(); i++)
         mReaders[i]->SetTemporaryFrameBuffer(enable);
+}
+
+void MXFGroupReader::StartRead()
+{
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++) {
+        if (mTrackReaders[i]->IsEnabled())
+            mTrackReaders[i]->GetMXFFrameBuffer()->StartRead();
+    }
+}
+
+void MXFGroupReader::CompleteRead()
+{
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++) {
+        if (mTrackReaders[i]->IsEnabled())
+            mTrackReaders[i]->GetMXFFrameBuffer()->CompleteRead();
+    }
+}
+
+void MXFGroupReader::AbortRead()
+{
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++) {
+        if (mTrackReaders[i]->IsEnabled())
+            mTrackReaders[i]->GetMXFFrameBuffer()->AbortRead();
+    }
 }
 

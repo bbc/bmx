@@ -56,14 +56,15 @@ public:
     void ParseIndexTableSegment(mxfpp::File *file, uint64_t segment_len);
 
     bool HaveExtraIndexEntries() const { return mHaveExtraIndexEntries; }
-    int64_t GetIndexEndOffset() const { return mIndexEndOffset; }
+    int64_t GetIndexEndOffset() const  { return mIndexEndOffset; }
 
     int GetEditUnit(int64_t position, int8_t *temporal_offset, int8_t *key_frame_offset, uint8_t *flags,
                     int64_t *stream_offset);
 
 public:
+    bool CanAppendIndexEntry() const;
     void AppendIndexEntry(uint32_t num_entries, int8_t temporal_offset, int8_t key_frame_offset, uint8_t flags,
-                          uint64_t stream_offset);
+                          int64_t stream_offset);
 
     bool HaveConstantEditUnitSize();
     uint32_t GetEditUnitSize();
@@ -71,16 +72,29 @@ public:
     void SetEssenceStartOffset(int64_t offset);
     int64_t GetEssenceEndOffset();
 
+    bool IsFileIndexSegment() const { return mIsFileIndexSegment; }
+
+    void SetHavePairedIndexEntries();
+    bool HavePairedIndexEntries() const { return mHavePairedIndexEntries; }
+
+    void UpdateStartPosition(int64_t position);
+    void UpdateDuration(int64_t duration);
+
+    void CopyIndexEntries(const IndexTableHelperSegment *segment, uint32_t duration);
+
 private:
     unsigned char *mIndexEntries;
     uint32_t mAllocIndexEntries;
     uint32_t mNumIndexEntries;
+    uint32_t mEntriesStart;
 
     bool mHaveExtraIndexEntries;
     int64_t mIndexEndOffset;
     bool mHavePairedIndexEntries;
 
     int64_t mEssenceStartOffset;
+
+    bool mIsFileIndexSegment;
 };
 
 
@@ -92,10 +106,14 @@ public:
 
     bool ExtractIndexTable();
 
+    void SetEssenceDataSize(int64_t size);
+
     void SetEditRate(Rational edit_rate);
     void SetConstantEditUnitSize(Rational edit_rate, uint32_t size);
 
-    void SetEssenceDataSize(int64_t size);
+    void ReadIndexTableSegment(uint64_t len);
+    void UpdateIndex(int64_t position, int64_t essence_offset, int64_t size);
+    void SetIsComplete();
 
 public:
     bool IsComplete() const { return mIsComplete; }
@@ -106,17 +124,27 @@ public:
     bool HaveConstantEditUnitSize() const { return mHaveConstantEditUnitSize; }
     uint32_t GetEditUnitSize()      const { return mEditUnitSize; }
 
+    bool HaveEditUnit(int64_t position) const;
     void GetEditUnit(int64_t position, int8_t *temporal_offset, int8_t *key_frame_offset, uint8_t *flags,
-                     int64_t *offset, int64_t *size);
+                     int64_t *offset, int64_t *size = 0);
     void GetEditUnit(int64_t position, int64_t *offset, int64_t *size);
+    bool HaveEditUnitOffset(int64_t position) const;
     int64_t GetEditUnitOffset(int64_t position);
+    bool HaveEditUnitSize(int64_t position) const;
 
     bool GetTemporalReordering(uint32_t element_index);
 
     bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position);
 
 private:
+    void InsertCBEIndexSegment(IndexTableHelperSegment *new_segment);
+    void InsertVBEIndexSegment(IndexTableHelperSegment *new_segment);
+
+    IndexTableHelperSegment* CreateStartSegment(IndexTableHelperSegment *segment, uint32_t duration);
+
+private:
     MXFFileReader *mFileReader;
+    mxfpp::File *mFile;
 
     bool mIsComplete;
 

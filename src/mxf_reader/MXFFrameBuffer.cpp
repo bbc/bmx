@@ -100,6 +100,30 @@ void MXFFrameBuffer::SetFrameFactory(FrameFactory *frame_factory, bool take_owne
     mTargetBuffer->SetFrameFactory(frame_factory, take_ownership);
 }
 
+void MXFFrameBuffer::StartRead()
+{
+    if (mUseTemporaryBuffer)
+        mTemporaryBuffer.StartRead();
+    else
+        mTargetBuffer->StartRead();
+}
+
+void MXFFrameBuffer::CompleteRead()
+{
+    if (mUseTemporaryBuffer)
+        mTemporaryBuffer.CompleteRead();
+    else
+        mTargetBuffer->CompleteRead();
+}
+
+void MXFFrameBuffer::AbortRead()
+{
+    if (mUseTemporaryBuffer)
+        mTemporaryBuffer.AbortRead();
+    else
+        mTargetBuffer->AbortRead();
+}
+
 Frame* MXFFrameBuffer::CreateFrame()
 {
     if (mUseTemporaryBuffer)

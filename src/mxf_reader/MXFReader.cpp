@@ -51,6 +51,8 @@ MXFReader::MXFReader()
 {
     mEditRate = ZERO_RATIONAL;
     mDuration = 0;
+    mOrigin = 0;
+    mReadError = false;
     mMaterialStartTimecode = 0;
     mFileSourceStartTimecode = 0;
     mPhysicalSourceStartTimecode = 0;

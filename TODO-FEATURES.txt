@@ -108,8 +108,6 @@ example
 
 44. allow partition selection in MXFReader and mxf2raw
 
-45. support reading growing MXF files
-
 46. add write support for Sony XDCAM OP-1A flavour
 
 47. add support for an OP-1A flavour that is Avid AMA link compatible
@@ -137,3 +135,19 @@ example
 
 54. Support clip wrapped files with no index table and varying edit units size.
     Use available essence parsers
+
+55. Support sparse index tables
+
+56. Support incomplete / growing clip wrapped essence files
+
+57. Support incomplete / growing last segment in clip sequence reader
+
+58. Investigate different ways to set read limits and to supports tracks with
+    different durations / precharge / rollout / origins. Maybe default to all
+    available essence data when start and duration not specified.
+
+59. Support --start and --dur in apps when input file is incomplete / growing
+
+60. Add bmx md5 utility for testing, avoiding need for external md5(sum) utility
+
+61. Simplify test shell scripts

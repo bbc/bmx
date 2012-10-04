@@ -59,10 +59,12 @@ MXFSequenceTrackReader::MXFSequenceTrackReader(MXFSequenceReader *sequence_reade
     mFileSourcePackage = 0;
     mIsEnabled = true;
     mReadStartPosition = 0;
-    mReadDuration = 0;
+    mReadDuration = -1;
     mEditRate = ZERO_RATIONAL;
     mPosition = 0;
     mDuration = 0;
+    mOrigin = 0;
+    mReadError = false;
 
     mFrameBuffer.SetTargetBuffer(new DefaultFrameBuffer(), true);
 }
@@ -110,6 +112,7 @@ void MXFSequenceTrackReader::AppendSegment(MXFTrackReader *segment)
         mFileSourcePackage = segment->GetFileSourcePackage();
         mEditRate = segment->GetEditRate();
         mDuration = segment->GetDuration();
+        mOrigin = segment->GetOrigin();
     } else {
         // not valid because multiple segments means there are multiple file source packages
         mFileSourcePackage = 0;

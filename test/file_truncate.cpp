@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2012, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,76 +29,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_FRAME_BUFFER_H_
-#define BMX_FRAME_BUFFER_H_
-
-#include <deque>
-
-#include <bmx/frame/Frame.h>
-
-
-
-namespace bmx
-{
-
-
-class FrameBuffer
-{
-public:
-    virtual ~FrameBuffer() {};
-
-    virtual void SetFrameFactory(FrameFactory *frame_factory, bool take_ownership) = 0;
-
-    virtual void StartRead() = 0;
-    virtual void CompleteRead() = 0;
-    virtual void AbortRead() = 0;
-
-    virtual Frame* CreateFrame() = 0;
-
-    virtual void PushFrame(Frame *frame) = 0;
-    virtual void PopFrame(bool del_frame) = 0;
-
-    virtual Frame* GetLastFrame(bool pop) = 0;
-    virtual size_t GetNumFrames() const = 0;
-
-    virtual void Clear(bool del_frames) = 0;
-};
-
-
-class DefaultFrameBuffer : public FrameBuffer
-{
-public:
-    DefaultFrameBuffer();
-    DefaultFrameBuffer(FrameFactory *frame_factory, bool take_ownership);
-    virtual ~DefaultFrameBuffer();
-
-    virtual void SetFrameFactory(FrameFactory *frame_factory, bool take_ownership);
-
-    virtual void StartRead();
-    virtual void CompleteRead();
-    virtual void AbortRead();
-
-    virtual Frame* CreateFrame();
-
-    virtual void PushFrame(Frame *frame);
-    virtual void PopFrame(bool del_frame);
-
-    virtual Frame* GetLastFrame(bool pop);
-    virtual size_t GetNumFrames() const;
-
-    virtual void Clear(bool del_frames);
-
-private:
-    FrameFactory *mFrameFactory;
-    bool mOwnFrameFactory;
-    std::deque<Frame*> mFrames;
-    size_t mStartReadIndex;
-};
-
-
-};
-
-
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
+
+#define __STDC_FORMAT_MACROS
+
+#include <cstdio>
+#include <cstring>
+#include <cerrno>
+#include <inttypes.h>
+#include <unistd.h>
+
+
+static void print_usage(const char *cmd)
+{
+    fprintf(stderr, "Usage: %s <length> <filename>\n", cmd);
+}
+
+int main(int argc, const char **argv)
+{
+    const char *filename;
+    int64_t length;
+
+    if (argc != 3) {
+        print_usage(argv[0]);
+        return 1;
+    }
+
+    if (sscanf(argv[1], "%"PRId64, &length) != 1 || length < 0) {
+        print_usage(argv[0]);
+        fprintf(stderr, "Invalid <length> %s\n", argv[1]);
+        return 1;
+    }
+
+    filename = argv[2];
+
+
+    if (truncate(filename, length) != 0) {
+        fprintf(stderr, "%s: truncate failed: %s\n", filename, strerror(errno));
+        return 1;
+    }
+
+    return 0;
+}
 

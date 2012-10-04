@@ -74,7 +74,7 @@ MXFSequenceReader::MXFSequenceReader()
 : MXFReader()
 {
     mReadStartPosition = 0;
-    mReadDuration = 0;
+    mReadDuration = -1;
     mPosition = 0;
 }
 
@@ -94,6 +94,10 @@ MXFSequenceReader::~MXFSequenceReader()
 
 void MXFSequenceReader::AddReader(MXFReader *reader)
 {
+    // TODO: support incomplete files
+    if (!reader->IsComplete())
+        BMX_EXCEPTION(("MXF sequence reader currently only supports complete files with known duration"));
+
     mReaders.push_back(reader);
 }
 
@@ -409,7 +413,7 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
 void MXFSequenceReader::UpdateReadLimits()
 {
     mReadStartPosition = 0;
-    mReadDuration = 0;
+    mReadDuration = -1;
 
     if (mGroupSegments.empty())
         return;
@@ -433,6 +437,12 @@ void MXFSequenceReader::UpdateReadLimits()
             break;
         mReadDuration += CONVERT_GROUP_DUR(mGroupSegments[i]->GetReadDuration());
     }
+}
+
+bool MXFSequenceReader::IsComplete() const
+{
+    // TODO: support incomplete files
+    return true;
 }
 
 void MXFSequenceReader::GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const

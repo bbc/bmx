@@ -453,9 +453,9 @@ void OP1AFile::CompleteWrite()
 
         const std::vector<Partition*> &partitions = mMXFFile->getPartitions();
         for (i = 0; i < partitions.size(); i++) {
-            if (mxf_is_header_partition_pack(partitions[i]->getKey()))
+            if (partitions[i]->isHeader())
                 partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Header));
-            else if (mxf_is_body_partition_pack(partitions[i]->getKey()))
+            else if (partitions[i]->isBody())
                 partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Body));
         }
         mMXFFile->updatePartitions();

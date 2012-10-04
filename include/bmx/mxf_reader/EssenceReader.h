@@ -52,7 +52,10 @@ class MXFFileReader;
 class EssenceReader
 {
 public:
-    EssenceReader(MXFFileReader *file_reader);
+    friend class BaseReader;
+
+public:
+    EssenceReader(MXFFileReader *file_reader, bool file_is_complete);
     ~EssenceReader();
 
     void SetReadLimits(int64_t start_position, int64_t duration);
@@ -60,26 +63,53 @@ public:
     uint32_t Read(uint32_t num_samples);
     void Seek(int64_t position);
 
-    mxfRational GetEditRate();
-    int64_t GetPosition() { return mPosition; }
-
+    mxfRational GetEditRate() const    { return mIndexTableHelper.GetEditRate(); };
+    int64_t GetPosition() const        { return mPosition; }
     int64_t GetIndexedDuration() const { return mIndexTableHelper.GetDuration(); }
+
     bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position);
 
     int64_t LegitimisePosition(int64_t position);
+
+    bool IsComplete() const;
 
 private:
     void ReadClipWrappedSamples(uint32_t num_samples);
     void ReadFrameWrappedSamples(uint32_t num_samples);
 
-    bool HaveEditUnit(int64_t position);
     void GetEditUnit(int64_t position, int64_t *file_position, int64_t *size);
     void GetEditUnitGroup(int64_t position, uint32_t max_samples, int64_t *file_position, int64_t *size,
                           uint32_t *num_samples);
-    int64_t GetFilePosition(int64_t position);
+
+    bool SetConstantEditUnitSize();
+
+private:
+    void SeekEssence(int64_t base_position, bool for_read);
+    bool ReadEssenceKL(bool first_element, mxfKey *key, uint8_t *llen, uint64_t *len);
+
+private:
+    int64_t GetIndexedFilePosition(int64_t base_position);
+
+    void SetContentPackageStart(int64_t base_position, int64_t file_position, bool pos_at_key);
+
+    void ReadFirstEssenceKL(mxfKey *key, uint8_t *llen, uint64_t *len);
+    bool ReadNonfirstEssenceKL(mxfKey *key, uint8_t *llen, uint64_t *len);
+    void SeekContentPackageStart();
+
+    size_t GetPartitionId(int64_t file_position);
+    void ReadNextPartition(const mxfKey *key, uint8_t llen, uint64_t len);
+
+    void SetHaveFooter();
+    void SetFileIsComplete();
+
+    void SetNextKL(const mxfKey *key, uint8_t llen, uint64_t len);
+    void ResetNextKL();
+    void ResetState();
 
 private:
     MXFFileReader *mFileReader;
+    mxfpp::File *mFile;
+    bool mFileIsComplete;
 
     EssenceChunkHelper mEssenceChunkHelper;
     IndexTableHelper mIndexTableHelper;
@@ -94,10 +124,18 @@ private:
 
     std::vector<Frame*> mTrackFrames;
 
-    mxfKey mCachedKey;
-    uint8_t mCachedLLen;
-    uint64_t mCachedLen;
-    bool mHaveCachedKL;
+    int64_t mBasePosition;
+    int64_t mFilePosition;
+    mxfKey mNextKey;
+    uint8_t mNextLLen;
+    uint64_t mNextLen;
+    bool mAtCPStart;
+    mxfKey mEssenceStartKey;
+    int64_t mLastKnownFilePosition;
+    int64_t mLastKnownBasePosition;
+    size_t mPreviousPartitionId;
+    int64_t mPreviousFilePosition;
+    bool mHaveFooter;
 };
 
 

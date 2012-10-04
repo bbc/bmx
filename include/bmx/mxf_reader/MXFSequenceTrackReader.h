@@ -71,11 +71,14 @@ public:
     virtual int64_t GetReadDuration() const      { return mReadDuration; }
 
     virtual uint32_t Read(uint32_t num_samples, bool is_top = true);
+    virtual bool ReadError() const               { return mReadError; }
+    virtual std::string ReadErrorMessage() const { return mReadErrorMessage; }
     virtual void Seek(int64_t position);
 
     virtual int64_t GetPosition() const       { return mPosition; }
     virtual mxfRational GetEditRate() const   { return mEditRate; }
     virtual int64_t GetDuration() const       { return mDuration; }
+    virtual int64_t GetOrigin() const         { return mOrigin; }
 
     virtual bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position = CURRENT_POSITION_VALUE) const;
 
@@ -119,6 +122,10 @@ private:
     mxfRational mEditRate;
     int64_t mPosition;
     int64_t mDuration;
+    int64_t mOrigin;
+
+    bool mReadError;
+    std::string mReadErrorMessage;
 
     std::vector<MXFTrackReader*> mTrackSegments;
     std::vector<int64_t> mSegmentOffsets;

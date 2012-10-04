@@ -325,6 +325,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --start <frame>         Set the start frame in input edit rate units. Default is 0\n");
     fprintf(stderr, "  --dur <frame>           Set the duration in frames in input edit rate units. Default is minimum input duration\n");
     fprintf(stderr, "  --check-end             Check at the start that the last (start + duration - 1) frame can be read\n");
+    fprintf(stderr, "  --check-complete        Check that the input file is complete\n");
     fprintf(stderr, "  --group                 Use the group reader instead of the sequence reader\n");
     fprintf(stderr, "                          Use this option if the files have different material packages\n");
     fprintf(stderr, "                          but actually belong to the same virtual package / group\n");
@@ -424,8 +425,10 @@ int main(int argc, const char** argv)
     Timecode start_timecode;
     const char *start_timecode_str = 0;
     int64_t start = 0;
+    bool start_set = false;
     int64_t duration = -1;
     bool check_end = false;
+    bool check_complete = false;
     const char *clip_name = 0;
     MICType mic_type = MD5_MIC_TYPE;
     MICScope ess_component_mic_scope = ESSENCE_ONLY_MIC_SCOPE;
@@ -605,6 +608,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
+            start_set = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--dur") == 0)
@@ -626,6 +630,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--check-end") == 0)
         {
             check_end = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--check-complete") == 0)
+        {
+            check_complete = true;
         }
         else if (strcmp(argv[cmdln_index], "--group") == 0)
         {
@@ -1221,6 +1229,14 @@ int main(int argc, const char** argv)
             reader = file_reader;
         }
 
+        if (!reader->IsComplete()) {
+            if (check_complete) {
+                log_error("Input file is incomplete\n");
+                throw false;
+            }
+            log_warn("Input file is incomplete\n");
+        }
+
         Rational frame_rate = reader->GetEditRate();
 
 
@@ -1350,61 +1366,73 @@ int main(int argc, const char** argv)
 
         // set read limits
 
-        int64_t read_start = start;
-        if (read_start >= reader->GetDuration()) {
-            log_error("Start position %"PRId64" is >= input duration %"PRId64"\n",
-                      start, reader->GetDuration());
-            throw false;
-        }
-        int64_t output_duration;
-        if (duration >= 0) {
-            output_duration = duration;
-            if (read_start + output_duration > reader->GetDuration()) {
-                log_warn("Limiting duration %"PRId64" because it exceeds the available duration %"PRId64"\n",
-                          duration, reader->GetDuration() - read_start);
-                output_duration = reader->GetDuration() - read_start;
-            }
-        } else {
-            output_duration = reader->GetDuration() - read_start;
-        }
-
+        int64_t read_start = 0;
         int16_t precharge = 0;
         int16_t rollout = 0;
-        if (output_duration > 0) {
-            precharge = reader->GetMaxPrecharge(read_start, true);
-            rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
-
-            if (precharge != 0 && (no_precharge || clip_type == CW_AVID_CLIP_TYPE)) {
-                if (!no_precharge) {
-                    log_warn("'%s' clip type does not support precharge\n",
-                             ClipWriter::ClipWriterTypeToString(clip_type).c_str());
-                }
-                log_info("Precharge resulted in %d frame adjustment of start position and duration\n",
-                         precharge);
-                output_duration += (- precharge);
-                read_start += precharge;
-                precharge = 0;
+        if (!reader->IsComplete()) {
+            if (start_set || duration >= 0) {
+                log_error("The --start and --dur options are not yet supported for incomplete files\n");
+                throw false;
             }
-            if (rollout != 0 && (no_rollout || clip_type == CW_AVID_CLIP_TYPE)) {
-                int64_t original_output_duration = output_duration;
-                while (rollout != 0) {
-                    output_duration += rollout;
-                    rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
-                }
-                if (!no_rollout) {
-                    log_warn("'%s' clip type does not support rollout\n",
-                             ClipWriter::ClipWriterTypeToString(clip_type).c_str());
-                }
-                log_info("Rollout resulted in %"PRId64" frame adjustment of duration\n",
-                         output_duration - original_output_duration);
+            if (check_end) {
+                log_error("Checking last frame is present (--check-end) is not supported for incomplete files\n");
+                throw false;
             }
-        }
+        } else {
+            read_start = start;
+            if (read_start >= reader->GetDuration()) {
+                log_error("Start position %"PRId64" is >= input duration %"PRId64"\n",
+                          start, reader->GetDuration());
+                throw false;
+            }
+            int64_t output_duration;
+            if (duration >= 0) {
+                output_duration = duration;
+                if (read_start + output_duration > reader->GetDuration()) {
+                    log_warn("Limiting duration %"PRId64" because it exceeds the available duration %"PRId64"\n",
+                              duration, reader->GetDuration() - read_start);
+                    output_duration = reader->GetDuration() - read_start;
+                }
+            } else {
+                output_duration = reader->GetDuration() - read_start;
+            }
 
-        reader->SetReadLimits(read_start + precharge, - precharge + output_duration + rollout, true);
+            if (output_duration > 0) {
+                precharge = reader->GetMaxPrecharge(read_start, true);
+                rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
 
-        if (check_end && !reader->CheckReadLastFrame()) {
-            log_error("Check for last frame failed\n");
-            throw false;
+                if (precharge != 0 && (no_precharge || clip_type == CW_AVID_CLIP_TYPE)) {
+                    if (!no_precharge) {
+                        log_warn("'%s' clip type does not support precharge\n",
+                                 ClipWriter::ClipWriterTypeToString(clip_type).c_str());
+                    }
+                    log_info("Precharge resulted in %d frame adjustment of start position and duration\n",
+                             precharge);
+                    output_duration += (- precharge);
+                    read_start += precharge;
+                    precharge = 0;
+                }
+                if (rollout != 0 && (no_rollout || clip_type == CW_AVID_CLIP_TYPE)) {
+                    int64_t original_output_duration = output_duration;
+                    while (rollout != 0) {
+                        output_duration += rollout;
+                        rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
+                    }
+                    if (!no_rollout) {
+                        log_warn("'%s' clip type does not support rollout\n",
+                                 ClipWriter::ClipWriterTypeToString(clip_type).c_str());
+                    }
+                    log_info("Rollout resulted in %"PRId64" frame adjustment of duration\n",
+                             output_duration - original_output_duration);
+                }
+            }
+
+            reader->SetReadLimits(read_start + precharge, - precharge + output_duration + rollout, true);
+
+            if (check_end && !reader->CheckReadLastFrame()) {
+                log_error("Check for last frame failed\n");
+                throw false;
+            }
         }
 
 
@@ -1971,7 +1999,7 @@ int main(int argc, const char** argv)
         int64_t prev_container_duration = -1;
         int64_t last_ess_mark_pos = INT64_MIN;
         bmx::ByteArray sound_buffer;
-        while (total_read < read_duration) {
+        while (read_duration < 0 || total_read < read_duration) {
             uint32_t num_read = read_samples(reader, sample_sequence, &sample_sequence_offset, max_samples_per_read);
             if (num_read == 0)
                 break;
@@ -2062,6 +2090,13 @@ int main(int argc, const char** argv)
             if (max_samples_per_read > 1 && num_read < max_samples_per_read)
                 break;
         }
+        if (reader->ReadError()) {
+            log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
+                "A read error occurred: %s\n", reader->ReadErrorMessage().c_str());
+            if (reader->IsComplete())
+                cmd_result = 1;
+        }
+
         if (show_progress)
             print_progress(total_read, read_duration, 0);
 
@@ -2104,10 +2139,11 @@ int main(int argc, const char** argv)
                  get_generic_duration_string_2(clip->GetDuration(), clip->GetFrameRate()).c_str());
 
 
-        if (total_read != read_duration) {
-            log_error("Read less (%"PRId64") samples than expected (%"PRId64")\n",
-                      total_read, read_duration);
-            throw false;
+        if (read_duration >= 0 && total_read != read_duration) {
+            log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
+                "Read less (%"PRId64") samples than expected (%"PRId64")\n", total_read, read_duration);
+            if (reader->IsComplete())
+                cmd_result = 1;
         }
 
 

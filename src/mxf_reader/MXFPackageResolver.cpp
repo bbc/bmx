@@ -71,7 +71,7 @@ DefaultMXFPackageResolver::~DefaultMXFPackageResolver()
         delete mExternalReaders[i];
 }
 
-void DefaultMXFPackageResolver::ExtractResolvedPackages(MXFFileReader *file_reader)
+void DefaultMXFPackageResolver::ExtractPackages(MXFFileReader *file_reader)
 {
     if (!mFileReader)
         mFileReader = file_reader;
@@ -186,7 +186,7 @@ vector<ResolvedPackage> DefaultMXFPackageResolver::ResolveSourceClip(SourceClip 
         }
 
         mExternalReaders.push_back(file_reader);
-        ExtractResolvedPackages(file_reader);
+        ExtractPackages(file_reader);
     }
 
     return ResolveSourceClip(source_clip);

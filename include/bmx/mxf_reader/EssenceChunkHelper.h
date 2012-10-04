@@ -51,8 +51,10 @@ public:
     EssenceChunk();
 
     int64_t file_position;
-    int64_t offset;
+    int64_t essence_offset;
     int64_t size;
+    bool is_complete;
+    size_t partition_id;
 };
 
 
@@ -63,22 +65,35 @@ public:
     EssenceChunkHelper(MXFFileReader *file_reader);
     ~EssenceChunkHelper();
 
-    void ExtractEssenceChunkIndex(uint32_t avid_first_frame_offset);
+    void CreateEssenceChunkIndex();
+
+    void AppendChunk(size_t partition_id, int64_t file_position, uint8_t klv_llen, uint64_t klv_len);
+    void UpdateLastChunk(int64_t file_position, bool is_end);
+    void SetIsComplete();
+
+    size_t GetNumIndexedPartitions() const { return mNumIndexedPartitions; }
+
+public:
+    bool IsComplete() const { return mIsComplete; }
+
+    bool HaveFilePosition(int64_t essence_offset);
 
     int64_t GetEssenceDataSize() const;
-    int64_t GetFilePosition(int64_t index_offset, int64_t index_size);
-    int64_t GetFilePosition(int64_t index_offset);
-    int64_t GetMaxContiguousSize(int64_t file_position);
+    int64_t GetFilePosition(int64_t essence_offset, int64_t size);
+    int64_t GetFilePosition(int64_t essence_offset);
+    int64_t GetEssenceOffset(int64_t file_position);
 
 private:
-    void IndexOffsetUpdate(int64_t index_offset);
+    void EssenceOffsetUpdate(int64_t essence_offset);
     void FilePositionUpdate(int64_t file_position);
 
 private:
     MXFFileReader *mFileReader;
-
+    uint32_t mAvidFirstFrameOffset;
     std::vector<EssenceChunk> mEssenceChunks;
     size_t mLastEssenceChunk;
+    size_t mNumIndexedPartitions;
+    bool mIsComplete;
 };
 
 

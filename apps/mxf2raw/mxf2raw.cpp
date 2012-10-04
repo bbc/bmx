@@ -412,6 +412,7 @@ static void usage(const char *cmd)
     fprintf(stderr, " --start <frame>       Set the start frame. Default is 0\n");
     fprintf(stderr, " --dur <frame>         Set the duration in frames. Default is minimum avaliable duration\n");
     fprintf(stderr, " --check-end           Check at the start that the last (start + duration - 1) frame can be read\n");
+    fprintf(stderr, " --check-complete      Check that the input file is complete\n");
     fprintf(stderr, " --nopc                Don't include pre-charge frames\n");
     fprintf(stderr, " --noro                Don't include roll-out frames\n");
     fprintf(stderr, " --md5                 Calculate md5 checksum of essence data\n");
@@ -445,8 +446,10 @@ int main(int argc, const char** argv)
     bool do_print_info = false;
     bool deinterleave = false;
     int64_t start = 0;
+    bool start_set = false;
     int64_t duration = -1;
     bool check_end = false;
+    bool check_complete = false;
     bool no_precharge = false;
     bool no_rollout = false;
     bool calc_md5 = false;
@@ -538,6 +541,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
+            start_set = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--dur") == 0)
@@ -559,6 +563,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--check-end") == 0)
         {
             check_end = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--check-complete") == 0)
+        {
+            check_complete = true;
         }
         else if (strcmp(argv[cmdln_index], "--nopc") == 0)
         {
@@ -741,7 +749,7 @@ int main(int argc, const char** argv)
         vector<MXFMD5WrapperFile*> md5_wrap_files;
         MXFReader *reader;
         MXFFileReader *file_reader = 0;
-        if (use_group_reader) {
+        if (use_group_reader && filenames.size() > 1) {
             MXFGroupReader *group_reader = new MXFGroupReader();
             size_t i;
             for (i = 0; i < filenames.size(); i++) {
@@ -777,38 +785,58 @@ int main(int argc, const char** argv)
             reader = file_reader;
         }
 
+        if (!reader->IsComplete()) {
+            if (check_complete) {
+                log_error("Input file is incomplete\n");
+                throw false;
+            }
+            log_warn("Input file is incomplete\n");
+        }
 
         mxfRational sample_rate = reader->GetEditRate();
 
 
         // set read limits
-        int64_t input_duration = reader->GetDuration();
-        if (start > input_duration) {
-            log_error("Start position %"PRId64" is beyond available frames %"PRId64"\n", start, input_duration);
-            throw false;
-        }
-        int64_t output_duration = input_duration - start;
-        if (duration >= 0) {
-            if (duration <= output_duration) {
-                output_duration = duration;
-            } else {
-                log_warn("Output duration %"PRId64" not possible. Set to %"PRId64" instead\n",
-                         duration, output_duration);
-            }
-        }
-
+        int64_t output_duration;
         int64_t max_precharge = 0;
-        if (!no_precharge)
-            max_precharge = reader->GetMaxPrecharge(start, false);
         int64_t max_rollout = 0;
-        if (!no_rollout)
-            max_rollout = reader->GetMaxRollout(start + output_duration - 1, false);
+        if (!reader->IsComplete()) {
+            if (start_set || duration >= 0) {
+                log_error("The --start and --dur options are not yet supported for incomplete files\n");
+                throw false;
+            }
+            if (check_end) {
+                log_error("Checking last frame is present (--check-end) is not supported for incomplete files\n");
+                throw false;
+            }
+            output_duration = reader->GetDuration();
+        } else {
+            int64_t input_duration = reader->GetDuration();
+            if (start > input_duration) {
+                log_error("Start position %"PRId64" is beyond available frames %"PRId64"\n", start, input_duration);
+                throw false;
+            }
+            output_duration = input_duration - start;
+            if (duration >= 0) {
+                if (duration <= output_duration) {
+                    output_duration = duration;
+                } else {
+                    log_warn("Output duration %"PRId64" not possible. Set to %"PRId64" instead\n",
+                             duration, output_duration);
+                }
+            }
 
-        reader->SetReadLimits(start + max_precharge, - max_precharge + output_duration + max_rollout, true);
+            if (!no_precharge)
+                max_precharge = reader->GetMaxPrecharge(start, false);
+            if (!no_rollout)
+                max_rollout = reader->GetMaxRollout(start + output_duration - 1, false);
 
-        if (check_end && !reader->CheckReadLastFrame()) {
-            log_error("Check for last frame failed\n");
-            throw false;
+            reader->SetReadLimits(start + max_precharge, - max_precharge + output_duration + max_rollout, true);
+
+            if (check_end && !reader->CheckReadLastFrame()) {
+                log_error("Check for last frame failed\n");
+                throw false;
+            }
         }
 
         int64_t lead_filler_offset = 0;
@@ -841,8 +869,10 @@ int main(int argc, const char** argv)
                     printf("  Physical src package name  : %s\n", reader->GetPhysicalSourcePackageName().c_str());
                 }
                 printf("  Edit rate                  : %d/%d\n", sample_rate.numerator, sample_rate.denominator);
+                // TODO: only true if actually set
                 printf("  Precharge                  : %"PRId64"\n", max_precharge);
                 printf("  Duration                   : %"PRId64"\n", output_duration);
+                // TODO: only true if actually set
                 printf("  Rollout                    : %"PRId64"\n", max_rollout);
 
                 printf("  Identifications            :\n");
@@ -889,8 +919,10 @@ int main(int argc, const char** argv)
                     log_info("Material package name: %s\n", reader->GetMaterialPackageName().c_str());
                 }
                 log_info("Edit rate: %d/%d\n", sample_rate.numerator, sample_rate.denominator);
+                // TODO: only true if actually set
                 log_info("Precharge: %"PRId64"\n", max_precharge);
                 log_info("Duration: %"PRId64"\n", output_duration);
+                // TODO: only true if actually set
                 log_info("Rollout: %"PRId64"\n", max_rollout);
             }
 
@@ -1093,6 +1125,12 @@ int main(int argc, const char** argv)
                         delete frame;
                     }
                 }
+            }
+            if (reader->ReadError()) {
+                log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
+                    "A read error occurred: %s\n", reader->ReadErrorMessage().c_str());
+                if (reader->IsComplete())
+                    cmd_result = 1;
             }
 
             log_info("Read %"PRId64" samples (%s)\n",

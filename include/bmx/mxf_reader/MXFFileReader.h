@@ -61,6 +61,7 @@ public:
     friend class EssenceChunkHelper;
     friend class MXFFileTrackReader;
     friend class FrameMetadataReader;
+    friend class BaseReader;
 
 public:
     typedef enum
@@ -95,6 +96,8 @@ public:
     MXFFileFactory* GetFileFactory() const         { return mFileFactory; }
 
 public:
+    virtual bool IsComplete() const;
+
     virtual void GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const;
     virtual void SetReadLimits();
     virtual void SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position);
@@ -153,7 +156,7 @@ private:
 
     void GetStartTimecodes(mxfpp::Preface *preface, mxfpp::MaterialPackage *material_package,
                            mxfpp::Track *infile_mp_track);
-    bool GetStartTimecode(mxfpp::GenericPackage *package, mxfpp::Track *track, int64_t offset, Timecode *timecode);
+    bool GetStartTimecode(mxfpp::GenericPackage *package, mxfpp::Track *ref_track, int64_t offset, Timecode *timecode);
     bool GetReferencedPackage(mxfpp::Preface *preface, mxfpp::Track *track, int64_t offset_in, PackageType package_type,
                               mxfpp::GenericPackage **ref_package_out, mxfpp::Track **ref_track_out,
                               int64_t *ref_offset_out);
@@ -162,7 +165,7 @@ private:
     void ProcessPictureDescriptor(mxfpp::FileDescriptor *file_descriptor, MXFPictureTrackInfo *picture_track_info);
     void ProcessSoundDescriptor(mxfpp::FileDescriptor *file_descriptor, MXFSoundTrackInfo *sound_track_info);
 
-    bool IsClipWrapped() { return mIsClipWrapped; }
+    bool IsClipWrapped()  { return  mIsClipWrapped; }
     bool IsFrameWrapped() { return !mIsClipWrapped; }
 
     size_t GetNumInternalTrackReaders() const { return mInternalTrackReaders.size(); }
@@ -181,7 +184,12 @@ private:
 
     bool InternalIsEnabled() const;
 
-    void ExtractInfoFromFirstFrame();
+    bool CheckRequireFirstFrameInfo();
+    bool ExtractInfoFromFirstFrame();
+
+    void StartRead();
+    void CompleteRead();
+    void AbortRead();
 
 private:
     std::string mFilename;
@@ -201,10 +209,10 @@ private:
     uint32_t mBodySID;
     uint32_t mIndexSID;
 
-    int64_t mOrigin;
-
     int64_t mReadStartPosition;
     int64_t mReadDuration;
+
+    int64_t mFileOrigin;
 
     std::vector<MXFTrackReader*> mTrackReaders;
     std::vector<MXFTrackReader*> mInternalTrackReaders;
@@ -215,6 +223,8 @@ private:
     std::vector<MXFTrackReader*> mExternalTrackReaders;
 
     EssenceReader *mEssenceReader;
+
+    bool mRequireFirstFrameInfo;
 };
 
 

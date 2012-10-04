@@ -40,18 +40,22 @@
 using namespace std;
 using namespace bmx;
 
+#define NULL_READ_START_INDEX   (size_t)(-1)
+
 
 
 DefaultFrameBuffer::DefaultFrameBuffer()
 {
     mFrameFactory = new DefaultFrameFactory();
     mOwnFrameFactory = true;
+    mStartReadIndex = NULL_READ_START_INDEX;
 }
 
 DefaultFrameBuffer::DefaultFrameBuffer(FrameFactory *frame_factory, bool take_ownership)
 {
     mFrameFactory = frame_factory;
     mOwnFrameFactory = take_ownership;
+    mStartReadIndex = NULL_READ_START_INDEX;
 }
 
 DefaultFrameBuffer::~DefaultFrameBuffer()
@@ -69,6 +73,28 @@ void DefaultFrameBuffer::SetFrameFactory(FrameFactory *frame_factory, bool take_
 
     mFrameFactory = frame_factory;
     mOwnFrameFactory = take_ownership;
+}
+
+void DefaultFrameBuffer::StartRead()
+{
+    mStartReadIndex = mFrames.size();
+}
+
+void DefaultFrameBuffer::CompleteRead()
+{
+    mStartReadIndex = NULL_READ_START_INDEX;
+}
+
+void DefaultFrameBuffer::AbortRead()
+{
+    if (mStartReadIndex != NULL_READ_START_INDEX && mStartReadIndex < mFrames.size()) {
+        size_t num_pops = mFrames.size() - mStartReadIndex;
+        size_t i;
+        for (i = 0; i < num_pops; i++)
+            PopFrame(true);
+    }
+
+    mStartReadIndex = NULL_READ_START_INDEX;
 }
 
 Frame* DefaultFrameBuffer::CreateFrame()
@@ -115,5 +141,6 @@ void DefaultFrameBuffer::Clear(bool del_frames)
     }
 
     mFrames.clear();
+    mStartReadIndex = NULL_READ_START_INDEX;
 }
 

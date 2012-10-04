@@ -65,7 +65,7 @@ class MXFPackageResolver
 public:
     virtual ~MXFPackageResolver() {};
 
-    virtual void ExtractResolvedPackages(MXFFileReader *file_reader) = 0;
+    virtual void ExtractPackages(MXFFileReader *file_reader) = 0;
 
 public:
     virtual std::vector<ResolvedPackage> ResolveSourceClip(mxfpp::SourceClip *source_clip) = 0;
@@ -83,7 +83,7 @@ public:
     DefaultMXFPackageResolver();
     virtual ~DefaultMXFPackageResolver();
 
-    virtual void ExtractResolvedPackages(MXFFileReader *file_reader);
+    virtual void ExtractPackages(MXFFileReader *file_reader);
 
 public:
     virtual std::vector<ResolvedPackage> ResolveSourceClip(mxfpp::SourceClip *source_clip);

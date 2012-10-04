@@ -37,10 +37,13 @@
 
 #include <cstdio>
 
+#include <memory>
+
 #include <libMXF++/MXF.h>
 
 #include <bmx/mxf_reader/EssenceChunkHelper.h>
 #include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -55,8 +58,10 @@ using namespace mxfpp;
 EssenceChunk::EssenceChunk()
 {
     file_position = 0;
-    offset = 0;
+    essence_offset = 0;
     size = 0;
+    is_complete = false;
+    partition_id = 0;
 }
 
 
@@ -64,14 +69,30 @@ EssenceChunk::EssenceChunk()
 EssenceChunkHelper::EssenceChunkHelper(MXFFileReader *file_reader)
 {
     mFileReader = file_reader;
+    mAvidFirstFrameOffset = 0;
     mLastEssenceChunk = 0;
+    mNumIndexedPartitions = 0;
+    mIsComplete = false;
+
+    if (mFileReader->IsClipWrapped() &&
+        mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->is_picture)
+    {
+        auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
+            mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),
+            mFileReader->GetMXFVersion(),
+            mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->essence_container_label));
+        PictureMXFDescriptorHelper *picture_helper = dynamic_cast<PictureMXFDescriptorHelper*>(helper.get());
+
+        if (picture_helper->HaveAvidFirstFrameOffset())
+            mAvidFirstFrameOffset = picture_helper->GetAvidFirstFrameOffset();
+    }
 }
 
 EssenceChunkHelper::~EssenceChunkHelper()
 {
 }
 
-void EssenceChunkHelper::ExtractEssenceChunkIndex(uint32_t avid_first_frame_offset)
+void EssenceChunkHelper::CreateEssenceChunkIndex()
 {
     mxfKey key;
     uint8_t llen;
@@ -93,11 +114,23 @@ void EssenceChunkHelper::ExtractEssenceChunkIndex(uint32_t avid_first_frame_offs
         mxf_file->seek(partitions[i]->getThisPartition(), SEEK_SET);
         mxf_file->readKL(&key, &llen, &len);
         mxf_file->skip(len);
-        while (!mxf_file->eof()) {
-
+        while (!mxf_file->eof())
+        {
             mxf_file->readNextNonFillerKL(&key, &llen, &len);
 
-            if (mxf_is_gc_essence_element(&key) || mxf_avid_is_essence_element(&key)) {
+            if (mxf_is_partition_pack(&key)) {
+                break;
+            } else if (mxf_is_header_metadata(&key)) {
+                if (partitions[i]->getHeaderByteCount() > mxfKey_extlen + llen + len)
+                    mxf_file->skip(partitions[i]->getHeaderByteCount() - (mxfKey_extlen + llen));
+                else
+                    mxf_file->skip(len);
+            } else if (mxf_is_index_table_segment(&key)) {
+                if (partitions[i]->getIndexByteCount() > mxfKey_extlen + llen + len)
+                    mxf_file->skip(partitions[i]->getIndexByteCount() - (mxfKey_extlen + llen));
+                else
+                    mxf_file->skip(len);
+            } else if (mxf_is_gc_essence_element(&key) || mxf_avid_is_essence_element(&key)) {
                 if (mFileReader->IsClipWrapped()) {
                     // check whether this is the target essence container; skip and continue if not
                     if (!mFileReader->GetInternalTrackReaderByNumber(mxf_get_track_number(&key))) {
@@ -106,152 +139,185 @@ void EssenceChunkHelper::ExtractEssenceChunkIndex(uint32_t avid_first_frame_offs
                     }
                 }
 
-                // check the essence container data is contiguous
-                uint64_t body_offset = partitions[i]->getBodyOffset();
-                if (mEssenceChunks.empty()) {
-                    if (body_offset > 0) {
-                        log_warn("Ignoring potential missing essence container data; "
-                                 "partition pack's BodyOffset 0x%"PRIx64" > expected offset 0x00\n",
-                                 body_offset);
-                        body_offset = 0;
-                    }
-                } else if (body_offset > (uint64_t)(mEssenceChunks.back().offset + mEssenceChunks.back().size)) {
-                    log_warn("Ignoring potential missing essence container data; "
-                             "partition pack's BodyOffset 0x%"PRIx64" > expected offset 0x%"PRIx64"\n",
-                             body_offset, mEssenceChunks.back().offset + mEssenceChunks.back().size);
-                    body_offset = mEssenceChunks.back().offset + mEssenceChunks.back().size;
-                } else if (body_offset < (uint64_t)(mEssenceChunks.back().offset + mEssenceChunks.back().size)) {
-                    log_warn("Ignoring potential overlapping essence container data; "
-                             "partition pack's BodyOffset 0x%"PRIx64" < expected offset 0x%"PRIx64"\n",
-                             body_offset, mEssenceChunks.back().offset + mEssenceChunks.back().size);
-                    body_offset = mEssenceChunks.back().offset + mEssenceChunks.back().size;
-                }
-
-                // add this partition's essence to the index
-                EssenceChunk essence_chunk;
-                essence_chunk.offset = body_offset;
-                essence_chunk.file_position = mxf_file->tell();
+                AppendChunk(i, mxf_file->tell(), llen, len);
                 if (mFileReader->IsFrameWrapped()) {
-                    essence_chunk.file_position -= mxfKey_extlen + llen;
-                    essence_chunk.size = partition_end - essence_chunk.file_position;
+                    UpdateLastChunk(partition_end, true);
+                    break;
                 } else {
-                    essence_chunk.size = len;
-                    if (avid_first_frame_offset > 0 && mEssenceChunks.empty()) {
-                        essence_chunk.file_position += avid_first_frame_offset;
-                        essence_chunk.size -= avid_first_frame_offset;
-                    }
-                }
-                BMX_CHECK(essence_chunk.size >= 0);
-                if (essence_chunk.size > 0)
-                    mEssenceChunks.push_back(essence_chunk);
-
-                // continue with clip-wrapped to support multiple essence container elements in this partition
-                if (mFileReader->IsClipWrapped()) {
+                    // continue with clip-wrapped to support multiple essence container elements in this partition
                     mxf_file->skip(len);
-                    continue;
                 }
-
-                break;
-            }
-
-            if (mxf_is_partition_pack(&key))
-                break;
-
-            if (mxf_is_header_metadata(&key) && partitions[i]->getHeaderByteCount() > 0)
-                mxf_file->skip(partitions[i]->getHeaderByteCount() - (mxfKey_extlen + llen));
-            else if (mxf_is_index_table_segment(&key) && partitions[i]->getIndexByteCount() > 0)
-                mxf_file->skip(partitions[i]->getIndexByteCount() - (mxfKey_extlen + llen));
-            else
+            } else {
                 mxf_file->skip(len);
+            }
         }
     }
 
+    mIsComplete = true;
+}
 
-#if 0
-    {
-        size_t i;
-        for (i = 0; i < mEssenceChunks.size(); i++)
-            printf("Essence chunk: file_pos=0x%"PRIx64", offset=0x%"PRIx64" size=0x%"PRIx64"\n",
-                   mEssenceChunks[i].file_position, mEssenceChunks[i].offset, mEssenceChunks[i].size);
+void EssenceChunkHelper::AppendChunk(size_t partition_id, int64_t file_position, uint8_t klv_llen, uint64_t klv_len)
+{
+    // Note: file_position is after the KL
+
+    Partition *partition = mFileReader->mFile->getPartitions()[partition_id];
+
+    // check the essence container data is contiguous
+    uint64_t body_offset = partition->getBodyOffset();
+    if (mEssenceChunks.empty()) {
+        if (body_offset > 0) {
+            log_warn("Ignoring potential missing essence container data; "
+                     "partition pack's BodyOffset 0x%"PRIx64" > expected offset 0x00\n",
+                     body_offset);
+            body_offset = 0;
+        }
+    } else if (body_offset > (uint64_t)(mEssenceChunks.back().essence_offset + mEssenceChunks.back().size)) {
+        log_warn("Ignoring potential missing essence container data; "
+                 "partition pack's BodyOffset 0x%"PRIx64" > expected offset 0x%"PRIx64"\n",
+                 body_offset, mEssenceChunks.back().essence_offset + mEssenceChunks.back().size);
+        body_offset = mEssenceChunks.back().essence_offset + mEssenceChunks.back().size;
+    } else if (body_offset < (uint64_t)(mEssenceChunks.back().essence_offset + mEssenceChunks.back().size)) {
+        log_warn("Ignoring potential overlapping essence container data; "
+                 "partition pack's BodyOffset 0x%"PRIx64" < expected offset 0x%"PRIx64"\n",
+                 body_offset, mEssenceChunks.back().essence_offset + mEssenceChunks.back().size);
+        body_offset = mEssenceChunks.back().essence_offset + mEssenceChunks.back().size;
     }
-#endif
+
+    // add this partition's essence to the index
+    EssenceChunk essence_chunk;
+    essence_chunk.essence_offset = body_offset;
+    essence_chunk.file_position = file_position;
+    essence_chunk.partition_id = partition_id;
+    if (mFileReader->IsFrameWrapped()) {
+        essence_chunk.file_position -= mxfKey_extlen + klv_llen;
+        essence_chunk.size = 0;
+        essence_chunk.is_complete = false;
+    } else {
+        essence_chunk.size = klv_len;
+        if (mAvidFirstFrameOffset > 0 && mEssenceChunks.empty()) {
+            essence_chunk.file_position += mAvidFirstFrameOffset;
+            essence_chunk.size -= mAvidFirstFrameOffset;
+        }
+        BMX_CHECK(essence_chunk.size >= 0);
+        essence_chunk.is_complete = true;
+    }
+    mEssenceChunks.push_back(essence_chunk);
+
+    mNumIndexedPartitions = partition_id + 1;
+}
+
+void EssenceChunkHelper::UpdateLastChunk(int64_t file_position, bool is_end)
+{
+    if (!mEssenceChunks.empty() &&
+        !mEssenceChunks.back().is_complete &&
+        file_position >= mEssenceChunks.back().file_position + mEssenceChunks.back().size)
+    {
+        mEssenceChunks.back().size = file_position - mEssenceChunks.back().file_position;
+        mEssenceChunks.back().is_complete = is_end;
+    }
+}
+
+void EssenceChunkHelper::SetIsComplete()
+{
+    mIsComplete = true;
+}
+
+bool EssenceChunkHelper::HaveFilePosition(int64_t essence_offset)
+{
+    if (mEssenceChunks.empty())
+        return false;
+
+    EssenceOffsetUpdate(essence_offset);
+
+    return mEssenceChunks[mLastEssenceChunk].essence_offset <= essence_offset &&
+           mEssenceChunks[mLastEssenceChunk].essence_offset + mEssenceChunks[mLastEssenceChunk].size >= essence_offset;
 }
 
 int64_t EssenceChunkHelper::GetEssenceDataSize() const
 {
     if (mEssenceChunks.empty())
         return 0;
-
-    return mEssenceChunks.back().offset + mEssenceChunks.back().size;
+    else
+        return mEssenceChunks.back().essence_offset + mEssenceChunks.back().size;
 }
 
-int64_t EssenceChunkHelper::GetFilePosition(int64_t index_offset, int64_t index_size)
+int64_t EssenceChunkHelper::GetFilePosition(int64_t essence_offset, int64_t size)
 {
-    IndexOffsetUpdate(index_offset);
+    EssenceOffsetUpdate(essence_offset);
 
-    if (mEssenceChunks[mLastEssenceChunk].offset > index_offset ||
-        mEssenceChunks[mLastEssenceChunk].offset + mEssenceChunks[mLastEssenceChunk].size < index_offset + index_size)
+    bool have_position = true;
+    if (mEssenceChunks[mLastEssenceChunk].essence_offset > essence_offset)
     {
-        BMX_EXCEPTION(("Failed to find indexed edit unit (off=0x%"PRIx64",size=0x%"PRIx64") in essence data",
-                      index_offset, index_size));
+        have_position = false;
+    }
+    else if (mEssenceChunks[mLastEssenceChunk].essence_offset + mEssenceChunks[mLastEssenceChunk].size <
+                essence_offset + size)
+    {
+        if (mEssenceChunks[mLastEssenceChunk].essence_offset + mEssenceChunks[mLastEssenceChunk].size < essence_offset)
+            have_position = false;
+        else if (mEssenceChunks[mLastEssenceChunk].is_complete)
+            have_position = false;
+    }
+    if (!have_position) {
+        BMX_EXCEPTION(("Failed to find edit unit (off=0x%"PRIx64",size=0x%"PRIx64") in essence container",
+                       essence_offset, size));
     }
 
     return mEssenceChunks[mLastEssenceChunk].file_position +
-                (index_offset - mEssenceChunks[mLastEssenceChunk].offset);
+                (essence_offset - mEssenceChunks[mLastEssenceChunk].essence_offset);
 }
 
-int64_t EssenceChunkHelper::GetFilePosition(int64_t index_offset)
+int64_t EssenceChunkHelper::GetFilePosition(int64_t essence_offset)
 {
-    IndexOffsetUpdate(index_offset);
+    EssenceOffsetUpdate(essence_offset);
 
-    if (mEssenceChunks[mLastEssenceChunk].offset > index_offset ||
-        mEssenceChunks[mLastEssenceChunk].offset + mEssenceChunks[mLastEssenceChunk].size < index_offset)
+    if (mEssenceChunks[mLastEssenceChunk].essence_offset > essence_offset ||
+        mEssenceChunks[mLastEssenceChunk].essence_offset + mEssenceChunks[mLastEssenceChunk].size < essence_offset)
     {
-        BMX_EXCEPTION(("Failed to find indexed file position (off=0x%"PRIx64") in essence data",
-                      index_offset));
+        BMX_EXCEPTION(("Failed to find edit unit offset (off=0x%"PRIx64") in essence container", essence_offset));
     }
 
     return mEssenceChunks[mLastEssenceChunk].file_position +
-                (index_offset - mEssenceChunks[mLastEssenceChunk].offset);
+                (essence_offset - mEssenceChunks[mLastEssenceChunk].essence_offset);
 }
 
-int64_t EssenceChunkHelper::GetMaxContiguousSize(int64_t file_position)
+int64_t EssenceChunkHelper::GetEssenceOffset(int64_t file_position)
 {
     FilePositionUpdate(file_position);
 
     if (mEssenceChunks[mLastEssenceChunk].file_position > file_position ||
         mEssenceChunks[mLastEssenceChunk].file_position + mEssenceChunks[mLastEssenceChunk].size < file_position)
     {
-        BMX_EXCEPTION(("Failed to find file position (off=0x%"PRIx64") in essence data",
-                      file_position));
+        BMX_EXCEPTION(("Failed to find edit unit file position (pos=0x%"PRIx64") in essence container", file_position));
     }
 
-    return mEssenceChunks[mLastEssenceChunk].file_position + mEssenceChunks[mLastEssenceChunk].size - file_position;
+    return mEssenceChunks[mLastEssenceChunk].essence_offset +
+                (file_position - mEssenceChunks[mLastEssenceChunk].file_position);
 }
 
-void EssenceChunkHelper::IndexOffsetUpdate(int64_t index_offset)
+void EssenceChunkHelper::EssenceOffsetUpdate(int64_t essence_offset)
 {
     BMX_CHECK(!mEssenceChunks.empty());
 
     // TODO: use binary search
-    if (mEssenceChunks[mLastEssenceChunk].offset > index_offset)
+    if (mEssenceChunks[mLastEssenceChunk].essence_offset > essence_offset)
     {
         // edit unit is in chunk before mLastEssenceChunk
         size_t i;
         for (i = mLastEssenceChunk; i > 0; i--) {
-            if (mEssenceChunks[i - 1].offset <= index_offset) {
+            if (mEssenceChunks[i - 1].essence_offset <= essence_offset) {
                 mLastEssenceChunk = i - 1;
                 break;
             }
         }
     }
-    else if (mEssenceChunks[mLastEssenceChunk].offset +
-                    mEssenceChunks[mLastEssenceChunk].size <= index_offset)
+    else if (mEssenceChunks[mLastEssenceChunk].essence_offset +
+                    mEssenceChunks[mLastEssenceChunk].size <= essence_offset)
     {
         // edit unit is in chunk after mLastEssenceChunk
         size_t i;
         for (i = mLastEssenceChunk + 1; i < mEssenceChunks.size(); i++) {
-            if (mEssenceChunks[i].offset + mEssenceChunks[i].size > index_offset) {
+            if (mEssenceChunks[i].essence_offset + mEssenceChunks[i].size > essence_offset) {
                 mLastEssenceChunk = i;
                 break;
             }

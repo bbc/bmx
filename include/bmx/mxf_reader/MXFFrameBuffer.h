@@ -55,6 +55,9 @@ public:
 
 public:
     virtual void SetFrameFactory(FrameFactory *frame_factory, bool take_ownership);
+    virtual void StartRead();
+    virtual void CompleteRead();
+    virtual void AbortRead();
     virtual Frame* CreateFrame();
     virtual void PushFrame(Frame *frame);
     virtual void PopFrame(bool del_frame);

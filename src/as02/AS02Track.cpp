@@ -375,9 +375,9 @@ void AS02Track::CompleteWrite()
     const std::vector<Partition*> &partitions = mMXFFile->getPartitions();
     size_t i;
     for (i = 0; i < partitions.size(); i++) {
-        if (mxf_is_header_partition_pack(partitions[i]->getKey()))
+        if (partitions[i]->isHeader())
             partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Header));
-        else if (mxf_is_body_partition_pack(partitions[i]->getKey()))
+        else if (partitions[i]->isBody())
             partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Body));
     }
     mMXFFile->updatePartitions();
