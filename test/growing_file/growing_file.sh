@@ -18,11 +18,13 @@ tmpdir=/tmp
 testpcm="$tmpdir/pcm.raw"
 testm2v="$tmpdir/test_in.raw"
 testmxf="$tmpdir/gftest.mxf"
+testrawtxt="$tmpdir/gftest_raw.txt"
 testtxt="$tmpdir/gftest.txt"
 testmd5="$tmpdir/gftest.md5"
 sampletxt="$tmpdir/sample_gftest.txt"
 
 md5file="$base/growing_file.md5"
+gftxt="$base/growing_file.txt"
 
 
 create_test_file()
@@ -39,7 +41,7 @@ read_file()
 
 clean_test_files()
 {
-    rm -f $testpcm $testm2v $testmxf $testtxt $testmd5
+    rm -f $testpcm $testm2v $testmxf $testrawtxt $testtxt $testmd5
 }
 
 calc_md5()
@@ -62,11 +64,13 @@ run_test()
                       13592 \
                       4866"
 
-    rm -f $testtxt
+    rm -f $testrawtxt
     for tlen in $truncate_lengths ; do
-        echo $tlen >>$testtxt
-        $testdir/file_truncate $tlen $testmxf && read_file >>$testtxt 2>&1
+        echo $tlen >>$testrawtxt
+        $testdir/file_truncate $tlen $testmxf && read_file >>$testrawtxt 2>&1
     done
+
+    sed 's/at\ .*//g' $testrawtxt | sed 's/in\ .*//g' | sed 's/near\ .*//g' >$testtxt
 
     calc_md5 $testtxt $1
 }
@@ -79,7 +83,7 @@ check()
 
 create_data()
 {
-    run_test $md5file
+    run_test $md5file && cp $testtxt $gftxt
 }
 
 create_sample()

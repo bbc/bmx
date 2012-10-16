@@ -1,0 +1,154 @@
+5941560
+Info: Input filename: /tmp/gftest.mxf
+Info: Material package name: 
+Info: Edit rate: 25/1
+Info: Precharge: 0
+Info: Duration: 24
+Info: Rollout: 0
+Info: Read 24 samples (00:00:00:24 @25fps)
+Info: MD5 Track 0: dd8fb89170d3e4bbfd21c3f55a6e6288
+Info: MD5 Track 1: bdc3d1a5ad30870eafc32cbb3beebbf6
+5941464
+Warning (libMXF): File is missing both a RIP and a footer partition offset 
+Info: Input filename: /tmp/gftest.mxf
+Info: Material package name: 
+Info: Edit rate: 25/1
+Info: Precharge: 0
+Info: Duration: 24
+Info: Rollout: 0
+Info: Read 24 samples (00:00:00:24 @25fps)
+Info: MD5 Track 0: dd8fb89170d3e4bbfd21c3f55a6e6288
+Info: MD5 Track 1: bdc3d1a5ad30870eafc32cbb3beebbf6
+5927832
+ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
+ERROR (libMXF): 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
+ERROR (libMXF): 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+Warning: Input file is incomplete
+Info: Input filename: /tmp/gftest.mxf
+Info: Material package name: 
+Info: Edit rate: 25/1
+Info: Precharge: 0
+Info: Duration: -1
+Info: Rollout: 0
+Warning: A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+Info: Read 24 samples (00:00:00:24 @25fps)
+Info: MD5 Track 0: dd8fb89170d3e4bbfd21c3f55a6e6288
+Info: MD5 Track 1: bdc3d1a5ad30870eafc32cbb3beebbf6
+5927350
+ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
+ERROR (libMXF): 'mxf_read_kl(_cFile, key, llen, len)' failed, 
+Warning: Input file is incomplete
+Info: Input filename: /tmp/gftest.mxf
+Info: Material package name: 
+Info: Edit rate: 25/1
+Info: Precharge: 0
+Info: Duration: -1
+Info: Rollout: 0
+Warning: A read error occurred: 'mxf_read_kl(_cFile, key, llen, len)' failed, 
+Info: Read 23 samples (00:00:00:23 @25fps)
+Info: MD5 Track 0: 290a268469d4df657d7bb80a2c8dc531
+Info: MD5 Track 1: bebb193b9967aa36399295279abb1831
+5683470
+ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
+ERROR (libMXF): 'mxf_read_kl(_cFile, key, llen, len)' failed, 
+Warning: Input file is incomplete
+Info: Input filename: /tmp/gftest.mxf
+Info: Material package name: 
+Info: Edit rate: 25/1
+Info: Precharge: 0
+Info: Duration: -1
+Info: Rollout: 0
+Warning: A read error occurred: 'mxf_read_kl(_cFile, key, llen, len)' failed, 
+Info: Read 22 samples (00:00:00:22 @25fps)
+Info: MD5 Track 0: c3472a0f842662dc9ec402a882bcf4b0
+Info: MD5 Track 1: 21bde5d4750f84e81f007a14f0d81274
+5679610
+ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
+ERROR (libMXF): 'mxf_read_kl(_cFile, key, llen, len)' failed, 
+Warning: Input file is incomplete
+Info: Input filename: /tmp/gftest.mxf
+Info: Material package name: 
+Info: Edit rate: 25/1
+Info: Precharge: 0
+Info: Duration: -1
+Info: Rollout: 0
+Warning: A read error occurred: 'mxf_read_kl(_cFile, key, llen, len)' failed, 
+Info: Read 22 samples (00:00:00:22 @25fps)
+Info: MD5 Track 0: c3472a0f842662dc9ec402a882bcf4b0
+Info: MD5 Track 1: 21bde5d4750f84e81f007a14f0d81274
+2970790
+ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
+ERROR (libMXF): 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
+ERROR (libMXF): 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+Warning: Input file is incomplete
+Info: Input filename: /tmp/gftest.mxf
+Info: Material package name: 
+Info: Edit rate: 25/1
+Info: Precharge: 0
+Info: Duration: -1
+Info: Rollout: 0
+Warning: A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+Info: Read 12 samples (00:00:00:12 @25fps)
+Info: MD5 Track 0: eff9ee12e2632b37781752113e5ca718
+Info: MD5 Track 1: 7777a1ecc367c9e0134453829e2f44ab
+2970328
+ERROR (libMXF): 'mxf_file_read(mxfFile, buffer, 2) == 2' failed, 
+ERROR (libMXF): 'mxf_read_local_tag(mxfFile, tag)' failed, 
+ERROR (libMXF): 'mxf_read_local_tl(mxfFile, &localTag, &localLen)' failed, 
+ERROR: 'mxf_avid_read_index_table_segment_2(file->getCFile(), segment_len, mxf_default_add_delta_entry, 0, add_frame_offset_index_entry, this, &_cSegment)' check failed
+ERROR:     
+Warning: Input file is incomplete
+Info: Input filename: /tmp/gftest.mxf
+Info: Material package name: 
+Info: Edit rate: 25/1
+Info: Precharge: 0
+Info: Duration: -1
+Info: Rollout: 0
+Warning: A read error occurred: 'mxf_avid_read_index_table_segment_2(file->getCFile(), segment_len, mxf_default_add_delta_entry, 0, add_frame_offset_index_entry, this, &_cSegment)' check failed
+Info: Read 12 samples (00:00:00:12 @25fps)
+Info: MD5 Track 0: eff9ee12e2632b37781752113e5ca718
+Info: MD5 Track 1: 7777a1ecc367c9e0134453829e2f44ab
+2970308
+ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
+ERROR (libMXF): 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
+ERROR (libMXF): 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+Warning: Input file is incomplete
+Info: Input filename: /tmp/gftest.mxf
+Info: Material package name: 
+Info: Edit rate: 25/1
+Info: Precharge: 0
+Info: Duration: -1
+Info: Rollout: 0
+Warning: A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+Info: Read 12 samples (00:00:00:12 @25fps)
+Info: MD5 Track 0: eff9ee12e2632b37781752113e5ca718
+Info: MD5 Track 1: 7777a1ecc367c9e0134453829e2f44ab
+13592
+ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
+ERROR (libMXF): 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
+ERROR (libMXF): 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+Warning: Input file is incomplete
+Info: Input filename: /tmp/gftest.mxf
+Info: Material package name: 
+Info: Edit rate: 25/1
+Info: Precharge: 0
+Info: Duration: -1
+Info: Rollout: 0
+Warning: A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+Info: Read 0 samples (00:00:00:00 @25fps)
+Info: MD5 Track 0: d41d8cd98f00b204e9800998ecf8427e
+Info: MD5 Track 1: d41d8cd98f00b204e9800998ecf8427e
+4866
+ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
+ERROR (libMXF): 'mxf_read_kl(mxfFile, &key, &llen, &len)' failed, 
+ERROR (libMXF): 'mxf_read_filtered_header_metadata(mxfFile, &readFilter.filter, headerMetadata, headerByteCount, key, llen, len)' failed, 
+ERROR (libMXF): 'mxf_avid_read_filtered_header_metadata(file->getCFile(), 0, getCHeaderMetadata(), partition->getCPartition()->headerByteCount, key, llen, len)' failed, 
+ERROR: Failed to open MXF file '/tmp/gftest.mxf': general error
