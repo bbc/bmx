@@ -223,6 +223,18 @@
 				>
 			</File>
 			<Filter
+				Name="apps"
+				>
+				<File
+					RelativePath="..\..\..\include\bmx\apps\AppUtils.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\apps\AS11Helper.h"
+					>
+				</File>
+			</Filter>
+			<Filter
 				Name="as02"
 				>
 				<File
@@ -716,6 +728,18 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<Filter
+				Name="apps"
+				>
+				<File
+					RelativePath="..\..\..\src\apps\AppUtils.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\apps\AS11Helper.cpp"
+					>
+				</File>
+			</Filter>
 			<Filter
 				Name="as02"
 				>

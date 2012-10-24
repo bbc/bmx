@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\;..\..\..\..\apps;..\..\..\..\..\libMXF;..\..\..\..\..\libMXF++;..\..\..\..\..\uriparser\include;..\..\..\..\include;.."
+				AdditionalIncludeDirectories="..\..\;..\..\..\..\..\libMXF;..\..\..\..\..\libMXF++;..\..\..\..\..\uriparser\include;..\..\..\..\include;.."
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -118,7 +118,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\;..\..\..\..\apps;..\..\..\..\..\libMXF;..\..\..\..\..\libMXF++;..\..\..\..\..\uriparser\include;..\..\..\..\include;.."
+				AdditionalIncludeDirectories="..\..\;..\..\..\..\..\libMXF;..\..\..\..\..\libMXF++;..\..\..\..\..\uriparser\include;..\..\..\..\include;.."
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -181,14 +181,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\..\apps\AppUtils.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\apps\AS11Helper.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\apps\bmxtranswrap\bmxtranswrap.cpp"
 				>
 			</File>
@@ -198,14 +190,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath="..\..\..\..\apps\AppUtils.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\apps\AS11Helper.h"
-				>
-			</File>
 		</Filter>
 	</Files>
 	<Globals>
