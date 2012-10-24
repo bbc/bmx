@@ -145,11 +145,11 @@ void APPInfoOutput::ExtractInfo(int event_mask)
 
 void APPInfoOutput::AddEventTimecodes(int64_t position, Timecode vitc, Timecode ltc)
 {
-#define COPY_EVENT_TC(tt)                           \
-    tc_info->tt.hour       = tt.GetHour();          \
-    tc_info->tt.min        = tt.GetMin();           \
-    tc_info->tt.sec        = tt.GetSec();           \
-    tc_info->tt.frame      = tt.GetFrame();         \
+#define COPY_EVENT_TC(tt)                                   \
+    tc_info->tt.hour       = (uint8_t)tt.GetHour();         \
+    tc_info->tt.min        = (uint8_t)tt.GetMin();          \
+    tc_info->tt.sec        = (uint8_t)tt.GetSec();          \
+    tc_info->tt.frame      = (uint8_t)tt.GetFrame();        \
     tc_info->tt.dropFrame  = tt.IsDropFrame();
 
 #define ADD_EVENT_TC(index, array, info)            \

@@ -679,7 +679,8 @@ void IndexTableHelper::InsertVBEIndexSegment(IndexTableHelperSegment *new_segmen
             } else if (SEG_START(segment) < SEG_START(new_segment) && SEG_END(segment) > SEG_END(new_segment)) {
                 // existing segment covers and is larger than new segment
                 iter = mSegments.insert(iter, CreateStartSegment(segment,
-                                                                 SEG_START(new_segment) - SEG_START(segment)));
+                                                                 (uint32_t)(SEG_START(new_segment) -
+                                                                            SEG_START(segment))));
                 segment->UpdateStartPosition(SEG_START(new_segment));
             } else if (SEG_START(segment) < SEG_START(new_segment)) {
                 // existing segment starts before new segment
