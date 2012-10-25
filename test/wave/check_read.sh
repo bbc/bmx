@@ -1,13 +1,6 @@
 #!/bin/sh
 
-if command -v md5sum >/dev/null 2>&1; then
-  MD5TOOL=md5sum
-elif command -v md5 >/dev/null 2>&1; then
-  MD5TOOL=md5
-else
-  echo "ERROR: require md5/md5sum tool"
-  exit 1
-fi
+MD5TOOL=../file_md5
 
 
 OUTPUT1=/tmp/test_1.wav
@@ -26,7 +19,7 @@ $WRITE_BASE_COMMAND -q 16 --pcm /tmp/pcm.raw -q 16 --pcm /tmp/pcm.raw >/dev/null
 $REWRITE_BASE_COMMAND --wave $OUTPUT1 >/dev/null
 
 # calculate md5sum and compare with expected value
-$MD5TOOL < $OUTPUT2 | sed 's/\([a-f0-9]\)$/\1\ \ -/g' > /tmp/test.md5
+$MD5TOOL < $OUTPUT2 > /tmp/test.md5
 if diff /tmp/test.md5 ${srcdir}/$1.md5
 then
 	RESULT=0

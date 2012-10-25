@@ -55,11 +55,6 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
 
-AC_CHECK_PROGS(MD5TOOL, [md5sum md5])
-if test x"$MD5TOOL" = x"" ; then
-	AC_MSG_WARN(Missing md5sum/md5 tool. Cannot make check.)
-fi
-
 
 dnl-----------------------------------------------------------------------------
 dnl -- Checks for libraries.

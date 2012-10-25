@@ -2,14 +2,7 @@
 
 base=$(dirname $0)
 
-if command -v md5sum >/dev/null 2>&1; then
-  md5tool=md5sum
-elif command -v md5 >/dev/null 2>&1; then
-  md5tool=md5
-else
-  echo "ERROR: require md5/md5sum tool"
-  exit 1
-fi
+md5tool=../file_md5
 
 appsdir=../../apps
 testdir=..
@@ -46,7 +39,7 @@ clean_test_files()
 
 calc_md5()
 {
-    $md5tool < $1 | sed 's/\([a-f0-9]\)$/\1\ \ -/g' > $2
+    $md5tool < $1 > $2
 }
 
 run_test()

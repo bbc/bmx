@@ -1,13 +1,6 @@
 #!/bin/sh
 
-if command -v md5sum >/dev/null 2>&1; then
-  MD5TOOL=md5sum
-elif command -v md5 >/dev/null 2>&1; then
-  MD5TOOL=md5
-else
-  echo "ERROR: require md5/md5sum tool"
-  exit 1
-fi
+MD5TOOL=../file_md5
 
 
 AS02_BASE_COMMAND="../../apps/raw2bmx/raw2bmx --regtest -t as02 -o /tmp/as02test -y 10:11:12:13 --clip test "
@@ -28,7 +21,7 @@ if $AS02_BASE_COMMAND -a 16:9 --$3 /tmp/test_in.raw -q 16 --locked true --pcm /t
 then
   if $READ_COMMAND >/tmp/mxfreadertest_stdout
   then
-    $MD5TOOL < /tmp/mxfreadertest_stdout | sed 's/\([a-f0-9]\)$/\1\ \ -/g' > $1/$3$4.md5
+    $MD5TOOL < /tmp/mxfreadertest_stdout > $1/$3$4.md5
     RESULT=0
   else
     RESULT=1
