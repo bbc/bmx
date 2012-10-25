@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${srcdir}/check.sh 24 5 dv100_1080i
+${srcdir}/check.sh 3 5 dv100_1080i
 

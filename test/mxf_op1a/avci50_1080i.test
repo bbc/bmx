@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${srcdir}/check.sh 24 9 avci50_1080i
+${srcdir}/check.sh 3 9 avci50_1080i
 

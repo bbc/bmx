@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${srcdir}/check.sh 24 3 dvbased25
+${srcdir}/check.sh 3 3 dvbased25
 

@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${srcdir}/check.sh 24 2 iecdv25
+${srcdir}/check.sh 3 2 iecdv25
 

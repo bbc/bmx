@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${srcdir}/check.sh 24 36 vc3_1080i_1243
+${srcdir}/check.sh 3 36 vc3_1080i_1243
 

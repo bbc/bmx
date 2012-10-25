@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${srcdir}/check.sh 24 6 dv100_720p 50
+${srcdir}/check.sh 3 6 dv100_720p 50
 

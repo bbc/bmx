@@ -83,58 +83,58 @@ EXTRA_DIST = \
 
 .PHONY: create-data
 create-data:
-	${srcdir}/create.sh ${srcdir} 24 2 iecdv25
-	${srcdir}/create.sh ${srcdir} 24 3 dvbased25
-	${srcdir}/create.sh ${srcdir} 24 4 dv50
-	${srcdir}/create.sh ${srcdir} 24 5 dv100_1080i
-	${srcdir}/create.sh ${srcdir} 24 6 dv100_720p 25
-	${srcdir}/create.sh ${srcdir} 24 6 dv100_720p 50
-	${srcdir}/create.sh ${srcdir} 24 7 avci100_1080i
-	${srcdir}/create.sh ${srcdir} 24 8 avci100_1080p
-	${srcdir}/create.sh ${srcdir} 24 29 avci100_720p 25
-	${srcdir}/create.sh ${srcdir} 24 29 avci100_720p 50
-	${srcdir}/create.sh ${srcdir} 24 9 avci50_1080i
-	${srcdir}/create.sh ${srcdir} 24 10 avci50_1080p
-	${srcdir}/create.sh ${srcdir} 24 30 avci50_720p 25
-	${srcdir}/create.sh ${srcdir} 24 30 avci50_720p 50
-	${srcdir}/create.sh ${srcdir} 24 11 d10_50
-	${srcdir}/create.sh ${srcdir} 24 12 d10_40
-	${srcdir}/create.sh ${srcdir} 24 13 d10_30
+	${srcdir}/create.sh ${srcdir} 3 2 iecdv25
+	${srcdir}/create.sh ${srcdir} 3 3 dvbased25
+	${srcdir}/create.sh ${srcdir} 3 4 dv50
+	${srcdir}/create.sh ${srcdir} 3 5 dv100_1080i
+	${srcdir}/create.sh ${srcdir} 3 6 dv100_720p 25
+	${srcdir}/create.sh ${srcdir} 3 6 dv100_720p 50
+	${srcdir}/create.sh ${srcdir} 3 7 avci100_1080i
+	${srcdir}/create.sh ${srcdir} 3 8 avci100_1080p
+	${srcdir}/create.sh ${srcdir} 3 29 avci100_720p 25
+	${srcdir}/create.sh ${srcdir} 3 29 avci100_720p 50
+	${srcdir}/create.sh ${srcdir} 3 9 avci50_1080i
+	${srcdir}/create.sh ${srcdir} 3 10 avci50_1080p
+	${srcdir}/create.sh ${srcdir} 3 30 avci50_720p 25
+	${srcdir}/create.sh ${srcdir} 3 30 avci50_720p 50
+	${srcdir}/create.sh ${srcdir} 3 11 d10_50
+	${srcdir}/create.sh ${srcdir} 3 12 d10_40
+	${srcdir}/create.sh ${srcdir} 3 13 d10_30
 	${srcdir}/create.sh ${srcdir} 24 14 mpeg2lg_422p_hl_1080i
 	${srcdir}/create.sh ${srcdir} 24 15 mpeg2lg_mp_h14_1080i
 	${srcdir}/create.sh ${srcdir} 24 16 mpeg2lg_mp_hl_1920_1080i
-	${srcdir}/create.sh ${srcdir} 24 17 unc
-	${srcdir}/create.sh ${srcdir} 24 18 unc_1080i
-	${srcdir}/create.sh ${srcdir} 24 19 unc_1080p
-	${srcdir}/create.sh ${srcdir} 24 20 unc_720p
+	${srcdir}/create.sh ${srcdir} 3 17 unc
+	${srcdir}/create.sh ${srcdir} 3 18 unc_1080i
+	${srcdir}/create.sh ${srcdir} 3 19 unc_1080p
+	${srcdir}/create.sh ${srcdir} 3 20 unc_720p
 
 
 
 .PHONY: create-samples
 create-samples:
-	${srcdir}/samples.sh 24 2 iecdv25
-	${srcdir}/samples.sh 24 3 dvbased25
-	${srcdir}/samples.sh 24 4 dv50
-	${srcdir}/samples.sh 24 5 dv100_1080i
-	${srcdir}/samples.sh 24 6 dv100_720p 25
-	${srcdir}/samples.sh 24 6 dv100_720p 50
-	${srcdir}/samples.sh 24 7 avci100_1080i
-	${srcdir}/samples.sh 24 8 avci100_1080p
-	${srcdir}/samples.sh 24 29 avci100_720p 25
-	${srcdir}/samples.sh 24 29 avci100_720p 50
-	${srcdir}/samples.sh 24 9 avci50_1080i
-	${srcdir}/samples.sh 24 10 avci50_1080p
-	${srcdir}/samples.sh 24 30 avci50_720p 25
-	${srcdir}/samples.sh 24 30 avci50_720p 50
-	${srcdir}/samples.sh 24 11 d10_50
-	${srcdir}/samples.sh 24 12 d10_40
-	${srcdir}/samples.sh 24 13 d10_30
+	${srcdir}/samples.sh 3 2 iecdv25
+	${srcdir}/samples.sh 3 3 dvbased25
+	${srcdir}/samples.sh 3 4 dv50
+	${srcdir}/samples.sh 3 5 dv100_1080i
+	${srcdir}/samples.sh 3 6 dv100_720p 25
+	${srcdir}/samples.sh 3 6 dv100_720p 50
+	${srcdir}/samples.sh 3 7 avci100_1080i
+	${srcdir}/samples.sh 3 8 avci100_1080p
+	${srcdir}/samples.sh 3 29 avci100_720p 25
+	${srcdir}/samples.sh 3 29 avci100_720p 50
+	${srcdir}/samples.sh 3 9 avci50_1080i
+	${srcdir}/samples.sh 3 10 avci50_1080p
+	${srcdir}/samples.sh 3 30 avci50_720p 25
+	${srcdir}/samples.sh 3 30 avci50_720p 50
+	${srcdir}/samples.sh 3 11 d10_50
+	${srcdir}/samples.sh 3 12 d10_40
+	${srcdir}/samples.sh 3 13 d10_30
 	${srcdir}/samples.sh 24 14 mpeg2lg_422p_hl_1080i
 	${srcdir}/samples.sh 24 15 mpeg2lg_mp_h14_1080i
 	${srcdir}/samples.sh 24 16 mpeg2lg_mp_hl_1920_1080i
-	${srcdir}/samples.sh 24 17 unc
-	${srcdir}/samples.sh 24 18 unc_1080i
-	${srcdir}/samples.sh 24 19 unc_1080p
-	${srcdir}/samples.sh 24 20 unc_720p
+	${srcdir}/samples.sh 3 17 unc
+	${srcdir}/samples.sh 3 18 unc_1080i
+	${srcdir}/samples.sh 3 19 unc_1080p
+	${srcdir}/samples.sh 3 20 unc_720p
 
 

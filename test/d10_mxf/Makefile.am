@@ -29,20 +29,20 @@ EXTRA_DIST = \
 
 .PHONY: create-data
 create-data:
-	${srcdir}/create.sh ${srcdir} 24 11 d10_50 25
-	${srcdir}/create.sh ${srcdir} 24 12 d10_40 25
-	${srcdir}/create.sh ${srcdir} 24 13 d10_30 25
-	${srcdir}/create.sh ${srcdir} 24 11 d10_50 2997
-	${srcdir}/create.sh ${srcdir} 24 12 d10_40 2997
-	${srcdir}/create.sh ${srcdir} 24 13 d10_30 2997
+	${srcdir}/create.sh ${srcdir} 3 11 d10_50 25
+	${srcdir}/create.sh ${srcdir} 3 12 d10_40 25
+	${srcdir}/create.sh ${srcdir} 3 13 d10_30 25
+	${srcdir}/create.sh ${srcdir} 3 11 d10_50 2997
+	${srcdir}/create.sh ${srcdir} 3 12 d10_40 2997
+	${srcdir}/create.sh ${srcdir} 3 13 d10_30 2997
 
 
 .PHONY: create-samples
 create-samples:
-	${srcdir}/samples.sh 24 11 d10_50 25
-	${srcdir}/samples.sh 24 12 d10_40 25
-	${srcdir}/samples.sh 24 13 d10_30 25
-	${srcdir}/samples.sh 24 11 d10_50 2997
-	${srcdir}/samples.sh 24 12 d10_40 2997
-	${srcdir}/samples.sh 24 13 d10_30 2997
+	${srcdir}/samples.sh 3 11 d10_50 25
+	${srcdir}/samples.sh 3 12 d10_40 25
+	${srcdir}/samples.sh 3 13 d10_30 25
+	${srcdir}/samples.sh 3 11 d10_50 2997
+	${srcdir}/samples.sh 3 12 d10_40 2997
+	${srcdir}/samples.sh 3 13 d10_30 2997
 
