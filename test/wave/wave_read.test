@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${srcdir}/check_read.sh wave_read
+${srcdir}/check_read.sh 25 wave_read
 

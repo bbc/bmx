@@ -16,11 +16,11 @@ EXTRA_DIST = \
 
 .PHONY: create-data
 create-data:
-	${srcdir}/create_write.sh ${srcdir} wave_write
-	${srcdir}/create_read.sh ${srcdir} wave_read
+	${srcdir}/create_write.sh ${srcdir} 25 wave_write
+	${srcdir}/create_read.sh ${srcdir} 25 wave_read
 
 
 .PHONY: create-samples
 create-samples:
-	${srcdir}/samples.sh ${srcdir} wave
+	${srcdir}/samples.sh 25 wave
 

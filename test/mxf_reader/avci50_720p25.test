@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${srcdir}/check.sh 30 avci50_720p 25
+${srcdir}/check.sh 24 30 avci50_720p 25
 

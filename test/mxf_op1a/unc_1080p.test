@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${srcdir}/check.sh 19 unc_1080p
+${srcdir}/check.sh 24 19 unc_1080p
 

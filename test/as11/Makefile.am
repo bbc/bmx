@@ -18,12 +18,12 @@ EXTRA_DIST = \
 
 .PHONY: create-data
 create-data:
-	${srcdir}/create.sh ${srcdir} 7 avci100_1080i
-	${srcdir}/create.sh ${srcdir} 11 d10_50
+	${srcdir}/create.sh ${srcdir} 24 7 avci100_1080i
+	${srcdir}/create.sh ${srcdir} 24 11 d10_50
 
 
 .PHONY: create-samples
 create-samples:
-	${srcdir}/samples.sh ${srcdir} 7 avci100_1080i
-	${srcdir}/samples.sh ${srcdir} 11 d10_50
+	${srcdir}/samples.sh ${srcdir} 24 7 avci100_1080i
+	${srcdir}/samples.sh ${srcdir} 24 11 d10_50
 

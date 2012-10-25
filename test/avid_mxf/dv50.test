@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${srcdir}/check.sh 4 dv50
+${srcdir}/check.sh 24 4 dv50
 

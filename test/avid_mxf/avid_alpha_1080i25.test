@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${srcdir}/check.sh 41 avid_alpha_1080i 25
+${srcdir}/check.sh 24 41 avid_alpha_1080i 25
 

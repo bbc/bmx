@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${srcdir}/check.sh 12 d10_40
+${srcdir}/check.sh 24 12 d10_40
 
