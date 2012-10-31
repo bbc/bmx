@@ -294,9 +294,9 @@ void WaveReader::ReadChunks(bool is_rf64, uint32_t riff_size)
             mInput->Skip(4);
             have_ds64 = true;
         } else if (tag_equals(tag, "fmt ")) {
-            BMX_CHECK(size == 16);
+            BMX_CHECK(size >= 16);
             uint16_t format_category = mInput->ReadUInt16();
-            if (format_category != 1) { // PCM
+            if (!(format_category == 1 || format_category == 0xFFFE)) { // PCM
                 log_error("Unsupported non-PCM Wave format category 0x%04x\n", format_category);
                 throw false;
             }
@@ -308,6 +308,8 @@ void WaveReader::ReadChunks(bool is_rf64, uint32_t riff_size)
             mChannelBlockAlign = mBlockAlign / mChannelCount;
             mQuantizationBits = mInput->ReadUInt16();
             BMX_CHECK((mQuantizationBits + 7) / 8 * mChannelCount == mBlockAlign);
+            if (size > 16)
+                mInput->Skip(size - 16);
             have_fmt = true;
         } else if (tag_equals(tag, "fact")) {
             BMX_CHECK(size == 4);
