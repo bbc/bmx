@@ -50,9 +50,6 @@
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as02/AS02PictureTrack.h>
-#include <bmx/as02/AS02PCMTrack.h>
-#include <bmx/avid_mxf/AvidPCMTrack.h>
-#include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/URI.h>
 #include <bmx/MXFUtils.h>
@@ -285,6 +282,8 @@ static bool parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type
         *clip_type = CW_AVID_CLIP_TYPE;
     else if (strcmp(clip_type_str, "d10") == 0)
         *clip_type = CW_D10_CLIP_TYPE;
+    else if (strcmp(clip_type_str, "rdd9") == 0)
+        *clip_type = CW_RDD9_CLIP_TYPE;
     else if (strcmp(clip_type_str, "wave") == 0)
         *clip_type = CW_WAVE_CLIP_TYPE;
     else
@@ -313,9 +312,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -v | --version          Print version info\n");
     fprintf(stderr, "  -p                      Print progress percentage to stdout\n");
     fprintf(stderr, "  -l <file>               Log filename. Default log to stderr/stdout\n");
-    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, wave. Default is as02\n");
+    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, rdd9, wave. Default is as02\n");
     fprintf(stderr, "* -o <name>               as02: <name> is a bundle name\n");
-    fprintf(stderr, "                          as11op1a/as11d10/op1a/d10/wave: <name> is a filename\n");
+    fprintf(stderr, "                          as11op1a/as11d10/op1a/d10/rdd9/wave: <name> is a filename\n");
     fprintf(stderr, "                          avid: <name> is a filename prefix\n");
     fprintf(stderr, "  --input-file-md5        Calculate an MD5 checksum of the input file\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Override input start timecode. Is drop frame when c is not ':'. Default 00:00:00:00\n");
@@ -360,7 +359,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --shim-id <id>          Set ShimID element value in shim.xml file to <id>. Default is '%s'\n", DEFAULT_SHIM_ID);
     fprintf(stderr, "    --shim-annot <str>      Set AnnotationText element value in shim.xml file to <str>. Default is '%s'\n", DEFAULT_SHIM_ANNOTATION);
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as02/as11op1a/op1a:\n");
+    fprintf(stderr, "  as02/as11op1a/op1a/rdd9:\n");
     fprintf(stderr, "    --part <interval>       Video essence partition interval in frames in input edit rate units, or seconds with 's' suffix. Default single partition\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/as11d10:\n");
@@ -368,10 +367,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --dm-file <fwork> <name>       Parse and set descriptive framework properties from text file <name>. <fwork> is 'as11' or 'dpp'\n");
     fprintf(stderr, "    --seg <name>                   Parse and set segmentation data from text file <name>\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as02/as11op1a/as11d10/op1a/d10:\n");
+    fprintf(stderr, "  as02/as11op1a/as11d10/op1a/d10/rdd9:\n");
     fprintf(stderr, "    --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default is input file's value or not set\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/as11d10/op1a/d10:\n");
+    fprintf(stderr, "  as11op1a/as11d10/op1a/d10/rdd9:\n");
     fprintf(stderr, "    --single-pass           Write file in a single pass\n");
     fprintf(stderr, "                            Header and body partitions will be incomplete for as11op1a/op1a if the number if essence container bytes per edit unit is variable\n");
     fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the output file. This requires writing in a single pass (--single-pass is assumed)\n");
@@ -434,6 +433,7 @@ int main(int argc, const char** argv)
     MICScope ess_component_mic_scope = ESSENCE_ONLY_MIC_SCOPE;
     const char *partition_interval_str = 0;
     int64_t partition_interval = 0;
+    bool partition_interval_set = false;
     const char *shim_name = 0;
     const char *shim_id = 0;
     const char *shim_annot = 0;
@@ -1460,12 +1460,14 @@ int main(int argc, const char** argv)
             throw false;
         }
 
-        if (partition_interval_str &&
-            !parse_partition_interval(partition_interval_str, frame_rate, &partition_interval))
-        {
-            usage(argv[0]);
-            log_error("Invalid value '%s' for option '--part'\n", partition_interval_str);
-            throw false;
+        if (partition_interval_str) {
+            if (!parse_partition_interval(partition_interval_str, frame_rate, &partition_interval))
+            {
+                usage(argv[0]);
+                log_error("Invalid value '%s' for option '--part'\n", partition_interval_str);
+                throw false;
+            }
+            partition_interval_set = true;
         }
 
         if (segmentation_filename &&
@@ -1507,6 +1509,12 @@ int main(int argc, const char** argv)
                 flavour |= D10_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
                 flavour |= D10_SINGLE_PASS_WRITE_FLAVOUR;
+        } else if (clip_type == CW_RDD9_CLIP_TYPE) {
+            flavour = RDD9_DEFAULT_FLAVOUR;
+            if (output_file_md5)
+                flavour |= RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR;
+            else if (single_pass)
+                flavour |= RDD9_SINGLE_PASS_WRITE_FLAVOUR;
         }
         ClipWriter *clip = 0;
         Rational clip_frame_rate = (is_sound_frame_rate ? timecode_rate : frame_rate);
@@ -1529,6 +1537,9 @@ int main(int argc, const char** argv)
                 break;
             case CW_D10_CLIP_TYPE:
                 clip = ClipWriter::OpenNewD10Clip(flavour, file_factory.OpenNew(output_name), clip_frame_rate);
+                break;
+            case CW_RDD9_CLIP_TYPE:
+                clip = ClipWriter::OpenNewRDD9Clip(flavour, file_factory.OpenNew(output_name), clip_frame_rate);
                 break;
             case CW_WAVE_CLIP_TYPE:
                 clip = ClipWriter::OpenNewWaveClip(WaveFileIO::OpenNew(output_name));
@@ -1570,7 +1581,8 @@ int main(int argc, const char** argv)
             AS11Clip *as11_clip = clip->GetAS11Clip();
 
             if (clip_type == CW_AS11_OP1A_CLIP_TYPE) {
-                as11_clip->SetPartitionInterval(partition_interval);
+                if (partition_interval_set)
+                    as11_clip->SetPartitionInterval(partition_interval);
                 as11_clip->SetOutputStartOffset(- precharge);
                 as11_clip->SetOutputEndOffset(- rollout);
             }
@@ -1595,7 +1607,8 @@ int main(int argc, const char** argv)
                 op1a_clip->SetInputDuration(reader->GetReadDuration());
 
             op1a_clip->SetClipWrapped(clip_wrap);
-            op1a_clip->SetPartitionInterval(partition_interval);
+            if (partition_interval_set)
+                op1a_clip->SetPartitionInterval(partition_interval);
             op1a_clip->SetOutputStartOffset(- precharge);
             op1a_clip->SetOutputEndOffset(- rollout);
         } else if (clip_type == CW_AVID_CLIP_TYPE) {
@@ -1672,6 +1685,13 @@ int main(int argc, const char** argv)
 
             if (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR)
                 d10_clip->SetInputDuration(reader->GetReadDuration());
+        } else if (clip_type == CW_RDD9_CLIP_TYPE) {
+            RDD9File *rdd9_clip = clip->GetRDD9Clip();
+
+            if (partition_interval_set)
+                rdd9_clip->SetPartitionInterval(partition_interval);
+            rdd9_clip->SetOutputStartOffset(- precharge);
+            rdd9_clip->SetOutputEndOffset(- rollout);
         } else if (clip_type == CW_WAVE_CLIP_TYPE) {
             WaveWriter *wave_clip = clip->GetWaveClip();
 
@@ -1749,9 +1769,11 @@ int main(int argc, const char** argv)
                     as02_track->SetMICType(mic_type);
                     as02_track->SetMICScope(ess_component_mic_scope);
 
-                    AS02PictureTrack *as02_pict_track = dynamic_cast<AS02PictureTrack*>(as02_track);
-                    if (as02_pict_track)
-                        as02_pict_track->SetPartitionInterval(partition_interval);
+                    if (partition_interval_set) {
+                        AS02PictureTrack *as02_pict_track = dynamic_cast<AS02PictureTrack*>(as02_track);
+                        if (as02_pict_track)
+                            as02_pict_track->SetPartitionInterval(partition_interval);
+                    }
                 } else if (clip_type == CW_AVID_CLIP_TYPE) {
                     AvidTrack *avid_track = output_track.track->GetAvidTrack();
 
@@ -2164,6 +2186,10 @@ int main(int argc, const char** argv)
                     d10_clip = as11_clip->GetD10Clip();
 
                 log_info("Output file MD5: %s\n", d10_clip->GetMD5DigestStr().c_str());
+            } else if (clip_type == CW_RDD9_CLIP_TYPE) {
+                RDD9File *rdd9_clip = clip->GetRDD9Clip();
+
+                log_info("Output file MD5: %s\n", rdd9_clip->GetMD5DigestStr().c_str());
             }
         }
 

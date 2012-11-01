@@ -671,6 +671,34 @@
 				</File>
 			</Filter>
 			<Filter
+				Name="rdd9_mxf"
+				>
+				<File
+					RelativePath="..\..\..\include\bmx\rdd9_mxf\RDD9ContentPackage.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\rdd9_mxf\RDD9File.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\rdd9_mxf\RDD9IndexTable.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\rdd9_mxf\RDD9MPEG2LGTrack.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\rdd9_mxf\RDD9PCMTrack.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\rdd9_mxf\RDD9Track.h"
+					>
+				</File>
+			</Filter>
+			<Filter
 				Name="wave"
 				>
 				<File
@@ -1213,6 +1241,34 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\mxf_reader\MXFTrackInfo.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="rdd9_mxf"
+				>
+				<File
+					RelativePath="..\..\..\src\rdd9_mxf\RDD9ContentPackage.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\rdd9_mxf\RDD9File.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\rdd9_mxf\RDD9IndexTable.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\rdd9_mxf\RDD9MPEG2LGTrack.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\rdd9_mxf\RDD9PCMTrack.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\rdd9_mxf\RDD9Track.cpp"
 					>
 				</File>
 			</Filter>

@@ -56,6 +56,7 @@ static const ClipWriterTypeStringMap CLIP_WRITER_TYPE_STRING_MAP[] =
     {CW_OP1A_CLIP_TYPE,      "MXF OP-1A"},
     {CW_AVID_CLIP_TYPE,      "Avid MXF"},
     {CW_D10_CLIP_TYPE,       "D-10 MXF"},
+    {CW_RDD9_CLIP_TYPE,      "RDD9 MXF"},
     {CW_WAVE_CLIP_TYPE,      "Wave"},
 };
 
@@ -94,6 +95,11 @@ ClipWriter* ClipWriter::OpenNewD10Clip(int flavour, File *file, Rational frame_r
     return new ClipWriter(new D10File(flavour, file, frame_rate));
 }
 
+ClipWriter* ClipWriter::OpenNewRDD9Clip(int flavour, File *file, Rational frame_rate)
+{
+    return new ClipWriter(new RDD9File(flavour, file, frame_rate));
+}
+
 ClipWriter* ClipWriter::OpenNewWaveClip(WaveIO *file)
 {
     return new ClipWriter(new WaveWriter(file, true));
@@ -120,6 +126,7 @@ ClipWriter::ClipWriter(AS02Bundle *bundle, AS02Clip *clip)
     mOP1AClip = 0;
     mAvidClip = 0;
     mD10Clip = 0;
+    mRDD9Clip = 0;
     mWaveClip = 0;
 }
 
@@ -135,6 +142,7 @@ ClipWriter::ClipWriter(AS11Clip *clip)
     mOP1AClip = 0;
     mAvidClip = 0;
     mD10Clip = 0;
+    mRDD9Clip = 0;
     mWaveClip = 0;
 }
 
@@ -147,6 +155,7 @@ ClipWriter::ClipWriter(OP1AFile *clip)
     mOP1AClip = clip;
     mAvidClip = 0;
     mD10Clip = 0;
+    mRDD9Clip = 0;
     mWaveClip = 0;
 }
 
@@ -159,6 +168,7 @@ ClipWriter::ClipWriter(AvidClip *clip)
     mOP1AClip = 0;
     mAvidClip = clip;
     mD10Clip = 0;
+    mRDD9Clip = 0;
     mWaveClip = 0;
 }
 
@@ -171,6 +181,20 @@ ClipWriter::ClipWriter(D10File *clip)
     mOP1AClip = 0;
     mAvidClip = 0;
     mD10Clip = clip;
+    mRDD9Clip = 0;
+    mWaveClip = 0;
+}
+
+ClipWriter::ClipWriter(RDD9File *clip)
+{
+    mType = CW_RDD9_CLIP_TYPE;
+    mAS02Bundle = 0;
+    mAS02Clip = 0;
+    mAS11Clip = 0;
+    mOP1AClip = 0;
+    mAvidClip = 0;
+    mD10Clip = 0;
+    mRDD9Clip = clip;
     mWaveClip = 0;
 }
 
@@ -183,6 +207,7 @@ ClipWriter::ClipWriter(WaveWriter *clip)
     mOP1AClip = 0;
     mAvidClip = 0;
     mD10Clip = 0;
+    mRDD9Clip = 0;
     mWaveClip = clip;
 }
 
@@ -194,6 +219,7 @@ ClipWriter::~ClipWriter()
     delete mOP1AClip;
     delete mAvidClip;
     delete mD10Clip;
+    delete mRDD9Clip;
     delete mWaveClip;
 
     size_t i;
@@ -220,6 +246,9 @@ void ClipWriter::SetClipName(string name)
             break;
         case CW_D10_CLIP_TYPE:
             mD10Clip->SetClipName(name);
+            break;
+        case CW_RDD9_CLIP_TYPE:
+            mRDD9Clip->SetClipName(name);
             break;
         case CW_WAVE_CLIP_TYPE:
             break;
@@ -248,6 +277,9 @@ void ClipWriter::SetStartTimecode(Timecode start_timecode)
             break;
         case CW_D10_CLIP_TYPE:
             mD10Clip->SetStartTimecode(start_timecode);
+            break;
+        case CW_RDD9_CLIP_TYPE:
+            mRDD9Clip->SetStartTimecode(start_timecode);
             break;
         case CW_WAVE_CLIP_TYPE:
             mWaveClip->SetStartTimecode(start_timecode);
@@ -278,6 +310,9 @@ void ClipWriter::SetProductInfo(string company_name, string product_name, mxfPro
             break;
         case CW_D10_CLIP_TYPE:
             mD10Clip->SetProductInfo(company_name, product_name, product_version, version, product_uid);
+            break;
+        case CW_RDD9_CLIP_TYPE:
+            mRDD9Clip->SetProductInfo(company_name, product_name, product_version, version, product_uid);
             break;
         case CW_WAVE_CLIP_TYPE:
             break;
@@ -311,6 +346,9 @@ ClipWriterTrack* ClipWriter::CreateTrack(EssenceType essence_type, string track_
         case CW_D10_CLIP_TYPE:
             track = new ClipWriterTrack(essence_type, mD10Clip->CreateTrack(essence_type));
             break;
+        case CW_RDD9_CLIP_TYPE:
+            track = new ClipWriterTrack(essence_type, mRDD9Clip->CreateTrack(essence_type));
+            break;
         case CW_WAVE_CLIP_TYPE:
             BMX_CHECK(essence_type == WAVE_PCM);
             track = new ClipWriterTrack(essence_type, mWaveClip->CreateTrack());
@@ -343,6 +381,9 @@ void ClipWriter::PrepareWrite()
             break;
         case CW_D10_CLIP_TYPE:
             mD10Clip->PrepareWrite();
+            break;
+        case CW_RDD9_CLIP_TYPE:
+            mRDD9Clip->PrepareWrite();
             break;
         case CW_WAVE_CLIP_TYPE:
             mWaveClip->PrepareWrite();
@@ -380,6 +421,9 @@ void ClipWriter::CompleteWrite()
         case CW_D10_CLIP_TYPE:
             mD10Clip->CompleteWrite();
             break;
+        case CW_RDD9_CLIP_TYPE:
+            mRDD9Clip->CompleteWrite();
+            break;
         case CW_WAVE_CLIP_TYPE:
             mWaveClip->CompleteWrite();
             break;
@@ -404,6 +448,8 @@ Rational ClipWriter::GetFrameRate() const
             return mAvidClip->GetFrameRate();
         case CW_D10_CLIP_TYPE:
             return mD10Clip->GetFrameRate();
+        case CW_RDD9_CLIP_TYPE:
+            return mRDD9Clip->GetFrameRate();
         case CW_WAVE_CLIP_TYPE:
             return mWaveClip->GetSamplingRate();
         case CW_UNKNOWN_CLIP_TYPE:
@@ -429,6 +475,8 @@ int64_t ClipWriter::GetDuration() const
             return mAvidClip->GetDuration();
         case CW_D10_CLIP_TYPE:
             return mD10Clip->GetDuration();
+        case CW_RDD9_CLIP_TYPE:
+            return mRDD9Clip->GetDuration();
         case CW_WAVE_CLIP_TYPE:
             return mWaveClip->GetDuration();
         case CW_UNKNOWN_CLIP_TYPE:

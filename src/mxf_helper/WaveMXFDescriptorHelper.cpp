@@ -91,6 +91,7 @@ WaveMXFDescriptorHelper::WaveMXFDescriptorHelper()
 {
     mEssenceType = WAVE_PCM;
     mSequenceOffset = 0;
+    mUseAES3AudioDescriptor = false;
 }
 
 WaveMXFDescriptorHelper::~WaveMXFDescriptorHelper()
@@ -118,14 +119,31 @@ void WaveMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16
 
 void WaveMXFDescriptorHelper::SetSequenceOffset(uint8_t offset)
 {
-    BMX_ASSERT(!mFileDescriptor);
-
     mSequenceOffset = offset;
+
+    if (mFileDescriptor) {
+        WaveAudioDescriptor *wav_descriptor = dynamic_cast<WaveAudioDescriptor*>(mFileDescriptor);
+        BMX_ASSERT(wav_descriptor);
+        if ((!wav_descriptor->haveSequenceOffset() && mSequenceOffset != 0) ||
+            ( wav_descriptor->haveSequenceOffset() && mSequenceOffset != wav_descriptor->getSequenceOffset()))
+        {
+            wav_descriptor->setSequenceOffset(mSequenceOffset);
+        }
+    }
+}
+
+void WaveMXFDescriptorHelper::SetUseAES3AudioDescriptor(bool enable)
+{
+    BMX_ASSERT(!mFileDescriptor);
+    mUseAES3AudioDescriptor = enable;
 }
 
 FileDescriptor* WaveMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata)
 {
-    mFileDescriptor = new WaveAudioDescriptor(header_metadata);
+    if (mUseAES3AudioDescriptor)
+        mFileDescriptor = new AES3AudioDescriptor(header_metadata);
+    else
+        mFileDescriptor = new WaveAudioDescriptor(header_metadata);
     UpdateFileDescriptor();
     return mFileDescriptor;
 }
@@ -151,9 +169,16 @@ uint32_t WaveMXFDescriptorHelper::GetSampleSize()
 
 mxfUL WaveMXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
-    if (mFrameWrapped)
-        return MXF_EC_L(BWFFrameWrapped);
-    else
-        return MXF_EC_L(BWFClipWrapped);
+    if (mUseAES3AudioDescriptor) {
+        if (mFrameWrapped)
+            return MXF_EC_L(AES3FrameWrapped);
+        else
+            return MXF_EC_L(AES3ClipWrapped);
+    } else {
+        if (mFrameWrapped)
+            return MXF_EC_L(BWFFrameWrapped);
+        else
+            return MXF_EC_L(BWFClipWrapped);
+    }
 }
 

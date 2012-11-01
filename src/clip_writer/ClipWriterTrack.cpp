@@ -57,6 +57,8 @@
 #include <bmx/avid_mxf/AvidPCMTrack.h>
 #include <bmx/d10_mxf/D10MPEGTrack.h>
 #include <bmx/d10_mxf/D10PCMTrack.h>
+#include <bmx/rdd9_mxf/RDD9MPEG2LGTrack.h>
+#include <bmx/rdd9_mxf/RDD9PCMTrack.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -83,6 +85,8 @@ bool ClipWriterTrack::IsSupported(ClipWriterType clip_type, EssenceType essence_
             return AvidTrack::IsSupported(essence_type, sample_rate);
         case CW_D10_CLIP_TYPE:
             return D10Track::IsSupported(essence_type, sample_rate);
+        case CW_RDD9_CLIP_TYPE:
+            return RDD9Track::IsSupported(essence_type, sample_rate);
         case CW_WAVE_CLIP_TYPE:
             return essence_type == WAVE_PCM;
         case CW_UNKNOWN_CLIP_TYPE:
@@ -101,6 +105,7 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AS02Track *track)
     mOP1ATrack = 0;
     mAvidTrack = 0;
     mD10Track = 0;
+    mRDD9Track = 0;
     mWaveTrack = 0;
 }
 
@@ -116,6 +121,7 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AS11Track *track)
     mOP1ATrack = 0;
     mAvidTrack = 0;
     mD10Track = 0;
+    mRDD9Track = 0;
     mWaveTrack = 0;
 }
 
@@ -128,6 +134,7 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, OP1ATrack *track)
     mOP1ATrack = track;
     mAvidTrack = 0;
     mD10Track = 0;
+    mRDD9Track = 0;
     mWaveTrack = 0;
 }
 
@@ -140,6 +147,7 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AvidTrack *track)
     mOP1ATrack = 0;
     mAvidTrack = track;
     mD10Track = 0;
+    mRDD9Track = 0;
     mWaveTrack = 0;
 }
 
@@ -152,6 +160,20 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, D10Track *track)
     mOP1ATrack = 0;
     mAvidTrack = 0;
     mD10Track = track;
+    mRDD9Track = 0;
+    mWaveTrack = 0;
+}
+
+ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, RDD9Track *track)
+{
+    mClipType = CW_RDD9_CLIP_TYPE;
+    mEssenceType = essence_type;
+    mAS02Track = 0;
+    mAS11Track = 0;
+    mOP1ATrack = 0;
+    mAvidTrack = 0;
+    mD10Track = 0;
+    mRDD9Track = track;
     mWaveTrack = 0;
 }
 
@@ -164,6 +186,7 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, WaveTrackWriter *trac
     mOP1ATrack = 0;
     mAvidTrack = 0;
     mD10Track = 0;
+    mRDD9Track = 0;
     mWaveTrack = track;
 }
 
@@ -190,6 +213,9 @@ void ClipWriterTrack::SetOutputTrackNumber(uint32_t track_number)
             break;
         case CW_D10_CLIP_TYPE:
             mD10Track->SetOutputTrackNumber(track_number);
+            break;
+        case CW_RDD9_CLIP_TYPE:
+            mRDD9Track->SetOutputTrackNumber(track_number);
             break;
         case CW_WAVE_CLIP_TYPE:
             // TODO
@@ -234,6 +260,13 @@ void ClipWriterTrack::SetAspectRatio(Rational aspect_ratio)
         case CW_D10_CLIP_TYPE:
         {
             D10MPEGTrack *mpeg_track = dynamic_cast<D10MPEGTrack*>(mD10Track);
+            if (mpeg_track)
+                mpeg_track->SetAspectRatio(aspect_ratio);
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9MPEG2LGTrack *mpeg_track = dynamic_cast<RDD9MPEG2LGTrack*>(mRDD9Track);
             if (mpeg_track)
                 mpeg_track->SetAspectRatio(aspect_ratio);
             break;
@@ -284,6 +317,7 @@ void ClipWriterTrack::SetComponentDepth(uint32_t depth)
             break;
         }
         case CW_D10_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
         case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
@@ -387,6 +421,7 @@ void ClipWriterTrack::SetAVCIMode(AVCIMode mode)
             break;
         }
         case CW_D10_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
         case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
@@ -427,6 +462,7 @@ void ClipWriterTrack::SetAVCIHeader(const unsigned char *data, uint32_t size)
             break;
         }
         case CW_D10_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
         case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
@@ -468,6 +504,13 @@ void ClipWriterTrack::SetAFD(uint8_t afd)
                 mpeg_track->SetAFD(afd);
             break;
         }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9MPEG2LGTrack *mpeg_track = dynamic_cast<RDD9MPEG2LGTrack*>(mRDD9Track);
+            if (mpeg_track)
+                mpeg_track->SetAFD(afd);
+            break;
+        }
         case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
@@ -485,6 +528,7 @@ void ClipWriterTrack::SetInputHeight(uint32_t height)
         case CW_AS11_D10_CLIP_TYPE:
         case CW_OP1A_CLIP_TYPE:
         case CW_D10_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
             break;
         case CW_AVID_CLIP_TYPE:
         {
@@ -542,6 +586,13 @@ void ClipWriterTrack::SetSamplingRate(Rational sampling_rate)
                 pcm_track->SetSamplingRate(sampling_rate);
             break;
         }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
+            if (pcm_track)
+                pcm_track->SetSamplingRate(sampling_rate);
+            break;
+        }
         case CW_WAVE_CLIP_TYPE:
             mWaveTrack->SetSamplingRate(sampling_rate);
             break;
@@ -585,6 +636,13 @@ void ClipWriterTrack::SetQuantizationBits(uint32_t bits)
         case CW_D10_CLIP_TYPE:
         {
             D10PCMTrack *pcm_track = dynamic_cast<D10PCMTrack*>(mD10Track);
+            if (pcm_track)
+                pcm_track->SetQuantizationBits(bits);
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
             if (pcm_track)
                 pcm_track->SetQuantizationBits(bits);
             break;
@@ -636,6 +694,13 @@ void ClipWriterTrack::SetChannelCount(uint32_t count)
                 pcm_track->SetChannelCount(count);
             break;
         }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
+            if (pcm_track)
+                pcm_track->SetChannelCount(count);
+            break;
+        }
         case CW_WAVE_CLIP_TYPE:
             mWaveTrack->SetChannelCount(count);
             break;
@@ -679,6 +744,13 @@ void ClipWriterTrack::SetLocked(bool locked)
         case CW_D10_CLIP_TYPE:
         {
             D10PCMTrack *pcm_track = dynamic_cast<D10PCMTrack*>(mD10Track);
+            if (pcm_track)
+                pcm_track->SetLocked(locked);
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
             if (pcm_track)
                 pcm_track->SetLocked(locked);
             break;
@@ -729,6 +801,13 @@ void ClipWriterTrack::SetAudioRefLevel(int8_t level)
                 pcm_track->SetAudioRefLevel(level);
             break;
         }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
+            if (pcm_track)
+                pcm_track->SetAudioRefLevel(level);
+            break;
+        }
         case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
@@ -771,6 +850,13 @@ void ClipWriterTrack::SetDialNorm(int8_t dial_norm)
         case CW_D10_CLIP_TYPE:
         {
             D10PCMTrack *pcm_track = dynamic_cast<D10PCMTrack*>(mD10Track);
+            if (pcm_track)
+                pcm_track->SetDialNorm(dial_norm);
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
             if (pcm_track)
                 pcm_track->SetDialNorm(dial_norm);
             break;
@@ -818,6 +904,13 @@ void ClipWriterTrack::SetSequenceOffset(uint8_t offset)
                 pcm_track->SetSequenceOffset(offset);
             break;
         }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
+            if (pcm_track)
+                pcm_track->SetSequenceOffset(offset);
+            break;
+        }
         case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
@@ -846,6 +939,9 @@ void ClipWriterTrack::WriteSamples(const unsigned char *data, uint32_t size, uin
         case CW_D10_CLIP_TYPE:
             mD10Track->WriteSamples(data, size, num_samples);
             break;
+        case CW_RDD9_CLIP_TYPE:
+            mRDD9Track->WriteSamples(data, size, num_samples);
+            break;
         case CW_WAVE_CLIP_TYPE:
             mWaveTrack->WriteSamples(data, size, num_samples);
             break;
@@ -870,6 +966,8 @@ bool ClipWriterTrack::IsPicture() const
             return mAvidTrack->IsPicture();
         case CW_D10_CLIP_TYPE:
             return mD10Track->IsPicture();
+        case CW_RDD9_CLIP_TYPE:
+            return mRDD9Track->IsPicture();
         case CW_WAVE_CLIP_TYPE:
             return false;
         case CW_UNKNOWN_CLIP_TYPE:
@@ -895,6 +993,8 @@ uint32_t ClipWriterTrack::GetSampleSize() const
             return mAvidTrack->GetSampleSize();
         case CW_D10_CLIP_TYPE:
             return mD10Track->GetSampleSize();
+        case CW_RDD9_CLIP_TYPE:
+            return mRDD9Track->GetSampleSize();
         case CW_WAVE_CLIP_TYPE:
             return mWaveTrack->GetSampleSize();
         case CW_UNKNOWN_CLIP_TYPE:
@@ -954,6 +1054,7 @@ uint32_t ClipWriterTrack::GetAVCISampleWithoutHeaderSize() const
             break;
         }
         case CW_D10_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
         case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
@@ -973,6 +1074,7 @@ bool ClipWriterTrack::IsSingleField() const
         case CW_AS11_D10_CLIP_TYPE:
         case CW_OP1A_CLIP_TYPE:
         case CW_D10_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
             break;
         case CW_AVID_CLIP_TYPE:
         {
@@ -1026,6 +1128,13 @@ vector<uint32_t> ClipWriterTrack::GetShiftedSampleSequence() const
                 return pcm_track->GetShiftedSampleSequence();
             break;
         }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
+            if (pcm_track)
+                return pcm_track->GetShiftedSampleSequence();
+            break;
+        }
         case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
@@ -1051,6 +1160,8 @@ int64_t ClipWriterTrack::GetDuration() const
             return mAvidTrack->GetDuration();
         case CW_D10_CLIP_TYPE:
             return mD10Track->GetDuration();
+        case CW_RDD9_CLIP_TYPE:
+            return mRDD9Track->GetDuration();
         case CW_WAVE_CLIP_TYPE:
             return mWaveTrack->GetDuration();
         case CW_UNKNOWN_CLIP_TYPE:
@@ -1076,6 +1187,8 @@ int64_t ClipWriterTrack::GetContainerDuration() const
             return mAvidTrack->GetContainerDuration();
         case CW_D10_CLIP_TYPE:
             return mD10Track->GetDuration();
+        case CW_RDD9_CLIP_TYPE:
+            return mRDD9Track->GetContainerDuration();
         case CW_WAVE_CLIP_TYPE:
             return mWaveTrack->GetDuration();
         case CW_UNKNOWN_CLIP_TYPE:

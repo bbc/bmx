@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2012, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,11 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_WAVE_MXF_DESCRIPTOR_HELPER_H_
-#define BMX_WAVE_MXF_DESCRIPTOR_HELPER_H_
+#ifndef BMX_RDD9_PCM_TRACK_H_
+#define BMX_RDD9_PCM_TRACK_H_
 
-
-#include <bmx/mxf_helper/SoundMXFDescriptorHelper.h>
+#include <bmx/rdd9_mxf/RDD9Track.h>
+#include <bmx/mxf_helper/WaveMXFDescriptorHelper.h>
 
 
 
@@ -41,39 +41,36 @@ namespace bmx
 {
 
 
-class WaveMXFDescriptorHelper : public SoundMXFDescriptorHelper
+class RDD9PCMTrack : public RDD9Track
 {
 public:
-    static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
-    static bool IsSupported(EssenceType essence_type);
+    RDD9PCMTrack(RDD9File *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+                 Rational frame_rate, EssenceType essence_type);
+    virtual ~RDD9PCMTrack();
+
+    void SetSamplingRate(Rational sampling_rate);       // default 48000/1
+    void SetQuantizationBits(uint32_t bits);            // default 16
+    void SetChannelCount(uint32_t count);               // default and required 1
+    void SetLocked(bool locked);                        // default not set
+    void SetAudioRefLevel(int8_t level);                // default not set
+    void SetDialNorm(int8_t dial_norm);                 // default not set
+    void SetSequenceOffset(uint8_t offset);             // default not set
 
 public:
-    WaveMXFDescriptorHelper();
-    virtual ~WaveMXFDescriptorHelper();
-
-public:
-    // initialize from existing descriptor
-    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
-
-public:
-    // configure and create new descriptor
-    void SetSequenceOffset(uint8_t offset);         // default not set (0)
-    void SetUseAES3AudioDescriptor(bool enable);    // default Wave audio descriptor
-
-    virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
-    virtual void UpdateFileDescriptor();
+    const std::vector<uint32_t>& GetSampleSequence() const  { return mSampleSequence; }
+    uint8_t GetSequenceOffset() const                       { return mWaveDescriptorHelper->GetSequenceOffset(); }
+    std::vector<uint32_t> GetShiftedSampleSequence() const;
 
 protected:
-    virtual mxfUL ChooseEssenceContainerUL() const;
-
-public:
-    uint8_t GetSequenceOffset() const { return mSequenceOffset; }
-
-    virtual uint32_t GetSampleSize();
+    virtual void PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count);
+    virtual void CompleteWrite();
 
 private:
-    uint8_t mSequenceOffset;
-    bool mUseAES3AudioDescriptor;
+    void SetSampleSequence();
+
+private:
+    WaveMXFDescriptorHelper *mWaveDescriptorHelper;
+    std::vector<uint32_t> mSampleSequence;
 };
 
 

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check.sh 24 14 mpeg2lg_422p_hl_1080i
+

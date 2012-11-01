@@ -1,4 +1,5 @@
-SUBDIRS = . as02 as11 mxf_op1a mxf_reader d10_mxf avid_mxf wave essence_parser growing_file
+SUBDIRS = . as02 as11 mxf_op1a rdd9_mxf d10_mxf avid_mxf mxf_reader \
+	wave essence_parser growing_file
 
 check_PROGRAMS = create_test_essence file_truncate file_md5
 

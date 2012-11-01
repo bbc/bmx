@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2012, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,27 +29,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_OP1A_FILE_H_
-#define BMX_OP1A_FILE_H_
+#ifndef BMX_RDD9_FILE_H_
+#define BMX_RDD9_FILE_H_
 
-#include <vector>
 #include <set>
 #include <map>
+#include <vector>
 
-#include <libMXF++/MXF.h>
-
-#include <bmx/mxf_op1a/OP1ATrack.h>
-#include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
+#include <bmx/rdd9_mxf/RDD9Track.h>
+#include <bmx/rdd9_mxf/RDD9MPEG2LGTrack.h>
+#include <bmx/rdd9_mxf/RDD9PCMTrack.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFUtils.h>
 
 
-#define OP1A_DEFAULT_FLAVOUR                0x0000
-#define OP1A_MIN_PARTITIONS_FLAVOUR         0x0001
-#define OP1A_512_KAG_FLAVOUR                0x0002
-#define OP1A_377_2004_FLAVOUR               0x0004
-#define OP1A_SINGLE_PASS_WRITE_FLAVOUR      0x0008
-#define OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR  0x0018
+#define RDD9_DEFAULT_FLAVOUR                 0x0000
+#define RDD9_SINGLE_PASS_WRITE_FLAVOUR       0x0001
+#define RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR   0x0003
 
 
 
@@ -57,18 +53,19 @@ namespace bmx
 {
 
 
-class OP1AFile
+class RDD9File
 {
 public:
-    friend class OP1ATrack;
-    friend class OP1AMPEG2LGTrack;
+    friend class RDD9Track;
+    friend class RDD9MPEG2LGTrack;
 
 public:
-    OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate);
-    virtual ~OP1AFile();
+    RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate);
+    virtual ~RDD9File();
 
     void SetClipName(std::string name);                                 // default ""
     void SetStartTimecode(Timecode start_timecode);                     // default 00:00:00:00, non-drop frame
+    void SetHaveInputUserTimecode(bool enable);                         // default false (generated)
     void SetProductInfo(std::string company_name, std::string product_name, mxfProductVersion product_version,
                         std::string version, mxfUUID product_uid);
     void SetCreationDate(mxfTimestamp creation_date);                   // default generated ('now')
@@ -76,45 +73,38 @@ public:
     void SetMaterialPackageUID(mxfUMID package_uid);                    // default generated
     void SetFileSourcePackageUID(mxfUMID package_uid);                  // default generated
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);                // default 8192
-    void SetPartitionInterval(int64_t frame_count);                     // default 0 (single partition)
-    void SetInputDuration(int64_t duration);                            // single pass flavours only
-    void SetClipWrapped(bool enable);                                   // default false (frame wrapped)
+    void SetPartitionInterval(int64_t frame_count);                     // default 10sec
 
 public:
     void SetOutputStartOffset(int64_t offset);
     void SetOutputEndOffset(int64_t offset);
 
-    OP1ATrack* CreateTrack(EssenceType essence_type);
+    RDD9Track* CreateTrack(EssenceType essence_type);
 
 public:
     void PrepareHeaderMetadata();
     void PrepareWrite();
+    void WriteUserTimecode(Timecode user_timecode);
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
     void CompleteWrite();
 
 public:
     mxfpp::HeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }
-    mxfpp::DataModel* GetDataModel() const { return mDataModel; }
+    mxfpp::DataModel* GetDataModel() const           { return mDataModel; }
 
-    bool IsFrameWrapped() const { return mFrameWrapped; }
-
-    mxfRational GetFrameRate() const { return mEditRate; }
-
-    Timecode GetStartTimecode() const { return mStartTimecode; }
-
+    Rational GetFrameRate() const       { return mEditRate; }
+    Timecode GetStartTimecode() const   { return mStartTimecode; }
     int64_t GetDuration() const;
     int64_t GetContainerDuration() const;
 
-    int64_t GetInputDuration() const { return mInputDuration; }
-
     uint32_t GetNumTracks() const { return (uint32_t)mTracks.size(); }
-    OP1ATrack* GetTrack(uint32_t track_index);
+    RDD9Track* GetTrack(uint32_t track_index);
 
     std::string GetMD5DigestStr() const { return mMD5DigestStr; }
 
 private:
-    OP1AIndexTable* GetIndexTable() const { return mIndexTable; }
-    OP1AContentPackageManager* GetContentPackageManager() const { return mCPManager; }
+    RDD9IndexTable* GetIndexTable() const                       { return mIndexTable; }
+    RDD9ContentPackageManager* GetContentPackageManager() const { return mCPManager; }
 
     void CreateHeaderMetadata();
     void CreateFile();
@@ -122,17 +112,15 @@ private:
     void UpdatePackageMetadata();
     void UpdateTrackMetadata(mxfpp::GenericPackage *package, int64_t origin, int64_t duration);
 
-    void WriteContentPackages(bool end_of_samples);
-
-    void UpdateFirstPartitions();
+    void WriteContentPackages(bool final_write);
 
 private:
     int mFlavour;
     mxfpp::File *mMXFFile;
 
     std::string mClipName;
-    mxfRational mFrameRate;
-    mxfRational mEditRate;
+    Rational mFrameRate;
+    Rational mEditRate;
     Timecode mStartTimecode;
     std::string mCompanyName;
     std::string mProductName;
@@ -140,45 +128,36 @@ private:
     std::string mVersionString;
     mxfUUID mProductUID;
     uint32_t mReserveMinBytes;
-    int64_t mInputDuration;
     mxfTimestamp mCreationDate;
     mxfUUID mGenerationUID;
     mxfUMID mMaterialPackageUID;
     mxfUMID mFileSourcePackageUID;
-    bool mFrameWrapped;
 
     int64_t mOutputStartOffset;
     int64_t mOutputEndOffset;
-
-    std::vector<OP1ATrack*> mTracks;
-    std::map<uint32_t, OP1ATrack*> mTrackMap;
-    uint8_t mPictureTrackCount;
-    uint8_t mSoundTrackCount;
-
-    mxfpp::DataModel *mDataModel;
-    mxfpp::HeaderMetadata *mHeaderMetadata;
-    int64_t mHeaderMetadataStartPos;
-    int64_t mHeaderMetadataEndPos;
-    int64_t mCBEIndexTableStartPos;
-
-    std::set<mxfUL> mEssenceContainerULs;
-
-    mxfpp::MaterialPackage *mMaterialPackage;
-    mxfpp::SourcePackage *mFileSourcePackage;
-
-    OP1AIndexTable *mIndexTable;
-    OP1AContentPackageManager *mCPManager;
 
     bool mFirstWrite;
 
     int64_t mPartitionInterval;
     int64_t mPartitionFrameCount;
 
-    uint32_t mKAGSize;
-    uint32_t mEssencePartitionKAGSize;
+    std::vector<RDD9Track*> mTracks;
+    RDD9MPEG2LGTrack *mPictureTrack;
+    std::map<uint32_t, RDD9Track*> mTrackMap;
+    uint8_t mPictureTrackCount;
+    uint8_t mSoundTrackCount;
 
-    bool mSupportCompleteSinglePass;
-    int64_t mFooterPartitionOffset;
+    std::set<mxfUL> mEssenceContainerULs;
+
+    mxfpp::DataModel *mDataModel;
+    mxfpp::HeaderMetadata *mHeaderMetadata;
+    int64_t mHeaderMetadataEndPos;
+
+    mxfpp::MaterialPackage *mMaterialPackage;
+    mxfpp::SourcePackage *mFileSourcePackage;
+
+    RDD9IndexTable *mIndexTable;
+    RDD9ContentPackageManager *mCPManager;
 
     MXFMD5WrapperFile *mMXFMD5WrapperFile;
     std::string mMD5DigestStr;

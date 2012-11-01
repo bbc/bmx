@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check.sh 24 16 mpeg2lg_mp_hl_1920_1080i
+

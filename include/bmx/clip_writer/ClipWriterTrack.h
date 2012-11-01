@@ -38,6 +38,7 @@
 #include <bmx/mxf_op1a/OP1ATrack.h>
 #include <bmx/avid_mxf/AvidTrack.h>
 #include <bmx/d10_mxf/D10Track.h>
+#include <bmx/rdd9_mxf/RDD9Track.h>
 #include <bmx/wave/WaveTrackWriter.h>
 
 
@@ -55,6 +56,7 @@ typedef enum
     CW_OP1A_CLIP_TYPE,
     CW_AVID_CLIP_TYPE,
     CW_D10_CLIP_TYPE,
+    CW_RDD9_CLIP_TYPE,
     CW_WAVE_CLIP_TYPE,
 } ClipWriterType;
 
@@ -71,6 +73,7 @@ public:
     ClipWriterTrack(EssenceType essence_type, OP1ATrack *track);
     ClipWriterTrack(EssenceType essence_type, AvidTrack *track);
     ClipWriterTrack(EssenceType essence_type, D10Track *track);
+    ClipWriterTrack(EssenceType essence_type, RDD9Track *track);
     ClipWriterTrack(EssenceType essence_type, WaveTrackWriter *track);
     virtual ~ClipWriterTrack();
 
@@ -120,6 +123,7 @@ public:
     OP1ATrack* GetOP1ATrack()       const { return mOP1ATrack; }
     AvidTrack* GetAvidTrack()       const { return mAvidTrack; }
     D10Track* GetD10Track()         const { return mD10Track; }
+    RDD9Track* GetRDD9Track()       const { return mRDD9Track; }
     WaveTrackWriter* GetWaveTrack() const { return mWaveTrack; }
 
 private:
@@ -130,6 +134,7 @@ private:
     OP1ATrack *mOP1ATrack;
     AvidTrack *mAvidTrack;
     D10Track *mD10Track;
+    RDD9Track *mRDD9Track;
     WaveTrackWriter *mWaveTrack;
 };
 

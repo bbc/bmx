@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2012, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,11 +29,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_WAVE_MXF_DESCRIPTOR_HELPER_H_
-#define BMX_WAVE_MXF_DESCRIPTOR_HELPER_H_
+#ifndef BMX_RDD9_MPEG2LG_TRACK_H_
+#define BMX_RDD9_MPEG2LG_TRACK_H_
 
-
-#include <bmx/mxf_helper/SoundMXFDescriptorHelper.h>
+#include <bmx/rdd9_mxf/RDD9Track.h>
+#include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
+#include <bmx/writer_helper/MPEG2LGWriterHelper.h>
+#include <bmx/ByteArray.h>
 
 
 
@@ -41,39 +43,25 @@ namespace bmx
 {
 
 
-class WaveMXFDescriptorHelper : public SoundMXFDescriptorHelper
+class RDD9MPEG2LGTrack : public RDD9Track
 {
 public:
-    static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
-    static bool IsSupported(EssenceType essence_type);
+    RDD9MPEG2LGTrack(RDD9File *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+                     Rational frame_rate, EssenceType essence_type);
+    virtual ~RDD9MPEG2LGTrack();
 
-public:
-    WaveMXFDescriptorHelper();
-    virtual ~WaveMXFDescriptorHelper();
-
-public:
-    // initialize from existing descriptor
-    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
-
-public:
-    // configure and create new descriptor
-    void SetSequenceOffset(uint8_t offset);         // default not set (0)
-    void SetUseAES3AudioDescriptor(bool enable);    // default Wave audio descriptor
-
-    virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
-    virtual void UpdateFileDescriptor();
+    void SetAspectRatio(Rational aspect_ratio);         // default 16/9
+    void SetPartitionInterval(int64_t frame_count);     // default 0 (single partition)
+    void SetAFD(uint8_t afd);                           // default not set
 
 protected:
-    virtual mxfUL ChooseEssenceContainerUL() const;
-
-public:
-    uint8_t GetSequenceOffset() const { return mSequenceOffset; }
-
-    virtual uint32_t GetSampleSize();
+    virtual void PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count);
+    virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
+    virtual void CompleteWrite();
 
 private:
-    uint8_t mSequenceOffset;
-    bool mUseAES3AudioDescriptor;
+    PictureMXFDescriptorHelper *mPictureDescriptorHelper;
+    MPEG2LGWriterHelper mWriterHelper;
 };
 
 

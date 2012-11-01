@@ -232,6 +232,7 @@ AC_CONFIG_FILES([
 	src/avid_mxf/Makefile
 	src/d10_mxf/Makefile
 	src/as11/Makefile
+	src/rdd9_mxf/Makefile
 	src/wave/Makefile
 	src/clip_writer/Makefile
 	test/Makefile
@@ -241,6 +242,7 @@ AC_CONFIG_FILES([
 	test/avid_mxf/Makefile
 	test/mxf_reader/Makefile
 	test/d10_mxf/Makefile
+	test/rdd9_mxf/Makefile
 	test/wave/Makefile
 	test/essence_parser/Makefile
 	test/growing_file/Makefile
