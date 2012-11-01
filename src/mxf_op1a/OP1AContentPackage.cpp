@@ -113,30 +113,25 @@ OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, mxfK
     first_sample_size = 0;
     nonfirst_sample_size = 0;
 
+    // set the fixed element size
+
     uint32_t max_sample_sequence = 0;
-    uint32_t prev_max_sample_sequence = 0;
+    bool variable_sequence = false;
     size_t i;
     for (i = 0; i < sample_sequence.size(); i++) {
+        if (max_sample_sequence != 0 && sample_sequence[i] != max_sample_sequence)
+            variable_sequence = true;
         if (sample_sequence[i] > max_sample_sequence)
             max_sample_sequence = sample_sequence[i];
-        if (sample_sequence[i] > prev_max_sample_sequence &&
-            sample_sequence[i] < max_sample_sequence)
-        {
-            prev_max_sample_sequence = sample_sequence[i];
-        }
     }
 
     fixed_element_size = GetKAGAlignedSize(mxfKey_extlen + essence_llen + max_sample_sequence * sample_size);
-    if (prev_max_sample_sequence > 0 && prev_max_sample_sequence < max_sample_sequence) {
-        uint32_t prev_max_element_size = GetKAGAlignedSize(mxfKey_extlen + essence_llen +
-                                                            max_sample_sequence * sample_size +
-                                                            mxfKey_extlen + min_llen);
-        if (prev_max_element_size > fixed_element_size) {
-            // max sample sequence element also requires filler
-            fixed_element_size = GetKAGAlignedSize(mxfKey_extlen + essence_llen +
-                                                      max_sample_sequence * sample_size +
-                                                      mxfKey_extlen + min_llen);
-        }
+
+    if (variable_sequence && fixed_element_size == mxfKey_extlen + essence_llen + max_sample_sequence * sample_size) {
+        // allow space to include a KLV fill
+        fixed_element_size = GetKAGAlignedSize(mxfKey_extlen + essence_llen +
+                                               max_sample_sequence * sample_size +
+                                               mxfKey_extlen + min_llen);
     }
 }
 
