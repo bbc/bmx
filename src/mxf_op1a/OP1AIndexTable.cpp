@@ -348,7 +348,7 @@ void OP1AIndexTable::UpdateIndexEntry(uint32_t track_index, int64_t position, in
     BMX_ASSERT(position >= 0);
     BMX_ASSERT(mIndexElementsMap.find(track_index) != mIndexElementsMap.end());
 
-    if (position > mDuration) {
+    if (position >= mDuration) {
         mIndexElementsMap[track_index]->UpdateIndexEntry(position, temporal_offset);
     } else {
         int64_t end_offset = mDuration - position;
