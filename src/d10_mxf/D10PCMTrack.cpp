@@ -34,6 +34,7 @@
 #endif
 
 #include <bmx/d10_mxf/D10PCMTrack.h>
+#include <bmx/d10_mxf/D10File.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -118,7 +119,7 @@ void D10PCMTrack::SetDialNorm(int8_t dial_norm)
 
 void D10PCMTrack::SetSequenceOffset(uint8_t offset)
 {
-    mCPManager->SetSoundSequenceOffset(offset);
+    mD10File->SetSoundSequenceOffset(offset);
 }
 
 bool D10PCMTrack::HaveSequenceOffset() const
