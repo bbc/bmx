@@ -82,6 +82,7 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
     mPreviousPartitionId = 0;
     mPreviousFilePosition = 0;
     mHaveFooter = file_is_complete;
+    mBaseReadError = false;
 
 
     // get ImageStartOffset and ImageEndOffset properties which are used in Avid uncompressed files
@@ -594,7 +595,7 @@ void EssenceReader::SeekEssence(int64_t base_position, bool for_read)
         if (mBasePosition < 0) {
             SeekContentPackageStart();
             SetContentPackageStart(0, -1, false);
-        } else if (mBasePosition < mLastKnownBasePosition) {
+        } else if (mBasePosition < mLastKnownBasePosition || mBaseReadError) {
             BMX_ASSERT(mLastKnownBasePosition < base_position);
             mFile->seek(mLastKnownFilePosition, SEEK_SET);
             SetContentPackageStart(mLastKnownBasePosition, mLastKnownFilePosition, true);
@@ -628,6 +629,7 @@ void EssenceReader::SeekEssence(int64_t base_position, bool for_read)
     catch (...)
     {
         ResetState();
+        mBaseReadError = true;
         throw;
     }
 }
@@ -676,6 +678,7 @@ void EssenceReader::SetContentPackageStart(int64_t base_position, int64_t file_p
     if (pos_at_key)
         ResetNextKL();
     mAtCPStart = true;
+    mBaseReadError = false;
 }
 
 void EssenceReader::ReadFirstEssenceKL(mxfKey *key_out, uint8_t *llen_out, uint64_t *len_out)
@@ -702,6 +705,7 @@ void EssenceReader::ReadFirstEssenceKL(mxfKey *key_out, uint8_t *llen_out, uint6
     catch (...)
     {
         ResetState();
+        mBaseReadError = true;
         throw;
     }
 }
@@ -740,6 +744,7 @@ bool EssenceReader::ReadNonfirstEssenceKL(mxfKey *key_out, uint8_t *llen_out, ui
     catch (...)
     {
         ResetState();
+        mBaseReadError = true;
         throw;
     }
 }

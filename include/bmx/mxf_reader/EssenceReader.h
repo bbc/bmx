@@ -136,6 +136,7 @@ private:
     size_t mPreviousPartitionId;
     int64_t mPreviousFilePosition;
     bool mHaveFooter;
+    bool mBaseReadError;
 };
 
 
