@@ -341,6 +341,7 @@ void D10File::CompleteWrite()
         // update and re-write the header partition pack
 
         Partition &header_partition = mMXFFile->getPartition(0);
+        header_partition.setKey(&MXF_PP_K(ClosedComplete, Header));
         header_partition.setFooterPartition(footer_partition.getThisPartition());
         header_partition.write(mMXFFile);
 
@@ -359,7 +360,6 @@ void D10File::CompleteWrite()
 
         // update partition pack and flush memory writes to file
 
-        header_partition.setKey(&MXF_PP_K(ClosedComplete, Header));
         mMXFFile->updatePartitions();
         mMXFFile->closeMemoryFile();
     }
