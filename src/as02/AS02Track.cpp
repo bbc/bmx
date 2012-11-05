@@ -324,6 +324,8 @@ void AS02Track::CompleteWrite()
     if (!HaveCBEIndexTable() && HaveVBEIndexEntries()) {
         // write a index partition pack and VBE index table
 
+        mMXFFile->openMemoryFile(8192);
+
         Partition &index_partition = mMXFFile->createPartition();
         index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
         index_partition.setIndexSID(mIndexSID);
@@ -331,6 +333,9 @@ void AS02Track::CompleteWrite()
         index_partition.write(mMXFFile);
 
         WriteVBEIndexTable(&index_partition);
+
+        mMXFFile->updatePartitions();
+        mMXFFile->closeMemoryFile();
     }
 
 
@@ -720,6 +725,11 @@ void AS02Track::CreateFile()
     mMXFFile->setMinLLen(mLLen);
 
 
+    // write header partition and essence partition pack to memory first
+
+    mMXFFile->openMemoryFile(8192);
+
+
     // write the header partition pack and header metadata
 
     Partition &header_partition = mMXFFile->createPartition();
@@ -760,6 +770,12 @@ void AS02Track::CreateFile()
     ess_partition.setBodySID(mBodySID);
     ess_partition.setBodyOffset(0);
     ess_partition.write(mMXFFile);
+
+
+    // update partitions and flush memory
+
+    mMXFFile->updatePartitions();
+    mMXFFile->closeMemoryFile();
 
 
     PreSampleWriting();
