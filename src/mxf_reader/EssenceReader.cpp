@@ -575,7 +575,11 @@ void EssenceReader::SeekEssence(int64_t base_position, bool for_read)
             return;
 
         // if the file position is known then seek to it
-        int64_t file_position = GetIndexedFilePosition(base_position);
+        int64_t file_position;
+        if (mLastKnownBasePosition == base_position)
+            file_position = mLastKnownFilePosition;
+        else
+            file_position = GetIndexedFilePosition(base_position);
         if (file_position >= 0) {
             mFile->seek(file_position, SEEK_SET);
             SetContentPackageStart(base_position, file_position, true);
