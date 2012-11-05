@@ -142,7 +142,7 @@ private:
 
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;
-    int64_t mCBEIndexTableStartPos;
+    int64_t mHeaderMetadataEndPos;
 
     mxfpp::MaterialPackage *mMaterialPackage;
     mxfpp::SourcePackage *mFileSourcePackage;

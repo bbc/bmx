@@ -123,7 +123,7 @@ D10File::D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     memset(&mEssenceContainerUL, 0, sizeof(mEssenceContainerUL));
     mDataModel = 0;
     mHeaderMetadata = 0;
-    mCBEIndexTableStartPos = 0;
+    mHeaderMetadataEndPos = 0;
     mMaterialPackage = 0;
     mFileSourcePackage = 0;
     mCPManager = new D10ContentPackageManager(frame_rate);
@@ -347,8 +347,8 @@ void D10File::CompleteWrite()
 
         // re-write the header metadata
 
-        KAGFillerWriter reserve_filler_writer(&header_partition, mReserveMinBytes);
-        mHeaderMetadata->write(mMXFFile, &header_partition, &reserve_filler_writer);
+        PositionFillerWriter pos_filler_writer(mHeaderMetadataEndPos);
+        mHeaderMetadata->write(mMXFFile, &header_partition, &pos_filler_writer);
 
 
         // update and re-write the index table segment
@@ -616,6 +616,7 @@ void D10File::CreateFile()
 
     KAGFillerWriter reserve_filler_writer(&header_partition, mReserveMinBytes);
     mHeaderMetadata->write(mMXFFile, &header_partition, &reserve_filler_writer);
+    mHeaderMetadataEndPos = mMXFFile->tell();  // need this position when we re-write the header metadata
 
 
     // write cbe index table
