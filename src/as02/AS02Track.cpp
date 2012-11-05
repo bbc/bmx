@@ -204,10 +204,8 @@ AS02Track::AS02Track(AS02Clip *clip, uint32_t track_index, EssenceType essence_t
     mKAGSize = 1;
     mxf_generate_umid(&mMaterialPackageUID);
     mxf_generate_umid(&mFileSourcePackageUID);
-    mHeaderMetadataStartPos = 0;
     mHeaderMetadataEndPos = 0;
     mCBEIndexSegment = 0;
-    mIndexTableStartPos = 0;
     mMaterialPackage = 0;
     mFileSourcePackage = 0;
     mHaveLowerLevelSourcePackage = false;
@@ -360,29 +358,50 @@ void AS02Track::CompleteWrite()
 
 
 
+    // re-write header to memory
+
+    mMXFFile->seek(0, SEEK_SET);
+    mMXFFile->openMemoryFile(8192);
+    mMXFFile->setMemoryPartitionIndexes(0, 0); // overwriting and updating from header pp
+
+
+    // update and re-write the header partition pack
+
+    Partition &header_partition = mMXFFile->getPartition(0);
+    header_partition.setKey(&MXF_PP_K(ClosedComplete, Header));
+    header_partition.setFooterPartition(footer_partition.getThisPartition());
+    header_partition.write(mMXFFile);
+
+
     // re-write the header metadata in the header partition
 
-    mMXFFile->seek(mHeaderMetadataStartPos, SEEK_SET);
     PositionFillerWriter pos_filler_writer(mHeaderMetadataEndPos);
-    mHeaderMetadata->write(mMXFFile, &mMXFFile->getPartition(0), &pos_filler_writer);
+    mHeaderMetadata->write(mMXFFile, &header_partition, &pos_filler_writer);
 
 
     if (HaveCBEIndexTable()) {
         // update and re-write the CBE index table segment
 
-        mMXFFile->seek(mIndexTableStartPos, SEEK_SET);
+        Partition &index_partition = mMXFFile->getPartition(1);
+        index_partition.setKey(&MXF_PP_K(ClosedComplete, Body));
+        index_partition.setFooterPartition(footer_partition.getThisPartition());
+        index_partition.write(mMXFFile);
+
         WriteCBEIndexTable(&mMXFFile->getPartition(1));
     }
 
+    // update header and index partition packs and flush memory writes to file
 
-    // update and re-write the partition packs
+    mMXFFile->updatePartitions();
+    mMXFFile->closeMemoryFile();
+
+
+    // update and re-write the body partition packs
 
     const std::vector<Partition*> &partitions = mMXFFile->getPartitions();
     size_t i;
     for (i = 0; i < partitions.size(); i++) {
-        if (partitions[i]->isHeader())
-            partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Header));
-        else if (partitions[i]->isBody())
+        if (partitions[i]->isBody())
             partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Body));
     }
     mMXFFile->updatePartitions();
@@ -742,7 +761,6 @@ void AS02Track::CreateFile()
     header_partition.addEssenceContainer(GetEssenceContainerUL());
     header_partition.write(mMXFFile);
 
-    mHeaderMetadataStartPos = mMXFFile->tell(); // need this position when we re-write the header metadata
     KAGFillerWriter reserve_filler_writer(&header_partition, mClip->mReserveMinBytes);
     mHeaderMetadata->write(mMXFFile, &header_partition, &reserve_filler_writer);
     mHeaderMetadataEndPos = mMXFFile->tell();  // need this position when we re-write the header metadata
@@ -757,7 +775,6 @@ void AS02Track::CreateFile()
         index_partition.setBodySID(0);
         index_partition.write(mMXFFile);
 
-        mIndexTableStartPos = mMXFFile->tell(); // need this position when we re-write the index segment
         WriteCBEIndexTable(&index_partition);
     }
 

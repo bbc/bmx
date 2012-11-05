@@ -154,7 +154,6 @@ private:
     int64_t mHeaderMetadataStartPos;
     int64_t mHeaderMetadataEndPos;
     mxfpp::IndexTableSegment *mCBEIndexSegment;
-    int64_t mIndexTableStartPos;
 
     mxfpp::MaterialPackage* mMaterialPackage;
     mxfpp::SourcePackage* mFileSourcePackage;
