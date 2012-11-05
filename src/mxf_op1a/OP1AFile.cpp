@@ -107,9 +107,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mSoundTrackCount = 0;
     mDataModel = 0;
     mHeaderMetadata = 0;
-    mHeaderMetadataStartPos = 0;
     mHeaderMetadataEndPos = 0;
-    mCBEIndexTableStartPos = 0;
     mMaterialPackage = 0;
     mFileSourcePackage = 0;
     mFirstWrite = true;
@@ -432,30 +430,55 @@ void OP1AFile::CompleteWrite()
     // update previous partitions if not writing in a single pass
 
     if (!(mFlavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)) {
-        // re-write the header metadata in the header partition
+        // re-write header and cbe index partition to memory
 
-        mMXFFile->seek(mHeaderMetadataStartPos, SEEK_SET);
+        mMXFFile->seek(0, SEEK_SET);
+        mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
+        mMXFFile->setMemoryPartitionIndexes(0, 0); // overwriting and updating from header pp
+
+
+        // re-write the header partition pack
+
+        Partition &header_partition = mMXFFile->getPartition(0);
+        header_partition.setKey(&MXF_PP_K(ClosedComplete, Header));
+        header_partition.setFooterPartition(footer_partition.getThisPartition());
+        header_partition.write(mMXFFile);
+
+
+        // re-write the header metadata
+
         PositionFillerWriter pos_filler_writer(mHeaderMetadataEndPos);
-        mHeaderMetadata->write(mMXFFile, &mMXFFile->getPartition(0), &pos_filler_writer);
+        mHeaderMetadata->write(mMXFFile, &header_partition, &pos_filler_writer);
 
 
         // re-write the CBE index table segment(s)
 
         if (!mFirstWrite && mIndexTable->IsCBE()) {
-            mMXFFile->seek(mCBEIndexTableStartPos, SEEK_SET);
-            mIndexTable->WriteSegments(mMXFFile,
-                                       &mMXFFile->getPartition(((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) ? 0 : 1)),
-                                       true);
+            Partition *index_partition;
+            if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR)) {
+                index_partition = &mMXFFile->getPartition(0);
+            } else {
+                index_partition = &mMXFFile->getPartition(1);
+                index_partition->setKey(&MXF_PP_K(ClosedComplete, Body));
+                index_partition->setFooterPartition(footer_partition.getThisPartition());
+                index_partition->write(mMXFFile);
+            }
+
+            mIndexTable->WriteSegments(mMXFFile, index_partition, true);
         }
 
 
-        // update and re-write the partition packs
+        // update header and index partition packs and flush memory writes to file
+
+        mMXFFile->updatePartitions();
+        mMXFFile->closeMemoryFile();
+
+
+        // update and re-write the body partition packs
 
         const std::vector<Partition*> &partitions = mMXFFile->getPartitions();
         for (i = 0; i < partitions.size(); i++) {
-            if (partitions[i]->isHeader())
-                partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Header));
-            else if (partitions[i]->isBody())
+            if (partitions[i]->isBody())
                 partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Body));
         }
         mMXFFile->updatePartitions();
@@ -673,7 +696,6 @@ void OP1AFile::CreateFile()
         header_partition.addEssenceContainer(&(*iter));
     header_partition.write(mMXFFile);
 
-    mHeaderMetadataStartPos = mMXFFile->tell(); // need this position when we re-write the header metadata
     KAGFillerWriter reserve_filler_writer(&header_partition, mReserveMinBytes);
     mHeaderMetadata->write(mMXFFile, &header_partition, &reserve_filler_writer);
     mHeaderMetadataEndPos = mMXFFile->tell();  // need this position when we re-write the header metadata
@@ -761,7 +783,6 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                 mCPManager->UpdateIndexTable(mCPManager->HaveContentPackages(2) ? 2 : 1);
 
                 if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR)) {
-                    mCBEIndexTableStartPos = mMXFFile->tell(); // need this position when we re-write the index segment
                     mIndexTable->WriteSegments(mMXFFile, &mMXFFile->getPartition(0), false);
                 } else {
                     Partition &index_partition = mMXFFile->createPartition();
@@ -774,7 +795,6 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                     index_partition.setKagSize(mKAGSize);
                     index_partition.write(mMXFFile);
 
-                    mCBEIndexTableStartPos = mMXFFile->tell(); // need this position when we re-write the index segment
                     mIndexTable->WriteSegments(mMXFFile, &index_partition, false);
                 }
             }
