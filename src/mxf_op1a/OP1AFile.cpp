@@ -768,7 +768,7 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                     if (mSupportCompleteSinglePass)
                         index_partition.setKey(&MXF_PP_K(ClosedComplete, Body));
                     else
-                        index_partition.setKey(&MXF_PP_K(OpenIncomplete, Body));
+                        index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
                     index_partition.setIndexSID(INDEX_SID);
                     index_partition.setBodySID(0);
                     index_partition.setKagSize(mKAGSize);
@@ -794,7 +794,7 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                 BMX_ASSERT(mIndexTable->HaveSegments());
 
                 Partition &index_partition = mMXFFile->createPartition();
-                index_partition.setKey(&MXF_PP_K(OpenIncomplete, Body));
+                index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
                 index_partition.setIndexSID(INDEX_SID);
                 index_partition.setBodySID(0);
                 index_partition.setKagSize(mKAGSize);
@@ -812,7 +812,7 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
             if (mSupportCompleteSinglePass)
                 ess_partition.setKey(&MXF_PP_K(ClosedComplete, Body));
             else
-                ess_partition.setKey(&MXF_PP_K(OpenIncomplete, Body));
+                ess_partition.setKey(&MXF_PP_K(OpenComplete, Body));
             ess_partition.setIndexSID(0);
             ess_partition.setBodySID(BODY_SID);
             ess_partition.setKagSize(mEssencePartitionKAGSize);

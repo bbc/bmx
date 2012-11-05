@@ -582,7 +582,7 @@ void AvidTrack::CreateFile()
 
     int64_t file_pos = mMXFFile->tell();
     Partition &ess_partition = mMXFFile->createPartition();
-    ess_partition.setKey(&MXF_PP_K(OpenIncomplete, Body));
+    ess_partition.setKey(&MXF_PP_K(OpenComplete, Body));
     ess_partition.setKagSize(IsPicture() ? 0x20000 : 0x1000);
     ess_partition.setIndexSID(0);
     ess_partition.setBodySID(mBodySID);

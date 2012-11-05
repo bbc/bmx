@@ -325,7 +325,7 @@ void AS02Track::CompleteWrite()
         // write a index partition pack and VBE index table
 
         Partition &index_partition = mMXFFile->createPartition();
-        index_partition.setKey(&MXF_PP_K(OpenIncomplete, Body));
+        index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
         index_partition.setIndexSID(mIndexSID);
         index_partition.setBodySID(0);
         index_partition.write(mMXFFile);
@@ -742,7 +742,7 @@ void AS02Track::CreateFile()
         // write the CBE index partition pack and index table segment
 
         Partition &index_partition = mMXFFile->createPartition();
-        index_partition.setKey(&MXF_PP_K(OpenIncomplete, Body));
+        index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
         index_partition.setIndexSID(mIndexSID);
         index_partition.setBodySID(0);
         index_partition.write(mMXFFile);
@@ -755,7 +755,7 @@ void AS02Track::CreateFile()
     // write the essence data partition pack
 
     Partition &ess_partition = mMXFFile->createPartition();
-    ess_partition.setKey(&MXF_PP_K(OpenIncomplete, Body));
+    ess_partition.setKey(&MXF_PP_K(OpenComplete, Body));
     ess_partition.setIndexSID(0);
     ess_partition.setBodySID(mBodySID);
     ess_partition.setBodyOffset(0);

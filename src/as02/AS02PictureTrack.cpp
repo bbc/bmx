@@ -126,7 +126,7 @@ void AS02PictureTrack::HandlePartitionInterval(bool can_start_partition)
         if (!HaveCBEIndexTable()) {
             // VBE index table partition
             Partition &index_partition = mMXFFile->createPartition();
-            index_partition.setKey(&MXF_PP_K(OpenIncomplete, Body));
+            index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
             index_partition.setIndexSID(mIndexSID);
             index_partition.setBodySID(0);
             index_partition.write(mMXFFile);
@@ -136,7 +136,7 @@ void AS02PictureTrack::HandlePartitionInterval(bool can_start_partition)
 
         // start a new essence data partition
         Partition &ess_partition = mMXFFile->createPartition();
-        ess_partition.setKey(&MXF_PP_K(OpenIncomplete, Body));
+        ess_partition.setKey(&MXF_PP_K(OpenComplete, Body));
         ess_partition.setIndexSID(0);
         ess_partition.setBodySID(mBodySID);
         ess_partition.setBodyOffset(mContainerSize);
