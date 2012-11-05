@@ -793,6 +793,8 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
             if (mIndexTable->IsVBE()) {
                 BMX_ASSERT(mIndexTable->HaveSegments());
 
+                mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
+
                 Partition &index_partition = mMXFFile->createPartition();
                 index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
                 index_partition.setIndexSID(INDEX_SID);
@@ -801,6 +803,9 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                 index_partition.write(mMXFFile);
 
                 mIndexTable->WriteSegments(mMXFFile, &index_partition, true);
+
+                mMXFFile->updatePartitions();
+                mMXFFile->closeMemoryFile();
             }
 
             start_ess_partition = true;
