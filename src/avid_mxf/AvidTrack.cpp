@@ -248,7 +248,6 @@ AvidTrack::AvidTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_t
     mOutputTrackNumberSet = false;
     mDataModel = 0;
     mHeaderMetadata = 0;
-    mHeaderMetadataStartPos = 0;
     mEssenceDataStartPos = 0;
     mCBEIndexSegment = 0;
     mMaterialPackage = 0;
@@ -326,11 +325,16 @@ void AvidTrack::CompleteWrite()
     mMXFFile->getPartition(BODY_PARTITION).fillToKag(mMXFFile);
 
 
-    // write the footer partition pack and header metadata
+    // write the footer partition and RIP to memory first
+
+    mMXFFile->openMemoryFile(8192);
+
+
+    // write the footer partition pack
 
     file_pos = mMXFFile->tell();
     Partition &footer_partition = mMXFFile->createPartition();
-    footer_partition.setKey(&MXF_PP_K(OpenIncomplete, Footer));
+    footer_partition.setKey(&MXF_PP_K(ClosedComplete, Footer));
     footer_partition.setKagSize(0x100);
     footer_partition.setIndexSID(mIndexSID);
     footer_partition.setBodySID(0);
@@ -354,6 +358,12 @@ void AvidTrack::CompleteWrite()
     mMXFFile->writeRIP();
 
 
+    // update the footer partition pack and flush memory writes to file
+
+    mMXFFile->updatePartitions();
+    mMXFFile->closeMemoryFile();
+
+
     // update container duration (track durations were updated in AvidClip::CompleteWrite)
 
     FileDescriptor *file_descriptor = dynamic_cast<FileDescriptor*>(mFileSourcePackage->getDescriptor());
@@ -361,18 +371,36 @@ void AvidTrack::CompleteWrite()
 
 
 
+    // re-write header partition to memory first
+
+    mMXFFile->seek(0, SEEK_SET);
+    mMXFFile->openMemoryFile(8192);
+    mMXFFile->setMemoryPartitionIndexes(0, 0); // overwriting and updating from header pp
+
+
+    // update and re-write the header partition pack
+
+    Partition &header_partition = mMXFFile->getPartition(HEADER_PARTITION);
+    header_partition.setKey(&MXF_PP_K(ClosedComplete, Header));
+    header_partition.setFooterPartition(footer_partition.getThisPartition());
+    header_partition.write(mMXFFile);
+
+
     // re-write the header metadata in the header partition
 
-    mMXFFile->seek(mHeaderMetadataStartPos, SEEK_SET);
-    PositionFillerWriter position_filler_writer(FIXED_BODY_PP_OFFSET);
-    mHeaderMetadata->write(mMXFFile, &mMXFFile->getPartition(HEADER_PARTITION), &position_filler_writer);
+    PositionFillerWriter pos_filler_writer(FIXED_BODY_PP_OFFSET);
+    mHeaderMetadata->write(mMXFFile, &header_partition, &pos_filler_writer);
 
 
-    // update and re-write the partition packs
+    // update header partition pack and flush memory writes to file
 
-    mMXFFile->getPartition(HEADER_PARTITION).setKey(&MXF_PP_K(ClosedComplete, Header));
+    mMXFFile->updatePartitions();
+    mMXFFile->closeMemoryFile();
+
+
+    // update body partition and re-write the partition packs
+
     mMXFFile->getPartition(BODY_PARTITION).setKey(&MXF_PP_K(ClosedComplete, Body));
-    mMXFFile->getPartition(FOOTER_PARTITION).setKey(&MXF_PP_K(ClosedComplete, Footer));
     mMXFFile->updatePartitions();
 
 
@@ -562,6 +590,11 @@ void AvidTrack::CreateFile()
     mMXFFile->setMinLLen(LLEN);
 
 
+    // write header partition and essence partition pack to memory first
+
+    mMXFFile->openMemoryFile(8192);
+
+
     // write the header partition pack and header metadata
 
     Partition &header_partition = mMXFFile->createPartition();
@@ -573,7 +606,6 @@ void AvidTrack::CreateFile()
     header_partition.addEssenceContainer(&mEssenceContainerUL);
     header_partition.write(mMXFFile);
 
-    mHeaderMetadataStartPos = mMXFFile->tell(); // need this position when we re-write the header metadata
     PositionFillerWriter position_filler_writer(FIXED_BODY_PP_OFFSET);
     mHeaderMetadata->write(mMXFFile, &header_partition, &position_filler_writer);
 
@@ -598,6 +630,12 @@ void AvidTrack::CreateFile()
 
     mEssenceDataStartPos = mMXFFile->tell(); // need this position when we re-write the key
     mMXFFile->writeFixedKL(&mEssenceElementKey, LLEN, 0);
+
+
+    // update partitions and flush memory
+
+    mMXFFile->updatePartitions();
+    mMXFFile->closeMemoryFile();
 
 
     PreSampleWriting();

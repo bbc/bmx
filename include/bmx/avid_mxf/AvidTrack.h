@@ -131,7 +131,6 @@ protected:
 
     mxfpp::DataModel *mDataModel;
     mxfpp::AvidHeaderMetadata *mHeaderMetadata;
-    int64_t mHeaderMetadataStartPos;
     int64_t mEssenceDataStartPos;
     mxfpp::IndexTableSegment *mCBEIndexSegment;
 
