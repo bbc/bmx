@@ -34,10 +34,19 @@
 #endif
 
 #define __STDC_FORMAT_MACROS
+#define __STDC_LIMIT_MACROS
 
 #include <cstdio>
 #include <cstring>
 #include <cerrno>
+#include <ctime>
+
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <unistd.h>
+#include <sys/time.h>
+#endif
 
 #include <bmx/apps/AppUtils.h>
 #include <bmx/Utils.h>
@@ -458,5 +467,41 @@ void bmx::print_progress(int64_t count, int64_t duration, float *next_update)
             }
         }
     }
+}
+
+void bmx::sleep_msec(uint32_t msec)
+{
+#if defined(_WIN32)
+    Sleep(msec);
+#else
+    usleep((useconds_t)msec * 1000);
+#endif
+}
+
+uint32_t bmx::get_tick_count()
+{
+#if defined(_WIN32)
+    return GetTickCount();
+#else
+    struct timeval now;
+    if (gettimeofday(&now, 0) != 0)
+        return 0;
+    return (uint32_t)(now.tv_sec * 1000LL + now.tv_usec / 1000);
+#endif
+}
+
+uint32_t bmx::delta_tick_count(uint32_t from, uint32_t to)
+{
+    return (uint32_t)((int64_t)to - from + UINT32_MAX);
+}
+
+void bmx::rt_sleep(float rt_factor, uint32_t start_tick, Rational sample_rate, int64_t num_samples)
+{
+    uint32_t tick = get_tick_count();
+    uint32_t target_tick = (uint32_t)(start_tick + 1000 * num_samples *
+                                            sample_rate.denominator / (rt_factor * sample_rate.numerator));
+    uint32_t delta_tick = delta_tick_count(tick, target_tick);
+    if (delta_tick < 10000) // don't sleep if target_tick < tick or there are bogus tick values
+        sleep_msec(delta_tick);
 }
 

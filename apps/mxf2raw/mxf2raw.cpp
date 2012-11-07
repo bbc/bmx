@@ -49,6 +49,7 @@
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/Version.h>
+#include <bmx/apps/AppUtils.h>
 #include "AS11InfoOutput.h"
 #include "APPInfoOutput.h"
 #include "AvidInfoOutput.h"
@@ -423,6 +424,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "                       but actually belong to the same virtual package / group\n");
     fprintf(stderr, " --no-reorder          Don't attempt to order the inputs in a sequence\n");
     fprintf(stderr, "                       Use this option for files with broken timecode\n");
+    fprintf(stderr, "  --rt <factor>        Read at realtime rate x <factor>, where <factor> is a floating point value\n");
+    fprintf(stderr, "                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
     fprintf(stderr, " --as11                Print AS-11 and UK DPP metadata to stdout (single file only)\n");
 #if defined(_WIN32)
     fprintf(stderr, " --no-seq-scan         Do not set the sequential scan hint for optimizing file caching\n");
@@ -467,6 +470,8 @@ int main(int argc, const char** argv)
     int app_events_mask = 0;
     bool extract_app_events_tc = true;
     bool do_print_avid = false;
+    bool realtime = false;
+    float rt_factor = 1.0;
     int cmdln_index;
 
 
@@ -596,6 +601,23 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--no-reorder") == 0)
         {
             keep_input_order = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--rt") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%f", &rt_factor) != 1 || rt_factor <= 0.0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            realtime = true;
+            cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--as11") == 0)
         {
@@ -999,6 +1021,11 @@ int main(int argc, const char** argv)
             if (!have_video && sample_rate == SAMPLING_RATE_48K)
                 max_samples_per_read = 1920;
 
+            // realtime reading
+            uint32_t rt_start = 0;
+            if (realtime)
+                rt_start = get_tick_count();
+
             // read data
             bmx::ByteArray sound_buffer;
             int64_t crc32_error_count = 0;
@@ -1125,6 +1152,9 @@ int main(int argc, const char** argv)
                         delete frame;
                     }
                 }
+
+                if (realtime)
+                    rt_sleep(rt_factor, rt_start, sample_rate, total_num_read);
             }
             if (reader->ReadError()) {
                 log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,

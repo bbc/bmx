@@ -316,6 +316,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -y <hh:mm:sscff>        Start timecode. Is drop frame when c is not ':'. Default 00:00:00:00\n");
     fprintf(stderr, "  --clip <name>           Set the clip name\n");
     fprintf(stderr, "  --dur <frame>           Set the duration in frames in frame rate units. Default is minimum input duration\n");
+    fprintf(stderr, "  --rt <factor>           Wrap at realtime rate x <factor>, where <factor> is a floating point value\n");
+    fprintf(stderr, "                          <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
     fprintf(stderr, "  --avcihead <format> <file> <offset>\n");
     fprintf(stderr, "                          Default AVC-Intra sequence header data (512 bytes) to use when the input file does have it\n");
     fprintf(stderr, "                          <format> is a comma separated list of one or more of the following integer values:\n");
@@ -520,6 +522,8 @@ int main(int argc, const char** argv)
     bool clip_wrap = false;
     bool allow_no_avci_head = false;
     bool force_no_avci_head = false;
+    bool realtime = false;
+    float rt_factor = 1.0;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -638,6 +642,23 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--rt") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%f", &rt_factor) != 1 || rt_factor <= 0.0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            realtime = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--avcihead") == 0)
@@ -3008,6 +3029,13 @@ int main(int argc, const char** argv)
             max_samples_per_read = 1920;
 
 
+        // realtime wrapping
+
+        uint32_t rt_start = 0;
+        if (realtime)
+            rt_start = get_tick_count();
+
+
         // create clip file(s) and write samples
 
         clip->PrepareWrite();
@@ -3056,6 +3084,9 @@ int main(int argc, const char** argv)
 
             if (min_num_samples < max_samples_per_read)
                 break;
+
+            if (realtime)
+                rt_sleep(rt_factor, rt_start, frame_rate, total_read);
         }
 
 

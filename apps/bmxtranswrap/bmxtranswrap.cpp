@@ -330,6 +330,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          but actually belong to the same virtual package / group\n");
     fprintf(stderr, "  --no-reorder            Don't attempt to order the inputs in a sequence\n");
     fprintf(stderr, "                          Use this option for files with broken timecode\n");
+    fprintf(stderr, "  --rt <factor>           Transwrap at realtime rate x <factor>, where <factor> is a floating point value\n");
+    fprintf(stderr, "                          <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
     fprintf(stderr, "  --no-precharge          Don't output clip/track with precharge. Adjust the start position and duration instead\n");
     fprintf(stderr, "  --no-rollout            Don't output clip/track with rollout. Adjust the duration instead\n");
     fprintf(stderr, "  --rw-intl               Interleave input reads with output writes\n");
@@ -483,6 +485,8 @@ int main(int argc, const char** argv)
     bool force_no_avci_head = false;
     bool min_part = false;
     bool clip_wrap = false;
+    bool realtime = false;
+    float rt_factor = 1.0;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -642,6 +646,23 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--no-reorder") == 0)
         {
             keep_input_order = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--rt") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%f", &rt_factor) != 1 || rt_factor <= 0.0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            realtime = true;
+            cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--no-precharge") == 0)
         {
@@ -2006,6 +2027,13 @@ int main(int argc, const char** argv)
         BMX_ASSERT(max_samples_per_read == 1 || (precharge == 0 && rollout == 0));
 
 
+        // realtime transwrapping
+
+        uint32_t rt_start = 0;
+        if (realtime)
+            rt_start = get_tick_count();
+
+
         // create clip file(s) and write samples
 
         clip->PrepareWrite();
@@ -2111,6 +2139,9 @@ int main(int argc, const char** argv)
 
             if (max_samples_per_read > 1 && num_read < max_samples_per_read)
                 break;
+
+            if (realtime)
+                rt_sleep(rt_factor, rt_start, frame_rate, total_read);
         }
         if (reader->ReadError()) {
             log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
