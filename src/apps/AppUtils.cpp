@@ -471,8 +471,21 @@ void bmx::print_progress(int64_t count, int64_t duration, float *next_update)
 
 void bmx::sleep_msec(uint32_t msec)
 {
-#if defined(_WIN32)
+#if HAVE_NANOSLEEP
+    struct timespec req, rem;
+    int result;
+    req.tv_sec  = msec / 1000;
+    req.tv_nsec = (msec % 1000) * 1000000L;
+    while (true) {
+        result = nanosleep(&req, &rem);
+        if (result == 0 || errno != EINTR)
+            break;
+        req = rem;
+    }
+
+#elif defined(_WIN32)
     Sleep(msec);
+
 #else
     usleep((useconds_t)msec * 1000);
 #endif
@@ -480,8 +493,19 @@ void bmx::sleep_msec(uint32_t msec)
 
 uint32_t bmx::get_tick_count()
 {
-#if defined(_WIN32)
+#if HAVE_CLOCK_GETTIME
+    struct timespec now;
+#if defined(CLOCK_MONOTONIC_COARSE)
+    if (clock_gettime(CLOCK_MONOTONIC_COARSE, &now) != 0)
+#else
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0)
+#endif
+        return 0;
+    return (uint32_t)(now.tv_sec * 1000LL + now.tv_nsec / 1000000L);
+
+#elif defined(_WIN32)
     return GetTickCount();
+
 #else
     struct timeval now;
     if (gettimeofday(&now, 0) != 0)

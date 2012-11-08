@@ -65,6 +65,14 @@ if test x"$prefix" != x"NONE"; then
 	CFLAGS="${CFLAGS} -L${prefix}/lib -I${prefix}/include"
 fi
 
+dnl check for clock_gettime
+AC_CHECK_LIB(rt, clock_gettime, have_clock_gettime=yes)
+if test x$have_clock_gettime = xyes ; then
+	AC_DEFINE(HAVE_CLOCK_GETTIME, 1,
+			  [Define to 1 if you have librt and the `clock_gettime' function])
+	RT_LIB=-lrt
+fi
+
 dnl Check for UUID generation library
 case "$host" in
 	*-*-*mingw*) os=win ;;
@@ -168,7 +176,7 @@ AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
 
 
-AC_CHECK_FUNCS([getcwd gettimeofday memmove memset mkdir strerror strerror_r])
+AC_CHECK_FUNCS([getcwd gettimeofday memmove memset mkdir strerror strerror_r nanosleep])
 
 
 dnl-----------------------------------------------------------------------------
@@ -185,7 +193,7 @@ BMX_CFLAGS="${WARN_CFLAGS} ${LIBMXF_CFLAGS} ${LIBMXFPP_CFLAGS} \
 	${LIBURIPARSER_CFLAGS} -I\$(top_srcdir)/include -I\$(top_srcdir)"
 AC_SUBST(BMX_CFLAGS)
 
-BMX_LIBADDLIBS="${UUIDLIB} ${LIBURIPARSER_LIBS} ${LIBMXF_LIBS} ${LIBMXFPP_LIBS}"
+BMX_LIBADDLIBS="${RT_LIB} ${UUIDLIB} ${LIBURIPARSER_LIBS} ${LIBMXF_LIBS} ${LIBMXFPP_LIBS}"
 AC_SUBST(BMX_LIBADDLIBS)
 
 BMX_LDADDLIBS="${BMX_LIBADDLIBS} \
@@ -203,9 +211,9 @@ AC_SUBST(pkgconfigdir)
 dnl add libraries to pkg config "Libs:" for static-only builds
 if test x"$enable_shared" = xyes; then
 	PC_ADD_LIBS=
-	PC_ADD_PRIVATE_LIBS="${UUIDLIB} ${LIBURIPARSER_LIBS}"
+	PC_ADD_PRIVATE_LIBS="${RT_LIB} ${UUIDLIB} ${LIBURIPARSER_LIBS}"
 else
-	PC_ADD_LIBS="${UUIDLIB} ${LIBURIPARSER_LIBS}"
+	PC_ADD_LIBS="${RT_LIB} ${UUIDLIB} ${LIBURIPARSER_LIBS}"
 	PC_ADD_PRIVATE_LIBS=
 fi
 AC_SUBST(PC_ADD_LIBS)
