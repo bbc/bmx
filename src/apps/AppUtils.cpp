@@ -391,7 +391,7 @@ bool bmx::read_avci_header_data(EssenceType essence_type, Rational sample_rate,
     BMX_ASSERT(buffer_size >= 512);
 
     size_t i;
-    size_t j;
+    size_t j = 0;
     for (i = 0; i < avci_header_inputs.size(); i++) {
         for (j = 0; j < avci_header_inputs[i].formats.size(); j++) {
             if (avci_header_inputs[i].formats[j].essence_type == essence_type &&
