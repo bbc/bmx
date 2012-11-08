@@ -71,6 +71,10 @@ using namespace bmx;
 using namespace mxfpp;
 
 
+#define DEFAULT_GF_RETRIES          10
+#define DEFAULT_GF_RETRY_DELAY      1.0
+#define DEFAULT_GF_RATE_AFTER_FAIL  1.5
+
 
 typedef struct
 {
@@ -332,6 +336,11 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          Use this option for files with broken timecode\n");
     fprintf(stderr, "  --rt <factor>           Transwrap at realtime rate x <factor>, where <factor> is a floating point value\n");
     fprintf(stderr, "                          <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
+    fprintf(stderr, "  --gf                    Support growing files. Retry reading a frame when it fails\n");
+    fprintf(stderr, "  --gf-retries <max>      Set the maximum times to retry reading a frame. The default is %u.\n", DEFAULT_GF_RETRIES);
+    fprintf(stderr, "  --gf-delay <sec>        Set the delay (in seconds) between a failure to read and a retry. The default is %f.\n", DEFAULT_GF_RETRY_DELAY);
+    fprintf(stderr, "  --gf-rate <factor>      Limit the read rate to realtime rate x <factor> after a read failure. The default is %f\n", DEFAULT_GF_RATE_AFTER_FAIL);
+    fprintf(stderr, "                          <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
     fprintf(stderr, "  --no-precharge          Don't output clip/track with precharge. Adjust the start position and duration instead\n");
     fprintf(stderr, "  --no-rollout            Don't output clip/track with rollout. Adjust the duration instead\n");
     fprintf(stderr, "  --rw-intl               Interleave input reads with output writes\n");
@@ -487,6 +496,10 @@ int main(int argc, const char** argv)
     bool clip_wrap = false;
     bool realtime = false;
     float rt_factor = 1.0;
+    bool growing_file = false;
+    unsigned int gf_retries = DEFAULT_GF_RETRIES;
+    float gf_retry_delay = DEFAULT_GF_RETRY_DELAY;
+    float gf_rate_after_fail = DEFAULT_GF_RATE_AFTER_FAIL;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -662,6 +675,61 @@ int main(int argc, const char** argv)
                 return 1;
             }
             realtime = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--gf") == 0)
+        {
+            growing_file = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--gf-retries") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &gf_retries) != 1 || gf_retries == 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            growing_file = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--gf-delay") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%f", &gf_retry_delay) != 1 || gf_retry_delay < 0.0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            growing_file = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--gf-rate") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%f", &gf_rate_after_fail) != 1 || gf_rate_after_fail <= 0.0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            growing_file = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--no-precharge") == 0)
@@ -2034,6 +2102,14 @@ int main(int argc, const char** argv)
             rt_start = get_tick_count();
 
 
+        // growing input files
+
+        unsigned int gf_retry_count = 0;
+        bool gf_read_failure = false;
+        int64_t gf_failure_num_read = 0;
+        uint32_t gf_failure_start = 0;
+
+
         // create clip file(s) and write samples
 
         clip->PrepareWrite();
@@ -2051,8 +2127,22 @@ int main(int argc, const char** argv)
         bmx::ByteArray sound_buffer;
         while (read_duration < 0 || total_read < read_duration) {
             uint32_t num_read = read_samples(reader, sample_sequence, &sample_sequence_offset, max_samples_per_read);
-            if (num_read == 0)
-                break;
+            if (num_read == 0) {
+                if (!growing_file || !reader->ReadError() || gf_retry_count >= gf_retries)
+                    break;
+                gf_retry_count++;
+                gf_read_failure = true;
+                if (gf_retry_delay > 0.0) {
+                    rt_sleep(1.0 / gf_retry_delay, get_tick_count(), frame_rate,
+                             frame_rate.numerator / frame_rate.denominator);
+                }
+                continue;
+            }
+            if (growing_file && gf_retry_count > 0) {
+                gf_failure_num_read = total_read;
+                gf_failure_start    = get_tick_count();
+                gf_retry_count      = 0;
+            }
 
             if (clip_type == CW_AS02_CLIP_TYPE && (precharge || rollout)) {
                 container_duration = clip->GetDuration();
@@ -2140,12 +2230,16 @@ int main(int argc, const char** argv)
             if (max_samples_per_read > 1 && num_read < max_samples_per_read)
                 break;
 
-            if (realtime)
+            if (gf_read_failure)
+                rt_sleep(gf_rate_after_fail, gf_failure_start, frame_rate, total_read - gf_failure_num_read);
+            else if (realtime)
                 rt_sleep(rt_factor, rt_start, frame_rate, total_read);
         }
         if (reader->ReadError()) {
             log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
                 "A read error occurred: %s\n", reader->ReadErrorMessage().c_str());
+            if (gf_retry_count >= gf_retries)
+                log_warn("Reached maximum growing file retries, %u\n", gf_retries);
             if (reader->IsComplete())
                 cmd_result = 1;
         }
