@@ -105,7 +105,6 @@ AS02Version::AS02Version(AS02Bundle *bundle, string filepath, string rel_uri, mx
     mxf_generate_umid(&mMaterialPackageUID);
     mDataModel = 0;
     mHeaderMetadata = 0;
-    mHeaderMetadataStartPos = 0;
     mHeaderMetadataEndPos = 0;
 
     mManifestFile = bundle->GetManifest()->RegisterFile(rel_uri, VERSION_FILE_ROLE);
@@ -157,17 +156,31 @@ void AS02Version::CompleteWrite()
 
 
 
+    // re-write header to memory
+
+    mMXFFile->seek(0, SEEK_SET);
+    mMXFFile->openMemoryFile(8192);
+    mMXFFile->setMemoryPartitionIndexes(0, 0); // overwriting and updating from header pp
+
+
+    // update and re-write the header partition pack
+
+    Partition &header_partition = mMXFFile->getPartition(0);
+    header_partition.setKey(&MXF_PP_K(ClosedComplete, Header));
+    header_partition.setFooterPartition(footer_partition.getThisPartition());
+    header_partition.write(mMXFFile);
+
+
     // re-write the header metadata in the header partition
 
-    mMXFFile->seek(mHeaderMetadataStartPos, SEEK_SET);
     PositionFillerWriter pos_filler_writer(mHeaderMetadataEndPos);
-    mHeaderMetadata->write(mMXFFile, &mMXFFile->getPartition(HEADER_PARTITION), &pos_filler_writer);
+    mHeaderMetadata->write(mMXFFile, &header_partition, &pos_filler_writer);
 
 
-    // update and re-write the partition packs
+    // update header partition packs and flush memory writes to file
 
-    mMXFFile->getPartition(HEADER_PARTITION).setKey(&MXF_PP_K(ClosedComplete, Header));
     mMXFFile->updatePartitions();
+    mMXFFile->closeMemoryFile();
 
 
     // done with the file
@@ -308,6 +321,11 @@ void AS02Version::CreateFile()
     mMXFFile->setMinLLen(4);
 
 
+    // write header partition and essence partition pack to memory first
+
+    mMXFFile->openMemoryFile(8192);
+
+
     // write the header partition pack and header metadata
 
     Partition &header_partition = mMXFFile->createPartition();
@@ -319,10 +337,15 @@ void AS02Version::CreateFile()
     header_partition.setOperationalPattern(&MXF_OP_L(1b, UniTrack_NonStream_External));
     header_partition.write(mMXFFile);
 
-    mHeaderMetadataStartPos = mMXFFile->tell(); // need this position when we re-write the header metadata
     KAGFillerWriter reserve_filler_writer(&header_partition, mReserveMinBytes);
     mHeaderMetadata->write(mMXFFile, &header_partition, &reserve_filler_writer);
     mHeaderMetadataEndPos = mMXFFile->tell();  // need this position when we re-write the header metadata
+
+
+    // update partition and flush memory
+
+    mMXFFile->updatePartitions();
+    mMXFFile->closeMemoryFile();
 }
 
 void AS02Version::UpdatePackageMetadata()

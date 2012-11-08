@@ -76,7 +76,6 @@ private:
 
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;
-    int64_t mHeaderMetadataStartPos;
     int64_t mHeaderMetadataEndPos;
 
     std::set<mxfUL> mEssenceContainerULs;
