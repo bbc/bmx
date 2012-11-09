@@ -63,9 +63,6 @@ chars.
 25. investigate improving / cleaning-up libMXF file structure, particularly to
 help writing wrappers
 
-26. use the memory file output in more writers to ensure external readers
-always see complete header partitions
-
 27. factorize common code in bmxtranswrap and raw2bmx
 
 29. add requested num samples for Frame class so that client knows that
