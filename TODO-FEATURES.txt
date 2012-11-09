@@ -143,8 +143,6 @@ example
 
 59. Support --start and --dur in apps when input file is incomplete / growing
 
-60. Add bmx md5 utility for testing, avoiding need for external md5(sum) utility
-
 61. Simplify test shell scripts
 
 62. Add support for metadata to package metadata set in RDD9 writer, e.g. UMID
