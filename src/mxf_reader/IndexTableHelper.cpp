@@ -400,10 +400,14 @@ void IndexTableHelper::SetConstantEditUnitSize(Rational edit_rate, uint32_t size
     mHaveConstantEditUnitSize = true;
 }
 
-void IndexTableHelper::ReadIndexTableSegment(uint64_t len)
+int64_t IndexTableHelper::ReadIndexTableSegment(uint64_t len)
 {
     auto_ptr<IndexTableHelperSegment> new_segment(new IndexTableHelperSegment());
     new_segment->ParseIndexTableSegment(mFileReader->mFile, len);
+
+    int64_t end_offset = -1;
+    if (new_segment->getIndexDuration() >= 0)
+        end_offset = new_segment->getIndexStartPosition() + new_segment->getIndexDuration();
 
     if (new_segment->HaveConstantEditUnitSize())
         InsertCBEIndexSegment(new_segment.release());
@@ -412,6 +416,8 @@ void IndexTableHelper::ReadIndexTableSegment(uint64_t len)
 
     if (mSegments.size() == 1)
         mEditRate = mSegments.back()->getIndexEditRate();
+
+    return end_offset;
 }
 
 void IndexTableHelper::UpdateIndex(int64_t position, int64_t essence_offset, int64_t size)

@@ -79,8 +79,6 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
     mEssenceStartKey = g_Null_Key;
     mLastKnownFilePosition = -1;
     mLastKnownBasePosition = -1;
-    mPreviousPartitionId = 0;
-    mPreviousFilePosition = 0;
     mHaveFooter = file_is_complete;
     mBaseReadError = false;
 
@@ -192,13 +190,15 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
     mTrackFrames.assign(mFileReader->GetNumInternalTrackReaders(), 0);
     mFrameMetadataReader->Reset();
 
+    int64_t end_position = mPosition + num_samples;
+
     // check read limits
     if (mReadDuration == 0 ||
         mPosition >= mReadStartPosition + mReadDuration ||
-        mPosition + num_samples <= 0)
+        end_position <= 0)
     {
         // always be positioned num_samples after previous position
-        Seek(mPosition + num_samples);
+        Seek(end_position);
         return 0;
     }
 
@@ -217,10 +217,11 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
 
     // read the samples
     int64_t start_position = mPosition;
+    uint32_t actual_read_num_samples;
     if (mFileReader->IsClipWrapped())
-        ReadClipWrappedSamples(read_num_samples);
+        actual_read_num_samples = ReadClipWrappedSamples(read_num_samples);
     else
-        ReadFrameWrappedSamples(read_num_samples);
+        actual_read_num_samples = ReadFrameWrappedSamples(read_num_samples);
 
 
     // add information for first sample in frame
@@ -256,10 +257,10 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
 
 
     // always be positioned num_samples after previous position
-    if (read_num_samples < num_samples)
-        Seek(mPosition + (num_samples - read_num_samples));
+    if (mPosition != end_position)
+        Seek(end_position);
 
-    return read_num_samples;
+    return actual_read_num_samples;
 }
 
 void EssenceReader::Seek(int64_t position)
@@ -295,11 +296,11 @@ bool EssenceReader::IsComplete() const
     return mEssenceChunkHelper.IsComplete() && mIndexTableHelper.IsComplete();
 }
 
-void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
+uint32_t EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
 {
-    // only support seeking to position 0 for incomplete clip wrapped files
-    if (!IsComplete() && mPosition == 0)
-        SeekEssence(mPosition, true);
+    // for incomplete clip wrapped files only support seeking to position 0
+    if (!IsComplete() && mPosition == 0 && !SeekEssence(mPosition, true))
+        return 0;
 
     if (mFileReader->GetInternalTrackReader(0)->IsEnabled())
         mTrackFrames[0] = mFileReader->GetInternalTrackReader(0)->GetFrameBuffer()->CreateFrame();
@@ -354,9 +355,12 @@ void EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
         mPosition += num_cont_samples;
         total_num_samples += num_cont_samples;
     }
+
+    BMX_ASSERT(total_num_samples == num_samples);
+    return num_samples;
 }
 
-void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
+uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
 {
     int64_t start_position = mPosition;
 
@@ -365,7 +369,8 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
     for (i = 0; i < num_samples; i++) {
         int64_t cp_file_position;
         int64_t size;
-        SeekEssence(mPosition, true);
+        if (!SeekEssence(mPosition, true))
+            return i;
         if (mIndexTableHelper.HaveEditUnitSize(mPosition)) {
             GetEditUnit(mPosition, &cp_file_position, &size);
             BMX_ASSERT(cp_file_position == mFilePosition);
@@ -451,6 +456,8 @@ void EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
 
         mPosition++;
     }
+
+    return num_samples;
 }
 
 void EssenceReader::GetEditUnit(int64_t position, int64_t *file_position, int64_t *size)
@@ -566,14 +573,14 @@ bool EssenceReader::SetConstantEditUnitSize()
     return edit_unit_size > 0;
 }
 
-void EssenceReader::SeekEssence(int64_t base_position, bool for_read)
+bool EssenceReader::SeekEssence(int64_t base_position, bool for_read)
 {
     try
     {
         BMX_ASSERT(base_position >= 0);
 
         if (mAtCPStart && base_position == mBasePosition)
-            return;
+            return true;
 
         // if the file position is known then seek to it
         int64_t file_position;
@@ -584,16 +591,17 @@ void EssenceReader::SeekEssence(int64_t base_position, bool for_read)
         if (file_position >= 0) {
             mFile->seek(file_position, SEEK_SET);
             SetContentPackageStart(base_position, file_position, true);
-            return;
+            return true;
         }
 
         BMX_ASSERT(!mEssenceChunkHelper.IsComplete() || !mIndexTableHelper.IsComplete());
         if (!for_read)
-            return;
+            return true;
 
         // position file at start of first or last known content package
         if (mBasePosition < 0) {
-            SeekContentPackageStart();
+            if (!SeekContentPackageStart())
+                return false;
             SetContentPackageStart(0, -1, false);
         } else if (mBasePosition < mLastKnownBasePosition || mBaseReadError) {
             BMX_ASSERT(mLastKnownBasePosition < base_position);
@@ -609,7 +617,8 @@ void EssenceReader::SeekEssence(int64_t base_position, bool for_read)
         int64_t next_file_position;
         int64_t next_base_position;
         while (mBasePosition < base_position) {
-            ReadFirstEssenceKL(&key, &llen, &len);
+            if (!ReadFirstEssenceKL(&key, &llen, &len))
+                return false;
             cp_num_read = mxfKey_extlen + llen + len;
             next_file_position = mFilePosition;
             next_base_position = mBasePosition;
@@ -625,6 +634,8 @@ void EssenceReader::SeekEssence(int64_t base_position, bool for_read)
                                               cp_num_read);
             }
         }
+
+        return true;
     }
     catch (...)
     {
@@ -637,7 +648,8 @@ void EssenceReader::SeekEssence(int64_t base_position, bool for_read)
 bool EssenceReader::ReadEssenceKL(bool first_element, mxfKey *key_out, uint8_t *llen_out, uint64_t *len_out)
 {
     if (first_element) {
-        ReadFirstEssenceKL(key_out, llen_out, len_out);
+        if (!ReadFirstEssenceKL(key_out, llen_out, len_out))
+            return false;
         ResetState();
         return true;
     } else {
@@ -681,13 +693,14 @@ void EssenceReader::SetContentPackageStart(int64_t base_position, int64_t file_p
     mBaseReadError = false;
 }
 
-void EssenceReader::ReadFirstEssenceKL(mxfKey *key_out, uint8_t *llen_out, uint64_t *len_out)
+bool EssenceReader::ReadFirstEssenceKL(mxfKey *key_out, uint8_t *llen_out, uint64_t *len_out)
 {
     try
     {
         // read the first element's KL
         if (!mAtCPStart) {
-            SeekContentPackageStart();
+            if (!SeekContentPackageStart())
+                return false;
             SetContentPackageStart(mBasePosition + 1, -1, false);
         } else if (mNextKey == g_Null_Key) {
             mFile->readKL(&mNextKey, &mNextLLen, &mNextLen);
@@ -701,6 +714,8 @@ void EssenceReader::ReadFirstEssenceKL(mxfKey *key_out, uint8_t *llen_out, uint6
         *key_out  = mNextKey;
         *llen_out = mNextLLen;
         *len_out  = mNextLen;
+
+        return true;
     }
     catch (...)
     {
@@ -749,7 +764,7 @@ bool EssenceReader::ReadNonfirstEssenceKL(mxfKey *key_out, uint8_t *llen_out, ui
     }
 }
 
-void EssenceReader::SeekContentPackageStart()
+bool EssenceReader::SeekContentPackageStart()
 {
     mxfKey key;
     uint8_t llen;
@@ -758,36 +773,31 @@ void EssenceReader::SeekContentPackageStart()
     Partition *partition;
     bool have_start_key = (mEssenceStartKey != g_Null_Key);
 
-    if (mxf_is_partition_pack(&mNextKey)) {
-        if (mFileIsComplete)
-            mFile->skip(mNextLen);
-        else
-            ReadNextPartition(&mNextKey, mNextLLen, mNextLen);
-    }
+    if (mxf_is_partition_pack(&mNextKey))
+        ReadNextPartition(&mNextKey, mNextLLen, mNextLen);
     ResetNextKL();
 
-    if (mFileIsComplete)
-        partition_id = GetPartitionId(mFile->tell());
-    else
-        partition_id = mFile->getPartitions().size() - 1;
+    partition_id = mFile->getPartitions().size() - 1;
     partition = mFile->getPartitions()[partition_id];
 
-    while (true)
+    bool at_cp_start = false;
+    while (!at_cp_start && !mFileIsComplete)
     {
         mFile->readNextNonFillerKL(&key, &llen, &len);
 
         if (mxf_is_partition_pack(&key))
         {
-            if (mFileIsComplete) {
-                mFile->skip(len);
-                partition_id = GetPartitionId(mFile->tell());
-            } else {
-                if (partition->getBodySID() == mFileReader->mBodySID)
-                    mEssenceChunkHelper.UpdateLastChunk(mFile->tell() - mxfKey_extlen - llen, true);
-                ReadNextPartition(&key, llen, len);
-                partition_id++;
-            }
+            if (partition->getBodySID() == mFileReader->mBodySID)
+                mEssenceChunkHelper.UpdateLastChunk(mFile->tell() - mxfKey_extlen - llen, true);
+            ReadNextPartition(&key, llen, len);
+            partition_id++;
             partition = mFile->getPartitions()[partition_id];
+        }
+        else if (mxf_equals_key(&key, &g_RandomIndexPack_key))
+        {
+            if (!mHaveFooter)
+                BMX_EXCEPTION(("Encountered a RIP key before a footer partition pack"));
+            SetFileIsComplete();
         }
         else if (mxf_is_header_metadata(&key))
         {
@@ -799,12 +809,15 @@ void EssenceReader::SeekContentPackageStart()
         else if (mxf_is_index_table_segment(&key))
         {
             if (!mIndexTableHelper.IsComplete() && partition->getIndexSID() == mFileReader->mIndexSID) {
-                mIndexTableHelper.ReadIndexTableSegment(len);
+                int64_t end_offset = mIndexTableHelper.ReadIndexTableSegment(len);
+                // if in footer then file is complete if the index table segment covers the last content package
+                if (mHaveFooter && partition_id == mFile->getPartitions().size() - 1 &&
+                    end_offset >= mIndexTableHelper.GetDuration())
+                {
+                    SetFileIsComplete();
+                }
             } else {
-                if (partition->getIndexByteCount() > mxfKey_extlen + llen + len)
-                    mFile->skip(partition->getIndexByteCount() - mxfKey_extlen - llen);
-                else
-                    mFile->skip(len);
+                mFile->skip(len);
             }
         }
         else if (partition->getBodySID() == mFileReader->mBodySID &&
@@ -830,40 +843,15 @@ void EssenceReader::SeekContentPackageStart()
                 mEssenceStartKey = key;
 
             SetNextKL(&key, llen, len);
-            break;
+            at_cp_start = true;
         }
         else
         {
-            if (!mFileIsComplete && mxf_equals_key(&key, &g_RandomIndexPack_key)) {
-                if (!mHaveFooter)
-                    BMX_EXCEPTION(("Encountered a RIP key before a footer partition pack"));
-                SetFileIsComplete();
-            }
             mFile->skip(len);
         }
     }
-}
 
-size_t EssenceReader::GetPartitionId(int64_t file_position)
-{
-    if (file_position < mPreviousFilePosition) {
-        mPreviousPartitionId = 0;
-        mPreviousFilePosition = 0;
-    }
-
-    const std::vector<Partition*> &partitions = mFile->getPartitions();
-    size_t i;
-    for (i = mPreviousPartitionId; i < partitions.size(); i++) {
-        if (partitions[i]->getThisPartition() > (uint64_t)file_position)
-            break;
-    }
-    if (i > 0)
-        i--;
-
-    mPreviousFilePosition = file_position;
-    mPreviousPartitionId = i;
-
-    return i;
+    return at_cp_start;
 }
 
 void EssenceReader::ReadNextPartition(const mxfKey *key, uint8_t llen, uint64_t len)

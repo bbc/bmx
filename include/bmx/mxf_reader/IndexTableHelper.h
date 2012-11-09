@@ -111,7 +111,7 @@ public:
     void SetEditRate(Rational edit_rate);
     void SetConstantEditUnitSize(Rational edit_rate, uint32_t size);
 
-    void ReadIndexTableSegment(uint64_t len);
+    int64_t ReadIndexTableSegment(uint64_t len);
     void UpdateIndex(int64_t position, int64_t essence_offset, int64_t size);
     void SetIsComplete();
 

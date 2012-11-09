@@ -74,8 +74,8 @@ public:
     bool IsComplete() const;
 
 private:
-    void ReadClipWrappedSamples(uint32_t num_samples);
-    void ReadFrameWrappedSamples(uint32_t num_samples);
+    uint32_t ReadClipWrappedSamples(uint32_t num_samples);
+    uint32_t ReadFrameWrappedSamples(uint32_t num_samples);
 
     void GetEditUnit(int64_t position, int64_t *file_position, int64_t *size);
     void GetEditUnitGroup(int64_t position, uint32_t max_samples, int64_t *file_position, int64_t *size,
@@ -84,7 +84,7 @@ private:
     bool SetConstantEditUnitSize();
 
 private:
-    void SeekEssence(int64_t base_position, bool for_read);
+    bool SeekEssence(int64_t base_position, bool for_read);
     bool ReadEssenceKL(bool first_element, mxfKey *key, uint8_t *llen, uint64_t *len);
 
 private:
@@ -92,11 +92,10 @@ private:
 
     void SetContentPackageStart(int64_t base_position, int64_t file_position, bool pos_at_key);
 
-    void ReadFirstEssenceKL(mxfKey *key, uint8_t *llen, uint64_t *len);
+    bool ReadFirstEssenceKL(mxfKey *key, uint8_t *llen, uint64_t *len);
     bool ReadNonfirstEssenceKL(mxfKey *key, uint8_t *llen, uint64_t *len);
-    void SeekContentPackageStart();
+    bool SeekContentPackageStart();
 
-    size_t GetPartitionId(int64_t file_position);
     void ReadNextPartition(const mxfKey *key, uint8_t llen, uint64_t len);
 
     void SetHaveFooter();
@@ -133,8 +132,6 @@ private:
     mxfKey mEssenceStartKey;
     int64_t mLastKnownFilePosition;
     int64_t mLastKnownBasePosition;
-    size_t mPreviousPartitionId;
-    int64_t mPreviousFilePosition;
     bool mHaveFooter;
     bool mBaseReadError;
 };
