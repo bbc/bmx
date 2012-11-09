@@ -797,6 +797,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
 
     Track *infile_mp_track = 0;
     vector<GenericTrack*> mp_tracks = material_package->getTracks();
+    uint32_t skipped_track_count = 0;
     size_t i;
     for (i = 0; i < mp_tracks.size(); i++) {
         Track *mp_track = dynamic_cast<Track*>(mp_tracks[i]);
@@ -856,6 +857,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         }
         if (!mp_source_clip) {
             log_warn("Skipping material package track %u which has no SourceClip\n", mp_track_id);
+            skipped_track_count++;
             continue;
         }
 
@@ -877,7 +879,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         // skip if could not resolve the source clip
         vector<ResolvedPackage> resolved_packages = mPackageResolver->ResolveSourceClip(mp_source_clip);
         if (resolved_packages.empty()) {
-            log_warn("Skipping material package track %u because source track could not be found\n", mp_track_id);
+            skipped_track_count++;
             continue;
         }
 
@@ -903,6 +905,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
             if (!track_reader) {
                 log_warn("Skipping material package track %u because external source track could not be found\n",
                          mp_track_id);
+                skipped_track_count++;
                 continue;
             }
 
@@ -925,8 +928,11 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         if (!infile_mp_track)
             infile_mp_track = mp_track;
     }
-    if (mTrackReaders.empty())
+    if (mTrackReaders.empty()) {
+        if (skipped_track_count > 0)
+            log_warn("Skipped %u material package tracks whilst processing header metadata\n", skipped_track_count);
         THROW_RESULT(MXF_RESULT_NO_ESSENCE);
+    }
     if (mIsClipWrapped && mInternalTrackReaders.size() > 1) {
         log_error("Multiple tracks and clip wrapped essence container is not supported\n");
         THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
