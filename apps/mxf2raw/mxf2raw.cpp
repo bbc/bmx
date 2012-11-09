@@ -1114,7 +1114,7 @@ int main(int argc, const char** argv)
                     gf_retry_count++;
                     gf_read_failure = true;
                     if (gf_retry_delay > 0.0) {
-                        rt_sleep(1.0 / gf_retry_delay, get_tick_count(), sample_rate,
+                        rt_sleep(1.0f / gf_retry_delay, get_tick_count(), sample_rate,
                                  sample_rate.numerator / sample_rate.denominator);
                     }
                     continue;
