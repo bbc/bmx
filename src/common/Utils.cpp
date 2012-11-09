@@ -536,19 +536,19 @@ bmx::Timestamp bmx::generate_timestamp_now()
     Timestamp now;
     struct tm gmt;
 
-#if defined(_MSC_VER)
+#if HAVE_GMTIME_R
+    time_t t = time(0);
+    BMX_CHECK(gmtime_r(&t, &gmt));
+#elif defined(_MSC_VER)
     struct _timeb tb;
     BMX_CHECK(_ftime_s(&tb) == 0);
     BMX_CHECK(gmtime_s(&gmt, &tb.time) == 0);
-#elif defined(_WIN32)
-    // TODO: need thread-safe (reentrant) version
+#else
+    // Note: gmtime is not thread-safe
     time_t t = time(0);
     const struct tm *gmt_ptr = gmtime(&t);
     BMX_CHECK(gmt_ptr);
     gmt = *gmt_ptr;
-#else
-    time_t t = time(0);
-    BMX_CHECK(gmtime_r(&t, &gmt));
 #endif
 
     now.year  = gmt.tm_year + 1900;

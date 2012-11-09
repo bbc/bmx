@@ -176,7 +176,7 @@ AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
 
 
-AC_CHECK_FUNCS([getcwd gettimeofday memmove memset mkdir strerror strerror_r nanosleep])
+AC_CHECK_FUNCS([getcwd gettimeofday memmove memset mkdir strerror strerror_r nanosleep gmtime_r])
 
 
 dnl-----------------------------------------------------------------------------
