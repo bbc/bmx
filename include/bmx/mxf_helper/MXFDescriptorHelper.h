@@ -51,6 +51,8 @@ public:
         SMPTE_377_2004_FLAVOUR,
         SMPTE_377_1_FLAVOUR,
         AVID_FLAVOUR,
+        RDD9_377_2004_FLAVOUR,
+        RDD9_377_1_FLAVOUR,
     } DescriptorFlavour;
 
 public:

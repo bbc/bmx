@@ -350,6 +350,8 @@ void PictureMXFDescriptorHelper::SetCodingEquations(mxfUL label)
     {
         case SMPTE_377_2004_FLAVOUR:
         case SMPTE_377_1_FLAVOUR:
+        case RDD9_377_1_FLAVOUR:
+        case RDD9_377_2004_FLAVOUR:
             picture_descriptor->setCodingEquations(label);
             break;
         case AVID_FLAVOUR:
@@ -372,12 +374,14 @@ void PictureMXFDescriptorHelper::SetColorSiting(uint8_t color_siting)
     {
         case SMPTE_377_2004_FLAVOUR:
         case AVID_FLAVOUR:
+        case RDD9_377_2004_FLAVOUR:
             if (color_siting > MXF_COLOR_SITING_REC601)
                 cdci_descriptor->setColorSiting(MXF_COLOR_SITING_UNKNOWN);
             else
                 cdci_descriptor->setColorSiting(color_siting);
             break;
         case SMPTE_377_1_FLAVOUR:
+        case RDD9_377_1_FLAVOUR:
             if (color_siting > MXF_COLOR_SITING_VERT_MIDPOINT)
                 cdci_descriptor->setColorSiting(MXF_COLOR_SITING_UNKNOWN);
             else

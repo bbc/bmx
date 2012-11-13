@@ -58,10 +58,11 @@ RDD9PCMTrack::RDD9PCMTrack(RDD9File *file, uint32_t track_index, uint32_t track_
     mWaveDescriptorHelper = dynamic_cast<WaveMXFDescriptorHelper*>(mDescriptorHelper);
     BMX_ASSERT(mWaveDescriptorHelper);
 
-    mWaveDescriptorHelper->SetUseAES3AudioDescriptor(true);
     mWaveDescriptorHelper->SetSamplingRate(SAMPLING_RATE_48K);
     mWaveDescriptorHelper->SetQuantizationBits(16);
     mWaveDescriptorHelper->SetChannelCount(1);
+    mWaveDescriptorHelper->SetLocked(true);
+    mWaveDescriptorHelper->SetAudioRefLevel(0);
 
     mIsPicture = false;
     mTrackNumber = MXF_AES3BWF_TRACK_NUM(0x01, MXF_AES3_FRAME_WRAPPED_EE_TYPE, 0x00);

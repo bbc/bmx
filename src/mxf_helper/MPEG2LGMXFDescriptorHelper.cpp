@@ -334,6 +334,21 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setWhiteReflevel(235);
     cdci_descriptor->setColorRange(225);
 
+    if (mFlavour == RDD9_377_2004_FLAVOUR || mFlavour == RDD9_377_2004_FLAVOUR) {
+        if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_SEPARATE_FIELDS) {
+            cdci_descriptor->setStoredF2Offset(0);
+            cdci_descriptor->setDisplayF2Offset(0);
+            cdci_descriptor->setFieldDominance(1);
+        }
+        cdci_descriptor->setSampledXOffset(0);
+        cdci_descriptor->setSampledYOffset(0);
+        cdci_descriptor->setDisplayXOffset(0);
+        cdci_descriptor->setDisplayYOffset(0);
+        cdci_descriptor->setImageStartOffset(0);
+        cdci_descriptor->setImageEndOffset(0);
+        cdci_descriptor->setPaddingBits(0);
+    }
+
     if (mpeg_descriptor) {
         mpeg_descriptor->setSingleSequence(true);
         mpeg_descriptor->setCodedContentType(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_FULL_FRAME ? 1 : 2);
@@ -359,6 +374,28 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             default:
                 BMX_ASSERT(false);
                 break;
+        }
+
+        if (mFlavour == RDD9_377_2004_FLAVOUR || mFlavour == RDD9_377_2004_FLAVOUR) {
+            mpeg_descriptor->setLowDelay(false);
+            switch (mEssenceType)
+            {
+                case MPEG2LG_422P_HL_720P:
+                case MPEG2LG_MP_HL_720P:
+                    mpeg_descriptor->setMaxGOP(12);
+                    break;
+                case MPEG2LG_422P_HL_1080I:
+                case MPEG2LG_422P_HL_1080P:
+                case MPEG2LG_MP_HL_1920_1080I:
+                case MPEG2LG_MP_HL_1920_1080P:
+                case MPEG2LG_MP_HL_1440_1080I:
+                case MPEG2LG_MP_HL_1440_1080P:
+                case MPEG2LG_MP_H14_1080I:
+                case MPEG2LG_MP_H14_1080P:
+                default:
+                    mpeg_descriptor->setMaxGOP(15);
+                    break;
+            }
         }
     }
 }
