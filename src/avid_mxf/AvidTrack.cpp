@@ -400,8 +400,7 @@ void AvidTrack::CompleteWrite()
 
     // update body partition and re-write the partition packs
 
-    mMXFFile->getPartition(BODY_PARTITION).setKey(&MXF_PP_K(ClosedComplete, Body));
-    mMXFFile->updatePartitions();
+    mMXFFile->updateBodyPartitions(&MXF_PP_K(ClosedComplete, Body));
 
 
     // done with the file

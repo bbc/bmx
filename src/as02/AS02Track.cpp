@@ -398,13 +398,7 @@ void AS02Track::CompleteWrite()
 
     // update and re-write the body partition packs
 
-    const std::vector<Partition*> &partitions = mMXFFile->getPartitions();
-    size_t i;
-    for (i = 0; i < partitions.size(); i++) {
-        if (partitions[i]->isBody())
-            partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Body));
-    }
-    mMXFFile->updatePartitions();
+    mMXFFile->updateBodyPartitions(&MXF_PP_K(ClosedComplete, Body));
 
 
     // done with the file

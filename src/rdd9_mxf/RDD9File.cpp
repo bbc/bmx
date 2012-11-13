@@ -393,14 +393,8 @@ void RDD9File::CompleteWrite()
 
 
         // update body partition status and re-write the partition packs
-        // TODO: should only need to re-write the body partitions
 
-        const std::vector<Partition*> &partitions = mMXFFile->getPartitions();
-        for (i = 0; i < partitions.size(); i++) {
-            if (partitions[i]->isBody())
-                partitions[i]->setKey(&MXF_PP_K(ClosedComplete, Body));
-        }
-        mMXFFile->updatePartitions();
+        mMXFFile->updateBodyPartitions(&MXF_PP_K(ClosedComplete, Body));
     }
 
 
