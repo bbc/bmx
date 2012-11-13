@@ -56,7 +56,7 @@ using namespace mxfpp;
 
 static const uint32_t TIMECODE_TRACK_ID         = 1;
 static const uint32_t FIRST_PICTURE_TRACK_ID    = 2;
-static const uint32_t FIRST_SOUND_TRACK_ID      = 3;
+static const uint32_t FIRST_SOUND_TRACK_ID      = 4;
 static const uint32_t KAG_SIZE                  = 0x200;
 static const uint32_t INDEX_SID                 = 1;
 static const uint32_t BODY_SID                  = 2;
@@ -100,7 +100,6 @@ RDD9File::RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate)
     mxf_generate_umid(&mFileSourcePackageUID);
     mOutputStartOffset = 0;
     mOutputEndOffset = 0;
-    mPictureTrack = 0;
     mPictureTrackCount = 0;
     mSoundTrackCount = 0;
     mDataModel = 0;
@@ -212,8 +211,8 @@ RDD9Track* RDD9File::CreateTrack(EssenceType essence_type)
         track_type_number = mSoundTrackCount;
         mSoundTrackCount++;
     } else {
-        if (mPictureTrackCount > 0)
-            BMX_EXCEPTION(("Multiple picture tracks are not supported"));
+        if (mPictureTrackCount > 1)
+            BMX_EXCEPTION(("A maximum of 2 MPEG-2 Long GOP picture tracks are supported"));
         track_id = FIRST_PICTURE_TRACK_ID + mPictureTrackCount;
         track_type_number = mPictureTrackCount;
         mPictureTrackCount++;
@@ -223,9 +222,6 @@ RDD9Track* RDD9File::CreateTrack(EssenceType essence_type)
     mTracks.push_back(RDD9Track::Create(this, track_index, track_id, track_type_number, mEditRate, essence_type));
     mTrackMap[track_index] = mTracks.back();
 
-    if (mTracks.back()->IsPicture())
-        mPictureTrack = dynamic_cast<RDD9MPEG2LGTrack*>(mTracks.back());
-
     return mTracks.back();
 }
 
@@ -234,7 +230,7 @@ void RDD9File::PrepareHeaderMetadata()
     if (mHeaderMetadata)
         return;
 
-    if (!mPictureTrack)
+    if (mPictureTrackCount == 0)
         BMX_EXCEPTION(("Require a MPEG-2 Long GOP picture track"));
     if (mTracks.size() < 2)
         BMX_EXCEPTION(("Require at least 1 sound track"));

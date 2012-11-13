@@ -144,7 +144,6 @@ private:
     int64_t mPartitionFrameCount;
 
     std::vector<RDD9Track*> mTracks;
-    RDD9MPEG2LGTrack *mPictureTrack;
     std::map<uint32_t, RDD9Track*> mTrackMap;
     uint8_t mPictureTrackCount;
     uint8_t mSoundTrackCount;
