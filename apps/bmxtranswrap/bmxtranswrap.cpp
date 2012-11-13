@@ -1599,7 +1599,7 @@ int main(int argc, const char** argv)
             else if (single_pass)
                 flavour |= D10_SINGLE_PASS_WRITE_FLAVOUR;
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
-            flavour = RDD9_DEFAULT_FLAVOUR;
+            flavour = RDD9_SMPTE_377_2004_FLAVOUR;
             if (output_file_md5)
                 flavour |= RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)

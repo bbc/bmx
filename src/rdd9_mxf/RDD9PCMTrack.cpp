@@ -58,6 +58,8 @@ RDD9PCMTrack::RDD9PCMTrack(RDD9File *file, uint32_t track_index, uint32_t track_
     mWaveDescriptorHelper = dynamic_cast<WaveMXFDescriptorHelper*>(mDescriptorHelper);
     BMX_ASSERT(mWaveDescriptorHelper);
 
+    if ((file->mFlavour & RDD9_SMPTE_377_1_FLAVOUR))
+        mWaveDescriptorHelper->SetSampleRate(SAMPLING_RATE_48K);
     mWaveDescriptorHelper->SetSamplingRate(SAMPLING_RATE_48K);
     mWaveDescriptorHelper->SetQuantizationBits(16);
     mWaveDescriptorHelper->SetChannelCount(1);

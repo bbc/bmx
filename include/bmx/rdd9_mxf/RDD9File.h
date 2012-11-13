@@ -43,9 +43,10 @@
 #include <bmx/MXFUtils.h>
 
 
-#define RDD9_DEFAULT_FLAVOUR                 0x0000
-#define RDD9_SINGLE_PASS_WRITE_FLAVOUR       0x0001
-#define RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR   0x0003
+#define RDD9_SMPTE_377_2004_FLAVOUR          0x0001
+#define RDD9_SMPTE_377_1_FLAVOUR             0x0002
+#define RDD9_SINGLE_PASS_WRITE_FLAVOUR       0x0004
+#define RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR   0x000c
 
 
 
@@ -58,6 +59,7 @@ class RDD9File
 public:
     friend class RDD9Track;
     friend class RDD9MPEG2LGTrack;
+    friend class RDD9PCMTrack;
 
 public:
     RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate);

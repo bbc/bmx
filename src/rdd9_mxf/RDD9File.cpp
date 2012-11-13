@@ -457,7 +457,10 @@ void RDD9File::CreateHeaderMetadata()
     // Preface
     Preface *preface = new Preface(mHeaderMetadata);
     preface->setLastModifiedDate(mCreationDate);
-    preface->setVersion(MXF_PREFACE_VER(1, 2));
+    if ((mFlavour & RDD9_SMPTE_377_2004_FLAVOUR))
+        preface->setVersion(MXF_PREFACE_VER(1, 2));
+    else
+        preface->setVersion(MXF_PREFACE_VER(1, 3));
     preface->setOperationalPattern(MXF_OP_L(1a, MultiTrack_Stream_Internal));
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
@@ -578,7 +581,10 @@ void RDD9File::CreateFile()
 
     Partition &header_partition = mMXFFile->createPartition();
     header_partition.setKey(&MXF_PP_K(OpenIncomplete, Header));
-    header_partition.setVersion(1, 2);  // v1.2 - smpte 377-2004
+    if ((mFlavour & RDD9_SMPTE_377_2004_FLAVOUR))
+        header_partition.setVersion(1, 2);
+    else
+        header_partition.setVersion(1, 3);
     header_partition.setIndexSID(0);
     header_partition.setBodySID(0);
     header_partition.setKagSize(KAG_SIZE);

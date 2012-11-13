@@ -2538,7 +2538,7 @@ int main(int argc, const char** argv)
             flavour = D10_DEFAULT_FLAVOUR;
             // single pass flavours not (yet) supported
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
-            flavour = RDD9_DEFAULT_FLAVOUR;
+            flavour = RDD9_SMPTE_377_2004_FLAVOUR;
             if (file_md5)
                 flavour |= RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
