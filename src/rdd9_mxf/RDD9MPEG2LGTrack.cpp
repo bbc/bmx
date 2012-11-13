@@ -67,6 +67,10 @@ RDD9MPEG2LGTrack::~RDD9MPEG2LGTrack()
 
 void RDD9MPEG2LGTrack::SetAspectRatio(Rational aspect_ratio)
 {
+    if (aspect_ratio != ASPECT_RATIO_16_9) {
+        log_warn("Image aspect ratio is set to %d/%d; RDD9 requires image aspect ratio 16/9\n",
+                 aspect_ratio.numerator, aspect_ratio.denominator);
+    }
     mPictureDescriptorHelper->SetAspectRatio(aspect_ratio);
 }
 

@@ -90,6 +90,8 @@ void RDD9PCMTrack::SetQuantizationBits(uint32_t bits)
 {
     BMX_CHECK(bits > 0 && bits <= 32);
 
+    if (bits != 16 && bits != 24)
+        log_warn("Audio quantization bits is set to %u; RDD9 requires audio quantization bits 16 or 24\n", bits);
     mWaveDescriptorHelper->SetQuantizationBits(bits);
 }
 
@@ -100,11 +102,15 @@ void RDD9PCMTrack::SetChannelCount(uint32_t count)
 
 void RDD9PCMTrack::SetLocked(bool locked)
 {
+    if (!locked)
+        log_warn("Audio locked is set to false; RDD9 requires audio locked true\n");
     mWaveDescriptorHelper->SetLocked(locked);
 }
 
 void RDD9PCMTrack::SetAudioRefLevel(int8_t level)
 {
+    if (level != 0)
+        log_warn("Audio reference level is set to %d; RDD9 requires audio reference level 0\n", level);
     mWaveDescriptorHelper->SetAudioRefLevel(level);
 }
 

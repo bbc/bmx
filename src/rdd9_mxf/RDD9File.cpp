@@ -80,6 +80,9 @@ RDD9File::RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate)
               frame_rate == FRAME_RATE_50 ||
               frame_rate == FRAME_RATE_5994);
 
+    if (frame_rate == FRAME_RATE_24)
+        log_warn("Frame rate is 24Hz; RDD9 does not list this rate in the supported rates list\n");
+
     mFlavour = flavour;
     mMXFFile = mxf_file;
     mFrameRate = frame_rate;
