@@ -180,7 +180,7 @@ FileDescriptor* AVCIMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetad
 {
     UpdateEssenceIndex();
 
-    if (mFlavour == AVID_FLAVOUR)
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR))
         mFileDescriptor = new CDCIEssenceDescriptor(header_metadata);
     else
         mFileDescriptor = new MPEGVideoDescriptor(header_metadata);
@@ -195,7 +195,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(cdci_descriptor);
     MPEGVideoDescriptor *mpeg_descriptor = dynamic_cast<MPEGVideoDescriptor*>(mFileDescriptor);
-    BMX_ASSERT(mFlavour == AVID_FLAVOUR || mpeg_descriptor);
+    BMX_ASSERT((mFlavour & MXFDESC_AVID_FLAVOUR) || mpeg_descriptor);
 
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
     switch (mEssenceType)

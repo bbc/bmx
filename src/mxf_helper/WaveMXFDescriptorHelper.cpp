@@ -140,7 +140,7 @@ void WaveMXFDescriptorHelper::SetUseAES3AudioDescriptor(bool enable)
 
 FileDescriptor* WaveMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata)
 {
-    if (mFlavour == RDD9_377_1_FLAVOUR || mFlavour == RDD9_377_2004_FLAVOUR || mUseAES3AudioDescriptor)
+    if ((mFlavour & MXFDESC_RDD9_FLAVOUR) || mUseAES3AudioDescriptor)
         mFileDescriptor = new AES3AudioDescriptor(header_metadata);
     else
         mFileDescriptor = new WaveAudioDescriptor(header_metadata);
@@ -160,7 +160,7 @@ void WaveMXFDescriptorHelper::UpdateFileDescriptor()
     wav_descriptor->setAvgBps(sample_size * mSamplingRate.numerator / mSamplingRate.denominator);
     if (mSequenceOffset > 0)
         wav_descriptor->setSequenceOffset(mSequenceOffset);
-    if (mFlavour == RDD9_377_1_FLAVOUR || mFlavour == RDD9_377_2004_FLAVOUR) {
+    if ((mFlavour & MXFDESC_RDD9_FLAVOUR)) {
         // Professional use, linear PCM, no emphasis, 48KHz sampling
         static const mxfAES3FixedData fixed_channel_status_data =
         {
@@ -186,7 +186,7 @@ uint32_t WaveMXFDescriptorHelper::GetSampleSize()
 
 mxfUL WaveMXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
-    if (mFlavour == RDD9_377_1_FLAVOUR || mFlavour == RDD9_377_2004_FLAVOUR || mUseAES3AudioDescriptor) {
+    if ((mFlavour & MXFDESC_RDD9_FLAVOUR) || mUseAES3AudioDescriptor) {
         if (mFrameWrapped)
             return MXF_EC_L(AES3FrameWrapped);
         else

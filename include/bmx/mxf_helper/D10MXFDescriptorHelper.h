@@ -60,7 +60,7 @@ public:
     virtual void SetEssenceType(EssenceType essence_type);
     virtual void SetSampleRate(mxfRational sample_rate);
     virtual void SetFrameWrapped(bool frame_wrapped);
-    virtual void SetFlavour(DescriptorFlavour flavour);
+    virtual void SetFlavour(int flavour);
     void SetSampleSize(uint32_t size);
 
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);

@@ -98,7 +98,7 @@ MXFDescriptorHelper::MXFDescriptorHelper()
     mSampleRate = FRAME_RATE_25;
     mFrameWrapped = true;
     mFileDescriptor = 0;
-    mFlavour = SMPTE_377_2004_FLAVOUR;
+    mFlavour = MXFDESC_SMPTE_377_2004_FLAVOUR;
 
     // mEssenceType is set by subclass
 }
@@ -146,12 +146,12 @@ void MXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
     mFrameWrapped = frame_wrapped;
 }
 
-void MXFDescriptorHelper::SetFlavour(DescriptorFlavour flavour)
+void MXFDescriptorHelper::SetFlavour(int flavour)
 {
     BMX_ASSERT(!mFileDescriptor);
 
     mFlavour = flavour;
-    if (flavour == AVID_FLAVOUR)
+    if ((flavour & MXFDESC_AVID_FLAVOUR))
         mFrameWrapped = false;
 }
 

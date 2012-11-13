@@ -114,7 +114,7 @@ D10Track::D10Track(D10File *file, uint32_t track_index, mxfRational frame_rate, 
 
     mEssenceType = essence_type;
     mDescriptorHelper = MXFDescriptorHelper::Create(essence_type);
-    mDescriptorHelper->SetFlavour(MXFDescriptorHelper::SMPTE_377_2004_FLAVOUR);
+    mDescriptorHelper->SetFlavour(MXFDESC_SMPTE_377_2004_FLAVOUR);
     mDescriptorHelper->SetFrameWrapped(true);
     mDescriptorHelper->SetSampleRate(frame_rate);
 }

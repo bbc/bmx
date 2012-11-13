@@ -215,7 +215,7 @@ AS02Track::AS02Track(AS02Clip *clip, uint32_t track_index, EssenceType essence_t
 
     mEssenceType = essence_type;
     mDescriptorHelper = MXFDescriptorHelper::Create(essence_type);
-    mDescriptorHelper->SetFlavour(MXFDescriptorHelper::SMPTE_377_1_FLAVOUR);
+    mDescriptorHelper->SetFlavour(MXFDESC_SMPTE_377_1_FLAVOUR);
 
     mManifestFile = clip->GetBundle()->GetManifest()->RegisterFile(rel_uri, ESSENCE_COMPONENT_FILE_ROLE);
     mManifestFile->SetId(mFileSourcePackageUID);

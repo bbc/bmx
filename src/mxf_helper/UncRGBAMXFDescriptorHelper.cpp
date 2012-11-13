@@ -315,15 +315,15 @@ void UncRGBAMXFDescriptorHelper::UpdateFileDescriptor()
     rgba_descriptor->setStoredHeight(mStoredHeight);
     rgba_descriptor->setDisplayWidth(mDisplayWidth);
     rgba_descriptor->setDisplayHeight(mDisplayHeight);
-    if (mDisplayXOffset != 0 || mFlavour == AVID_FLAVOUR)
+    if (mDisplayXOffset != 0 || (mFlavour & MXFDESC_AVID_FLAVOUR))
         rgba_descriptor->setDisplayXOffset(mDisplayXOffset);
-    if (mDisplayYOffset != 0 || mFlavour == AVID_FLAVOUR)
+    if (mDisplayYOffset != 0 || (mFlavour & MXFDESC_AVID_FLAVOUR))
         rgba_descriptor->setDisplayYOffset(mDisplayYOffset);
     rgba_descriptor->setSampledWidth(mSampledWidth);
     rgba_descriptor->setSampledHeight(mSampledHeight);
-    if (mSampledXOffset != 0 || mFlavour == AVID_FLAVOUR)
+    if (mSampledXOffset != 0 || (mFlavour & MXFDESC_AVID_FLAVOUR))
         rgba_descriptor->setSampledXOffset(mSampledXOffset);
-    if (mSampledYOffset != 0 || mFlavour == AVID_FLAVOUR)
+    if (mSampledYOffset != 0 || (mFlavour & MXFDESC_AVID_FLAVOUR))
         rgba_descriptor->setSampledYOffset(mSampledYOffset);
     rgba_descriptor->appendVideoLineMap(mVideoLineMap[0]);
     rgba_descriptor->appendVideoLineMap(mVideoLineMap[1]);
@@ -334,7 +334,7 @@ uint32_t UncRGBAMXFDescriptorHelper::GetImageAlignmentOffset()
 {
     if (mImageAlignmentOffsetSet)
         return mImageAlignmentOffset;
-    else if (mFlavour == AVID_FLAVOUR)
+    else if ((mFlavour & MXFDESC_AVID_FLAVOUR))
         return AVID_IMAGE_ALIGNMENT;
     else
         return 1;
@@ -344,7 +344,7 @@ uint32_t UncRGBAMXFDescriptorHelper::GetImageEndOffset()
 {
     if (mImageEndOffsetSet)
         return mImageEndOffset;
-    else if (mFlavour != AVID_FLAVOUR)
+    else if (!(mFlavour & MXFDESC_AVID_FLAVOUR))
         return 0;
 
     uint32_t image_alignment = GetImageAlignmentOffset();
@@ -403,7 +403,7 @@ void UncRGBAMXFDescriptorHelper::SetDefaultDimensions()
     if (!mStoredDimensionsSet) {
         mStoredWidth  = SUPPORTED_ESSENCE[mEssenceIndex].display_width;
         mStoredHeight = SUPPORTED_ESSENCE[mEssenceIndex].display_height;
-        if (mFlavour == AVID_FLAVOUR)
+        if ((mFlavour & MXFDESC_AVID_FLAVOUR))
             mStoredHeight += SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
     }
     if (!mDisplayDimensionsSet) {
@@ -416,7 +416,7 @@ void UncRGBAMXFDescriptorHelper::SetDefaultDimensions()
             mDisplayWidth   = SUPPORTED_ESSENCE[mEssenceIndex].display_width;
             mDisplayHeight  = SUPPORTED_ESSENCE[mEssenceIndex].display_height;
             mDisplayXOffset = 0;
-            if (mFlavour == AVID_FLAVOUR)
+            if ((mFlavour & MXFDESC_AVID_FLAVOUR))
                 mDisplayYOffset = SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
             else
                 mDisplayYOffset = 0;
@@ -431,7 +431,7 @@ void UncRGBAMXFDescriptorHelper::SetDefaultDimensions()
         } else {
             mSampledWidth  = SUPPORTED_ESSENCE[mEssenceIndex].display_width;
             mSampledHeight = SUPPORTED_ESSENCE[mEssenceIndex].display_height;
-            if (mFlavour == AVID_FLAVOUR)
+            if ((mFlavour & MXFDESC_AVID_FLAVOUR))
                 mSampledHeight += SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
             mSampledXOffset = 0;
             mSampledYOffset = 0;
@@ -441,7 +441,7 @@ void UncRGBAMXFDescriptorHelper::SetDefaultDimensions()
     if (!mVideoLineMapSet) {
         mVideoLineMap[0] = SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0];
         mVideoLineMap[1] = SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1];
-        if (mFlavour == AVID_FLAVOUR) {
+        if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
             if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_MIXED_FIELDS) {
                 mVideoLineMap[0] -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;
                 mVideoLineMap[1] -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;

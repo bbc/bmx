@@ -211,7 +211,7 @@ void VC3MXFDescriptorHelper::UpdateFileDescriptor()
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(cdci_descriptor);
 
-    if (mFlavour == AVID_FLAVOUR)
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].avid_pc_label);
     else
         cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
@@ -239,7 +239,7 @@ void VC3MXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1]);
     cdci_descriptor->setHorizontalSubsampling(2);
     cdci_descriptor->setVerticalSubsampling(1);
-    if (mFlavour == AVID_FLAVOUR)
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setImageAlignmentOffset(8192);
 }
 
@@ -250,7 +250,7 @@ uint32_t VC3MXFDescriptorHelper::GetSampleSize()
 
 mxfUL VC3MXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
-    if (mFlavour == AVID_FLAVOUR) {
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
         BMX_ASSERT(!mFrameWrapped);
         return SUPPORTED_ESSENCE[mEssenceIndex].avid_ec_label;
     } else {

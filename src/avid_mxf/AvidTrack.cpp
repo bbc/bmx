@@ -259,7 +259,7 @@ AvidTrack::AvidTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_t
 
     mEssenceType = essence_type;
     mDescriptorHelper = MXFDescriptorHelper::Create(essence_type);
-    mDescriptorHelper->SetFlavour(MXFDescriptorHelper::AVID_FLAVOUR);
+    mDescriptorHelper->SetFlavour(MXFDESC_SMPTE_377_2004_FLAVOUR | MXFDESC_AVID_FLAVOUR);
 }
 
 AvidTrack::~AvidTrack()

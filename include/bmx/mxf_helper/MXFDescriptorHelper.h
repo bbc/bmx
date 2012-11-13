@@ -38,6 +38,12 @@
 #include <bmx/EssenceType.h>
 
 
+#define MXFDESC_SMPTE_377_2004_FLAVOUR   0x0001
+#define MXFDESC_SMPTE_377_1_FLAVOUR      0x0002
+#define MXFDESC_AVID_FLAVOUR             0x0004
+#define MXFDESC_RDD9_FLAVOUR             0x0008
+
+
 
 namespace bmx
 {
@@ -45,16 +51,6 @@ namespace bmx
 
 class MXFDescriptorHelper
 {
-public:
-    typedef enum
-    {
-        SMPTE_377_2004_FLAVOUR,
-        SMPTE_377_1_FLAVOUR,
-        AVID_FLAVOUR,
-        RDD9_377_2004_FLAVOUR,
-        RDD9_377_1_FLAVOUR,
-    } DescriptorFlavour;
-
 public:
     static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
     static MXFDescriptorHelper* Create(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version,
@@ -81,7 +77,7 @@ public:
     virtual void SetEssenceType(EssenceType essence_type);  // default depends on sub-class
     virtual void SetSampleRate(mxfRational sample_rate);    // default 25/1
     virtual void SetFrameWrapped(bool frame_wrapped);       // default true; clip wrapped if false
-    virtual void SetFlavour(DescriptorFlavour flavour);     // default SMPTE_377_2004_FLAVOUR
+    virtual void SetFlavour(int flavour);                   // default MXFDESC_SMPTE_377_2004_FLAVOUR
 
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata) = 0;
     virtual void UpdateFileDescriptor();
@@ -103,7 +99,7 @@ protected:
     EssenceType mEssenceType;
     mxfRational mSampleRate;
     bool mFrameWrapped;
-    DescriptorFlavour mFlavour;
+    int mFlavour;
 
     mxfpp::FileDescriptor *mFileDescriptor;
 };

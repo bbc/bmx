@@ -212,7 +212,7 @@ FileDescriptor* MPEG2LGMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMe
     UpdateEssenceIndex();
 
     // create CDCI descriptor for Avid files
-    if (mFlavour == AVID_FLAVOUR)
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR))
         mFileDescriptor = new CDCIEssenceDescriptor(header_metadata);
     else
         mFileDescriptor = new MPEGVideoDescriptor(header_metadata);
@@ -227,7 +227,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(cdci_descriptor);
     MPEGVideoDescriptor *mpeg_descriptor = dynamic_cast<MPEGVideoDescriptor*>(mFileDescriptor);
-    BMX_ASSERT(mFlavour == AVID_FLAVOUR || mpeg_descriptor);
+    BMX_ASSERT((mFlavour & MXFDESC_AVID_FLAVOUR) || mpeg_descriptor);
 
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
     SetCodingEquations(ITUR_BT709_CODING_EQ);
@@ -334,7 +334,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setWhiteReflevel(235);
     cdci_descriptor->setColorRange(225);
 
-    if (mFlavour == RDD9_377_2004_FLAVOUR || mFlavour == RDD9_377_2004_FLAVOUR) {
+    if ((mFlavour & MXFDESC_RDD9_FLAVOUR)) {
         if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_SEPARATE_FIELDS) {
             cdci_descriptor->setStoredF2Offset(0);
             cdci_descriptor->setDisplayF2Offset(0);
@@ -376,7 +376,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
                 break;
         }
 
-        if (mFlavour == RDD9_377_2004_FLAVOUR || mFlavour == RDD9_377_2004_FLAVOUR) {
+        if ((mFlavour & MXFDESC_RDD9_FLAVOUR)) {
             mpeg_descriptor->setLowDelay(false);
             switch (mEssenceType)
             {
@@ -402,7 +402,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
 
 mxfUL MPEG2LGMXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
-    if (mFlavour == AVID_FLAVOUR) {
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
         BMX_ASSERT(!mFrameWrapped);
         return MXF_EC_L(AvidMPEGClipWrapped);
     } else {

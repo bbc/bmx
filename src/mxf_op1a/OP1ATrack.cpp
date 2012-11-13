@@ -205,7 +205,10 @@ OP1ATrack::OP1ATrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, ui
 
     mEssenceType = essence_type;
     mDescriptorHelper = MXFDescriptorHelper::Create(essence_type);
-    mDescriptorHelper->SetFlavour(MXFDescriptorHelper::SMPTE_377_1_FLAVOUR);
+    if ((file->mFlavour & OP1A_377_2004_FLAVOUR))
+        mDescriptorHelper->SetFlavour(MXFDESC_SMPTE_377_2004_FLAVOUR);
+    else
+        mDescriptorHelper->SetFlavour(MXFDESC_SMPTE_377_1_FLAVOUR);
     mDescriptorHelper->SetFrameWrapped(file->IsFrameWrapped());
     mDescriptorHelper->SetSampleRate(frame_rate);
 }

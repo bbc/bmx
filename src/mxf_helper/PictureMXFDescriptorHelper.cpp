@@ -249,7 +249,7 @@ void PictureMXFDescriptorHelper::UpdateFileDescriptor()
     if (mAFD)
         picture_descriptor->setActiveFormatDescriptor(encode_afd(mAFD, mAspectRatio));
 
-    if (mFlavour == AVID_FLAVOUR) {
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
         if (GetImageAlignmentOffset() > 1)
             picture_descriptor->setImageAlignmentOffset(GetImageAlignmentOffset());
         if (GetImageStartOffset() > 0)
@@ -346,22 +346,15 @@ void PictureMXFDescriptorHelper::SetCodingEquations(mxfUL label)
     BMX_ASSERT(picture_descriptor);
 
     mxfAUID auid;
-    switch (mFlavour)
-    {
-        case SMPTE_377_2004_FLAVOUR:
-        case SMPTE_377_1_FLAVOUR:
-        case RDD9_377_1_FLAVOUR:
-        case RDD9_377_2004_FLAVOUR:
-            picture_descriptor->setCodingEquations(label);
-            break;
-        case AVID_FLAVOUR:
-            // this label is half-swapped in Avid files
-            // Note that 377-1 defines an AUID with a UL stored as-is and an UUID half swapped. An IDAU has the
-            // opposite, swapping the UL. The "AUID" (aafUID_t) type defined in the AAF SDK is therefore an IDAU! The
-            // mxfAUID type and mxf_avid_set_auid function follow the AAF SDK naming
-            mxf_avid_set_auid(&label, &auid);
-            picture_descriptor->setCodingEquations(auid);
-            break;
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
+        // this label is half-swapped in Avid files
+        // Note that 377-1 defines an AUID with a UL stored as-is and an UUID half swapped. An IDAU has the
+        // opposite, swapping the UL. The "AUID" (aafUID_t) type defined in the AAF SDK is therefore an IDAU! The
+        // mxfAUID type and mxf_avid_set_auid function follow the AAF SDK naming
+        mxf_avid_set_auid(&label, &auid);
+        picture_descriptor->setCodingEquations(auid);
+    } else {
+        picture_descriptor->setCodingEquations(label);
     }
 }
 
@@ -370,23 +363,17 @@ void PictureMXFDescriptorHelper::SetColorSiting(uint8_t color_siting)
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(cdci_descriptor);
 
-    switch (mFlavour)
-    {
-        case SMPTE_377_2004_FLAVOUR:
-        case AVID_FLAVOUR:
-        case RDD9_377_2004_FLAVOUR:
-            if (color_siting > MXF_COLOR_SITING_REC601)
-                cdci_descriptor->setColorSiting(MXF_COLOR_SITING_UNKNOWN);
-            else
-                cdci_descriptor->setColorSiting(color_siting);
-            break;
-        case SMPTE_377_1_FLAVOUR:
-        case RDD9_377_1_FLAVOUR:
-            if (color_siting > MXF_COLOR_SITING_VERT_MIDPOINT)
-                cdci_descriptor->setColorSiting(MXF_COLOR_SITING_UNKNOWN);
-            else
-                cdci_descriptor->setColorSiting(color_siting);
-            break;
+    if ((mFlavour & MXFDESC_SMPTE_377_2004_FLAVOUR)) {
+        if (color_siting > MXF_COLOR_SITING_REC601)
+            cdci_descriptor->setColorSiting(MXF_COLOR_SITING_UNKNOWN);
+        else
+            cdci_descriptor->setColorSiting(color_siting);
+    } else {
+        // MXF_COLOR_SITING_VERT_MIDPOINT is 2nd of 2 additional color siting enums added in SMPTE 377-1
+        if (color_siting > MXF_COLOR_SITING_VERT_MIDPOINT)
+            cdci_descriptor->setColorSiting(MXF_COLOR_SITING_UNKNOWN);
+        else
+            cdci_descriptor->setColorSiting(color_siting);
     }
 }
 

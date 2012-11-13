@@ -191,7 +191,7 @@ void D10MXFDescriptorHelper::SetFrameWrapped(bool frame_wrapped)
     UpdateEssenceIndex();
 }
 
-void D10MXFDescriptorHelper::SetFlavour(DescriptorFlavour flavour)
+void D10MXFDescriptorHelper::SetFlavour(int flavour)
 {
     BMX_ASSERT(!mFileDescriptor);
 
@@ -282,7 +282,7 @@ void D10MXFDescriptorHelper::UpdateEssenceIndex()
         if (SUPPORTED_ESSENCE[i].essence_type == mEssenceType &&
             SUPPORTED_ESSENCE[i].sample_rate == mSampleRate &&
             SUPPORTED_ESSENCE[i].frame_wrapped == mFrameWrapped &&
-            (SUPPORTED_ESSENCE[i].avid_resolution_id != 0 || mFlavour != AVID_FLAVOUR))
+            (SUPPORTED_ESSENCE[i].avid_resolution_id != 0 || !(mFlavour & MXFDESC_AVID_FLAVOUR)))
         {
             mEssenceIndex = i;
             mAvidResolutionId = SUPPORTED_ESSENCE[i].avid_resolution_id;

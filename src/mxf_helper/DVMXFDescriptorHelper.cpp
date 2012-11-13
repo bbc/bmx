@@ -265,7 +265,7 @@ void DVMXFDescriptorHelper::UpdateFileDescriptor()
     SetCodingEquations(SUPPORTED_ESSENCE[mEssenceIndex].coding_eq);
     cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0]);
     cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1]);
-    if (mFlavour == AVID_FLAVOUR)
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setStoredWidth(SUPPORTED_ESSENCE[mEssenceIndex].avid_stored_width);
     else
         cdci_descriptor->setStoredWidth(SUPPORTED_ESSENCE[mEssenceIndex].stored_width);

@@ -360,20 +360,20 @@ void UncCDCIMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setVerticalSubsampling(1);
     SetColorSiting(MXF_COLOR_SITING_REC601);
     cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
-    if (mFlavour != AVID_FLAVOUR &&
+    if (!(mFlavour & MXFDESC_AVID_FLAVOUR) &&
         SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_MIXED_FIELDS)
     {
         cdci_descriptor->setFieldDominance(1); // field 1
     }
 
     if (mComponentDepth == 8) {
-        if (mFlavour != AVID_FLAVOUR)
+        if (!(mFlavour & MXFDESC_AVID_FLAVOUR))
             cdci_descriptor->setPictureEssenceCoding(MXF_CMDEF_L(UNC_8B_422_INTERLEAVED));
         cdci_descriptor->setBlackRefLevel(16);
         cdci_descriptor->setWhiteReflevel(235);
         cdci_descriptor->setColorRange(225);
     } else {
-        if (mFlavour == AVID_FLAVOUR) {
+        if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
             if (mEssenceType == AVID_10BIT_UNC_SD)
                 cdci_descriptor->setPictureEssenceCoding(MXF_CMDEF_L(AvidUncSD10Bit));
             else
@@ -386,9 +386,9 @@ void UncCDCIMXFDescriptorHelper::UpdateFileDescriptor()
         cdci_descriptor->setColorRange(897);
     }
 
-    if (mFlavour != AVID_FLAVOUR || (mEssenceType != UNC_SD && mEssenceType != AVID_10BIT_UNC_SD))
+    if (!(mFlavour & MXFDESC_AVID_FLAVOUR) || (mEssenceType != UNC_SD && mEssenceType != AVID_10BIT_UNC_SD))
         SetCodingEquations(SUPPORTED_ESSENCE[mEssenceIndex].coding_eq);
-    if (mFlavour != AVID_FLAVOUR)
+    if (!(mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setSignalStandard(SUPPORTED_ESSENCE[mEssenceIndex].signal_standard);
     cdci_descriptor->appendVideoLineMap(mVideoLineMap[0]);
     cdci_descriptor->appendVideoLineMap(mVideoLineMap[1]);
@@ -396,15 +396,15 @@ void UncCDCIMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setStoredHeight(mStoredHeight);
     cdci_descriptor->setDisplayWidth(mDisplayWidth);
     cdci_descriptor->setDisplayHeight(mDisplayHeight);
-    if (mDisplayXOffset != 0 || mFlavour == AVID_FLAVOUR)
+    if (mDisplayXOffset != 0 || (mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setDisplayXOffset(mDisplayXOffset);
-    if (mDisplayYOffset != 0 || mFlavour == AVID_FLAVOUR)
+    if (mDisplayYOffset != 0 || (mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setDisplayYOffset(mDisplayYOffset);
     cdci_descriptor->setSampledWidth(mSampledWidth);
     cdci_descriptor->setSampledHeight(mSampledHeight);
-    if (mSampledXOffset != 0 || mFlavour == AVID_FLAVOUR)
+    if (mSampledXOffset != 0 || (mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setSampledXOffset(mSampledXOffset);
-    if (mSampledYOffset != 0 || mFlavour == AVID_FLAVOUR)
+    if (mSampledYOffset != 0 || (mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setSampledYOffset(mSampledYOffset);
 }
 
@@ -412,7 +412,7 @@ uint32_t UncCDCIMXFDescriptorHelper::GetImageAlignmentOffset()
 {
     if (mImageAlignmentOffsetSet)
         return mImageAlignmentOffset;
-    else if (mFlavour == AVID_FLAVOUR)
+    else if ((mFlavour & MXFDESC_AVID_FLAVOUR))
         return AVID_IMAGE_ALIGNMENT;
     else
         return 1;
@@ -422,7 +422,7 @@ uint32_t UncCDCIMXFDescriptorHelper::GetImageStartOffset()
 {
     if (mImageStartOffsetSet)
         return mImageStartOffset;
-    else if (mFlavour != AVID_FLAVOUR)
+    else if (!(mFlavour & MXFDESC_AVID_FLAVOUR))
         return 0;
 
     uint32_t image_alignment = GetImageAlignmentOffset();
@@ -468,7 +468,7 @@ bool UncCDCIMXFDescriptorHelper::UpdateEssenceIndex()
             mAvidResolutionId = SUPPORTED_ESSENCE[i].avid_resolution_id;
             if (SUPPORTED_ESSENCE[i].is_avid_10bit)
                 mComponentDepth = 10;
-            else if (mFlavour == AVID_FLAVOUR)
+            else if ((mFlavour & MXFDESC_AVID_FLAVOUR))
                 mComponentDepth = 8;
             SetDefaultDimensions();
             return true;
@@ -486,7 +486,7 @@ void UncCDCIMXFDescriptorHelper::SetDefaultDimensions()
         else
             mStoredWidth = (SUPPORTED_ESSENCE[mEssenceIndex].display_width + 47) / 48 * 48;
         mStoredHeight = SUPPORTED_ESSENCE[mEssenceIndex].display_height;
-        if (mFlavour == AVID_FLAVOUR)
+        if ((mFlavour & MXFDESC_AVID_FLAVOUR))
             mStoredHeight += SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
     }
     if (!mDisplayDimensionsSet) {
@@ -499,7 +499,7 @@ void UncCDCIMXFDescriptorHelper::SetDefaultDimensions()
             mDisplayWidth   = SUPPORTED_ESSENCE[mEssenceIndex].display_width;
             mDisplayHeight  = SUPPORTED_ESSENCE[mEssenceIndex].display_height;
             mDisplayXOffset = 0;
-            if (mFlavour == AVID_FLAVOUR)
+            if ((mFlavour & MXFDESC_AVID_FLAVOUR))
                 mDisplayYOffset = SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
             else
                 mDisplayYOffset = 0;
@@ -514,7 +514,7 @@ void UncCDCIMXFDescriptorHelper::SetDefaultDimensions()
         } else {
             mSampledWidth  = SUPPORTED_ESSENCE[mEssenceIndex].display_width;
             mSampledHeight = SUPPORTED_ESSENCE[mEssenceIndex].display_height;
-            if (mFlavour == AVID_FLAVOUR)
+            if ((mFlavour & MXFDESC_AVID_FLAVOUR))
                 mSampledHeight += SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
             mSampledXOffset = 0;
             mSampledYOffset = 0;
@@ -524,7 +524,7 @@ void UncCDCIMXFDescriptorHelper::SetDefaultDimensions()
     if (!mVideoLineMapSet) {
         mVideoLineMap[0] = SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0];
         mVideoLineMap[1] = SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1];
-        if (mFlavour == AVID_FLAVOUR) {
+        if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
             if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_MIXED_FIELDS) {
                 mVideoLineMap[0] -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;
                 mVideoLineMap[1] -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;
