@@ -208,9 +208,12 @@ void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
             mFlags |= 0x80; // reference frame bit
         }
     } else if (frame_type == P_FRAME) {
-        mFlags |= 0x22;
+        mFlags |= 0x22; // naive setting - assume forward prediction
     } else {
-        mFlags |= 0x33; // naive setting - assume forward and backward prediction
+        if (mCurrentGOPClosed && mTemporalReference + 1 == mBPictureCount && mFlavour != AVID_FLAVOUR)
+            mFlags |= 0x13; // B frames commence closed GOP - assume backward prediction
+        else
+            mFlags |= 0x33; // naive setting - assume forward and backward prediction
     }
     if (mKeyFrameOffset + mPosition < 0 || mTemporalOffset + mPosition < 0)
         mFlags |= 0x0b; // offsets out of range

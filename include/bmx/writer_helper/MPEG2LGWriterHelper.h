@@ -112,7 +112,7 @@ private:
 
     bool mHaveGOPHeader;
     bool mSingleSequence;
-    int16_t mBPictureCount;
+    uint16_t mBPictureCount;
     bool mConstantBFrames;
     bool mLowDelay;
     bool mClosedGOP;
