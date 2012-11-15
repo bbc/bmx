@@ -108,7 +108,7 @@ private:
     void UpdateHeaderMetadata();
     void UpdateTrackDurations(AvidTrack *avid_track, mxfpp::Track *track, mxfRational edit_rate, int64_t duration);
     void UpdateTimecodeTrackDuration(AvidTrack *avid_track, mxfpp::GenericPackage *package, mxfRational package_edit_rate);
-    bool GetStartTimecode(mxfpp::GenericPackage *package, Timecode *timecode);
+    mxfpp::TimecodeComponent* GetTimecodeComponent(mxfpp::GenericPackage *package);
 
     std::vector<std::pair<mxfUMID, uint32_t> > GetSourceReferences(mxfpp::SourcePackage *source_package, bool is_picture);
 

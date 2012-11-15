@@ -617,9 +617,12 @@ void AvidClip::SetPhysicalSourceStartTimecode()
         }
 
         // get physical package start timecode
-        Timecode phys_start_timecode;
-        if (!GetStartTimecode(ref_source_package, &phys_start_timecode))
+        TimecodeComponent *phys_tc_component = GetTimecodeComponent(ref_source_package);
+        if (!phys_tc_component)
             continue;
+        Timecode phys_start_timecode(phys_tc_component->getRoundedTimecodeBase(),
+                                     phys_tc_component->getDropFrame(),
+                                     phys_tc_component->getStartTimecode());
 
         // convert to a offset at clip frame rate
         uint16_t rounded_clip_tc_base = get_rounded_tc_base(mClipFrameRate);
@@ -661,6 +664,9 @@ void AvidClip::SetPhysicalSourceStartTimecode()
             source_clip->setStartPosition(convert_position(mClipFrameRate, start_position, track->getEditRate(), ROUND_AUTO));
             break;
         }
+
+        // set physical source timecode component's drop frame flag
+        phys_tc_component->setDropFrame(mStartTimecode.IsDropFrame());
     }
 }
 
@@ -827,7 +833,7 @@ void AvidClip::UpdateTimecodeTrackDuration(AvidTrack *avid_track, GenericPackage
     }
 }
 
-bool AvidClip::GetStartTimecode(GenericPackage *package, Timecode *timecode)
+TimecodeComponent* AvidClip::GetTimecodeComponent(GenericPackage *package)
 {
     // find the timecode component in this package
     TimecodeComponent *tc_component = 0;
@@ -857,14 +863,8 @@ bool AvidClip::GetStartTimecode(GenericPackage *package, Timecode *timecode)
         if (tc_component)
             break;
     }
-    if (!tc_component)
-        return false;
 
-
-    timecode->Init(tc_component->getRoundedTimecodeBase(),
-                   tc_component->getDropFrame(),
-                   tc_component->getStartTimecode());
-    return true;
+    return tc_component;
 }
 
 vector<pair<mxfUMID, uint32_t> > AvidClip::GetSourceReferences(mxfpp::SourcePackage *source_package, bool is_picture)
