@@ -97,6 +97,8 @@ void RDD9PCMTrack::SetQuantizationBits(uint32_t bits)
 
 void RDD9PCMTrack::SetChannelCount(uint32_t count)
 {
+    BMX_CHECK_M(count == 1, ("Invalid channel count %u; RDD9 requires 1 channel per audio element / track", count));
+
     mWaveDescriptorHelper->SetChannelCount(count);
 }
 
