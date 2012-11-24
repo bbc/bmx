@@ -511,7 +511,7 @@ void RDD9ContentPackageManager::PrepareWrite()
         if (!mElements[i]->IsPicture())
             break;
     }
-    BMX_ASSERT(i + 1 < mElements.size());
+    BMX_ASSERT(i < mElements.size());
     mSoundSequence = mElements[i]->GetSampleSequence();
     for (i = i + 1; i < mElements.size() && valid_sequences; i++) {
         if (mSoundSequence.size() != mElements[i]->GetSampleSequence().size()) {
