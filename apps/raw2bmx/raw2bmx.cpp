@@ -312,6 +312,17 @@ static void usage(const char *cmd)
     fprintf(stderr, "* -o <name>               as02: <name> is a bundle name\n");
     fprintf(stderr, "                          as11op1a/as11d10/op1a/d10/rdd9/wave: <name> is a filename\n");
     fprintf(stderr, "                          avid: <name> is a filename prefix\n");
+    fprintf(stderr, "  --prod-info <cname>\n");
+    fprintf(stderr, "              <pname>\n");
+    fprintf(stderr, "              <ver>\n");
+    fprintf(stderr, "              <verstr>\n");
+    fprintf(stderr, "              <uid>\n");
+    fprintf(stderr, "                          Set the product info in the MXF Identification set\n");
+    fprintf(stderr, "                          <cname> is a string and is the Company Name property\n");
+    fprintf(stderr, "                          <pname> is a string and is the Product Name property\n");
+    fprintf(stderr, "                          <ver> has format '<major>.<minor>.<patch>.<build>.<release>' and is the Product Version property\n");
+    fprintf(stderr, "                          <verstr> is a string and is the Version String property\n");
+    fprintf(stderr, "                          <uid> is a UUID (see Notes at the end) and is the Product UID property\n");
     fprintf(stderr, "  -f <rate>               Frame rate: 23976 (24000/1001), 24, 25, 2997 (30000/1001), 50 or 5994 (60000/1001). Default parsed or 25\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Start timecode. Is drop frame when c is not ':'. Default 00:00:00:00\n");
     fprintf(stderr, "  --clip <name>           Set the clip name\n");
@@ -467,7 +478,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --wave <name>           Wave PCM audio input file\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Notes:\n");
-    fprintf(stderr, " - <umid> format is [0-9a-fA-F]{64}, a sequence of 32 hexadecimal bytes\n");
+    fprintf(stderr, " - <umid> format is 64 hexadecimal characters and any '.' and '-' characters are ignored\n");
+    fprintf(stderr, " - <uuid> format is 32 hexadecimal characters and any '.' and '-' characters are ignored\n");
     fprintf(stderr, " - <tstamp> format is YYYY-MM-DDThh:mm:ss:qm where qm is in units of 1/250th second\n");
 }
 
@@ -524,6 +536,12 @@ int main(int argc, const char** argv)
     bool force_no_avci_head = false;
     bool realtime = false;
     float rt_factor = 1.0;
+    bool product_info_set = false;
+    string company_name;
+    string product_name;
+    mxfProductVersion product_version;
+    string version_string;
+    UUID product_uid;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -588,6 +606,24 @@ int main(int argc, const char** argv)
             }
             output_name = argv[cmdln_index + 1];
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--prod-info") == 0)
+        {
+            if (cmdln_index + 5 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing arguments for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_product_info(&argv[cmdln_index + 1], 5, &company_name, &product_name, &product_version,
+                                    &version_string, &product_uid))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid values '%s' etc. for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            product_info_set = true;
+            cmdln_index += 5;
         }
         else if (strcmp(argv[cmdln_index], "-f") == 0)
         {
@@ -2087,6 +2123,13 @@ int main(int argc, const char** argv)
         force_no_avci_head = false;
     }
 
+    if (!product_info_set) {
+        company_name    = get_bmx_company_name();
+        product_name    = get_bmx_library_name();
+        product_version = get_bmx_mxf_product_version();
+        version_string  = get_bmx_mxf_version_string();
+        product_uid     = get_bmx_product_uid();
+    }
 
     if (log_filename) {
         if (!open_log_file(log_filename))
@@ -2587,6 +2630,7 @@ int main(int argc, const char** argv)
         clip->SetStartTimecode(start_timecode);
         if (clip_name)
             clip->SetClipName(clip_name);
+        clip->SetProductInfo(company_name, product_name, product_version, version_string, product_uid);
 
         if (clip_type == CW_AS02_CLIP_TYPE) {
             AS02Clip *as02_clip = clip->GetAS02Clip();

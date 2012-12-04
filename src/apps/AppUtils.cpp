@@ -105,6 +105,37 @@ static const AVCIHeaderFormatInfo AVCI_HEADER_FORMAT_INFO[] =
 
 
 
+static bool parse_hex_string(const char *hex_str, unsigned char *octets, size_t octets_size)
+{
+    size_t i = 0, s = 0;
+
+#define DECODE_HEX_CHAR(c)                  \
+    if ((c) >= 'a' && (c) <= 'f')           \
+        octets[i] |= 10 + ((c) - 'a');      \
+    else if ((c) >= 'A' && (c) <= 'F')      \
+        octets[i] |= 10 + ((c) - 'A');      \
+    else if ((c) >= '0' && (c) <= '9')      \
+        octets[i] |= ((c) - '0');           \
+    else                                    \
+        break;
+
+    while (hex_str[s] && i < octets_size) {
+        if (hex_str[s] != '.' && hex_str[s] != '-') {
+            octets[i] = 0;
+            DECODE_HEX_CHAR(hex_str[s])
+            octets[i] <<= 4;
+            s++;
+            DECODE_HEX_CHAR(hex_str[s])
+            i++;
+        }
+        s++;
+    }
+
+    return i == octets_size;
+}
+
+
+
 size_t bmx::get_num_avci_header_formats()
 {
     return BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO);
@@ -288,34 +319,60 @@ bool bmx::parse_timestamp(const char *timestamp_str, Timestamp *timestamp)
     return true;
 }
 
-bool bmx::parse_umid(const char *umid_str, UMID *umid_out)
+bool bmx::parse_umid(const char *umid_str, UMID *umid)
 {
-    UMID umid = g_Null_UMID;
-    unsigned char *octet_ptr = (unsigned char*)&umid.octet0;
-    const unsigned char *octet_end_ptr = (unsigned char*)&umid.octet31 + 1;
+    return parse_hex_string(umid_str, (unsigned char*)&umid->octet0, 32);
+}
 
-#define DECODE_UMID_CHAR                            \
-    if (*umid_str >= 'a' && *umid_str <= 'f')       \
-        *octet_ptr |= 10 + (*umid_str - 'a');       \
-    else if (*umid_str >= 'A' && *umid_str <= 'F')  \
-        *octet_ptr |= 10 + (*umid_str - 'A');       \
-    else if (*umid_str >= '0' && *umid_str <= '9')  \
-        *octet_ptr |= (*umid_str - '0');            \
-    else                                            \
-        break;
+bool bmx::parse_uuid(const char *uuid_str, UUID *uuid)
+{
+    return parse_hex_string(uuid_str, (unsigned char*)&uuid->octet0, 16);
+}
 
-    while (*umid_str && octet_ptr != octet_end_ptr) {
-        DECODE_UMID_CHAR
-        *octet_ptr <<= 4;
-        umid_str++;
-        DECODE_UMID_CHAR
-        umid_str++;
-        octet_ptr++;
-    }
-    if (octet_ptr != octet_end_ptr)
+bool bmx::parse_product_version(const char *version_str, mxfProductVersion *version)
+{
+    unsigned int major, minor, patch, build, release;
+
+    if (sscanf(version_str, "%u.%u.%u.%u.%u", &major, &minor, &patch, &build, &release) != 5)
         return false;
 
-    *umid_out = umid;
+    version->major   = (uint16_t)major;
+    version->minor   = (uint16_t)minor;
+    version->patch   = (uint16_t)patch;
+    version->build   = (uint16_t)build;
+    version->release = (uint16_t)release;
+
+    return true;
+}
+
+bool bmx::parse_product_info(const char **info_strings, size_t info_strings_size,
+                             string *company_name, string *product_name, mxfProductVersion *product_version,
+                             string *version, UUID *product_uid)
+{
+    if (info_strings_size > 0)
+        *company_name = info_strings[0];
+    else
+        company_name->clear();
+    if (info_strings_size > 1)
+        *product_name = info_strings[1];
+    else
+        product_name->clear();
+    if (info_strings_size > 2) {
+        if (!parse_product_version(info_strings[2], product_version))
+            return false;
+    } else {
+        memset(product_version, 0, sizeof(*product_version));
+    }
+    if (info_strings_size > 3)
+        *version = info_strings[3];
+    else
+        version->clear();
+    if (info_strings_size > 4) {
+        if (!parse_uuid(info_strings[4], product_uid))
+            return false;
+    } else {
+        memset(product_uid, 0, sizeof(*product_uid));
+    }
 
     return true;
 }
