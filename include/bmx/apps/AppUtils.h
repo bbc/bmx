@@ -59,45 +59,29 @@ typedef struct
 } AVCIHeaderInput;
 
 
+
 size_t get_num_avci_header_formats();
 const char* get_avci_header_format_string(size_t index);
 
-
 bool parse_frame_rate(const char *rate_str, Rational *frame_rate);
-
 bool parse_timecode(const char *tc_str, Rational frame_rate, Timecode *timecode);
-
 bool parse_position(const char *position_str, Timecode start_timecode, Rational frame_rate, int64_t *position);
-
 bool parse_partition_interval(const char *partition_interval_str, Rational frame_rate, int64_t *partition_interval);
-
 bool parse_bool(const char *bool_str, bool *value);
-
 bool parse_color(const char *color_str, Color *color);
-
 bool parse_avci_header(const char *format_str, const char *filename, const char *offset_str,
                        std::vector<AVCIHeaderInput> *avci_header_inputs);
-
 bool parse_d10_sound_flags(const char *flags_str, uint8_t *flags);
-
 bool parse_timestamp(const char *timestamp_str, Timestamp *timestamp);
-
 bool parse_umid(const char *umid_str, UMID *umid);
-
 bool parse_uuid(const char *uuid_str, UUID *uuid);
-
 bool parse_product_version(const char *version_str, mxfProductVersion *uuid);
-
 bool parse_product_info(const char **info_strings, size_t num_info_strings,
                         std::string *company_name, std::string *product_name, mxfProductVersion *product_version,
                         std::string *version, UUID *product_uid);
-
 bool parse_avid_import_name(const char *import_name, URI *uri);
 
-
 std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture);
-
-
 
 bool have_avci_header_data(EssenceType essence_type, Rational sample_rate,
                            std::vector<AVCIHeaderInput> &avci_header_inputs);
@@ -105,10 +89,8 @@ bool read_avci_header_data(EssenceType essence_type, Rational sample_rate,
                            std::vector<AVCIHeaderInput> &avci_header_inputs,
                            unsigned char *buffer, size_t buffer_size);
 
-
 void init_progress(float *next_update);
 void print_progress(int64_t count, int64_t duration, float *next_update);
-
 
 void sleep_msec(uint32_t msec);
 uint32_t get_tick_count();
