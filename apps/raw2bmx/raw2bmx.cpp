@@ -320,7 +320,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          Set the product info in the MXF Identification set\n");
     fprintf(stderr, "                          <cname> is a string and is the Company Name property\n");
     fprintf(stderr, "                          <pname> is a string and is the Product Name property\n");
-    fprintf(stderr, "                          <ver> has format '<major>.<minor>.<patch>.<build>.<release>' and is the Product Version property\n");
+    fprintf(stderr, "                          <ver> has format '<major>.<minor>.<patch>.<build>.<release>' and is the Product Version property. Set to '0.0.0.0.0' to omit it\n");
     fprintf(stderr, "                          <verstr> is a string and is the Version String property\n");
     fprintf(stderr, "                          <uid> is a UUID (see Notes at the end) and is the Product UID property\n");
     fprintf(stderr, "  -f <rate>               Frame rate: 23976 (24000/1001), 24, 25, 2997 (30000/1001), 50 or 5994 (60000/1001). Default parsed or 25\n");

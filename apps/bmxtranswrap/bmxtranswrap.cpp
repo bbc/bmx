@@ -328,7 +328,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          Set the product info in the MXF Identification set\n");
     fprintf(stderr, "                          <cname> is a string and is the Company Name property\n");
     fprintf(stderr, "                          <pname> is a string and is the Product Name property\n");
-    fprintf(stderr, "                          <ver> has format '<major>.<minor>.<patch>.<build>.<release>' and is the Product Version property\n");
+    fprintf(stderr, "                          <ver> has format '<major>.<minor>.<patch>.<build>.<release>' and is the Product Version property. Set to '0.0.0.0.0' to omit it\n");
     fprintf(stderr, "                          <verstr> is a string and is the Version String property\n");
     fprintf(stderr, "                          <uid> is a UUID (see Notes at the end) and is the Product UID property\n");
     fprintf(stderr, "  --input-file-md5        Calculate an MD5 checksum of the input file\n");

@@ -553,7 +553,11 @@ void OP1AFile::CreateHeaderMetadata()
     Identification *ident = new Identification(mHeaderMetadata);
     preface->appendIdentifications(ident);
     ident->initialise(mCompanyName, mProductName, mVersionString, mProductUID);
-    ident->setProductVersion(mProductVersion);
+    if (mProductVersion.major != 0 || mProductVersion.minor != 0 || mProductVersion.patch != 0 ||
+        mProductVersion.build != 0 || mProductVersion.release != 0)
+    {
+        ident->setProductVersion(mProductVersion);
+    }
     ident->setModificationDate(mCreationDate);
     ident->setThisGenerationUID(mGenerationUID);
 

@@ -580,7 +580,11 @@ void AS02Track::CreateHeaderMetadata()
     Identification *ident = new Identification(mHeaderMetadata);
     preface->appendIdentifications(ident);
     ident->initialise(mClip->mCompanyName, mClip->mProductName, mClip->mVersionString, mClip->mProductUID);
-    ident->setProductVersion(mClip->mProductVersion);
+    if (mClip->mProductVersion.major != 0 || mClip->mProductVersion.minor != 0 || mClip->mProductVersion.patch != 0 ||
+        mClip->mProductVersion.build != 0 || mClip->mProductVersion.release != 0)
+    {
+        ident->setProductVersion(mClip->mProductVersion);
+    }
     ident->setModificationDate(mClip->mCreationDate);
     ident->setThisGenerationUID(mClip->mGenerationUID);
 
