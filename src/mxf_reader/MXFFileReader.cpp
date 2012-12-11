@@ -1146,13 +1146,6 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
         BMX_EXCEPTION(("File source package descriptor is not a known sub-class of FileDescriptor"));
     }
 
-    Rational desc_sample_rate = normalize_rate(file_desc->getSampleRate());
-    if (desc_sample_rate != fsp_edit_rate) {
-        log_info("FSP track edit rate %d/%d does not equal descriptor sample rate %d/%d\n",
-                 fsp_edit_rate.numerator, fsp_edit_rate.denominator,
-                 desc_sample_rate.numerator, desc_sample_rate.denominator);
-    }
-
 
     // fill in track info
 
