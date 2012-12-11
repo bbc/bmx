@@ -33,6 +33,11 @@
 #include "config.h"
 #endif
 
+#if !defined(_MSC_VER)
+#include <strings.h>
+#endif
+#include <cstring>
+
 #include <bmx/mxf_reader/MXFPackageResolver.h>
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/MXFUtils.h>
@@ -157,12 +162,30 @@ vector<ResolvedPackage> DefaultMXFPackageResolver::ResolveSourceClip(SourceClip 
             continue;
 
         URI uri;
-        if (!uri.Parse(network_locator->getURLString())) {
-            log_warn("Failed to parse url string '%s' from MXF file\n", network_locator->getURLString().c_str());
+        string url = network_locator->getURLString();
+        if (!uri.Parse(url)) {
+            log_warn("Failed to parse network locator URL string '%s'\n", url.c_str());
+#if defined(_MSC_VER)
+            if (_strnicmp(url.c_str(), "file://", 7) == 0)
+#else
+            if (strncasecmp(url.c_str(), "file://", 7) == 0)
+#endif
+            {
+                // if it starts with "file://" then it shall be treated as a file URL according to ST377 and therefore
+                // the parse failure means it is skipped here
+                continue;
+            }
+            log_warn("Assuming network locator URL string '%s' is a file path\n", url.c_str());
+            if (!uri.ParseFilename(network_locator->getURLString())) {
+                log_warn("Failed to parse network locator URL string '%s' as a file path\n", url.c_str());
+                continue;
+            }
+        }
+        if (!uri.IsAbsFile() && !uri.IsRelative()) {
+            log_warn("Skipping network locator URL string '%s' that is not a relative URI or 'file://' URL\n",
+                     url.c_str());
             continue;
         }
-        if (!uri.IsAbsFile() && !uri.IsRelative())
-            continue;
 
         if (uri.IsRelative())
             uri.MakeAbsolute(mFileReader->GetAbsoluteURI());
