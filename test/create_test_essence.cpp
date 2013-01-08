@@ -392,6 +392,8 @@ static void write_mpeg2lg(FILE *file, int type, unsigned int duration)
         else
             write_buffer(file, data, non_i_frame_size);
     }
+
+    delete [] data;
 }
 
 static void write_unc(FILE *file, int type, unsigned int duration)
