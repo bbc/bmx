@@ -512,7 +512,9 @@ void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, in
                ("Failed to find edit unit index information for position 0x%"PRIx64, position));
 
     if (size) {
-        if (mDuration == 0 || position + 1 < mDuration) {
+        if (mEditUnitSize > 0) {
+            *size = mEditUnitSize;
+        } else if (mDuration == 0 || position + 1 < mDuration) {
             *size = GetEditUnitOffset(position + 1) - (*offset);
         } else if (mSegments.back()->HaveExtraIndexEntries()) {
             *size = mSegments.back()->GetIndexEndOffset() - (*offset);
@@ -520,9 +522,6 @@ void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, in
             if (mEssenceDataSize == 0)
                 BMX_EXCEPTION(("Unknown size for last index edit unit because essence container size is unknown"));
             *size = mEssenceDataSize - (*offset);
-            /* ignores junk found at the end of Avid clip wrapped essence with fixed edit unit size */
-            if (mEditUnitSize > 0 && *size > mEditUnitSize)
-                *size = mEditUnitSize;
         }
     }
 }
