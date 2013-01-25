@@ -137,8 +137,13 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
 
         // require a known constant edit unit size for clip wrapped essence
         // TODO: support clip wrapped essence with variable or unknown edit unit size using essence parsers
-        if (mFileReader->IsClipWrapped() && !SetConstantEditUnitSize())
-            log_warn("Failed to set a constant edit unit size for clip wrapped essence data\n");
+        if (mFileReader->IsClipWrapped()) {
+            uint32_t edit_unit_size = GetConstantEditUnitSize();
+            if (edit_unit_size > 0)
+                mIndexTableHelper.SetConstantEditUnitSize(mFileReader->GetEditRate(), edit_unit_size);
+            else
+                log_warn("Failed to set a constant edit unit size for clip wrapped essence data\n");
+        }
 
         if (mEssenceChunkHelper.IsComplete())
             mIndexTableHelper.SetEssenceDataSize(mEssenceChunkHelper.GetEssenceDataSize());
@@ -514,7 +519,7 @@ void EssenceReader::GetEditUnitGroup(int64_t position, uint32_t max_samples, int
     *num_samples = left_num_samples;
 }
 
-bool EssenceReader::SetConstantEditUnitSize()
+uint32_t EssenceReader::GetConstantEditUnitSize()
 {
     BMX_ASSERT(mFileReader->GetNumInternalTrackReaders() == 1);
     auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
@@ -567,10 +572,8 @@ bool EssenceReader::SetConstantEditUnitSize()
         default:
             break;
     }
-    if (edit_unit_size > 0)
-        mIndexTableHelper.SetConstantEditUnitSize(mFileReader->GetEditRate(), edit_unit_size);
 
-    return edit_unit_size > 0;
+    return edit_unit_size;
 }
 
 bool EssenceReader::SeekEssence(int64_t base_position, bool for_read)

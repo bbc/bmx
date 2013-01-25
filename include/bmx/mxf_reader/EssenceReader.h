@@ -81,7 +81,7 @@ private:
     void GetEditUnitGroup(int64_t position, uint32_t max_samples, int64_t *file_position, int64_t *size,
                           uint32_t *num_samples);
 
-    bool SetConstantEditUnitSize();
+    uint32_t GetConstantEditUnitSize();
 
 private:
     bool SeekEssence(int64_t base_position, bool for_read);
