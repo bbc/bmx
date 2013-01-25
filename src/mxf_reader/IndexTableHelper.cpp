@@ -381,7 +381,6 @@ void IndexTableHelper::SetEditRate(Rational edit_rate)
     BMX_ASSERT(mSegments.empty());
 
     mEditRate = edit_rate;
-    mEditUnitSize = 0;
 }
 
 void IndexTableHelper::SetConstantEditUnitSize(Rational edit_rate, uint32_t size)
