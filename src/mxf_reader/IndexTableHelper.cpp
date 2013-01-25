@@ -591,60 +591,54 @@ bool IndexTableHelper::GetIndexEntry(MXFIndexEntryExt *entry, int64_t position)
     return true;
 }
 
-void IndexTableHelper::InsertCBEIndexSegment(IndexTableHelperSegment *new_segment_in)
+void IndexTableHelper::InsertCBEIndexSegment(IndexTableHelperSegment *new_segment)
 {
-    IndexTableHelperSegment *new_segment = new_segment_in;
+    if (!mSegments.empty()) {
+        if (!mSegments.back()->HaveConstantEditUnitSize()) {
+            // existing VBE segments, either originating from file or runtime generated
 
-    if (!mSegments.empty() && !mSegments.back()->HaveConstantEditUnitSize()) {
-        if (mSegments.size() > 1 || !mSegments.back()->IsFileIndexSegment())
-            BMX_EXCEPTION(("Can't mix VBE and CBE index table segments"));
+            if (mSegments.size() > 1 || !mSegments.back()->IsFileIndexSegment())
+                BMX_EXCEPTION(("Can't mix VBE and CBE index table segments"));
 
-        if (SEG_DUR(new_segment) > 0 && SEG_DUR(new_segment) < SEG_DUR(mSegments.front())) {
-            // ignore new segment if it covers less edit units than the runtime generated index segment
-            delete new_segment;
-        } else {
-            if (SEG_START(new_segment) != 0)
-                BMX_EXCEPTION(("Sparse index table is not supported"));
+            if (SEG_DUR(new_segment) > 0 && SEG_DUR(new_segment) < SEG_DUR(mSegments.front())) {
+                // ignore new segment if it covers less edit units than the runtime generated index segment
+                delete new_segment;
+                return;
+            }
 
+            // replace runtime generated index segment
             delete mSegments.front();
             mSegments.clear();
-            mSegments.push_back(new_segment);
+        } else {
+            // existing CBE segments
 
-            mDuration = new_segment->getIndexDuration();
-            mEditUnitSize = new_segment->GetEditUnitSize();
-        }
-    } else {
-        if (!mSegments.empty()) {
-            if (SEG_DUR(mSegments.back()) == 0) {
-                // ignore new segment that follows one with unspecified duration
-                delete new_segment;
-                new_segment = 0;
-            } else if (SEG_START(new_segment) < SEG_END(mSegments.back())) {
+            if (SEG_DUR(mSegments.back()) == 0 || SEG_START(new_segment) < SEG_END(mSegments.back())) {
                 // ignore new segment that overlaps with existing segments
                 delete new_segment;
-                new_segment = 0;
-            } else {
-                if (mEditUnitSize != new_segment->GetEditUnitSize())
-                    mEditUnitSize = 0;
-                new_segment->SetEssenceStartOffset(mSegments.back()->GetEssenceEndOffset());
+                return;
             }
-        }
 
-        if (new_segment) {
-            if (( mSegments.empty() && SEG_START(new_segment) != 0) ||
-                (!mSegments.empty() && SEG_START(new_segment) != SEG_END(mSegments.back())))
-            {
-                // TODO: add support for sparse index tables
-                BMX_EXCEPTION(("Sparse index table is not supported"));
-            }
-            mSegments.push_back(new_segment);
-
-            if (mSegments.size() == 1)
-                mEditUnitSize = new_segment->GetEditUnitSize();
-            else if (new_segment->GetEditUnitSize() != mEditUnitSize)
-                mEditUnitSize = 0;
-            mDuration += new_segment->getIndexDuration();
+            // new segment indexes after last segment
+            new_segment->SetEssenceStartOffset(mSegments.back()->GetEssenceEndOffset());
         }
+    }
+
+    if (( mSegments.empty() && SEG_START(new_segment) != 0) ||
+        (!mSegments.empty() && SEG_START(new_segment) != SEG_END(mSegments.back())))
+    {
+        // TODO: add support for sparse index tables
+        BMX_EXCEPTION(("Sparse index table is not supported"));
+    }
+
+    mSegments.push_back(new_segment);
+
+    if (mSegments.size() == 1) {
+        mEditUnitSize = new_segment->GetEditUnitSize();
+        mDuration = new_segment->getIndexDuration();
+    } else {
+        if (new_segment->GetEditUnitSize() != mEditUnitSize)
+            mEditUnitSize = 0;
+        mDuration += new_segment->getIndexDuration();
     }
 }
 
