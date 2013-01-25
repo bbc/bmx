@@ -211,7 +211,7 @@ void IndexTableHelperSegment::AppendIndexEntry(uint32_t num_entries, int8_t temp
 
 bool IndexTableHelperSegment::HaveConstantEditUnitSize()
 {
-    return getEditUnitByteCount() != 0;
+    return getEditUnitByteCount() > 0;
 }
 
 uint32_t IndexTableHelperSegment::GetEditUnitSize()
@@ -286,7 +286,6 @@ IndexTableHelper::IndexTableHelper(MXFFileReader *file_reader)
     mFile = file_reader->mFile;
     mIsComplete = false;
     mLastEditUnitSegment = 0;
-    mHaveConstantEditUnitSize = true;
     mEditUnitSize = 0;
     mEssenceDataSize = 0;
     mEditRate = ZERO_RATIONAL;
@@ -372,8 +371,8 @@ void IndexTableHelper::SetEssenceDataSize(int64_t size)
 {
     mEssenceDataSize = size;
 
-    // calc index duration if unknown
-    if (mDuration == 0 && mHaveConstantEditUnitSize && mEditUnitSize > 0)
+    // calc index duration if unknown and edit unit size is constant
+    if (mDuration == 0 && mEditUnitSize > 0)
         mDuration = size / mEditUnitSize;
 }
 
@@ -383,12 +382,12 @@ void IndexTableHelper::SetEditRate(Rational edit_rate)
 
     mEditRate = edit_rate;
     mEditUnitSize = 0;
-    mHaveConstantEditUnitSize = false;
 }
 
 void IndexTableHelper::SetConstantEditUnitSize(Rational edit_rate, uint32_t size)
 {
     BMX_ASSERT(mSegments.empty());
+    BMX_ASSERT(size > 0);
 
     mSegments.push_back(new IndexTableHelperSegment());
     IndexTableHelperSegment *segment = mSegments.back();
@@ -397,7 +396,6 @@ void IndexTableHelper::SetConstantEditUnitSize(Rational edit_rate, uint32_t size
 
     mEditRate = edit_rate;
     mEditUnitSize = size;
-    mHaveConstantEditUnitSize = true;
 }
 
 int64_t IndexTableHelper::ReadIndexTableSegment(uint64_t len)
@@ -427,13 +425,10 @@ void IndexTableHelper::UpdateIndex(int64_t position, int64_t essence_offset, int
     // TODO: size might be useful
     (void)size;
 
-    if (position < mDuration ||
-        (mDuration == 0 && mHaveConstantEditUnitSize && mEditUnitSize > 0))
-    {
+    if (position < mDuration || (mDuration == 0 && HaveConstantEditUnitSize()))
         return;
-    }
 
-    if (mHaveConstantEditUnitSize && mEditUnitSize > 0) {
+    if (HaveConstantEditUnitSize()) {
         BMX_EXCEPTION(("Index table with constant edit unit size and duration %"PRId64
                        " does not cover position %"PRId64, mDuration, position));
     }
@@ -527,7 +522,7 @@ void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, in
                 BMX_EXCEPTION(("Unknown size for last index edit unit because essence container size is unknown"));
             *size = mEssenceDataSize - (*offset);
             /* ignores junk found at the end of Avid clip wrapped essence with fixed edit unit size */
-            if (mHaveConstantEditUnitSize && *size > mEditUnitSize)
+            if (mEditUnitSize > 0 && *size > mEditUnitSize)
                 *size = mEditUnitSize;
         }
     }
@@ -562,7 +557,7 @@ int64_t IndexTableHelper::GetEditUnitOffset(int64_t position)
 
 bool IndexTableHelper::HaveEditUnitSize(int64_t position) const
 {
-    if (mHaveConstantEditUnitSize && mEditUnitSize > 0)
+    if (HaveConstantEditUnitSize())
         return true;
     else if (mSegments.empty())
         return false;
@@ -617,7 +612,6 @@ void IndexTableHelper::InsertCBEIndexSegment(IndexTableHelperSegment *new_segmen
             mSegments.push_back(new_segment);
 
             mDuration = new_segment->getIndexDuration();
-            mHaveConstantEditUnitSize = true;
             mEditUnitSize = new_segment->GetEditUnitSize();
         }
     } else {
@@ -631,12 +625,8 @@ void IndexTableHelper::InsertCBEIndexSegment(IndexTableHelperSegment *new_segmen
                 delete new_segment;
                 new_segment = 0;
             } else {
-                if (mHaveConstantEditUnitSize && mEditUnitSize > 0 &&
-                    mEditUnitSize != new_segment->GetEditUnitSize())
-                {
-                    mHaveConstantEditUnitSize = false;
+                if (mEditUnitSize != new_segment->GetEditUnitSize())
                     mEditUnitSize = 0;
-                }
                 new_segment->SetEssenceStartOffset(mSegments.back()->GetEssenceEndOffset());
             }
         }
@@ -651,16 +641,9 @@ void IndexTableHelper::InsertCBEIndexSegment(IndexTableHelperSegment *new_segmen
             mSegments.push_back(new_segment);
 
             if (mSegments.size() == 1)
-            {
-                mHaveConstantEditUnitSize = true;
                 mEditUnitSize = new_segment->GetEditUnitSize();
-            }
-            else if (mHaveConstantEditUnitSize && mEditUnitSize > 0 &&
-                     new_segment->GetEditUnitSize() != mEditUnitSize)
-            {
-                mHaveConstantEditUnitSize = false;
+            else if (new_segment->GetEditUnitSize() != mEditUnitSize)
                 mEditUnitSize = 0;
-            }
             mDuration += new_segment->getIndexDuration();
         }
     }
@@ -668,6 +651,9 @@ void IndexTableHelper::InsertCBEIndexSegment(IndexTableHelperSegment *new_segmen
 
 void IndexTableHelper::InsertVBEIndexSegment(IndexTableHelperSegment *new_segment)
 {
+    if (mEditUnitSize > 0)
+        BMX_EXCEPTION(("Can't mix VBE and CBE index table segments"));
+
     // update or remove existing segments
     int64_t new_duration = 0;
     vector<IndexTableHelperSegment*>::iterator iter = mSegments.begin();

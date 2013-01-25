@@ -121,7 +121,7 @@ public:
     Rational GetEditRate() const { return mEditRate; }
     int64_t GetDuration() const  { return mDuration; }
 
-    bool HaveConstantEditUnitSize() const { return mHaveConstantEditUnitSize; }
+    bool HaveConstantEditUnitSize() const { return mEditUnitSize > 0; }
     uint32_t GetEditUnitSize()      const { return mEditUnitSize; }
 
     bool HaveEditUnit(int64_t position) const;
@@ -151,7 +151,6 @@ private:
     std::vector<IndexTableHelperSegment*> mSegments;
     size_t mLastEditUnitSegment;
 
-    bool mHaveConstantEditUnitSize;
     uint32_t mEditUnitSize;
 
     int64_t mEssenceDataSize;
