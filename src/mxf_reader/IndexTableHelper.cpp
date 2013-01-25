@@ -519,8 +519,10 @@ void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, in
         } else if (mSegments.back()->HaveExtraIndexEntries()) {
             *size = mSegments.back()->GetIndexEndOffset() - (*offset);
         } else {
-            if (mEssenceDataSize == 0)
-                BMX_EXCEPTION(("Unknown size for last index edit unit because essence container size is unknown"));
+            if (mEssenceDataSize < (*offset)) {
+                BMX_EXCEPTION(("Failed to calc valid last edit unit size because essence data size %"PRId64
+                               " is too small", mEssenceDataSize));
+            }
             *size = mEssenceDataSize - (*offset);
         }
     }
