@@ -145,6 +145,7 @@ MXFFileReader::MXFFileReader()
     mFile = 0;
     mHeaderMetadata = 0;
     mMXFVersion = 0;
+    mOPLabel = g_Null_UL;
     mIsClipWrapped = false;
     mBodySID = 0;
     mIndexSID = 0;
@@ -255,7 +256,8 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
         // TODO: require a table that maps essence container labels to wrapping type
 
         // guess the wrapping type based on the OP
-        mIsClipWrapped = mxf_is_op_atom(header_partition.getOperationalPattern());
+        mOPLabel = *header_partition.getOperationalPattern();
+        mIsClipWrapped = mxf_is_op_atom(&mOPLabel);
 
         // change frame wrapped guess if file is op1a containing clip wrapped pcm audio
         if (!mIsClipWrapped) {

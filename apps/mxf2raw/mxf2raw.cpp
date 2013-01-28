@@ -104,6 +104,60 @@ static char* get_umid_string(mxfUMID umid, char *buf, size_t buf_size)
     return buf;
 }
 
+static char* get_op_label_string(mxfUL op_label, char *buf, size_t buf_size)
+{
+    static const mxfUL op_label_prefix = MXF_OP_L_LABEL(0, 0, 0, 0);
+    // check first 12 bytes, ignoring the registry version byte
+    if (memcmp(&op_label,        &op_label_prefix,        7) != 0 ||
+        memcmp(&op_label.octet8, &op_label_prefix.octet8, 4) != 0)
+    {
+        return get_label_string(op_label, buf, buf_size);
+    }
+
+    if (op_label.octet12 == 0x10)
+    {
+        // OP-Atom
+        if (op_label.octet13 <= 0x03) {
+            bmx_snprintf(buf, buf_size, "OP-Atom (%s, %s)",
+                         ((op_label.octet13 & 0x01) ? ">1 source clips"   : "1 source clip"),
+                         ((op_label.octet13 & 0x02) ? ">1 essence tracks" : "1 essence track"));
+        } else {
+            bmx_snprintf(buf, buf_size, "OP-Atom (byte 14-16: 0x%02x%02x%02x)",
+                         op_label.octet13, op_label.octet14, op_label.octet15);
+        }
+    }
+    else if (op_label.octet12 >= 0x01  && op_label.octet12 <= 0x03 &&
+             op_label.octet13 >= 0x01  && op_label.octet13 <= 0x03)
+    {
+        // OP-1A ... OP-3C
+        if ((op_label.octet14 & 0x01) && op_label.octet14 <= 0x0f &&
+             op_label.octet15 == 0x00)
+        {
+            bmx_snprintf(buf, buf_size, "OP-%c%c (%s, %s, %s)",
+                         '1' + op_label.octet12 - 1,
+                         'A' + op_label.octet13 - 1,
+                         ((op_label.octet13 & 0x02) ? "external essence" : "internal essence"),
+                         ((op_label.octet13 & 0x04) ? "non-stream file"  : "stream file"),
+                         ((op_label.octet13 & 0x08) ? "multi-track"      : "uni-track"));
+        }
+        else
+        {
+            bmx_snprintf(buf, buf_size, "OP-%c%c (byte 15-16: 0x%02x%02x)",
+                         '1' + op_label.octet12 - 1,
+                         'A' + op_label.octet13 - 1,
+                         op_label.octet14, op_label.octet15);
+        }
+    }
+    else
+    {
+        // unknown label
+        bmx_snprintf(buf, buf_size, "byte 13-16: 0x%02x%02x%02x%02x",
+                     op_label.octet12, op_label.octet13, op_label.octet14, op_label.octet15);
+    }
+
+    return buf;
+}
+
 static char* get_rational_string(mxfRational rat, char *buf, size_t buf_size)
 {
     bmx_snprintf(buf, buf_size, "%d/%d", rat.numerator, rat.denominator);
@@ -940,8 +994,12 @@ int main(int argc, const char** argv)
 
         if (do_print_info) {
             if (file_reader) {
+                char buf[128];
+
                 printf("MXF File Information:\n");
                 printf("  Filename                   : %s\n", filenames[0]);
+                printf("  OP label                   : %s\n",
+                       get_op_label_string(file_reader->GetOPLabel(), buf, sizeof(buf)));
                 printf("  Material package name      : %s\n", reader->GetMaterialPackageName().c_str());
                 if (reader->HaveMaterialTimecode()) {
                         printf("  Material start timecode    : %s\n",
