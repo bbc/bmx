@@ -136,9 +136,9 @@ static char* get_op_label_string(mxfUL op_label, char *buf, size_t buf_size)
             bmx_snprintf(buf, buf_size, "OP-%c%c (%s, %s, %s)",
                          '1' + op_label.octet12 - 1,
                          'A' + op_label.octet13 - 1,
-                         ((op_label.octet13 & 0x02) ? "external essence" : "internal essence"),
-                         ((op_label.octet13 & 0x04) ? "non-stream file"  : "stream file"),
-                         ((op_label.octet13 & 0x08) ? "multi-track"      : "uni-track"));
+                         ((op_label.octet14 & 0x02) ? "external essence" : "internal essence"),
+                         ((op_label.octet14 & 0x04) ? "non-stream file"  : "stream file"),
+                         ((op_label.octet14 & 0x08) ? "multi-track"      : "uni-track"));
         }
         else
         {
