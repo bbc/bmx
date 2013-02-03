@@ -272,30 +272,6 @@ static bool parse_mic_type(const char *mic_type_str, MICType *mic_type)
     return true;
 }
 
-static bool parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type)
-{
-    if (strcmp(clip_type_str, "as02") == 0)
-        *clip_type = CW_AS02_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "as11op1a") == 0)
-        *clip_type = CW_AS11_OP1A_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "as11d10") == 0)
-        *clip_type = CW_AS11_D10_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "op1a") == 0)
-        *clip_type = CW_OP1A_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "avid") == 0)
-        *clip_type = CW_AVID_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "d10") == 0)
-        *clip_type = CW_D10_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "rdd9") == 0)
-        *clip_type = CW_RDD9_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "wave") == 0)
-        *clip_type = CW_WAVE_CLIP_TYPE;
-    else
-        return false;
-
-    return true;
-}
-
 static string get_version_info()
 {
     char buffer[256];
