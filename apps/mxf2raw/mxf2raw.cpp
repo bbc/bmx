@@ -48,7 +48,6 @@
 #include <bmx/CRC32.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
-#include <bmx/Version.h>
 #include <bmx/apps/AppUtils.h>
 #include "AS11InfoOutput.h"
 #include "APPInfoOutput.h"
@@ -68,6 +67,10 @@ using namespace mxfpp;
 #define DEFAULT_GF_RETRIES          10
 #define DEFAULT_GF_RETRY_DELAY      1.0
 #define DEFAULT_GF_RATE_AFTER_FAIL  1.5
+
+
+static const char APP_NAME[]    = "mxf2raw";
+
 
 
 static char* get_label_string(mxfUL label, char *buf, size_t buf_size)
@@ -445,20 +448,9 @@ static bool parse_app_events_mask(const char *mask_str, int *mask_out)
     return true;
 }
 
-static string get_version_info()
-{
-    char buffer[256];
-    sprintf(buffer, "mxf2raw, %s v%s, %s %s (scm %s)",
-            get_bmx_library_name().c_str(),
-            get_bmx_version_string().c_str(),
-            __DATE__, __TIME__,
-            get_bmx_scm_version_string().c_str());
-    return buffer;
-}
-
 static void usage(const char *cmd)
 {
-    fprintf(stderr, "%s\n", get_version_info().c_str());
+    fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
     fprintf(stderr, "Usage: %s <<options>> <filename>+\n", cmd);
     fprintf(stderr, "Options:\n");
     fprintf(stderr, " -h | --help           Show usage and exit\n");
@@ -559,7 +551,7 @@ int main(int argc, const char** argv)
                  strcmp(argv[cmdln_index], "-v") == 0)
         {
             if (argc == 2) {
-                printf("%s\n", get_version_info().c_str());
+                printf("%s\n", get_app_version_info(APP_NAME).c_str());
                 return 0;
             }
             do_print_version = true;
@@ -822,7 +814,7 @@ int main(int argc, const char** argv)
     connect_libmxf_logging();
 
     if (do_print_version)
-        log_info("%s\n", get_version_info().c_str());
+        log_info("%s\n", get_app_version_info(APP_NAME).c_str());
 
 
     int cmd_result = 0;

@@ -96,6 +96,8 @@ typedef struct
 } LocatorOption;
 
 
+static const char APP_NAME[]                = "bmxtranswrap";
+
 static const char DEFAULT_SHIM_NAME[]       = "Sample File";
 static const char DEFAULT_SHIM_ID[]         = "http://bbc.co.uk/rd/as02/default-shim.txt";
 static const char DEFAULT_SHIM_ANNOTATION[] = "Default AS-02 shim";
@@ -260,20 +262,9 @@ static uint32_t read_samples(MXFReader *reader, const vector<uint32_t> &sample_s
     return num_read;
 }
 
-static string get_version_info()
-{
-    char buffer[256];
-    bmx_snprintf(buffer, sizeof(buffer), "bmxtranswrap, %s v%s, %s %s (scm %s)",
-                 get_bmx_library_name().c_str(),
-                 get_bmx_version_string().c_str(),
-                 __DATE__, __TIME__,
-                 get_bmx_scm_version_string().c_str());
-    return buffer;
-}
-
 static void usage(const char *cmd)
 {
-    fprintf(stderr, "%s\n", get_version_info().c_str());
+    fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
     fprintf(stderr, "Usage: %s <<options>> [<mxf input>]+\n", cmd);
     fprintf(stderr, "Options (* means option is required):\n");
     fprintf(stderr, "  -h | --help             Show usage and exit\n");
@@ -516,7 +507,7 @@ int main(int argc, const char** argv)
                  strcmp(argv[cmdln_index], "-v") == 0)
         {
             if (argc == 2) {
-                printf("%s\n", get_version_info().c_str());
+                printf("%s\n", get_app_version_info(APP_NAME).c_str());
                 return 0;
             }
             do_print_version = true;
@@ -1287,7 +1278,7 @@ int main(int argc, const char** argv)
     }
 
     if (do_print_version)
-        log_info("%s\n", get_version_info().c_str());
+        log_info("%s\n", get_app_version_info(APP_NAME).c_str());
 
 
     int cmd_result = 0;

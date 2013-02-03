@@ -51,6 +51,7 @@
 #include <bmx/apps/AppUtils.h>
 #include "ps_avci_header_data.h"
 #include <bmx/Utils.h>
+#include <bmx/Version.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -135,6 +136,18 @@ static bool parse_hex_string(const char *hex_str, unsigned char *octets, size_t 
     return i == octets_size;
 }
 
+
+string bmx::get_app_version_info(const char *app_name)
+{
+    char buffer[256];
+    sprintf(buffer, "%s, %s v%s, %s %s (scm %s)",
+            app_name,
+            get_bmx_library_name().c_str(),
+            get_bmx_version_string().c_str(),
+            __DATE__, __TIME__,
+            get_bmx_scm_version_string().c_str());
+    return buffer;
+}
 
 
 size_t bmx::get_num_avci_header_formats()

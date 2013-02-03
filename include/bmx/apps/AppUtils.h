@@ -61,6 +61,7 @@ typedef struct
 } AVCIHeaderInput;
 
 
+std::string get_app_version_info(const char *app_name);
 
 size_t get_num_avci_header_formats();
 const char* get_avci_header_format_string(size_t index);
