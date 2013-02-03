@@ -338,6 +338,18 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          or set <format> to 'all' for all formats listed above\n");
     fprintf(stderr, "                          The 512 bytes are extracted from <file> starting at <offset> bytes\n");
     fprintf(stderr, "                              and incrementing 512 bytes for each format in the list\n");
+    fprintf(stderr, "  --ps-avcihead           Panasonic AVC-Intra sequence header data for Panasonic-compatible files that don't include the header data\n");
+    fprintf(stderr, "                          These formats are supported:\n");
+    for (i = 0; i < get_num_ps_avci_header_formats(); i++) {
+        if (i == 0)
+            fprintf(stderr, "                              ");
+        else if (i % 4 == 0)
+            fprintf(stderr, ",\n                              ");
+        else
+            fprintf(stderr, ", ");
+        fprintf(stderr, "%s", get_ps_avci_header_format_string(i));
+    }
+    fprintf(stderr, "\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02:\n");
     fprintf(stderr, "    --mic-type <type>       Media integrity check type: 'md5' or 'none'. Default 'md5'\n");
@@ -542,6 +554,7 @@ int main(int argc, const char** argv)
     mxfProductVersion product_version;
     string version_string;
     UUID product_uid;
+    bool ps_avcihead = false;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -714,6 +727,10 @@ int main(int argc, const char** argv)
                 return 1;
             }
             cmdln_index += 3;
+        }
+        else if (strcmp(argv[cmdln_index], "--ps-avcihead") == 0)
+        {
+            ps_avcihead = true;
         }
         else if (strcmp(argv[cmdln_index], "--mic-type") == 0)
         {
@@ -2852,7 +2869,13 @@ int main(int argc, const char** argv)
                         else
                             input->track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
 
-                        if (have_avci_header_data(input->essence_type, frame_rate, avci_header_inputs)) {
+                        if (ps_avcihead && get_ps_avci_header_data(input->essence_type, frame_rate,
+                                                                   avci_header_data, sizeof(avci_header_data)))
+                        {
+                            input->track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
+                        }
+                        else if (have_avci_header_data(input->essence_type, frame_rate, avci_header_inputs))
+                        {
                             if (!read_avci_header_data(input->essence_type, frame_rate, avci_header_inputs,
                                                        avci_header_data, sizeof(avci_header_data)))
                             {

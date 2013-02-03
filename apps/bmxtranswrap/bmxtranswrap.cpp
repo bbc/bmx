@@ -369,6 +369,18 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          or set <format> to 'all' for all formats listed above\n");
     fprintf(stderr, "                          The 512 bytes are extracted from <file> starting at <offset> bytes\n");
     fprintf(stderr, "                              and incrementing 512 bytes for each format in the list\n");
+    fprintf(stderr, "  --ps-avcihead           Panasonic AVC-Intra sequence header data for Panasonic-compatible files that don't include the header data\n");
+    fprintf(stderr, "                          These formats are supported:\n");
+    for (i = 0; i < get_num_ps_avci_header_formats(); i++) {
+        if (i == 0)
+            fprintf(stderr, "                              ");
+        else if (i % 4 == 0)
+            fprintf(stderr, ",\n                              ");
+        else
+            fprintf(stderr, ", ");
+        fprintf(stderr, "%s", get_ps_avci_header_format_string(i));
+    }
+    fprintf(stderr, "\n");
     fprintf(stderr, "  -a <n:d>                Override or set the image aspect ratio. Either 4:3 or 16:9.\n");
     fprintf(stderr, "  --locked <bool>         Override or set flag indicating whether the number of audio samples is locked to the video. Either true or false\n");
     fprintf(stderr, "  --audio-ref <level>     Override or set audio reference level, number of dBm for 0VU\n");
@@ -518,6 +530,7 @@ int main(int argc, const char** argv)
     mxfProductVersion product_version;
     string version_string;
     UUID product_uid;
+    bool ps_avcihead = false;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -821,6 +834,10 @@ int main(int argc, const char** argv)
                 return 1;
             }
             cmdln_index += 3;
+        }
+        else if (strcmp(argv[cmdln_index], "--ps-avcihead") == 0)
+        {
+            ps_avcihead = true;
         }
         else if (strcmp(argv[cmdln_index], "-a") == 0)
         {
@@ -1472,6 +1489,8 @@ int main(int argc, const char** argv)
                     !force_no_avci_head &&
                     !allow_no_avci_head &&
                     !track_reader->HaveAVCIHeader() &&
+                    !(ps_avcihead &&
+                        have_ps_avci_header_data(input_track_info->essence_type, input_track_info->edit_rate)) &&
                     !have_avci_header_data(input_track_info->essence_type, input_track_info->edit_rate,
                                            avci_header_inputs))
                 {
@@ -1972,6 +1991,12 @@ int main(int argc, const char** argv)
                             if (input_track_reader->HaveAVCIHeader())
                             {
                                 output_track.track->SetAVCIHeader(input_track_reader->GetAVCIHeader(), AVCI_HEADER_SIZE);
+                            }
+                            else if (ps_avcihead && get_ps_avci_header_data(input_track_info->essence_type,
+                                                                            input_picture_info->edit_rate,
+                                                                            avci_header_data, sizeof(avci_header_data)))
+                            {
+                                output_track.track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
                             }
                             else if (read_avci_header_data(input_track_info->essence_type,
                                                            input_picture_info->edit_rate, avci_header_inputs,

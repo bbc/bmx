@@ -233,6 +233,10 @@
 					RelativePath="..\..\..\include\bmx\apps\AS11Helper.h"
 					>
 				</File>
+				<File
+					RelativePath="..\..\..\src\apps\ps_avci_header_data.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="as02"

@@ -146,7 +146,7 @@ example
 62. Add support for metadata to package metadata set in RDD9 writer, e.g. UMID
     and essence marks
 
-63. Add built-in support for all Panasonic AVCI SPS+PPS variations and enable
-    using a --p2-avcihead option
+63. Add more built-in Panasonic AVCI SPS+PPS variations and maybe create them
+    using code rather than including chunks of bytes in the library
 
 64. Improve logic around selecting sequence and group reading

@@ -49,6 +49,7 @@
 #endif
 
 #include <bmx/apps/AppUtils.h>
+#include "ps_avci_header_data.h"
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -145,6 +146,18 @@ const char* bmx::get_avci_header_format_string(size_t index)
 {
     BMX_ASSERT(index < BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO));
     return AVCI_HEADER_FORMAT_INFO[index].format_str;
+}
+
+
+size_t bmx::get_num_ps_avci_header_formats()
+{
+    return BMX_ARRAY_SIZE(PS_AVCI_HEADER_DATA);
+}
+
+const char* bmx::get_ps_avci_header_format_string(size_t index)
+{
+    BMX_ASSERT(index < BMX_ARRAY_SIZE(PS_AVCI_HEADER_DATA));
+    return PS_AVCI_HEADER_DATA[index].format_str;
 }
 
 
@@ -492,6 +505,49 @@ bool bmx::read_avci_header_data(EssenceType essence_type, Rational sample_rate,
     }
 
     fclose(file);
+
+    return true;
+}
+
+
+bool bmx::have_ps_avci_header_data(EssenceType essence_type, Rational sample_rate)
+{
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(PS_AVCI_HEADER_DATA); i++) {
+        if (PS_AVCI_HEADER_DATA[i].essence_type == essence_type &&
+            PS_AVCI_HEADER_DATA[i].sample_rate  == sample_rate)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool bmx::get_ps_avci_header_data(EssenceType essence_type, Rational sample_rate,
+                                  unsigned char *buffer, size_t buffer_size)
+{
+    BMX_ASSERT(buffer_size >= 512);
+
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(PS_AVCI_HEADER_DATA); i++) {
+        if (PS_AVCI_HEADER_DATA[i].essence_type == essence_type &&
+            PS_AVCI_HEADER_DATA[i].sample_rate  == sample_rate)
+        {
+            break;
+        }
+    }
+    if (i >= BMX_ARRAY_SIZE(PS_AVCI_HEADER_DATA))
+        return false;
+
+    // byte 0...255: AUD + SPS + zero padding
+    memcpy(buffer, PS_AVCI_AUD, PS_AUD_DATA_SIZE);
+    memcpy(&buffer[PS_AUD_DATA_SIZE], PS_AVCI_HEADER_DATA[i].sps, PS_SPS_DATA_SIZE);
+    memset(&buffer[PS_AUD_DATA_SIZE + PS_SPS_DATA_SIZE], 0, 256 - (PS_AUD_DATA_SIZE + PS_SPS_DATA_SIZE));
+
+    // byte 256...511: PPS + zero padding
+    memcpy(&buffer[256], PS_AVCI_HEADER_DATA[i].pps, PS_PPS_DATA_SIZE);
+    memset(&buffer[256 + PS_PPS_DATA_SIZE], 0, 256 - PS_PPS_DATA_SIZE);
 
     return true;
 }

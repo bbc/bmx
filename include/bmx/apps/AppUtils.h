@@ -63,6 +63,9 @@ typedef struct
 size_t get_num_avci_header_formats();
 const char* get_avci_header_format_string(size_t index);
 
+size_t get_num_ps_avci_header_formats();
+const char* get_ps_avci_header_format_string(size_t index);
+
 bool parse_frame_rate(const char *rate_str, Rational *frame_rate);
 bool parse_timecode(const char *tc_str, Rational frame_rate, Timecode *timecode);
 bool parse_position(const char *position_str, Timecode start_timecode, Rational frame_rate, int64_t *position);
@@ -88,6 +91,10 @@ bool have_avci_header_data(EssenceType essence_type, Rational sample_rate,
 bool read_avci_header_data(EssenceType essence_type, Rational sample_rate,
                            std::vector<AVCIHeaderInput> &avci_header_inputs,
                            unsigned char *buffer, size_t buffer_size);
+
+bool have_ps_avci_header_data(EssenceType essence_type, Rational sample_rate);
+bool get_ps_avci_header_data(EssenceType essence_type, Rational sample_rate,
+                             unsigned char *buffer, size_t buffer_size);
 
 void init_progress(float *next_update);
 void print_progress(int64_t count, int64_t duration, float *next_update);
