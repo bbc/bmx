@@ -437,29 +437,13 @@ string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number,
 bool bmx::have_avci_header_data(EssenceType essence_type, Rational sample_rate,
                                 vector<AVCIHeaderInput> &avci_header_inputs)
 {
-    size_t i;
-    size_t j;
-    for (i = 0; i < avci_header_inputs.size(); i++) {
-        for (j = 0; j < avci_header_inputs[i].formats.size(); j++) {
-            if (avci_header_inputs[i].formats[j].essence_type == essence_type &&
-                avci_header_inputs[i].formats[j].sample_rate == sample_rate)
-            {
-                break;
-            }
-        }
-        if (j < avci_header_inputs[i].formats.size())
-            break;
-    }
-
-    return i < avci_header_inputs.size();
+    return read_avci_header_data(essence_type, sample_rate, avci_header_inputs, 0, 0);
 }
 
 bool bmx::read_avci_header_data(EssenceType essence_type, Rational sample_rate,
                                 vector<AVCIHeaderInput> &avci_header_inputs,
                                 unsigned char *buffer, size_t buffer_size)
 {
-    BMX_ASSERT(buffer_size >= 512);
-
     size_t i;
     size_t j = 0;
     for (i = 0; i < avci_header_inputs.size(); i++) {
@@ -476,6 +460,9 @@ bool bmx::read_avci_header_data(EssenceType essence_type, Rational sample_rate,
     if (i >= avci_header_inputs.size())
         return false;
 
+    if (!buffer)
+        return true;
+    BMX_ASSERT(buffer_size >= 512);
 
     FILE *file = fopen(avci_header_inputs[i].filename, "rb");
     if (!file) {
@@ -512,23 +499,12 @@ bool bmx::read_avci_header_data(EssenceType essence_type, Rational sample_rate,
 
 bool bmx::have_ps_avci_header_data(EssenceType essence_type, Rational sample_rate)
 {
-    size_t i;
-    for (i = 0; i < BMX_ARRAY_SIZE(PS_AVCI_HEADER_DATA); i++) {
-        if (PS_AVCI_HEADER_DATA[i].essence_type == essence_type &&
-            PS_AVCI_HEADER_DATA[i].sample_rate  == sample_rate)
-        {
-            return true;
-        }
-    }
-
-    return false;
+    return get_ps_avci_header_data(essence_type, sample_rate, 0, 0);
 }
 
 bool bmx::get_ps_avci_header_data(EssenceType essence_type, Rational sample_rate,
                                   unsigned char *buffer, size_t buffer_size)
 {
-    BMX_ASSERT(buffer_size >= 512);
-
     size_t i;
     for (i = 0; i < BMX_ARRAY_SIZE(PS_AVCI_HEADER_DATA); i++) {
         if (PS_AVCI_HEADER_DATA[i].essence_type == essence_type &&
@@ -539,6 +515,10 @@ bool bmx::get_ps_avci_header_data(EssenceType essence_type, Rational sample_rate
     }
     if (i >= BMX_ARRAY_SIZE(PS_AVCI_HEADER_DATA))
         return false;
+
+    if (!buffer)
+        return true;
+    BMX_ASSERT(buffer_size >= 512);
 
     // byte 0...255: AUD + SPS + zero padding
     memcpy(buffer, PS_AVCI_AUD, PS_AUD_DATA_SIZE);
