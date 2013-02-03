@@ -150,3 +150,17 @@ example
     using code rather than including chunks of bytes in the library
 
 64. Improve logic around selecting sequence and group reading
+
+65. Support reading non-seekable MXF files, e.g. piped from stdin
+
+66. Add options to disable some or all essence tracks
+
+67. Support for separate metadata tracks containing metadata extracted from
+    the essence container, e.g. System Item UMID, timecodes, timestamps, marks.
+    Possibly only enable this feature when requested.
+
+68. Support setting the output audio layout, e.g. single channel per track, all
+    channels in 1 track, 2 channels per track.
+
+69. Support selecting audio routing from input track/channel to output
+    track/channel and setting mute/invalid output channels
