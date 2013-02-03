@@ -260,18 +260,6 @@ static uint32_t read_samples(MXFReader *reader, const vector<uint32_t> &sample_s
     return num_read;
 }
 
-static bool parse_mic_type(const char *mic_type_str, MICType *mic_type)
-{
-    if (strcmp(mic_type_str, "md5") == 0)
-        *mic_type = MD5_MIC_TYPE;
-    else if (strcmp(mic_type_str, "none") == 0)
-        *mic_type = NONE_MIC_TYPE;
-    else
-        return false;
-
-    return true;
-}
-
 static string get_version_info()
 {
     char buffer[256];

@@ -39,6 +39,7 @@
 #include <bmx/EssenceType.h>
 #include <bmx/URI.h>
 #include <bmx/clip_writer/ClipWriterTrack.h>
+#include <bmx/as02/AS02Manifest.h>
 
 
 
@@ -85,6 +86,7 @@ bool parse_product_info(const char **info_strings, size_t num_info_strings,
                         std::string *version, UUID *product_uid);
 bool parse_avid_import_name(const char *import_name, URI *uri);
 bool parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type);
+bool parse_mic_type(const char *mic_type_str, MICType *mic_type);
 
 std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture);
 

@@ -447,6 +447,18 @@ bool bmx::parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type)
     return true;
 }
 
+bool bmx::parse_mic_type(const char *mic_type_str, MICType *mic_type)
+{
+    if (strcmp(mic_type_str, "md5") == 0)
+        *mic_type = MD5_MIC_TYPE;
+    else if (strcmp(mic_type_str, "none") == 0)
+        *mic_type = NONE_MIC_TYPE;
+    else
+        return false;
+
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture)
 {
