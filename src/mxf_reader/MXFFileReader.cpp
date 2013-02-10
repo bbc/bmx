@@ -276,11 +276,16 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
 
         // try read all partitions find and get last partition with header metadata
 
-        bool file_is_complete = mFile->readPartitions();
-        if (!file_is_complete) {
-            BMX_ASSERT(mFile->getPartitions().size() == 1);
-            if (mFile->getPartition(0).isClosed() || mFile->getPartition(0).getFooterPartition() != 0)
-                log_warn("Failed to read all partitions. File may be incomplete or invalid\n");
+        bool file_is_complete;
+        if (mFile->isSeekable()) {
+            file_is_complete = mFile->readPartitions();
+            if (!file_is_complete) {
+                BMX_ASSERT(mFile->getPartitions().size() == 1);
+                if (mFile->getPartition(0).isClosed() || mFile->getPartition(0).getFooterPartition() != 0)
+                    log_warn("Failed to read all partitions. File may be incomplete or invalid\n");
+            }
+        } else {
+            file_is_complete = false;
         }
         const vector<Partition*> &partitions = mFile->getPartitions();
         Partition *metadata_partition = 0;
@@ -300,9 +305,11 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
         mxfKey key;
         uint8_t llen;
         uint64_t len;
-        mFile->seek(metadata_partition->getThisPartition(), SEEK_SET);
-        mFile->readKL(&key, &llen, &len);
-        mFile->skip(len);
+        if (mFile->isSeekable()) {
+            mFile->seek(metadata_partition->getThisPartition(), SEEK_SET);
+            mFile->readKL(&key, &llen, &len);
+            mFile->skip(len);
+        }
         mFile->readNextNonFillerKL(&key, &llen, &len);
         BMX_CHECK(mxf_is_header_metadata(&key));
 
