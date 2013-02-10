@@ -113,11 +113,15 @@ File* AppMXFFileFactory::OpenRead(string filename)
 
     try
     {
+        if (filename.empty()) {
+            BMX_CHECK(mxf_stdin_wrap_read(&mxf_file));
+        } else {
 #if defined(_WIN32)
-        BMX_CHECK(mxf_win32_file_open_read(filename.c_str(), mInputFlags, &mxf_file));
+            BMX_CHECK(mxf_win32_file_open_read(filename.c_str(), mInputFlags, &mxf_file));
 #else
-        BMX_CHECK(mxf_disk_file_open_read(filename.c_str(), &mxf_file));
+            BMX_CHECK(mxf_disk_file_open_read(filename.c_str(), &mxf_file));
 #endif
+        }
 
         if (mMD5WrapInput) {
             MXFMD5WrapperFile *md5_wrap_file = md5_wrap_mxf_file(mxf_file);

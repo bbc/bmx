@@ -70,6 +70,16 @@ static const char APP_NAME[]    = "mxf2raw";
 
 
 
+static const char* get_input_filename(const char *filename)
+{
+    static const char* stdin_filename = "<standard input>";
+
+    if (filename[0] == 0)
+        return stdin_filename;
+    else
+        return filename;
+}
+
 static char* get_label_string(mxfUL label, char *buf, size_t buf_size)
 {
     bmx_snprintf(buf, buf_size,
@@ -449,6 +459,7 @@ static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
     fprintf(stderr, "Usage: %s <<options>> <filename>+\n", cmd);
+    fprintf(stderr, "   Use <filename> '-' for standard input\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, " -h | --help           Show usage and exit\n");
     fprintf(stderr, " -v | --version        Print version info\n");
@@ -792,16 +803,21 @@ int main(int argc, const char** argv)
     }
 
     for (; cmdln_index < argc; cmdln_index++) {
-        if (!check_file_exists(argv[cmdln_index])) {
-            if (argv[cmdln_index][0] == '-') {
-                usage(argv[0]);
-                fprintf(stderr, "Unknown argument '%s'\n", argv[cmdln_index]);
-            } else {
-                fprintf(stderr, "Failed to open input filename '%s'\n", argv[cmdln_index]);
+        if (strcmp(argv[cmdln_index], "-") == 0) {
+            // standard input
+            filenames.push_back("");
+        } else {
+            if (!check_file_exists(argv[cmdln_index])) {
+                if (argv[cmdln_index][0] == '-') {
+                    usage(argv[0]);
+                    fprintf(stderr, "Unknown argument '%s'\n", argv[cmdln_index]);
+                } else {
+                    fprintf(stderr, "Failed to open input filename '%s'\n", argv[cmdln_index]);
+                }
+                return 1;
             }
-            return 1;
+            filenames.push_back(argv[cmdln_index]);
         }
-        filenames.push_back(argv[cmdln_index]);
     }
 
 
@@ -825,11 +841,11 @@ int main(int argc, const char** argv)
             for (i = 0; i < filenames.size(); i++) {
                 string md5_str = md5_calc_file(filenames[i]);
                 if (md5_str.empty()) {
-                    log_error("failed to calculate md5 for file '%s'\n", filenames[i]);
+                    log_error("failed to calculate md5 for file '%s'\n", get_input_filename(filenames[i]));
                     cmd_result = 1;
                     break;
                 }
-                log_info("File MD5: %s %s\n", filenames[i], md5_str.c_str());
+                log_info("File MD5: %s %s\n", get_input_filename(filenames[i]), md5_str.c_str());
             }
         }
         catch (const BMXException &ex)
@@ -866,7 +882,7 @@ int main(int argc, const char** argv)
                 grp_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
                 result = grp_file_reader->Open(filenames[i]);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-                    log_error("Failed to open MXF file '%s': %s\n", filenames[i],
+                    log_error("Failed to open MXF file '%s': %s\n", get_input_filename(filenames[i]),
                               MXFFileReader::ResultToString(result).c_str());
                     throw false;
                 }
@@ -886,7 +902,7 @@ int main(int argc, const char** argv)
                 seq_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
                 result = seq_file_reader->Open(filenames[i]);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-                    log_error("Failed to open MXF file '%s': %s\n", filenames[i],
+                    log_error("Failed to open MXF file '%s': %s\n", get_input_filename(filenames[i]),
                               MXFFileReader::ResultToString(result).c_str());
                     throw false;
                 }
@@ -908,7 +924,7 @@ int main(int argc, const char** argv)
             // avid extensions are already registered by the MXFReader
             result = file_reader->Open(filenames[0]);
             if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-                log_error("Failed to open MXF file '%s': %s\n", filenames[0],
+                log_error("Failed to open MXF file '%s': %s\n", get_input_filename(filenames[0]),
                           MXFFileReader::ResultToString(result).c_str());
                 throw false;
             }
@@ -984,7 +1000,7 @@ int main(int argc, const char** argv)
                 char buf[128];
 
                 printf("MXF File Information:\n");
-                printf("  Filename                   : %s\n", filenames[0]);
+                printf("  Filename                   : %s\n", get_input_filename(filenames[0]));
                 printf("  OP label                   : %s\n",
                        get_op_label_string(file_reader->GetOPLabel(), buf, sizeof(buf)));
                 printf("  Material package name      : %s\n", reader->GetMaterialPackageName().c_str());
@@ -1050,7 +1066,7 @@ int main(int argc, const char** argv)
                 log_info("Output prefix: %s\n", prefix);
             if (log_filename || !do_print_info) {
                 if (file_reader) {
-                    log_info("Input filename: %s\n", filenames[0]);
+                    log_info("Input filename: %s\n", get_input_filename(filenames[0]));
                     log_info("Material package name: %s\n", reader->GetMaterialPackageName().c_str());
                 }
                 log_info("Edit rate: %d/%d\n", sample_rate.numerator, sample_rate.denominator);
@@ -1330,7 +1346,8 @@ int main(int argc, const char** argv)
                      iter != file_factory.GetInputMD5Digests().end();
                      iter++)
                 {
-                    log_info("File MD5: %s %s\n", iter->first.c_str(), md5_digest_str(iter->second.bytes).c_str());
+                    log_info("File MD5: %s %s\n", get_input_filename(iter->first.c_str()),
+                             md5_digest_str(iter->second.bytes).c_str());
                 }
             }
 
@@ -1346,7 +1363,8 @@ int main(int argc, const char** argv)
                  iter != file_factory.GetInputMD5Digests().end();
                  iter++)
             {
-                log_info("File MD5: %s %s\n", iter->first.c_str(), md5_digest_str(iter->second.bytes).c_str());
+                log_info("File MD5: %s %s\n", get_input_filename(iter->first.c_str()),
+                         md5_digest_str(iter->second.bytes).c_str());
             }
         }
 
