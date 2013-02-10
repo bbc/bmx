@@ -1159,7 +1159,7 @@ int main(int argc, const char** argv)
         MXFReader *reader = 0;
         MXFFileReader *file_reader = 0;
 
-        if (use_group_reader) {
+        if (use_group_reader && input_filenames.size() > 1) {
             MXFGroupReader *group_reader = new MXFGroupReader();
             MXFFileReader::OpenResult result;
             size_t i;
