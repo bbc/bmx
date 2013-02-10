@@ -66,14 +66,28 @@ ResolvedPackage::ResolvedPackage()
 
 DefaultMXFPackageResolver::DefaultMXFPackageResolver()
 {
+    mFileFactory = new DefaultMXFFileFactory();
+    mOwnFilefactory = true;
     mFileReader = 0;
 }
 
 DefaultMXFPackageResolver::~DefaultMXFPackageResolver()
 {
+    if (mOwnFilefactory)
+        delete mFileFactory;
+
     size_t i;
     for (i = 0; i < mExternalReaders.size(); i++)
         delete mExternalReaders[i];
+}
+
+void DefaultMXFPackageResolver::SetFileFactory(MXFFileFactory *factory, bool take_ownership)
+{
+    if (mOwnFilefactory)
+        delete mFileFactory;
+
+    mFileFactory = factory;
+    mOwnFilefactory = take_ownership;
 }
 
 void DefaultMXFPackageResolver::ExtractPackages(MXFFileReader *file_reader)
@@ -201,6 +215,7 @@ vector<ResolvedPackage> DefaultMXFPackageResolver::ResolveSourceClip(SourceClip 
 
         string filename = uri.ToFilename();
         MXFFileReader *file_reader = new MXFFileReader();
+        file_reader->SetFileFactory(mFileFactory, false);
         MXFFileReader::OpenResult result = file_reader->Open(filename);
         if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
             log_warn("Failed to open external MXF file '%s'\n", filename.c_str());

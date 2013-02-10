@@ -37,6 +37,8 @@
 
 #include <libMXF++/MXF.h>
 
+#include <bmx/mxf_helper/MXFFileFactory.h>
+
 
 
 namespace bmx
@@ -65,6 +67,8 @@ class MXFPackageResolver
 public:
     virtual ~MXFPackageResolver() {};
 
+    virtual void SetFileFactory(MXFFileFactory *factory, bool take_ownership) = 0;
+
     virtual void ExtractPackages(MXFFileReader *file_reader) = 0;
 
 public:
@@ -83,6 +87,8 @@ public:
     DefaultMXFPackageResolver();
     virtual ~DefaultMXFPackageResolver();
 
+    virtual void SetFileFactory(MXFFileFactory *factory, bool take_ownership);
+
     virtual void ExtractPackages(MXFFileReader *file_reader);
 
 public:
@@ -93,7 +99,9 @@ public:
     virtual std::vector<ResolvedPackage> GetResolvedPackages() { return mResolvedPackages; }
 
 protected:
-    MXFFileReader* mFileReader;
+    MXFFileFactory *mFileFactory;
+    bool mOwnFilefactory;
+    MXFFileReader *mFileReader;
     std::vector<ResolvedPackage> mResolvedPackages;
     std::vector<MXFFileReader*> mExternalReaders;
 };
