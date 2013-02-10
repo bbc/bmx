@@ -863,6 +863,7 @@ int main(int argc, const char** argv)
             for (i = 0; i < filenames.size(); i++) {
                 MXFFileReader *grp_file_reader = new MXFFileReader();
                 grp_file_reader->SetFileFactory(&file_factory, false);
+                grp_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
                 result = grp_file_reader->Open(filenames[i]);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", filenames[i],
@@ -882,6 +883,7 @@ int main(int argc, const char** argv)
             for (i = 0; i < filenames.size(); i++) {
                 MXFFileReader *seq_file_reader = new MXFFileReader();
                 seq_file_reader->SetFileFactory(&file_factory, false);
+                seq_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
                 result = seq_file_reader->Open(filenames[i]);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", filenames[i],
@@ -898,6 +900,7 @@ int main(int argc, const char** argv)
             MXFFileReader::OpenResult result;
             file_reader = new MXFFileReader();
             file_reader->SetFileFactory(&file_factory, false);
+            file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
             if (do_print_as11)
                 as11_register_extensions(file_reader);
             if (do_print_app || app_events_mask)
