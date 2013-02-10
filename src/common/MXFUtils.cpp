@@ -126,6 +126,24 @@ static bool update_md5_to_position(MXFMD5WrapperFile *md5_wrapper_file, int64_t 
     return result;
 }
 
+static void update_md5_to_nonseekable_end(MXFMD5WrapperFile *md5_wrapper_file)
+{
+    MXFFile *mxf_file = md5_wrapper_file->mxf_file;
+    MXFFileSysData *sys_data = mxf_file->sysData;
+
+    // set force update to false to avoid endless update loop
+    bool original_force_update = sys_data->force_update;
+    sys_data->force_update = false;
+
+    const uint32_t buffer_size = 8192;
+    unsigned char *buffer = new unsigned char[buffer_size];
+    while (mxf_file_read(mxf_file, buffer, buffer_size) == buffer_size)
+    {}
+    // TODO: ferror/errno needs to filter up to here so that error condition isn't ignored
+
+    sys_data->force_update = original_force_update;
+}
+
 
 static void md5_mxf_file_close(MXFFileSysData *sys_data)
 {
@@ -419,9 +437,13 @@ bool bmx::md5_wrap_finalize(MXFMD5WrapperFile *md5_wrapper_file, unsigned char d
     MXFFile *mxf_file = md5_wrapper_file->mxf_file;
     MXFFileSysData *sys_data = mxf_file->sysData;
 
-    int64_t file_size = mxf_file_size(mxf_file);
-    if (!update_md5_to_position(md5_wrapper_file, file_size))
-        return false;
+    if (mxf_file_is_seekable(mxf_file)) {
+        int64_t file_size = mxf_file_size(mxf_file);
+        if (!update_md5_to_position(md5_wrapper_file, file_size))
+            return false;
+    } else {
+        update_md5_to_nonseekable_end(md5_wrapper_file);
+    }
 
     md5_final(digest, &sys_data->md5_context);
 
