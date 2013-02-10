@@ -334,10 +334,21 @@ string bmx::md5_calc_file(string filename)
 {
     FILE *file = fopen(filename.c_str(), "rb");
     if (!file) {
-        log_warn("Failed to open file '%s' to calc md5: %s\n", filename.c_str(), bmx_strerror(errno).c_str());
+        log_warn("Failed to open file '%s' to calculate md5: %s\n", filename.c_str(), bmx_strerror(errno).c_str());
         return "";
     }
 
+    string result = md5_calc_file(file);
+    if (result.empty())
+        log_warn("Failed to calculate md5 for file '%s'\n", filename.c_str());
+
+    fclose(file);
+
+    return result;
+}
+
+string bmx::md5_calc_file(FILE *file)
+{
     MD5Context context;
     md5_init(&context);
 
@@ -346,16 +357,13 @@ string bmx::md5_calc_file(string filename)
     while (num_read == sizeof(buffer)) {
         num_read = fread(buffer, 1, sizeof(buffer), file);
         if (num_read != sizeof(buffer) && ferror(file)) {
-            log_warn("Failed to read from file '%s' to calc md5: %s\n", filename.c_str(), bmx_strerror(errno).c_str());
-            fclose(file);
+            log_warn("Read failure when calculating md5: %s\n", bmx_strerror(errno).c_str());
             return "";
         }
 
         if (num_read > 0)
             md5_update(&context, buffer, (uint32_t)num_read);
     }
-
-    fclose(file);
 
     unsigned char digest[16];
     md5_final(digest, &context);

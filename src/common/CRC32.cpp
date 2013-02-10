@@ -152,10 +152,21 @@ string bmx::crc32_calc_file(string filename)
 {
     FILE *file = fopen(filename.c_str(), "rb");
     if (!file) {
-        log_warn("Failed to open file '%s' to calc crc32: %s\n", filename.c_str(), bmx_strerror(errno).c_str());
+        log_warn("Failed to open file '%s' to calculate crc32: %s\n", filename.c_str(), bmx_strerror(errno).c_str());
         return "";
     }
 
+    string result = crc32_calc_file(file);
+    if (result.empty())
+        log_warn("Failed to calculate crc32 for file '%s'\n", filename.c_str());
+
+    fclose(file);
+
+    return result;
+}
+
+string bmx::crc32_calc_file(FILE *file)
+{
     uint32_t crc32;
     crc32_init(&crc32);
 
@@ -164,17 +175,13 @@ string bmx::crc32_calc_file(string filename)
     while (num_read == sizeof(buffer)) {
         num_read = fread(buffer, 1, sizeof(buffer), file);
         if (num_read != sizeof(buffer) && ferror(file)) {
-            log_warn("Failed to read from file '%s' to calc crc32: %s\n",
-                     filename.c_str(), bmx_strerror(errno).c_str());
-            fclose(file);
+            log_warn("Read failure when calculating crc32: %s\n", bmx_strerror(errno).c_str());
             return "";
         }
 
         if (num_read > 0)
             crc32_update(&crc32, buffer, num_read);
     }
-
-    fclose(file);
 
     crc32_final(&crc32);
 

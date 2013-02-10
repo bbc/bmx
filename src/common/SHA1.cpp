@@ -223,10 +223,21 @@ string bmx::sha1_calc_file(string filename)
 {
     FILE *file = fopen(filename.c_str(), "rb");
     if (!file) {
-        log_warn("Failed to open file '%s' to calc sha1: %s\n", filename.c_str(), bmx_strerror(errno).c_str());
+        log_warn("Failed to open file '%s' to calculate sha1: %s\n", filename.c_str(), bmx_strerror(errno).c_str());
         return "";
     }
 
+    string result = sha1_calc_file(file);
+    if (result.empty())
+        log_warn("Failed to calculate sha1 for file '%s'\n", filename.c_str());
+
+    fclose(file);
+
+    return result;
+}
+
+string bmx::sha1_calc_file(FILE *file)
+{
     SHA1Context context;
     sha1_init(&context);
 
@@ -235,16 +246,13 @@ string bmx::sha1_calc_file(string filename)
     while (num_read == sizeof(buffer)) {
         num_read = fread(buffer, 1, sizeof(buffer), file);
         if (num_read != sizeof(buffer) && ferror(file)) {
-            log_warn("Failed to read from file '%s' to calc sha1: %s\n", filename.c_str(), bmx_strerror(errno).c_str());
-            fclose(file);
+            log_warn("Read failure when calculating sha1: %s\n", bmx_strerror(errno).c_str());
             return "";
         }
 
         if (num_read > 0)
             sha1_update(&context, buffer, (uint32_t)num_read);
     }
-
-    fclose(file);
 
     unsigned char digest[16];
     sha1_final(digest, &context);
