@@ -171,3 +171,8 @@ example
     stdin. It should fail gracefully instead.
 
 72. Support stdout outputs in raw2bmx and bmxtranswrap
+
+73. Set errno in MXF file I/O structure functions. This would allow the exact
+    error to be surfaced higher up the chain (e.g. in exception messages) and
+    avoid having to log the exact cause in the file I/O layer or losing the
+    exact cause.
