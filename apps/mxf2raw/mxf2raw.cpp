@@ -839,7 +839,11 @@ int main(int argc, const char** argv)
         {
             size_t i;
             for (i = 0; i < filenames.size(); i++) {
-                string md5_str = md5_calc_file(filenames[i]);
+                string md5_str;
+                if (strcmp(argv[cmdln_index], "-") == 0)
+                    md5_str = md5_calc_file(stdin);
+                else
+                    md5_str = md5_calc_file(filenames[i]);
                 if (md5_str.empty()) {
                     log_error("failed to calculate md5 for file '%s'\n", get_input_filename(filenames[i]));
                     cmd_result = 1;
