@@ -49,15 +49,12 @@
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/apps/AppUtils.h>
+#include <bmx/apps/AppMXFFileFactory.h>
 #include "AS11InfoOutput.h"
 #include "APPInfoOutput.h"
 #include "AvidInfoOutput.h"
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
-
-#if defined(_WIN32)
-#include <mxf/mxf_win32_file.h>
-#endif
 
 using namespace std;
 using namespace bmx;
@@ -519,6 +516,8 @@ int main(int argc, const char** argv)
     bool do_print_as11 = false;
 #if defined(_WIN32)
     int file_flags = MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
+#else
+    int file_flags = 0;
 #endif
     bool check_crc32 = false;
     bool do_print_app = false;
@@ -852,45 +851,24 @@ int main(int argc, const char** argv)
 
     try
     {
-
-#if defined(_WIN32)
-#define MXF_OPEN_READ(fn, pf)   mxf_win32_file_open_read(fn, file_flags, pf)
-#else
-#define MXF_OPEN_READ(fn, pf)   mxf_disk_file_open_read(fn, pf)
-#endif
-
-#define OPEN_FILE(sreader, index)                                                       \
-    MXFFileReader::OpenResult result;                                                   \
-    MXFFile *mxf_file;                                                                  \
-    if (MXF_OPEN_READ(filenames[index], &mxf_file)) {                                   \
-        if (calc_file_md5) {                                                            \
-            MXFMD5WrapperFile *md5_wrap_file = md5_wrap_mxf_file(mxf_file);             \
-            md5_wrap_files.push_back(md5_wrap_file);                                    \
-            result = sreader->Open(new File(md5_wrap_get_file(md5_wrap_files.back())),  \
-                                  filenames[index]);                                    \
-        } else {                                                                        \
-            result = sreader->Open(new File(mxf_file), filenames[index]);               \
-        }                                                                               \
-    } else {                                                                            \
-        result = MXFFileReader::MXF_RESULT_OPEN_FAIL;                                   \
-    }                                                                                   \
-    if (result != MXFFileReader::MXF_RESULT_SUCCESS) {                                  \
-        log_error("Failed to open MXF file '%s': %s\n", filenames[index],               \
-                  MXFFileReader::ResultToString(result).c_str());                       \
-        delete sreader;                                                                 \
-        throw false;                                                                    \
-    }
-
+        AppMXFFileFactory file_factory(calc_file_md5, file_flags);
         APPInfoOutput app_output;
-        vector<MXFMD5WrapperFile*> md5_wrap_files;
-        MXFReader *reader;
+        MXFReader *reader = 0;
         MXFFileReader *file_reader = 0;
+
         if (use_group_reader && filenames.size() > 1) {
             MXFGroupReader *group_reader = new MXFGroupReader();
+            MXFFileReader::OpenResult result;
             size_t i;
             for (i = 0; i < filenames.size(); i++) {
                 MXFFileReader *grp_file_reader = new MXFFileReader();
-                OPEN_FILE(grp_file_reader, i)
+                grp_file_reader->SetFileFactory(&file_factory, false);
+                result = grp_file_reader->Open(filenames[i]);
+                if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
+                    log_error("Failed to open MXF file '%s': %s\n", filenames[i],
+                              MXFFileReader::ResultToString(result).c_str());
+                    throw false;
+                }
                 group_reader->AddReader(grp_file_reader);
             }
             if (!group_reader->Finalize())
@@ -899,10 +877,17 @@ int main(int argc, const char** argv)
             reader = group_reader;
         } else if (filenames.size() > 1) {
             MXFSequenceReader *seq_reader = new MXFSequenceReader();
+            MXFFileReader::OpenResult result;
             size_t i;
             for (i = 0; i < filenames.size(); i++) {
                 MXFFileReader *seq_file_reader = new MXFFileReader();
-                OPEN_FILE(seq_file_reader, i)
+                seq_file_reader->SetFileFactory(&file_factory, false);
+                result = seq_file_reader->Open(filenames[i]);
+                if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
+                    log_error("Failed to open MXF file '%s': %s\n", filenames[i],
+                              MXFFileReader::ResultToString(result).c_str());
+                    throw false;
+                }
                 seq_reader->AddReader(seq_file_reader);
             }
             if (!seq_reader->Finalize(false, keep_input_order))
@@ -910,13 +895,20 @@ int main(int argc, const char** argv)
 
             reader = seq_reader;
         } else {
+            MXFFileReader::OpenResult result;
             file_reader = new MXFFileReader();
+            file_reader->SetFileFactory(&file_factory, false);
             if (do_print_as11)
                 as11_register_extensions(file_reader);
             if (do_print_app || app_events_mask)
                 app_output.RegisterExtensions(file_reader);
             // avid extensions are already registered by the MXFReader
-            OPEN_FILE(file_reader, 0)
+            result = file_reader->Open(filenames[0]);
+            if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
+                log_error("Failed to open MXF file '%s': %s\n", filenames[0],
+                          MXFFileReader::ResultToString(result).c_str());
+                throw false;
+            }
 
             reader = file_reader;
         }
@@ -1128,11 +1120,8 @@ int main(int argc, const char** argv)
             }
 
             // force file md5 update now that reading/seeking will be forwards only
-            if (calc_file_md5) {
-                size_t i;
-                for (i = 0; i < md5_wrap_files.size(); i++)
-                    md5_wrap_force_update(md5_wrap_files[i]);
-            }
+            if (calc_file_md5)
+                file_factory.ForceInputMD5Update();
 
             // choose number of samples to read in one go
             uint32_t max_samples_per_read = 1;
@@ -1332,12 +1321,13 @@ int main(int argc, const char** argv)
             }
 
             if (calc_file_md5) {
-                BMX_ASSERT(filenames.size() == md5_wrap_files.size());
-                unsigned char digest[16];
-                size_t i;
-                for (i = 0; i < md5_wrap_files.size(); i++) {
-                    md5_wrap_finalize(md5_wrap_files[i], digest);
-                    log_info("File MD5: %s %s\n", filenames[i], md5_digest_str(digest).c_str());
+                file_factory.FinalizeInputMD5();
+                map<string, AppMXFFileFactory::MD5Digest>::const_iterator iter;
+                for (iter = file_factory.GetInputMD5Digests().begin();
+                     iter != file_factory.GetInputMD5Digests().end();
+                     iter++)
+                {
+                    log_info("File MD5: %s %s\n", iter->first.c_str(), md5_digest_str(iter->second.bytes).c_str());
                 }
             }
 
@@ -1347,12 +1337,13 @@ int main(int argc, const char** argv)
             for (i = 0; i < raw_files.size(); i++)
                 fclose(raw_files[i]);
         } else if (calc_file_md5) {
-            BMX_ASSERT(filenames.size() == md5_wrap_files.size());
-            unsigned char digest[16];
-            size_t i;
-            for (i = 0; i < md5_wrap_files.size(); i++) {
-                md5_wrap_finalize(md5_wrap_files[i], digest);
-                log_info("File MD5: %s %s\n", filenames[i], md5_digest_str(digest).c_str());
+            file_factory.FinalizeInputMD5();
+            map<string, AppMXFFileFactory::MD5Digest>::const_iterator iter;
+            for (iter = file_factory.GetInputMD5Digests().begin();
+                 iter != file_factory.GetInputMD5Digests().end();
+                 iter++)
+            {
+                log_info("File MD5: %s %s\n", iter->first.c_str(), md5_digest_str(iter->second.bytes).c_str());
             }
         }
 

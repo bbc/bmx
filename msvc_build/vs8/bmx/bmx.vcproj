@@ -226,6 +226,10 @@
 				Name="apps"
 				>
 				<File
+					RelativePath="..\..\..\include\bmx\apps\AppMXFFileFactory.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\include\bmx\apps\AppUtils.h"
 					>
 				</File>
@@ -763,6 +767,10 @@
 			<Filter
 				Name="apps"
 				>
+				<File
+					RelativePath="..\..\..\src\apps\AppMXFFileFactory.cpp"
+					>
+				</File>
 				<File
 					RelativePath="..\..\..\src\apps\AppUtils.cpp"
 					>
