@@ -151,8 +151,6 @@ example
 
 64. Improve logic around selecting sequence and group reading
 
-65. Support reading non-seekable MXF files, e.g. piped from stdin
-
 66. Add options to disable some or all essence tracks
 
 67. Support for separate metadata tracks containing metadata extracted from
@@ -164,3 +162,12 @@ example
 
 69. Support selecting audio routing from input track/channel to output
     track/channel and setting mute/invalid output channels
+
+70. Support AVCI and D10 AES3 stdin inputs in mxf2raw. The requirement to read
+    the first frame to extract info is causing it to fail.
+
+71. Support incomplete files piped through stdin. The MXF reader tries to seek
+    back when it reaches the (incomplete) end and this throws an exception for
+    stdin. It should fail gracefully instead.
+
+72. Support stdout outputs in raw2bmx and bmxtranswrap
