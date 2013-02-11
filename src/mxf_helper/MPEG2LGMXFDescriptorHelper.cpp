@@ -231,14 +231,16 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
 
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
     SetCodingEquations(ITUR_BT709_CODING_EQ);
-    if (mEssenceType == MPEG2LG_422P_HL_720P ||
-        mEssenceType == MPEG2LG_MP_HL_720P)
-    {
-        cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_SMPTE296M);
-    }
-    else
-    {
-        cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_SMPTE274M);
+    if (!(mFlavour & MXFDESC_AVID_FLAVOUR)) {
+        if (mEssenceType == MPEG2LG_422P_HL_720P ||
+            mEssenceType == MPEG2LG_MP_HL_720P)
+        {
+            cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_SMPTE296M);
+        }
+        else
+        {
+            cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_SMPTE274M);
+        }
     }
     cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
     if (mEssenceType == MPEG2LG_422P_HL_1080I ||
@@ -246,7 +248,10 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
         mEssenceType == MPEG2LG_422P_HL_720P)
     {
         // 4:2:2
-        SetColorSiting(MXF_COLOR_SITING_COSITING);
+        if ((mFlavour & MXFDESC_AVID_FLAVOUR))
+            SetColorSiting(MXF_COLOR_SITING_REC601);
+        else
+            SetColorSiting(MXF_COLOR_SITING_COSITING);
     }
     else
     {
@@ -314,7 +319,8 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             BMX_ASSERT(false);
             break;
     }
-    cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
+    if (!(mFlavour & MXFDESC_AVID_FLAVOUR))
+        cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
     cdci_descriptor->setComponentDepth(8);
     if (mEssenceType == MPEG2LG_422P_HL_1080I ||
         mEssenceType == MPEG2LG_422P_HL_1080P ||
@@ -347,6 +353,12 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
         cdci_descriptor->setImageStartOffset(0);
         cdci_descriptor->setImageEndOffset(0);
         cdci_descriptor->setPaddingBits(0);
+    } else if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
+        cdci_descriptor->setSampledXOffset(0);
+        cdci_descriptor->setSampledYOffset(0);
+        cdci_descriptor->setDisplayXOffset(0);
+        cdci_descriptor->setDisplayYOffset(0);
+        cdci_descriptor->setImageAlignmentOffset(1);
     }
 
     if (mpeg_descriptor) {
