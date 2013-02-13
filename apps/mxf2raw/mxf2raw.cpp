@@ -495,6 +495,7 @@ static void usage(const char *cmd)
 #endif
     fprintf(stderr, " --check-crc32         Check frame's essence data using CRC-32 frame metadata if available\n");
     fprintf(stderr, " --app                 Print Archive Preservation Project metadata to stdout (single file only)\n");
+    fprintf(stderr, " --app-tc <filename>   Extract Archive Preservation Project timecodes to <filename> (single file only)\n");
     fprintf(stderr, " --app-events <mask>   Print Archive Preservation Project events metadata to stdout (single file only)\n");
     fprintf(stderr, "                         <mask> is a sequence of event types (e.g. dtv) identified using the following characters:\n");
     fprintf(stderr, "                            d=digibeta dropout, p=PSE failure, t=timecode break, v=VTR error\n");
@@ -541,6 +542,7 @@ int main(int argc, const char** argv)
     unsigned int gf_retries = DEFAULT_GF_RETRIES;
     float gf_retry_delay = DEFAULT_GF_RETRY_DELAY;
     float gf_rate_after_fail = DEFAULT_GF_RATE_AFTER_FAIL;
+    const char *app_tc_filename = 0;
     int cmdln_index;
 
 
@@ -761,6 +763,18 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--app") == 0)
         {
             do_print_app = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--app-tc") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            app_tc_filename = argv[cmdln_index + 1];
+            do_read = true;
+            cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--app-events") == 0)
         {
@@ -1090,6 +1104,17 @@ int main(int argc, const char** argv)
                     md5_init(&md5_contexts[i]);
             }
 
+            // open APP timecode output file
+            FILE *app_tc_file = 0;
+            if (file_reader && app_tc_filename) {
+                app_tc_file = fopen(app_tc_filename, "wb");
+                if (!app_tc_file) {
+                    log_error("Failed to open APP timecode file '%s': %s\n",
+                              app_tc_filename, bmx_strerror(errno).c_str());
+                    throw false;
+                }
+            }
+
             // open raw files and check if have video
             bool have_video = false;
             vector<FILE*> raw_files;
@@ -1230,7 +1255,9 @@ int main(int argc, const char** argv)
                             }
                         }
 
-                        if (!have_app_tc && file_reader && app_events_mask && extract_app_events_tc) {
+                        if (!have_app_tc && file_reader &&
+                            ((app_events_mask && extract_app_events_tc) || app_tc_file))
+                        {
                             const vector<FrameMetadata*> *metadata = frame->GetMetadata(SYSTEM_SCHEME_1_FMETA_ID);
                             if (metadata) {
                                 size_t i;
@@ -1241,8 +1268,22 @@ int main(int argc, const char** argv)
                                         continue;
 
                                     const SS1TimecodeArray *tc_array = dynamic_cast<const SS1TimecodeArray*>(ss1_meta);
-                                    app_output.AddEventTimecodes(frame->position, tc_array->GetVITC(),
-                                                                 tc_array->GetLTC());
+                                    if (app_events_mask && extract_app_events_tc) {
+                                        app_output.AddEventTimecodes(frame->position, tc_array->GetVITC(),
+                                                                     tc_array->GetLTC());
+                                    }
+                                    if (app_tc_file) {
+                                        Timecode ctc(sample_rate, false, frame->position);
+                                        int res = fprintf(app_tc_file, "C%s V%s L%s\n",
+                                                          get_timecode_string(ctc).c_str(),
+                                                          get_timecode_string(tc_array->GetVITC()).c_str(),
+                                                          get_timecode_string(tc_array->GetLTC()).c_str());
+                                        if (res < 0) {
+                                            log_error("Failed to write to APP timecode file: %s\n",
+                                                      bmx_strerror(errno).c_str());
+                                            throw false;
+                                        }
+                                    }
 
                                     have_app_tc = true;
                                     break;
@@ -1360,6 +1401,8 @@ int main(int argc, const char** argv)
             size_t i;
             for (i = 0; i < raw_files.size(); i++)
                 fclose(raw_files[i]);
+            if (app_tc_file)
+                fclose(app_tc_file);
         } else if (calc_file_md5) {
             file_factory.FinalizeInputMD5();
             map<string, AppMXFFileFactory::MD5Digest>::const_iterator iter;
