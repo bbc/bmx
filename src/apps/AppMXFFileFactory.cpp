@@ -41,10 +41,6 @@
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
-#if defined(_WIN32)
-#include <mxf/mxf_win32_file.h>
-#endif
-
 using namespace std;
 using namespace bmx;
 using namespace mxfpp;

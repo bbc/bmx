@@ -39,6 +39,10 @@
 
 #include <mxf/mxf_rw_intl_file.h>
 
+#if defined(_WIN32)
+#include <mxf/mxf_win32_file.h>
+#endif
+
 
 
 namespace bmx
