@@ -139,7 +139,8 @@ static void update_md5_to_nonseekable_end(MXFMD5WrapperFile *md5_wrapper_file)
     unsigned char *buffer = new unsigned char[buffer_size];
     while (mxf_file_read(mxf_file, buffer, buffer_size) == buffer_size)
     {}
-    // TODO: ferror/errno needs to filter up to here so that error condition isn't ignored
+    // TODO: ferror/errno needs to filter up to here so that error conditions aren't ignored
+    delete [] buffer;
 
     sys_data->force_update = original_force_update;
 }
