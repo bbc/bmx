@@ -799,11 +799,6 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
             if (!(mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR))
                 start_ess_partition = true;
             mFirstWrite = false;
-
-            if (mMXFFile->isMemoryFileOpen()) {
-                UpdateFirstPartitions();
-                mMXFFile->closeMemoryFile();
-            }
         }
         else if (mPartitionInterval > 0 &&
                  mPartitionFrameCount >= mPartitionInterval && mIndexTable->CanStartPartition())
@@ -845,6 +840,11 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
             ess_partition.setKagSize(mEssencePartitionKAGSize);
             ess_partition.setBodyOffset(ess_partition_body_offset);
             ess_partition.write(mMXFFile);
+        }
+
+        if (mMXFFile->isMemoryFileOpen()) {
+            UpdateFirstPartitions();
+            mMXFFile->closeMemoryFile();
         }
 
         mCPManager->WriteNextContentPackage();
