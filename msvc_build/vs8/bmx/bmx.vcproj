@@ -171,6 +171,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\bmx\Checksum.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\include\bmx\CRC32.h"
 				>
 			</File>
@@ -953,6 +957,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\common\ByteArray.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\common\Checksum.cpp"
 					>
 				</File>
 				<File

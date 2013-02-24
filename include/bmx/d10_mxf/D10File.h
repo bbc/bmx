@@ -150,7 +150,7 @@ private:
     D10ContentPackageManager *mCPManager;
     mxfpp::IndexTableSegment *mIndexSegment;
 
-    MXFMD5WrapperFile *mMXFMD5WrapperFile;
+    MXFChecksumFile *mMXFChecksumFile;
     std::string mMD5DigestStr;
 };
 

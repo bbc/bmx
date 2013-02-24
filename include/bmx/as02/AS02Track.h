@@ -35,7 +35,7 @@
 
 #include <bmx/as02/AS02Bundle.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
-#include <bmx/MD5.h>
+#include <bmx/Checksum.h>
 
 
 
@@ -164,7 +164,7 @@ private:
     uint32_t mLowerLevelTrackId;
     std::string mLowerLevelURI;
 
-    MD5Context mEssenceOnlyMD5Context;
+    Checksum mEssenceOnlyChecksum;
 };
 
 

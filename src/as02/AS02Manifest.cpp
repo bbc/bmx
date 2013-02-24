@@ -41,7 +41,7 @@
 
 #include <bmx/as02/AS02Manifest.h>
 #include <bmx/as02/AS02Bundle.h>
-#include <bmx/MD5.h>
+#include <bmx/Checksum.h>
 #include <bmx/XMLUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -265,7 +265,7 @@ void AS02ManifestFile::CompleteInfo(AS02Bundle *bundle, MICType default_mic_type
 
         if (mMIC.empty() && mic_scope == ENTIRE_FILE_MIC_SCOPE && mRole != FOLDER_FILE_ROLE) {
             if (mic_type == MD5_MIC_TYPE) {
-                SetMIC(mic_type, mic_scope, md5_calc_file(complete_path));
+                SetMIC(mic_type, mic_scope, Checksum::CalcFileChecksum(complete_path, MD5_CHECKSUM));
                 if (mMIC.empty())
                     log_warn("Failed to calc MD5 for '%s'\n", complete_path.c_str());
             }

@@ -39,7 +39,6 @@
 
 #include <mxf/mxf.h>
 
-#include <bmx/MD5.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/Logging.h>
@@ -50,18 +49,18 @@ using namespace std;
 using namespace bmx;
 
 
-struct bmx::MXFMD5WrapperFile
+struct bmx::MXFChecksumFile
 {
     MXFFile *mxf_file;
 };
 
 struct MXFFileSysData
 {
-    MXFMD5WrapperFile md5_wrapper_file;
+    MXFChecksumFile checksum_file;
     MXFFile *target;
-    MD5Context md5_context;
+    Checksum *checksum;
     int64_t position;
-    int64_t md5_position;
+    int64_t checksum_position;
     bool force_update;
 };
 
@@ -81,12 +80,12 @@ static void connect_mxf_log(MXFLogLevel level, const char *format, ...)
 }
 
 
-static bool update_md5_to_position(MXFMD5WrapperFile *md5_wrapper_file, int64_t position)
+static bool update_checksum_to_position(MXFChecksumFile *checksum_file, int64_t position)
 {
-    MXFFile *mxf_file = md5_wrapper_file->mxf_file;
+    MXFFile *mxf_file = checksum_file->mxf_file;
     MXFFileSysData *sys_data = mxf_file->sysData;
 
-    if (sys_data->md5_position >= position)
+    if (sys_data->checksum_position >= position)
         return true;
 
     // set force update to false to avoid endless update loop
@@ -97,16 +96,16 @@ static bool update_md5_to_position(MXFMD5WrapperFile *md5_wrapper_file, int64_t 
     unsigned char *buffer = 0;
     try
     {
-        if (!mxf_file_seek(mxf_file, sys_data->md5_position, SEEK_SET))
+        if (!mxf_file_seek(mxf_file, sys_data->checksum_position, SEEK_SET))
             throw false;
 
         const int buffer_size = 8192;
         buffer = new unsigned char[buffer_size];
         uint32_t num_read;
-        while (sys_data->md5_position < position) {
+        while (sys_data->checksum_position < position) {
             num_read = buffer_size;
-            if (sys_data->md5_position + num_read > position)
-                num_read = (uint32_t)(position - sys_data->md5_position);
+            if (sys_data->checksum_position + num_read > position)
+                num_read = (uint32_t)(position - sys_data->checksum_position);
             if (mxf_file_read(mxf_file, buffer, num_read) != num_read)
                 throw false;
         }
@@ -126,9 +125,9 @@ static bool update_md5_to_position(MXFMD5WrapperFile *md5_wrapper_file, int64_t 
     return result;
 }
 
-static void update_md5_to_nonseekable_end(MXFMD5WrapperFile *md5_wrapper_file)
+static void update_checksum_to_nonseekable_end(MXFChecksumFile *checksum_file)
 {
-    MXFFile *mxf_file = md5_wrapper_file->mxf_file;
+    MXFFile *mxf_file = checksum_file->mxf_file;
     MXFFileSysData *sys_data = mxf_file->sysData;
 
     // set force update to false to avoid endless update loop
@@ -146,16 +145,16 @@ static void update_md5_to_nonseekable_end(MXFMD5WrapperFile *md5_wrapper_file)
 }
 
 
-static void md5_mxf_file_close(MXFFileSysData *sys_data)
+static void checksum_file_close(MXFFileSysData *sys_data)
 {
     if (sys_data->target)
         mxf_file_close(&sys_data->target);
 }
 
-static uint32_t md5_mxf_file_read(MXFFileSysData *sys_data, uint8_t *data, uint32_t count)
+static uint32_t checksum_file_read(MXFFileSysData *sys_data, uint8_t *data, uint32_t count)
 {
     if (sys_data->force_update &&
-        !update_md5_to_position(&sys_data->md5_wrapper_file, sys_data->position))
+        !update_checksum_to_position(&sys_data->checksum_file, sys_data->position))
     {
         return 0;
     }
@@ -163,14 +162,13 @@ static uint32_t md5_mxf_file_read(MXFFileSysData *sys_data, uint8_t *data, uint3
     uint32_t result = mxf_file_read(sys_data->target, data, count);
 
     if (result > 0) {
-        if (sys_data->position          <= sys_data->md5_position &&
-            sys_data->position + result >  sys_data->md5_position)
+        if (sys_data->position          <= sys_data->checksum_position &&
+            sys_data->position + result >  sys_data->checksum_position)
         {
-            uint32_t md5_count = (uint32_t)(sys_data->position + result - sys_data->md5_position);
-            md5_update(&sys_data->md5_context,
-                       &data[(uint32_t)(sys_data->md5_position - sys_data->position)],
-                       md5_count);
-            sys_data->md5_position += md5_count;
+            uint32_t checksum_count = (uint32_t)(sys_data->position + result - sys_data->checksum_position);
+            sys_data->checksum->Update(&data[(uint32_t)(sys_data->checksum_position - sys_data->position)],
+                                       checksum_count);
+            sys_data->checksum_position += checksum_count;
         }
         sys_data->position += result;
     }
@@ -178,26 +176,27 @@ static uint32_t md5_mxf_file_read(MXFFileSysData *sys_data, uint8_t *data, uint3
     return result;
 }
 
-static uint32_t md5_mxf_file_write(MXFFileSysData *sys_data, const uint8_t *data, uint32_t count)
+static uint32_t checksum_file_write(MXFFileSysData *sys_data, const uint8_t *data, uint32_t count)
 {
-    BMX_CHECK_M(sys_data->position == sys_data->md5_position,
-                ("File modification not supported when using the MD5 MXF file"));
+    BMX_CHECK_M(sys_data->position == sys_data->checksum_position,
+                ("File modification not supported when using the MXF checksum file"));
 
     uint32_t result = mxf_file_write(sys_data->target, data, count);
 
     if (result > 0) {
-        md5_update(&sys_data->md5_context, data, result);
-        sys_data->md5_position += result;
+        // sys_data->position == sys_data->checksum_position
+        sys_data->checksum->Update(data, result);
+        sys_data->checksum_position += result;
         sys_data->position += result;
     }
 
     return result;
 }
 
-static int md5_mxf_file_getc(MXFFileSysData *sys_data)
+static int checksum_file_getc(MXFFileSysData *sys_data)
 {
     if (sys_data->force_update &&
-        !update_md5_to_position(&sys_data->md5_wrapper_file, sys_data->position))
+        !update_checksum_to_position(&sys_data->checksum_file, sys_data->position))
     {
         return EOF;
     }
@@ -205,10 +204,10 @@ static int md5_mxf_file_getc(MXFFileSysData *sys_data)
     int result = mxf_file_getc(sys_data->target);
 
     if (result != EOF) {
-        if (sys_data->position == sys_data->md5_position) {
+        if (sys_data->position == sys_data->checksum_position) {
             unsigned char byte = (unsigned char)result;
-            md5_update(&sys_data->md5_context, &byte, 1);
-            sys_data->md5_position++;
+            sys_data->checksum->Update(&byte, 1);
+            sys_data->checksum_position++;
         }
         sys_data->position++;
     }
@@ -216,36 +215,37 @@ static int md5_mxf_file_getc(MXFFileSysData *sys_data)
     return result;
 }
 
-static int md5_mxf_file_putc(MXFFileSysData *sys_data, int c)
+static int checksum_file_putc(MXFFileSysData *sys_data, int c)
 {
-    BMX_CHECK_M(sys_data->position == sys_data->md5_position,
-                ("File modification not supported when using the MD5 MXF file"));
+    BMX_CHECK_M(sys_data->position == sys_data->checksum_position,
+                ("File modification not supported when using the MXF Checksum file"));
 
     int result = mxf_file_putc(sys_data->target, c);
 
     if (result != EOF) {
+        // sys_data->position == sys_data->checksum_position
         unsigned char byte = (unsigned char)c;
-        md5_update(&sys_data->md5_context, &byte, 1);
-        sys_data->md5_position++;
+        sys_data->checksum->Update(&byte, 1);
+        sys_data->checksum_position++;
         sys_data->position++;
     }
 
     return result;
 }
 
-static int md5_mxf_file_eof(MXFFileSysData *sys_data)
+static int checksum_file_eof(MXFFileSysData *sys_data)
 {
     return mxf_file_eof(sys_data->target);
 }
 
-static int md5_mxf_file_seek(MXFFileSysData *sys_data, int64_t offset, int whence)
+static int checksum_file_seek(MXFFileSysData *sys_data, int64_t offset, int whence)
 {
-    // if possible, seek using the md5 update if forced to update
+    // if possible, seek using the checksum update if forced to update
     if (sys_data->force_update) {
-        if (whence == SEEK_SET && offset > sys_data->md5_position)
-            return update_md5_to_position(&sys_data->md5_wrapper_file, offset);
-        else if (whence == SEEK_CUR && sys_data->position + offset > sys_data->md5_position)
-            return update_md5_to_position(&sys_data->md5_wrapper_file, sys_data->position + offset);
+        if (whence == SEEK_SET && offset > sys_data->checksum_position)
+            return update_checksum_to_position(&sys_data->checksum_file, offset);
+        else if (whence == SEEK_CUR && sys_data->position + offset > sys_data->checksum_position)
+            return update_checksum_to_position(&sys_data->checksum_file, sys_data->position + offset);
     }
 
     int result = mxf_file_seek(sys_data->target, offset, whence);
@@ -267,7 +267,7 @@ static int md5_mxf_file_seek(MXFFileSysData *sys_data, int64_t offset, int whenc
         }
 
         if (sys_data->force_update &&
-            !update_md5_to_position(&sys_data->md5_wrapper_file, sys_data->position))
+            !update_checksum_to_position(&sys_data->checksum_file, sys_data->position))
         {
             return 0;
         }
@@ -276,7 +276,7 @@ static int md5_mxf_file_seek(MXFFileSysData *sys_data, int64_t offset, int whenc
     return result;
 }
 
-static int64_t md5_mxf_file_tell(MXFFileSysData *sys_data)
+static int64_t checksum_file_tell(MXFFileSysData *sys_data)
 {
     int64_t result = mxf_file_tell(sys_data->target);
 
@@ -287,20 +287,23 @@ static int64_t md5_mxf_file_tell(MXFFileSysData *sys_data)
     return result;
 }
 
-static int md5_mxf_file_is_seekable(MXFFileSysData *sys_data)
+static int checksum_file_is_seekable(MXFFileSysData *sys_data)
 {
     return mxf_file_is_seekable(sys_data->target);
 }
 
-static int64_t md5_mxf_file_size(MXFFileSysData *sys_data)
+static int64_t checksum_file_size(MXFFileSysData *sys_data)
 {
     return mxf_file_size(sys_data->target);
 }
 
 
-static void free_md5_mxf_file(MXFFileSysData *sys_data)
+static void free_checksum_file(MXFFileSysData *sys_data)
 {
-    free(sys_data);
+    if (sys_data) {
+        delete sys_data->checksum;
+        free(sys_data);
+    }
 }
 
 
@@ -376,78 +379,93 @@ string bmx::convert_utf16_string(const unsigned char *utf16_str_in, uint16_t siz
     return result;
 }
 
-MXFMD5WrapperFile* bmx::md5_wrap_mxf_file(MXFFile *target)
+MXFChecksumFile* bmx::mxf_checksum_file_open(MXFFile *target, ChecksumType type)
 {
-    MXFFile *md5_mxf_file = 0;
+    MXFFile *checksum_file = 0;
     try
     {
         // using malloc() because mxf_file_close will call free()
-        BMX_CHECK((md5_mxf_file = (MXFFile*)malloc(sizeof(MXFFile))) != 0);
-        memset(md5_mxf_file, 0, sizeof(MXFFile));
-        BMX_CHECK((md5_mxf_file->sysData = (MXFFileSysData*)malloc(sizeof(MXFFileSysData))) != 0);
-        memset(md5_mxf_file->sysData, 0, sizeof(MXFFileSysData));
+        BMX_CHECK((checksum_file = (MXFFile*)malloc(sizeof(MXFFile))) != 0);
+        memset(checksum_file, 0, sizeof(MXFFile));
+        BMX_CHECK((checksum_file->sysData = (MXFFileSysData*)malloc(sizeof(MXFFileSysData))) != 0);
+        memset(checksum_file->sysData, 0, sizeof(MXFFileSysData));
 
-        md5_mxf_file->sysData->target       = target;
-        md5_mxf_file->sysData->position     = mxf_file_tell(target);
-        md5_mxf_file->sysData->md5_position = 0;
-        md5_mxf_file->sysData->force_update = false;
-        md5_init(&md5_mxf_file->sysData->md5_context);
+        checksum_file->sysData->target            = target;
+        checksum_file->sysData->checksum          = new Checksum(type);
+        checksum_file->sysData->position          = mxf_file_tell(target);
+        checksum_file->sysData->checksum_position = 0;
+        checksum_file->sysData->force_update      = false;
 
-        md5_mxf_file->sysData->md5_wrapper_file.mxf_file = md5_mxf_file;
+        checksum_file->sysData->checksum_file.mxf_file = checksum_file;
 
-        md5_mxf_file->close         = md5_mxf_file_close;
-        md5_mxf_file->read          = md5_mxf_file_read;
-        md5_mxf_file->write         = md5_mxf_file_write;
-        md5_mxf_file->get_char      = md5_mxf_file_getc;
-        md5_mxf_file->put_char      = md5_mxf_file_putc;
-        md5_mxf_file->eof           = md5_mxf_file_eof;
-        md5_mxf_file->seek          = md5_mxf_file_seek;
-        md5_mxf_file->tell          = md5_mxf_file_tell;
-        md5_mxf_file->is_seekable   = md5_mxf_file_is_seekable;
-        md5_mxf_file->size          = md5_mxf_file_size;
-        md5_mxf_file->free_sys_data = free_md5_mxf_file;
+        checksum_file->close         = checksum_file_close;
+        checksum_file->read          = checksum_file_read;
+        checksum_file->write         = checksum_file_write;
+        checksum_file->get_char      = checksum_file_getc;
+        checksum_file->put_char      = checksum_file_putc;
+        checksum_file->eof           = checksum_file_eof;
+        checksum_file->seek          = checksum_file_seek;
+        checksum_file->tell          = checksum_file_tell;
+        checksum_file->is_seekable   = checksum_file_is_seekable;
+        checksum_file->size          = checksum_file_size;
+        checksum_file->free_sys_data = free_checksum_file;
 
-        md5_mxf_file->minLLen       = target->minLLen;
-        md5_mxf_file->runinLen      = target->runinLen;
+        checksum_file->minLLen       = target->minLLen;
+        checksum_file->runinLen      = target->runinLen;
 
-        return &md5_mxf_file->sysData->md5_wrapper_file;
+        return &checksum_file->sysData->checksum_file;
     }
     catch (...)
     {
-        if (md5_mxf_file) {
-            if (md5_mxf_file->sysData)
-                md5_mxf_file->sysData->target = 0; // ownership returns to the caller
-            mxf_file_close(&md5_mxf_file);
+        if (checksum_file) {
+            if (checksum_file->sysData)
+                checksum_file->sysData->target = 0; // ownership returns to the caller
+            mxf_file_close(&checksum_file);
         }
         throw;
     }
 }
 
-MXFFile* bmx::md5_wrap_get_file(MXFMD5WrapperFile *md5_wrapper_file)
+MXFFile* bmx::mxf_checksum_file_get_file(MXFChecksumFile *checksum_file)
 {
-    return md5_wrapper_file->mxf_file;
+    return checksum_file->mxf_file;
 }
 
-void bmx::md5_wrap_force_update(MXFMD5WrapperFile *md5_wrapper_file)
+void bmx::mxf_checksum_file_force_update(MXFChecksumFile *checksum_file)
 {
-    md5_wrapper_file->mxf_file->sysData->force_update = true;
+    checksum_file->mxf_file->sysData->force_update = true;
 }
 
-bool bmx::md5_wrap_finalize(MXFMD5WrapperFile *md5_wrapper_file, unsigned char digest[16])
+bool bmx::mxf_checksum_file_final(MXFChecksumFile *checksum_file)
 {
-    MXFFile *mxf_file = md5_wrapper_file->mxf_file;
+    MXFFile *mxf_file = checksum_file->mxf_file;
     MXFFileSysData *sys_data = mxf_file->sysData;
 
     if (mxf_file_is_seekable(mxf_file)) {
         int64_t file_size = mxf_file_size(mxf_file);
-        if (!update_md5_to_position(md5_wrapper_file, file_size))
+        if (!update_checksum_to_position(checksum_file, file_size))
             return false;
     } else {
-        update_md5_to_nonseekable_end(md5_wrapper_file);
+        update_checksum_to_nonseekable_end(checksum_file);
     }
 
-    md5_final(digest, &sys_data->md5_context);
+    sys_data->checksum->Final();
 
     return true;
+}
+
+size_t bmx::mxf_checksum_file_digest_size(const MXFChecksumFile *checksum_file)
+{
+    return checksum_file->mxf_file->sysData->checksum->GetDigestSize();
+}
+
+void bmx::mxf_checksum_file_digest(const MXFChecksumFile *checksum_file, unsigned char *digest, size_t size)
+{
+    return checksum_file->mxf_file->sysData->checksum->GetDigest(digest, size);
+}
+
+string bmx::mxf_checksum_file_digest_str(const MXFChecksumFile *checksum_file)
+{
+    return checksum_file->mxf_file->sysData->checksum->GetDigestString();
 }
 

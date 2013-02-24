@@ -178,7 +178,7 @@ private:
     bool mSupportCompleteSinglePass;
     int64_t mFooterPartitionOffset;
 
-    MXFMD5WrapperFile *mMXFMD5WrapperFile;
+    MXFChecksumFile *mMXFChecksumFile;
     std::string mMD5DigestStr;
 };
 

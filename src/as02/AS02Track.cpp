@@ -220,7 +220,7 @@ AS02Track::AS02Track(AS02Clip *clip, uint32_t track_index, EssenceType essence_t
     mManifestFile = clip->GetBundle()->GetManifest()->RegisterFile(rel_uri, ESSENCE_COMPONENT_FILE_ROLE);
     mManifestFile->SetId(mFileSourcePackageUID);
 
-    md5_init(&mEssenceOnlyMD5Context);
+    mEssenceOnlyChecksum.Init(MD5_CHECKSUM);
 
     // use fill key with correct version number
     g_KLVFill_key = g_CompliantKLVFill_key;
@@ -409,9 +409,8 @@ void AS02Track::CompleteWrite()
     // finalize checksum and update manifest
     if (mManifestFile->GetMICScope() == ESSENCE_ONLY_MIC_SCOPE) {
         if (mManifestFile->GetMICType() == MD5_MIC_TYPE) {
-            unsigned char digest[16];
-            md5_final(digest, &mEssenceOnlyMD5Context);
-            mManifestFile->SetMIC(MD5_MIC_TYPE, ESSENCE_ONLY_MIC_SCOPE, md5_digest_str(digest));
+            mEssenceOnlyChecksum.Final();
+            mManifestFile->SetMIC(MD5_MIC_TYPE, ESSENCE_ONLY_MIC_SCOPE, mEssenceOnlyChecksum.GetDigestString());
         }
     }
 }
@@ -562,7 +561,7 @@ void AS02Track::UpdateEssenceOnlyChecksum(const unsigned char *data, uint32_t si
 {
     if (data && size > 0 && mManifestFile->GetMICScope() == ESSENCE_ONLY_MIC_SCOPE) {
         if (mManifestFile->GetMICType() == MD5_MIC_TYPE)
-            md5_update(&mEssenceOnlyMD5Context, data, size);
+            mEssenceOnlyChecksum.Update(data, size);
     }
 }
 

@@ -1,6 +1,7 @@
 library_includedir = $(includedir)/bmx-@BMX_MAJORMINOR@
 nobase_library_include_HEADERS = \
 	bmx/ByteArray.h \
+	bmx/Checksum.h \
 	bmx/CRC32.h \
 	bmx/EssenceType.h \
 	bmx/BMXException.h \

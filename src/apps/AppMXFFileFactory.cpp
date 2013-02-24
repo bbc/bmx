@@ -47,33 +47,41 @@ using namespace mxfpp;
 
 
 
-AppMXFFileFactory::AppMXFFileFactory(bool md5_wrap_input, int input_flags)
+AppMXFFileFactory::AppMXFFileFactory()
 {
-    mMD5WrapInput = md5_wrap_input;
-    mInputFlags = input_flags;
+    mChecksumInput = false;
+    mInputChecksumType = MD5_CHECKSUM;
+    mInputFlags = 0;
     mRWInterleaver = 0;
-}
-
-AppMXFFileFactory::AppMXFFileFactory(bool md5_wrap_input, int input_flags,
-                                     bool rw_interleave, uint32_t rw_interleave_size)
-{
-    mMD5WrapInput = md5_wrap_input;
-    mInputFlags = input_flags;
-    mRWInterleaver = 0;
-
-    if (rw_interleave) {
-        uint32_t cache_size = 2 * 1024 * 1024;
-        if (cache_size < rw_interleave_size) {
-            BMX_CHECK(rw_interleave_size < UINT32_MAX / 2);
-            cache_size = 2 * rw_interleave_size;
-        }
-        BMX_CHECK(mxf_create_rw_intl(rw_interleave_size, cache_size, &mRWInterleaver));
-    }
 }
 
 AppMXFFileFactory::~AppMXFFileFactory()
 {
     mxf_free_rw_intl(&mRWInterleaver);
+}
+
+void AppMXFFileFactory::SetInputChecksum(ChecksumType type)
+{
+    mChecksumInput     = true;
+    mInputChecksumType = type;
+}
+
+void AppMXFFileFactory::SetInputFlags(int flags)
+{
+    mInputFlags = flags;
+}
+
+void AppMXFFileFactory::SetRWInterleave(uint32_t rw_interleave_size)
+{
+    if (mRWInterleaver)
+        mxf_free_rw_intl(&mRWInterleaver);
+
+    uint32_t cache_size = 2 * 1024 * 1024;
+    if (cache_size < rw_interleave_size) {
+        BMX_CHECK(rw_interleave_size < UINT32_MAX / 2);
+        cache_size = 2 * rw_interleave_size;
+    }
+    BMX_CHECK(mxf_create_rw_intl(rw_interleave_size, cache_size, &mRWInterleaver));
 }
 
 File* AppMXFFileFactory::OpenNew(string filename)
@@ -119,10 +127,10 @@ File* AppMXFFileFactory::OpenRead(string filename)
 #endif
         }
 
-        if (mMD5WrapInput) {
-            MXFMD5WrapperFile *md5_wrap_file = md5_wrap_mxf_file(mxf_file);
-            mInputMD5WrapFiles[filename] = md5_wrap_file;
-            mxf_file = md5_wrap_get_file(md5_wrap_file);
+        if (mChecksumInput) {
+            MXFChecksumFile *checksum_file = mxf_checksum_file_open(mxf_file, mInputChecksumType);
+            mInputChecksumFiles.push_back(make_pair(filename, checksum_file));
+            mxf_file = mxf_checksum_file_get_file(checksum_file);
         }
 
         if (mRWInterleaver) {
@@ -167,20 +175,41 @@ File* AppMXFFileFactory::OpenModify(string filename)
     }
 }
 
-void AppMXFFileFactory::ForceInputMD5Update()
+void AppMXFFileFactory::ForceInputChecksumUpdate()
 {
-    map<string, MXFMD5WrapperFile*>::const_iterator iter;
-    for (iter = mInputMD5WrapFiles.begin(); iter != mInputMD5WrapFiles.end(); iter++)
-        md5_wrap_force_update(iter->second);
+    size_t i;
+    for (i = 0; i < mInputChecksumFiles.size(); i++)
+        mxf_checksum_file_force_update(mInputChecksumFiles[i].second);
 }
 
-void AppMXFFileFactory::FinalizeInputMD5()
+void AppMXFFileFactory::FinalizeInputChecksum()
 {
-    map<string, MXFMD5WrapperFile*>::const_iterator iter;
-    for (iter = mInputMD5WrapFiles.begin(); iter != mInputMD5WrapFiles.end(); iter++) {
-        MD5Digest digest;
-        BMX_CHECK(md5_wrap_finalize(iter->second, digest.bytes));
-        mInputMD5Digests[iter->first] = digest;
-    }
+    size_t i;
+    for (i = 0; i < mInputChecksumFiles.size(); i++)
+        BMX_CHECK(mxf_checksum_file_final(mInputChecksumFiles[i].second));
+}
+
+string AppMXFFileFactory::GetInputChecksumFilename(size_t index) const
+{
+    BMX_ASSERT(index < mInputChecksumFiles.size());
+    return mInputChecksumFiles[index].first;
+}
+
+size_t AppMXFFileFactory::GetInputChecksumDigestSize(size_t index) const
+{
+    BMX_ASSERT(index < mInputChecksumFiles.size());
+    return mxf_checksum_file_digest_size(mInputChecksumFiles[index].second);
+}
+
+void AppMXFFileFactory::GetInputChecksumDigest(size_t index, unsigned char *digest, size_t size) const
+{
+    BMX_ASSERT(index < mInputChecksumFiles.size());
+    return mxf_checksum_file_digest(mInputChecksumFiles[index].second, digest, size);
+}
+
+string AppMXFFileFactory::GetInputChecksumDigestString(size_t index) const
+{
+    BMX_ASSERT(index < mInputChecksumFiles.size());
+    return mxf_checksum_file_digest_str(mInputChecksumFiles[index].second);
 }
 

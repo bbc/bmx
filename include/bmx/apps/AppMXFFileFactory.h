@@ -32,6 +32,7 @@
 #ifndef BMX_APP_MXF_FILE_FACTORY_H_
 #define BMX_APP_MXF_FILE_FACTORY_H_
 
+#include <vector>
 #include <map>
 
 #include <bmx/mxf_helper/MXFFileFactory.h>
@@ -52,29 +53,33 @@ namespace bmx
 class AppMXFFileFactory : public MXFFileFactory
 {
 public:
-    typedef struct
-    {
-        unsigned char bytes[16];
-    } MD5Digest;
-
-public:
-    AppMXFFileFactory(bool md5_wrap_input, int input_flags);
-    AppMXFFileFactory(bool md5_wrap_input, int input_flags, bool rw_interleave, uint32_t rw_interleave_size);
+    AppMXFFileFactory();
     virtual ~AppMXFFileFactory();
 
+    void SetInputChecksum(ChecksumType type);
+    void SetInputFlags(int flags);
+    void SetRWInterleave(uint32_t rw_interleave_size);
+
+public:
     virtual mxfpp::File* OpenNew(std::string filename);
     virtual mxfpp::File* OpenRead(std::string filename);
     virtual mxfpp::File* OpenModify(std::string filename);
 
-    void ForceInputMD5Update();
-    void FinalizeInputMD5();
-    const std::map<std::string, MD5Digest>& GetInputMD5Digests() { return mInputMD5Digests; }
+public:
+    void ForceInputChecksumUpdate();
+    void FinalizeInputChecksum();
+
+    size_t GetNumInputChecksumFiles() const { return mInputChecksumFiles.size(); }
+    std::string GetInputChecksumFilename(size_t index) const;
+    size_t GetInputChecksumDigestSize(size_t index) const;
+    void GetInputChecksumDigest(size_t index, unsigned char *digest, size_t size) const;
+    std::string GetInputChecksumDigestString(size_t index) const;
 
 private:
-    bool mMD5WrapInput;
+    bool mChecksumInput;
+    ChecksumType mInputChecksumType;
     int mInputFlags;
-    std::map<std::string, MXFMD5WrapperFile*> mInputMD5WrapFiles;
-    std::map<std::string, MD5Digest> mInputMD5Digests;
+    std::vector<std::pair<std::string, MXFChecksumFile*> > mInputChecksumFiles;
     MXFRWInterleaver *mRWInterleaver;
 };
 

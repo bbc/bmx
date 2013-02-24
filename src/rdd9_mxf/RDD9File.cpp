@@ -41,7 +41,6 @@
 #include <algorithm>
 
 #include <bmx/rdd9_mxf/RDD9File.h>
-#include <bmx/MD5.h>
 #include <bmx/Version.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -110,14 +109,14 @@ RDD9File::RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate)
     mFirstWrite = true;
     mPartitionInterval = 10 * frame_rate.numerator / frame_rate.denominator;
     mPartitionFrameCount = 0;
-    mMXFMD5WrapperFile = 0;
+    mMXFChecksumFile = 0;
 
     mIndexTable = new RDD9IndexTable(INDEX_SID, BODY_SID, frame_rate);
     mCPManager = new RDD9ContentPackageManager(mMXFFile, mIndexTable, frame_rate);
 
     if (flavour & RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR) {
-        mMXFMD5WrapperFile = md5_wrap_mxf_file(mMXFFile->getCFile());
-        mMXFFile->swapCFile(md5_wrap_get_file(mMXFMD5WrapperFile));
+        mMXFChecksumFile = mxf_checksum_file_open(mMXFFile->getCFile(), MD5_CHECKSUM);
+        mMXFFile->swapCFile(mxf_checksum_file_get_file(mMXFChecksumFile));
     }
 }
 
@@ -400,10 +399,9 @@ void RDD9File::CompleteWrite()
 
     // finalize md5
 
-    if (mMXFMD5WrapperFile) {
-        unsigned char digest[16];
-        md5_wrap_finalize(mMXFMD5WrapperFile, digest);
-        mMD5DigestStr = md5_digest_str(digest);
+    if (mMXFChecksumFile) {
+        mxf_checksum_file_final(mMXFChecksumFile);
+        mMD5DigestStr = mxf_checksum_file_digest_str(mMXFChecksumFile);
     }
 
 

@@ -855,9 +855,9 @@ int main(int argc, const char** argv)
             for (i = 0; i < filenames.size(); i++) {
                 string md5_str;
                 if (strcmp(argv[cmdln_index], "-") == 0)
-                    md5_str = md5_calc_file(stdin);
+                    md5_str = Checksum::CalcFileChecksum(stdin, MD5_CHECKSUM);
                 else
-                    md5_str = md5_calc_file(filenames[i]);
+                    md5_str = Checksum::CalcFileChecksum(filenames[i], MD5_CHECKSUM);
                 if (md5_str.empty()) {
                     log_error("failed to calculate md5 for file '%s'\n", get_input_filename(filenames[i]));
                     cmd_result = 1;
@@ -885,10 +885,14 @@ int main(int argc, const char** argv)
 
     try
     {
-        AppMXFFileFactory file_factory(calc_file_md5, file_flags);
+        AppMXFFileFactory file_factory;
         APPInfoOutput app_output;
         MXFReader *reader = 0;
         MXFFileReader *file_reader = 0;
+
+        if (calc_file_md5)
+            file_factory.SetInputChecksum(MD5_CHECKSUM);
+        file_factory.SetInputFlags(file_flags);
 
         if (use_group_reader && filenames.size() > 1) {
             MXFGroupReader *group_reader = new MXFGroupReader();
@@ -1096,12 +1100,11 @@ int main(int argc, const char** argv)
             }
 
             // md5 calculation initialization
-            vector<MD5Context> md5_contexts;
+            vector<Checksum> md5_contexts;
             if (calc_md5) {
-                md5_contexts.resize(reader->GetNumTrackReaders());
                 size_t i;
                 for (i = 0; i < reader->GetNumTrackReaders(); i++)
-                    md5_init(&md5_contexts[i]);
+                    md5_contexts.push_back(Checksum(MD5_CHECKSUM));
             }
 
             // open APP timecode output file
@@ -1169,7 +1172,7 @@ int main(int argc, const char** argv)
 
             // force file md5 update now that reading/seeking will be forwards only
             if (calc_file_md5)
-                file_factory.ForceInputMD5Update();
+                file_factory.ForceInputChecksumUpdate();
 
             // choose number of samples to read in one go
             uint32_t max_samples_per_read = 1;
@@ -1227,7 +1230,7 @@ int main(int argc, const char** argv)
                         }
 
                         if (calc_md5)
-                            md5_update(&md5_contexts[i], frame->GetBytes(), frame->GetSize());
+                            md5_contexts[i].Update(frame->GetBytes(), frame->GetSize());
 
                         if (check_crc32) {
                             const vector<FrameMetadata*> *metadata = frame->GetMetadata(SYSTEM_SCHEME_1_FMETA_ID);
@@ -1376,23 +1379,20 @@ int main(int argc, const char** argv)
             }
 
             if (calc_md5) {
-                unsigned char digest[16];
                 size_t i;
                 for (i = 0; i < reader->GetNumTrackReaders(); i++) {
-                    md5_final(digest, &md5_contexts[i]);
-                    log_info("MD5 Track %"PRIszt": %s\n", i, md5_digest_str(digest).c_str());
+                    md5_contexts[i].Final();
+                    log_info("MD5 Track %"PRIszt": %s\n", i, md5_contexts[i].GetDigestString().c_str());
                 }
             }
 
             if (calc_file_md5) {
-                file_factory.FinalizeInputMD5();
-                map<string, AppMXFFileFactory::MD5Digest>::const_iterator iter;
-                for (iter = file_factory.GetInputMD5Digests().begin();
-                     iter != file_factory.GetInputMD5Digests().end();
-                     iter++)
-                {
-                    log_info("File MD5: %s %s\n", get_input_filename(iter->first.c_str()),
-                             md5_digest_str(iter->second.bytes).c_str());
+                file_factory.FinalizeInputChecksum();
+                size_t i;
+                for (i = 0; i < file_factory.GetNumInputChecksumFiles(); i++) {
+                    log_info("File MD5: %s %s\n",
+                             get_input_filename(file_factory.GetInputChecksumFilename(i).c_str()),
+                             file_factory.GetInputChecksumDigestString(i).c_str());
                 }
             }
 
@@ -1404,14 +1404,12 @@ int main(int argc, const char** argv)
             if (app_tc_file)
                 fclose(app_tc_file);
         } else if (calc_file_md5) {
-            file_factory.FinalizeInputMD5();
-            map<string, AppMXFFileFactory::MD5Digest>::const_iterator iter;
-            for (iter = file_factory.GetInputMD5Digests().begin();
-                 iter != file_factory.GetInputMD5Digests().end();
-                 iter++)
-            {
-                log_info("File MD5: %s %s\n", get_input_filename(iter->first.c_str()),
-                         md5_digest_str(iter->second.bytes).c_str());
+            file_factory.FinalizeInputChecksum();
+            size_t i;
+            for (i = 0; i < file_factory.GetNumInputChecksumFiles(); i++) {
+                log_info("File MD5: %s %s\n",
+                         get_input_filename(file_factory.GetInputChecksumFilename(i).c_str()),
+                         file_factory.GetInputChecksumDigestString(i).c_str());
             }
         }
 

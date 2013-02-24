@@ -42,7 +42,6 @@
 #include <bmx/mxf_op1a/OP1AFile.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
-#include <bmx/MD5.h>
 #include <bmx/Version.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -117,14 +116,14 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mEssencePartitionKAGSize = mKAGSize;
     mSupportCompleteSinglePass = false;
     mFooterPartitionOffset = 0;
-    mMXFMD5WrapperFile = 0;
+    mMXFChecksumFile = 0;
 
     mIndexTable = new OP1AIndexTable(INDEX_SID, BODY_SID, frame_rate);
     mCPManager = new OP1AContentPackageManager(mMXFFile, mIndexTable, mEssencePartitionKAGSize, MIN_LLEN);
 
     if (flavour & OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR) {
-        mMXFMD5WrapperFile = md5_wrap_mxf_file(mMXFFile->getCFile());
-        mMXFFile->swapCFile(md5_wrap_get_file(mMXFMD5WrapperFile));
+        mMXFChecksumFile = mxf_checksum_file_open(mMXFFile->getCFile(), MD5_CHECKSUM);
+        mMXFFile->swapCFile(mxf_checksum_file_get_file(mMXFChecksumFile));
     }
 
     // use fill key with correct version number
@@ -482,10 +481,9 @@ void OP1AFile::CompleteWrite()
 
     // finalize md5
 
-    if (mMXFMD5WrapperFile) {
-        unsigned char digest[16];
-        md5_wrap_finalize(mMXFMD5WrapperFile, digest);
-        mMD5DigestStr = md5_digest_str(digest);
+    if (mMXFChecksumFile) {
+        mxf_checksum_file_final(mMXFChecksumFile);
+        mMD5DigestStr = mxf_checksum_file_digest_str(mMXFChecksumFile);
     }
 
 

@@ -160,7 +160,7 @@ private:
     RDD9IndexTable *mIndexTable;
     RDD9ContentPackageManager *mCPManager;
 
-    MXFMD5WrapperFile *mMXFMD5WrapperFile;
+    MXFChecksumFile *mMXFChecksumFile;
     std::string mMD5DigestStr;
 };
 

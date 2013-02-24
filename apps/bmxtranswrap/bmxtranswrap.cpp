@@ -1155,9 +1155,15 @@ int main(int argc, const char** argv)
     {
         // open an MXFReader using the input filenames
 
-        AppMXFFileFactory file_factory(input_file_md5, input_file_flags, rw_interleave, rw_interleave_size);
+        AppMXFFileFactory file_factory;
         MXFReader *reader = 0;
         MXFFileReader *file_reader = 0;
+
+        if (input_file_md5)
+            file_factory.SetInputChecksum(MD5_CHECKSUM);
+        file_factory.SetInputFlags(input_file_flags);
+        if (rw_interleave)
+            file_factory.SetRWInterleave(rw_interleave_size);
 
         if (use_group_reader && input_filenames.size() > 1) {
             MXFGroupReader *group_reader = new MXFGroupReader();
@@ -1973,7 +1979,7 @@ int main(int argc, const char** argv)
         // force file md5 update now that reading/seeking will be forwards only
 
         if (input_file_md5)
-            file_factory.ForceInputMD5Update();
+            file_factory.ForceInputChecksumUpdate();
 
 
         // set the sample sequence
@@ -2224,13 +2230,12 @@ int main(int argc, const char** argv)
         // input file md5
 
         if (input_file_md5) {
-            file_factory.FinalizeInputMD5();
-            map<string, AppMXFFileFactory::MD5Digest>::const_iterator iter;
-            for (iter = file_factory.GetInputMD5Digests().begin();
-                 iter != file_factory.GetInputMD5Digests().end();
-                 iter++)
-            {
-                log_info("Input file MD5: %s %s\n", iter->first.c_str(), md5_digest_str(iter->second.bytes).c_str());
+            file_factory.FinalizeInputChecksum();
+            size_t i;
+            for (i = 0; i < file_factory.GetNumInputChecksumFiles(); i++) {
+                log_info("Input file MD5: %s %s\n",
+                         file_factory.GetInputChecksumFilename(i).c_str(),
+                         file_factory.GetInputChecksumDigestString(i).c_str());
             }
         }
 

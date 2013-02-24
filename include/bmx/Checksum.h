@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2013, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,16 +29,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_MXF_UTILS_H_
-#define BMX_MXF_UTILS_H_
+#ifndef BMX_CHECKSUM_H_
+#define BMX_CHECKSUM_H_
 
-
-#include <string>
-
-#include <mxf/mxf_file.h>
-
-#include <bmx/BMXTypes.h>
-#include <bmx/Checksum.h>
+#include <bmx/CRC32.h>
+#include <bmx/MD5.h>
+#include <bmx/SHA1.h>
 
 
 
@@ -46,30 +42,41 @@ namespace bmx
 {
 
 
-typedef struct MXFChecksumFile MXFChecksumFile;
+typedef enum
+{
+    CRC32_CHECKSUM,
+    MD5_CHECKSUM,
+    SHA1_CHECKSUM,
+} ChecksumType;
 
 
+class Checksum
+{
+public:
+    static std::string CalcFileChecksum(const std::string &filename, ChecksumType type);
+    static std::string CalcFileChecksum(FILE *file, ChecksumType type);
 
-void connect_libmxf_logging();
+public:
+    Checksum();
+    Checksum(ChecksumType type);
+    ~Checksum();
 
-int64_t convert_tc_offset(mxfRational in_edit_rate, int64_t in_offset, uint16_t out_tc_base);
+    void Init(ChecksumType type);
 
-std::string get_track_name(bool is_video, uint32_t track_number);
+    void Update(const unsigned char *data, uint32_t size);
+    void Final();
 
-void decode_afd(uint8_t afd, uint16_t mxf_version, uint8_t *code, Rational *aspect_ratio);
-uint8_t encode_afd(uint8_t code, Rational aspect_ratio);
+    size_t GetDigestSize() const;
+    void GetDigest(unsigned char *digest, size_t size) const;
+    std::string GetDigestString() const;
 
-std::string convert_utf16_string(const mxfUTF16Char *utf16_str);
-std::string convert_utf16_string(const unsigned char *utf16_str, uint16_t size);
-
-
-MXFChecksumFile* mxf_checksum_file_open(MXFFile *target, ChecksumType type);
-MXFFile* mxf_checksum_file_get_file(MXFChecksumFile *checksum_file);
-void mxf_checksum_file_force_update(MXFChecksumFile *checksum_file);
-bool mxf_checksum_file_final(MXFChecksumFile *checksum_file);
-size_t mxf_checksum_file_digest_size(const MXFChecksumFile *checksum_file);
-void mxf_checksum_file_digest(const MXFChecksumFile *checksum_file, unsigned char *digest, size_t size);
-std::string mxf_checksum_file_digest_str(const MXFChecksumFile *checksum_file);
+private:
+    ChecksumType mType;
+    uint32_t mCRC32Context;
+    MD5Context mMD5Context;
+    SHA1Context mSHA1Context;
+    unsigned char mDigest[20];
+};
 
 
 };
@@ -77,3 +84,4 @@ std::string mxf_checksum_file_digest_str(const MXFChecksumFile *checksum_file);
 
 
 #endif
+
