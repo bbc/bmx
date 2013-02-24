@@ -843,7 +843,9 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
         }
 
         if (mMXFFile->isMemoryFileOpen()) {
-            UpdateFirstPartitions();
+            if (mSupportCompleteSinglePass)
+                SetPartitionsFooterOffset();
+            mMXFFile->updatePartitions();
             mMXFFile->closeMemoryFile();
         }
 
@@ -857,27 +859,27 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
         mCPManager->CompleteWrite();
 
         if (mMXFFile->isMemoryFileOpen()) {
-            UpdateFirstPartitions();
+            if (mSupportCompleteSinglePass)
+                SetPartitionsFooterOffset();
+            mMXFFile->updatePartitions();
             mMXFFile->closeMemoryFile();
         }
     }
 }
 
-void OP1AFile::UpdateFirstPartitions()
+void OP1AFile::SetPartitionsFooterOffset()
 {
-    if (mSupportCompleteSinglePass) {
-        uint32_t first_size = 0, non_first_size = 0;
-        mIndexTable->GetCBEEditUnitSize(&first_size, &non_first_size);
+    BMX_ASSERT(mSupportCompleteSinglePass);
 
-        mFooterPartitionOffset = mMXFFile->tell();
-        if (mInputDuration > 0)
-            mFooterPartitionOffset += first_size + (mInputDuration - 1) * non_first_size;
+    uint32_t first_size = 0, non_first_size = 0;
+    mIndexTable->GetCBEEditUnitSize(&first_size, &non_first_size);
 
-        size_t i;
-        for (i = 0; i < mMXFFile->getPartitions().size(); i++)
-            mMXFFile->getPartitions()[i]->setFooterPartition(mFooterPartitionOffset);
-    }
+    mFooterPartitionOffset = mMXFFile->tell();
+    if (mInputDuration > 0)
+        mFooterPartitionOffset += first_size + (mInputDuration - 1) * non_first_size;
 
-    mMXFFile->updatePartitions();
+    size_t i;
+    for (i = 0; i < mMXFFile->getPartitions().size(); i++)
+        mMXFFile->getPartitions()[i]->setFooterPartition(mFooterPartitionOffset);
 }
 

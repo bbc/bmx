@@ -124,7 +124,7 @@ private:
 
     void WriteContentPackages(bool end_of_samples);
 
-    void UpdateFirstPartitions();
+    void SetPartitionsFooterOffset();
 
 private:
     int mFlavour;
