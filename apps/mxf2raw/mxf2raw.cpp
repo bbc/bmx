@@ -80,6 +80,17 @@ static const char* get_input_filename(const char *filename)
         return filename;
 }
 
+static const char* get_checksum_type_str(ChecksumType type)
+{
+    switch (type)
+    {
+        case CRC32_CHECKSUM: return "CRC32";
+        case MD5_CHECKSUM:   return "MD5";
+        case SHA1_CHECKSUM:  return "SHA1";
+        default:             return "";
+    }
+}
+
 static char* get_label_string(mxfUL label, char *buf, size_t buf_size)
 {
     bmx_snprintf(buf, buf_size,
@@ -476,7 +487,9 @@ static void usage(const char *cmd)
     fprintf(stderr, " --noro                Don't include roll-out frames\n");
     fprintf(stderr, " --md5                 Calculate md5 checksum of essence data\n");
     fprintf(stderr, " --file-md5            Calculate md5 checksum of the file(s)\n");
+    fprintf(stderr, " --file-sha1           Calculate sha1 checksum of the file(s)\n");
     fprintf(stderr, " --file-md5-only       Calculate md5 checksum of the file(s) and exit\n");
+    fprintf(stderr, " --file-sha1-only      Calculate sha1 checksum of the file(s) and exit\n");
     fprintf(stderr, " --group               Use the group reader instead of the sequence reader\n");
     fprintf(stderr, "                       Use this option if the files have different material packages\n");
     fprintf(stderr, "                       but actually belong to the same virtual package / group\n");
@@ -520,8 +533,9 @@ int main(int argc, const char** argv)
     bool no_precharge = false;
     bool no_rollout = false;
     bool calc_md5 = false;
-    bool calc_file_md5 = false;
-    bool calc_file_md5_only = false;
+    bool calc_file_checksum = false;
+    ChecksumType file_checksum_type = MD5_CHECKSUM;
+    bool calc_file_only_checksum = false;
     bool use_group_reader = false;
     bool keep_input_order = false;
     bool do_print_version = false;
@@ -659,11 +673,23 @@ int main(int argc, const char** argv)
         }
         else if (strcmp(argv[cmdln_index], "--file-md5") == 0)
         {
-            calc_file_md5 = true;
+            calc_file_checksum = true;
+            file_checksum_type = MD5_CHECKSUM;
+        }
+        else if (strcmp(argv[cmdln_index], "--file-sha1") == 0)
+        {
+            calc_file_checksum = true;
+            file_checksum_type = SHA1_CHECKSUM;
         }
         else if (strcmp(argv[cmdln_index], "--file-md5-only") == 0)
         {
-            calc_file_md5_only = true;
+            calc_file_only_checksum = true;
+            file_checksum_type = MD5_CHECKSUM;
+        }
+        else if (strcmp(argv[cmdln_index], "--file-sha1-only") == 0)
+        {
+            calc_file_only_checksum = true;
+            file_checksum_type = SHA1_CHECKSUM;
         }
         else if (strcmp(argv[cmdln_index], "--group") == 0)
         {
@@ -848,22 +874,25 @@ int main(int argc, const char** argv)
 
     int cmd_result = 0;
 
-    if (calc_file_md5_only) {
+    if (calc_file_only_checksum) {
         try
         {
             size_t i;
             for (i = 0; i < filenames.size(); i++) {
-                string md5_str;
-                if (strcmp(argv[cmdln_index], "-") == 0)
-                    md5_str = Checksum::CalcFileChecksum(stdin, MD5_CHECKSUM);
+                string checksum_str;
+                if (filenames[i][0] == 0)
+                    checksum_str = Checksum::CalcFileChecksum(stdin, file_checksum_type);
                 else
-                    md5_str = Checksum::CalcFileChecksum(filenames[i], MD5_CHECKSUM);
-                if (md5_str.empty()) {
-                    log_error("failed to calculate md5 for file '%s'\n", get_input_filename(filenames[i]));
+                    checksum_str = Checksum::CalcFileChecksum(filenames[i], file_checksum_type);
+                if (checksum_str.empty()) {
+                    log_error("Failed to calculate %s checksum for file '%s'\n",
+                              get_checksum_type_str(file_checksum_type),
+                              get_input_filename(filenames[i]));
                     cmd_result = 1;
                     break;
                 }
-                log_info("File MD5: %s %s\n", get_input_filename(filenames[i]), md5_str.c_str());
+                log_info("File %s: %s %s\n", get_checksum_type_str(file_checksum_type),
+                         get_input_filename(filenames[i]), checksum_str.c_str());
             }
         }
         catch (const BMXException &ex)
@@ -890,8 +919,8 @@ int main(int argc, const char** argv)
         MXFReader *reader = 0;
         MXFFileReader *file_reader = 0;
 
-        if (calc_file_md5)
-            file_factory.SetInputChecksum(MD5_CHECKSUM);
+        if (calc_file_checksum)
+            file_factory.SetInputChecksum(file_checksum_type);
         file_factory.SetInputFlags(file_flags);
 
         if (use_group_reader && filenames.size() > 1) {
@@ -1170,8 +1199,8 @@ int main(int argc, const char** argv)
                 }
             }
 
-            // force file md5 update now that reading/seeking will be forwards only
-            if (calc_file_md5)
+            // force file checksum update now that reading/seeking will be forwards only
+            if (calc_file_checksum)
                 file_factory.ForceInputChecksumUpdate();
 
             // choose number of samples to read in one go
@@ -1386,11 +1415,11 @@ int main(int argc, const char** argv)
                 }
             }
 
-            if (calc_file_md5) {
+            if (calc_file_checksum) {
                 file_factory.FinalizeInputChecksum();
                 size_t i;
                 for (i = 0; i < file_factory.GetNumInputChecksumFiles(); i++) {
-                    log_info("File MD5: %s %s\n",
+                    log_info("File %s: %s %s\n", get_checksum_type_str(file_checksum_type),
                              get_input_filename(file_factory.GetInputChecksumFilename(i).c_str()),
                              file_factory.GetInputChecksumDigestString(i).c_str());
                 }
@@ -1403,11 +1432,11 @@ int main(int argc, const char** argv)
                 fclose(raw_files[i]);
             if (app_tc_file)
                 fclose(app_tc_file);
-        } else if (calc_file_md5) {
+        } else if (calc_file_checksum) {
             file_factory.FinalizeInputChecksum();
             size_t i;
             for (i = 0; i < file_factory.GetNumInputChecksumFiles(); i++) {
-                log_info("File MD5: %s %s\n",
+                log_info("File %s: %s %s\n", get_checksum_type_str(file_checksum_type),
                          get_input_filename(file_factory.GetInputChecksumFilename(i).c_str()),
                          file_factory.GetInputChecksumDigestString(i).c_str());
             }
