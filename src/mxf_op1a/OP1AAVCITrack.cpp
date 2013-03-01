@@ -85,6 +85,11 @@ void OP1AAVCITrack::SetHeader(const unsigned char *data, uint32_t size)
     mWriterHelper.SetHeader(data, size);
 }
 
+void OP1AAVCITrack::SetReplaceHeader(bool enable)
+{
+    mWriterHelper.SetReplaceHeader(enable);
+}
+
 uint32_t OP1AAVCITrack::GetSampleWithoutHeaderSize()
 {
     return mAVCIDescriptorHelper->GetSampleWithoutHeaderSize();

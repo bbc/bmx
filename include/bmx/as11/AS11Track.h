@@ -70,6 +70,7 @@ public:
     void SetComponentDepth(uint32_t depth);                         // default 8; alternative is 10
     void SetAVCIMode(OP1AAVCIMode mode);                            // default OP1A_AVCI_ALL_FRAME_HEADER_MODE
     void SetAVCIHeader(const unsigned char *data, uint32_t size);
+    void SetReplaceAVCIHeader(bool enable);                         // default false; requires SetAVCIHeader if true
     void SetAFD(uint8_t afd);                                       // default not set
 
     // Sound properties

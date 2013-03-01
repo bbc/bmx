@@ -471,6 +471,35 @@ void ClipWriterTrack::SetAVCIHeader(const unsigned char *data, uint32_t size)
     }
 }
 
+void ClipWriterTrack::SetReplaceAVCIHeader(bool enable)
+{
+    switch (mClipType)
+    {
+        case CW_AS11_OP1A_CLIP_TYPE:
+        {
+            mAS11Track->SetReplaceAVCIHeader(enable);
+            break;
+        }
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1AAVCITrack *avci_track = dynamic_cast<OP1AAVCITrack*>(mOP1ATrack);
+            if (avci_track)
+                avci_track->SetReplaceHeader(enable);
+            break;
+        }
+        case CW_AS02_CLIP_TYPE:
+        case CW_AS11_D10_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_D10_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
 void ClipWriterTrack::SetAFD(uint8_t afd)
 {
     switch (mClipType)

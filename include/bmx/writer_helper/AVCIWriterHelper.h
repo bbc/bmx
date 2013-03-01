@@ -60,6 +60,7 @@ public:
 
     void SetMode(AVCIMode mode);
     void SetHeader(const unsigned char *data, uint32_t size);
+    void SetReplaceHeader(bool enable);
 
 public:
     uint32_t ProcessFrame(const unsigned char *data, uint32_t size,
@@ -74,6 +75,7 @@ private:
     AVCIEssenceParser mEssenceParser;
     AVCIMode mMode;
     unsigned char *mHeader;
+    bool mReplaceHeader;
     CDataBuffer mDataArray[3];
     int64_t mSampleCount;
     bool mFirstFrameHeader;

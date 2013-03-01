@@ -53,6 +53,7 @@ AVCIWriterHelper::AVCIWriterHelper()
 {
     mMode = AVCI_PASS_MODE;
     mHeader = 0;
+    mReplaceHeader = false;
     mSampleCount = 0;
     mFirstFrameHeader = false;
     mSecondFrameHeader = false;
@@ -80,9 +81,17 @@ void AVCIWriterHelper::SetHeader(const unsigned char *data, uint32_t size)
     memcpy(mHeader, data, AVCI_HEADER_SIZE);
 }
 
+void AVCIWriterHelper::SetReplaceHeader(bool enable)
+{
+    BMX_ASSERT(mSampleCount == 0);
+    mReplaceHeader = enable;
+}
+
 uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size,
                                         const CDataBuffer **data_array, uint32_t *array_size)
 {
+    BMX_ASSERT(!(mReplaceHeader && !mHeader));
+
     mEssenceParser.ParseFrameInfo(data, size);
     bool have_header = mEssenceParser.HaveSequenceParameterSet();
 
@@ -102,7 +111,8 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             if (have_header) {
                 if (SET_HEADER_ENABLED) {
                     mFirstFrameHeader = true;
-                    SetHeader(data, AVCI_HEADER_SIZE);
+                    if (!mReplaceHeader)
+                        SetHeader(data, AVCI_HEADER_SIZE);
                 }
 
                 if (mFirstFrameHeader)
@@ -120,7 +130,8 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             if (have_header) {
                 if (SET_HEADER_ENABLED) {
                     output_frame_size = PassFrame(data, size, array_size);
-                    SetHeader(data, AVCI_HEADER_SIZE);
+                    if (!mReplaceHeader)
+                        SetHeader(data, AVCI_HEADER_SIZE);
                 } else {
                     output_frame_size = StripFrameHeader(data, size, array_size);
                 }
@@ -139,7 +150,8 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             if (have_header) {
                 if (SET_HEADER_ENABLED) {
                     output_frame_size = PassFrame(data, size, array_size);
-                    SetHeader(data, AVCI_HEADER_SIZE);
+                    if (!mReplaceHeader)
+                        SetHeader(data, AVCI_HEADER_SIZE);
                 } else if (mSampleCount == 1) {
                     mSecondFrameHeader = true;
                     output_frame_size = PassFrame(data, size, array_size);
@@ -167,7 +179,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             break;
         case AVCI_ALL_FRAME_HEADER_MODE:
             if (have_header) {
-                if (SET_HEADER_ENABLED)
+                if (SET_HEADER_ENABLED && !mReplaceHeader)
                     SetHeader(data, AVCI_HEADER_SIZE);
                 output_frame_size = PassFrame(data, size, array_size);
             } else {
@@ -189,9 +201,17 @@ uint32_t AVCIWriterHelper::PassFrame(const unsigned char *data, uint32_t size, u
 {
     // ensure frame starts with access unit delimiter
     if (memcmp(data, AVCI_ACCESS_UNIT_DELIMITER, sizeof(AVCI_ACCESS_UNIT_DELIMITER)) == 0) {
-        mDataArray[0].data = (unsigned char*)data;
-        mDataArray[0].size = size;
-        *array_size = 1;
+        if (mReplaceHeader) {
+            mDataArray[0].data = mHeader;
+            mDataArray[0].size = AVCI_HEADER_SIZE;
+            mDataArray[1].data = (unsigned char*)data + AVCI_HEADER_SIZE;
+            mDataArray[1].size = size - AVCI_HEADER_SIZE;
+            *array_size = 2;
+        } else {
+            mDataArray[0].data = (unsigned char*)data;
+            mDataArray[0].size = size;
+            *array_size = 1;
+        }
     } else if (memcmp(data, AVCI_FILLER, sizeof(AVCI_FILLER)) == 0) {
         mDataArray[0].data = (unsigned char*)AVCI_ACCESS_UNIT_DELIMITER;
         mDataArray[0].size = sizeof(AVCI_ACCESS_UNIT_DELIMITER);

@@ -188,6 +188,25 @@ void AS11Track::SetAVCIHeader(const unsigned char *data, uint32_t size)
     }
 }
 
+void AS11Track::SetReplaceAVCIHeader(bool enable)
+{
+    switch (mClipType)
+    {
+        case AS11_OP1A_CLIP_TYPE:
+        {
+            OP1AAVCITrack *avci_track = dynamic_cast<OP1AAVCITrack*>(mOP1ATrack);
+            if (avci_track)
+                avci_track->SetReplaceHeader(enable);
+            break;
+        }
+        case AS11_D10_CLIP_TYPE:
+            break;
+        case AS11_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
 void AS11Track::SetAFD(uint8_t afd)
 {
     switch (mClipType)

@@ -59,6 +59,7 @@ public:
 
     void SetMode(OP1AAVCIMode mode);                            // default OP1A_AVCI_ALL_FRAME_HEADER_MODE
     void SetHeader(const unsigned char *data, uint32_t size);
+    void SetReplaceHeader(bool enable);                         // default false; requires SetHeader if true
 
 public:
     uint32_t GetSampleWithoutHeaderSize();
