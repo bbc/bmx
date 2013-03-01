@@ -173,6 +173,73 @@ const char* bmx::get_ps_avci_header_format_string(size_t index)
     return PS_AVCI_HEADER_DATA[index].format_str;
 }
 
+void bmx::check_avid_avci_stop_bit(const unsigned char *input_data, const unsigned char *ps_data, size_t data_size,
+                                   bool *missing_stop_bit, bool *other_differences)
+{
+    BMX_ASSERT(data_size >= AVCI_HEADER_SIZE);
+
+    // check whether there are any differences
+    size_t diff_offset = AVCI_HEADER_SIZE;
+    size_t i;
+    for (i = 0; i < AVCI_HEADER_SIZE; i++) {
+        if (input_data[i] != ps_data[i]) {
+            if (diff_offset < AVCI_HEADER_SIZE)
+                break;
+            diff_offset = i;
+        }
+    }
+    if (diff_offset >= AVCI_HEADER_SIZE) {
+        // no differences
+        *missing_stop_bit  = false;
+        *other_differences = false;
+        return;
+    } else if (i < AVCI_HEADER_SIZE) {
+        // multiple differences
+        *missing_stop_bit  = false;
+        *other_differences = true;
+        return;
+    }
+
+    // check that ps_data has a stop bit that input_data does not have
+    bool found_stop_bit = false;
+    unsigned char xor_byte = input_data[diff_offset] ^ ps_data[diff_offset];
+    unsigned char cmp_bit;
+    int s;
+    for (s = 0; s < 8; s++) {
+        cmp_bit = (1 << s);
+        if ((xor_byte & cmp_bit)) {
+            if (found_stop_bit || (input_data[diff_offset] & cmp_bit))
+                break;
+            found_stop_bit = true;
+        }
+    }
+    if (s < 8) {
+        *missing_stop_bit  = false;
+        *other_differences = true;
+        return;
+    }
+
+    // check that the remaining bytes are padding followed by a PPS NAL unit
+    uint32_t state = (uint32_t)(-1);
+    for (i = diff_offset + 1; i < AVCI_HEADER_SIZE - 1; i++) {
+        state <<= 8;
+        state |= input_data[i];
+        if (input_data[i])
+            break;
+    }
+    if ((state & 0x00ffffff) == 0x000001 &&     // start prefix
+        (input_data[i + 1] & 0x1f) == 8)        // PPS == 8
+    {
+        *missing_stop_bit  = true;
+        *other_differences = false;
+    }
+    else
+    {
+        *missing_stop_bit  = false;
+        *other_differences = true;
+    }
+}
+
 
 bool bmx::parse_frame_rate(const char *rate_str, Rational *frame_rate)
 {

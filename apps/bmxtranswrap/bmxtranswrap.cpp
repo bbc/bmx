@@ -355,6 +355,7 @@ int main(int argc, const char** argv)
     string version_string;
     UUID product_uid;
     bool ps_avcihead = false;
+    bool replace_avid_avcihead = false;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -662,6 +663,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--ps-avcihead") == 0)
         {
             ps_avcihead = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--replace-avid-avcihead") == 0)
+        {
+            replace_avid_avcihead = true;
         }
         else if (strcmp(argv[cmdln_index], "-a") == 0)
         {
@@ -1830,7 +1835,35 @@ int main(int argc, const char** argv)
                             else
                                 output_track.track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
 
-                            if (input_track_reader->HaveAVCIHeader())
+                            if (replace_avid_avcihead)
+                            {
+                                if (!get_ps_avci_header_data(input_track_info->essence_type,
+                                                             input_picture_info->edit_rate,
+                                                             avci_header_data, sizeof(avci_header_data)))
+                                {
+                                    log_error("No replacement Panasonic AVCI header data available for input %s\n",
+                                              essence_type_to_string(input_track_info->essence_type));
+                                    throw false;
+                                }
+                                if (input_track_reader->HaveAVCIHeader()) {
+                                    bool missing_stop_bit;
+                                    bool other_differences;
+                                    check_avid_avci_stop_bit(input_track_reader->GetAVCIHeader(), avci_header_data,
+                                                             AVCI_HEADER_SIZE, &missing_stop_bit, &other_differences);
+                                    if (other_differences) {
+                                        log_warn("Difference between input and Panasonic AVCI header is not just a "
+                                                 "missing stop bit\n");
+                                        log_warn("AVCI header replacement may result in invalid or broken bitstream\n");
+                                    } else if (missing_stop_bit) {
+                                        log_info("Found missing stop bit in input AVCI header\n");
+                                    } else {
+                                        log_info("No missing stop bit found in input AVCI header\n");
+                                    }
+                                }
+                                output_track.track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
+                                output_track.track->SetReplaceAVCIHeader(true);
+                            }
+                            else if (input_track_reader->HaveAVCIHeader())
                             {
                                 output_track.track->SetAVCIHeader(input_track_reader->GetAVCIHeader(), AVCI_HEADER_SIZE);
                             }

@@ -100,6 +100,8 @@ bool read_avci_header_data(EssenceType essence_type, Rational sample_rate,
 bool have_ps_avci_header_data(EssenceType essence_type, Rational sample_rate);
 bool get_ps_avci_header_data(EssenceType essence_type, Rational sample_rate,
                              unsigned char *buffer, size_t buffer_size);
+void check_avid_avci_stop_bit(const unsigned char *input_data, const unsigned char *ps_data, size_t data_size,
+                              bool *missing_stop_bit, bool *other_differences);
 
 void init_progress(float *next_update);
 void print_progress(int64_t count, int64_t duration, float *next_update);
