@@ -211,7 +211,7 @@ SourcePackage* AvidClip::CreateDefaultTapeSource(string name, uint32_t num_video
     if (!name.empty())
         tape_package->setName(name);
     if (!mProjectName.empty())
-        tape_package->attachAvidAttribute("_PJ", mProjectName);
+        tape_package->appendAvidAttribute("_PJ", mProjectName);
 
     uint32_t track_id = 1;
     uint32_t video_track_number = 1, audio_track_number = 1;
@@ -304,7 +304,7 @@ SourcePackage* AvidClip::CreateDefaultImportSource(string uri, string name,
     if (!name.empty())
         import_package->setName(name);
     if (!mProjectName.empty())
-        import_package->attachAvidAttribute("_PJ", mProjectName);
+        import_package->appendAvidAttribute("_PJ", mProjectName);
 
     uint32_t track_id = 1;
     uint32_t video_track_number = 1, audio_track_number = 1;
@@ -538,7 +538,7 @@ void AvidClip::CreateMaterialPackage()
     mMaterialPackage->setBooleanItem(&MXF_ITEM_K(GenericPackage, ConvertFrameRate), false);
     mMaterialPackage->setInt32Item(&MXF_ITEM_K(GenericPackage, AppCode), 7);
     if (!mProjectName.empty())
-        mMaterialPackage->attachAvidAttribute("_PJ", mProjectName);
+        mMaterialPackage->appendAvidAttribute("_PJ", mProjectName);
     // user comments and locators are written when completing the file
 
     bool have_described_track_id = false;
@@ -694,7 +694,7 @@ void AvidClip::UpdateHeaderMetadata()
         // add user comments
         map<string, string>::const_iterator iter;
         for (iter = mUserComments.begin(); iter != mUserComments.end(); iter++)
-            track_material_package->attachAvidUserComment(iter->first, iter->second);
+            track_material_package->appendAvidUserComment(iter->first, iter->second);
 
         // add locators
         if (!mLocators.empty()) {

@@ -521,7 +521,7 @@ void AvidTrack::CreateHeaderMetadata()
     mFileSourcePackage->setPackageCreationDate(mClip->mCreationDate);
     mFileSourcePackage->setPackageModifiedDate(mClip->mCreationDate);
     if (!mClip->mProjectName.empty())
-        mFileSourcePackage->attachAvidAttribute("_PJ", mClip->mProjectName);
+        mFileSourcePackage->appendAvidAttribute("_PJ", mClip->mProjectName);
 
     // Preface - ContentStorage - SourcePackage - Timeline Track
     Track *track = new Track(mHeaderMetadata);
