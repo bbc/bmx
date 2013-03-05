@@ -262,6 +262,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --tp-created <tstamp>   Set the tape Source Package creation date. Default is 'now'\n");
     fprintf(stderr, "    --ess-marks             Convert XDCAM Essence Marks to locators\n");
     fprintf(stderr, "    --allow-no-avci-head    Allow inputs with no AVCI header (512 bytes, sequence and picture parameter sets)\n");
+    fprintf(stderr, "    --avid-gf               Use the Avid growing file flavour\n");
+    fprintf(stderr, "    --avid-gf-dur <dur>     Set the duration which should be shown whilst the file is growing\n");
+    fprintf(stderr, "                            The default value is the output duration\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/avid:\n");
     fprintf(stderr, "    --force-no-avci-head    Strip AVCI header (512 bytes, sequence and picture parameter sets) if present\n");
@@ -360,6 +363,8 @@ int main(int argc, const char** argv)
     UUID product_uid;
     bool ps_avcihead = false;
     bool replace_avid_avcihead = false;
+    bool avid_gf = false;
+    int64_t avid_gf_duration = -1;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -1086,6 +1091,27 @@ int main(int argc, const char** argv)
         {
             allow_no_avci_head = true;
         }
+        else if (strcmp(argv[cmdln_index], "--avid-gf") == 0)
+        {
+            avid_gf = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--avid-gf-dur") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &avid_gf_duration) != 1 || avid_gf_duration < 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            avid_gf = true;
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--force-no-avci-head") == 0)
         {
             force_no_avci_head = true;
@@ -1517,6 +1543,10 @@ int main(int argc, const char** argv)
                 flavour |= RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
                 flavour |= RDD9_SINGLE_PASS_WRITE_FLAVOUR;
+        } else if (clip_type == CW_AVID_CLIP_TYPE) {
+            flavour = AVID_DEFAULT_FLAVOUR;
+            if (avid_gf)
+                flavour |= AVID_GROWING_FILE_FLAVOUR;
         }
         ClipWriter *clip = 0;
         Rational clip_frame_rate = (is_sound_frame_rate ? timecode_rate : frame_rate);
@@ -1590,6 +1620,13 @@ int main(int argc, const char** argv)
             op1a_clip->SetOutputEndOffset(- rollout);
         } else if (clip_type == CW_AVID_CLIP_TYPE) {
             AvidClip *avid_clip = clip->GetAvidClip();
+
+            if (avid_gf) {
+                if (avid_gf_duration < 0)
+                    avid_clip->SetGrowingDuration(reader->GetReadDuration());
+                else
+                    avid_clip->SetGrowingDuration(avid_gf_duration);
+            }
 
             if (!clip_name)
                 avid_clip->SetClipName(output_name);
