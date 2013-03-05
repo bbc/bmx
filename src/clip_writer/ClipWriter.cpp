@@ -72,10 +72,10 @@ ClipWriter* ClipWriter::OpenNewOP1AClip(int flavour, File *file, Rational frame_
     return new ClipWriter(new OP1AFile(flavour, file, frame_rate));
 }
 
-ClipWriter* ClipWriter::OpenNewAvidClip(Rational frame_rate, MXFFileFactory *file_factory, bool take_factory_ownership,
-                                        string filename_prefix)
+ClipWriter* ClipWriter::OpenNewAvidClip(int flavour, Rational frame_rate, MXFFileFactory *file_factory,
+                                        bool take_factory_ownership, string filename_prefix)
 {
-    return new ClipWriter(new AvidClip(frame_rate, file_factory, take_factory_ownership, filename_prefix));
+    return new ClipWriter(new AvidClip(flavour, frame_rate, file_factory, take_factory_ownership, filename_prefix));
 }
 
 ClipWriter* ClipWriter::OpenNewD10Clip(int flavour, File *file, Rational frame_rate)

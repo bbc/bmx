@@ -2608,7 +2608,7 @@ int main(int argc, const char** argv)
                 clip = ClipWriter::OpenNewOP1AClip(flavour, file_factory.OpenNew(output_name), frame_rate);
                 break;
             case CW_AVID_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAvidClip(frame_rate, &file_factory, false);
+                clip = ClipWriter::OpenNewAvidClip(flavour, frame_rate, &file_factory, false);
                 break;
             case CW_D10_CLIP_TYPE:
                 clip = ClipWriter::OpenNewD10Clip(flavour, file_factory.OpenNew(output_name), frame_rate);

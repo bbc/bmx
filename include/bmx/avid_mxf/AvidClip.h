@@ -44,6 +44,10 @@
 #include <bmx/avid_mxf/AvidTypes.h>
 
 
+#define AVID_DEFAULT_FLAVOUR                0x0000
+#define AVID_GROWING_FILE_FLAVOUR           0x0001
+
+
 
 namespace bmx
 {
@@ -55,7 +59,7 @@ public:
     friend class AvidTrack;
 
 public:
-    AvidClip(mxfRational frame_rate, MXFFileFactory *file_factory, bool take_factory_ownership,
+    AvidClip(int flavour, mxfRational frame_rate, MXFFileFactory *file_factory, bool take_factory_ownership,
              std::string filename_prefix = "");
     ~AvidClip();
 
@@ -118,6 +122,7 @@ private:
     mxfpp::TimecodeComponent* GetTimecodeComponent(mxfpp::GenericPackage *package);
 
 private:
+    int mFlavour;
     MXFFileFactory *mFileFactory;
     bool mOwnFileFactory;
 

@@ -54,8 +54,8 @@ public:
     static ClipWriter* OpenNewAS02Clip(std::string bundle_directory, bool create_bundle_dir, Rational frame_rate,
                                        MXFFileFactory *file_factory, bool take_factory_ownership);
     static ClipWriter* OpenNewOP1AClip(int flavour, mxfpp::File *file, Rational frame_rate);
-    static ClipWriter* OpenNewAvidClip(Rational frame_rate, MXFFileFactory *file_factory, bool take_factory_ownership,
-                                       std::string filename_prefix = "");
+    static ClipWriter* OpenNewAvidClip(int flavour, Rational frame_rate, MXFFileFactory *file_factory,
+                                       bool take_factory_ownership, std::string filename_prefix = "");
     static ClipWriter* OpenNewD10Clip(int flavour, mxfpp::File *file, Rational frame_rate);
     static ClipWriter* OpenNewRDD9Clip(int flavour, mxfpp::File *file, Rational frame_rate);
     static ClipWriter* OpenNewWaveClip(WaveIO *file);
