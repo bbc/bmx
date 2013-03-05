@@ -35,6 +35,7 @@
 #include <string>
 
 #include <libMXF++/MXF.h>
+#include <libMXF++/extensions/TaggedValue.h>
 
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
 
@@ -97,6 +98,8 @@ public:
     mxfpp::AvidHeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }
     mxfpp::DataModel* GetDataModel() const { return mDataModel; }
 
+    void SetPhysicalSourceStartTimecode();
+
 protected:
     AvidTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *mxf_file);
 
@@ -142,12 +145,17 @@ protected:
     mxfpp::SourcePackage* mFileSourcePackage;
     mxfpp::SourcePackage* mRefSourcePackage;
 
+    mxfpp::TaggedValue *mOMMMobCompleteTaggedValue;
+    mxfpp::TaggedValue *mEWCFileMobTaggedValue;
+
     int64_t mContainerDuration;
     int64_t mContainerSize;
 
 private:
     void CreateHeaderMetadata();
     void CreateFile();
+
+    mxfpp::TimecodeComponent* GetTimecodeComponent(mxfpp::GenericPackage *package);
 };
 
 

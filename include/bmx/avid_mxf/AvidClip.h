@@ -57,6 +57,7 @@ class AvidClip
 {
 public:
     friend class AvidTrack;
+    friend class AvidAVCITrack;
 
 public:
     AvidClip(int flavour, mxfRational frame_rate, MXFFileFactory *file_factory, bool take_factory_ownership,
@@ -72,6 +73,7 @@ public:
     void SetGenerationUID(mxfUUID generation_uid);                      // default generated
     void SetMaterialPackageCreationDate(mxfTimestamp creation_date);    // default file creation date
     void SetMaterialPackageUID(mxfUMID package_uid);                    // default generated
+    void SetGrowingDuration(int64_t duration);                          // default -1; requires growing file flavour
 
 public:
     void SetUserComment(std::string name, std::string value);
@@ -117,9 +119,10 @@ private:
     void SetPhysicalSourceStartTimecode();
 
     void UpdateHeaderMetadata();
-    void UpdateTrackDurations(AvidTrack *avid_track, mxfpp::Track *track, mxfRational edit_rate, int64_t duration);
-    void UpdateTimecodeTrackDuration(AvidTrack *avid_track, mxfpp::GenericPackage *package, mxfRational package_edit_rate);
-    mxfpp::TimecodeComponent* GetTimecodeComponent(mxfpp::GenericPackage *package);
+    void UpdateTrackDurations(AvidTrack *avid_track, bool is_file_source, mxfpp::Track *track, mxfRational edit_rate,
+                              int64_t duration);
+    void UpdateTimecodeTrackDuration(AvidTrack *avid_track, bool is_file_source, mxfpp::GenericPackage *package,
+                                     mxfRational package_edit_rate);
 
 private:
     int mFlavour;
@@ -140,6 +143,7 @@ private:
     std::map<std::string, std::string> mUserComments;
     std::vector<AvidLocator> mLocators;
     bool mMaxLocatorsExceeded;
+    int64_t mGrowingDuration;
 
     mxfTimestamp mCreationDate;
     mxfUUID mGenerationUID;

@@ -59,6 +59,7 @@ public:
     // configure and create new descriptor
     virtual void SetEssenceType(EssenceType essence_type);
     virtual void SetSampleRate(mxfRational sample_rate);
+    void SetIncludeHeader(bool include_header);
 
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
     virtual void UpdateFileDescriptor();
@@ -75,6 +76,8 @@ private:
 
 private:
     size_t mEssenceIndex;
+    bool mIncludeHeader;
+    bool mIncludeHeaderSet;
 };
 
 

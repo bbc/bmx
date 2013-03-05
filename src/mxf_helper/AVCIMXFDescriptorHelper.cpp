@@ -125,6 +125,8 @@ AVCIMXFDescriptorHelper::AVCIMXFDescriptorHelper()
 {
     mEssenceIndex = 0;
     mEssenceType = SUPPORTED_ESSENCE[0].essence_type;
+    mIncludeHeader = false;
+    mIncludeHeaderSet = false;
 }
 
 AVCIMXFDescriptorHelper::~AVCIMXFDescriptorHelper()
@@ -191,6 +193,12 @@ FileDescriptor* AVCIMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetad
 void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
 {
     PictureMXFDescriptorHelper::UpdateFileDescriptor();
+
+    // override the default Avid frame sample size set in PictureMXFDescriptorHelper
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR) && mIncludeHeaderSet) {
+        SetAvidFrameSampleSize(mIncludeHeader ? GetSampleSize() :
+                                                GetSampleWithoutHeaderSize());
+    }
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(cdci_descriptor);
@@ -291,6 +299,12 @@ uint32_t AVCIMXFDescriptorHelper::GetSampleSize()
 uint32_t AVCIMXFDescriptorHelper::GetSampleWithoutHeaderSize()
 {
     return SUPPORTED_ESSENCE[mEssenceIndex].frame_size - 512;
+}
+
+void AVCIMXFDescriptorHelper::SetIncludeHeader(bool include_header)
+{
+    mIncludeHeader = include_header;
+    mIncludeHeaderSet = true;
 }
 
 mxfUL AVCIMXFDescriptorHelper::ChooseEssenceContainerUL() const

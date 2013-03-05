@@ -101,6 +101,7 @@ AvidClip::AvidClip(int flavour, mxfRational frame_rate, MXFFileFactory *file_fac
     mVersionString = get_bmx_mxf_version_string();
     mProductUID = get_bmx_product_uid();
     mMaxLocatorsExceeded = false;
+    mGrowingDuration = -1;
     mxf_get_timestamp_now(&mCreationDate);
     mxf_generate_uuid(&mGenerationUID);
     mxf_generate_aafsdk_umid(&mMaterialPackageUID);
@@ -172,6 +173,12 @@ void AvidClip::SetGenerationUID(mxfUUID generation_uid)
 void AvidClip::SetMaterialPackageUID(mxfUMID package_uid)
 {
     mMaterialPackageUID = package_uid;
+}
+
+void AvidClip::SetGrowingDuration(int64_t duration)
+{
+    if (mFlavour & AVID_GROWING_FILE_FLAVOUR)
+        mGrowingDuration = duration;
 }
 
 void AvidClip::SetMaterialPackageCreationDate(mxfTimestamp creation_date)
@@ -480,9 +487,6 @@ void AvidClip::PrepareWrite()
 
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite();
-
-    if (mHavePhysSourceTimecodeTrack)
-        SetPhysicalSourceStartTimecode();
 }
 
 void AvidClip::WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples)
@@ -554,9 +558,16 @@ void AvidClip::CreateMaterialPackage()
     // user comments and locators are written when completing the file
 
     bool have_described_track_id = false;
+    int64_t track_growing_duration = -1;
     uint32_t track_id = 1;
     size_t i;
     for (i = 0; i < mTracks.size(); i++) {
+
+        // initial duration is -1 or mGrowingDuration if flavour is growing file
+        if (mGrowingDuration >= 0) {
+            track_growing_duration = convert_duration(mClipFrameRate, mGrowingDuration,
+                                                      mTracks[i]->GetSampleRate(), ROUND_AUTO);
+        }
 
         // get picture track id or first audio track id for locators
         if (mTracks[i]->IsPicture() && !have_described_track_id) {
@@ -581,13 +592,13 @@ void AvidClip::CreateMaterialPackage()
         Sequence *sequence = new Sequence(mHeaderMetadata);
         track->setSequence(sequence);
         sequence->setDataDefinition(mTracks[i]->IsPicture() ? MXF_DDEF_L(Picture) : MXF_DDEF_L(Sound));
-        sequence->setDuration(-1); // updated when writing completed
+        sequence->setDuration(track_growing_duration); // updated when writing completed
 
         // Preface - ContentStorage - MaterialPackage - Timeline Track - Sequence - SourceClip
         SourceClip *source_clip = new SourceClip(mHeaderMetadata);
         sequence->appendStructuralComponents(source_clip);
         source_clip->setDataDefinition(mTracks[i]->IsPicture() ? MXF_DDEF_L(Picture) : MXF_DDEF_L(Sound));
-        source_clip->setDuration(-1); // updated when writing completed
+        source_clip->setDuration(track_growing_duration); // updated when writing completed
         source_clip->setStartPosition(0);
         pair<mxfUMID, uint32_t> source_ref = mTracks[i]->GetSourceReference();
         source_clip->setSourcePackageID(source_ref.first);
@@ -614,83 +625,26 @@ void AvidClip::CreateMaterialPackage()
         Sequence *sequence = new Sequence(mHeaderMetadata);
         tc_track->setSequence(sequence);
         sequence->setDataDefinition(MXF_DDEF_L(Timecode));
-        sequence->setDuration(-1); // updated when writing completed
+        sequence->setDuration(mGrowingDuration); // updated when writing completed
 
         // Preface - ContentStorage - MaterialPackage - Timecode Track - TimecodeComponent
         mMaterialTimecodeComponent = new TimecodeComponent(mHeaderMetadata);
         sequence->appendStructuralComponents(mMaterialTimecodeComponent);
         mMaterialTimecodeComponent->setDataDefinition(MXF_DDEF_L(Timecode));
-        mMaterialTimecodeComponent->setDuration(-1); // updated when writing completed
+        mMaterialTimecodeComponent->setDuration(mGrowingDuration); // updated when writing completed
         mMaterialTimecodeComponent->setRoundedTimecodeBase(mStartTimecode.GetRoundedTCBase());
         mMaterialTimecodeComponent->setDropFrame(mStartTimecode.IsDropFrame());
         mMaterialTimecodeComponent->setStartTimecode(mStartTimecode.GetOffset());
     }
-}
 
-void AvidClip::SetPhysicalSourceStartTimecode()
-{
-    // set start position in file source package source clips that reference a physical source package
-    size_t i;
-    for (i = 0; i < mTracks.size(); i++) {
-        SourcePackage *ref_source_package = mTracks[i]->GetRefSourcePackage();
-        if (!ref_source_package ||
-            !ref_source_package->haveDescriptor() ||
-            !mTracks[i]->GetDataModel()->isSubclassOf(ref_source_package->getDescriptor(), &MXF_SET_K(PhysicalDescriptor)))
-        {
-            continue;
-        }
-
-        // get physical package start timecode
-        TimecodeComponent *phys_tc_component = GetTimecodeComponent(ref_source_package);
-        if (!phys_tc_component)
-            continue;
-        Timecode phys_start_timecode(phys_tc_component->getRoundedTimecodeBase(),
-                                     phys_tc_component->getDropFrame(),
-                                     phys_tc_component->getStartTimecode());
-
-        // convert to a offset at clip frame rate
-        uint16_t rounded_clip_tc_base = get_rounded_tc_base(mClipFrameRate);
-        int64_t phys_tc_start_offset = convert_position(phys_start_timecode.GetOffset(),
-                                                        rounded_clip_tc_base,
-                                                        phys_start_timecode.GetRoundedTCBase(),
-                                                        ROUND_AUTO);
-        int64_t clip_tc_start_offset = convert_position(mStartTimecode.GetOffset(),
-                                                        rounded_clip_tc_base,
-                                                        mStartTimecode.GetRoundedTCBase(),
-                                                        ROUND_AUTO);
-        int64_t start_position = clip_tc_start_offset - phys_tc_start_offset;
-        if (start_position < 0) {
-            // physical source's start timecode was > start timecode
-            log_warn("Not setting start timecode in file source package because start position was negative\n");
-            continue;
-        }
-
-        // set the start position
-        vector<GenericTrack*> tracks = mTracks[i]->GetFileSourcePackage()->getTracks();
-        size_t j;
-        for (j = 0; j < tracks.size(); j++) {
-            Track *track = dynamic_cast<Track*>(tracks[j]);
-            if (!track)
-                continue;
-
-            StructuralComponent *track_sequence = track->getSequence();
-            mxfUL data_def = track_sequence->getDataDefinition();
-            if (!mxf_is_picture(&data_def) && !mxf_is_sound(&data_def))
-                continue;
-
-            Sequence *sequence = dynamic_cast<Sequence*>(track_sequence);
-            BMX_ASSERT(sequence);
-            vector<StructuralComponent*> components = sequence->getStructuralComponents();
-            BMX_ASSERT(components.size() == 1);
-            SourceClip *source_clip = dynamic_cast<SourceClip*>(components[0]);
-            BMX_ASSERT(source_clip);
-
-            source_clip->setStartPosition(convert_position(mClipFrameRate, start_position, track->getEditRate(), ROUND_AUTO));
-            break;
-        }
-
-        // set physical source timecode component's drop frame flag
-        phys_tc_component->setDropFrame(mStartTimecode.IsDropFrame());
+    if (mFlavour & AVID_GROWING_FILE_FLAVOUR) {
+        TaggedValue *bundle_tv = mMaterialPackage->appendAvidAttribute("_EWC_BUNDLE", "__AttributeList");
+        if (mGrowingDuration >= 0)
+            bundle_tv->appendAvidAttribute("_EWC_EXPECTED_DUR", (int32_t)mGrowingDuration);
+        else
+            bundle_tv->appendAvidAttribute("_EWC_EXPECTED_DUR", 12 * 60 * 60 * (int32_t)get_rounded_tc_base(mClipFrameRate));
+        bundle_tv->appendAvidAttribute("_EWC_KNOWN_MEDIA_DUR", 0);
+        bundle_tv->appendAvidAttribute("_EWC_MOD_TIME",        0);
     }
 }
 
@@ -760,16 +714,16 @@ void AvidClip::UpdateHeaderMetadata()
             BMX_ASSERT(track);
 
             BMX_ASSERT(track->getEditRate() == mTracks[i]->GetSampleRate());
-            UpdateTrackDurations(mTracks[i], track, mTracks[i]->GetSampleRate(), track_duration);
+            UpdateTrackDurations(mTracks[i], true, track, mTracks[i]->GetSampleRate(), track_duration);
         }
     }
 
     // update timecode track duration in material package and in source package referenced by file source packages
     for (i = 0; i < mTracks.size(); i++) {
-        UpdateTimecodeTrackDuration(mTracks[i], mTracks[i]->GetMaterialPackage(), mClipFrameRate);
+        UpdateTimecodeTrackDuration(mTracks[i], true, mTracks[i]->GetMaterialPackage(), mClipFrameRate);
 
         if (mTracks[i]->GetRefSourcePackage())
-            UpdateTimecodeTrackDuration(mTracks[i], mTracks[i]->GetRefSourcePackage(), mTracks[i]->GetSampleRate());
+            UpdateTimecodeTrackDuration(mTracks[i], false, mTracks[i]->GetRefSourcePackage(), mTracks[i]->GetSampleRate());
     }
 
     // update start timecode
@@ -778,19 +732,23 @@ void AvidClip::UpdateHeaderMetadata()
         mMaterialTimecodeComponent->setDropFrame(mStartTimecode.IsDropFrame());
         mMaterialTimecodeComponent->setStartTimecode(mStartTimecode.GetOffset());
     }
-    if (mHavePhysSourceTimecodeTrack)
-        SetPhysicalSourceStartTimecode();
+    if (mHavePhysSourceTimecodeTrack) {
+        for (i = 0; i < mTracks.size(); i++)
+            mTracks[i]->SetPhysicalSourceStartTimecode();
+    }
 }
 
-void AvidClip::UpdateTrackDurations(AvidTrack *avid_track, Track *track, mxfRational edit_rate, int64_t duration)
+void AvidClip::UpdateTrackDurations(AvidTrack *avid_track, bool is_file_source, Track *track, mxfRational edit_rate,
+                                    int64_t duration)
 {
     int64_t track_duration = convert_duration(edit_rate, duration, track->getEditRate(), ROUND_AUTO);
 
     Sequence *sequence = dynamic_cast<Sequence*>(track->getSequence());
     BMX_ASSERT(sequence);
-    if (sequence->getDuration() >= 0) {
+    // don't update legacy source durations unless they are set to -1
+    if (!is_file_source && sequence->getDuration() >= 0) {
         if (sequence->getDuration() < track_duration)
-            log_warn("Existing track duration is less than the essence duration\n");
+            log_warn("Existing legacy source track duration is less than the essence duration\n");
         return;
     }
     sequence->setDuration(track_duration);
@@ -811,7 +769,7 @@ void AvidClip::UpdateTrackDurations(AvidTrack *avid_track, Track *track, mxfRati
                 if (ref_gen_track) {
                     Track *ref_track = dynamic_cast<Track*>(ref_gen_track);
                     BMX_CHECK(ref_track);
-                    UpdateTrackDurations(avid_track, ref_track, track->getEditRate(),
+                    UpdateTrackDurations(avid_track, false, ref_track, track->getEditRate(),
                                          source_clip->getStartPosition() + track_duration);
                 }
             }
@@ -819,7 +777,8 @@ void AvidClip::UpdateTrackDurations(AvidTrack *avid_track, Track *track, mxfRati
     }
 }
 
-void AvidClip::UpdateTimecodeTrackDuration(AvidTrack *avid_track, GenericPackage *package, mxfRational package_edit_rate)
+void AvidClip::UpdateTimecodeTrackDuration(AvidTrack *avid_track, bool is_file_source, GenericPackage *package,
+                                           mxfRational package_edit_rate)
 {
     int64_t max_duration = 0;
     vector<GenericTrack*> tracks = package->getTracks();
@@ -841,7 +800,7 @@ void AvidClip::UpdateTimecodeTrackDuration(AvidTrack *avid_track, GenericPackage
             max_duration = duration;
     }
 
-    // set timecode track duration to max duration if currently set to -1
+    // set timecode track duration to max duration if currently set to -1 or this is the file source package
     for (j = 0; j < tracks.size(); j++) {
         Track *track = dynamic_cast<Track*>(tracks[j]);
         if (!track)
@@ -852,42 +811,7 @@ void AvidClip::UpdateTimecodeTrackDuration(AvidTrack *avid_track, GenericPackage
         if (!mxf_is_timecode(&data_def))
             continue;
 
-        if (track_sequence->getDuration() < 0)
-            UpdateTrackDurations(avid_track, track, package_edit_rate, max_duration);
+        UpdateTrackDurations(avid_track, is_file_source, track, package_edit_rate, max_duration);
     }
-}
-
-TimecodeComponent* AvidClip::GetTimecodeComponent(GenericPackage *package)
-{
-    // find the timecode component in this package
-    TimecodeComponent *tc_component = 0;
-    vector<GenericTrack*> tracks = package->getTracks();
-    size_t i;
-    for (i = 0; i < tracks.size(); i++) {
-        Track *track = dynamic_cast<Track*>(tracks[i]);
-        if (!track)
-            continue;
-
-        StructuralComponent *track_sequence = track->getSequence();
-        mxfUL data_def = track_sequence->getDataDefinition();
-        if (!mxf_is_timecode(&data_def))
-            continue;
-
-        Sequence *sequence = dynamic_cast<Sequence*>(track_sequence);
-        tc_component = dynamic_cast<TimecodeComponent*>(track_sequence);
-        if (sequence) {
-            vector<StructuralComponent*> components = sequence->getStructuralComponents();
-            size_t j;
-            for (j = 0; j < components.size(); j++) {
-                tc_component = dynamic_cast<TimecodeComponent*>(components[j]);
-                if (tc_component)
-                    break;
-            }
-        }
-        if (tc_component)
-            break;
-    }
-
-    return tc_component;
 }
 

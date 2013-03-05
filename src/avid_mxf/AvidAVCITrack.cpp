@@ -36,6 +36,7 @@
 #define __STDC_FORMAT_MACROS
 
 #include <bmx/avid_mxf/AvidAVCITrack.h>
+#include <bmx/avid_mxf/AvidClip.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -76,9 +77,11 @@ void AvidAVCITrack::SetMode(AvidAVCIMode mode)
             break;
         case AVID_AVCI_NO_FRAME_HEADER_MODE:
             mWriterHelper.SetMode(AVCI_NO_FRAME_HEADER_MODE);
+            mAVCIDescriptorHelper->SetIncludeHeader(false);
             break;
         case AVID_AVCI_ALL_FRAME_HEADER_MODE:
             mWriterHelper.SetMode(AVCI_ALL_FRAME_HEADER_MODE);
+            mAVCIDescriptorHelper->SetIncludeHeader(true);
             break;
     }
 }
