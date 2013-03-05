@@ -79,6 +79,8 @@ public:
 public:
     virtual bool IsPicture() const = 0;
 
+    mxfUMID GetFileSourcePackageUID() const { return mFileSourcePackageUID; }
+
     void SetMaterialTrackId(uint32_t track_id);
     uint32_t GetMaterialTrackId() const { return mMaterialTrackId; }
 

@@ -514,8 +514,13 @@ int64_t AvidClip::GetDuration() const
 
 int64_t AvidClip::GetFilePosition(uint32_t track_index) const
 {
+    return GetTrack(track_index)->GetFilePosition();
+}
+
+AvidTrack* AvidClip::GetTrack(uint32_t track_index) const
+{
     BMX_CHECK(track_index < mTracks.size());
-    return mTracks[track_index]->GetFilePosition();
+    return mTracks[track_index];
 }
 
 void AvidClip::CreateMinimalHeaderMetadata()

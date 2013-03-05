@@ -100,7 +100,12 @@ public:
     int64_t GetDuration() const;
     mxfRational GetFrameRate() const { return mClipFrameRate; }
 
+    uint32_t GetNumTracks() const { return (uint32_t)mTracks.size(); }
+    AvidTrack* GetTrack(uint32_t track_index) const;
+
     int64_t GetFilePosition(uint32_t track_index) const;
+
+    mxfUMID GetMaterialPackageUID() const { return mMaterialPackageUID; }
 
 private:
     void CreateMinimalHeaderMetadata();
