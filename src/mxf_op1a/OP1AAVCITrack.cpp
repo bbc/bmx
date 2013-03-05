@@ -77,6 +77,12 @@ void OP1AAVCITrack::SetMode(OP1AAVCIMode mode)
         case OP1A_AVCI_ALL_FRAME_HEADER_MODE:
             mWriterHelper.SetMode(AVCI_ALL_FRAME_HEADER_MODE);
             break;
+        case OP1A_AVCI_NO_OR_ALL_FRAME_HEADER_MODE:
+            mWriterHelper.SetMode(AVCI_NO_OR_ALL_FRAME_HEADER_MODE);
+            break;
+        case OP1A_AVCI_NO_FRAME_HEADER_MODE:
+            mWriterHelper.SetMode(AVCI_NO_FRAME_HEADER_MODE);
+            break;
     }
 }
 

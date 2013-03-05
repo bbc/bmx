@@ -326,6 +326,12 @@ void ClipWriterTrack::SetAVCIMode(AVCIMode mode)
                     case AVCI_ALL_FRAME_HEADER_MODE:
                         avci_track->SetMode(OP1A_AVCI_ALL_FRAME_HEADER_MODE);
                         break;
+                    case AVCI_NO_OR_ALL_FRAME_HEADER_MODE:
+                        avci_track->SetMode(OP1A_AVCI_NO_OR_ALL_FRAME_HEADER_MODE);
+                        break;
+                    case AVCI_NO_FRAME_HEADER_MODE:
+                        avci_track->SetMode(OP1A_AVCI_NO_FRAME_HEADER_MODE);
+                        break;
                     default:
                         log_warn("AVCI mode %d not supported\n", mode);
                         break;
