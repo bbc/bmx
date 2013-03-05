@@ -74,6 +74,8 @@ public:
     int64_t GetDuration() const;
     int64_t GetContainerDuration() const;
 
+    int64_t GetFilePosition() const;
+
 public:
     virtual bool IsPicture() const = 0;
 

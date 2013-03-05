@@ -435,6 +435,11 @@ int64_t AvidTrack::GetContainerDuration() const
     return mContainerDuration;
 }
 
+int64_t AvidTrack::GetFilePosition() const
+{
+    return mMXFFile->tell();
+}
+
 void AvidTrack::SetMaterialTrackId(uint32_t track_id)
 {
     mMaterialTrackId = track_id;

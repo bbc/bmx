@@ -100,6 +100,8 @@ public:
     int64_t GetDuration() const;
     mxfRational GetFrameRate() const { return mClipFrameRate; }
 
+    int64_t GetFilePosition(uint32_t track_index) const;
+
 private:
     void CreateMinimalHeaderMetadata();
     void CreateMaterialPackage();
