@@ -262,6 +262,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --tp-created <tstamp>   Set the tape Source Package creation date. Default is 'now'\n");
     fprintf(stderr, "    --ess-marks             Convert XDCAM Essence Marks to locators\n");
     fprintf(stderr, "    --allow-no-avci-head    Allow inputs with no AVCI header (512 bytes, sequence and picture parameter sets)\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "  op1a/avid:\n");
     fprintf(stderr, "    --force-no-avci-head    Strip AVCI header (512 bytes, sequence and picture parameter sets) if present\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  wave:\n");
@@ -1109,10 +1111,10 @@ int main(int argc, const char** argv)
         }
     }
 
-    if (clip_type != CW_AVID_CLIP_TYPE) {
+    if (clip_type != CW_AVID_CLIP_TYPE)
         allow_no_avci_head = false;
+    if (clip_type != CW_AVID_CLIP_TYPE && clip_type != CW_OP1A_CLIP_TYPE)
         force_no_avci_head = false;
-    }
 
     if (!product_info_set) {
         company_name    = get_bmx_company_name();
