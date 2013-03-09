@@ -109,7 +109,7 @@ IndexTableHelperSegment::~IndexTableHelperSegment()
     delete [] mIndexEntries;
 }
 
-void IndexTableHelperSegment::ParseIndexTableSegment(File *file, uint64_t segment_len)
+void IndexTableHelperSegment::ReadIndexTableSegment(File *file, uint64_t segment_len)
 {
     mIsFileIndexSegment = true;
 
@@ -121,7 +121,17 @@ void IndexTableHelperSegment::ParseIndexTableSegment(File *file, uint64_t segmen
                                                   mxf_default_add_delta_entry, 0,
                                                   add_frame_offset_index_entry, this,
                                                   &_cSegment));
+}
+
+void IndexTableHelperSegment::ProcessIndexTableSegment(Rational expected_edit_rate)
+{
     setIndexEditRate(normalize_rate(getIndexEditRate()));
+
+    if (expected_edit_rate.numerator != 0 && expected_edit_rate != getIndexEditRate()) {
+        BMX_EXCEPTION(("Index table segment edit rate %d/%d differs from expected edit rate %d/%d",
+                       getIndexEditRate().numerator, getIndexEditRate().denominator,
+                       expected_edit_rate.numerator, expected_edit_rate.denominator));
+    }
 
     // samples files produced by Ardendo product 'ardftp' had an invalid index duration -1
     if (getIndexDuration() < 0) {
@@ -411,7 +421,16 @@ void IndexTableHelper::SetConstantEditUnitSize(Rational edit_rate, uint32_t size
 int64_t IndexTableHelper::ReadIndexTableSegment(uint64_t len)
 {
     auto_ptr<IndexTableHelperSegment> new_segment(new IndexTableHelperSegment());
-    new_segment->ParseIndexTableSegment(mFileReader->mFile, len);
+    new_segment->ReadIndexTableSegment(mFileReader->mFile, len);
+    try
+    {
+        new_segment->ProcessIndexTableSegment(mEditRate);
+    }
+    catch (const BMXException &ex)
+    {
+        log_warn("Ignoring index table segment that is invalid or could not be processed\n");
+        return -1;
+    }
 
     int64_t end_offset = -1;
     if (new_segment->getIndexDuration() >= 0)

@@ -54,7 +54,8 @@ public:
     IndexTableHelperSegment();
     virtual ~IndexTableHelperSegment();
 
-    void ParseIndexTableSegment(mxfpp::File *file, uint64_t segment_len);
+    void ReadIndexTableSegment(mxfpp::File *file, uint64_t segment_len);
+    void ProcessIndexTableSegment(Rational expected_edit_rate);
 
     bool HaveExtraIndexEntries() const { return mHaveExtraIndexEntries; }
     int64_t GetIndexEndOffset() const  { return mIndexEndOffset; }
