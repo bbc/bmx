@@ -39,8 +39,6 @@
 #include <cstdio>
 #include <cstring>
 
-#include <memory>
-
 #include <libMXF++/MXF.h>
 
 #include <mxf/mxf_avid.h>
@@ -420,9 +418,10 @@ int64_t IndexTableHelper::ReadIndexTableSegment(uint64_t len)
         end_offset = new_segment->getIndexStartPosition() + new_segment->getIndexDuration();
 
     if (new_segment->HaveConstantEditUnitSize())
-        InsertCBEIndexSegment(new_segment.release());
+        InsertCBEIndexSegment(new_segment);
     else
-        InsertVBEIndexSegment(new_segment.release());
+        InsertVBEIndexSegment(new_segment);
+    // don't use new_segment from here onwards
 
     if (mSegments.size() == 1)
         mEditRate = mSegments.back()->getIndexEditRate();
@@ -605,8 +604,10 @@ bool IndexTableHelper::GetIndexEntry(MXFIndexEntryExt *entry, int64_t position)
     return true;
 }
 
-void IndexTableHelper::InsertCBEIndexSegment(IndexTableHelperSegment *new_segment)
+void IndexTableHelper::InsertCBEIndexSegment(auto_ptr<IndexTableHelperSegment> &new_segment_ap)
 {
+    IndexTableHelperSegment *new_segment = new_segment_ap.get();
+
     if (!mSegments.empty()) {
         if (!mSegments.back()->HaveConstantEditUnitSize()) {
             // existing VBE segments, either originating from file or runtime generated
@@ -616,7 +617,7 @@ void IndexTableHelper::InsertCBEIndexSegment(IndexTableHelperSegment *new_segmen
 
             if (SEG_DUR(new_segment) > 0 && SEG_DUR(new_segment) < SEG_DUR(mSegments.front())) {
                 // ignore new segment if it covers less edit units than the runtime generated index segment
-                delete new_segment;
+                new_segment_ap.reset(0);
                 return;
             }
 
@@ -628,7 +629,7 @@ void IndexTableHelper::InsertCBEIndexSegment(IndexTableHelperSegment *new_segmen
 
             if (SEG_DUR(mSegments.back()) == 0 || SEG_START(new_segment) < SEG_END(mSegments.back())) {
                 // ignore new segment that overlaps with existing segments
-                delete new_segment;
+                new_segment_ap.reset(0);
                 return;
             }
 
@@ -645,6 +646,7 @@ void IndexTableHelper::InsertCBEIndexSegment(IndexTableHelperSegment *new_segmen
     }
 
     mSegments.push_back(new_segment);
+    new_segment_ap.release();
 
     if (mSegments.size() == 1) {
         mEditUnitSize = new_segment->GetEditUnitSize();
@@ -656,8 +658,10 @@ void IndexTableHelper::InsertCBEIndexSegment(IndexTableHelperSegment *new_segmen
     }
 }
 
-void IndexTableHelper::InsertVBEIndexSegment(IndexTableHelperSegment *new_segment)
+void IndexTableHelper::InsertVBEIndexSegment(auto_ptr<IndexTableHelperSegment> &new_segment_ap)
 {
+    IndexTableHelperSegment *new_segment = new_segment_ap.get();
+
     if (mEditUnitSize > 0)
         BMX_EXCEPTION(("Can't mix VBE and CBE index table segments"));
 
@@ -691,6 +695,7 @@ void IndexTableHelper::InsertVBEIndexSegment(IndexTableHelperSegment *new_segmen
         } else if (SEG_START(segment) >= SEG_END(new_segment)) {
             // existing (shortened) segment is after new segment
             iter = mSegments.insert(iter, new_segment);
+            new_segment_ap.release();
             break;
         }
 
@@ -707,6 +712,7 @@ void IndexTableHelper::InsertVBEIndexSegment(IndexTableHelperSegment *new_segmen
             BMX_EXCEPTION(("Sparse index table is not supported"));
         }
         mSegments.push_back(new_segment);
+        new_segment_ap.release();
         new_duration += new_segment->getIndexDuration();
     } else {
         while (iter != mSegments.end()) {

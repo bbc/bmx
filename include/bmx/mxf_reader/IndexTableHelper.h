@@ -33,6 +33,7 @@
 #define BMX_INDEX_TABLE_HELPER_H_
 
 #include <vector>
+#include <memory>
 
 #include <libMXF++/MXF.h>
 
@@ -137,8 +138,8 @@ public:
     bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position);
 
 private:
-    void InsertCBEIndexSegment(IndexTableHelperSegment *new_segment);
-    void InsertVBEIndexSegment(IndexTableHelperSegment *new_segment);
+    void InsertCBEIndexSegment(std::auto_ptr<IndexTableHelperSegment> &new_segment_ap);
+    void InsertVBEIndexSegment(std::auto_ptr<IndexTableHelperSegment> &new_segment_ap);
 
     IndexTableHelperSegment* CreateStartSegment(IndexTableHelperSegment *segment, uint32_t duration);
 
