@@ -131,9 +131,22 @@ void IndexTableHelperSegment::ParseIndexTableSegment(File *file, uint64_t segmen
         setIndexDuration(0);
     }
 
-    BMX_CHECK((mNumIndexEntries == 0 && getEditUnitByteCount() > 0) ||
-             ((int64_t)mNumIndexEntries >= getIndexDuration()));
-    BMX_CHECK(getIndexDuration() > 0 || mNumIndexEntries == 0);
+    if (getEditUnitByteCount() == 0) {
+        if (getIndexDuration() == 0) {
+            if (mNumIndexEntries > 0)
+                BMX_EXCEPTION(("VBE index table segment with index entries but unknown duration is invalid"));
+        } else if ((int64_t)mNumIndexEntries < getIndexDuration()) {
+            if ((int64_t)mNumIndexEntries > 0) {
+                BMX_EXCEPTION(("VBE index table is missing index entries"));
+            } else {
+                BMX_EXCEPTION(("CBE index table edit unit byte count is invalid or "
+                               "VBE index table is missing index entries"));
+            }
+        }
+    } else if (mNumIndexEntries > 0) {
+        BMX_EXCEPTION(("VBE index table with non-zero edit unit byte count or "
+                       "CBE index table with index entries is invalid"));
+    }
 
     if (mNumIndexEntries > 1 && mNumIndexEntries > getIndexDuration()) {
         // Avid adds an extra entry which provides the end offset or size for the last frame
