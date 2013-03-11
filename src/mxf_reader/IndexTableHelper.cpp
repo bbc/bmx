@@ -426,7 +426,7 @@ int64_t IndexTableHelper::ReadIndexTableSegment(uint64_t len)
     {
         new_segment->ProcessIndexTableSegment(mEditRate);
     }
-    catch (const BMXException &ex)
+    catch (const BMXException&)
     {
         log_warn("Ignoring index table segment that is invalid or could not be processed\n");
         return -1;
