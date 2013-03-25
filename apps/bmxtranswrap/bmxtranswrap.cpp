@@ -2177,8 +2177,8 @@ int main(int argc, const char** argv)
                 rt_sleep(rt_factor, rt_start, frame_rate, total_read);
         }
         if (reader->ReadError()) {
-            log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
-                "A read error occurred: %s\n", reader->ReadErrorMessage().c_str());
+            bmx::log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
+                     "A read error occurred: %s\n", reader->ReadErrorMessage().c_str());
             if (gf_retry_count >= gf_retries)
                 log_warn("Reached maximum growing file retries, %u\n", gf_retries);
             if (reader->IsComplete())
@@ -2228,8 +2228,8 @@ int main(int argc, const char** argv)
 
 
         if (read_duration >= 0 && total_read != read_duration) {
-            log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
-                "Read less (%"PRId64") samples than expected (%"PRId64")\n", total_read, read_duration);
+            bmx::log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
+                     "Read less (%"PRId64") samples than expected (%"PRId64")\n", total_read, read_duration);
             if (reader->IsComplete())
                 cmd_result = 1;
         }

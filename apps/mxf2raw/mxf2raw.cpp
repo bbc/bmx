@@ -1382,8 +1382,8 @@ int main(int argc, const char** argv)
                     rt_sleep(rt_factor, rt_start, sample_rate, total_num_read);
             }
             if (reader->ReadError()) {
-                log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
-                    "A read error occurred: %s\n", reader->ReadErrorMessage().c_str());
+                bmx::log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
+                         "A read error occurred: %s\n", reader->ReadErrorMessage().c_str());
                 if (gf_retry_count >= gf_retries)
                     log_warn("Reached maximum growing file retries, %u\n", gf_retries);
                 if (reader->IsComplete())
