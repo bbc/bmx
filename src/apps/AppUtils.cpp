@@ -140,12 +140,18 @@ static bool parse_hex_string(const char *hex_str, unsigned char *octets, size_t 
 string bmx::get_app_version_info(const char *app_name)
 {
     char buffer[256];
-    sprintf(buffer, "%s, %s v%s, %s %s (scm %s)",
-            app_name,
-            get_bmx_library_name().c_str(),
-            get_bmx_version_string().c_str(),
-            __DATE__, __TIME__,
-            get_bmx_scm_version_string().c_str());
+
+    bmx_snprintf(buffer, sizeof(buffer), "%s, %s v%s, %s %s",
+                 app_name,
+                 get_bmx_library_name().c_str(),
+                 get_bmx_version_string().c_str(),
+                 __DATE__, __TIME__);
+
+    if (!get_bmx_scm_version_string().empty()) {
+        size_t len = strlen(buffer);
+        bmx_snprintf(&buffer[len], sizeof(buffer) - len, " (scm %s)", get_bmx_scm_version_string().c_str());
+    }
+
     return buffer;
 }
 
