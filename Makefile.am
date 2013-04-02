@@ -15,7 +15,7 @@ ACLOCAL_AMFLAGS = -I m4
 BUILT_SOURCES = bmx_scm_version.h
 
 bmx_scm_version.h:
-	sh $(top_srcdir)/gen_scm_version.sh
+	sh $(top_srcdir)/gen_scm_version.sh bmx_scm_version.h $(top_srcdir)/bmx_scm_version.h BMX_SCM_VERSION
 
 .PHONY: bmx_scm_version.h
 
