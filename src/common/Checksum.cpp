@@ -74,6 +74,7 @@ string Checksum::CalcFileChecksum(FILE *file, ChecksumType type)
         num_read = fread(buffer, 1, buffer_size, file);
         if (num_read != buffer_size && ferror(file)) {
             log_warn("Read failure when calculating checksum: %s\n", bmx_strerror(errno).c_str());
+            delete [] buffer;
             return "";
         }
 
