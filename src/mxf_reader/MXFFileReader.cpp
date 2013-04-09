@@ -913,6 +913,28 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         SourcePackage *file_source_package = dynamic_cast<SourcePackage*>(resolved_package->package);
         BMX_CHECK(file_source_package);
 
+        // check the material package track and file source package track data definitions match
+        uint32_t fsp_track_id = 0;
+        if (resolved_package->generic_track->haveTrackID())
+            fsp_track_id = resolved_package->generic_track->getTrackID();
+        Track *fsp_track = dynamic_cast<Track*>(resolved_package->generic_track);
+        bool fsp_is_picture = false;
+        bool fsp_is_sound = false;
+        if (fsp_track) {
+            StructuralComponent *fsp_sequence = fsp_track->getSequence();
+            mxfUL fsp_data_def = fsp_sequence->getDataDefinition();
+            fsp_is_picture = mxf_is_picture(&fsp_data_def);
+            fsp_is_sound = mxf_is_sound(&fsp_data_def);
+        }
+        if (!fsp_track ||
+            (is_sound   && !fsp_is_sound) ||
+            (is_picture && !fsp_is_picture))
+        {
+            log_error("Material package track %u data def does not match referenced "
+                      "file source package track %u data def\n", mp_track_id, fsp_track_id);
+            THROW_RESULT(MXF_RESULT_INVALID_FILE);
+        }
+
         MXFTrackReader *track_reader = 0;
         if (resolved_package->external_essence) {
             track_reader = GetExternalTrackReader(mp_source_clip, file_source_package);
