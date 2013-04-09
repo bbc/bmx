@@ -253,24 +253,30 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
         }
 
 
-        // TODO: require a table that maps essence container labels to wrapping type
-
-        // guess the wrapping type based on the OP
         mOPLabel = *header_partition.getOperationalPattern();
-        mIsClipWrapped = mxf_is_op_atom(&mOPLabel);
 
-        // change frame wrapped guess if file is op1a containing clip wrapped pcm audio
-        if (!mIsClipWrapped) {
-            vector<mxfUL> essence_labels = header_partition.getEssenceContainers();
-            size_t i;
-            for (i = 0; i < essence_labels.size(); i++) {
-                if (mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(BWFClipWrapped)) ||
-                    mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(AES3ClipWrapped)))
-                {
-                    mIsClipWrapped = true;
-                    break;
-                }
+        // check specific audio cases that would be guessed incorrectly:
+        // AS-02 clip wrapped OP-1A and Digital Cinema frame wrapped OP-Atom
+        // TODO: require a table that maps essence container labels to wrapping type
+        vector<mxfUL> essence_labels = header_partition.getEssenceContainers();
+        size_t i;
+        for (i = 0; i < essence_labels.size(); i++) {
+            if (mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(BWFFrameWrapped)) ||
+                mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(AES3FrameWrapped)))
+            {
+                mIsClipWrapped = false;
+                break;
             }
+            else if (mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(BWFClipWrapped)) ||
+                     mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(AES3ClipWrapped)))
+            {
+                mIsClipWrapped = true;
+                break;
+            }
+        }
+        if (i >= essence_labels.size()) {
+            // guess the wrapping type based on the OP
+            mIsClipWrapped = mxf_is_op_atom(&mOPLabel);
         }
 
 
@@ -289,7 +295,6 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
         }
         const vector<Partition*> &partitions = mFile->getPartitions();
         Partition *metadata_partition = 0;
-        size_t i;
         for (i = partitions.size(); i > 0 ; i--) {
             if (partitions[i - 1]->getHeaderByteCount() > 0) {
                 metadata_partition = partitions[i - 1];
