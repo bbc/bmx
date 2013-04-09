@@ -119,6 +119,8 @@ public:
     mxfpp::HeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }
     uint16_t GetMXFVersion() const                   { return mMXFVersion; }
     mxfUL GetOPLabel() const                         { return mOPLabel; }
+    bool IsClipWrapped()                             { return mIsClipWrapped; }
+    bool IsFrameWrapped()                            { return !mIsClipWrapped; }
 
     std::string GetFilename() const { return mFilename; }
     const URI& GetAbsoluteURI() const { return mAbsoluteURI; }
@@ -165,9 +167,6 @@ private:
     void ProcessDescriptor(mxfpp::FileDescriptor *file_descriptor, MXFTrackInfo *track_info);
     void ProcessPictureDescriptor(mxfpp::FileDescriptor *file_descriptor, MXFPictureTrackInfo *picture_track_info);
     void ProcessSoundDescriptor(mxfpp::FileDescriptor *file_descriptor, MXFSoundTrackInfo *sound_track_info);
-
-    bool IsClipWrapped()  { return  mIsClipWrapped; }
-    bool IsFrameWrapped() { return !mIsClipWrapped; }
 
     size_t GetNumInternalTrackReaders() const { return mInternalTrackReaders.size(); }
     MXFTrackReader* GetInternalTrackReader(size_t index) const;

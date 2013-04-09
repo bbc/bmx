@@ -1052,8 +1052,12 @@ int main(int argc, const char** argv)
 
                 printf("MXF File Information:\n");
                 printf("  Filename                   : %s\n", get_input_filename(filenames[0]));
+                printf("  MXF version                : %d.%d\n",
+                       file_reader->GetMXFVersion() >> 8, file_reader->GetMXFVersion() & 0xff);
                 printf("  OP label                   : %s\n",
                        get_op_label_string(file_reader->GetOPLabel(), buf, sizeof(buf)));
+                printf("  Wrapping type              : %s\n",
+                       (file_reader->IsFrameWrapped() ? "Frame" : "Clip"));
                 printf("  Material package name      : %s\n", reader->GetMaterialPackageName().c_str());
                 if (reader->HaveMaterialTimecode()) {
                         printf("  Material start timecode    : %s\n",
