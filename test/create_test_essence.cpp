@@ -54,7 +54,7 @@
 typedef enum
 {
     TYPE_UNKNOWN = 0,
-    TYPE_PCM,
+    TYPE_16BIT_PCM,
     TYPE_IEC_DV25,
     TYPE_DVBASED_DV25,
     TYPE_DV50,
@@ -95,6 +95,7 @@ typedef enum
     TYPE_VC3_720P_1252,
     TYPE_VC3_1080P_1253,
     TYPE_AVID_ALPHA_HD_1080I,
+    TYPE_24BIT_PCM,
     TYPE_END,
 } EssenceType;
 
@@ -201,10 +202,10 @@ static void write_data(FILE *file, int64_t size)
         write_buffer(file, DATA, (size_t)partial_data_size);
 }
 
-static void write_pcm(FILE *file, unsigned int duration)
+static void write_pcm(FILE *file, uint16_t block_align, unsigned int duration)
 {
-    // 1920 samples per 25Hz frame, 2 bytes per sample
-    write_data(file, duration * 1920 * 2);
+    // 1920 samples per 25Hz frame, block_align bytes per sample
+    write_data(file, duration * 1920 * block_align);
 }
 
 static void write_dv25(FILE *file, unsigned int duration)
@@ -518,6 +519,7 @@ static void print_usage(const char *cmd)
     fprintf(stderr, " 39: VC3/DNxHD 1252 1280x720p 220/185/110/90 Mbps\n");
     fprintf(stderr, " 40: VC3/DNxHD 1253 1920x1080p 45/36 Mbps\n");
     fprintf(stderr, " 41: AVID Alpha HD 1080I\n");
+    fprintf(stderr, " 42: 24-bit PCM\n");
 }
 
 int main(int argc, const char **argv)
@@ -602,8 +604,8 @@ int main(int argc, const char **argv)
 
     switch (type)
     {
-        case TYPE_PCM:
-            write_pcm(file, duration);
+        case TYPE_16BIT_PCM:
+            write_pcm(file, 2, duration);
             break;
         case TYPE_IEC_DV25:
         case TYPE_DVBASED_DV25:
@@ -670,6 +672,9 @@ int main(int argc, const char **argv)
             break;
         case TYPE_AVID_ALPHA_HD_1080I:
             write_avid_alpha(file, type, duration);
+            break;
+        case TYPE_24BIT_PCM:
+            write_pcm(file, 3, duration);
             break;
         case TYPE_UNKNOWN:
         case TYPE_END:

@@ -1,7 +1,7 @@
 SeriesTitle: Holby City Series 5
 ProgrammeTitle: Holby City Series 5, Episode 10: Depths of Devotion
 EpisodeTitleNumber: Depths of Devotion
-ShimName: UK DPP HD Rev.1.0
+ShimName: UK DPP HD
 AudioTrackLayout: 3
 PrimaryAudioLanguage: eng
 ClosedCaptionsPresent: false
