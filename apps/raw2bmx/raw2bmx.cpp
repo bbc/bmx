@@ -278,7 +278,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          <ver> has format '<major>.<minor>.<patch>.<build>.<release>' and is the Product Version property. Set to '0.0.0.0.0' to omit it\n");
     fprintf(stderr, "                          <verstr> is a string and is the Version String property\n");
     fprintf(stderr, "                          <uid> is a UUID (see Notes at the end) and is the Product UID property\n");
-    fprintf(stderr, "  -f <rate>               Frame rate: 23976 (24000/1001), 24, 25, 2997 (30000/1001), 50 or 5994 (60000/1001). Default parsed or 25\n");
+    fprintf(stderr, "  -f <rate>               Frame rate: 23976 (24000/1001), 24, 25, 2997 (30000/1001), 30, 50, 5994 (60000/1001) or 60. Default parsed or 25\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Start timecode. Is drop frame when c is not ':'. Default 00:00:00:00\n");
     fprintf(stderr, "  --clip <name>           Set the clip name\n");
     fprintf(stderr, "  --dur <frame>           Set the duration in frames in frame rate units. Default is minimum input duration\n");

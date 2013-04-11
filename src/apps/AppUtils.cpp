@@ -261,10 +261,14 @@ bool bmx::parse_frame_rate(const char *rate_str, Rational *frame_rate)
         *frame_rate = FRAME_RATE_25;
     else if (value == 2997)
         *frame_rate = FRAME_RATE_2997;
+    else if (value == 30)
+        *frame_rate = FRAME_RATE_30;
     else if (value == 50)
         *frame_rate = FRAME_RATE_50;
     else if (value == 5994)
         *frame_rate = FRAME_RATE_5994;
+    else if (value == 60)
+        *frame_rate = FRAME_RATE_60;
     else
         return false;
 

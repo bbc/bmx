@@ -83,8 +83,10 @@ AvidClip::AvidClip(mxfRational frame_rate, MXFFileFactory *file_factory, bool ta
               frame_rate == FRAME_RATE_24 ||
               frame_rate == FRAME_RATE_25 ||
               frame_rate == FRAME_RATE_2997 ||
+              frame_rate == FRAME_RATE_30 ||
               frame_rate == FRAME_RATE_50 ||
-              frame_rate == FRAME_RATE_5994);
+              frame_rate == FRAME_RATE_5994 ||
+              frame_rate == FRAME_RATE_60);
 
     mFileFactory = file_factory;
     mOwnFileFactory = take_factory_ownership;

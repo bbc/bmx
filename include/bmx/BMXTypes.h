@@ -78,8 +78,10 @@ static const Rational FRAME_RATE_23976  = {24000, 1001};
 static const Rational FRAME_RATE_24     = {24, 1};
 static const Rational FRAME_RATE_25     = {25, 1};
 static const Rational FRAME_RATE_2997   = {30000, 1001};
+static const Rational FRAME_RATE_30     = {30, 1};
 static const Rational FRAME_RATE_50     = {50, 1};
 static const Rational FRAME_RATE_5994   = {60000, 1001};
+static const Rational FRAME_RATE_60     = {60, 1};
 
 static const Rational SAMPLING_RATE_48K = {48000, 1};
 

@@ -80,8 +80,10 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
               frame_rate == FRAME_RATE_24 ||
               frame_rate == FRAME_RATE_25 ||
               frame_rate == FRAME_RATE_2997 ||
+              frame_rate == FRAME_RATE_30 ||
               frame_rate == FRAME_RATE_50 ||
-              frame_rate == FRAME_RATE_5994);
+              frame_rate == FRAME_RATE_5994 ||
+              frame_rate == FRAME_RATE_60);
 
     mFlavour = flavour;
     mMXFFile = mxf_file;

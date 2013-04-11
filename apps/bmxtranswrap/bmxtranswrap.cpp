@@ -158,7 +158,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --input-file-md5        Calculate an MD5 checksum of the input file\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Override input start timecode. Is drop frame when c is not ':'. Default 00:00:00:00\n");
     fprintf(stderr, "  --tc-rate <rate>        Start timecode rate to use when input is audio only\n");
-    fprintf(stderr, "                          Values are 23976 (24000/1001), 24, 25 (default), 2997 (30000/1001), 50 or 5994 (60000/1001)\n");
+    fprintf(stderr, "                          Values are 23976 (24000/1001), 24, 25 (default), 2997 (30000/1001), 30, 50, 5994 (60000/1001) or 60\n");
     fprintf(stderr, "  --clip <name>           Set the clip name\n");
     fprintf(stderr, "  --start <frame>         Set the start frame in input edit rate units. Default is 0\n");
     fprintf(stderr, "  --dur <frame>           Set the duration in frames in input edit rate units. Default is minimum input duration\n");
