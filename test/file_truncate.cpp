@@ -39,7 +39,21 @@
 #include <cstring>
 #include <cerrno>
 #include <inttypes.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#if defined(_WIN32)
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
+
+#if defined(_WIN32)
+#define open        _open
+#define close       _close
+#define ftruncate   _chsize_s
+#define O_WRONLY    _O_WRONLY
+#endif
 
 
 static void print_usage(const char *cmd)
@@ -51,6 +65,8 @@ int main(int argc, const char **argv)
 {
     const char *filename;
     int64_t length;
+    int fd;
+    int res;
 
     if (argc != 3) {
         print_usage(argv[0]);
@@ -65,12 +81,18 @@ int main(int argc, const char **argv)
 
     filename = argv[2];
 
-
-    if (truncate(filename, length) != 0) {
-        fprintf(stderr, "%s: truncate failed: %s\n", filename, strerror(errno));
+    fd = open(filename, O_WRONLY);
+    if (fd == -1) {
+        fprintf(stderr, "%s: failed to open file: %s\n", filename, strerror(errno));
         return 1;
     }
 
-    return 0;
+    res = ftruncate(fd, length);
+    if (res != 0)
+        fprintf(stderr, "%s: failed to truncate file: %s\n", filename, strerror(errno));
+
+    close(fd);
+
+    return res == 0 ? 0 : 1;
 }
 
