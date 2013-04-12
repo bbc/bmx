@@ -39,6 +39,11 @@
 #include <cstring>
 #include <cerrno>
 
+#if defined(_WIN32)
+#include <io.h>
+#include <fcntl.h>
+#endif
+
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_reader/MXFGroupReader.h>
 #include <bmx/mxf_reader/MXFSequenceReader.h>
@@ -880,10 +885,19 @@ int main(int argc, const char** argv)
             size_t i;
             for (i = 0; i < filenames.size(); i++) {
                 string checksum_str;
-                if (filenames[i][0] == 0)
+                if (filenames[i][0] == 0) {
+#if defined(_WIN32)
+                    int res = _setmode(_fileno(stdin), _O_BINARY);
+                    if (res == -1) {
+                        log_error("Failed to set 'stdin' to binary mode: %s\n", bmx_strerror(errno).c_str());
+                        cmd_result = 1;
+                        break;
+                    }
+#endif
                     checksum_str = Checksum::CalcFileChecksum(stdin, file_checksum_type);
-                else
+                } else {
                     checksum_str = Checksum::CalcFileChecksum(filenames[i], file_checksum_type);
+                }
                 if (checksum_str.empty()) {
                     log_error("Failed to calculate %s checksum for file '%s'\n",
                               get_checksum_type_str(file_checksum_type),

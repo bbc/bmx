@@ -60,9 +60,6 @@ references, create a new reader when the same file is used in multiple resolves
 
 19. improve support for audio files with non-default audio sequences start
 
-20. need to investigate whether _setmode(handle, _O_BINARY) is required on
-Windows when passing data through stdout/stdin because they default to text mode
-
 21. add regression tests using real world test files
 
 23. improve timecode handling in avidmxfinfo, e.g. drop-frame

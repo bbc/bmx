@@ -56,6 +56,11 @@
 #include <cerrno>
 #include <inttypes.h>
 
+#if defined(_WIN32)
+#include <io.h>
+#include <fcntl.h>
+#endif
+
 
 typedef struct
 {
@@ -348,6 +353,16 @@ int main(int argc, const char **argv)
             return 1;
         }
     }
+
+#if defined(_WIN32)
+    if (file == stdin) {
+        int res = _setmode(_fileno(stdin), _O_BINARY);
+        if (res == -1) {
+            fprintf(stderr, "Failed to set 'stdin' to binary mode: %s\n", strerror(errno));
+            return 1;
+        }
+    }
+#endif
 
     md5_init(&context);
     do {
