@@ -115,7 +115,7 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
         if (mIndexTableHelper.ExtractIndexTable()) {
             BMX_CHECK(mIndexTableHelper.GetEditRate() == mFileReader->GetEditRate());
         } else if (mEssenceChunkHelper.GetEssenceDataSize() > 0) {
-            log_warn("Missing index table segments for essence data with size %"PRId64,
+            log_warn("Missing index table segments for essence data with size %"PRId64"\n",
                      mEssenceChunkHelper.GetEssenceDataSize());
         }
 

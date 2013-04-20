@@ -863,7 +863,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
                         if (choices->next())
                             log_warn("Using the first SourceClip in EssenceGroup containing multiple choices\n");
                     } else {
-                        log_error("StructuralComponent in Sequence is not a SourceClip, Filler or EssenceGroup");
+                        log_error("StructuralComponent in Sequence is not a SourceClip, Filler or EssenceGroup\n");
                         THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
                     }
                 }
@@ -1136,7 +1136,7 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
 
     int64_t origin = fsp_track->getOrigin();
     if (origin < 0) {
-        log_error("Negative track origin %"PRId64" in top-level file Source Package not supported", origin);
+        log_error("Negative track origin %"PRId64" in top-level file Source Package not supported\n", origin);
         THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
     }
 
