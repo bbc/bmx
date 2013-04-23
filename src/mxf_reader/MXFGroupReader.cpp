@@ -73,8 +73,8 @@ static bool compare_group_track_reader(const GroupTrackReader &left_reader, cons
         return left_reader.index < right_reader.index;
 
     // data kind
-    if (left_info->is_picture != right_info->is_picture)
-        return left_info->is_picture;
+    if (left_info->data_def != right_info->data_def)
+        return left_info->data_def < right_info->data_def;
 
     // track number
     if (left_info->material_track_number != 0) {

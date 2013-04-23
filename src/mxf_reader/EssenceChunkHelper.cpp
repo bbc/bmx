@@ -75,7 +75,7 @@ EssenceChunkHelper::EssenceChunkHelper(MXFFileReader *file_reader)
     mIsComplete = false;
 
     if (mFileReader->IsClipWrapped() &&
-        mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->is_picture)
+        mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->data_def == MXF_PICTURE_DDEF)
     {
         auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
             mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),

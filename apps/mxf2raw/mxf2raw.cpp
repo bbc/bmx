@@ -44,6 +44,8 @@
 #include <fcntl.h>
 #endif
 
+#include <map>
+
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_reader/MXFGroupReader.h>
 #include <bmx/mxf_reader/MXFSequenceReader.h>
@@ -325,6 +327,20 @@ static const char* get_d10_sound_flags(uint8_t flags, char *buf, size_t buf_size
     return buf;
 }
 
+static const char* get_essence_kind_string(MXFDataDefEnum data_def)
+{
+    switch (data_def)
+    {
+        case MXF_PICTURE_DDEF:  return "Picture";
+        case MXF_SOUND_DDEF:    return "Sound";
+        case MXF_TIMECODE_DDEF: return "Timecode";
+        case MXF_DATA_DDEF:     return "Data";
+        case MXF_DM_DDEF:       return "Descriptive Metadata";
+        case MXF_UNKNOWN_DDEF:
+        default:                return "Unknown";
+    }
+}
+
 static void print_track_info(const MXFTrackInfo *track_info)
 {
     char buf[128];
@@ -332,7 +348,7 @@ static void print_track_info(const MXFTrackInfo *track_info)
     const MXFPictureTrackInfo *picture_info = dynamic_cast<const MXFPictureTrackInfo*>(track_info);
     const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
 
-    printf("  Essence kind         : %s\n", (picture_info ? "Picture" : (sound_info ? "Sound" : "Unknown")));
+    printf("  Essence kind         : %s\n", get_essence_kind_string(track_info->data_def));
     printf("  Essence type         : %s\n", essence_type_to_string(track_info->essence_type));
     printf("  Essence label        : %s\n", get_label_string(track_info->essence_container_label, buf, sizeof(buf)));
     printf("  Material package uid : %s\n", get_umid_string(track_info->material_package_uid, buf, sizeof(buf)));
@@ -436,13 +452,24 @@ static string timecode_to_string(Timecode timecode)
     return buffer;
 }
 
-static string create_raw_filename(string prefix, bool is_video, uint32_t index, int32_t child_index)
+static string create_raw_filename(string prefix, MXFDataDefEnum data_def, uint32_t index, int32_t child_index)
 {
+    const char *ddef_letter = "x";
+    switch (data_def)
+    {
+        case MXF_PICTURE_DDEF:  ddef_letter = "v"; break;
+        case MXF_SOUND_DDEF:    ddef_letter = "a"; break;
+        case MXF_DATA_DDEF:     ddef_letter = "d"; break;
+        case MXF_TIMECODE_DDEF: ddef_letter = "t"; break;
+        case MXF_DM_DDEF:       ddef_letter = "m"; break;
+        case MXF_UNKNOWN_DDEF:  ddef_letter = "x"; break;
+    }
+
     char buffer[64];
     if (child_index >= 0)
-        sprintf(buffer, "_%s%u_%d.raw", is_video ? "v" : "a", index, child_index);
+        sprintf(buffer, "_%s%u_%d.raw", ddef_letter, index, child_index);
     else
-        sprintf(buffer, "_%s%u.raw", is_video ? "v" : "a", index);
+        sprintf(buffer, "_%s%u.raw", ddef_letter, index);
 
     return prefix + buffer;
 }
@@ -1170,39 +1197,16 @@ int main(int argc, const char** argv)
             vector<FILE*> raw_files;
             vector<string> raw_filenames;
             if (prefix) {
-                int video_count = 0, audio_count = 0;
+                map<MXFDataDefEnum, uint32_t> ddef_count;
                 size_t i;
                 for (i = 0; i < reader->GetNumTrackReaders(); i++) {
                     const MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
-                    if (track_info->is_picture) {
-                        string raw_filename = create_raw_filename(prefix, true, video_count, -1);
-                        FILE *raw_file = fopen(raw_filename.c_str(), "wb");
-                        if (!raw_file) {
-                            log_error("Failed to open raw file '%s': %s\n",
-                                      raw_filename.c_str(), bmx_strerror(errno).c_str());
-                            throw false;
-                        }
-                        raw_files.push_back(raw_file);
-                        raw_filenames.push_back(raw_filename);
-                        video_count++;
-                        have_video = true;
-                    } else if (track_info->is_sound) {
-                        const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
-                        if (deinterleave && sound_info->channel_count > 1) {
-                            uint32_t c;
-                            for (c = 0; c < sound_info->channel_count; c++) {
-                                string raw_filename = create_raw_filename(prefix, false, audio_count, c);
-                                FILE *raw_file = fopen(raw_filename.c_str(), "wb");
-                                if (!raw_file) {
-                                    log_error("Failed to open raw file '%s': %s\n",
-                                              raw_filename.c_str(), bmx_strerror(errno).c_str());
-                                    throw false;
-                                }
-                                raw_files.push_back(raw_file);
-                                raw_filenames.push_back(raw_filename);
-                            }
-                        } else {
-                            string raw_filename = create_raw_filename(prefix, false, audio_count, -1);
+                    const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
+                    if (sound_info && deinterleave && sound_info->channel_count > 1) {
+                        uint32_t c;
+                        for (c = 0; c < sound_info->channel_count; c++) {
+                            string raw_filename = create_raw_filename(prefix, track_info->data_def,
+                                                                      ddef_count[track_info->data_def], c);
                             FILE *raw_file = fopen(raw_filename.c_str(), "wb");
                             if (!raw_file) {
                                 log_error("Failed to open raw file '%s': %s\n",
@@ -1212,8 +1216,22 @@ int main(int argc, const char** argv)
                             raw_files.push_back(raw_file);
                             raw_filenames.push_back(raw_filename);
                         }
-                        audio_count++;
+                    } else {
+                        string raw_filename = create_raw_filename(prefix, track_info->data_def,
+                                                                  ddef_count[track_info->data_def], -1);
+                        FILE *raw_file = fopen(raw_filename.c_str(), "wb");
+                        if (!raw_file) {
+                            log_error("Failed to open raw file '%s': %s\n",
+                                      raw_filename.c_str(), bmx_strerror(errno).c_str());
+                            throw false;
+                        }
+                        raw_files.push_back(raw_file);
+                        raw_filenames.push_back(raw_filename);
                     }
+
+                    if (track_info->data_def == MXF_PICTURE_DDEF)
+                        have_video = true;
+                    ddef_count[track_info->data_def]++;
                 }
             }
 

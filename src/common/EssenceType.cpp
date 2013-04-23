@@ -52,6 +52,7 @@ static const EssenceTypeStringMap ESSENCE_TYPE_STRING_MAP[] =
     {UNKNOWN_ESSENCE_TYPE,     "unknown essence type"},
     {PICTURE_ESSENCE,          "picture essence"},
     {SOUND_ESSENCE,            "sound essence"},
+    {DATA_ESSENCE,             "data essence"},
     {D10_30,                   "D10 30Mbps"},
     {D10_40,                   "D10 40Mbps"},
     {D10_50,                   "D10 50Mbps"},
@@ -107,6 +108,8 @@ static const EssenceTypeStringMap ESSENCE_TYPE_STRING_MAP[] =
     {MJPEG_15_1S,              "MJPEG 15:1s"},
     {WAVE_PCM,                 "WAVE PCM"},
     {D10_AES3_PCM,             "D10 AES3 PCM"},
+    {ANC_DATA,                 "ANC data"},
+    {VBI_DATA,                 "VBI data"},
 };
 
 

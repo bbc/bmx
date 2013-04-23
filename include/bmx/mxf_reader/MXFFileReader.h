@@ -153,7 +153,7 @@ private:
 
     MXFTrackReader* CreateInternalTrackReader(mxfpp::Partition *partition, mxfpp::MaterialPackage *material_package,
                                               mxfpp::Track *mp_track, mxfpp::SourceClip *mp_source_clip,
-                                              bool is_picture, const ResolvedPackage *resolved_package);
+                                              MXFDataDefEnum data_def, const ResolvedPackage *resolved_package);
     MXFTrackReader* GetExternalTrackReader(mxfpp::SourceClip *mp_source_clip,
                                            mxfpp::SourcePackage *file_source_package);
 
@@ -167,6 +167,7 @@ private:
     void ProcessDescriptor(mxfpp::FileDescriptor *file_descriptor, MXFTrackInfo *track_info);
     void ProcessPictureDescriptor(mxfpp::FileDescriptor *file_descriptor, MXFPictureTrackInfo *picture_track_info);
     void ProcessSoundDescriptor(mxfpp::FileDescriptor *file_descriptor, MXFSoundTrackInfo *sound_track_info);
+    void ProcessDataDescriptor(mxfpp::FileDescriptor *file_descriptor, MXFDataTrackInfo *data_track_info);
 
     size_t GetNumInternalTrackReaders() const { return mInternalTrackReaders.size(); }
     MXFTrackReader* GetInternalTrackReader(size_t index) const;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2013, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,8 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_ESSENCE_TYPE_H_
-#define BMX_ESSENCE_TYPE_H_
+#ifndef BMX_DATA_MXF_DESCRIPTOR_HELPER_H_
+#define BMX_DATA_MXF_DESCRIPTOR_HELPER_H_
+
+
+#include <bmx/mxf_helper/MXFDescriptorHelper.h>
 
 
 
@@ -38,86 +41,41 @@ namespace bmx
 {
 
 
-typedef enum
+class DataMXFDescriptorHelper : public MXFDescriptorHelper
 {
-    UNKNOWN_ESSENCE_TYPE,
-    // generic
-    PICTURE_ESSENCE,
-    SOUND_ESSENCE,
-    DATA_ESSENCE,
-    // D-10 video
-    D10_30,
-    D10_40,
-    D10_50,
-    // DV
-    IEC_DV25,
-    DVBASED_DV25,
-    DV50,
-    DV100_1080I,
-    DV100_720P,
-    // AVC-Intra
-    AVCI100_1080I,
-    AVCI100_1080P,
-    AVCI100_720P,
-    AVCI50_1080I,
-    AVCI50_1080P,
-    AVCI50_720P,
-    // Uncompressed video
-    UNC_SD,
-    UNC_HD_1080I,
-    UNC_HD_1080P,
-    UNC_HD_720P,
-    AVID_10BIT_UNC_SD,
-    AVID_10BIT_UNC_HD_1080I,
-    AVID_10BIT_UNC_HD_1080P,
-    AVID_10BIT_UNC_HD_720P,
-    AVID_ALPHA_SD,
-    AVID_ALPHA_HD_1080I,
-    AVID_ALPHA_HD_1080P,
-    AVID_ALPHA_HD_720P,
-    // MPEG-2 Long GOP HD
-    MPEG2LG_422P_HL_1080I,
-    MPEG2LG_422P_HL_1080P,
-    MPEG2LG_422P_HL_720P,
-    MPEG2LG_MP_HL_1920_1080I,
-    MPEG2LG_MP_HL_1920_1080P,
-    MPEG2LG_MP_HL_1440_1080I,
-    MPEG2LG_MP_HL_1440_1080P,
-    MPEG2LG_MP_HL_720P,
-    MPEG2LG_MP_H14_1080I,
-    MPEG2LG_MP_H14_1080P,
-    // VC-3
-    VC3_1080P_1235,
-    VC3_1080P_1237,
-    VC3_1080P_1238,
-    VC3_1080I_1241,
-    VC3_1080I_1242,
-    VC3_1080I_1243,
-    VC3_720P_1250,
-    VC3_720P_1251,
-    VC3_720P_1252,
-    VC3_1080P_1253,
-    // Avid MJPEG
-    MJPEG_2_1,
-    MJPEG_3_1,
-    MJPEG_10_1,
-    MJPEG_20_1,
-    MJPEG_4_1M,
-    MJPEG_10_1M,
-    MJPEG_15_1S,
-    // PCM
-    WAVE_PCM,
-    D10_AES3_PCM,
-    // ST 436 data
-    ANC_DATA,
-    VBI_DATA,
-} EssenceType;
+public:
+    static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
+    static DataMXFDescriptorHelper* Create(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version,
+                                           mxfUL alternative_ec_label);
 
+    static bool IsSupported(EssenceType essence_type);
+    static MXFDescriptorHelper* Create(EssenceType essence_type);
 
-const char* essence_type_to_string(EssenceType essence_type);
+public:
+    DataMXFDescriptorHelper();
+    virtual ~DataMXFDescriptorHelper();
+
+public:
+    virtual bool IsData() const { return true; }
+
+public:
+    // initialize from existing descriptor
+    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
+
+public:
+    // configure and create new descriptor
+    virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
+
+public:
+    virtual uint32_t GetSampleSize();
+
+protected:
+    virtual mxfUL ChooseEssenceContainerUL() const;
+};
 
 
 };
+
 
 
 #endif

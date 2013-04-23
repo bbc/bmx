@@ -36,6 +36,7 @@
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/SoundMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/DataMXFDescriptorHelper.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/BMXException.h>
@@ -54,8 +55,11 @@ EssenceType MXFDescriptorHelper::IsSupported(mxfpp::FileDescriptor *file_descrip
     EssenceType essence_type = PictureMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)
         return essence_type;
-    else
-        return SoundMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+    essence_type = SoundMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+    if (essence_type)
+        return essence_type;
+    essence_type = DataMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+    return essence_type;
 }
 
 MXFDescriptorHelper* MXFDescriptorHelper::Create(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version,
@@ -65,6 +69,8 @@ MXFDescriptorHelper* MXFDescriptorHelper::Create(mxfpp::FileDescriptor *file_des
         return PictureMXFDescriptorHelper::Create(file_descriptor, mxf_version, alternative_ec_label);
     else if (SoundMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
         return SoundMXFDescriptorHelper::Create(file_descriptor, mxf_version, alternative_ec_label);
+    else if (DataMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
+        return DataMXFDescriptorHelper::Create(file_descriptor, mxf_version, alternative_ec_label);
 
     BMX_ASSERT(false);
     return 0;
@@ -76,6 +82,8 @@ MXFDescriptorHelper* MXFDescriptorHelper::Create(EssenceType essence_type)
         return PictureMXFDescriptorHelper::Create(essence_type);
     else if (SoundMXFDescriptorHelper::IsSupported(essence_type))
         return SoundMXFDescriptorHelper::Create(essence_type);
+    else if (DataMXFDescriptorHelper::IsSupported(essence_type))
+        return DataMXFDescriptorHelper::Create(essence_type);
 
     BMX_ASSERT(false);
     return 0;

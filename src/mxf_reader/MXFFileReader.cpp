@@ -107,8 +107,8 @@ static bool compare_track_reader(const MXFTrackReader *left_reader, const MXFTra
     const MXFTrackInfo *right = right_reader->GetTrackInfo();
 
     // data kind
-    if (left->is_picture != right->is_picture)
-        return left->is_picture;
+    if (left->data_def != right->data_def)
+        return left->data_def < right->data_def;
 
     // track number
     if (left->material_track_number != 0) {
@@ -795,7 +795,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
     mPackageResolver->ExtractPackages(this);
 
 
-    // create track readers for each material package picture or sound track
+    // create track readers for each material package picture, sound or data track
 
     MaterialPackage *material_package = preface->findMaterialPackage();
     BMX_CHECK(material_package);
@@ -818,12 +818,11 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         if (!mp_track)
             continue;
 
-        // skip if not picture or sound
+        // skip if not picture, sound or data
         StructuralComponent *track_sequence = mp_track->getSequence();
-        mxfUL data_def = track_sequence->getDataDefinition();
-        bool is_picture = mxf_is_picture(&data_def);
-        bool is_sound = mxf_is_sound(&data_def);
-        if (!is_picture && !is_sound)
+        mxfUL data_def_ul = track_sequence->getDataDefinition();
+        MXFDataDefEnum data_def = mxf_get_ddef_enum(&data_def_ul);
+        if (data_def != MXF_PICTURE_DDEF && data_def != MXF_SOUND_DDEF && data_def != MXF_DATA_DDEF)
             continue;
 
         uint32_t mp_track_id = 0;
@@ -918,18 +917,13 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         if (resolved_package->generic_track->haveTrackID())
             fsp_track_id = resolved_package->generic_track->getTrackID();
         Track *fsp_track = dynamic_cast<Track*>(resolved_package->generic_track);
-        bool fsp_is_picture = false;
-        bool fsp_is_sound = false;
+        MXFDataDefEnum fsp_data_def = MXF_UNKNOWN_DDEF;
         if (fsp_track) {
             StructuralComponent *fsp_sequence = fsp_track->getSequence();
-            mxfUL fsp_data_def = fsp_sequence->getDataDefinition();
-            fsp_is_picture = mxf_is_picture(&fsp_data_def);
-            fsp_is_sound = mxf_is_sound(&fsp_data_def);
+            mxfUL fsp_data_def_ul = fsp_sequence->getDataDefinition();
+            fsp_data_def = mxf_get_ddef_enum(&fsp_data_def_ul);
         }
-        if (!fsp_track ||
-            (is_sound   && !fsp_is_sound) ||
-            (is_picture && !fsp_is_picture))
-        {
+        if (!fsp_track || fsp_data_def != data_def) {
             log_error("Material package track %u data def does not match referenced "
                       "file source package track %u data def\n", mp_track_id, fsp_track_id);
             THROW_RESULT(MXF_RESULT_INVALID_FILE);
@@ -955,7 +949,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
             track_info->lead_filler_offset    = lead_filler_offset;
         } else {
             track_reader = CreateInternalTrackReader(partition, material_package, mp_track, mp_source_clip,
-                                                     is_picture, resolved_package);
+                                                     data_def, resolved_package);
             track_reader->GetTrackInfo()->lead_filler_offset = lead_filler_offset;
         }
         mTrackReaders.push_back(track_reader);
@@ -1111,7 +1105,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
 
 MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, MaterialPackage *material_package,
                                                          Track *mp_track, SourceClip *mp_source_clip,
-                                                         bool is_picture, const ResolvedPackage *resolved_package)
+                                                         MXFDataDefEnum data_def, const ResolvedPackage *resolved_package)
 {
     SourcePackage *file_source_package = dynamic_cast<SourcePackage*>(resolved_package->package);
     BMX_CHECK(file_source_package);
@@ -1188,12 +1182,17 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
     auto_ptr<MXFTrackInfo> track_info;
     MXFPictureTrackInfo *picture_track_info = 0;
     MXFSoundTrackInfo *sound_track_info = 0;
-    if (is_picture) {
+    MXFDataTrackInfo *data_track_info = 0;
+    if (data_def == MXF_PICTURE_DDEF) {
         picture_track_info = new MXFPictureTrackInfo();
         track_info.reset(picture_track_info);
-    } else {
+    } else if (data_def == MXF_SOUND_DDEF) {
         sound_track_info = new MXFSoundTrackInfo();
         track_info.reset(sound_track_info);
+    } else {
+        BMX_ASSERT(data_def == MXF_DATA_DDEF);
+        data_track_info = new MXFDataTrackInfo();
+        track_info.reset(data_track_info);
     }
 
     track_info->material_package_uid  = material_package->getPackageUID();
@@ -1222,10 +1221,12 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
             track_info->essence_container_label = ec_labels[0];
     }
 
-    if (is_picture)
+    if (data_def == MXF_PICTURE_DDEF)
         ProcessPictureDescriptor(file_desc, picture_track_info);
-    else
+    else if (data_def == MXF_SOUND_DDEF)
         ProcessSoundDescriptor(file_desc, sound_track_info);
+    else
+        ProcessDataDescriptor(file_desc, data_track_info);
 
 
     MXFFileTrackReader *track_reader = new MXFFileTrackReader(this, mInternalTrackReaders.size(), track_info.get(),
@@ -1339,8 +1340,8 @@ bool MXFFileReader::GetStartTimecode(GenericPackage *package, Track *ref_track, 
             continue;
 
         StructuralComponent *track_sequence = track->getSequence();
-        mxfUL data_def = track_sequence->getDataDefinition();
-        if (!mxf_is_timecode(&data_def))
+        mxfUL data_def_ul = track_sequence->getDataDefinition();
+        if (!mxf_is_timecode(&data_def_ul))
             continue;
 
         Sequence *sequence = dynamic_cast<Sequence*>(track_sequence);
@@ -1577,6 +1578,11 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
             sound_track_info->block_align = (sound_track_info->bits_per_sample + 7) / 8;
         }
     }
+}
+
+void MXFFileReader::ProcessDataDescriptor(FileDescriptor *file_descriptor, MXFDataTrackInfo *data_track_info)
+{
+    ProcessDescriptor(file_descriptor, data_track_info);
 }
 
 MXFTrackReader* MXFFileReader::GetInternalTrackReader(size_t index) const

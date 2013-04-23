@@ -53,8 +53,7 @@ public:
     virtual MXFTrackInfo* Clone() const = 0;
 
 public:
-    bool is_picture;
-    bool is_sound;
+    MXFDataDefEnum data_def;
 
     EssenceType essence_type;
     mxfUL essence_container_label;
@@ -130,6 +129,18 @@ public:
     bool audio_ref_level_set;
     int8_t dial_norm;
     bool dial_norm_set;
+};
+
+
+class MXFDataTrackInfo : public MXFTrackInfo
+{
+public:
+    MXFDataTrackInfo();
+    virtual ~MXFDataTrackInfo() {}
+
+    virtual bool IsCompatible(const MXFTrackInfo *right) const;
+
+    virtual MXFTrackInfo* Clone() const;
 };
 
 

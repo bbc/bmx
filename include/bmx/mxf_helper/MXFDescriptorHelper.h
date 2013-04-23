@@ -67,6 +67,7 @@ public:
 
     virtual bool IsPicture() const { return false; }
     virtual bool IsSound() const { return false; }
+    virtual bool IsData() const { return false; }
 
 public:
     // initialize from existing descriptor

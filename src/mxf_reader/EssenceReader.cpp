@@ -84,7 +84,9 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
 
 
     // get ImageStartOffset and ImageEndOffset properties which are used in Avid uncompressed files
-    if (mFileReader->IsClipWrapped() && mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->is_picture) {
+    if (mFileReader->IsClipWrapped() &&
+        mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->data_def == MXF_PICTURE_DDEF)
+    {
         auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
             mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),
             mFileReader->GetMXFVersion(),

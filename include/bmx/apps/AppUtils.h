@@ -89,7 +89,7 @@ bool parse_avid_import_name(const char *import_name, URI *uri);
 bool parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type);
 bool parse_mic_type(const char *mic_type_str, MICType *mic_type);
 
-std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture);
+std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def);
 
 bool have_avci_header_data(EssenceType essence_type, Rational sample_rate,
                            std::vector<AVCIHeaderInput> &avci_header_inputs);

@@ -42,6 +42,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_reader/MXFGroupReader.h>
@@ -79,7 +80,7 @@ typedef struct
     ClipWriterTrack *track;
     EssenceType essence_type;
     EssenceType input_essence_type;
-    bool is_picture;
+    MXFDataDefEnum data_def;
     uint32_t channel_count;
     uint32_t channel_index;
     uint32_t bits_per_sample;
@@ -1641,6 +1642,9 @@ int main(int argc, const char** argv)
                         continue;
 
                     const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
+                    if (input_track_info->data_def != MXF_PICTURE_DDEF && input_track_info->data_def != MXF_SOUND_DDEF)
+                        continue;
+
                     const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
 
                     if (input_sound_info)
@@ -1670,9 +1674,9 @@ int main(int argc, const char** argv)
                     if (reader->GetMaterialPackageUID() != g_Null_UMID)
                         physical_package->setPackageUID(reader->GetMaterialPackageUID());
                 }
-                physical_package_picture_refs = avid_clip->GetPictureSourceReferences(physical_package);
+                physical_package_picture_refs = avid_clip->GetSourceReferences(physical_package, MXF_PICTURE_DDEF);
                 BMX_ASSERT(physical_package_picture_refs.size() == num_picture_tracks);
-                physical_package_sound_refs = avid_clip->GetSoundSourceReferences(physical_package);
+                physical_package_sound_refs = avid_clip->GetSourceReferences(physical_package, MXF_PICTURE_DDEF);
                 BMX_ASSERT(physical_package_sound_refs.size() == num_sound_tracks);
             }
 
@@ -1704,8 +1708,7 @@ int main(int argc, const char** argv)
         vector<OutputTrack> output_tracks;
 
         unsigned char avci_header_data[AVCI_HEADER_SIZE];
-        uint32_t picture_track_count = 0;
-        uint32_t sound_track_count = 0;
+        map<MXFDataDefEnum, uint32_t> track_count;
         for (i = 0; i < reader->GetNumTrackReaders(); i++) {
             MXFTrackReader *input_track_reader = reader->GetTrackReader(i);
             if (!input_track_reader->IsEnabled())
@@ -1731,7 +1734,7 @@ int main(int argc, const char** argv)
             for (c = 0; c < output_track_count; c++) {
                 OutputTrack output_track;
                 output_track.input_buffer        = input_track_reader->GetFrameBuffer();
-                output_track.is_picture          = input_track_info->is_picture;
+                output_track.data_def            = input_track_info->data_def;
                 output_track.channel_count       = output_track_count;
                 output_track.channel_index       = c;
                 output_track.input_essence_type  = input_track_info->essence_type;
@@ -1748,11 +1751,9 @@ int main(int argc, const char** argv)
                 }
 
                 if (clip_type == CW_AVID_CLIP_TYPE) {
-                    string track_name = create_mxf_track_filename(
-                                            output_name,
-                                            input_track_info->is_picture ? picture_track_count + 1 :
-                                                                           sound_track_count + 1,
-                                            input_track_info->is_picture);
+                    string track_name = create_mxf_track_filename(output_name,
+                                                                  track_count[input_track_info->data_def] + 1,
+                                                                  input_track_info->data_def);
                     output_track.track = clip->CreateTrack(output_track.essence_type, track_name.c_str());
                 } else {
                     output_track.track = clip->CreateTrack(output_track.essence_type);
@@ -1777,12 +1778,12 @@ int main(int argc, const char** argv)
                     AvidTrack *avid_track = output_track.track->GetAvidTrack();
 
                     if (physical_package) {
-                        if (input_track_info->is_picture) {
-                            avid_track->SetSourceRef(physical_package_picture_refs[picture_track_count].first,
-                                                     physical_package_picture_refs[picture_track_count].second);
-                        } else {
-                            avid_track->SetSourceRef(physical_package_sound_refs[sound_track_count].first,
-                                                     physical_package_sound_refs[sound_track_count].second);
+                        if (input_track_info->data_def == MXF_PICTURE_DDEF) {
+                            avid_track->SetSourceRef(physical_package_picture_refs[track_count[input_track_info->data_def]].first,
+                                                     physical_package_picture_refs[track_count[input_track_info->data_def]].second);
+                        } else if (input_track_info->data_def == MXF_SOUND_DDEF) {
+                            avid_track->SetSourceRef(physical_package_sound_refs[track_count[input_track_info->data_def]].first,
+                                                     physical_package_sound_refs[track_count[input_track_info->data_def]].second);
                         }
                     }
                 }
@@ -1976,19 +1977,18 @@ int main(int argc, const char** argv)
                             output_track.track->SetSequenceOffset(input_sound_info->sequence_offset);
                         break;
                     case D10_AES3_PCM:
+                    case ANC_DATA:
+                    case VBI_DATA:
                     case PICTURE_ESSENCE:
                     case SOUND_ESSENCE:
+                    case DATA_ESSENCE:
                     case UNKNOWN_ESSENCE_TYPE:
                         BMX_ASSERT(false);
                 }
 
                 output_tracks.push_back(output_track);
 
-
-                if (input_track_info->is_picture)
-                    picture_track_count++;
-                else
-                    sound_track_count++;
+                track_count[input_track_info->data_def]++;
             }
         }
 
@@ -2152,10 +2152,10 @@ int main(int argc, const char** argv)
                                                      num_samples * output_track.block_align,
                                                      num_samples);
                 } else {
-                    if (output_track.is_picture)
-                        num_samples = frame->num_samples;
-                    else
+                    if (output_track.data_def == MXF_SOUND_DDEF)
                         num_samples = frame->GetSize() / output_track.block_align;
+                    else
+                        num_samples = frame->num_samples;
                     output_track.track->WriteSamples(frame->GetBytes(), frame->GetSize(), num_samples);
                 }
 

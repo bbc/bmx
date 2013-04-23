@@ -386,14 +386,24 @@ SourcePackage* AvidClip::CreateDefaultImportSource(string uri, string name,
     return import_package;
 }
 
-vector<pair<mxfUMID, uint32_t> > AvidClip::GetPictureSourceReferences(mxfpp::SourcePackage *source_package)
+vector<pair<mxfUMID, uint32_t> > AvidClip::GetSourceReferences(mxfpp::SourcePackage *source_package,
+                                                               MXFDataDefEnum data_def)
 {
-    return GetSourceReferences(source_package, true);
-}
+    vector<pair<mxfUMID, uint32_t> > references;
+    vector<GenericTrack*> tracks = source_package->getTracks();
+    size_t i;
+    for (i = 0; i < tracks.size(); i++) {
+        Track *track = dynamic_cast<Track*>(tracks[i]);
+        if (!track || !track->haveTrackID())
+            continue;
 
-vector<pair<mxfUMID, uint32_t> > AvidClip::GetSoundSourceReferences(mxfpp::SourcePackage *source_package)
-{
-    return GetSourceReferences(source_package, false);
+        StructuralComponent *track_sequence = track->getSequence();
+        mxfUL data_def_ul = track_sequence->getDataDefinition();
+        if (data_def == mxf_get_ddef_enum(&data_def_ul))
+            references.push_back(make_pair(source_package->getPackageUID(), track->getTrackID()));
+    }
+
+    return references;
 }
 
 void AvidClip::RegisterPhysicalSource(SourcePackage *source_package)
@@ -867,26 +877,5 @@ TimecodeComponent* AvidClip::GetTimecodeComponent(GenericPackage *package)
     }
 
     return tc_component;
-}
-
-vector<pair<mxfUMID, uint32_t> > AvidClip::GetSourceReferences(mxfpp::SourcePackage *source_package, bool is_picture)
-{
-    vector<pair<mxfUMID, uint32_t> > references;
-    vector<GenericTrack*> tracks = source_package->getTracks();
-    size_t i;
-    for (i = 0; i < tracks.size(); i++) {
-        Track *track = dynamic_cast<Track*>(tracks[i]);
-        if (!track || !track->haveTrackID())
-            continue;
-
-        StructuralComponent *track_sequence = track->getSequence();
-        mxfUL data_def = track_sequence->getDataDefinition();
-        if ((is_picture && !mxf_is_picture(&data_def)) || (!is_picture && !mxf_is_sound(&data_def)))
-            continue;
-
-        references.push_back(make_pair(source_package->getPackageUID(), track->getTrackID()));
-    }
-
-    return references;
 }
 

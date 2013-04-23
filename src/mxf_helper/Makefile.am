@@ -1,8 +1,10 @@
 noinst_LTLIBRARIES = libmxfhelper.la
 
 libmxfhelper_la_SOURCES = \
+	ANCDataMXFDescriptorHelper.cpp \
 	AVCIMXFDescriptorHelper.cpp \
 	D10MXFDescriptorHelper.cpp \
+	DataMXFDescriptorHelper.cpp \
 	DVMXFDescriptorHelper.cpp \
 	MJPEGMXFDescriptorHelper.cpp \
 	MPEG2LGMXFDescriptorHelper.cpp \
@@ -12,6 +14,7 @@ libmxfhelper_la_SOURCES = \
 	SoundMXFDescriptorHelper.cpp \
 	UncCDCIMXFDescriptorHelper.cpp \
 	UncRGBAMXFDescriptorHelper.cpp \
+	VBIDataMXFDescriptorHelper.cpp \
 	VC3MXFDescriptorHelper.cpp \
 	WaveMXFDescriptorHelper.cpp
 

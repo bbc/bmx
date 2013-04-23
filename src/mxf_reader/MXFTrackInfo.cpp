@@ -48,8 +48,7 @@ using namespace mxfpp;
 
 MXFTrackInfo::MXFTrackInfo()
 {
-    is_picture = false;
-    is_sound = false;
+    data_def = MXF_UNKNOWN_DDEF;
 
     essence_type = UNKNOWN_ESSENCE_TYPE;
     essence_container_label = g_Null_UL;
@@ -72,8 +71,7 @@ bool MXFTrackInfo::IsCompatible(const MXFTrackInfo *right) const
 
 void MXFTrackInfo::Clone(MXFTrackInfo *clone) const
 {
-    clone->is_picture               = is_picture;
-    clone->is_sound                 = is_sound;
+    clone->data_def                 = data_def;
     clone->essence_type             = essence_type;
     clone->essence_container_label  = essence_container_label;
     clone->material_package_uid     = material_package_uid;
@@ -93,7 +91,7 @@ void MXFTrackInfo::Clone(MXFTrackInfo *clone) const
 MXFPictureTrackInfo::MXFPictureTrackInfo()
 : MXFTrackInfo()
 {
-    is_picture = true;
+    data_def = MXF_PICTURE_DDEF;
 
     is_cdci = true;
     picture_essence_coding_label = g_Null_UL;
@@ -173,7 +171,7 @@ MXFTrackInfo* MXFPictureTrackInfo::Clone() const
 MXFSoundTrackInfo::MXFSoundTrackInfo()
 : MXFTrackInfo()
 {
-    is_sound = true;
+    data_def = MXF_SOUND_DDEF;
 
     sampling_rate = ZERO_RATIONAL;
     bits_per_sample = 0;
@@ -204,7 +202,6 @@ bool MXFSoundTrackInfo::IsCompatible(const MXFTrackInfo *right) const
            sequence_offset      == sound_right->sequence_offset;
 }
 
-
 MXFTrackInfo* MXFSoundTrackInfo::Clone() const
 {
     MXFSoundTrackInfo *clone = new MXFSoundTrackInfo();
@@ -223,6 +220,32 @@ MXFTrackInfo* MXFSoundTrackInfo::Clone() const
     clone->audio_ref_level_set  = audio_ref_level_set;
     clone->dial_norm            = dial_norm;
     clone->dial_norm_set        = dial_norm_set;
+
+    return clone;
+}
+
+
+
+MXFDataTrackInfo::MXFDataTrackInfo()
+: MXFTrackInfo()
+{
+    data_def = MXF_DATA_DDEF;
+}
+
+bool MXFDataTrackInfo::IsCompatible(const MXFTrackInfo *right) const
+{
+    const MXFDataTrackInfo *data_right = dynamic_cast<const MXFDataTrackInfo*>(right);
+    if (!data_right)
+        return false;
+
+    return MXFTrackInfo::IsCompatible(right);
+}
+
+MXFTrackInfo* MXFDataTrackInfo::Clone() const
+{
+    MXFDataTrackInfo *clone = new MXFDataTrackInfo();
+
+    MXFTrackInfo::Clone(clone);
 
     return clone;
 }

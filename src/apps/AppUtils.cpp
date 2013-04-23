@@ -550,10 +550,21 @@ bool bmx::parse_mic_type(const char *mic_type_str, MICType *mic_type)
 }
 
 
-string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, bool is_picture)
+string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {
+    const char *ddef_letter = "x";
+    switch (data_def)
+    {
+        case MXF_PICTURE_DDEF:  ddef_letter = "v"; break;
+        case MXF_SOUND_DDEF:    ddef_letter = "a"; break;
+        case MXF_DATA_DDEF:     ddef_letter = "d"; break;
+        case MXF_TIMECODE_DDEF: ddef_letter = "t"; break;
+        case MXF_DM_DDEF:       ddef_letter = "m"; break;
+        case MXF_UNKNOWN_DDEF:  ddef_letter = "x"; break;
+    }
+
     char buffer[16];
-    bmx_snprintf(buffer, sizeof(buffer), "_%s%u.mxf", (is_picture ? "v" : "a"), track_number);
+    bmx_snprintf(buffer, sizeof(buffer), "_%s%u.mxf", ddef_letter, track_number);
 
     string filename = prefix;
     return filename.append(buffer);
