@@ -106,7 +106,7 @@ public:
     IndexTableHelper(MXFFileReader *file_reader);
     ~IndexTableHelper();
 
-    bool ExtractIndexTable();
+    void ExtractIndexTable();
 
     void SetEssenceDataSize(int64_t size);
 

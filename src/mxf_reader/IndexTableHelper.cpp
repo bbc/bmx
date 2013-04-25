@@ -320,7 +320,7 @@ IndexTableHelper::~IndexTableHelper()
         delete mSegments[i];
 }
 
-bool IndexTableHelper::ExtractIndexTable()
+void IndexTableHelper::ExtractIndexTable()
 {
     mxfKey key;
     uint8_t llen;
@@ -383,9 +383,7 @@ bool IndexTableHelper::ExtractIndexTable()
         }
     }
 
-    mIsComplete = true;
-
-    return !mSegments.empty();
+    mIsComplete = !mSegments.empty();
 }
 
 void IndexTableHelper::SetEssenceDataSize(int64_t size)

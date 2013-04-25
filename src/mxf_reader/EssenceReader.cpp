@@ -106,33 +106,31 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
         }
     }
 
-    // extract essence container layout if file is complete
-    if (file_is_complete)
+    // if file is complete then extract essence container layout and index table segments
+    if (file_is_complete) {
         mEssenceChunkHelper.CreateEssenceChunkIndex();
+        BMX_ASSERT(mEssenceChunkHelper.IsComplete());
 
-    // extract essence container index table if file is complete
-    if (mFileReader->mIndexSID && file_is_complete) {
-        if (mIndexTableHelper.ExtractIndexTable()) {
+        if (mFileReader->mIndexSID)
+            mIndexTableHelper.ExtractIndexTable();
+
+        if (mIndexTableHelper.IsComplete()) {
             BMX_CHECK(mIndexTableHelper.GetEditRate() == mFileReader->GetEditRate());
-        } else if (mEssenceChunkHelper.GetEssenceDataSize() > 0) {
-            log_warn("Missing index table segments for essence data with size %"PRId64"\n",
-                     mEssenceChunkHelper.GetEssenceDataSize());
+            mIndexTableHelper.SetEssenceDataSize(mEssenceChunkHelper.GetEssenceDataSize());
+        } else {
+            if (mEssenceChunkHelper.GetEssenceDataSize() == 0) {
+                // mark index table as complete if there is no essence data to index
+                mIndexTableHelper.SetEditRate(mFileReader->GetEditRate());
+                mIndexTableHelper.SetIsComplete();
+            } else if (mFileReader->mIndexSID) {
+                log_warn("Missing index table segments (IndexSID %u) for essence data with size %"PRId64"\n",
+                         mFileReader->mIndexSID, mEssenceChunkHelper.GetEssenceDataSize());
+            }
         }
+    }
 
-        mIndexTableHelper.SetEssenceDataSize(mEssenceChunkHelper.GetEssenceDataSize());
-
-        // check the last indexed edit unit is available in the essence container data
-        if (mIndexTableHelper.GetDuration() > 0) {
-            int64_t last_unit_offset, last_unit_size;
-            mIndexTableHelper.GetEditUnit(mIndexTableHelper.GetDuration() - 1, &last_unit_offset,
-                                          &last_unit_size);
-            BMX_CHECK_M(mEssenceChunkHelper.GetEssenceDataSize() >= last_unit_offset + last_unit_size,
-                       ("Last edit unit (offset %"PRId64", size %"PRId64") not available in "
-                            "essence container (size %"PRId64")",
-                        last_unit_offset, last_unit_size, mEssenceChunkHelper.GetEssenceDataSize()));
-        }
-    } else {
-        // if there is no index table then at least set the edit rate
+    // if index table is empty (incomplete) then fill in some known index table information
+    if (!mIndexTableHelper.IsComplete()) {
         mIndexTableHelper.SetEditRate(mFileReader->GetEditRate());
 
         // require a known constant edit unit size for clip wrapped essence
@@ -148,6 +146,22 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
         if (mEssenceChunkHelper.IsComplete())
             mIndexTableHelper.SetEssenceDataSize(mEssenceChunkHelper.GetEssenceDataSize());
     }
+
+    // if essence container layout and index table are complete then check
+    // that the last indexed edit unit is available in the essence container
+    if (mEssenceChunkHelper.IsComplete() &&
+        mIndexTableHelper.IsComplete() &&
+        mIndexTableHelper.GetDuration() > 0)
+    {
+        int64_t last_unit_offset, last_unit_size;
+        mIndexTableHelper.GetEditUnit(mIndexTableHelper.GetDuration() - 1, &last_unit_offset, &last_unit_size);
+        if (mEssenceChunkHelper.GetEssenceDataSize() < last_unit_offset + last_unit_size) {
+            BMX_EXCEPTION(("Last edit unit (offset %"PRId64", size %"PRId64") not available in "
+                                "essence container (size %"PRId64")",
+                          last_unit_offset, last_unit_size, mEssenceChunkHelper.GetEssenceDataSize()));
+        }
+    }
+
 
     // set read limits
     mReadStartPosition = 0;
