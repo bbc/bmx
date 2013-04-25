@@ -227,7 +227,7 @@ void APPInfoOutput::CompleteEventTimecodes()
             mFileReader->GetTrackReader(i)->GetFrameBuffer()->Clear(true);
 
         if (!frame || frame->IsEmpty()) {
-            log_warn("Failed to read frame from track %zu at position %"PRId64"\n",
+            log_warn("Failed to read frame from track %"PRIszt" at position %"PRId64"\n",
                      enabled_track_index, position);
             break;
         }

@@ -234,7 +234,7 @@ void RDD9File::PrepareHeaderMetadata()
     if (mTracks.size() < 2)
         BMX_EXCEPTION(("Require at least 1 sound track"));
     if (mTracks.size() != 3 && mTracks.size() != 5 && mTracks.size() != 9)
-        log_warn("There are %zu audio tracks; RDD9 requires 2, 4, or 8 audio tracks\n", mTracks.size() - 1);
+        log_warn("There are %"PRIszt" audio tracks; RDD9 requires 2, 4, or 8 audio tracks\n", mTracks.size() - 1);
 
     // sort tracks, picture followed by sound
     stable_sort(mTracks.begin(), mTracks.end(), compare_track);

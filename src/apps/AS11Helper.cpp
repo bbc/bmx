@@ -389,7 +389,7 @@ bool FrameworkHelper::SetProperty(string name, string value)
             size_t clip_len = get_utf8_clip_len(value.c_str(), 127, &invalid, &truncated);
             if (truncated) {
                 if (invalid) {
-                    log_warn("Truncating string property %s::%s to %zu chars because it contains invalid UTF-8 data\n",
+                    log_warn("Truncating string property %s::%s to %"PRIszt" chars because it contains invalid UTF-8 data\n",
                              mFrameworkInfo->name, name.c_str(), clip_len);
                 } else {
                     log_warn("Truncating string property %s::%s because it's length exceeds 127 unicode chars\n",
