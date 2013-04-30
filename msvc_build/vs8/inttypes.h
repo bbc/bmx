@@ -28,6 +28,7 @@ typedef __int64             int64_t;
 
 
 #if !defined(__cplusplus) || defined(__STDC_LIMIT_MACROS)
+
 #define INT8_MIN    (-128)
 #define INT16_MIN   (-32767 - 1)
 #define INT32_MIN   (-2147483647 - 1)
@@ -42,7 +43,13 @@ typedef __int64             int64_t;
 #define UINT16_MAX  65535
 #define UINT32_MAX  4294967295U
 #define UINT64_MAX  18446744073709551615ULL
+
+
+#define INT64_C(c)  c ## i64
+#define UINT64_C(c) c ## ui64
+
 #endif
+
 
 #endif
 

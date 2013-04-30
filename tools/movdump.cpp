@@ -40,6 +40,7 @@
 #include <cerrno>
 #include <cstdarg>
 #include <cctype>
+#include <ctime>
 #include <inttypes.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -171,7 +172,11 @@ static void update_atom_read(uint64_t num_read)
 
 static void skip_bytes(uint64_t num_bytes)
 {
+#if defined(_WIN32)
+    MOV_CHECK(_fseeki64(g_mov_file, num_bytes, SEEK_CUR) == 0);
+#else
     MOV_CHECK(fseeko(g_mov_file, num_bytes, SEEK_CUR) == 0);
+#endif
     update_atom_read(num_bytes);
 }
 
@@ -475,7 +480,7 @@ static void dump_bytes(uint64_t size, int extra_indent_amount = 0)
     while (total_read < size) {
         num_read = 16;
         if (total_read + num_read > size)
-            num_read = size - total_read;
+            num_read = (uint32_t)(size - total_read);
         MOV_CHECK(read_bytes(buffer, num_read));
 
         if (total_read > 0) {
@@ -512,12 +517,12 @@ static void dump_bytes(unsigned char *bytes, uint64_t size, int extra_indent_amo
     if ((size % 16) > 0) {
         if (num_lines > 0)
             indent(extra_indent_amount);
-        dump_bytes_line(size, num_lines * 16, &bytes[num_lines * 16], (size % 16));
+        dump_bytes_line(size, num_lines * 16, &bytes[num_lines * 16], (uint32_t)(size % 16));
         printf("\n");
     }
 }
 
-static void dump_string(uint32_t size, int extra_indent_amount = 0)
+static void dump_string(uint64_t size, int extra_indent_amount = 0)
 {
     if (size == 0) {
         printf("\n");
@@ -532,9 +537,9 @@ static void dump_string(uint32_t size, int extra_indent_amount = 0)
     }
 
     unsigned char buffer[256];
-    MOV_CHECK(read_bytes(buffer, size));
+    MOV_CHECK(read_bytes(buffer, (uint32_t)size));
 
-    uint32_t i;
+    uint64_t i;
     for (i = 0; i < size; i++) {
         if (!isprint(buffer[i]))
             break;
@@ -1102,7 +1107,7 @@ static void dump_sdtp_atom()
     }
 
 
-    uint32_t num_entries = CURRENT_ATOM.rem_size;
+    uint32_t num_entries = (uint32_t)CURRENT_ATOM.rem_size;
     indent();
     printf("entries (");
     dump_uint32(num_entries, false);
@@ -2174,7 +2179,7 @@ static void dump_ilst_data_atom()
             if (utf8_value_size == 0) {
                 printf("value: ''\n");
             } else if (utf8_value_size < sizeof(utf8_value_buffer)) {
-                MOV_CHECK(read_bytes(utf8_value_buffer, utf8_value_size));
+                MOV_CHECK(read_bytes(utf8_value_buffer, (uint32_t)utf8_value_size));
 
                 size_t i;
                 for (i = 0; i < utf8_value_size; i++) {
@@ -2284,7 +2289,7 @@ static void dump_tref_child_atom()
 {
     dump_atom_header();
 
-    uint32_t count = CURRENT_ATOM.rem_size / 4;
+    uint32_t count = (uint32_t)(CURRENT_ATOM.rem_size / 4);
 
     indent();
     printf("track_ids (");

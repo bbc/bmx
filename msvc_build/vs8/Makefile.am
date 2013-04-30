@@ -2,6 +2,7 @@ EXTRA_DIST = \
 	inttypes.h \
 	bmx.sln \
 	test.sln \
+	tools.sln \
 	bmx/bmx.vcproj \
 	bmx/gen_scm_version.cmd \
 	apps/bmxtranswrap/bmxtranswrap.vcproj \
@@ -9,5 +10,7 @@ EXTRA_DIST = \
 	apps/raw2bmx/raw2bmx.vcproj \
 	test/create_test_essence/create_test_essence.vcproj \
 	test/file_md5/file_md5.vcproj \
-	test/file_truncate/file_truncate.vcproj
+	test/file_truncate/file_truncate.vcproj \
+	tools/h264dump/h264dump.vcproj \
+	tools/movdump/movdump.vcproj
 

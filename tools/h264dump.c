@@ -128,7 +128,7 @@ typedef struct
     uint64_t next_value;
 
     uint8_t profile_idc;
-    uint64_t chroma_format_idc;
+    uint8_t chroma_format_idc;
     uint64_t chroma_array_type;
     uint8_t cpb_dpb_delays_present_flag;
     uint8_t cpb_removal_delay_length_minus1;
@@ -136,11 +136,11 @@ typedef struct
     uint8_t pict_struct_present_flag;
     uint8_t time_offset_length;
     uint8_t separate_colour_plane_flag;
-    uint64_t log2_max_frame_num_minus4;
+    uint8_t log2_max_frame_num_minus4;
     uint8_t frame_mbs_only_flag;
     uint8_t nal_unit_type;
     uint64_t pic_order_cnt_type;
-    uint64_t log2_max_pic_order_cnt_lsb_minus4;
+    uint8_t log2_max_pic_order_cnt_lsb_minus4;
     uint8_t bottom_field_pic_order_in_frame_present_flag;
     uint8_t delta_pic_order_always_zero_flag;
     uint8_t redundant_pic_cnt_present_flag;
@@ -197,7 +197,7 @@ static void deinit_context(ParseContext *context)
 
 static int read_next_page(ParseContext *context)
 {
-    uint32_t num_read;
+    size_t num_read;
 
     if (context->data_size + READ_BLOCK_SIZE > context->buffer_size) {
         unsigned char *new_buffer;
@@ -219,7 +219,7 @@ static int read_next_page(ParseContext *context)
     }
 
     num_read = fread(&context->buffer[context->data_size], 1, READ_BLOCK_SIZE, context->file);
-    context->data_size += num_read;
+    context->data_size += (uint32_t)num_read;
 
     return num_read != 0;
 }
@@ -335,9 +335,9 @@ static int byte_aligned(ParseContext *context)
 static int next_bits(ParseContext *context, uint8_t num_bits, uint8_t *advance_bits)
 {
     const unsigned char *byte;
-    uint32_t num_bytes;
+    uint8_t num_bytes;
     uint8_t skip_bits = 0;
-    uint32_t i;
+    uint8_t i;
 
     CHK(num_bits > 0);
     CHK(num_bits <= 64);
@@ -346,7 +346,7 @@ static int next_bits(ParseContext *context, uint8_t num_bits, uint8_t *advance_b
         return 0;
 
     byte = context->buffer + context->bit_pos / 8;
-    num_bytes = ((context->bit_pos % 8) + num_bits + 7) / 8;
+    num_bytes = (uint8_t)(((context->bit_pos % 8) + num_bits + 7) / 8);
     context->next_value = 0;
     for (i = 0; i < num_bytes; i++) {
         if (*byte == 0x03 && context->bit_pos + i * 8 >= 16 && byte[-1] == 0x00 && byte[-2] == 0x00) {
@@ -539,7 +539,7 @@ static void print_nal_unit_type(ParseContext *context)
         "Unspecified",
     };
 
-    uint8_t nal_unit_type = context->value & 31;
+    uint8_t nal_unit_type = (uint8_t)(context->value & 31);
 
     printf("%*c nal_unit_type: %u (%s)\n", context->indent * 4, ' ', nal_unit_type,
            NAL_UNIT_TYPE_STRINGS[nal_unit_type]);
@@ -795,9 +795,9 @@ static void print_bytes_line(ParseContext *context, uint64_t index, uint8_t *lin
     printf("|\n");
 }
 
-static int read_and_print_bytes(ParseContext *context, uint32_t num_bytes)
+static int read_and_print_bytes(ParseContext *context, uint64_t num_bytes)
 {
-    uint32_t i;
+    uint64_t i;
     uint8_t line[16];
     size_t num_values = 0;
 
@@ -895,14 +895,14 @@ static int vui_parameters(ParseContext *context)
         context->indent--;
     }
     u(1); PRINT_UINT("nal_hrd_parameters_present_flag");
-    nal_hrd_parameters_present_flag = context->value;
+    nal_hrd_parameters_present_flag = (uint8_t)context->value;
     if (context->value) {
         context->indent++;
         CHK(hrd_parameters(context));
         context->indent--;
     }
     u(1); PRINT_UINT("vcl_hrd_parameters_present_flag");
-    vcl_hrd_parameters_present_flag = context->value;
+    vcl_hrd_parameters_present_flag = (uint8_t)context->value;
     if (context->value) {
         context->indent++;
         CHK(hrd_parameters(context));
@@ -1634,8 +1634,8 @@ static int sequence_parameter_set_data(ParseContext *context)
         context->profile_idc ==  83 || context->profile_idc ==  86 || context->profile_idc == 118 ||
         context->profile_idc == 128)
     {
-        ue(); print_chroma_format(context, context->value);
-        context->chroma_format_idc = context->value;
+        ue(); print_chroma_format(context, (uint8_t)context->value);
+        context->chroma_format_idc = (uint8_t)context->value;
         if (context->chroma_format_idc == 3) {
             u(1); PRINT_UINT("separate_colour_plane_flag");
             context->separate_colour_plane_flag = (uint8_t)context->value;
@@ -1669,12 +1669,12 @@ static int sequence_parameter_set_data(ParseContext *context)
         }
     }
     ue(); PRINT_UINT("log2_max_frame_num_minus4");
-    context->log2_max_frame_num_minus4 = context->value;
+    context->log2_max_frame_num_minus4 = (uint8_t)context->value;
     ue(); PRINT_UINT("pic_order_cnt_type");
     context->pic_order_cnt_type = context->value;
     if (context->pic_order_cnt_type == 0) {
         ue(); PRINT_UINT("log2_max_pic_order_cnt_lsb_minus4");
-        context->log2_max_pic_order_cnt_lsb_minus4 = context->value;
+        context->log2_max_pic_order_cnt_lsb_minus4 = (uint8_t)context->value;
     } else if (context->pic_order_cnt_type == 1) {
         uint64_t num_ref_frames_in_pic_order_cnt_cycle;
         uint64_t i;
@@ -1850,7 +1850,7 @@ static int access_unit_delimiter(ParseContext *context)
 
 static int sequence_parameter_set_extension(ParseContext *context)
 {
-    uint64_t bit_depth_aux_minus8;
+    uint8_t bit_depth_aux_minus8;
     printf("%*c sequence_parameter_set_extension:\n", context->indent * 4, ' ');
     context->indent++;
 
@@ -1858,7 +1858,7 @@ static int sequence_parameter_set_extension(ParseContext *context)
     ue(); PRINT_UINT("aux_format_idc");
     if (context->value) {
         ue(); PRINT_UINT("bit_depth_aux_minus8");
-        bit_depth_aux_minus8 = context->value;
+        bit_depth_aux_minus8 = (uint8_t)context->value;
         u(1); PRINT_UINT("alpha_incr_flag");
         u(bit_depth_aux_minus8 + 9); PRINT_UINT("alpha_opaque_value");
         u(bit_depth_aux_minus8 + 9); PRINT_UINT("alpha_transparent_value");
