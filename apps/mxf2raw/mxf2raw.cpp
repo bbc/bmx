@@ -45,6 +45,7 @@
 #endif
 
 #include <map>
+#include <set>
 
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_reader/MXFGroupReader.h>
@@ -452,7 +453,29 @@ static string timecode_to_string(Timecode timecode)
     return buffer;
 }
 
-static string create_raw_filename(string prefix, MXFDataDefEnum data_def, uint32_t index, int32_t child_index)
+static void write_data(FILE *file, const string &filename, const unsigned char *data, uint32_t size,
+                       bool wrap_klv, const mxfKey *key)
+{
+#define CHECK_WRITE(dt, sz)                                                                                     \
+    if (fwrite(dt, sz, 1, file) != 1) {                                                                         \
+        log_error("Failed to write to raw file '%s': %s\n", filename.c_str(), bmx_strerror(errno).c_str());     \
+        throw false;                                                                                            \
+    }
+
+    if (wrap_klv) {
+        // write KL with 8-byte Length
+        unsigned char len_bytes[8] = {0x87};
+        mxf_set_uint32(size, &len_bytes[4]);
+
+        CHECK_WRITE((const unsigned char*)&key->octet0, 16)
+        CHECK_WRITE(len_bytes, 8)
+    }
+
+    CHECK_WRITE(data, size)
+}
+
+static string create_raw_filename(string prefix, bool wrap_klv, MXFDataDefEnum data_def, uint32_t index,
+                                  int32_t child_index)
 {
     const char *ddef_letter = "x";
     switch (data_def)
@@ -464,12 +487,15 @@ static string create_raw_filename(string prefix, MXFDataDefEnum data_def, uint32
         case MXF_DM_DDEF:       ddef_letter = "m"; break;
         case MXF_UNKNOWN_DDEF:  ddef_letter = "x"; break;
     }
+    const char *suffix = ".raw";
+    if (wrap_klv)
+        suffix = ".klv";
 
     char buffer[64];
     if (child_index >= 0)
-        sprintf(buffer, "_%s%u_%d.raw", ddef_letter, index, child_index);
+        sprintf(buffer, "_%s%u_%d%s", ddef_letter, index, child_index, suffix);
     else
-        sprintf(buffer, "_%s%u.raw", ddef_letter, index);
+        sprintf(buffer, "_%s%u%s", ddef_letter, index, suffix);
 
     return prefix + buffer;
 }
@@ -498,6 +524,26 @@ static bool parse_app_events_mask(const char *mask_str, int *mask_out)
     return true;
 }
 
+static bool parse_wrap_klv_mask(const char *mask_str, set<MXFDataDefEnum> *mask)
+{
+    const char *ptr = mask_str;
+
+    while (*ptr) {
+        if (*ptr == 'v' || *ptr == 'V')
+            mask->insert(MXF_PICTURE_DDEF);
+        else if (*ptr == 'a' || *ptr == 'A')
+            mask->insert(MXF_SOUND_DDEF);
+        else if (*ptr == 'd' || *ptr == 'D')
+            mask->insert(MXF_DATA_DDEF);
+        else
+            return false;
+
+        ptr++;
+    }
+
+    return true;
+}
+
 static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
@@ -508,6 +554,10 @@ static void usage(const char *cmd)
     fprintf(stderr, " -v | --version        Print version info\n");
     fprintf(stderr, " -l <file>             Log filename. Default log to stderr/stdout\n");
     fprintf(stderr, " -p <prefix>           Raw output filename prefix\n");
+    fprintf(stderr, " --wrap-klv <mask>     Wrap output frames in KLV using the source Key and an 8-byte Length\n");
+    fprintf(stderr, "                       The filename suffix will be '.klv' rather than '.raw'\n");
+    fprintf(stderr, "                         <mask> is a sequence of characters which identify which data types to wrap (e.g. 'ad' for audio and data):\n");
+    fprintf(stderr, "                            v=video, a=audio, d=data\n");
     fprintf(stderr, " -r                    Read frames even if -p or --md5 not used\n");
     fprintf(stderr, " -i                    Print file information to stdout\n");
     fprintf(stderr, " -d                    De-interleave multi-channel / AES-3 sound\n");
@@ -589,6 +639,7 @@ int main(int argc, const char** argv)
     float gf_retry_delay = DEFAULT_GF_RETRY_DELAY;
     float gf_rate_after_fail = DEFAULT_GF_RATE_AFTER_FAIL;
     const char *app_tc_filename = 0;
+    set<MXFDataDefEnum> wrap_klv_mask;
     int cmdln_index;
 
 
@@ -635,6 +686,22 @@ int main(int argc, const char** argv)
             }
             prefix = argv[cmdln_index + 1];
             do_read = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--wrap-klv") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_wrap_klv_mask(argv[cmdln_index + 1], &wrap_klv_mask))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "-r") == 0)
@@ -1205,8 +1272,10 @@ int main(int argc, const char** argv)
                     if (sound_info && deinterleave && sound_info->channel_count > 1) {
                         uint32_t c;
                         for (c = 0; c < sound_info->channel_count; c++) {
-                            string raw_filename = create_raw_filename(prefix, track_info->data_def,
-                                                                      ddef_count[track_info->data_def], c);
+                            string raw_filename = create_raw_filename(prefix,
+                                                      (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
+                                                      track_info->data_def,
+                                                      ddef_count[track_info->data_def], c);
                             FILE *raw_file = fopen(raw_filename.c_str(), "wb");
                             if (!raw_file) {
                                 log_error("Failed to open raw file '%s': %s\n",
@@ -1217,8 +1286,10 @@ int main(int argc, const char** argv)
                             raw_filenames.push_back(raw_filename);
                         }
                     } else {
-                        string raw_filename = create_raw_filename(prefix, track_info->data_def,
-                                                                  ddef_count[track_info->data_def], -1);
+                        string raw_filename = create_raw_filename(prefix,
+                                                        (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
+                                                        track_info->data_def,
+                                                        ddef_count[track_info->data_def], -1);
                         FILE *raw_file = fopen(raw_filename.c_str(), "wb");
                         if (!raw_file) {
                             log_error("Failed to open raw file '%s': %s\n",
@@ -1285,6 +1356,7 @@ int main(int argc, const char** argv)
                 int file_count = 0;
                 size_t i;
                 for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+                    MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
                     while (true) {
                         Frame *frame = reader->GetTrackReader(i)->GetFrameBuffer()->GetLastFrame(true);
                         if (!frame)
@@ -1360,8 +1432,7 @@ int main(int argc, const char** argv)
                         }
 
                         if (prefix) {
-                            const MXFSoundTrackInfo *sound_info =
-                                dynamic_cast<const MXFSoundTrackInfo*>(reader->GetTrackReader(i)->GetTrackInfo());
+                            const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
                             if (sound_info && deinterleave && sound_info->channel_count > 1) {
                                 sound_buffer.Allocate(frame->GetSize()); // more than enough
                                 uint32_t c;
@@ -1378,30 +1449,21 @@ int main(int argc, const char** argv)
                                                            sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
                                         sound_buffer.SetSize(frame->GetSize() / sound_info->channel_count);
                                     }
-                                    uint32_t num_written = (uint32_t)fwrite(sound_buffer.GetBytes(),
-                                                                            sound_buffer.GetSize(), 1,
-                                                                            raw_files[file_count]);
-                                    if (num_written != 1) {
-                                        log_error("Failed to write to raw file '%s': %s\n",
-                                                  raw_filenames[file_count].c_str(), bmx_strerror(errno).c_str());
-                                        throw false;
-                                    }
+                                    write_data(raw_files[file_count], raw_filenames[file_count],
+                                               sound_buffer.GetBytes(), sound_buffer.GetSize(),
+                                               (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
+                                               &frame->element_key);
                                     file_count++;
                                 }
                             } else {
-                                uint32_t num_written = (uint32_t)fwrite(frame->GetBytes(),
-                                                                        frame->GetSize(), 1,
-                                                                        raw_files[file_count]);
-                                if (num_written != 1) {
-                                    log_error("Failed to write to raw file '%s': %s\n",
-                                              raw_filenames[file_count].c_str(), bmx_strerror(errno).c_str());
-                                    throw false;
-                                }
+                                write_data(raw_files[file_count], raw_filenames[file_count],
+                                           frame->GetBytes(), frame->GetSize(),
+                                           (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
+                                           &frame->element_key);
                                 file_count++;
                             }
                         } else {
-                            const MXFSoundTrackInfo *sound_info =
-                                dynamic_cast<const MXFSoundTrackInfo*>(reader->GetTrackReader(i)->GetTrackInfo());
+                            const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
                             if (sound_info && deinterleave && sound_info->channel_count > 1)
                                 file_count += sound_info->channel_count;
                             else
