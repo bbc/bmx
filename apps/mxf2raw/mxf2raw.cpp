@@ -446,10 +446,10 @@ static void print_identification_info(Identification *identification)
 static string timecode_to_string(Timecode timecode)
 {
     char buffer[64];
-    sprintf(buffer, "%02d:%02d:%02d%c%02d (@ %dfps)",
-            timecode.GetHour(), timecode.GetMin(), timecode.GetSec(),
-            timecode.IsDropFrame() ? ';' : ':', timecode.GetFrame(),
-            timecode.GetRoundedTCBase());
+    bmx_snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d%c%02d (@ %dfps)",
+                 timecode.GetHour(), timecode.GetMin(), timecode.GetSec(),
+                 timecode.IsDropFrame() ? ';' : ':', timecode.GetFrame(),
+                 timecode.GetRoundedTCBase());
     return buffer;
 }
 
@@ -493,9 +493,9 @@ static string create_raw_filename(string prefix, bool wrap_klv, MXFDataDefEnum d
 
     char buffer[64];
     if (child_index >= 0)
-        sprintf(buffer, "_%s%u_%d%s", ddef_letter, index, child_index, suffix);
+        bmx_snprintf(buffer, sizeof(buffer), "_%s%u_%d%s", ddef_letter, index, child_index, suffix);
     else
-        sprintf(buffer, "_%s%u%s", ddef_letter, index, suffix);
+        bmx_snprintf(buffer, sizeof(buffer), "_%s%u%s", ddef_letter, index, suffix);
 
     return prefix + buffer;
 }
