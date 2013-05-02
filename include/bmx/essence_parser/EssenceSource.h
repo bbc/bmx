@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2013, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,13 +29,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_RAW_ESSENCE_READER_H_
-#define BMX_RAW_ESSENCE_READER_H_
+#ifndef BMX_ESSENCE_SOURCE_H_
+#define BMX_ESSENCE_SOURCE_H_
 
 
-#include <bmx/essence_parser/EssenceParser.h>
-#include <bmx/essence_parser/EssenceSource.h>
-#include <bmx/ByteArray.h>
+#include <string>
+
+#include <bmx/BMXTypes.h>
 
 
 
@@ -43,53 +43,18 @@ namespace bmx
 {
 
 
-class RawEssenceReader
+class EssenceSource
 {
 public:
-    RawEssenceReader(EssenceSource *essence_source);
-    virtual ~RawEssenceReader();
+    virtual ~EssenceSource() {}
 
-    void SetMaxReadLength(int64_t len);
+    virtual uint32_t Read(unsigned char *data, uint32_t size) = 0;
+    virtual bool SeekStart() = 0;
+    virtual bool Skip(int64_t offset) = 0;
 
-    void SetFixedSampleSize(uint32_t size);
-
-    virtual void SetEssenceParser(EssenceParser *essence_parser);
-    void SetCheckMaxSampleSize(uint32_t size);
-
-    uint32_t GetFixedSampleSize() const     { return mFixedSampleSize; }
-    EssenceParser* GetEssenceParser() const { return mEssenceParser; }
-    EssenceSource* GetEssenceSource() const { return mEssenceSource; }
-
-public:
-    virtual uint32_t ReadSamples(uint32_t num_samples);
-
-    virtual const unsigned char* GetSampleData() const  { return mSampleBuffer.GetBytes(); }
-    uint32_t GetSampleDataSize() const                  { return mSampleDataSize; }
-    uint32_t GetNumSamples() const                      { return mNumSamples; }
-    uint32_t GetSampleSize() const;
-
-    virtual void Reset();
-
-protected:
-    bool ReadAndParseSample();
-    uint32_t ReadBytes(uint32_t size);
-    void ShiftSampleData(uint32_t to_offset, uint32_t from_offset);
-
-protected:
-    EssenceSource *mEssenceSource;
-
-    int64_t mMaxReadLength;
-    int64_t mTotalReadLength;
-    uint32_t mMaxSampleSize;
-
-    uint32_t mFixedSampleSize;
-    EssenceParser *mEssenceParser;
-
-    ByteArray mSampleBuffer;
-    uint32_t mSampleDataSize;
-    uint32_t mNumSamples;
-    bool mReadFirstSample;
-    bool mLastSampleRead;
+    virtual bool HaveError() const = 0;
+    virtual int GetErrno() const = 0;
+    virtual std::string GetStrError() const = 0;
 };
 
 

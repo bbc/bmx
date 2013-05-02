@@ -44,8 +44,8 @@ using namespace bmx;
 
 
 
-AVCIRawEssenceReader::AVCIRawEssenceReader(FILE *raw_input)
-: RawEssenceReader(raw_input)
+AVCIRawEssenceReader::AVCIRawEssenceReader(EssenceSource *essence_source)
+: RawEssenceReader(essence_source)
 {
     SetEssenceParser(new AVCIEssenceParser());
     mLastSampleSize = 0;

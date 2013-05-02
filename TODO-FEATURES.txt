@@ -7,9 +7,6 @@ bmx TODO Features
 1. add support for general purpose user and application tags, similar to
 AAF/Avid TaggedValues
 
-3. add support for KLV raw essence input. This allows MXF files to be
-treated as raw essence, e.g. is useful if it doesn't have an index table
-
 4. add support for edit-while-record Avid MXF flavour
 
 7. add essence group detection (e.g. DV, MPEG-2, MJPEG, VC3) to provide more

@@ -46,7 +46,7 @@ namespace bmx
 class AVCIRawEssenceReader : public RawEssenceReader
 {
 public:
-    AVCIRawEssenceReader(FILE *raw_input);
+    AVCIRawEssenceReader(EssenceSource *essence_source);
     virtual ~AVCIRawEssenceReader();
 
     virtual uint32_t ReadSamples(uint32_t num_samples);

@@ -466,6 +466,18 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\include\bmx\essence_parser\EssenceSource.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\essence_parser\FileEssenceSource.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\essence_parser\KLVEssenceSource.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\src\essence_parser\EssenceParserUtils.h"
 					>
 				</File>
@@ -1065,6 +1077,14 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\essence_parser\EssenceParserUtils.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\essence_parser\FileEssenceSource.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\essence_parser\KLVEssenceSource.cpp"
 					>
 				</File>
 				<File

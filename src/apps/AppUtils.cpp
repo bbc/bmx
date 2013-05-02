@@ -549,6 +549,37 @@ bool bmx::parse_mic_type(const char *mic_type_str, MICType *mic_type)
     return true;
 }
 
+bool bmx::parse_klv_opt(const char *klv_opt_str, mxfKey *key, uint32_t *track_num)
+{
+    size_t len = strlen(klv_opt_str);
+    if (len == 1) {
+        if (klv_opt_str[0] != 's')
+            return false;
+        *track_num = 0;
+        *key = g_Null_Key;
+    } else if (len >= 32) {
+        if (!parse_hex_string(klv_opt_str, (unsigned char*)&key->octet0, 16))
+            return false;
+        *track_num = 0;
+    } else if (len >= 8) {
+        unsigned char buffer[4];
+        size_t parse_offset = 0;
+        if (klv_opt_str[0] == '0' && klv_opt_str[1] == 'x') // skip '0x' prefix
+            parse_offset = 2;
+        if (!parse_hex_string(&klv_opt_str[parse_offset], buffer, sizeof(buffer)))
+            return false;
+        *track_num = ((uint32_t)buffer[0] << 24) |
+                     ((uint32_t)buffer[1] << 16) |
+                     ((uint32_t)buffer[2] << 8) |
+                      (uint32_t)buffer[3];
+        *key = g_Null_Key;
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {

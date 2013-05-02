@@ -6,6 +6,8 @@ libessenceparser_la_SOURCES = \
 	DVEssenceParser.cpp \
 	EssenceParserUtils.cpp \
 	EssenceParserUtils.h \
+	FileEssenceSource.cpp \
+	KLVEssenceSource.cpp \
 	MJPEGEssenceParser.cpp \
 	MPEG2EssenceParser.cpp \
 	RawEssenceReader.cpp \

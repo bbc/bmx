@@ -92,6 +92,9 @@ nobase_library_include_HEADERS = \
 	bmx/essence_parser/AVCIRawEssenceReader.h \
 	bmx/essence_parser/DVEssenceParser.h \
 	bmx/essence_parser/EssenceParser.h \
+	bmx/essence_parser/EssenceSource.h \
+	bmx/essence_parser/FileEssenceSource.h \
+	bmx/essence_parser/KLVEssenceSource.h \
 	bmx/essence_parser/MJPEGEssenceParser.h \
 	bmx/essence_parser/MPEG2EssenceParser.h \
 	bmx/essence_parser/RawEssenceReader.h \

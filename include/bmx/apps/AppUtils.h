@@ -88,6 +88,7 @@ bool parse_product_info(const char **info_strings, size_t num_info_strings,
 bool parse_avid_import_name(const char *import_name, URI *uri);
 bool parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type);
 bool parse_mic_type(const char *mic_type_str, MICType *mic_type);
+bool parse_klv_opt(const char *klv_opt_str, mxfKey *key, uint32_t *track_num);
 
 std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def);
 

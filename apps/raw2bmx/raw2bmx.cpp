@@ -50,6 +50,8 @@
 #include <bmx/essence_parser/MJPEGEssenceParser.h>
 #include <bmx/essence_parser/VC3EssenceParser.h>
 #include <bmx/essence_parser/RawEssenceReader.h>
+#include <bmx/essence_parser/FileEssenceSource.h>
+#include <bmx/essence_parser/KLVEssenceSource.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/wave/WaveReader.h>
 #include <bmx/URI.h>
@@ -96,7 +98,10 @@ typedef struct
 
     const char *filename;
     int64_t file_start_offset;
-    int64_t file_max_length;
+    int64_t ess_max_length;
+    bool parse_klv;
+    mxfKey klv_key;
+    uint32_t klv_track_num;
 
     int64_t output_start_offset;
     int64_t output_end_offset;
@@ -186,10 +191,22 @@ static bool open_raw_reader(RawInput *input)
         return true;
     }
 
-    FILE *raw_file = fopen(input->filename, "rb");
-    if (!raw_file) {
-        log_error("Failed to open input file '%s': %s\n", input->filename, bmx_strerror(errno).c_str());
+    FileEssenceSource *file_source = new FileEssenceSource();
+    if (!file_source->Open(input->filename, input->file_start_offset)) {
+        log_error("Failed to open input file '%s' at start offset %"PRId64": %s\n",
+                  input->filename, input->file_start_offset, file_source->GetStrError().c_str());
+        delete file_source;
         return false;
+    }
+
+    EssenceSource *essence_source = file_source;
+    if (input->parse_klv) {
+        KLVEssenceSource *klv_source;
+        if (input->klv_track_num)
+            klv_source = new KLVEssenceSource(essence_source, input->klv_track_num);
+        else
+            klv_source = new KLVEssenceSource(essence_source, &input->klv_key);
+        essence_source = klv_source;
     }
 
     if (input->essence_type == AVCI100_1080I ||
@@ -199,16 +216,14 @@ static bool open_raw_reader(RawInput *input)
         input->essence_type == AVCI50_1080P ||
         input->essence_type == AVCI50_720P)
     {
-        input->raw_reader = new AVCIRawEssenceReader(raw_file);
+        input->raw_reader = new AVCIRawEssenceReader(essence_source);
     }
     else
     {
-        input->raw_reader = new RawEssenceReader(raw_file);
+        input->raw_reader = new RawEssenceReader(essence_source);
     }
-    if (input->file_start_offset)
-        input->raw_reader->SetStartOffset(input->file_start_offset);
-    if (input->file_max_length > 0)
-        input->raw_reader->SetMaxReadLength(input->file_max_length);
+    if (input->ess_max_length > 0)
+        input->raw_reader->SetMaxReadLength(input->ess_max_length);
 
     return true;
 }
@@ -376,8 +391,13 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --locked <bool>         Indicate whether the number of audio samples is locked to the video. Either true or false. Default not set\n");
     fprintf(stderr, "  --audio-ref <level>     Audio reference level, number of dBm for 0VU. Default not set\n");
     fprintf(stderr, "  --dial-norm <value>     Gain to be applied to normalize perceived loudness of the clip. Default not set\n");
-    fprintf(stderr, "  --off <bytes>           Skip bytes at start of the next input/track's file\n");
-    fprintf(stderr, "  --maxlen <bytes>        Maximum number of bytes to read from next input/track's file\n");
+    fprintf(stderr, "  --off <bytes>           Skip <bytes> at the start of the next input/track's file\n");
+    fprintf(stderr, "  --maxlen <bytes>        Maximum number of essence data bytes to read from next input/track's file\n");
+    fprintf(stderr, "  --klv <key>             Essence data is read from the KLV data in the next input/track's file\n");
+    fprintf(stderr, "                          <key> should have one of the following values:\n");
+    fprintf(stderr, "                            - 's', which means the first 16 bytes, at file position 0 or --off byte offset, are taken to be the Key\n");
+    fprintf(stderr, "                            - optional '0x' followed by 8 hexadecimal characters which represents the 4-byte track number part of a generic container essence Key\n");
+    fprintf(stderr, "                            - 32 hexadecimal characters representing a 16-byte Key\n");
     fprintf(stderr, "  --track-num <num>       Set the output track number. Default track number equals last track number of same picture/sound type + 1\n");
     fprintf(stderr, "                          For as11d10/d10 the track number must be > 0 and <= 8 because the AES-3 channel index equals track number - 1\n");
     fprintf(stderr, "\n");
@@ -1283,13 +1303,31 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &input.file_max_length) != 1 ||
-                input.file_max_length <= 0)
+            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &input.ess_max_length) != 1 ||
+                input.ess_max_length <= 0)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--klv") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_klv_opt(argv[cmdln_index + 1], &input.klv_key, &input.klv_track_num))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            input.parse_klv = true;
             cmdln_index++;
             continue; // skip input reset at the end
         }
