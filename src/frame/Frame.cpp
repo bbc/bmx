@@ -68,6 +68,7 @@ Frame::Frame()
     flags = 0;
     cp_file_position = 0;
     file_position = 0;
+    element_key = g_Null_Key;
 }
 
 Frame::~Frame()

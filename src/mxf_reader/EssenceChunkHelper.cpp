@@ -62,6 +62,7 @@ EssenceChunk::EssenceChunk()
     size = 0;
     is_complete = false;
     partition_id = 0;
+    element_key = g_Null_Key;
 }
 
 
@@ -139,7 +140,7 @@ void EssenceChunkHelper::CreateEssenceChunkIndex()
                     }
                 }
 
-                AppendChunk(i, mxf_file->tell(), llen, len);
+                AppendChunk(i, mxf_file->tell(), &key, llen, len);
                 if (mFileReader->IsFrameWrapped()) {
                     UpdateLastChunk(partition_end, true);
                     break;
@@ -156,7 +157,8 @@ void EssenceChunkHelper::CreateEssenceChunkIndex()
     mIsComplete = true;
 }
 
-void EssenceChunkHelper::AppendChunk(size_t partition_id, int64_t file_position, uint8_t klv_llen, uint64_t klv_len)
+void EssenceChunkHelper::AppendChunk(size_t partition_id, int64_t file_position, const mxfKey *element_key,
+                                     uint8_t element_llen, uint64_t element_len)
 {
     // Note: file_position is after the KL
 
@@ -186,17 +188,18 @@ void EssenceChunkHelper::AppendChunk(size_t partition_id, int64_t file_position,
     // add this partition's essence to the index
     EssenceChunk essence_chunk;
     essence_chunk.essence_offset = body_offset;
-    essence_chunk.file_position = file_position;
-    essence_chunk.partition_id = partition_id;
+    essence_chunk.file_position  = file_position;
+    essence_chunk.partition_id   = partition_id;
+    essence_chunk.element_key    = *element_key;
     if (mFileReader->IsFrameWrapped()) {
-        essence_chunk.file_position -= mxfKey_extlen + klv_llen;
-        essence_chunk.size = 0;
-        essence_chunk.is_complete = false;
+        essence_chunk.file_position -= mxfKey_extlen + element_llen;
+        essence_chunk.size           = 0;
+        essence_chunk.is_complete    = false;
     } else {
-        essence_chunk.size = klv_len;
+        essence_chunk.size = element_len;
         if (mAvidFirstFrameOffset > 0 && mEssenceChunks.empty()) {
             essence_chunk.file_position += mAvidFirstFrameOffset;
-            essence_chunk.size -= mAvidFirstFrameOffset;
+            essence_chunk.size          -= mAvidFirstFrameOffset;
         }
         BMX_CHECK(essence_chunk.size >= 0);
         essence_chunk.is_complete = true;
@@ -241,7 +244,8 @@ int64_t EssenceChunkHelper::GetEssenceDataSize() const
         return mEssenceChunks.back().essence_offset + mEssenceChunks.back().size;
 }
 
-int64_t EssenceChunkHelper::GetFilePosition(int64_t essence_offset, int64_t size)
+void EssenceChunkHelper::GetKeyAndFilePosition(int64_t essence_offset, int64_t size, mxfKey *element_key,
+                                               int64_t *position)
 {
     EssenceOffsetUpdate(essence_offset);
 
@@ -263,8 +267,9 @@ int64_t EssenceChunkHelper::GetFilePosition(int64_t essence_offset, int64_t size
                        essence_offset, size));
     }
 
-    return mEssenceChunks[mLastEssenceChunk].file_position +
-                (essence_offset - mEssenceChunks[mLastEssenceChunk].essence_offset);
+    *element_key = mEssenceChunks[mLastEssenceChunk].element_key;
+    *position    = mEssenceChunks[mLastEssenceChunk].file_position +
+                        (essence_offset - mEssenceChunks[mLastEssenceChunk].essence_offset);
 }
 
 int64_t EssenceChunkHelper::GetFilePosition(int64_t essence_offset)

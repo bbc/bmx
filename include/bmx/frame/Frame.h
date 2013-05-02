@@ -103,6 +103,8 @@ public:
     int64_t cp_file_position;
     int64_t file_position;
 
+    mxfKey element_key;
+
 protected:
     std::map<std::string, std::vector<FrameMetadata*> > mMetadata;
 };

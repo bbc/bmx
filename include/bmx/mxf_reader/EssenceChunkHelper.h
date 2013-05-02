@@ -55,6 +55,7 @@ public:
     int64_t size;
     bool is_complete;
     size_t partition_id;
+    mxfKey element_key;
 };
 
 
@@ -67,7 +68,8 @@ public:
 
     void CreateEssenceChunkIndex();
 
-    void AppendChunk(size_t partition_id, int64_t file_position, uint8_t klv_llen, uint64_t klv_len);
+    void AppendChunk(size_t partition_id, int64_t file_position, const mxfKey *element_key, uint8_t element_llen,
+                     uint64_t element_len);
     void UpdateLastChunk(int64_t file_position, bool is_end);
     void SetIsComplete();
 
@@ -79,7 +81,7 @@ public:
     bool HaveFilePosition(int64_t essence_offset);
 
     int64_t GetEssenceDataSize() const;
-    int64_t GetFilePosition(int64_t essence_offset, int64_t size);
+    void GetKeyAndFilePosition(int64_t essence_offset, int64_t size, mxfKey *element_key, int64_t *position);
     int64_t GetFilePosition(int64_t essence_offset);
     int64_t GetEssenceOffset(int64_t file_position);
 

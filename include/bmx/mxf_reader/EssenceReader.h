@@ -77,9 +77,9 @@ private:
     uint32_t ReadClipWrappedSamples(uint32_t num_samples);
     uint32_t ReadFrameWrappedSamples(uint32_t num_samples);
 
-    void GetEditUnit(int64_t position, int64_t *file_position, int64_t *size);
-    void GetEditUnitGroup(int64_t position, uint32_t max_samples, int64_t *file_position, int64_t *size,
-                          uint32_t *num_samples);
+    void GetEditUnit(int64_t position, mxfKey *element_key, int64_t *file_position, int64_t *size);
+    void GetEditUnitGroup(int64_t position, uint32_t max_samples, mxfKey *element_key, int64_t *file_position,
+                          int64_t *size, uint32_t *num_samples);
 
     uint32_t GetConstantEditUnitSize();
 

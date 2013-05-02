@@ -295,7 +295,9 @@ void EssenceReader::Seek(int64_t position)
 bool EssenceReader::GetIndexEntry(MXFIndexEntryExt *entry, int64_t position)
 {
     if (mIndexTableHelper.GetIndexEntry(entry, position)) {
-        entry->file_offset = mEssenceChunkHelper.GetFilePosition(entry->container_offset, entry->edit_unit_size);
+        mxfKey element_key;
+        mEssenceChunkHelper.GetKeyAndFilePosition(entry->container_offset, entry->edit_unit_size, &element_key,
+                                                  &entry->file_offset);
         return true;
     }
 
@@ -333,10 +335,13 @@ uint32_t EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
         // get maximum number of contiguous samples that can be read in one go
         uint32_t num_cont_samples;
         int64_t file_position, size;
-        if (mImageStartOffset || mImageEndOffset)
-            GetEditUnitGroup(mPosition, 1, &file_position, &size, &num_cont_samples);
-        else
-            GetEditUnitGroup(mPosition, num_samples - total_num_samples, &file_position, &size, &num_cont_samples);
+        mxfKey element_key;
+        if (mImageStartOffset || mImageEndOffset) {
+            GetEditUnitGroup(mPosition, 1, &element_key, &file_position, &size, &num_cont_samples);
+        } else {
+            GetEditUnitGroup(mPosition, num_samples - total_num_samples, &element_key, &file_position, &size,
+                             &num_cont_samples);
+        }
 
         if (frame) {
             BMX_CHECK(size >= mImageStartOffset + mImageEndOffset);
@@ -364,6 +369,7 @@ uint32_t EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
                 frame->temporal_reordering = mIndexTableHelper.GetTemporalReordering(0);
                 frame->cp_file_position    = current_file_position - mImageEndOffset - size;
                 frame->file_position       = frame->cp_file_position;
+                frame->element_key         = element_key;
             }
 
             frame->IncrementSize((uint32_t)size);
@@ -393,7 +399,8 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
         if (!SeekEssence(mPosition, true))
             return i;
         if (mIndexTableHelper.HaveEditUnitSize(mPosition)) {
-            GetEditUnit(mPosition, &cp_file_position, &size);
+            mxfKey dummy_key = g_Null_Key;
+            GetEditUnit(mPosition, &dummy_key, &cp_file_position, &size);
             BMX_ASSERT(cp_file_position == mFilePosition);
         } else if (mIndexTableHelper.HaveEditUnitOffset(mPosition)) {
             size = 0;
@@ -431,6 +438,7 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                         frame->ec_position         = start_position;
                         frame->cp_file_position    = cp_file_position;
                         frame->file_position       = cp_file_position + cp_num_read;
+                        frame->element_key         = key;
                         if (mIndexTableHelper.HaveEditUnit(start_position)) {
                             frame->temporal_reordering =
                                 mIndexTableHelper.GetTemporalReordering((uint32_t)(cp_num_read - (mxfKey_extlen + llen)));
@@ -481,29 +489,30 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
     return num_samples;
 }
 
-void EssenceReader::GetEditUnit(int64_t position, int64_t *file_position, int64_t *size)
+void EssenceReader::GetEditUnit(int64_t position, mxfKey *element_key, int64_t *file_position, int64_t *size)
 {
     int64_t essence_offset, essence_size;
     mIndexTableHelper.GetEditUnit(position, &essence_offset, &essence_size);
 
-    *file_position = mEssenceChunkHelper.GetFilePosition(essence_offset, essence_size);
-    *size          = essence_size;
+    mEssenceChunkHelper.GetKeyAndFilePosition(essence_offset, essence_size, element_key, file_position);
+    *size = essence_size;
 }
 
-void EssenceReader::GetEditUnitGroup(int64_t position, uint32_t max_samples, int64_t *file_position, int64_t *size,
-                                     uint32_t *num_samples)
+void EssenceReader::GetEditUnitGroup(int64_t position, uint32_t max_samples, mxfKey *element_key, int64_t *file_position,
+                                     int64_t *size, uint32_t *num_samples)
 {
     BMX_CHECK(max_samples > 0);
 
     if (!mIndexTableHelper.HaveConstantEditUnitSize() || max_samples == 1) {
-        GetEditUnit(position, file_position, size);
+        GetEditUnit(position, element_key, file_position, size);
         *num_samples = 1;
         return;
     }
 
     int64_t first_file_position;
     int64_t first_size;
-    GetEditUnit(position, &first_file_position, &first_size);
+    mxfKey first_element_key;
+    GetEditUnit(position, &first_element_key, &first_file_position, &first_size);
 
     // binary search to find number of contiguous edit units
     // first <= left <= right <= last
@@ -514,8 +523,9 @@ void EssenceReader::GetEditUnitGroup(int64_t position, uint32_t max_samples, int
 
     int64_t right_file_position;
     int64_t right_size;
+    mxfKey right_element_key;
     while (right_num_samples != left_num_samples) {
-        GetEditUnit(position + right_num_samples - 1, &right_file_position, &right_size);
+        GetEditUnit(position + right_num_samples - 1, &right_element_key, &right_file_position, &right_size);
         BMX_CHECK(right_size == mIndexTableHelper.GetEditUnitSize());
 
         if (right_file_position > first_file_position + mIndexTableHelper.GetEditUnitSize() * (right_num_samples - 1)) {
@@ -530,9 +540,10 @@ void EssenceReader::GetEditUnitGroup(int64_t position, uint32_t max_samples, int
         }
     }
 
+    *element_key   = first_element_key;
     *file_position = first_file_position;
-    *size = first_size * left_num_samples;
-    *num_samples = left_num_samples;
+    *size          = first_size * left_num_samples;
+    *num_samples   = left_num_samples;
 }
 
 uint32_t EssenceReader::GetConstantEditUnitSize()
@@ -850,12 +861,12 @@ bool EssenceReader::SeekContentPackageStart()
                     continue;
                 }
                 if (!mEssenceChunkHelper.IsComplete())
-                    mEssenceChunkHelper.AppendChunk(partition_id, mFile->tell(), llen, len);
+                    mEssenceChunkHelper.AppendChunk(partition_id, mFile->tell(), &key, llen, len);
             } else {
                 if (!mEssenceChunkHelper.IsComplete() &&
                     mEssenceChunkHelper.GetNumIndexedPartitions() < mFile->getPartitions().size())
                 {
-                    mEssenceChunkHelper.AppendChunk(partition_id, mFile->tell(), llen, len);
+                    mEssenceChunkHelper.AppendChunk(partition_id, mFile->tell(), &key, llen, len);
                 }
             }
             if (!have_start_key)
