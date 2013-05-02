@@ -359,15 +359,15 @@ uint32_t EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
                 size -= mImageStartOffset;
             }
 
-            frame->IncrementSize((uint32_t)size);
-            frame->num_samples += num_cont_samples;
-
             if (frame->IsEmpty()) {
                 frame->ec_position         = mPosition;
                 frame->temporal_reordering = mIndexTableHelper.GetTemporalReordering(0);
                 frame->cp_file_position    = current_file_position - mImageEndOffset - size;
                 frame->file_position       = frame->cp_file_position;
             }
+
+            frame->IncrementSize((uint32_t)size);
+            frame->num_samples += num_cont_samples;
         } else {
             mFile->seek(file_position + size, SEEK_SET);
             current_file_position = file_position + size;
