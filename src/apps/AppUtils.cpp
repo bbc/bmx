@@ -49,6 +49,7 @@
 #endif
 
 #include <bmx/apps/AppUtils.h>
+#include <bmx/clip_writer/ClipWriter.h>
 #include "ps_avci_header_data.h"
 #include <bmx/Utils.h>
 #include <bmx/Version.h>
@@ -153,6 +154,22 @@ string bmx::get_app_version_info(const char *app_name)
     }
 
     return buffer;
+}
+
+
+string bmx::clip_type_to_string(ClipWriterType clip_type, ClipSubType sub_clip_type)
+{
+    string sub_type_str;
+    switch (sub_clip_type)
+    {
+        case AS11_CLIP_SUB_TYPE:
+            sub_type_str = "AS-11 ";
+            break;
+        case NO_CLIP_SUB_TYPE:
+            break;
+    }
+
+    return sub_type_str + ClipWriter::ClipWriterTypeToString(clip_type);
 }
 
 
@@ -513,26 +530,35 @@ bool bmx::parse_avid_import_name(const char *import_name, URI *uri)
     }
 }
 
-bool bmx::parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type)
+bool bmx::parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type, ClipSubType *clip_sub_type)
 {
-    if (strcmp(clip_type_str, "as02") == 0)
-        *clip_type = CW_AS02_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "as11op1a") == 0)
-        *clip_type = CW_AS11_OP1A_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "as11d10") == 0)
-        *clip_type = CW_AS11_D10_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "op1a") == 0)
-        *clip_type = CW_OP1A_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "avid") == 0)
-        *clip_type = CW_AVID_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "d10") == 0)
-        *clip_type = CW_D10_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "rdd9") == 0)
-        *clip_type = CW_RDD9_CLIP_TYPE;
-    else if (strcmp(clip_type_str, "wave") == 0)
-        *clip_type = CW_WAVE_CLIP_TYPE;
-    else
+    if (strcmp(clip_type_str, "as02") == 0) {
+        *clip_type     = CW_AS02_CLIP_TYPE;
+        *clip_sub_type = NO_CLIP_SUB_TYPE;
+    } else if (strcmp(clip_type_str, "as11op1a") == 0) {
+        *clip_type     = CW_OP1A_CLIP_TYPE;
+        *clip_sub_type = AS11_CLIP_SUB_TYPE;
+    } else if (strcmp(clip_type_str, "as11d10") == 0) {
+        *clip_type     = CW_D10_CLIP_TYPE;
+        *clip_sub_type = AS11_CLIP_SUB_TYPE;
+    } else if (strcmp(clip_type_str, "op1a") == 0) {
+        *clip_type     = CW_OP1A_CLIP_TYPE;
+        *clip_sub_type = NO_CLIP_SUB_TYPE;
+    } else if (strcmp(clip_type_str, "avid") == 0) {
+        *clip_type     = CW_AVID_CLIP_TYPE;
+        *clip_sub_type = NO_CLIP_SUB_TYPE;
+    } else if (strcmp(clip_type_str, "d10") == 0) {
+        *clip_type     = CW_D10_CLIP_TYPE;
+        *clip_sub_type = NO_CLIP_SUB_TYPE;
+    } else if (strcmp(clip_type_str, "rdd9") == 0) {
+        *clip_type     = CW_RDD9_CLIP_TYPE;
+        *clip_sub_type = NO_CLIP_SUB_TYPE;
+    } else if (strcmp(clip_type_str, "wave") == 0) {
+        *clip_type     = CW_WAVE_CLIP_TYPE;
+        *clip_sub_type = NO_CLIP_SUB_TYPE;
+    } else {
         return false;
+    }
 
     return true;
 }

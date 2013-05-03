@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2013, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,17 +29,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_AS11_CLIP_H_
-#define BMX_AS11_CLIP_H_
+#ifndef BMX_AS11_WRITER_HELPER_H_
+#define BMX_AS11_WRITER_HELPER_H_
 
 
-#include <bmx/mxf_op1a/OP1AFile.h>
-#include <bmx/d10_mxf/D10File.h>
-
-#include <bmx/as11/AS11Track.h>
-#include <bmx/as11/AS11DMS.h>
+#include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as11/AS11CoreFramework.h>
-#include <bmx/as11/UKDPPDMS.h>
 #include <bmx/as11/UKDPPFramework.h>
 
 
@@ -65,39 +60,14 @@ typedef struct
 } AS11TCSegment;
 
 
-class AS11Clip
+class AS11WriterHelper
 {
 public:
-    static AS11Clip* OpenNewOP1AClip(int flavour, mxfpp::File *file, Rational frame_rate);
-    static AS11Clip* OpenNewD10Clip(int flavour, mxfpp::File *file, Rational frame_rate);
+    AS11WriterHelper(ClipWriter *clip);
+    ~AS11WriterHelper();
 
-    static std::string AS11ClipTypeToString(AS11ClipType clip_type);
-
-public:
-    AS11Clip(OP1AFile *clip);
-    AS11Clip(D10File *clip);
-    ~AS11Clip();
-
-    void SetClipName(std::string name);                // default ""
-    void SetStartTimecode(Timecode start_timecode);    // default 00:00:00:00 non-drop
-    void SetPartitionInterval(int64_t frame_count);    // default 0 (single partition)
-    void SetProductInfo(std::string company_name, std::string product_name, mxfProductVersion product_version,
-                        std::string version, mxfUUID product_uid);
-
-    void SetOutputStartOffset(int64_t offset);
-    void SetOutputEndOffset(int64_t offset);
-
-    AS11Track* CreateTrack(EssenceType essence_type);
-
-public:
-    void PrepareHeaderMetadata();
-    void PrepareWrite();
-    void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
-    void CompleteWrite();
-
-public:
-    mxfpp::HeaderMetadata* GetHeaderMetadata() const;
-    mxfpp::DataModel* GetDataModel() const;
+    void RegisterAS11Extensions();
+    void RegisterUKDPPExtensions();
 
     void InsertAS11CoreFramework(AS11CoreFramework *framework);
     void InsertUKDPPFramework(UKDPPFramework *framework);
@@ -108,34 +78,14 @@ public:
     uint16_t GetTotalSegments();
     int64_t GetTotalSegmentDuration();
 
-public:
-    Rational GetFrameRate() const;
-
-    Timecode GetStartTimecode() const;
-
-    int64_t GetDuration() const;
-
-    int64_t GetInputDuration() const;
-
-    uint32_t GetNumTracks() const { return (uint32_t)mTracks.size(); }
-    AS11Track* GetTrack(uint32_t track_index);
-
-public:
-    AS11ClipType GetType() const { return mType; }
-    OP1AFile* GetOP1AClip() const { return mOP1AClip; }
-    D10File* GetD10Clip() const { return mD10Clip; }
+    ClipWriter* GetClip() const { return mClip; }
 
 private:
     void AppendDMSLabel(mxfUL scheme_label);
     void InsertFramework(uint32_t track_id, std::string track_name, mxfpp::DMFramework *framework);
 
 private:
-    AS11ClipType mType;
-    OP1AFile *mOP1AClip;
-    D10File *mD10Clip;
-
-    std::vector<AS11Track*> mTracks;
-
+    ClipWriter *mClip;
     mxfpp::Sequence *mSegmentationSequence;
 };
 

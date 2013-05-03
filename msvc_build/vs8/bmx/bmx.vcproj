@@ -310,10 +310,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\include\bmx\as11\AS11Clip.h"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\include\bmx\as11\AS11CoreFramework.h"
 					>
 				</File>
@@ -330,7 +326,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\include\bmx\as11\AS11Track.h"
+					RelativePath="..\..\..\include\bmx\as11\AS11WriterHelper.h"
 					>
 				</File>
 				<File
@@ -868,10 +864,6 @@
 				Name="as11"
 				>
 				<File
-					RelativePath="..\..\..\src\as11\AS11Clip.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\..\..\src\as11\AS11CoreFramework.cpp"
 					>
 				</File>
@@ -888,7 +880,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\..\src\as11\AS11Track.cpp"
+					RelativePath="..\..\..\src\as11\AS11WriterHelper.cpp"
 					>
 				</File>
 				<File

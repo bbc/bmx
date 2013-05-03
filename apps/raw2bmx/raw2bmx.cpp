@@ -89,7 +89,6 @@ typedef struct
 
 typedef struct
 {
-    ClipWriterType clip_type;
     EssenceTypeGroup essence_type_group;
     EssenceType essence_type;
     bool is_wave;
@@ -474,6 +473,7 @@ int main(int argc, const char** argv)
 {
     const char *log_filename = 0;
     ClipWriterType clip_type = CW_AS02_CLIP_TYPE;
+    ClipSubType clip_sub_type = NO_CLIP_SUB_TYPE;
     const char *output_name = "";
     vector<RawInput> inputs;
     RawInput input;
@@ -576,7 +576,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (!parse_clip_type(argv[cmdln_index + 1], &clip_type))
+            if (!parse_clip_type(argv[cmdln_index + 1], &clip_type, &clip_sub_type))
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -2192,8 +2192,6 @@ int main(int argc, const char** argv)
         for (i = 0; i < inputs.size(); i++) {
             RawInput *input = &inputs[i];
 
-            input->clip_type = clip_type;
-
             if (input->is_wave) {
                 if (!open_wave_reader(input))
                     throw false;
@@ -2569,7 +2567,7 @@ int main(int argc, const char** argv)
                     log_error("Essence type '%s' @%d/%d fps not supported for clip type '%s'\n",
                               essence_type_to_string(input->essence_type),
                               frame_rate.numerator, frame_rate.denominator,
-                              ClipWriter::ClipWriterTypeToString(input->clip_type).c_str());
+                              clip_type_to_string(clip_type, clip_sub_type).c_str());
                     throw false;
                 }
             }
@@ -2579,15 +2577,15 @@ int main(int argc, const char** argv)
         // create clip
 
         int flavour = 0;
-        if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_OP1A_CLIP_TYPE) {
+        if (clip_type == CW_OP1A_CLIP_TYPE) {
             flavour = OP1A_DEFAULT_FLAVOUR;
-            if (clip_type == CW_OP1A_CLIP_TYPE && min_part)
+            if (clip_sub_type != AS11_CLIP_SUB_TYPE && min_part)
                 flavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
             if (file_md5)
                 flavour |= OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
                 flavour |= OP1A_SINGLE_PASS_WRITE_FLAVOUR;
-        } else if (clip_type == CW_AS11_D10_CLIP_TYPE || clip_type == CW_D10_CLIP_TYPE) {
+        } else if (clip_type == CW_D10_CLIP_TYPE) {
             flavour = D10_DEFAULT_FLAVOUR;
             // single pass flavours not (yet) supported
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
@@ -2603,12 +2601,6 @@ int main(int argc, const char** argv)
         {
             case CW_AS02_CLIP_TYPE:
                 clip = ClipWriter::OpenNewAS02Clip(output_name, true, frame_rate, &file_factory, false);
-                break;
-            case CW_AS11_OP1A_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS11OP1AClip(flavour, file_factory.OpenNew(output_name), frame_rate);
-                break;
-            case CW_AS11_D10_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS11D10Clip(flavour, file_factory.OpenNew(output_name), frame_rate);
                 break;
             case CW_OP1A_CLIP_TYPE:
                 clip = ClipWriter::OpenNewOP1AClip(flavour, file_factory.OpenNew(output_name), frame_rate);
@@ -2640,6 +2632,8 @@ int main(int argc, const char** argv)
         clip->SetStartTimecode(start_timecode);
         if (clip_name)
             clip->SetClipName(clip_name);
+        else if (clip_sub_type == AS11_CLIP_SUB_TYPE && as11_helper.HaveProgrammeTitle())
+            clip->SetClipName(as11_helper.GetProgrammeTitle());
         clip->SetProductInfo(company_name, product_name, product_version, version_string, product_uid);
 
         if (clip_type == CW_AS02_CLIP_TYPE) {
@@ -2661,28 +2655,11 @@ int main(int argc, const char** argv)
                 bundle->GetShim()->AppendAnnotation(shim_annot);
             else if (!shim_id)
                 bundle->GetShim()->AppendAnnotation(DEFAULT_SHIM_ANNOTATION);
-        } else if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE) {
-            AS11Clip *as11_clip = clip->GetAS11Clip();
-
-            if (clip_type == CW_AS11_OP1A_CLIP_TYPE) {
-                if (partition_interval_set)
-                    as11_clip->SetPartitionInterval(partition_interval);
-                as11_clip->SetOutputStartOffset(output_start_offset);
-                as11_clip->SetOutputEndOffset(- output_end_offset);
-            }
-
-            if (clip_type == CW_AS11_D10_CLIP_TYPE) {
-                D10File *d10_clip = as11_clip->GetD10Clip();
-                d10_clip->SetMuteSoundFlags(d10_mute_sound_flags);
-                d10_clip->SetInvalidSoundFlags(d10_invalid_sound_flags);
-            }
-
-            if (!clip_name && as11_helper.HaveProgrammeTitle())
-                as11_clip->SetClipName(as11_helper.GetProgrammeTitle());
         } else if (clip_type == CW_OP1A_CLIP_TYPE) {
             OP1AFile *op1a_clip = clip->GetOP1AClip();
 
-            op1a_clip->SetClipWrapped(clip_wrap);
+            if (clip_sub_type != AS11_CLIP_SUB_TYPE)
+                op1a_clip->SetClipWrapped(clip_wrap);
             if (partition_interval_set)
                 op1a_clip->SetPartitionInterval(partition_interval);
             op1a_clip->SetOutputStartOffset(output_start_offset);
@@ -3061,11 +3038,8 @@ int main(int argc, const char** argv)
 
         // add AS-11 descriptive metadata
 
-        if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE) {
-            AS11Clip *as11_clip = clip->GetAS11Clip();
-            as11_clip->PrepareHeaderMetadata();
-            as11_helper.InsertFrameworks(as11_clip);
-        }
+        if (clip_sub_type == AS11_CLIP_SUB_TYPE)
+            as11_helper.InsertFrameworks(clip);
 
 
         // read more than 1 sample to improve efficiency if the input is sound only and the output
@@ -3151,7 +3125,7 @@ int main(int argc, const char** argv)
 
         // complete AS-11 descriptive metadata
 
-        if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE)
+        if (clip_sub_type == AS11_CLIP_SUB_TYPE)
             as11_helper.Complete();
 
 
@@ -3165,11 +3139,8 @@ int main(int argc, const char** argv)
 
 
         if (file_md5) {
-            if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_OP1A_CLIP_TYPE) {
+            if (clip_type == CW_OP1A_CLIP_TYPE) {
                 OP1AFile *op1a_clip = clip->GetOP1AClip();
-                AS11Clip *as11_clip = clip->GetAS11Clip();
-                if (as11_clip)
-                    op1a_clip = as11_clip->GetOP1AClip();
 
                 log_info("File MD5: %s\n", op1a_clip->GetMD5DigestStr().c_str());
             } else if (clip_type == CW_RDD9_CLIP_TYPE) {

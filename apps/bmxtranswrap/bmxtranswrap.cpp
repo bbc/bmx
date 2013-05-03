@@ -280,6 +280,7 @@ int main(int argc, const char** argv)
     vector<const char *> input_filenames;
     const char *log_filename = 0;
     ClipWriterType clip_type = CW_AS02_CLIP_TYPE;
+    ClipSubType clip_sub_type = NO_CLIP_SUB_TYPE;
     const char *output_name = "";
     Timecode start_timecode;
     const char *start_timecode_str = 0;
@@ -406,7 +407,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (!parse_clip_type(argv[cmdln_index + 1], &clip_type))
+            if (!parse_clip_type(argv[cmdln_index + 1], &clip_type, &clip_sub_type))
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -1271,7 +1272,7 @@ int main(int argc, const char** argv)
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              sampling_rate.numerator, sampling_rate.denominator,
-                             ClipWriter::ClipWriterTypeToString(clip_type).c_str());
+                             clip_type_to_string(clip_type, clip_sub_type).c_str());
                     is_supported = false;
                 } else if (input_sound_info->bits_per_sample == 0 || input_sound_info->bits_per_sample > 32) {
                     log_warn("Track %"PRIszt" (%s) bits per sample %u not supported\n",
@@ -1324,7 +1325,7 @@ int main(int argc, const char** argv)
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              frame_rate.numerator, frame_rate.denominator,
-                             ClipWriter::ClipWriterTypeToString(clip_type).c_str());
+                             clip_type_to_string(clip_type, clip_sub_type).c_str());
                     is_supported = false;
                 }
 
@@ -1403,7 +1404,7 @@ int main(int argc, const char** argv)
                 if (precharge != 0 && (no_precharge || clip_type == CW_AVID_CLIP_TYPE)) {
                     if (!no_precharge) {
                         log_warn("'%s' clip type does not support precharge\n",
-                                 ClipWriter::ClipWriterTypeToString(clip_type).c_str());
+                                 clip_type_to_string(clip_type, clip_sub_type).c_str());
                     }
                     log_info("Precharge resulted in %d frame adjustment of start position and duration\n",
                              precharge);
@@ -1419,7 +1420,7 @@ int main(int argc, const char** argv)
                     }
                     if (!no_rollout) {
                         log_warn("'%s' clip type does not support rollout\n",
-                                 ClipWriter::ClipWriterTypeToString(clip_type).c_str());
+                                 clip_type_to_string(clip_type, clip_sub_type).c_str());
                     }
                     log_info("Rollout resulted in %"PRId64" frame adjustment of duration\n",
                              output_duration - original_output_duration);
@@ -1494,15 +1495,15 @@ int main(int argc, const char** argv)
         // create output clip and initialize
 
         int flavour = 0;
-        if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_OP1A_CLIP_TYPE) {
+        if (clip_type == CW_OP1A_CLIP_TYPE) {
             flavour = OP1A_DEFAULT_FLAVOUR;
-            if (clip_type == CW_OP1A_CLIP_TYPE && min_part)
+            if (clip_sub_type != AS11_CLIP_SUB_TYPE && min_part)
                 flavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
             if (output_file_md5)
                 flavour |= OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
                 flavour |= OP1A_SINGLE_PASS_WRITE_FLAVOUR;
-        } else if (clip_type == CW_AS11_D10_CLIP_TYPE || clip_type == CW_D10_CLIP_TYPE) {
+        } else if (clip_type == CW_D10_CLIP_TYPE) {
             flavour = D10_DEFAULT_FLAVOUR;
             if (output_file_md5)
                 flavour |= D10_SINGLE_PASS_MD5_WRITE_FLAVOUR;
@@ -1521,12 +1522,6 @@ int main(int argc, const char** argv)
         {
             case CW_AS02_CLIP_TYPE:
                 clip = ClipWriter::OpenNewAS02Clip(output_name, true, clip_frame_rate, &file_factory, false);
-                break;
-            case CW_AS11_OP1A_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS11OP1AClip(flavour, file_factory.OpenNew(output_name), clip_frame_rate);
-                break;
-            case CW_AS11_D10_CLIP_TYPE:
-                clip = ClipWriter::OpenNewAS11D10Clip(flavour, file_factory.OpenNew(output_name), clip_frame_rate);
                 break;
             case CW_OP1A_CLIP_TYPE:
                 clip = ClipWriter::OpenNewOP1AClip(flavour, file_factory.OpenNew(output_name), clip_frame_rate);
@@ -1556,6 +1551,8 @@ int main(int argc, const char** argv)
             clip->SetStartTimecode(start_timecode);
         if (clip_name)
             clip->SetClipName(clip_name);
+        else if (clip_sub_type == AS11_CLIP_SUB_TYPE && as11_helper.HaveProgrammeTitle())
+            clip->SetClipName(as11_helper.GetProgrammeTitle());
         clip->SetProductInfo(company_name, product_name, product_version, version_string, product_uid);
 
         if (clip_type == CW_AS02_CLIP_TYPE) {
@@ -1577,36 +1574,14 @@ int main(int argc, const char** argv)
                 bundle->GetShim()->AppendAnnotation(shim_annot);
             else if (!shim_id)
                 bundle->GetShim()->AppendAnnotation(DEFAULT_SHIM_ANNOTATION);
-        } else if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE) {
-            AS11Clip *as11_clip = clip->GetAS11Clip();
-
-            if (clip_type == CW_AS11_OP1A_CLIP_TYPE) {
-                if (partition_interval_set)
-                    as11_clip->SetPartitionInterval(partition_interval);
-                as11_clip->SetOutputStartOffset(- precharge);
-                as11_clip->SetOutputEndOffset(- rollout);
-            }
-
-            if (clip_type == CW_AS11_D10_CLIP_TYPE) {
-                D10File *d10_clip = as11_clip->GetD10Clip();
-                d10_clip->SetMuteSoundFlags(d10_mute_sound_flags);
-                d10_clip->SetInvalidSoundFlags(d10_invalid_sound_flags);
-            }
-
-            if (clip_type == CW_AS11_OP1A_CLIP_TYPE && (flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR))
-                as11_clip->GetOP1AClip()->SetInputDuration(reader->GetReadDuration());
-            else if (clip_type == CW_AS11_D10_CLIP_TYPE && (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR))
-                as11_clip->GetD10Clip()->SetInputDuration(reader->GetReadDuration());
-
-            if (!clip_name && as11_helper.HaveProgrammeTitle())
-                as11_clip->SetClipName(as11_helper.GetProgrammeTitle());
         } else if (clip_type == CW_OP1A_CLIP_TYPE) {
             OP1AFile *op1a_clip = clip->GetOP1AClip();
 
             if (flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)
                 op1a_clip->SetInputDuration(reader->GetReadDuration());
 
-            op1a_clip->SetClipWrapped(clip_wrap);
+            if (clip_sub_type != AS11_CLIP_SUB_TYPE)
+                op1a_clip->SetClipWrapped(clip_wrap);
             if (partition_interval_set)
                 op1a_clip->SetPartitionInterval(partition_interval);
             op1a_clip->SetOutputStartOffset(- precharge);
@@ -1996,13 +1971,11 @@ int main(int argc, const char** argv)
 
         // add AS-11 descriptive metadata
 
-        if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_AS11_D10_CLIP_TYPE) {
-            AS11Clip *as11_clip = clip->GetAS11Clip();
-            as11_clip->PrepareHeaderMetadata();
-            as11_helper.InsertFrameworks(as11_clip);
+        if (clip_sub_type == AS11_CLIP_SUB_TYPE) {
+            as11_helper.InsertFrameworks(clip);
 
-            if ((clip_type == CW_AS11_OP1A_CLIP_TYPE && (flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)) ||
-                (clip_type == CW_AS11_D10_CLIP_TYPE  && (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR)))
+            if ((clip_type == CW_OP1A_CLIP_TYPE && (flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)) ||
+                (clip_type == CW_D10_CLIP_TYPE  && (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR)))
             {
                 as11_helper.Complete();
             }
@@ -2211,8 +2184,9 @@ int main(int argc, const char** argv)
 
         // complete AS-11 descriptive metadata
 
-        if ((clip_type == CW_AS11_OP1A_CLIP_TYPE && !(flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)) ||
-            (clip_type == CW_AS11_D10_CLIP_TYPE  && !(flavour & D10_SINGLE_PASS_WRITE_FLAVOUR)))
+        if (clip_sub_type == AS11_CLIP_SUB_TYPE &&
+                ((clip_type == CW_OP1A_CLIP_TYPE && !(flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)) ||
+                 (clip_type == CW_D10_CLIP_TYPE  && !(flavour & D10_SINGLE_PASS_WRITE_FLAVOUR))))
         {
             as11_helper.Complete();
         }
@@ -2238,18 +2212,12 @@ int main(int argc, const char** argv)
         // output file md5
 
         if (output_file_md5) {
-            if (clip_type == CW_AS11_OP1A_CLIP_TYPE || clip_type == CW_OP1A_CLIP_TYPE) {
+            if (clip_type == CW_OP1A_CLIP_TYPE) {
                 OP1AFile *op1a_clip = clip->GetOP1AClip();
-                AS11Clip *as11_clip = clip->GetAS11Clip();
-                if (as11_clip)
-                    op1a_clip = as11_clip->GetOP1AClip();
 
                 log_info("Output file MD5: %s\n", op1a_clip->GetMD5DigestStr().c_str());
-            } else if (clip_type == CW_AS11_D10_CLIP_TYPE || clip_type == CW_D10_CLIP_TYPE) {
+            } else if (clip_type == CW_D10_CLIP_TYPE) {
                 D10File *d10_clip = clip->GetD10Clip();
-                AS11Clip *as11_clip = clip->GetAS11Clip();
-                if (as11_clip)
-                    d10_clip = as11_clip->GetD10Clip();
 
                 log_info("Output file MD5: %s\n", d10_clip->GetMD5DigestStr().c_str());
             } else if (clip_type == CW_RDD9_CLIP_TYPE) {

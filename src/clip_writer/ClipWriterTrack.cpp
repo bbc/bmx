@@ -37,7 +37,6 @@
 #include <bmx/as02/AS02MPEG2LGTrack.h>
 #include <bmx/as02/AS02AVCITrack.h>
 #include <bmx/as02/AS02PCMTrack.h>
-#include <bmx/as11/AS11Track.h>
 #include <bmx/mxf_op1a/OP1APictureTrack.h>
 #include <bmx/mxf_op1a/OP1ADVTrack.h>
 #include <bmx/mxf_op1a/OP1AUncTrack.h>
@@ -75,10 +74,6 @@ bool ClipWriterTrack::IsSupported(ClipWriterType clip_type, EssenceType essence_
     {
         case CW_AS02_CLIP_TYPE:
             return AS02Track::IsSupported(essence_type, sample_rate);
-        case CW_AS11_OP1A_CLIP_TYPE:
-            return AS11Track::IsSupported(AS11_OP1A_CLIP_TYPE, essence_type, sample_rate);
-        case CW_AS11_D10_CLIP_TYPE:
-            return AS11Track::IsSupported(AS11_D10_CLIP_TYPE, essence_type, sample_rate);
         case CW_OP1A_CLIP_TYPE:
             return OP1ATrack::IsSupported(essence_type, sample_rate);
         case CW_AVID_CLIP_TYPE:
@@ -101,23 +96,6 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AS02Track *track)
     mClipType = CW_AS02_CLIP_TYPE;
     mEssenceType = essence_type;
     mAS02Track = track;
-    mAS11Track = 0;
-    mOP1ATrack = 0;
-    mAvidTrack = 0;
-    mD10Track = 0;
-    mRDD9Track = 0;
-    mWaveTrack = 0;
-}
-
-ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AS11Track *track)
-{
-    if (track->GetClipType() == AS11_OP1A_CLIP_TYPE)
-        mClipType = CW_AS11_OP1A_CLIP_TYPE;
-    else
-        mClipType = CW_AS11_D10_CLIP_TYPE;
-    mEssenceType = essence_type;
-    mAS02Track = 0;
-    mAS11Track = track;
     mOP1ATrack = 0;
     mAvidTrack = 0;
     mD10Track = 0;
@@ -130,7 +108,6 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, OP1ATrack *track)
     mClipType = CW_OP1A_CLIP_TYPE;
     mEssenceType = essence_type;
     mAS02Track = 0;
-    mAS11Track = 0;
     mOP1ATrack = track;
     mAvidTrack = 0;
     mD10Track = 0;
@@ -143,7 +120,6 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AvidTrack *track)
     mClipType = CW_AVID_CLIP_TYPE;
     mEssenceType = essence_type;
     mAS02Track = 0;
-    mAS11Track = 0;
     mOP1ATrack = 0;
     mAvidTrack = track;
     mD10Track = 0;
@@ -156,7 +132,6 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, D10Track *track)
     mClipType = CW_D10_CLIP_TYPE;
     mEssenceType = essence_type;
     mAS02Track = 0;
-    mAS11Track = 0;
     mOP1ATrack = 0;
     mAvidTrack = 0;
     mD10Track = track;
@@ -169,7 +144,6 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, RDD9Track *track)
     mClipType = CW_RDD9_CLIP_TYPE;
     mEssenceType = essence_type;
     mAS02Track = 0;
-    mAS11Track = 0;
     mOP1ATrack = 0;
     mAvidTrack = 0;
     mD10Track = 0;
@@ -182,7 +156,6 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, WaveTrackWriter *trac
     mClipType = CW_WAVE_CLIP_TYPE;
     mEssenceType = essence_type;
     mAS02Track = 0;
-    mAS11Track = 0;
     mOP1ATrack = 0;
     mAvidTrack = 0;
     mD10Track = 0;
@@ -200,10 +173,6 @@ void ClipWriterTrack::SetOutputTrackNumber(uint32_t track_number)
     {
         case CW_AS02_CLIP_TYPE:
             mAS02Track->SetOutputTrackNumber(track_number);
-            break;
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            mAS11Track->SetOutputTrackNumber(track_number);
             break;
         case CW_OP1A_CLIP_TYPE:
             mOP1ATrack->SetOutputTrackNumber(track_number);
@@ -235,12 +204,6 @@ void ClipWriterTrack::SetAspectRatio(Rational aspect_ratio)
             AS02PictureTrack *pict_track = dynamic_cast<AS02PictureTrack*>(mAS02Track);
             if (pict_track)
                 pict_track->SetAspectRatio(aspect_ratio);
-            break;
-        }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-        {
-            mAS11Track->SetAspectRatio(aspect_ratio);
             break;
         }
         case CW_OP1A_CLIP_TYPE:
@@ -291,12 +254,6 @@ void ClipWriterTrack::SetComponentDepth(uint32_t depth)
                 dv_track->SetComponentDepth(depth);
             else if (unc_track)
                 unc_track->SetComponentDepth(depth);
-            break;
-        }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-        {
-            mAS11Track->SetComponentDepth(depth);
             break;
         }
         case CW_OP1A_CLIP_TYPE:
@@ -350,27 +307,6 @@ void ClipWriterTrack::SetAVCIMode(AVCIMode mode)
                         log_warn("AVCI mode %d not supported\n", mode);
                         break;
                 }
-            }
-            break;
-        }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-        {
-            switch (mode)
-            {
-                case AVCI_PASS_MODE:
-                case AVCI_FIRST_OR_ALL_FRAME_HEADER_MODE:
-                    mAS11Track->SetAVCIMode(OP1A_AVCI_FIRST_OR_ALL_FRAME_HEADER_MODE);
-                    break;
-                case AVCI_FIRST_FRAME_HEADER_MODE:
-                    mAS11Track->SetAVCIMode(OP1A_AVCI_FIRST_FRAME_HEADER_MODE);
-                    break;
-                case AVCI_ALL_FRAME_HEADER_MODE:
-                    mAS11Track->SetAVCIMode(OP1A_AVCI_ALL_FRAME_HEADER_MODE);
-                    break;
-                default:
-                    log_warn("AVCI mode %d not supported\n", mode);
-                    break;
             }
             break;
         }
@@ -441,12 +377,6 @@ void ClipWriterTrack::SetAVCIHeader(const unsigned char *data, uint32_t size)
                 avci_track->SetHeader(data, size);
             break;
         }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-        {
-            mAS11Track->SetAVCIHeader(data, size);
-            break;
-        }
         case CW_OP1A_CLIP_TYPE:
         {
             OP1AAVCITrack *avci_track = dynamic_cast<OP1AAVCITrack*>(mOP1ATrack);
@@ -475,11 +405,6 @@ void ClipWriterTrack::SetReplaceAVCIHeader(bool enable)
 {
     switch (mClipType)
     {
-        case CW_AS11_OP1A_CLIP_TYPE:
-        {
-            mAS11Track->SetReplaceAVCIHeader(enable);
-            break;
-        }
         case CW_OP1A_CLIP_TYPE:
         {
             OP1AAVCITrack *avci_track = dynamic_cast<OP1AAVCITrack*>(mOP1ATrack);
@@ -488,7 +413,6 @@ void ClipWriterTrack::SetReplaceAVCIHeader(bool enable)
             break;
         }
         case CW_AS02_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
         case CW_AVID_CLIP_TYPE:
         case CW_D10_CLIP_TYPE:
         case CW_RDD9_CLIP_TYPE:
@@ -509,12 +433,6 @@ void ClipWriterTrack::SetAFD(uint8_t afd)
             AS02PictureTrack *picture_track = dynamic_cast<AS02PictureTrack*>(mAS02Track);
             if (picture_track)
                 picture_track->SetAFD(afd);
-            break;
-        }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-        {
-            mAS11Track->SetAFD(afd);
             break;
         }
         case CW_OP1A_CLIP_TYPE:
@@ -553,8 +471,6 @@ void ClipWriterTrack::SetInputHeight(uint32_t height)
     switch (mClipType)
     {
         case CW_AS02_CLIP_TYPE:
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
         case CW_OP1A_CLIP_TYPE:
         case CW_D10_CLIP_TYPE:
         case CW_RDD9_CLIP_TYPE:
@@ -586,12 +502,6 @@ void ClipWriterTrack::SetSamplingRate(Rational sampling_rate)
             AS02PCMTrack *pcm_track = dynamic_cast<AS02PCMTrack*>(mAS02Track);
             if (pcm_track)
                 pcm_track->SetSamplingRate(sampling_rate);
-            break;
-        }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-        {
-            mAS11Track->SetSamplingRate(sampling_rate);
             break;
         }
         case CW_OP1A_CLIP_TYPE:
@@ -642,12 +552,6 @@ void ClipWriterTrack::SetQuantizationBits(uint32_t bits)
                 pcm_track->SetQuantizationBits(bits);
             break;
         }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-        {
-            mAS11Track->SetQuantizationBits(bits);
-            break;
-        }
         case CW_OP1A_CLIP_TYPE:
         {
             OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
@@ -694,12 +598,6 @@ void ClipWriterTrack::SetChannelCount(uint32_t count)
             AS02PCMTrack *pcm_track = dynamic_cast<AS02PCMTrack*>(mAS02Track);
             if (pcm_track)
                 pcm_track->SetChannelCount(count);
-            break;
-        }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-        {
-            mAS11Track->SetChannelCount(count);
             break;
         }
         case CW_OP1A_CLIP_TYPE:
@@ -750,12 +648,6 @@ void ClipWriterTrack::SetLocked(bool locked)
                 pcm_track->SetLocked(locked);
             break;
         }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-        {
-            mAS11Track->SetLocked(locked);
-            break;
-        }
         case CW_OP1A_CLIP_TYPE:
         {
             OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
@@ -801,12 +693,6 @@ void ClipWriterTrack::SetAudioRefLevel(int8_t level)
             AS02PCMTrack *pcm_track = dynamic_cast<AS02PCMTrack*>(mAS02Track);
             if (pcm_track)
                 pcm_track->SetAudioRefLevel(level);
-            break;
-        }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-        {
-            mAS11Track->SetAudioRefLevel(level);
             break;
         }
         case CW_OP1A_CLIP_TYPE:
@@ -856,12 +742,6 @@ void ClipWriterTrack::SetDialNorm(int8_t dial_norm)
                 pcm_track->SetDialNorm(dial_norm);
             break;
         }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-        {
-            mAS11Track->SetDialNorm(dial_norm);
-            break;
-        }
         case CW_OP1A_CLIP_TYPE:
         {
             OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
@@ -909,9 +789,6 @@ void ClipWriterTrack::SetSequenceOffset(uint8_t offset)
                 pcm_track->SetSequenceOffset(offset);
             break;
         }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            mAS11Track->SetSequenceOffset(offset);
         case CW_OP1A_CLIP_TYPE:
         {
             OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
@@ -955,10 +832,6 @@ void ClipWriterTrack::WriteSamples(const unsigned char *data, uint32_t size, uin
         case CW_AS02_CLIP_TYPE:
             mAS02Track->WriteSamples(data, size, num_samples);
             break;
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            mAS11Track->WriteSamples(data, size, num_samples);
-            break;
         case CW_OP1A_CLIP_TYPE:
             mOP1ATrack->WriteSamples(data, size, num_samples);
             break;
@@ -986,9 +859,6 @@ bool ClipWriterTrack::IsPicture() const
     {
         case CW_AS02_CLIP_TYPE:
             return mAS02Track->IsPicture();
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            return mAS11Track->IsPicture();
         case CW_OP1A_CLIP_TYPE:
             return mOP1ATrack->IsPicture();
         case CW_AVID_CLIP_TYPE:
@@ -1013,9 +883,6 @@ uint32_t ClipWriterTrack::GetSampleSize() const
     {
         case CW_AS02_CLIP_TYPE:
             return mAS02Track->GetSampleSize();
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            return mAS11Track->GetSampleSize();
         case CW_OP1A_CLIP_TYPE:
             return mOP1ATrack->GetSampleSize();
         case CW_AVID_CLIP_TYPE:
@@ -1063,11 +930,6 @@ uint32_t ClipWriterTrack::GetAVCISampleWithoutHeaderSize() const
                 return avci_track->GetSampleWithoutHeaderSize();
             break;
         }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-        {
-            return mAS11Track->GetAVCISampleWithoutHeaderSize();
-        }
         case CW_OP1A_CLIP_TYPE:
         {
             OP1AAVCITrack *avci_track = dynamic_cast<OP1AAVCITrack*>(mOP1ATrack);
@@ -1099,8 +961,6 @@ bool ClipWriterTrack::IsSingleField() const
     switch (mClipType)
     {
         case CW_AS02_CLIP_TYPE:
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
         case CW_OP1A_CLIP_TYPE:
         case CW_D10_CLIP_TYPE:
         case CW_RDD9_CLIP_TYPE:
@@ -1133,9 +993,6 @@ vector<uint32_t> ClipWriterTrack::GetShiftedSampleSequence() const
                 return pcm_track->GetShiftedSampleSequence();
             break;
         }
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            return mAS11Track->GetShiftedSampleSequence();
         case CW_OP1A_CLIP_TYPE:
         {
             OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
@@ -1180,9 +1037,6 @@ int64_t ClipWriterTrack::GetDuration() const
     {
         case CW_AS02_CLIP_TYPE:
             return mAS02Track->GetDuration();
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            return mAS11Track->GetDuration();
         case CW_OP1A_CLIP_TYPE:
             return mOP1ATrack->GetDuration();
         case CW_AVID_CLIP_TYPE:
@@ -1207,9 +1061,6 @@ int64_t ClipWriterTrack::GetContainerDuration() const
     {
         case CW_AS02_CLIP_TYPE:
             return mAS02Track->GetContainerDuration();
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            return mAS11Track->GetContainerDuration();
         case CW_OP1A_CLIP_TYPE:
             return mOP1ATrack->GetContainerDuration();
         case CW_AVID_CLIP_TYPE:

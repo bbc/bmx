@@ -34,12 +34,12 @@
 
 
 #include <bmx/as02/AS02Track.h>
-#include <bmx/as11/AS11Track.h>
 #include <bmx/mxf_op1a/OP1ATrack.h>
 #include <bmx/avid_mxf/AvidTrack.h>
 #include <bmx/d10_mxf/D10Track.h>
 #include <bmx/rdd9_mxf/RDD9Track.h>
 #include <bmx/wave/WaveTrackWriter.h>
+#include <bmx/writer_helper/AVCIWriterHelper.h>
 
 
 
@@ -51,8 +51,6 @@ typedef enum
 {
     CW_UNKNOWN_CLIP_TYPE = 0,
     CW_AS02_CLIP_TYPE,
-    CW_AS11_OP1A_CLIP_TYPE,
-    CW_AS11_D10_CLIP_TYPE,
     CW_OP1A_CLIP_TYPE,
     CW_AVID_CLIP_TYPE,
     CW_D10_CLIP_TYPE,
@@ -69,7 +67,6 @@ public:
 
 public:
     ClipWriterTrack(EssenceType essence_type, AS02Track *track);
-    ClipWriterTrack(EssenceType essence_type, AS11Track *track);
     ClipWriterTrack(EssenceType essence_type, OP1ATrack *track);
     ClipWriterTrack(EssenceType essence_type, AvidTrack *track);
     ClipWriterTrack(EssenceType essence_type, D10Track *track);
@@ -120,7 +117,6 @@ public:
     EssenceType GetEssenceType() const { return mEssenceType; }
 
     AS02Track* GetAS02Track()       const { return mAS02Track; }
-    AS11Track* GetAS11Track()       const { return mAS11Track; }
     OP1ATrack* GetOP1ATrack()       const { return mOP1ATrack; }
     AvidTrack* GetAvidTrack()       const { return mAvidTrack; }
     D10Track* GetD10Track()         const { return mD10Track; }
@@ -131,7 +127,6 @@ private:
     ClipWriterType mClipType;
     EssenceType mEssenceType;
     AS02Track *mAS02Track;
-    AS11Track *mAS11Track;
     OP1ATrack *mOP1ATrack;
     AvidTrack *mAvidTrack;
     D10Track *mD10Track;

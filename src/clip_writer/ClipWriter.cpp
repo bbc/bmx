@@ -51,8 +51,6 @@ static const ClipWriterTypeStringMap CLIP_WRITER_TYPE_STRING_MAP[] =
 {
     {CW_UNKNOWN_CLIP_TYPE,   "unknown"},
     {CW_AS02_CLIP_TYPE,      "AS-02"},
-    {CW_AS11_OP1A_CLIP_TYPE, "AS-11 OP-1A"},
-    {CW_AS11_D10_CLIP_TYPE,  "AS-11 D-10"},
     {CW_OP1A_CLIP_TYPE,      "MXF OP-1A"},
     {CW_AVID_CLIP_TYPE,      "Avid MXF"},
     {CW_D10_CLIP_TYPE,       "D-10 MXF"},
@@ -67,16 +65,6 @@ ClipWriter* ClipWriter::OpenNewAS02Clip(string bundle_directory, bool create_bun
 {
     AS02Bundle *bundle = AS02Bundle::OpenNew(bundle_directory, create_bundle_dir, file_factory, take_factory_ownership);
     return new ClipWriter(bundle, AS02Version::OpenNewPrimary(bundle, frame_rate));
-}
-
-ClipWriter* ClipWriter::OpenNewAS11OP1AClip(int flavour, File *file, Rational frame_rate)
-{
-    return new ClipWriter(AS11Clip::OpenNewOP1AClip(flavour, file, frame_rate));
-}
-
-ClipWriter* ClipWriter::OpenNewAS11D10Clip(int flavour, File *file, Rational frame_rate)
-{
-    return new ClipWriter(AS11Clip::OpenNewD10Clip(flavour, file, frame_rate));
 }
 
 ClipWriter* ClipWriter::OpenNewOP1AClip(int flavour, File *file, Rational frame_rate)
@@ -122,23 +110,6 @@ ClipWriter::ClipWriter(AS02Bundle *bundle, AS02Clip *clip)
     mType = CW_AS02_CLIP_TYPE;
     mAS02Bundle = bundle;
     mAS02Clip = clip;
-    mAS11Clip = 0;
-    mOP1AClip = 0;
-    mAvidClip = 0;
-    mD10Clip = 0;
-    mRDD9Clip = 0;
-    mWaveClip = 0;
-}
-
-ClipWriter::ClipWriter(AS11Clip *clip)
-{
-    if (clip->GetType() == AS11_OP1A_CLIP_TYPE)
-        mType = CW_AS11_OP1A_CLIP_TYPE;
-    else
-        mType = CW_AS11_D10_CLIP_TYPE;
-    mAS02Bundle = 0;
-    mAS02Clip = 0;
-    mAS11Clip = clip;
     mOP1AClip = 0;
     mAvidClip = 0;
     mD10Clip = 0;
@@ -151,7 +122,6 @@ ClipWriter::ClipWriter(OP1AFile *clip)
     mType = CW_OP1A_CLIP_TYPE;
     mAS02Bundle = 0;
     mAS02Clip = 0;
-    mAS11Clip = 0;
     mOP1AClip = clip;
     mAvidClip = 0;
     mD10Clip = 0;
@@ -164,7 +134,6 @@ ClipWriter::ClipWriter(AvidClip *clip)
     mType = CW_AVID_CLIP_TYPE;
     mAS02Bundle = 0;
     mAS02Clip = 0;
-    mAS11Clip = 0;
     mOP1AClip = 0;
     mAvidClip = clip;
     mD10Clip = 0;
@@ -177,7 +146,6 @@ ClipWriter::ClipWriter(D10File *clip)
     mType = CW_D10_CLIP_TYPE;
     mAS02Bundle = 0;
     mAS02Clip = 0;
-    mAS11Clip = 0;
     mOP1AClip = 0;
     mAvidClip = 0;
     mD10Clip = clip;
@@ -190,7 +158,6 @@ ClipWriter::ClipWriter(RDD9File *clip)
     mType = CW_RDD9_CLIP_TYPE;
     mAS02Bundle = 0;
     mAS02Clip = 0;
-    mAS11Clip = 0;
     mOP1AClip = 0;
     mAvidClip = 0;
     mD10Clip = 0;
@@ -203,7 +170,6 @@ ClipWriter::ClipWriter(WaveWriter *clip)
     mType = CW_WAVE_CLIP_TYPE;
     mAS02Bundle = 0;
     mAS02Clip = 0;
-    mAS11Clip = 0;
     mOP1AClip = 0;
     mAvidClip = 0;
     mD10Clip = 0;
@@ -215,7 +181,6 @@ ClipWriter::~ClipWriter()
 {
     delete mAS02Bundle;
     delete mAS02Clip;
-    delete mAS11Clip;
     delete mOP1AClip;
     delete mAvidClip;
     delete mD10Clip;
@@ -233,10 +198,6 @@ void ClipWriter::SetClipName(string name)
     {
         case CW_AS02_CLIP_TYPE:
             mAS02Clip->SetClipName(name);
-            break;
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            mAS11Clip->SetClipName(name);
             break;
         case CW_OP1A_CLIP_TYPE:
             mOP1AClip->SetClipName(name);
@@ -264,10 +225,6 @@ void ClipWriter::SetStartTimecode(Timecode start_timecode)
     {
         case CW_AS02_CLIP_TYPE:
             mAS02Clip->SetStartTimecode(start_timecode);
-            break;
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            mAS11Clip->SetStartTimecode(start_timecode);
             break;
         case CW_OP1A_CLIP_TYPE:
             mOP1AClip->SetStartTimecode(start_timecode);
@@ -298,10 +255,6 @@ void ClipWriter::SetProductInfo(string company_name, string product_name, mxfPro
         case CW_AS02_CLIP_TYPE:
             mAS02Clip->SetProductInfo(company_name, product_name, product_version, version, product_uid);
             break;
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            mAS11Clip->SetProductInfo(company_name, product_name, product_version, version, product_uid);
-            break;
         case CW_OP1A_CLIP_TYPE:
             mOP1AClip->SetProductInfo(company_name, product_name, product_version, version, product_uid);
             break;
@@ -329,10 +282,6 @@ ClipWriterTrack* ClipWriter::CreateTrack(EssenceType essence_type, string track_
     {
         case CW_AS02_CLIP_TYPE:
             track = new ClipWriterTrack(essence_type, mAS02Clip->CreateTrack(essence_type));
-            break;
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            track = new ClipWriterTrack(essence_type, mAS11Clip->CreateTrack(essence_type));
             break;
         case CW_OP1A_CLIP_TYPE:
             track = new ClipWriterTrack(essence_type, mOP1AClip->CreateTrack(essence_type));
@@ -362,16 +311,35 @@ ClipWriterTrack* ClipWriter::CreateTrack(EssenceType essence_type, string track_
     return track;
 }
 
+void ClipWriter::PrepareHeaderMetadata()
+{
+    switch (mType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+            mOP1AClip->PrepareHeaderMetadata();
+            break;
+        case CW_D10_CLIP_TYPE:
+            mD10Clip->PrepareHeaderMetadata();
+            break;
+        case CW_RDD9_CLIP_TYPE:
+            mRDD9Clip->PrepareHeaderMetadata();
+            break;
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
 void ClipWriter::PrepareWrite()
 {
     switch (mType)
     {
         case CW_AS02_CLIP_TYPE:
             mAS02Clip->PrepareWrite();
-            break;
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            mAS11Clip->PrepareWrite();
             break;
         case CW_OP1A_CLIP_TYPE:
             mOP1AClip->PrepareWrite();
@@ -408,10 +376,6 @@ void ClipWriter::CompleteWrite()
             mAS02Clip->CompleteWrite();
             mAS02Bundle->FinalizeBundle();
             break;
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            mAS11Clip->CompleteWrite();
-            break;
         case CW_OP1A_CLIP_TYPE:
             mOP1AClip->CompleteWrite();
             break;
@@ -433,15 +397,56 @@ void ClipWriter::CompleteWrite()
     }
 }
 
+HeaderMetadata* ClipWriter::GetHeaderMetadata() const
+{
+    switch (mType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+            return mOP1AClip->GetHeaderMetadata();
+        case CW_D10_CLIP_TYPE:
+            return mD10Clip->GetHeaderMetadata();
+        case CW_RDD9_CLIP_TYPE:
+            return mRDD9Clip->GetHeaderMetadata();
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0;
+}
+
+DataModel* ClipWriter::GetDataModel() const
+{
+    switch (mType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+            return mOP1AClip->GetDataModel();
+        case CW_D10_CLIP_TYPE:
+            return mD10Clip->GetDataModel();
+        case CW_RDD9_CLIP_TYPE:
+            return mRDD9Clip->GetDataModel();
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0;
+}
+
 Rational ClipWriter::GetFrameRate() const
 {
     switch (mType)
     {
         case CW_AS02_CLIP_TYPE:
             return mAS02Clip->GetFrameRate();
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            return mAS11Clip->GetFrameRate();
         case CW_OP1A_CLIP_TYPE:
             return mOP1AClip->GetFrameRate();
         case CW_AVID_CLIP_TYPE:
@@ -460,15 +465,34 @@ Rational ClipWriter::GetFrameRate() const
     return ZERO_RATIONAL;
 }
 
+Timecode ClipWriter::GetStartTimecode() const
+{
+    switch (mType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+            return mOP1AClip->GetStartTimecode();
+        case CW_D10_CLIP_TYPE:
+            return mD10Clip->GetStartTimecode();
+        case CW_RDD9_CLIP_TYPE:
+            return mRDD9Clip->GetStartTimecode();
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return Timecode();
+}
+
 int64_t ClipWriter::GetDuration() const
 {
     switch (mType)
     {
         case CW_AS02_CLIP_TYPE:
             return mAS02Clip->GetDuration();
-        case CW_AS11_OP1A_CLIP_TYPE:
-        case CW_AS11_D10_CLIP_TYPE:
-            return mAS11Clip->GetDuration();
         case CW_OP1A_CLIP_TYPE:
             return mOP1AClip->GetDuration();
         case CW_AVID_CLIP_TYPE:
@@ -485,6 +509,27 @@ int64_t ClipWriter::GetDuration() const
     }
 
     return 0;
+}
+
+int64_t ClipWriter::GetInputDuration() const
+{
+    switch (mType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+            return mOP1AClip->GetInputDuration();
+        case CW_D10_CLIP_TYPE:
+            return mD10Clip->GetInputDuration();
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return -1;
 }
 
 ClipWriterTrack* ClipWriter::GetTrack(uint32_t track_index)

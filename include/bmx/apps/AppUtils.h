@@ -47,6 +47,12 @@ namespace bmx
 {
 
 
+typedef enum
+{
+    NO_CLIP_SUB_TYPE,
+    AS11_CLIP_SUB_TYPE,
+} ClipSubType;
+
 typedef struct
 {
     EssenceType essence_type;
@@ -62,6 +68,8 @@ typedef struct
 
 
 std::string get_app_version_info(const char *app_name);
+
+std::string clip_type_to_string(ClipWriterType clip_type, ClipSubType sub_clip_type);
 
 size_t get_num_avci_header_formats();
 const char* get_avci_header_format_string(size_t index);
@@ -86,7 +94,7 @@ bool parse_product_info(const char **info_strings, size_t num_info_strings,
                         std::string *company_name, std::string *product_name, mxfProductVersion *product_version,
                         std::string *version, UUID *product_uid);
 bool parse_avid_import_name(const char *import_name, URI *uri);
-bool parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type);
+bool parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type, ClipSubType *clip_sub_type);
 bool parse_mic_type(const char *mic_type_str, MICType *mic_type);
 bool parse_klv_opt(const char *klv_opt_str, mxfKey *key, uint32_t *track_num);
 

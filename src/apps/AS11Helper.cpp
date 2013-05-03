@@ -339,13 +339,12 @@ static size_t get_utf8_clip_len(const char *u8_str, size_t max_unicode_len, bool
 
 
 
-FrameworkHelper::FrameworkHelper(DataModel *data_model, DMFramework *framework, Timecode start_timecode,
-                                 Rational frame_rate)
+FrameworkHelper::FrameworkHelper(AS11WriterHelper *writer_helper, DMFramework *framework)
 {
     mFramework = framework;
-    mStartTimecode = start_timecode;
-    mFrameRate = frame_rate;
-    BMX_ASSERT(data_model->findSetDef(framework->getKey(), &mSetDef));
+    mStartTimecode = writer_helper->GetClip()->GetStartTimecode();
+    mFrameRate = writer_helper->GetClip()->GetFrameRate();
+    BMX_ASSERT(writer_helper->GetClip()->GetDataModel()->findSetDef(framework->getKey(), &mSetDef));
 
     const FrameworkInfo *framework_info = FRAMEWORK_INFO;
     while (framework_info->name) {
@@ -511,7 +510,7 @@ bool FrameworkHelper::SetProperty(string name, string value)
 AS11Helper::AS11Helper()
 {
     mFillerCompleteSegments = false;
-    mClip = 0;
+    mWriterHelper = 0;
     mAS11FrameworkHelper = 0;
     mUKDPPFrameworkHelper = 0;
     mHaveUKDPPTotalNumberOfParts = false;
@@ -520,6 +519,7 @@ AS11Helper::AS11Helper()
 
 AS11Helper::~AS11Helper()
 {
+    delete mWriterHelper;
     delete mAS11FrameworkHelper;
     delete mUKDPPFrameworkHelper;
 }
@@ -700,30 +700,29 @@ string AS11Helper::GetProgrammeTitle() const
     return "";
 }
 
-void AS11Helper::InsertFrameworks(AS11Clip *as11_clip)
+void AS11Helper::InsertFrameworks(ClipWriter *clip)
 {
-    mClip = as11_clip;
-    AS11DMS::RegisterExtensions(mClip->GetDataModel());
-    UKDPPDMS::RegisterExtensions(mClip->GetDataModel());
+    if (clip->GetType() != CW_OP1A_CLIP_TYPE && clip->GetType() != CW_D10_CLIP_TYPE) {
+        BMX_EXCEPTION(("AS-11 is not supported in clip type '%s'",
+                       clip_type_to_string(clip->GetType(), NO_CLIP_SUB_TYPE).c_str()));
+    }
+
+    mWriterHelper = new AS11WriterHelper(clip);
 
     size_t i;
     for (i = 0; i < mFrameworkProperties.size(); i++) {
         if (mFrameworkProperties[i].type == AS11_CORE_FRAMEWORK_TYPE) {
             if (!mAS11FrameworkHelper) {
-                mAS11FrameworkHelper = new FrameworkHelper(mClip->GetDataModel(),
-                                                           new AS11CoreFramework(mClip->GetHeaderMetadata()),
-                                                           as11_clip->GetStartTimecode(),
-                                                           as11_clip->GetFrameRate());
+                mAS11FrameworkHelper = new FrameworkHelper(mWriterHelper,
+                                                new AS11CoreFramework(mWriterHelper->GetClip()->GetHeaderMetadata()));
             }
             BMX_CHECK_M(mAS11FrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value),
                         ("Failed to set AS11CoreFramework property '%s' to '%s'",
                          mFrameworkProperties[i].name.c_str(), mFrameworkProperties[i].value.c_str()));
         } else {
             if (!mUKDPPFrameworkHelper) {
-                mUKDPPFrameworkHelper = new FrameworkHelper(mClip->GetDataModel(),
-                                                            new UKDPPFramework(mClip->GetHeaderMetadata()),
-                                                            as11_clip->GetStartTimecode(),
-                                                            as11_clip->GetFrameRate());
+                mUKDPPFrameworkHelper = new FrameworkHelper(mWriterHelper,
+                                                new UKDPPFramework(mWriterHelper->GetClip()->GetHeaderMetadata()));
             }
             BMX_CHECK_M(mUKDPPFrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value),
                         ("Failed to set UKDPPCoreFramework property '%s' to '%s'",
@@ -733,15 +732,15 @@ void AS11Helper::InsertFrameworks(AS11Clip *as11_clip)
 
 
     if (mAS11FrameworkHelper) {
-        mClip->InsertAS11CoreFramework(dynamic_cast<AS11CoreFramework*>(mAS11FrameworkHelper->GetFramework()));
+        mWriterHelper->InsertAS11CoreFramework(dynamic_cast<AS11CoreFramework*>(mAS11FrameworkHelper->GetFramework()));
         BMX_CHECK_M(mAS11FrameworkHelper->GetFramework()->validate(true), ("AS11 Framework validation failed"));
     }
 
     if (!mSegments.empty())
-        mClip->InsertTCSegmentation(mSegments);
+        mWriterHelper->InsertTCSegmentation(mSegments);
 
     if (mUKDPPFrameworkHelper) {
-        mClip->InsertUKDPPFramework(dynamic_cast<UKDPPFramework*>(mUKDPPFrameworkHelper->GetFramework()));
+        mWriterHelper->InsertUKDPPFramework(dynamic_cast<UKDPPFramework*>(mUKDPPFrameworkHelper->GetFramework()));
 
         // make sure UKDPPTotalNumberOfParts and UKDPPTotalProgrammeDuration are set (default 0) for validation
         UKDPPFramework *dpp_framework = dynamic_cast<UKDPPFramework*>(mUKDPPFrameworkHelper->GetFramework());
@@ -760,26 +759,28 @@ void AS11Helper::InsertFrameworks(AS11Clip *as11_clip)
 
 void AS11Helper::Complete()
 {
+    BMX_ASSERT(mWriterHelper);
+
     if (!mSegments.empty())
-        mClip->CompleteSegmentation(mFillerCompleteSegments);
+        mWriterHelper->CompleteSegmentation(mFillerCompleteSegments);
 
     if (mUKDPPFrameworkHelper) {
         // calculate or check total number of parts and programme duration
         UKDPPFramework *dpp_framework = dynamic_cast<UKDPPFramework*>(mUKDPPFrameworkHelper->GetFramework());
         if (mHaveUKDPPTotalNumberOfParts) {
-            BMX_CHECK_M(mClip->GetTotalSegments() == dpp_framework->GetTotalNumberOfParts(),
+            BMX_CHECK_M(mWriterHelper->GetTotalSegments() == dpp_framework->GetTotalNumberOfParts(),
                         ("UKDPPTotalNumberOfParts value %u does not equal actual total part count %u",
-                         dpp_framework->GetTotalNumberOfParts(), mClip->GetTotalSegments()));
+                         dpp_framework->GetTotalNumberOfParts(), mWriterHelper->GetTotalSegments()));
         } else {
-            dpp_framework->SetTotalNumberOfParts(mClip->GetTotalSegments());
+            dpp_framework->SetTotalNumberOfParts(mWriterHelper->GetTotalSegments());
         }
         if (mHaveUKDPPTotalProgrammeDuration) {
-            BMX_CHECK_M(dpp_framework->GetTotalProgrammeDuration() >= mClip->GetTotalSegmentDuration(),
+            BMX_CHECK_M(dpp_framework->GetTotalProgrammeDuration() >= mWriterHelper->GetTotalSegmentDuration(),
                         ("UKDPPTotalProgrammeDuration value %"PRId64" is less than duration of parts in this "
                          "file %"PRId64,
-                         dpp_framework->GetTotalProgrammeDuration(), mClip->GetTotalSegmentDuration()));
+                         dpp_framework->GetTotalProgrammeDuration(), mWriterHelper->GetTotalSegmentDuration()));
         } else {
-            dpp_framework->SetTotalProgrammeDuration(mClip->GetTotalSegmentDuration());
+            dpp_framework->SetTotalProgrammeDuration(mWriterHelper->GetTotalSegmentDuration());
         }
     }
 }

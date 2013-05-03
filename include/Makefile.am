@@ -38,12 +38,11 @@ nobase_library_include_HEADERS = \
 	bmx/as02/AS02Track.h \
 	bmx/as02/AS02UncTrack.h \
 	bmx/as02/AS02Version.h \
-	bmx/as11/AS11Clip.h \
 	bmx/as11/AS11DMS.h \
 	bmx/as11/AS11CoreFramework.h \
 	bmx/as11/AS11Info.h \
 	bmx/as11/AS11SegmentationFramework.h \
-	bmx/as11/AS11Track.h \
+	bmx/as11/AS11WriterHelper.h \
 	bmx/as11/UKDPPDMS.h \
 	bmx/as11/UKDPPFramework.h \
 	bmx/as11/as11_extensions_data_model.h \

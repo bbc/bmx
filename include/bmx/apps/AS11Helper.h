@@ -37,7 +37,7 @@
 
 #include <libMXF++/MXF.h>
 
-#include <bmx/as11/AS11Clip.h>
+#include <bmx/as11/AS11WriterHelper.h>
 
 
 
@@ -77,8 +77,7 @@ typedef struct
 class FrameworkHelper
 {
 public:
-    FrameworkHelper(mxfpp::DataModel *data_model, mxfpp::DMFramework *framework, Timecode start_timecode,
-                    Rational frame_rate);
+    FrameworkHelper(AS11WriterHelper *writer_helper, mxfpp::DMFramework *framework);
     ~FrameworkHelper();
 
     bool SetProperty(std::string name, std::string value);
@@ -108,7 +107,7 @@ public:
     std::string GetProgrammeTitle() const;
 
 public:
-    void InsertFrameworks(AS11Clip *clip);
+    void InsertFrameworks(ClipWriter *clip);
     void Complete();
 
 private:
@@ -120,7 +119,7 @@ private:
     std::vector<AS11TCSegment> mSegments;
     bool mFillerCompleteSegments;
 
-    AS11Clip *mClip;
+    AS11WriterHelper *mWriterHelper;
     FrameworkHelper *mAS11FrameworkHelper;
     FrameworkHelper *mUKDPPFrameworkHelper;
     bool mHaveUKDPPTotalNumberOfParts;

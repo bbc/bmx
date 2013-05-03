@@ -34,7 +34,6 @@
 
 
 #include <bmx/as02/AS02Clip.h>
-#include <bmx/as11/AS11Clip.h>
 #include <bmx/mxf_op1a/OP1AFile.h>
 #include <bmx/avid_mxf/AvidClip.h>
 #include <bmx/d10_mxf/D10File.h>
@@ -54,8 +53,6 @@ class ClipWriter
 public:
     static ClipWriter* OpenNewAS02Clip(std::string bundle_directory, bool create_bundle_dir, Rational frame_rate,
                                        MXFFileFactory *file_factory, bool take_factory_ownership);
-    static ClipWriter* OpenNewAS11OP1AClip(int flavour, mxfpp::File *file, Rational frame_rate);
-    static ClipWriter* OpenNewAS11D10Clip(int flavour, mxfpp::File *file, Rational frame_rate);
     static ClipWriter* OpenNewOP1AClip(int flavour, mxfpp::File *file, Rational frame_rate);
     static ClipWriter* OpenNewAvidClip(Rational frame_rate, MXFFileFactory *file_factory, bool take_factory_ownership,
                                        std::string filename_prefix = "");
@@ -67,7 +64,6 @@ public:
 
 public:
     ClipWriter(AS02Bundle *bundle, AS02Clip *clip);
-    ClipWriter(AS11Clip *clip);
     ClipWriter(OP1AFile *clip);
     ClipWriter(AvidClip *clip);
     ClipWriter(D10File *clip);
@@ -84,14 +80,20 @@ public:
     ClipWriterTrack* CreateTrack(EssenceType essence_type, std::string track_filename = "");
 
 public:
+    void PrepareHeaderMetadata();
     void PrepareWrite();
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
     void CompleteWrite();
 
 public:
+    mxfpp::HeaderMetadata* GetHeaderMetadata() const;
+    mxfpp::DataModel* GetDataModel() const;
+
     Rational GetFrameRate() const;
+    Timecode GetStartTimecode() const;
 
     int64_t GetDuration() const;
+    int64_t GetInputDuration() const;
 
     uint32_t GetNumTracks() const { return (uint32_t)mTracks.size(); }
     ClipWriterTrack* GetTrack(uint32_t track_index);
@@ -100,7 +102,6 @@ public:
     ClipWriterType GetType() const { return mType; }
 
     AS02Clip* GetAS02Clip()   const { return mAS02Clip; }
-    AS11Clip* GetAS11Clip()   const { return mAS11Clip; }
     OP1AFile* GetOP1AClip()   const { return mOP1AClip; }
     AvidClip* GetAvidClip()   const { return mAvidClip; }
     D10File* GetD10Clip()     const { return mD10Clip; }
@@ -111,7 +112,6 @@ private:
     ClipWriterType mType;
     AS02Bundle *mAS02Bundle;
     AS02Clip *mAS02Clip;
-    AS11Clip *mAS11Clip;
     OP1AFile *mOP1AClip;
     AvidClip *mAvidClip;
     D10File *mD10Clip;
