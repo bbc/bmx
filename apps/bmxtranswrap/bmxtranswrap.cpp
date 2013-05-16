@@ -1690,7 +1690,7 @@ int main(int argc, const char** argv)
                 }
                 physical_package_picture_refs = avid_clip->GetSourceReferences(physical_package, MXF_PICTURE_DDEF);
                 BMX_ASSERT(physical_package_picture_refs.size() == num_picture_tracks);
-                physical_package_sound_refs = avid_clip->GetSourceReferences(physical_package, MXF_PICTURE_DDEF);
+                physical_package_sound_refs = avid_clip->GetSourceReferences(physical_package, MXF_SOUND_DDEF);
                 BMX_ASSERT(physical_package_sound_refs.size() == num_sound_tracks);
             }
 
