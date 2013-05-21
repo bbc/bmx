@@ -1,6 +1,6 @@
 #!/bin/sh
 
-BASE_COMMAND="../../apps/raw2bmx/raw2bmx --regtest -t avid -o /tmp/avidmxfsample_$3$4 -y 10:11:12:13 --clip test "
+BASE_COMMAND="../../apps/raw2bmx/raw2bmx --regtest -t avid -o /tmp/avidmxfsample_$3$4 -y 10:11:12:13 --clip test --tape testtape "
 if [ "$4" != "" ]; then
   BASE_COMMAND="$BASE_COMMAND -f $4 "
 fi

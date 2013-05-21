@@ -3,7 +3,7 @@
 MD5TOOL=../file_md5
 
 
-BASE_COMMAND="../../apps/raw2bmx/raw2bmx --regtest -t avid -o /tmp/avidmxftest -y 10:11:12:13 --clip test "
+BASE_COMMAND="../../apps/raw2bmx/raw2bmx --regtest -t avid -o /tmp/avidmxftest -y 10:11:12:13 --clip test --tape testtape "
 if [ "$5" != "" ]; then
   BASE_COMMAND="$BASE_COMMAND -f $5 "
 fi
