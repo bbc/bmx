@@ -1334,7 +1334,8 @@ int main(int argc, const char** argv)
             }
             else if (input_track_info->essence_type == UNKNOWN_ESSENCE_TYPE ||
                      input_track_info->essence_type == PICTURE_ESSENCE ||
-                     input_track_info->essence_type == SOUND_ESSENCE)
+                     input_track_info->essence_type == SOUND_ESSENCE ||
+                     input_track_info->essence_type == DATA_ESSENCE)
             {
                 log_warn("Track %"PRIszt" has unknown essence type\n", i);
                 is_supported = false;
