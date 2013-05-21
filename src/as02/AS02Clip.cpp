@@ -56,10 +56,14 @@ static bool compare_track(AS02Track *left, AS02Track *right)
 
 AS02Clip::AS02Clip(AS02Bundle *bundle, string filepath, mxfRational frame_rate)
 {
-    BMX_CHECK(frame_rate == FRAME_RATE_25 ||
+    BMX_CHECK(frame_rate == FRAME_RATE_23976 ||
+              frame_rate == FRAME_RATE_24 ||
+              frame_rate == FRAME_RATE_25 ||
               frame_rate == FRAME_RATE_2997 ||
+              frame_rate == FRAME_RATE_30 ||
               frame_rate == FRAME_RATE_50 ||
-              frame_rate == FRAME_RATE_5994);
+              frame_rate == FRAME_RATE_5994 ||
+              frame_rate == FRAME_RATE_60);
 
     mBundle = bundle;
     mClipFilename = strip_path(filepath);
