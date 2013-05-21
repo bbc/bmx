@@ -2077,7 +2077,6 @@ int main(int argc, const char** argv)
         int64_t duration_at_rollout_start = -1;
         int64_t container_duration;
         int64_t prev_container_duration = -1;
-        int64_t last_ess_mark_pos = INT64_MIN;
         bmx::ByteArray sound_buffer;
         while (read_duration < 0 || total_read < read_duration) {
             uint32_t num_read = read_samples(reader, sample_sequence, &sample_sequence_offset, max_samples_per_read);
@@ -2127,7 +2126,7 @@ int main(int argc, const char** argv)
                     continue;
                 }
 
-                if (clip_type == CW_AVID_CLIP_TYPE && convert_ess_marks && frame->position > last_ess_mark_pos) {
+                if (clip_type == CW_AVID_CLIP_TYPE && convert_ess_marks) {
                     const vector<FrameMetadata*> *metadata = frame->GetMetadata(SDTI_CP_PACKAGE_METADATA_FMETA_ID);
                     if (metadata && !metadata->empty()) {
                         const SDTICPPackageMetadata *pkg_metadata =
@@ -2141,7 +2140,6 @@ int main(int argc, const char** argv)
                                 locator.color = COLOR_GREEN;
                             locator.comment = pkg_metadata->mEssenceMark;
                             clip->GetAvidClip()->AddLocator(locator);
-                            last_ess_mark_pos = frame->position;
                         }
                     }
                 }
