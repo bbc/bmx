@@ -52,6 +52,7 @@
 #include <bmx/mxf_reader/MXFSequenceReader.h>
 #include <bmx/mxf_reader/MXFFrameMetadata.h>
 #include <bmx/essence_parser/SoundConversion.h>
+#include <bmx/st436/ST436Element.h>
 #include <bmx/MD5.h>
 #include <bmx/CRC32.h>
 #include <bmx/MXFUtils.h>
@@ -342,12 +343,195 @@ static const char* get_essence_kind_string(MXFDataDefEnum data_def)
     }
 }
 
+static const char* get_vbi_wrapping_type_string(uint8_t type)
+{
+    switch (type)
+    {
+        case VBI_FRAME:             return "Frame";
+        case VBI_FIELD1:            return "Field 1";
+        case VBI_FIELD2:            return "Field 2";
+        case VBI_PROGRESSIVE_FRAME: return "Progressive Frame";
+        default:                    return "Unknown";
+    }
+}
+
+static const char* get_vbi_sample_coding_string(uint8_t coding)
+{
+    switch (coding)
+    {
+        case VBI_1_BIT_COMP_LUMA:             return "1-bit Component Luma";
+        case VBI_1_BIT_COMP_COLOR:            return "1-bit Component Color Difference";
+        case VBI_1_BIT_COMP_LUMA_COLOR:       return "1-bit Component Luma and Color Difference";
+        case VBI_8_BIT_COMP_LUMA:             return "8-bit Component Luma";
+        case VBI_8_BIT_COMP_COLOR:            return "8-bit Component Color Difference";
+        case VBI_8_BIT_COMP_LUMA_COLOR:       return "8-bit Component Luma and Color Difference";
+        case VBI_10_BIT_COMP_LUMA:            return "10-bit Component Luma";
+        case VBI_10_BIT_COMP_COLOR:           return "10-bit Component Color Difference";
+        case VBI_10_BIT_COMP_LUMA_COLOR:      return "10-bit Component Luma and Color Difference";
+        case 10:
+        case 11:
+        case 12:                              return "Reserved";
+        default:                              return "Unknown";
+    }
+}
+
+static const char* get_anc_wrapping_type_string(uint8_t type)
+{
+    switch (type)
+    {
+        case VANC_FRAME:             return "VANC Frame";
+        case VANC_FIELD1:            return "VANC Field 1";
+        case VANC_FIELD2:            return "VANC Field 2";
+        case VANC_PROGRESSIVE_FRAME: return "VANC Progressive Frame";
+        case HANC_FRAME:             return "HANC Frame";
+        case HANC_FIELD1:            return "HANC Field 1";
+        case HANC_FIELD2:            return "HANC Field 2";
+        case HANC_PROGRESSIVE_FRAME: return "HANC Progressive Frame";
+        default:                     return "Unknown";
+    }
+}
+
+static const char* get_anc_sample_coding_string(uint8_t coding)
+{
+    switch (coding)
+    {
+        case 1:
+        case 2:
+        case 3:                               return "Reserved";
+        case ANC_8_BIT_COMP_LUMA:             return "8-bit Component Luma";
+        case ANC_8_BIT_COMP_COLOR:            return "8-bit Component Color Difference";
+        case ANC_8_BIT_COMP_LUMA_COLOR:       return "8-bit Component Luma and Color Difference";
+        case ANC_10_BIT_COMP_LUMA:            return "10-bit Component Luma";
+        case ANC_10_BIT_COMP_COLOR:           return "10-bit Component Color Difference";
+        case ANC_10_BIT_COMP_LUMA_COLOR:      return "10-bit Component Luma and Color Difference";
+        case ANC_8_BIT_COMP_LUMA_ERROR:       return "8-bit Component Luma with Parity Error";
+        case ANC_8_BIT_COMP_COLOR_ERROR:      return "8-bit Component Color Difference with Parity Error";
+        case ANC_8_BIT_COMP_LUMA_COLOR_ERROR: return "8-bit Component Luma and Color Difference with Parity Error";
+        default:                              return "Unknown";
+    }
+}
+
+static const char* get_did_type1_string(uint8_t did)
+{
+    static const struct
+    {
+        uint8_t did;
+        const char *application;
+    } did_type1_table[] =
+    {
+        {0x80, "[S291] Packet marked for deletion"},
+        {0x84, "[S291] End packet deleted  (Deprecated; revision of ST291-2010)"},
+        {0x88, "[S291] Start packet deleted (Deprecated; revision of ST291-2010)"},
+        {0xa0, "[ST 299-2] Audio data in HANC space (3G) - Group 8 Control pkt"},
+        {0xa1, "[ST 299-2] Audio data in HANC space (3G) - Group 7 Control pkt"},
+        {0xa2, "[ST 299-2] Audio data in HANC space (3G) - Group 6 Control pkt"},
+        {0xa3, "[ST 299-2] Audio data in HANC space (3G- Group 5 Control pkt)"},
+        {0xa4, "[ST 299-2] Audio data in HANC space (3G) - Group 8"},
+        {0xa5, "[ST 299-2] Audio data in HANC space (3G) - Group 7"},
+        {0xa6, "[ST 299-2] Audio data in HANC space (3G) - Group 6"},
+        {0xa7, "[ST 299-2] Audio data in HANC space (3G)- Group 5"},
+        {0xe0, "[ST 299-1] Audio data in HANC space (HDTV)"},
+        {0xe1, "[ST 299-1] Audio data in HANC space (HDTV)"},
+        {0xe2, "[ST 299-1] Audio data in HANC space (HDTV)"},
+        {0xe3, "[ST 299-1] Audio data in HANC space (HDTV)"},
+        {0xe4, "[ST 299-1] Audio data in HANC space (HDTV)"},
+        {0xe5, "[ST 299-1] Audio data in HANC space (HDTV)"},
+        {0xe6, "[ST 299-1] Audio data in HANC space (HDTV)"},
+        {0xe7, "[ST 299-1] Audio data in HANC space (HDTV)"},
+        {0xec, "[S272] Audio Data in HANC space (SDTV)"},
+        {0xed, "[S272] Audio Data in HANC space (SDTV)"},
+        {0xee, "[S272] Audio Data in HANC space (SDTV)"},
+        {0xef, "[S272] Audio Data in HANC space (SDTV)"},
+        {0xf0, "[S315] Camera position (HANC or VANC space)"},
+        {0xf4, "[RP165] Error Detection and Handling (HANC space)"},
+        {0xf8, "[S272] Audio Data in HANC space (SDTV)"},
+        {0xf9, "[S272] Audio Data in HANC space (SDTV)"},
+        {0xfa, "[S272] Audio Data in HANC space (SDTV)"},
+        {0xfb, "[S272] Audio Data in HANC space (SDTV)"},
+        {0xfc, "[S272] Audio Data in HANC space (SDTV)"},
+        {0xfd, "[S272] Audio Data in HANC space (SDTV)"},
+        {0xfe, "[S272] Audio Data in HANC space (SDTV)"},
+        {0xff, "[S272] Audio Data in HANC space (SDTV)"}
+    };
+
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(did_type1_table); i++) {
+        if (did_type1_table[i].did == did)
+            return did_type1_table[i].application;
+    }
+
+    return "Unknown";
+}
+
+static const char* get_did_type2_string(uint8_t did, uint8_t sdid)
+{
+    static const struct
+    {
+        uint8_t did;
+        uint8_t sdid;
+        const char *application;
+    } did_type2_table[] =
+    {
+        {0x08, 0x08, "[S353] MPEG recoding data, VANC space"},
+        {0x08, 0x0c, "[S353] MPEG recoding data, HANC space"},
+        {0x40, 0x01, "[S305] SDTI transport in active frame space"},
+        {0x40, 0x02, "[S348] HD-SDTI transport in active frame space"},
+        {0x40, 0x04, "[S427] Link Encryption Message 1"},
+        {0x40, 0x05, "[S427] Link Encryption Message 2"},
+        {0x40, 0x06, "[S427] Link Encryption Metadata"},
+        {0x41, 0x01, "[S352] Payload Identification , HANC space"},
+        {0x41, 0x05, "[S2016-3] AFD and Bar Data"},
+        {0x41, 0x06, "[S2016-4] Pan-Scan Data"},
+        {0x41, 0x07, "[S2010] ANSI/SCTE 104 messages"},
+        {0x41, 0x08, "[S2031] DVB/SCTE VBI data"},
+        {0x41, 0x09, "[ST 2056 (pending approval)] MPEG TS packets in VANC"},
+        {0x41, 0x0a, "[ST 2068 (Pending Approval)] Stereoscopic 3D Frame Compatible Packing and Signaling"},
+        {0x43, 0x01, "[ITU-R BT.1685] Structure of inter-station control data conveyed by ancillary data packets"},
+        {0x43, 0x02, "[RDD 8] Subtitling Distribution packet (SDP)"},
+        {0x43, 0x03, "[RDD 8] Transport of ANC packet in an ANC Multipacket"},
+        {0x43, 0x04, "[ARIB TR-B29] Metadata to monitor errors of audio and video signals on a broadcasting chain ARIB http://www.arib.or.jp/english/html/overview/archives/br/8-TR-B29v1_0-E1.pdf"},
+        {0x43, 0x05, "[RDD18] Acquisition Metadata Sets for Video Camera Parameters"},
+        {0x44, 0x04, "[RP214] KLV Metadata transport in VANC space"},
+        {0x44, 0x14, "[RP214] KLV Metadata transport in HANC space"},
+        {0x44, 0x44, "[RP223] Packing UMID and Program Identification Label Data into SMPTE 291M Ancillary Data Packets"},
+        {0x45, 0x01, "[S2020-1] Compressed Audio Metadata"},
+        {0x45, 0x02, "[S2020-1] Compressed Audio Metadata"},
+        {0x45, 0x03, "[S2020-1] Compressed Audio Metadata"},
+        {0x45, 0x04, "[S2020-1] Compressed Audio Metadata"},
+        {0x45, 0x05, "[S2020-1] Compressed Audio Metadata"},
+        {0x45, 0x06, "[S2020-1] Compressed Audio Metadata"},
+        {0x45, 0x07, "[S2020-1] Compressed Audio Metadata"},
+        {0x45, 0x08, "[S2020-1] Compressed Audio Metadata"},
+        {0x45, 0x09, "[S2020-1] Compressed Audio Metadata"},
+        {0x46, 0x01, "[ST 2051] Two Frame Marker in HANC"},
+        {0x50, 0x01, "[RDD 8] WSS data per RDD 8"},
+        {0x51, 0x01, "[RP215] Film Codes in VANC space"},
+        {0x60, 0x60, "[S12M-2] Ancillary Time Code"},
+        {0x61, 0x01, "[S334-1] EIA 708B Data mapping into VANC space"},
+        {0x61, 0x02, "[S334-1] EIA 608 Data mapping into VANC space"},
+        {0x62, 0x01, "[RP207] Program Description in VANC space"},
+        {0x62, 0x02, "[S334-1] Data broadcast (DTV) in VANC space"},
+        {0x62, 0x03, "[RP208] VBI Data in VANC space"},
+        {0x64, 0x64, "[RP196 (Withdrawn)] Time Code in HANC space (Deprecated; for reference only)"},
+        {0x64, 0x7f, "[RP196 (Withdrawn)] VITC in HANC space (Deprecated; for reference only)"},
+    };
+
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(did_type2_table); i++) {
+        if (did_type2_table[i].did == did && did_type2_table[i].sdid == sdid)
+            return did_type2_table[i].application;
+    }
+
+    return "Unknown";
+}
+
 static void print_track_info(const MXFTrackInfo *track_info)
 {
     char buf[128];
 
     const MXFPictureTrackInfo *picture_info = dynamic_cast<const MXFPictureTrackInfo*>(track_info);
     const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
+    const MXFDataTrackInfo *data_info = dynamic_cast<const MXFDataTrackInfo*>(track_info);
 
     printf("  Essence kind         : %s\n", get_essence_kind_string(track_info->data_def));
     printf("  Essence type         : %s\n", essence_type_to_string(track_info->essence_type));
@@ -412,6 +596,45 @@ static void print_track_info(const MXFTrackInfo *track_info)
             printf("%d\n", sound_info->dial_norm);
         else
             printf("(not set)\n");
+    } else if (data_info) {
+        if (!data_info->vbi_manifest.empty()) {
+            printf("  VBI data manifest    :\n");
+            size_t i;
+            for (i = 0; i < data_info->vbi_manifest.size(); i++) {
+                printf("    Element %"PRIszt":\n", i);
+                printf("      Line number    : %u\n", data_info->vbi_manifest[i].line_number);
+                printf("      Wrapping type  : %s (0x%02x)\n",
+                       get_vbi_wrapping_type_string(data_info->vbi_manifest[i].wrapping_type),
+                       data_info->vbi_manifest[i].wrapping_type);
+                printf("      Sample coding  : %s (0x%02x)\n",
+                       get_vbi_sample_coding_string(data_info->vbi_manifest[i].sample_coding),
+                       data_info->vbi_manifest[i].sample_coding);
+            }
+        } else if (!data_info->anc_manifest.empty()) {
+            printf("  ANC data manifest    :\n");
+            size_t i;
+            for (i = 0; i < data_info->anc_manifest.size(); i++) {
+                printf("    Element %"PRIszt":\n", i);
+                printf("      Line number    : %u\n", data_info->anc_manifest[i].line_number);
+                printf("      Wrapping type  : %s (0x%02x)\n",
+                       get_anc_wrapping_type_string(data_info->anc_manifest[i].wrapping_type),
+                       data_info->anc_manifest[i].wrapping_type);
+                printf("      Sample coding  : %s (0x%02x)\n",
+                       get_anc_sample_coding_string(data_info->anc_manifest[i].sample_coding),
+                       data_info->anc_manifest[i].sample_coding);
+                if (data_info->anc_manifest[i].did) {
+                    if ((data_info->anc_manifest[i].did & 0x80)) {
+                        printf("      DID Type 1     : %s (0x%02x)\n",
+                               get_did_type1_string(data_info->anc_manifest[i].did),
+                               data_info->anc_manifest[i].did);
+                    } else {
+                        printf("      DID Type 2     : %s (0x%02x, 0x%02x)\n",
+                               get_did_type2_string(data_info->anc_manifest[i].did, data_info->anc_manifest[i].sdid),
+                               data_info->anc_manifest[i].did, data_info->anc_manifest[i].sdid);
+                    }
+                }
+            }
+        }
     }
 }
 
