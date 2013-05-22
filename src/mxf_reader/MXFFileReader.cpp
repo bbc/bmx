@@ -267,8 +267,8 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
 
         mOPLabel = *header_partition.getOperationalPattern();
 
-        // check specific audio cases that would be guessed incorrectly:
-        // AS-02 clip wrapped OP-1A and Digital Cinema frame wrapped OP-Atom
+        // check specific cases that would be guessed incorrectly:
+        // e.g. AS-02 clip wrapped OP-1A and Digital Cinema frame wrapped OP-Atom
         // TODO: require a table that maps essence container labels to wrapping type
         vector<mxfUL> essence_labels = header_partition.getEssenceContainers();
         size_t i;
@@ -283,6 +283,12 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
                      mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(AES3ClipWrapped)))
             {
                 mIsClipWrapped = true;
+                break;
+            }
+            else if (mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(VBIData)) ||
+                     mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(ANCData)))
+            {
+                mIsClipWrapped = false;
                 break;
             }
         }
