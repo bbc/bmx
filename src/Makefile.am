@@ -1,4 +1,4 @@
-SUBDIRS = common frame essence_parser writer_helper mxf_helper \
+SUBDIRS = common frame essence_parser writer_helper mxf_helper st436 \
 	mxf_reader as02 mxf_op1a d10_mxf as11 avid_mxf rdd9_mxf \
 	wave clip_writer apps
 
@@ -14,6 +14,7 @@ libbmx_@BMX_MAJORMINOR@_la_LIBADD = \
 	frame/libframe.la \
 	essence_parser/libessenceparser.la \
 	writer_helper/libwriterhelper.la \
+	st436/libst436.la \
 	mxf_helper/libmxfhelper.la \
 	mxf_reader/libmxfreader.la \
 	as02/libas02.la \

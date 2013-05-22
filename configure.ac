@@ -246,6 +246,7 @@ AC_CONFIG_FILES([
 	src/rdd9_mxf/Makefile
 	src/wave/Makefile
 	src/clip_writer/Makefile
+	src/st436/Makefile
 	test/Makefile
 	test/as02/Makefile
 	test/as11/Makefile

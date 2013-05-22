@@ -226,6 +226,42 @@ MXFTrackInfo* MXFSoundTrackInfo::Clone() const
 
 
 
+VBIManifestElement::VBIManifestElement()
+{
+    line_number = 0;
+    wrapping_type = 0;
+    sample_coding = 0;
+}
+
+bool VBIManifestElement::operator==(const VBIManifestElement &right) const
+{
+    return line_number   == right.line_number &&
+           wrapping_type == right.wrapping_type &&
+           sample_coding == right.sample_coding;
+}
+
+
+
+ANCManifestElement::ANCManifestElement()
+{
+    line_number = 0;
+    wrapping_type = 0;
+    sample_coding = 0;
+    did = 0;
+    sdid = 0;
+}
+
+bool ANCManifestElement::operator==(const ANCManifestElement &right) const
+{
+    return line_number   == right.line_number &&
+           wrapping_type == right.wrapping_type &&
+           sample_coding == right.sample_coding &&
+           did           == right.did &&
+           sdid          == right.sdid;
+}
+
+
+
 MXFDataTrackInfo::MXFDataTrackInfo()
 : MXFTrackInfo()
 {
@@ -247,6 +283,31 @@ MXFTrackInfo* MXFDataTrackInfo::Clone() const
 
     MXFTrackInfo::Clone(clone);
 
+    clone->vbi_manifest.assign(vbi_manifest.begin(), vbi_manifest.end());
+    clone->anc_manifest.assign(anc_manifest.begin(), anc_manifest.end());
+
     return clone;
+}
+
+void MXFDataTrackInfo::AppendUniqueVBIElement(const VBIManifestElement &element)
+{
+    size_t i;
+    for (i = 0; i < vbi_manifest.size(); i++) {
+        if (vbi_manifest[i] == element)
+            return;
+    }
+
+    vbi_manifest.push_back(element);
+}
+
+void MXFDataTrackInfo::AppendUniqueANCElement(const ANCManifestElement &element)
+{
+    size_t i;
+    for (i = 0; i < anc_manifest.size(); i++) {
+        if (anc_manifest[i] == element)
+            return;
+    }
+
+    anc_manifest.push_back(element);
 }
 

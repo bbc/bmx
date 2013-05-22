@@ -735,6 +735,14 @@
 				</File>
 			</Filter>
 			<Filter
+				Name="st436"
+				>
+				<File
+					RelativePath="..\..\..\include\bmx\st436\ST436Element.h"
+					>
+				</File>
+			</Filter>
+			<Filter
 				Name="wave"
 				>
 				<File
@@ -1329,6 +1337,14 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\rdd9_mxf\RDD9Track.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="st436"
+				>
+				<File
+					RelativePath="..\..\..\src\st436\ST436Element.cpp"
 					>
 				</File>
 			</Filter>

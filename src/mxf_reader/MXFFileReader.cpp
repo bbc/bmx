@@ -44,6 +44,7 @@
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
 #include <bmx/essence_parser/AVCIEssenceParser.h>
+#include <bmx/st436/ST436Element.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -1776,7 +1777,9 @@ bool MXFFileReader::CheckRequireFirstFrameInfo()
                 track_info->essence_type == AVCI100_720P ||
                 track_info->essence_type == AVCI50_1080I ||
                 track_info->essence_type == AVCI50_1080P ||
-                track_info->essence_type == AVCI50_720P)
+                track_info->essence_type == AVCI50_720P ||
+                track_info->essence_type == VBI_DATA ||
+                track_info->essence_type == ANC_DATA)
             {
                 return true;
             }
@@ -1813,6 +1816,7 @@ bool MXFFileReader::ExtractInfoFromFirstFrame()
             MXFTrackInfo *track_info = mInternalTrackReaders[i]->GetTrackInfo();
             MXFPictureTrackInfo *picture_info = dynamic_cast<MXFPictureTrackInfo*>(track_info);
             MXFSoundTrackInfo *sound_info = dynamic_cast<MXFSoundTrackInfo*>(track_info);
+            MXFDataTrackInfo *data_info = dynamic_cast<MXFDataTrackInfo*>(track_info);
 
             if (track_info->essence_type == D10_AES3_PCM)
             {
@@ -1833,6 +1837,66 @@ bool MXFFileReader::ExtractInfoFromFirstFrame()
                         frame->GetBytes(), frame->GetSize());
                 } else {
                     log_warn("First frame in AVC-Intra track does not have sequence and picture parameter sets\n");
+                }
+            }
+            else if (track_info->essence_type == VBI_DATA ||
+                     track_info->essence_type == ANC_DATA)
+            {
+                ST436Element element(track_info->essence_type == VBI_DATA);
+                element.Parse(frame->GetBytes(), frame->GetSize());
+                if (track_info->essence_type == VBI_DATA) {
+                    size_t i;
+                    for (i = 0; i < element.lines.size(); i++) {
+                        const ST436Line &line = element.lines[i];
+                        VBIManifestElement element;
+                        element.line_number   = line.line_number;
+                        element.wrapping_type = line.wrapping_type;
+                        element.sample_coding = line.payload_sample_coding;
+                        data_info->AppendUniqueVBIElement(element);
+                    }
+                } else {
+                    size_t i;
+                    for (i = 0; i < element.lines.size(); i++) {
+                        const ST436Line &line = element.lines[i];
+                        ANCManifestElement element;
+                        element.line_number   = line.line_number;
+                        element.wrapping_type = line.wrapping_type;
+                        element.sample_coding = line.payload_sample_coding;
+                        if (line.payload_sample_coding == ANC_8_BIT_COMP_LUMA ||
+                            line.payload_sample_coding == ANC_8_BIT_COMP_COLOR ||
+                            line.payload_sample_coding == ANC_8_BIT_COMP_LUMA_COLOR ||
+                            line.payload_sample_coding == ANC_8_BIT_COMP_LUMA_ERROR ||
+                            line.payload_sample_coding == ANC_8_BIT_COMP_COLOR_ERROR ||
+                            line.payload_sample_coding == ANC_8_BIT_COMP_LUMA_COLOR_ERROR)
+                        {
+                            if (line.payload_size > 0) {
+                                element.did = line.payload_data[0];
+                                if (element.did && line.payload_size > 1)
+                                    element.sdid = line.payload_data[1];
+                            }
+                        }
+                        else if (line.payload_sample_coding == ANC_10_BIT_COMP_LUMA ||
+                                 line.payload_sample_coding == ANC_10_BIT_COMP_COLOR ||
+                                 line.payload_sample_coding == ANC_10_BIT_COMP_LUMA_COLOR)
+                        {
+                            // 8-bit ANC packet coding contains _lower-order_ 8 bits of 10-bit samples
+                            // the parity and inverted parity high-order bits are lost
+                            if (line.payload_size > 1) {
+                                element.did = ((line.payload_data[0] & 0x3f) << 2) |
+                                              ((line.payload_data[1] & 0xc0) >> 6);
+                                if (element.did && line.payload_size > 2) {
+                                    element.sdid = ((line.payload_data[1] & 0x0f) << 4) |
+                                                   ((line.payload_data[2] & 0xf0) >> 4);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            log_warn("Unsupported sample coding %u for ANC data manifest extraction\n",
+                                     line.payload_sample_coding);
+                        }
+                        data_info->AppendUniqueANCElement(element);
+                    }
                 }
             }
 

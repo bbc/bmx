@@ -33,6 +33,8 @@
 #define BMX_MXF_TRACK_INFO_
 
 
+#include <vector>
+
 #include <bmx/BMXTypes.h>
 #include <bmx/EssenceType.h>
 
@@ -132,6 +134,34 @@ public:
 };
 
 
+class VBIManifestElement
+{
+public:
+    VBIManifestElement();
+
+    bool operator==(const VBIManifestElement &right) const;
+
+public:
+    uint16_t line_number;
+    uint8_t wrapping_type;
+    uint8_t sample_coding;
+};
+
+class ANCManifestElement
+{
+public:
+    ANCManifestElement();
+
+    bool operator==(const ANCManifestElement &right) const;
+
+public:
+    uint16_t line_number;
+    uint8_t wrapping_type;
+    uint8_t sample_coding;
+    uint8_t did;
+    uint8_t sdid;
+};
+
 class MXFDataTrackInfo : public MXFTrackInfo
 {
 public:
@@ -141,6 +171,13 @@ public:
     virtual bool IsCompatible(const MXFTrackInfo *right) const;
 
     virtual MXFTrackInfo* Clone() const;
+
+    void AppendUniqueVBIElement(const VBIManifestElement &element);
+    void AppendUniqueANCElement(const ANCManifestElement &element);
+
+public:
+    std::vector<VBIManifestElement> vbi_manifest;
+    std::vector<ANCManifestElement> anc_manifest;
 };
 
 
