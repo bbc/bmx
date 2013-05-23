@@ -48,7 +48,7 @@ EssenceType ANCDataMXFDescriptorHelper::IsSupported(mxfpp::FileDescriptor *file_
     (void)alternative_ec_label;
 
     mxfUL ec_label = file_descriptor->getEssenceContainer();
-    if (!mxf_equals_ul(&ec_label, &MXF_EC_L(ANCData)))
+    if (!mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(ANCData)))
         return UNKNOWN_ESSENCE_TYPE;
 
     ANCDataDescriptor *anc_descriptor = dynamic_cast<ANCDataDescriptor*>(file_descriptor);
