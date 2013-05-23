@@ -347,7 +347,7 @@ FrameMetadataReader::FrameMetadataReader(MXFFileReader *file_reader)
     vector<mxfUL> dm_schemes = file_reader->GetHeaderMetadata()->getPreface()->getDMSchemes();
     size_t i;
     for (i = 0; i < dm_schemes.size(); i++) {
-        if (mxf_equals_ul(&MXF_DM_L(APP_PreservationDescriptiveScheme), &dm_schemes[i])) {
+        if (mxf_equals_ul_mod_regver(&MXF_DM_L(APP_PreservationDescriptiveScheme), &dm_schemes[i])) {
             is_bbc_preservation_file = true;
             break;
         }

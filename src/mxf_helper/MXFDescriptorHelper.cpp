@@ -97,7 +97,7 @@ bool MXFDescriptorHelper::CompareECULs(mxfUL ec_label_a, mxfUL alternative_ec_la
 
 bool MXFDescriptorHelper::IsNullAvidECUL(mxfUL ec_label, mxfUL alternative_ec_label)
 {
-    return mxf_equals_ul(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
+    return mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(AvidAAFKLVEssenceContainer)) &&
            mxf_equals_ul(&alternative_ec_label, &g_Null_UL);
 }
 

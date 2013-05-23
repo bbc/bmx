@@ -48,7 +48,7 @@ EssenceType VBIDataMXFDescriptorHelper::IsSupported(mxfpp::FileDescriptor *file_
     (void)alternative_ec_label;
 
     mxfUL ec_label = file_descriptor->getEssenceContainer();
-    if (!mxf_equals_ul(&ec_label, &MXF_EC_L(VBIData)))
+    if (!mxf_equals_ul_mod_regver(&ec_label, &MXF_EC_L(VBIData)))
         return UNKNOWN_ESSENCE_TYPE;
 
     VBIDataDescriptor *vbi_descriptor = dynamic_cast<VBIDataDescriptor*>(file_descriptor);

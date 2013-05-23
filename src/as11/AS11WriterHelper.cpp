@@ -249,7 +249,7 @@ void AS11WriterHelper::AppendDMSLabel(mxfUL scheme_label)
     vector<mxfUL> dm_schemes = header_metadata->getPreface()->getDMSchemes();
     size_t i;
     for (i = 0; i < dm_schemes.size(); i++) {
-        if (mxf_equals_ul(&dm_schemes[i], &scheme_label))
+        if (mxf_equals_ul_mod_regver(&dm_schemes[i], &scheme_label))
             break;
     }
     if (i >= dm_schemes.size())
