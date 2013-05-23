@@ -47,7 +47,7 @@ using namespace bmx;
 
 
 
-const char bmx::RDD6_NAMESPACE[] = "http://bbc.co.uk/rd/rdd6/201307";
+const char bmx::RDD6_NAMESPACE[] = "http://bbc.co.uk/rd/rdd6/201401";
 
 
 const XMLEnumInfo bmx::PROGRAM_CONFIG_ENUM[] =
@@ -169,7 +169,7 @@ const XMLEnumInfo bmx::SURMIXLEVEL_ENUM[] =
 {
     {"0.707",   0},
     {"0.500",   1},
-    {"0",       2},
+    {"0.000",   2},
     {"0.500",   3}, // reserved; treat as 0.500
     {0, 0}
 };
@@ -292,17 +292,6 @@ uint16_t bmx::parse_xml_hex_uint16(const string &context, const string &str)
     return (uint16_t)int_value;
 }
 
-uint8_t bmx::parse_xml_char(const string &context, const string &str)
-{
-    if (str.size() == 1) {
-        if (str[0] < 0x20 || str[0] > 0x7e)
-            throw BMXException("Failed to parse char value '%s' for '%s'", str.c_str(), context.c_str());
-        return (uint8_t)str[0];
-    } else {
-        return parse_xml_hex_uint8(context, str);
-    }
-}
-
 bool bmx::parse_xml_bool(const string &context, const string &str)
 {
     if (str == "true" || str == "1")
@@ -323,7 +312,7 @@ uint64_t bmx::parse_xml_smpte_timecode(const string &context, const string &str)
     uint64_t value = ((((uint64_t)hour  / 10) << 52) & 0x30) | ((((uint64_t)hour  % 10) << 48) & 0x0f) |
                      ((((uint64_t)min   / 10) << 36) & 0x70) | ((((uint64_t)min   % 10) << 32) & 0x0f) |
                      ((((uint64_t)sec   / 10) << 20) & 0x70) | ((((uint64_t)sec   % 10) << 16) & 0x0f) |
-                     ((((uint64_t)frame / 10) <<  4) & 0x70) | ((((uint64_t)frame % 10)      ) & 0x0f);
+                     ((((uint64_t)frame / 10) <<  4) & 0x30) | ((((uint64_t)frame % 10)      ) & 0x0f);
     if (c != ':')
         value |= 0x40;
 
@@ -363,13 +352,13 @@ void bmx::parse_xml_timecode(const std::string &context, const std::string &str,
     frame_64 %= 64;
 
     if (*timecode_2_e) {
-        *timecode_1 = ((uint16_t)hour     << 9) |
-                      ((uint16_t)min      << 3) |
-                      ((uint16_t)sec / 8);
+        *timecode_1 = ((uint16_t)hour << 9) |
+                      ((uint16_t)min  << 3) |
+                      ((uint16_t)sec  >> 3);
     }
     if (*timecode_1_e) {
-        *timecode_2 = (((uint16_t)sec % 8) << 11) |
-                       ((uint16_t)frame    << 6)  |
+        *timecode_2 = (((uint16_t)sec & 0x07) << 11) |
+                       ((uint16_t)frame       << 6)  |
                         (uint16_t)frame_64;
     }
 }
@@ -391,9 +380,6 @@ size_t bmx::parse_xml_bytes(const string &context, const string &str, unsigned c
     if (str.empty())
         return 0;
 
-    if (str.size() < 2 || str.compare(0, 2, "0x") != 0 || (str.size() & 1))
-        throw BMXException("Failed to parse bytes for '%s'", context.c_str());
-
 #define DECODE_HEX_CHAR(c)                                      \
     if ((c) >= '0' && (c) <= '9')                               \
         bytes[s] |= ((c) - '0');                                \
@@ -406,7 +392,7 @@ size_t bmx::parse_xml_bytes(const string &context, const string &str, unsigned c
                            context.c_str());
 
     size_t i, s;
-    for (i = 2, s = 0; i < str.size() && s < size; i += 2, s++) {
+    for (i = 0, s = 0; i < str.size() && s < size; i += 2, s++) {
         bytes[s] = 0;
         DECODE_HEX_CHAR(str[i])
         bytes[s] <<= 4;
@@ -456,16 +442,6 @@ string bmx::unparse_xml_hex_uint16(uint16_t value)
     return buf;
 }
 
-string bmx::unparse_xml_char(uint8_t value)
-{
-    if (value >= 0x20 && value <= 0x7e)
-        return string(1, (char)value);
-    else if (value == 0x02 || value == 0x03)
-        return unparse_xml_hex_uint8(value);
-    else
-        return unparse_xml_hex_uint8(0x00);
-}
-
 string bmx::unparse_xml_bool(bool value)
 {
     if (value)
@@ -500,6 +476,8 @@ string bmx::unparse_xml_smpte_timecode(uint64_t value)
 string bmx::unparse_xml_timecode(uint8_t timecode_1_e, uint8_t timecode_2_e,
                                  uint16_t timecode_1, uint16_t timecode_2)
 {
+    BMX_ASSERT(timecode_1_e || timecode_2_e);
+
     char buf[64];
     int hour = 0, min = 0, sec = 0, frame = 0, frame_64 = 0;
 
@@ -507,13 +485,13 @@ string bmx::unparse_xml_timecode(uint8_t timecode_1_e, uint8_t timecode_2_e,
         // low resolution is present
         hour = (timecode_1 & 0x3e00) >> 9;
         min  = (timecode_1 & 0x01f8) >> 3;
-        sec  = (timecode_1 & 0x0007) * 8;
+        sec  = (timecode_1 & 0x0007) << 3;
     }
     if (timecode_1_e) {
         // high resolution is present
-        sec      += (timecode_2 & 0x3800) >> 11;
-        frame    =  (timecode_2 & 0x07c0) >> 6;
-        frame_64 =   timecode_2 & 0x003f;
+        sec      |= (timecode_2 & 0x3800) >> 11;
+        frame     = (timecode_2 & 0x07c0) >> 6;
+        frame_64  =  timecode_2 & 0x003f;
     }
 
     hour     %= 24;
@@ -528,12 +506,9 @@ string bmx::unparse_xml_timecode(uint8_t timecode_1_e, uint8_t timecode_2_e,
     } else if (timecode_2_e) {
         // only low resolution is present
         bmx_snprintf(buf, sizeof(buf), "%02d:%02d:%02d", hour, min, sec);
-    } else if (timecode_1_e) {
+    } else { // timecode_1_e
         // only high resolution is present
         bmx_snprintf(buf, sizeof(buf), "%02d:%02d+%d/64", sec, frame, frame_64);
-    } else {
-        BMX_ASSERT(false);
-        buf[0] = 0;
     }
 
     return buf;
@@ -558,13 +533,11 @@ string bmx::unparse_xml_bytes(const unsigned char *bytes, size_t size)
     if (!bytes || size == 0)
         return "";
 
-    string str(2 + 2 * size, ' ');
-    str[0] = '0';
-    str[1] = 'x';
+    string str(2 * size, ' ');
     size_t i;
     for (i = 0; i < size; i++) {
-        str[2 * i + 2] = hex_chars[(bytes[i] & 0xf0) >> 4];
-        str[2 * i + 3] = hex_chars[(bytes[i] & 0x0f)];
+        str[2 * i    ] = hex_chars[(bytes[i] & 0xf0) >> 4];
+        str[2 * i + 1] = hex_chars[(bytes[i] & 0x0f)];
     }
 
     return str;

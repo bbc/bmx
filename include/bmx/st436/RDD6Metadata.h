@@ -45,6 +45,9 @@ namespace bmx
 {
 
 
+void get_program_config_info(uint8_t program_config, uint8_t *program_count, uint8_t *channel_count);
+
+
 class XMLWriter;
 
 class RDD6DataSegment;
@@ -65,6 +68,11 @@ public:
 
 class RDD6DolbyEComplete : public RDD6ParsedPayload
 {
+public:
+    static void GetProgramConfigInfo(const unsigned char *payload, uint32_t size,
+                                     uint8_t *program_count, uint8_t *channel_count);
+    static void UpdateStatic(unsigned char *payload, uint32_t size, const std::vector<uint8_t> &description_text_chars);
+
 public:
     RDD6DolbyEComplete();
 
@@ -96,6 +104,10 @@ public:
         uint16_t reserved_a;        // 10 bits
         uint16_t reserved_b;        // 10 bits
     } res2_elements[8];
+
+public:
+    // used in parsing/unparsing XML
+    std::string xml_desc_elements[8];
 };
 
 
@@ -115,7 +127,7 @@ public:
     uint8_t program_config;         // 6 bits
     uint8_t frame_rate_code;        // 4 bits
     int16_t pitch_shift_code;       // 12 bits
-    uint8_t reserved;               // 8 bits;
+    uint8_t reserved;               // 8 bits
 };
 
 
@@ -209,6 +221,9 @@ public:
 class RDD6DolbyDigitalComplete : public RDD6ParsedPayload
 {
 public:
+    static void UpdateStatic(unsigned char *payload, uint32_t size);
+
+public:
     RDD6DolbyDigitalComplete();
 
     virtual bool Validate();
@@ -236,9 +251,9 @@ public:
     uint8_t ac3_copyrightb;         // 1 bits
     uint8_t ac3_origbs;             // 1 bits
     uint8_t ac3_timecod1e;          // 1 bits
-    uint8_t ac3_timecod1;           // 14 bits
+    uint16_t ac3_timecod1;          // 14 bits
     uint8_t ac3_timecod2e;          // 1 bits
-    uint8_t ac3_timecod2;           // 14 bits
+    uint16_t ac3_timecod2;          // 14 bits
     uint8_t ac3_hpfon;              // 1 bits
     uint8_t ac3_bwlpfon;            // 1 bits
     uint8_t ac3_lfelpfon;           // 1 bits
@@ -320,7 +335,7 @@ public:
 
     uint8_t CalcChecksum();
 
-    uint8_t GetProgramId() const;
+    void UpdateStatic(const std::vector<uint8_t> &description_text_chars);
 
 public:
     uint8_t id;                         // 8 bits
@@ -328,6 +343,10 @@ public:
     ByteArray payload_buffer;
     const unsigned char *payload;       // only valid for lifetime of referenced data
     uint8_t checksum;                   // 8 bits
+
+public:
+    // used for parsing/unparsing XML
+    std::string xml_desc_elements[8];
 
 private:
     void PrepareConstruct8BitPayload();
@@ -356,7 +375,7 @@ public:
     } RDD6StartSubframeSyncWord;
 
 public:
-    RDD6MetadataSubFrame();
+    RDD6MetadataSubFrame(bool is_first);
     ~RDD6MetadataSubFrame();
 
     void Construct8Bit(PutBitBuffer *buffer);
@@ -364,8 +383,9 @@ public:
 
     void UnparseXML(XMLWriter *writer) const;
 
-    void GetDataSegments(uint8_t id, std::vector<RDD6DataSegment*> *segments) const;
-    RDD6DataSegment* GetProgramDataSegment(uint8_t id, uint8_t program_id) const;
+    void UpdateStatic(const std::vector<uint8_t> &description_text_chars, uint16_t frame_count);
+
+    bool IsFirst() const { return sync_segment.start_subframe_sync_word == FIRST_SUBFRAME_SYNC_WORD; }
 
 public:
     RDD6SyncSegment sync_segment;
@@ -375,6 +395,8 @@ private:
     void ClearDataSegments();
 };
 
+
+class RDD6MetadataSequence;
 
 class RDD6MetadataFrame
 {
@@ -388,6 +410,10 @@ public:
     RDD6MetadataFrame();
     ~RDD6MetadataFrame();
 
+    void ConstructST2020(ByteArray *data, uint8_t sdid, bool first);
+    void ParseST2020(const unsigned char *st2020_data_a, uint32_t st2020_size_a,
+                     const unsigned char *st2020_data_b, uint32_t st2020_size_b);
+
     void Construct8Bit(ByteArray *data, uint32_t *first_end_offset);
     void Construct8Bit(PutBitBuffer *buffer, uint32_t *first_end_offset);
     void Parse8Bit(const unsigned char *data_a, uint32_t size_a,
@@ -396,14 +422,42 @@ public:
 
     bool UnparseXML(XMLWriter *writer) const;
     bool UnparseXML(const std::string &filename) const;
+    bool ParseXML(const std::string &filename);
 
-    std::vector<RDD6DataSegment*> GetDataSegments(uint8_t id) const;
-    RDD6DataSegment* GetProgramDataSegment(uint8_t id, uint8_t program_id) const;
+    void InitStaticSequence(RDD6MetadataSequence *sequence);
+    void UpdateStaticFrame(const RDD6MetadataSequence *sequence);
+    void UpdateStaticFrameForXML(const RDD6MetadataSequence *sequence);
 
 public:
     RDD6MetadataSubFrame *first_sub_frame;
     RDD6MetadataSubFrame *second_sub_frame;
     uint16_t end_frame_sync_word;               // 16 bits
+
+private:
+    void Reset();
+
+    void ParseST2020Header(const unsigned char *st2020_data, uint32_t st2020_size,
+                           const unsigned char **data, uint32_t *size);
+};
+
+
+class RDD6MetadataSequence
+{
+public:
+    RDD6MetadataSequence();
+    ~RDD6MetadataSequence();
+
+    void Clear();
+    void AppendDescriptionText(const std::string &text);
+
+    std::vector<uint8_t> GetDescriptionTextChars() const;
+
+    void UpdateForNextStaticFrame();
+
+public:
+    uint16_t start_frame_count;
+    uint16_t frame_count;
+    std::vector<std::pair<std::string, int> > description_text;
 };
 
 

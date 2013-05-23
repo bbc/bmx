@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema
+  targetNamespace="http://bbc.co.uk/rd/rdd6/201401"
+  xmlns="http://bbc.co.uk/rd/rdd6/201401"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+  <xs:element name="rdd6">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="first_subframe" type="first_subframe_type" minOccurs="0"/>
+        <xs:element name="second_subframe" type="second_subframe_type" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="first_subframe_type">
+    <xs:sequence>
+      <xs:element name="sync" type="sync_type" minOccurs="0"/>
+      <xs:group ref="first_subframe_segment_type" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="second_subframe_type">
+    <xs:sequence>
+      <xs:element name="sync" type="sync_type" minOccurs="0"/>
+      <xs:group ref="second_subframe_segment_type" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:group name="first_subframe_segment_type">
+    <xs:choice>
+      <xs:element name="segment" type="segment_type"/>
+      <xs:element name="dolby_e_complete" type="dolby_e_complete_type"/>
+      <xs:element name="dolby_digital_complete_ext_bsi" type="dolby_digital_complete_ext_bsi_type"/>
+      <xs:element name="dolby_digital_complete" type="dolby_digital_complete_type"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:group name="second_subframe_segment_type">
+    <xs:choice>
+      <xs:element name="segment" type="segment_type"/>
+      <xs:element name="dolby_e_essential" type="dolby_e_essential_type"/>
+      <xs:element name="dolby_digital_essential_ext_bsi" type="dolby_digital_essential_ext_bsi_type"/>
+      <xs:element name="dolby_digital_essential" type="dolby_digital_essential_type"/>
+    </xs:choice>
+  </xs:group>
+
+
+
+  <xs:complexType name="sync_type">
+    <xs:sequence>
+      <xs:element name="rev_id" type="hex_uint8_type"/>
+      <xs:element name="orig_id" type="orig_id_type"/>
+      <xs:element name="orig_addr" type="hex_uint16_type" minOccurs="0"/>
+      <xs:element name="frame_count" type="uint16_type"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="orig_id_type">
+    <xs:simpleContent>
+      <xs:extension base="hex_uint8_type">
+        <xs:attribute name="manufacturer" type="xs:string" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+
+
+  <xs:complexType name="segment_type">
+    <xs:simpleContent>
+      <xs:extension base="xs:hexBinary">
+        <xs:attribute name="id" type="uint8_type" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+
+
+  <xs:complexType name="dolby_e_complete_type">
+    <xs:sequence>
+      <xs:element name="program_config" type="program_config_type"/>
+      <xs:element name="frame_rate" type="frame_rate_type"/>
+      <xs:element name="pitch_shift_code" type="int16_type" minOccurs="0"/>
+      <xs:element name="smpte_time_code" type="smpte_time_code_type" minOccurs="0"/>
+      <xs:element name="descr_text" type="descr_text_type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="descr_text_type">
+    <xs:sequence>
+      <xs:element name="program" type="descr_text_string_type" maxOccurs="8"/>
+    </xs:sequence>
+  </xs:complexType>
+
+
+
+  <xs:complexType name="dolby_e_essential_type">
+    <xs:sequence>
+      <xs:element name="program_config" type="program_config_type"/>
+      <xs:element name="frame_rate" type="frame_rate_type"/>
+      <xs:element name="pitch_shift_code" type="int16_type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+
+
+  <xs:complexType name="dolby_digital_complete_ext_bsi_type">
+    <xs:sequence>
+      <xs:element name="program_id" type="uint8_type"/>
+      <xs:element name="data_rate" type="data_rate_type" minOccurs="0"/>
+      <xs:element name="ac_mode" type="ac_mode_type"/>
+      <xs:element name="bs_mode" type="bs_mode_type"/>
+      <xs:element name="center_mix_level" type="center_mix_level_type"/>
+      <xs:element name="sur_mix_level" type="sur_mix_level_type"/>
+      <xs:element name="sur_encoded" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="lfe_on" type="xs:boolean"/>
+      <xs:element name="dialnorm" type="uint8_type"/>
+      <xs:element name="lang_code" type="hex_uint8_type" minOccurs="0"/>
+      <xs:element name="mix_level" type="uint8_type" minOccurs="0"/>
+      <xs:element name="room_type" type="room_type_type" minOccurs="0"/>
+      <xs:element name="copyright" type="xs:boolean"/>
+      <xs:element name="orig_bs" type="xs:boolean"/>
+      <xs:element name="downmix_mode" type="downmix_mode_type" minOccurs="0"/>
+      <xs:element name="lt_rt_center_mix" type="lt_rt_center_mix_type" minOccurs="0"/>
+      <xs:element name="lt_rt_sur_mix" type="lt_rt_sur_mix_type" minOccurs="0"/>
+      <xs:element name="lo_ro_center_mix" type="lo_ro_center_mix_type" minOccurs="0"/>
+      <xs:element name="lo_ro_sur_mix" type="lo_ro_sur_mix_type" minOccurs="0"/>
+      <xs:element name="sur_ex_encoded" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="headphone_encoded" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="ad_conv_type" type="ad_conv_type_type"/>
+      <xs:element name="hp_filter" type="xs:boolean"/>
+      <xs:element name="bw_lp_filter" type="xs:boolean"/>
+      <xs:element name="lfe_lp_filter" type="xs:boolean"/>
+      <xs:element name="sur_90_filter" type="xs:boolean"/>
+      <xs:element name="sur_att_filter" type="xs:boolean"/>
+      <xs:element name="rf_preemph_filter" type="xs:boolean"/>
+      <xs:group ref="compr_1_type"/>
+      <xs:group ref="dyn_range_1_type"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:group name="compr_1_type">
+    <xs:choice>
+      <xs:element name="compr_pf_1" type="compr_pf_type"/>
+      <xs:element name="compr_wd_1" type="hex_uint8_type"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:group name="dyn_range_1_type">
+    <xs:choice>
+      <xs:group ref="dyn_range_pf_1_type"/>
+      <xs:group ref="dyn_range_wd_1_type"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:group name="dyn_range_pf_1_type">
+    <xs:sequence>
+      <xs:element name="dyn_range_pf_1" type="dyn_range_pf_type"/>
+      <xs:element name="dyn_range_pf_2" type="dyn_range_pf_type"/>
+      <xs:element name="dyn_range_pf_3" type="dyn_range_pf_type"/>
+      <xs:element name="dyn_range_pf_4" type="dyn_range_pf_type"/>
+    </xs:sequence>
+  </xs:group>
+
+  <xs:group name="dyn_range_wd_1_type">
+    <xs:sequence>
+      <xs:element name="dyn_range_wd_1" type="hex_uint8_type"/>
+      <xs:element name="dyn_range_wd_2" type="hex_uint8_type"/>
+      <xs:element name="dyn_range_wd_3" type="hex_uint8_type"/>
+      <xs:element name="dyn_range_wd_4" type="hex_uint8_type"/>
+    </xs:sequence>
+  </xs:group>
+
+
+
+  <xs:complexType name="dolby_digital_essential_ext_bsi_type">
+    <xs:sequence>
+      <xs:element name="program_id" type="uint8_type"/>
+      <xs:element name="data_rate" type="data_rate_type" minOccurs="0"/>
+      <xs:element name="ac_mode" type="ac_mode_type"/>
+      <xs:element name="bs_mode" type="bs_mode_type"/>
+      <xs:element name="lfe_on" type="xs:boolean"/>
+      <xs:element name="dialnorm" type="uint8_type"/>
+      <xs:group ref="compr_2_type"/>
+      <xs:group ref="dyn_range_5_type"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:group name="compr_2_type">
+    <xs:choice>
+      <xs:element name="compr_pf_2" type="compr_pf_type"/>
+      <xs:element name="compr_wd_2" type="hex_uint8_type"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:group name="dyn_range_5_type">
+    <xs:choice>
+      <xs:group ref="dyn_range_pf_5_type"/>
+      <xs:group ref="dyn_range_wd_5_type"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:group name="dyn_range_pf_5_type">
+    <xs:sequence>
+      <xs:element name="dyn_range_pf_5" type="dyn_range_pf_type"/>
+      <xs:element name="dyn_range_pf_6" type="dyn_range_pf_type"/>
+      <xs:element name="dyn_range_pf_7" type="dyn_range_pf_type"/>
+      <xs:element name="dyn_range_pf_8" type="dyn_range_pf_type"/>
+    </xs:sequence>
+  </xs:group>
+
+  <xs:group name="dyn_range_wd_5_type">
+    <xs:sequence>
+      <xs:element name="dyn_range_wd_5" type="hex_uint8_type"/>
+      <xs:element name="dyn_range_wd_6" type="hex_uint8_type"/>
+      <xs:element name="dyn_range_wd_7" type="hex_uint8_type"/>
+      <xs:element name="dyn_range_wd_8" type="hex_uint8_type"/>
+    </xs:sequence>
+  </xs:group>
+
+
+
+  <xs:complexType name="dolby_digital_complete_type">
+    <xs:sequence>
+      <xs:element name="program_id" type="uint8_type"/>
+      <xs:element name="ac_mode" type="ac_mode_type"/>
+      <xs:element name="bs_mode" type="bs_mode_type"/>
+      <xs:element name="center_mix_level" type="center_mix_level_type"/>
+      <xs:element name="sur_mix_level" type="sur_mix_level_type"/>
+      <xs:element name="sur_encoded" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="lfe_on" type="xs:boolean"/>
+      <xs:element name="dialnorm" type="uint8_type"/>
+      <xs:element name="lang_code" type="hex_uint8_type" minOccurs="0"/>
+      <xs:element name="mix_level" type="uint8_type" minOccurs="0"/>
+      <xs:element name="room_type" type="room_type_type" minOccurs="0"/>
+      <xs:element name="copyright" type="xs:boolean"/>
+      <xs:element name="orig_bs" type="xs:boolean"/>
+      <xs:element name="timecode" type="timecode_type" minOccurs="0"/>
+      <xs:element name="hp_filter" type="xs:boolean"/>
+      <xs:element name="bw_lp_filter" type="xs:boolean"/>
+      <xs:element name="lfe_lp_filter" type="xs:boolean"/>
+      <xs:element name="sur_90_filter" type="xs:boolean"/>
+      <xs:element name="sur_att_filter" type="xs:boolean"/>
+      <xs:element name="rf_preemph_filter" type="xs:boolean"/>
+      <xs:group ref="compr_1_type"/>
+      <xs:group ref="dyn_range_1_type"/>
+    </xs:sequence>
+  </xs:complexType>
+
+
+
+  <xs:complexType name="dolby_digital_essential_type">
+    <xs:sequence>
+      <xs:element name="program_id" type="uint8_type"/>
+      <xs:element name="data_rate" type="data_rate_type" minOccurs="0"/>
+      <xs:element name="ac_mode" type="ac_mode_type"/>
+      <xs:element name="bs_mode" type="bs_mode_type"/>
+      <xs:element name="lfe_on" type="xs:boolean"/>
+      <xs:element name="dialnorm" type="uint8_type"/>
+      <xs:group ref="compr_2_type"/>
+      <xs:group ref="dyn_range_5_type"/>
+    </xs:sequence>
+  </xs:complexType>
+
+
+
+  <xs:simpleType name="program_config_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="5.1+2"/>
+      <xs:enumeration value="5.1+1+1"/>
+      <xs:enumeration value="4+4"/>
+      <xs:enumeration value="4+2+2"/>
+      <xs:enumeration value="4+2+1+1"/>
+      <xs:enumeration value="4+1+1+1+1"/>
+      <xs:enumeration value="2+2+2+2"/>
+      <xs:enumeration value="2+2+2+1+1"/>
+      <xs:enumeration value="2+2+1+1+1+1"/>
+      <xs:enumeration value="2+1+1+1+1+1+1"/>
+      <xs:enumeration value="1+1+1+1+1+1+1+1"/>
+      <xs:enumeration value="5.1"/>
+      <xs:enumeration value="4+2"/>
+      <xs:enumeration value="4+1+1"/>
+      <xs:enumeration value="2+2+2"/>
+      <xs:enumeration value="2+2+1+1"/>
+      <xs:enumeration value="2+1+1+1+1"/>
+      <xs:enumeration value="1+1+1+1+1+1"/>
+      <xs:enumeration value="4"/>
+      <xs:enumeration value="2+2"/>
+      <xs:enumeration value="2+1+1"/>
+      <xs:enumeration value="1+1+1+1"/>
+      <xs:enumeration value="7.1"/>
+      <xs:enumeration value="7.1_screen"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="frame_rate_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="23.98"/>
+      <xs:enumeration value="24"/>
+      <xs:enumeration value="25"/>
+      <xs:enumeration value="29.97"/>
+      <xs:enumeration value="30"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="data_rate_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="32"/>
+      <xs:enumeration value="40"/>
+      <xs:enumeration value="48"/>
+      <xs:enumeration value="56"/>
+      <xs:enumeration value="64"/>
+      <xs:enumeration value="80"/>
+      <xs:enumeration value="96"/>
+      <xs:enumeration value="112"/>
+      <xs:enumeration value="128"/>
+      <xs:enumeration value="160"/>
+      <xs:enumeration value="192"/>
+      <xs:enumeration value="224"/>
+      <xs:enumeration value="256"/>
+      <xs:enumeration value="320"/>
+      <xs:enumeration value="384"/>
+      <xs:enumeration value="448"/>
+      <xs:enumeration value="512"/>
+      <xs:enumeration value="576"/>
+      <xs:enumeration value="640"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ac_mode_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="1/0"/>
+      <xs:enumeration value="2/0"/>
+      <xs:enumeration value="3/0"/>
+      <xs:enumeration value="2/1"/>
+      <xs:enumeration value="3/1"/>
+      <xs:enumeration value="2/2"/>
+      <xs:enumeration value="3/2"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="bs_mode_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="main_complete"/>
+      <xs:enumeration value="main_music_and_effects"/>
+      <xs:enumeration value="assoc_visually_impaired"/>
+      <xs:enumeration value="assoc_hearing_impaired"/>
+      <xs:enumeration value="assoc_dialogue"/>
+      <xs:enumeration value="assoc_commentary"/>
+      <xs:enumeration value="assoc_emergency"/>
+      <xs:enumeration value="assoc_voice_over">
+        <xs:annotation>
+          <xs:documentation>valid when acmod equals 1</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="main_karaoke">
+        <xs:annotation>
+          <xs:documentation>valid when acmod equals 2 to 7</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="center_mix_level_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="0.707"/>
+      <xs:enumeration value="0.595"/>
+      <xs:enumeration value="0.500"/>
+      <xs:enumeration value="0.595"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="sur_mix_level_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="0.707"/>
+      <xs:enumeration value="0.500"/>
+      <xs:enumeration value="0.000"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="room_type_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="large_room"/>
+      <xs:enumeration value="small_room"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="downmix_mode_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="lt_rt"/>
+      <xs:enumeration value="lo_ro"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="lt_rt_center_mix_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="1.414"/>
+      <xs:enumeration value="1.189"/>
+      <xs:enumeration value="1.000"/>
+      <xs:enumeration value="0.841"/>
+      <xs:enumeration value="0.707"/>
+      <xs:enumeration value="0.595"/>
+      <xs:enumeration value="0.500"/>
+      <xs:enumeration value="0.000"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="lt_rt_sur_mix_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="1.414"/>
+      <xs:enumeration value="1.189"/>
+      <xs:enumeration value="1.000"/>
+      <xs:enumeration value="0.841"/>
+      <xs:enumeration value="0.707"/>
+      <xs:enumeration value="0.595"/>
+      <xs:enumeration value="0.500"/>
+      <xs:enumeration value="0.000"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="lo_ro_center_mix_type">
+    <xs:restriction base="lt_rt_center_mix_type"/>
+  </xs:simpleType>
+
+  <xs:simpleType name="lo_ro_sur_mix_type">
+    <xs:restriction base="lt_rt_sur_mix_type"/>
+  </xs:simpleType>
+
+  <xs:simpleType name="ad_conv_type_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="standard"/>
+      <xs:enumeration value="hdcd"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="compr_pf_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="none"/>
+      <xs:enumeration value="film_standard"/>
+      <xs:enumeration value="film_light"/>
+      <xs:enumeration value="music_standard"/>
+      <xs:enumeration value="music_light"/>
+      <xs:enumeration value="speech"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="dyn_range_pf_type">
+    <xs:restriction base="compr_pf_type"/>
+  </xs:simpleType>
+
+  <xs:simpleType name="hex_uint8_type">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="0x[0-9a-fA-F]{1,2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="uint8_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="255"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="hex_uint16_type">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="0x[0-9a-fA-F]{1,4}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="uint16_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="65535"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="int16_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="-32768"/>
+      <xs:maxInclusive value="32767"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="smpte_time_code_type">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\d{1,2}:\d{1,2}:\d{1,2}[;:]\d{1,2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="timecode_type">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\d{1,2}:\d{1,2}:\d{1,2}:\d{1,2}\+\d/64"/>
+      <xs:pattern value="\d{1,2}:\d{1,2}:\d{1,2}"/>
+      <xs:pattern value="\d{1,2}:\d{1,2}\+\d/64"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="descr_text_string_type">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[&#x20;-&#x7E;]*"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

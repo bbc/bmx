@@ -41,6 +41,7 @@
 
 #include <bmx/st436/RDD6Metadata.h>
 #include "RDD6MetadataXML.h"
+#include "RDD6MetadataExpat.h"
 #include <bmx/XMLWriter.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -48,7 +49,6 @@
 
 using namespace std;
 using namespace bmx;
-
 
 
 typedef struct
@@ -86,18 +86,13 @@ static const ProgramConfigInfo PROGRAM_CONFIG_INFO[] =
     {23, 1, 8},
 };
 
+static const uint8_t START_TEXT = 0x02; // next character is the start of the text description
+static const uint8_t END_TEXT   = 0x03; // previous character was the last character of the text description
+static const uint8_t NUL_TEXT   = 0x00; // no text description
+
+static const uint64_t INVALID_SMPTE_TC_HOURS = (uint64_t)0x3f << 48;
 
 
-static bool get_program_config_info(uint8_t program_config, uint8_t *program_count, uint8_t *channel_count)
-{
-    if (program_config >= BMX_ARRAY_SIZE(PROGRAM_CONFIG_INFO))
-        return false;
-
-    *program_count = PROGRAM_CONFIG_INFO[program_config].program_count;
-    *channel_count = PROGRAM_CONFIG_INFO[program_config].channel_count;
-
-    return true;
-}
 
 static void validate_range(const string &name, int value, int min, int max)
 {
@@ -112,12 +107,49 @@ static void validate_range(const string &name, int value, int min, int max)
 
 
 
+void bmx::get_program_config_info(uint8_t program_config, uint8_t *program_count, uint8_t *channel_count)
+{
+    if (program_config >= BMX_ARRAY_SIZE(PROGRAM_CONFIG_INFO))
+      BMX_EXCEPTION(("Invalid program config %u", program_config));
+
+    *program_count = PROGRAM_CONFIG_INFO[program_config].program_count;
+    *channel_count = PROGRAM_CONFIG_INFO[program_config].channel_count;
+}
+
+
+
+void RDD6DolbyEComplete::GetProgramConfigInfo(const unsigned char *payload, uint32_t size,
+                                              uint8_t *program_count, uint8_t *channel_count)
+{
+    uint8_t program_config;
+    RDD6GetBitBuffer buffer(payload, size, 0, 0);
+    buffer.GetBits(6, &program_config);
+
+    get_program_config_info(program_config, program_count, channel_count);
+}
+
+void RDD6DolbyEComplete::UpdateStatic(unsigned char *payload, uint32_t size, const vector<uint8_t> &description_text_chars)
+{
+    BMX_CHECK(description_text_chars.size() < 8);
+
+    PutBitBuffer buffer(payload, size);
+
+    buffer.SetBitPos(6+4+12);
+    buffer.PutBits(64, INVALID_SMPTE_TC_HOURS);
+
+    size_t i;
+    for (i = 0; i < description_text_chars.size(); i++) {
+        buffer.SetBitPos(6+4+12+64+8 + 10 * i);
+        buffer.PutBits(8, description_text_chars[i]);
+    }
+}
+
 RDD6DolbyEComplete::RDD6DolbyEComplete()
 {
     program_config = 0;
     frame_rate_code = 3;
     pitch_shift_code = 0;
-    smpte_time_code = (uint64_t)0x3f << 48;
+    smpte_time_code = INVALID_SMPTE_TC_HOURS;
     reserved = 0;
     memset(desc_elements, 0, sizeof(desc_elements));
     memset(res1_elements, 0, sizeof(res1_elements));
@@ -158,8 +190,7 @@ void RDD6DolbyEComplete::Construct8BitPayload(RDD6DataSegment *segment) const
     }
 
     uint8_t program_count, channel_count;
-    if (!get_program_config_info(program_config, &program_count, &channel_count))
-        BMX_EXCEPTION(("Unknown program config %u in data segment with id %u", program_config, segment->id));
+    get_program_config_info(program_config, &program_count, &channel_count);
 
     segment->PrepareConstruct8BitPayload();
 
@@ -201,8 +232,7 @@ void RDD6DolbyEComplete::Parse8BitPayload(const RDD6DataSegment *segment)
         BMX_EXCEPTION(("Insufficient payload data in RDD6 data segment with id %u", segment->id));
     buffer.GetBits(6, &program_config);
 
-    if (!get_program_config_info(program_config, &program_count, &channel_count))
-        BMX_EXCEPTION(("Unknown program config %u in data segment with id %u", program_config, segment->id));
+    get_program_config_info(program_config, &program_count, &channel_count);
 
     if (buffer.GetRemBitSize() < (uint64_t)88 + program_count * 10 + channel_count * 25)
         BMX_EXCEPTION(("Insufficient payload data in RDD6 data segment with id %u", segment->id));
@@ -229,7 +259,7 @@ void RDD6DolbyEComplete::UnparseXML(XMLWriter *writer) const
 {
     uint8_t i;
     uint8_t program_count, channel_count;
-    BMX_CHECK(get_program_config_info(program_config, &program_count, &channel_count));
+    get_program_config_info(program_config, &program_count, &channel_count);
 
     writer->WriteElementStart(RDD6_NAMESPACE, "dolby_e_complete");
 
@@ -239,13 +269,14 @@ void RDD6DolbyEComplete::UnparseXML(XMLWriter *writer) const
                          unparse_xml_enum("frame_rate", FRAME_RATE_ENUM, frame_rate_code));
     if (pitch_shift_code != 0)
         writer->WriteElement(RDD6_NAMESPACE, "pitch_shift_code", unparse_xml_int16(pitch_shift_code));
-    if (((smpte_time_code >> 48) & 0x3f) != 0x3f) // hour = 0x3f indicates timecode is invalid
+    if ((smpte_time_code & INVALID_SMPTE_TC_HOURS) != INVALID_SMPTE_TC_HOURS)
         writer->WriteElement(RDD6_NAMESPACE, "smpte_time_code", unparse_xml_smpte_timecode(smpte_time_code));
 
     bool write_descr_text = false;
     for (i = 0; i < program_count; i++) {
-        if (desc_elements[i].description_text == 0x02 ||
-            desc_elements[i].description_text == 0x03 ||
+        if (!xml_desc_elements[i].empty() ||
+            desc_elements[i].description_text == START_TEXT ||
+            desc_elements[i].description_text == END_TEXT ||
             (desc_elements[i].description_text >= 0x20 && desc_elements[i].description_text <= 0x7e))
         {
             write_descr_text = true;
@@ -255,8 +286,15 @@ void RDD6DolbyEComplete::UnparseXML(XMLWriter *writer) const
     if (write_descr_text) {
         writer->WriteElementStart(RDD6_NAMESPACE, "descr_text");
         for (i = 0; i < program_count; i++) {
-            writer->WriteElement(RDD6_NAMESPACE, "program",
-                                 unparse_xml_char(desc_elements[i].description_text));
+            if (!xml_desc_elements[i].empty()) {
+                writer->WriteElement(RDD6_NAMESPACE, "program", xml_desc_elements[i]);
+            } else if (desc_elements[i].description_text >= 0x20 && desc_elements[i].description_text <= 0x7e) {
+                char str[2] = {0, 0};
+                str[0] = desc_elements[i].description_text;
+                writer->WriteElement(RDD6_NAMESPACE, "program", str);
+            } else {
+                writer->WriteElement(RDD6_NAMESPACE, "program", "");
+            }
         }
         writer->WriteElementEnd();
     }
@@ -331,7 +369,7 @@ void RDD6DolbyEEssential::Parse8BitPayload(const RDD6DataSegment *segment)
 void RDD6DolbyEEssential::UnparseXML(XMLWriter *writer) const
 {
     uint8_t program_count, channel_count;
-    BMX_CHECK(get_program_config_info(program_config, &program_count, &channel_count));
+    get_program_config_info(program_config, &program_count, &channel_count);
 
     writer->WriteElementStart(RDD6_NAMESPACE, "dolby_e_essential");
 
@@ -350,7 +388,7 @@ void RDD6DolbyEEssential::UnparseXML(XMLWriter *writer) const
 RDD6DolbyDigitalCompleteExtBSI::RDD6DolbyDigitalCompleteExtBSI()
 {
     program_id = 0;
-    ac3_datarate = 0;
+    ac3_datarate = 31;
     ac3_bsmod = 0;
     ac3_acmod = 1;
     ac3_cmixlev = 0;
@@ -365,13 +403,13 @@ RDD6DolbyDigitalCompleteExtBSI::RDD6DolbyDigitalCompleteExtBSI()
     ac3_roomtyp = 0;
     ac3_copyrightb = 0;
     ac3_origbs = 0;
-    ac3_xbsi1e = 0;
+    ac3_xbsi1e = 1;
     ac3_dmixmod = 0;
     ac3_ltrtcmixlev = 0;
     ac3_ltrtsurmixlev = 0;
     ac3_lorocmixlev = 0;
     ac3_lorosurmixlev = 0;
-    ac3_xbsi2e = 0;
+    ac3_xbsi2e = 1;
     ac3_dsurexmod = 0;
     ac3_dheadphonmod = 0;
     ac3_adconvtyp = 0;
@@ -583,10 +621,12 @@ void RDD6DolbyDigitalCompleteExtBSI::UnparseXML(XMLWriter *writer) const
     writer->WriteElementStart(RDD6_NAMESPACE, "dolby_digital_complete_ext_bsi");
 
     writer->WriteElement(RDD6_NAMESPACE, "program_id", unparse_xml_uint8(program_id));
-    if (ac3_datarate != 31) { // 0x31 = not specified
+    if (ac3_datarate != 31) { // 31 = not specified
         writer->WriteElement(RDD6_NAMESPACE, "data_rate",
                              unparse_xml_enum("data_rate", DATARATE_ENUM, ac3_datarate));
     }
+    writer->WriteElement(RDD6_NAMESPACE, "ac_mode",
+                         unparse_xml_enum("ac_mode", ACMOD_ENUM, ac3_acmod));
     if (ac3_acmod <= 1) {
         writer->WriteElement(RDD6_NAMESPACE, "bs_mode",
                              unparse_xml_enum("bs_mode", BSMOD_1_ENUM, ac3_bsmod));
@@ -594,8 +634,6 @@ void RDD6DolbyDigitalCompleteExtBSI::UnparseXML(XMLWriter *writer) const
         writer->WriteElement(RDD6_NAMESPACE, "bs_mode",
                              unparse_xml_enum("bs_mode", BSMOD_2_ENUM, ac3_bsmod));
     }
-    writer->WriteElement(RDD6_NAMESPACE, "ac_mode",
-                         unparse_xml_enum("ac_mode", ACMOD_ENUM, ac3_acmod));
     writer->WriteElement(RDD6_NAMESPACE, "center_mix_level",
                          unparse_xml_enum("center_mix_level", CMIXLEVEL_ENUM, ac3_cmixlev));
     writer->WriteElement(RDD6_NAMESPACE, "sur_mix_level",
@@ -653,7 +691,7 @@ void RDD6DolbyDigitalCompleteExtBSI::UnparseXML(XMLWriter *writer) const
     writer->WriteElement(RDD6_NAMESPACE, "sur_att_filter", unparse_xml_bool(ac3_suratton));
     writer->WriteElement(RDD6_NAMESPACE, "rf_preemph_filter", unparse_xml_bool(ac3_rfpremphon));
     if (ac3_compre == 0) {
-        writer->WriteElement(RDD6_NAMESPACE, "comp_pf_1",
+        writer->WriteElement(RDD6_NAMESPACE, "compr_pf_1",
                              unparse_xml_enum("compr_pf_1", COMPR_ENUM, ac3_compr1));
     } else {
         writer->WriteElement(RDD6_NAMESPACE, "compr_wd_1", unparse_xml_hex_uint8(ac3_compr1));
@@ -682,7 +720,7 @@ void RDD6DolbyDigitalCompleteExtBSI::UnparseXML(XMLWriter *writer) const
 RDD6DolbyDigitalEssentialExtBSI::RDD6DolbyDigitalEssentialExtBSI()
 {
     program_id = 0;
-    ac3_datarate = 0;
+    ac3_datarate = 31;
     ac3_bsmod = 0;
     ac3_acmod = 1;
     ac3_lfeon = 0;
@@ -794,10 +832,12 @@ void RDD6DolbyDigitalEssentialExtBSI::UnparseXML(XMLWriter *writer) const
     writer->WriteElementStart(RDD6_NAMESPACE, "dolby_digital_essential_ext_bsi");
 
     writer->WriteElement(RDD6_NAMESPACE, "program_id", unparse_xml_uint8(program_id));
-    if (ac3_datarate != 31) { // 0x31 = not specified
+    if (ac3_datarate != 31) { // 31 = not specified
         writer->WriteElement(RDD6_NAMESPACE, "data_rate",
                              unparse_xml_enum("data_rate", DATARATE_ENUM, ac3_datarate));
     }
+    writer->WriteElement(RDD6_NAMESPACE, "ac_mode",
+                         unparse_xml_enum("ac_mode", ACMOD_ENUM, ac3_acmod));
     if (ac3_acmod <= 1) {
         writer->WriteElement(RDD6_NAMESPACE, "bs_mode",
                              unparse_xml_enum("bs_mode", BSMOD_1_ENUM, ac3_bsmod));
@@ -805,8 +845,6 @@ void RDD6DolbyDigitalEssentialExtBSI::UnparseXML(XMLWriter *writer) const
         writer->WriteElement(RDD6_NAMESPACE, "bs_mode",
                              unparse_xml_enum("bs_mode", BSMOD_2_ENUM, ac3_bsmod));
     }
-    writer->WriteElement(RDD6_NAMESPACE, "ac_mode",
-                         unparse_xml_enum("ac_mode", ACMOD_ENUM, ac3_acmod));
     writer->WriteElement(RDD6_NAMESPACE, "lfe_on", unparse_xml_bool(ac3_lfeon));
     if (ac3_dialnorm == 0)
         writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_uint8(31)); // 0 is treated as 31
@@ -838,6 +876,18 @@ void RDD6DolbyDigitalEssentialExtBSI::UnparseXML(XMLWriter *writer) const
 }
 
 
+
+void RDD6DolbyDigitalComplete::UpdateStatic(unsigned char *payload, uint32_t size)
+{
+    PutBitBuffer buffer(payload, size);
+
+    // timecode not present
+    buffer.SetBitPos(5+5+3+3+2+2+2+1+5+1+8+1+5+2+1+1);
+    buffer.PutBits( 1, 0); // ac3_timecod1e
+    buffer.PutBits(14, 0); // ac3_timecod1
+    buffer.PutBits( 1, 0); // ac3_timecod2e
+    buffer.PutBits(14, 0); // ac3_timecod2
+}
 
 RDD6DolbyDigitalComplete::RDD6DolbyDigitalComplete()
 {
@@ -1035,6 +1085,8 @@ void RDD6DolbyDigitalComplete::UnparseXML(XMLWriter *writer) const
     writer->WriteElementStart(RDD6_NAMESPACE, "dolby_digital_complete");
 
     writer->WriteElement(RDD6_NAMESPACE, "program_id", unparse_xml_uint8(program_id));
+    writer->WriteElement(RDD6_NAMESPACE, "ac_mode",
+                         unparse_xml_enum("ac_mode", ACMOD_ENUM, ac3_acmod));
     if (ac3_acmod <= 1) {
         writer->WriteElement(RDD6_NAMESPACE, "bs_mode",
                              unparse_xml_enum("bs_mode", BSMOD_1_ENUM, ac3_bsmod));
@@ -1042,8 +1094,6 @@ void RDD6DolbyDigitalComplete::UnparseXML(XMLWriter *writer) const
         writer->WriteElement(RDD6_NAMESPACE, "bs_mode",
                              unparse_xml_enum("bs_mode", BSMOD_2_ENUM, ac3_bsmod));
     }
-    writer->WriteElement(RDD6_NAMESPACE, "ac_mode",
-                         unparse_xml_enum("ac_mode", ACMOD_ENUM, ac3_acmod));
     writer->WriteElement(RDD6_NAMESPACE, "center_mix_level",
                          unparse_xml_enum("center_mix_level", CMIXLEVEL_ENUM, ac3_cmixlev));
     writer->WriteElement(RDD6_NAMESPACE, "sur_mix_level",
@@ -1077,7 +1127,7 @@ void RDD6DolbyDigitalComplete::UnparseXML(XMLWriter *writer) const
     writer->WriteElement(RDD6_NAMESPACE, "sur_att_filter", unparse_xml_bool(ac3_suratton));
     writer->WriteElement(RDD6_NAMESPACE, "rf_preemph_filter", unparse_xml_bool(ac3_rfpremphon));
     if (ac3_compre == 0) {
-        writer->WriteElement(RDD6_NAMESPACE, "comp_pf_1",
+        writer->WriteElement(RDD6_NAMESPACE, "compr_pf_1",
                              unparse_xml_enum("compr_pf_1", COMPR_ENUM, ac3_compr1));
     } else {
         writer->WriteElement(RDD6_NAMESPACE, "compr_wd_1", unparse_xml_hex_uint8(ac3_compr1));
@@ -1106,7 +1156,7 @@ void RDD6DolbyDigitalComplete::UnparseXML(XMLWriter *writer) const
 RDD6DolbyDigitalEssential::RDD6DolbyDigitalEssential()
 {
     program_id = 0;
-    ac3_datarate = 0;
+    ac3_datarate = 31;
     ac3_bsmod = 0;
     ac3_acmod = 1;
     ac3_lfeon = 0;
@@ -1215,13 +1265,15 @@ void RDD6DolbyDigitalEssential::Parse8BitPayload(const RDD6DataSegment *segment)
 
 void RDD6DolbyDigitalEssential::UnparseXML(XMLWriter *writer) const
 {
-    writer->WriteElementStart(RDD6_NAMESPACE, "dolby_digital_complete");
+    writer->WriteElementStart(RDD6_NAMESPACE, "dolby_digital_essential");
 
     writer->WriteElement(RDD6_NAMESPACE, "program_id", unparse_xml_uint8(program_id));
-    if (ac3_datarate != 31) { // 0x31 = not specified
+    if (ac3_datarate != 31) { // 31 = not specified
         writer->WriteElement(RDD6_NAMESPACE, "data_rate",
                              unparse_xml_enum("data_rate", DATARATE_ENUM, ac3_datarate));
     }
+    writer->WriteElement(RDD6_NAMESPACE, "ac_mode",
+                         unparse_xml_enum("ac_mode", ACMOD_ENUM, ac3_acmod));
     if (ac3_acmod <= 1) {
         writer->WriteElement(RDD6_NAMESPACE, "bs_mode",
                              unparse_xml_enum("bs_mode", BSMOD_1_ENUM, ac3_bsmod));
@@ -1229,15 +1281,13 @@ void RDD6DolbyDigitalEssential::UnparseXML(XMLWriter *writer) const
         writer->WriteElement(RDD6_NAMESPACE, "bs_mode",
                              unparse_xml_enum("bs_mode", BSMOD_2_ENUM, ac3_bsmod));
     }
-    writer->WriteElement(RDD6_NAMESPACE, "ac_mode",
-                         unparse_xml_enum("ac_mode", ACMOD_ENUM, ac3_acmod));
     writer->WriteElement(RDD6_NAMESPACE, "lfe_on", unparse_xml_bool(ac3_lfeon));
     if (ac3_dialnorm == 0)
         writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_uint8(31)); // 0 is treated as 31
     else
         writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_uint8(ac3_dialnorm));
     if (ac3_compre == 0) {
-        writer->WriteElement(RDD6_NAMESPACE, "comp_pf_2",
+        writer->WriteElement(RDD6_NAMESPACE, "compr_pf_2",
                              unparse_xml_enum("compr_pf_2", COMPR_ENUM, ac3_compr2));
     } else {
         writer->WriteElement(RDD6_NAMESPACE, "compr_wd_2", unparse_xml_hex_uint8(ac3_compr2));
@@ -1349,12 +1399,17 @@ void RDD6DataSegment::UnparseXML(XMLWriter *writer) const
         default:                                 break;
     }
     if (data.get()) {
+        if (id == DS_DOLBY_E_COMPLETE) {
+            RDD6DolbyEComplete *payload = dynamic_cast<RDD6DolbyEComplete*>(data.get());
+            size_t i;
+            for (i = 0; i < BMX_ARRAY_SIZE(xml_desc_elements); i++)
+                payload->xml_desc_elements[i] = xml_desc_elements[i];
+        }
         Parse8BitPayload(data.get());
         data->UnparseXML(writer);
     } else {
         writer->WriteElementStart(RDD6_NAMESPACE, "segment");
         writer->WriteAttribute(RDD6_NAMESPACE, "id", unparse_xml_uint8(id));
-        writer->WriteAttribute(RDD6_NAMESPACE, "size", unparse_xml_uint16(size));
         writer->WriteElementContent(unparse_xml_bytes(payload, size));
         writer->WriteElementEnd();
     }
@@ -1372,21 +1427,19 @@ uint8_t RDD6DataSegment::CalcChecksum()
     return result;
 }
 
-uint8_t RDD6DataSegment::GetProgramId() const
+void RDD6DataSegment::UpdateStatic(const vector<uint8_t> &description_text_chars)
 {
-    uint8_t program_id = UINT8_MAX;
+    if (id != DS_DOLBY_E_COMPLETE && id != DS_DOLBY_DIGITAL_COMPLETE)
+        return;
 
-    if (size >= 5 &&
-            (id == DS_DOLBY_DIGITAL_COMPLETE_EXT_BSI ||
-             id == DS_DOLBY_DIGITAL_ESSENTIAL_EXT_BSI ||
-             id == DS_DOLBY_DIGITAL_COMPLETE ||
-             id == DS_DOLBY_DIGITAL_ESSENTIAL))
-    {
-        RDD6GetBitBuffer buffer(payload, size, 0, 0);
-        buffer.GetBits(5, &program_id);
-    }
+    BMX_CHECK(payload_buffer.GetSize() > 0 && payload_buffer.GetBytes() == payload);
 
-    return program_id;
+    if (id == DS_DOLBY_E_COMPLETE)
+        RDD6DolbyEComplete::UpdateStatic(payload_buffer.GetBytes(), size, description_text_chars);
+    else if (id == DS_DOLBY_DIGITAL_COMPLETE)
+        RDD6DolbyDigitalComplete::UpdateStatic(payload_buffer.GetBytes(), size);
+
+    checksum = CalcChecksum();
 }
 
 void RDD6DataSegment::PrepareConstruct8BitPayload()
@@ -1409,9 +1462,14 @@ void RDD6DataSegment::CompleteConstruct8BitPayload()
 
 
 
-RDD6MetadataSubFrame::RDD6MetadataSubFrame()
+RDD6MetadataSubFrame::RDD6MetadataSubFrame(bool is_first)
 {
     memset(&sync_segment, 0, sizeof(sync_segment));
+    sync_segment.originator_id = 1;
+    if (is_first)
+      sync_segment.start_subframe_sync_word = FIRST_SUBFRAME_SYNC_WORD;
+    else
+      sync_segment.start_subframe_sync_word = SECOND_SUBFRAME_SYNC_WORD;
 }
 
 RDD6MetadataSubFrame::~RDD6MetadataSubFrame()
@@ -1464,7 +1522,10 @@ void RDD6MetadataSubFrame::Parse8Bit(RDD6GetBitBuffer *buffer)
 
 void RDD6MetadataSubFrame::UnparseXML(XMLWriter *writer) const
 {
-    writer->WriteElementStart(RDD6_NAMESPACE, "subframe");
+    if (IsFirst())
+        writer->WriteElementStart(RDD6_NAMESPACE, "first_subframe");
+    else
+        writer->WriteElementStart(RDD6_NAMESPACE, "second_subframe");
 
     writer->WriteElementStart(RDD6_NAMESPACE, "sync");
     writer->WriteElement(RDD6_NAMESPACE, "rev_id", unparse_xml_hex_uint8(sync_segment.revision_id));
@@ -1489,24 +1550,13 @@ void RDD6MetadataSubFrame::UnparseXML(XMLWriter *writer) const
     writer->WriteElementEnd();
 }
 
-void RDD6MetadataSubFrame::GetDataSegments(uint8_t id, vector<RDD6DataSegment*> *segments) const
+void RDD6MetadataSubFrame::UpdateStatic(const vector<uint8_t> &description_text_chars, uint16_t frame_count)
 {
-    size_t i;
-    for (i = 0; i < data_segments.size(); i++) {
-        if (data_segments[i]->id == id)
-            segments->push_back(data_segments[i]);
-    }
-}
+    sync_segment.frame_count = frame_count;
 
-RDD6DataSegment* RDD6MetadataSubFrame::GetProgramDataSegment(uint8_t id, uint8_t program_id) const
-{
     size_t i;
-    for (i = 0; i < data_segments.size(); i++) {
-        if (data_segments[i]->id == id && data_segments[i]->GetProgramId() == program_id)
-            return data_segments[i];
-    }
-
-    return 0;
+    for (i = 0; i < data_segments.size(); i++)
+        data_segments[i]->UpdateStatic(description_text_chars);
 }
 
 void RDD6MetadataSubFrame::ClearDataSegments()
@@ -1530,6 +1580,43 @@ RDD6MetadataFrame::~RDD6MetadataFrame()
 {
     delete first_sub_frame;
     delete second_sub_frame;
+}
+
+void RDD6MetadataFrame::ConstructST2020(ByteArray *data, uint8_t sdid, bool first)
+{
+    BMX_CHECK((first && first_sub_frame) || (!first && second_sub_frame));
+
+    PutBitBuffer buffer(data);
+    buffer.PutUInt8(0x45); // did
+    buffer.PutUInt8(sdid);
+    buffer.PutUInt8(0);    // size, filled in at the end
+
+    uint32_t start_size      = buffer.GetSize();
+    unsigned char *size_byte = &buffer.GetBuffer()->GetBytes()[start_size - 1];
+
+    if (first) {
+        first_sub_frame->Construct8Bit(&buffer);
+    } else {
+        second_sub_frame->Construct8Bit(&buffer);
+        buffer.PutBits(16, (uint16_t)END_FRAME_SYNC_WORD);
+    }
+
+    *size_byte = buffer.GetSize() - start_size;
+}
+
+void RDD6MetadataFrame::ParseST2020(const unsigned char *st2020_data_a, uint32_t st2020_size_a,
+                                    const unsigned char *st2020_data_b, uint32_t st2020_size_b)
+{
+    const unsigned char *data_a = 0;
+    uint32_t size_a = 0;
+    const unsigned char *data_b = 0;
+    uint32_t size_b = 0;
+
+    ParseST2020Header(st2020_data_a, st2020_size_a, &data_a, &size_a);
+    ParseST2020Header(st2020_data_b, st2020_size_b, &data_b, &size_b);
+
+    RDD6GetBitBuffer buffer(data_a, size_a, data_b, size_b);
+    Parse8Bit(&buffer);
 }
 
 void RDD6MetadataFrame::Construct8Bit(ByteArray *data, uint32_t *first_end_offset)
@@ -1571,8 +1658,7 @@ void RDD6MetadataFrame::Parse8Bit(RDD6GetBitBuffer *buffer)
             delete second_sub_frame;
             second_sub_frame = 0;
 
-            first_sub_frame = new RDD6MetadataSubFrame();
-            first_sub_frame->sync_segment.start_subframe_sync_word = RDD6MetadataSubFrame::FIRST_SUBFRAME_SYNC_WORD;
+            first_sub_frame = new RDD6MetadataSubFrame(true);
             first_sub_frame->Parse8Bit(buffer);
             read_first = true;
 
@@ -1581,8 +1667,7 @@ void RDD6MetadataFrame::Parse8Bit(RDD6GetBitBuffer *buffer)
             delete second_sub_frame;
             second_sub_frame = 0;
 
-            second_sub_frame = new RDD6MetadataSubFrame();
-            second_sub_frame->sync_segment.start_subframe_sync_word = RDD6MetadataSubFrame::SECOND_SUBFRAME_SYNC_WORD;
+            second_sub_frame = new RDD6MetadataSubFrame(false);
             second_sub_frame->Parse8Bit(buffer);
             read_second = true;
 
@@ -1636,25 +1721,171 @@ bool RDD6MetadataFrame::UnparseXML(const string &filename) const
     return result;
 }
 
-vector<RDD6DataSegment*> RDD6MetadataFrame::GetDataSegments(uint8_t id) const
+bool RDD6MetadataFrame::ParseXML(const string &filename)
 {
-    vector<RDD6DataSegment*> segments;
-    if (first_sub_frame)
-        first_sub_frame->GetDataSegments(id, &segments);
-    if (second_sub_frame)
-        second_sub_frame->GetDataSegments(id, &segments);
+    Reset();
 
-    return segments;
+    RDD6MetadataExpat parser(this);
+    bool result = parser.ParseXML(filename);
+
+    if (!result)
+        Reset();
+
+    return result;
 }
 
-RDD6DataSegment* RDD6MetadataFrame::GetProgramDataSegment(uint8_t id, uint8_t program_id) const
+void RDD6MetadataFrame::InitStaticSequence(RDD6MetadataSequence *sequence)
 {
-    RDD6DataSegment* segment = 0;
-    if (first_sub_frame)
-        segment = first_sub_frame->GetProgramDataSegment(id, program_id);
-    if (!segment && second_sub_frame)
-        segment = second_sub_frame->GetProgramDataSegment(id, program_id);
+    sequence->Clear();
 
-    return segment;
+    if (first_sub_frame)
+        sequence->start_frame_count = first_sub_frame->sync_segment.frame_count;
+    else if (second_sub_frame)
+        sequence->start_frame_count = second_sub_frame->sync_segment.frame_count;
+    sequence->frame_count = sequence->start_frame_count;
+
+    if (first_sub_frame) {
+        size_t i;
+        for (i = 0; i < first_sub_frame->data_segments.size(); i++) {
+            RDD6DataSegment *data_segment = first_sub_frame->data_segments[i];
+            if (data_segment->id == RDD6DataSegment::DS_DOLBY_E_COMPLETE) {
+                uint8_t program_count = 0;
+                uint8_t channel_count;
+                RDD6DolbyEComplete::GetProgramConfigInfo(data_segment->payload, data_segment->size,
+                                                         &program_count, &channel_count);
+
+                uint8_t p;
+                for (p = 0; p < program_count; p++)
+                    sequence->AppendDescriptionText(data_segment->xml_desc_elements[p]);
+                break;
+            }
+        }
+    }
+}
+
+void RDD6MetadataFrame::UpdateStaticFrame(const RDD6MetadataSequence *sequence)
+{
+    vector<uint8_t> description_text_chars = sequence->GetDescriptionTextChars();
+    if (first_sub_frame)
+        first_sub_frame->UpdateStatic(description_text_chars, sequence->frame_count);
+    if (second_sub_frame)
+        second_sub_frame->UpdateStatic(description_text_chars, sequence->frame_count);
+}
+
+void RDD6MetadataFrame::UpdateStaticFrameForXML(const RDD6MetadataSequence *sequence)
+{
+    UpdateStaticFrame(sequence);
+
+    if (first_sub_frame) {
+        size_t i;
+        for (i = 0; i < first_sub_frame->data_segments.size(); i++) {
+            RDD6DataSegment *data_segment = first_sub_frame->data_segments[i];
+            if (data_segment->id == RDD6DataSegment::DS_DOLBY_E_COMPLETE) {
+                size_t j;
+                for (j = 0; j < sequence->description_text.size(); j++)
+                    data_segment->xml_desc_elements[j] = sequence->description_text[j].first;
+                for (; j < BMX_ARRAY_SIZE(data_segment->xml_desc_elements); j++)
+                    data_segment->xml_desc_elements[j] = "";
+                break;
+            }
+        }
+    }
+}
+
+void RDD6MetadataFrame::Reset()
+{
+    delete first_sub_frame;
+    first_sub_frame = 0;
+    delete second_sub_frame;
+    second_sub_frame = 0;
+    end_frame_sync_word = 0;
+}
+
+void RDD6MetadataFrame::ParseST2020Header(const unsigned char *st2020_data, uint32_t st2020_size,
+                                          const unsigned char **data, uint32_t *size)
+{
+    if (st2020_data && st2020_size > 3) {
+        if (st2020_data[0] != 0x45)
+            BMX_EXCEPTION(("ST-2020 RDD-6 subframe DID 0x%02x does not equal 0x45", st2020_data[0]));
+        if (st2020_data[1] < 1 || st2020_data[1] > 9)
+            BMX_EXCEPTION(("ST-2020 RDD-6 subframe SDID 0x%02x is invalid", st2020_data[1]));
+        if (st2020_data[2] > st2020_size - 3) {
+            BMX_EXCEPTION(("ST-2020 RDD-6 subframe size %u extends beyond available size %u",
+                           st2020_data[2], st2020_size - 3));
+        }
+        if (st2020_data[2] > 0) {
+            *data = &st2020_data[3];
+            *size = st2020_data[2];
+        } else {
+            *data = 0;
+            *size = 0;
+        }
+    } else {
+        *data = 0;
+        *size = 0;
+    }
+}
+
+
+
+RDD6MetadataSequence::RDD6MetadataSequence()
+{
+    start_frame_count = 0;
+    frame_count = 0;
+}
+
+RDD6MetadataSequence::~RDD6MetadataSequence()
+{
+}
+
+
+void RDD6MetadataSequence::Clear()
+{
+    start_frame_count = 0;
+    frame_count = 0;
+    description_text.clear();
+}
+
+void RDD6MetadataSequence::AppendDescriptionText(const string &text)
+{
+    BMX_ASSERT(description_text.size() < 8);
+    description_text.push_back(make_pair(text, -1));
+}
+
+vector<uint8_t> RDD6MetadataSequence::GetDescriptionTextChars() const
+{
+    vector<uint8_t> description_text_chars;
+    size_t i;
+    for (i = 0; i < description_text.size(); i++) {
+        const pair<string, int> &dt_ref = description_text[i];
+
+        uint8_t next_char;
+        if (dt_ref.first.empty())
+            next_char = NUL_TEXT;
+        else if (dt_ref.second < 0)
+            next_char = START_TEXT;
+        else if (dt_ref.second >= (int)dt_ref.first.size())
+            next_char = END_TEXT;
+        else
+            next_char = dt_ref.first[dt_ref.second];
+
+        description_text_chars.push_back(next_char);
+    }
+
+    return description_text_chars;
+}
+
+void RDD6MetadataSequence::UpdateForNextStaticFrame()
+{
+    frame_count++;
+
+    size_t i;
+    for (i = 0; i < description_text.size(); i++) {
+        pair<string, int> &dt_ref = description_text[i];
+        if ((dt_ref.second >= 0 && dt_ref.second >= (int)dt_ref.first.size()) || dt_ref.first.empty())
+            dt_ref.second = -1;
+        else
+            dt_ref.second++;
+    }
 }
 

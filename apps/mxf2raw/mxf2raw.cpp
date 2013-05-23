@@ -1035,18 +1035,9 @@ static bool extract_rdd6_xml(Frame *frame, const char *filename)
         man_element.Parse(&st436_element.lines[i]);
         if (man_element.sample_coding == ANC_8_BIT_COMP_LUMA &&
             man_element.did == 0x45 &&
-            (man_element.sdid >= 0x01 && man_element.sdid <= 0x08))
+            (man_element.sdid >= 0x01 && man_element.sdid <= 0x09))
         {
-            if (st436_element.lines[i].payload_size >= 3 &&
-                st436_element.lines[i].payload_sample_count > 0 &&
-                st436_element.lines[i].payload_data[2] + 3 >= st436_element.lines[i].payload_sample_count)
-            {
-                rdd6_lines.push_back(&st436_element.lines[i]);
-            }
-            else
-            {
-                log_warn("Ignoring empty or invalid RDD-6 frame data\n");
-            }
+            rdd6_lines.push_back(&st436_element.lines[i]);
         }
     }
     if (rdd6_lines.empty())
@@ -1056,17 +1047,19 @@ static bool extract_rdd6_xml(Frame *frame, const char *filename)
     if (rdd6_lines.size() >= 2) {
         if (rdd6_lines.size() > 2)
             log_warn("ST-436 ANC data contains %"PRIszt" RDD-6 lines; only using the first 2\n", rdd6_lines.size());
-        rdd6_frame.Parse8Bit(&rdd6_lines[0]->payload_data[3], rdd6_lines[0]->payload_data[2],
-                             &rdd6_lines[1]->payload_data[3], rdd6_lines[1]->payload_data[2]);
+        rdd6_frame.ParseST2020(rdd6_lines[0]->payload_data, rdd6_lines[0]->payload_size,
+                               rdd6_lines[1]->payload_data, rdd6_lines[1]->payload_size);
     } else {
         log_warn("ST-436 ANC data only contains a single RDD-6 line\n");
-        rdd6_frame.Parse8Bit(&rdd6_lines[0]->payload_data[3], rdd6_lines[0]->payload_data[2],
-                             0, 0);
+        rdd6_frame.ParseST2020(rdd6_lines[0]->payload_data, rdd6_lines[0]->payload_size,
+                               0, 0);
     }
     if (!rdd6_frame.first_sub_frame)
         log_warn("RDD-6 frame data does not contain the first sub-frame\n");
     if (!rdd6_frame.second_sub_frame)
         log_warn("RDD-6 frame data does not contain the second sub-frame\n");
+    if (!rdd6_frame.first_sub_frame && !rdd6_frame.second_sub_frame)
+        return false;
 
     rdd6_frame.UnparseXML(filename);
 

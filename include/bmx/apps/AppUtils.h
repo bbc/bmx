@@ -113,6 +113,7 @@ bool parse_mic_type(const char *mic_type_str, MICType *mic_type);
 bool parse_klv_opt(const char *klv_opt_str, mxfKey *key, uint32_t *track_num);
 bool parse_anc_data_types(const char *types_str, std::set<ANCDataType> *types);
 bool parse_checksum_type(const char *type_str, ChecksumType *type);
+bool parse_rdd6_lines(const char *lines_str, uint16_t *lines);
 
 std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def);
 

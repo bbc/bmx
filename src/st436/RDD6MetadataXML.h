@@ -78,7 +78,6 @@ int16_t parse_xml_int16(const std::string &context, const std::string &str);
 int parse_xml_int(const std::string &context, const std::string &str);
 uint8_t parse_xml_hex_uint8(const std::string &context, const std::string &str);
 uint16_t parse_xml_hex_uint16(const std::string &context, const std::string &str);
-uint8_t parse_xml_char(const std::string &context, const std::string &str);
 bool parse_xml_bool(const std::string &context, const std::string &str);
 uint64_t parse_xml_smpte_timecode(const std::string &context, const std::string &str);
 void parse_xml_timecode(const std::string &context, const std::string &str,
@@ -93,7 +92,6 @@ std::string unparse_xml_int16(int16_t value);
 std::string unparse_xml_int(int value);
 std::string unparse_xml_hex_uint8(uint8_t value);
 std::string unparse_xml_hex_uint16(uint16_t value);
-std::string unparse_xml_char(uint8_t value);
 std::string unparse_xml_bool(bool value);
 std::string unparse_xml_smpte_timecode(uint64_t value);
 std::string unparse_xml_timecode(uint8_t timecode_1_e, uint8_t timecode_2_e,

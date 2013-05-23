@@ -174,26 +174,10 @@ bool GetBitBuffer::GetBits(uint8_t num_bits, int64_t *value)
     return true;
 }
 
-bool GetBitBuffer::SkipBits(uint64_t num_bits)
+void GetBitBuffer::SetBitPos(uint64_t pos)
 {
-    if (mBitPos + num_bits > mBitSize)
-        return false;
-
-    mBitPos += num_bits;
+    mBitPos = pos;
     mPos = (uint32_t)(mBitPos >> 3);
-
-    return true;
-}
-
-bool GetBitBuffer::UnskipBits(uint64_t num_bits)
-{
-    if (num_bits > mBitPos)
-        return false;
-
-    mBitPos -= num_bits;
-    mPos = (uint32_t)(mBitPos >> 3);
-
-    return true;
 }
 
 void GetBitBuffer::GetBits(const unsigned char *data, uint32_t *pos_io, uint64_t *bit_pos_io, uint8_t num_bits,
@@ -222,17 +206,37 @@ void GetBitBuffer::GetBits(const unsigned char *data, uint32_t *pos_io, uint64_t
 
 
 
-PutBitBuffer::PutBitBuffer(ByteArray *buffer)
+PutBitBuffer::PutBitBuffer(ByteArray *w_buffer)
 {
-    mBuffer = buffer;
-    mBitSize = (uint64_t)buffer->GetSize() << 3;
+    mWBuffer = w_buffer;
+    mRWBytes = 0;
+    mRWBytesSize = 0;
+    mRWBytesPos = 0;
+    mBitSize = (uint64_t)w_buffer->GetSize() << 3;
+}
+
+PutBitBuffer::PutBitBuffer(unsigned char *bytes, uint32_t size)
+{
+    mWBuffer = 0;
+    mRWBytes = bytes;
+    mRWBytesSize = size;
+    mRWBytesPos = 0;
+    mBitSize = 0;
+}
+
+uint32_t PutBitBuffer::GetSize() const
+{
+    if (mWBuffer)
+        return mWBuffer->GetSize();
+    else
+        return mRWBytesPos;
 }
 
 void PutBitBuffer::PutBytes(const unsigned char *data, uint32_t size)
 {
     BMX_ASSERT(!(mBitSize & 0x07));
 
-    mBuffer->Append(data, size);
+    Append(data, size);
     mBitSize += (uint64_t)size << 3;
 }
 
@@ -240,7 +244,7 @@ void PutBitBuffer::PutUInt8(uint8_t value)
 {
     BMX_ASSERT(!(mBitSize & 0x07));
 
-    mBuffer->Append(&value, 1);
+    Append(&value, 1);
     mBitSize += 8;
 }
 
@@ -262,31 +266,40 @@ void PutBitBuffer::PutBits(uint8_t num_bits, uint32_t value)
 void PutBitBuffer::PutBits(uint8_t num_bits, uint64_t value)
 {
     uint8_t byte_bitpos = (uint8_t)(mBitSize & 0x07);
+    uint8_t next_byte_bitpos = (uint8_t)((mBitSize + num_bits) & 0x07);
     uint8_t num_bytes = (byte_bitpos + num_bits + 7) / 8;
     uint8_t incr_size = num_bytes;
     if (byte_bitpos != 0)
         incr_size -= 1;
-    mBuffer->Grow(incr_size);
+    Grow(incr_size);
 
-    unsigned char *bytes = mBuffer->GetBytesAvailable();
+    unsigned char *bytes = GetBytesAvailable();
     if (byte_bitpos != 0)
         bytes--;
     uint64_t shift_value; // bits shifted to msb
     if ((64 - num_bits - byte_bitpos) >= 0)
         shift_value = value << (64 - num_bits - byte_bitpos);
     else
-        shift_value = value >> (- (64 - num_bits - byte_bitpos));
-    if (byte_bitpos != 0) // or existing bits
-        shift_value |= ((uint64_t)bytes[0] << 56);
+        shift_value = value >> (- (64 - num_bits - byte_bitpos)); // existing + new bits > 64
+    uint8_t first_byte_mask = (uint8_t)(0xff << (8 - byte_bitpos));
+    uint8_t last_byte_mask = 0;
+    if (next_byte_bitpos != 0)
+        last_byte_mask = (uint8_t)(0xff >> next_byte_bitpos);
+    uint8_t existing_byte_mask;
     uint8_t i;
     for (i = 0; i < num_bytes; i++) {
-        bytes[i] = (uint8_t)((shift_value >> 56) & 0xff);
+        existing_byte_mask = 0;
+        if (i == 0)
+            existing_byte_mask |= first_byte_mask;
+        if (i == num_bytes - 1)
+            existing_byte_mask |= last_byte_mask;
+        bytes[i] = (bytes[i] & existing_byte_mask) | (uint8_t)((shift_value >> 56) & 0xff);
         shift_value <<= 8;
         if (i == 0) // reinstate bits shifted out if (64 - num_bits - byte_bitpos) < 0
             shift_value |= ((value << 8) >> byte_bitpos) & 0xff;
     }
 
-    mBuffer->IncrementSize(incr_size);
+    IncrementSize(incr_size);
     mBitSize += num_bits;
 }
 
@@ -315,5 +328,54 @@ void PutBitBuffer::PutBits(uint8_t num_bits, int64_t value)
         u_value = value;
 
     PutBits(num_bits, u_value);
+}
+
+void PutBitBuffer::SetBitPos(uint64_t pos)
+{
+    BMX_ASSERT(mRWBytes); // currently only implemented for mRWBytes
+    mBitSize    = pos;
+    mRWBytesPos = (uint32_t)((pos + 7) >> 3);
+}
+
+void PutBitBuffer::Append(const unsigned char *bytes, uint32_t size)
+{
+    if (mWBuffer) {
+        mWBuffer->Append(bytes, size);
+    } else {
+        BMX_CHECK(mRWBytesPos + size <= mRWBytesSize);
+        memcpy(&mRWBytes[mRWBytesPos], bytes, size);
+        mRWBytesPos += size;
+    }
+}
+
+unsigned char* PutBitBuffer::GetBytesAvailable() const
+{
+    if (mWBuffer) {
+        return mWBuffer->GetBytesAvailable();
+    } else {
+        if (mRWBytesPos >= mRWBytesSize)
+            return 0;
+        else
+            return &mRWBytes[mRWBytesPos];
+    }
+}
+
+void PutBitBuffer::IncrementSize(uint32_t inc)
+{
+    if (mWBuffer) {
+        mWBuffer->IncrementSize(inc);
+    } else {
+        BMX_CHECK(inc <= mRWBytesSize && mRWBytesPos <= mRWBytesSize - inc);
+        mRWBytesPos += inc;
+    }
+}
+
+void PutBitBuffer::Grow(uint32_t min_size)
+{
+    if (mWBuffer)
+        mWBuffer->Grow(min_size);
+    else
+        BMX_CHECK(min_size <= mRWBytesSize && mRWBytesPos <= mRWBytesSize - min_size);
+
 }
 

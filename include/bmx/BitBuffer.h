@@ -73,8 +73,7 @@ public:
     bool GetBits(uint8_t num_bits, int32_t *value);
     bool GetBits(uint8_t num_bits, int64_t *value);
 
-    bool SkipBits(uint64_t num_bits);
-    bool UnskipBits(uint64_t num_bits);
+    void SetBitPos(uint64_t pos);
 
 protected:
     void GetBits(const unsigned char *data, uint32_t *pos_io, uint64_t *bit_pos_io, uint8_t num_bits, uint64_t *value);
@@ -91,11 +90,12 @@ protected:
 class PutBitBuffer
 {
 public:
-    PutBitBuffer(ByteArray *buffer);
+    PutBitBuffer(ByteArray *w_buffer);
+    PutBitBuffer(unsigned char *rw_bytes, uint32_t size);
 
-    ByteArray* GetBuffer() const { return mBuffer; }
+    ByteArray* GetBuffer() const { return mWBuffer; }
 
-    uint32_t GetSize() const     { return mBuffer->GetSize(); }
+    uint32_t GetSize() const;
     uint64_t GetBitSize() const  { return mBitSize; }
 
     void PutBytes(const unsigned char *data, uint32_t size);
@@ -111,9 +111,20 @@ public:
     void PutBits(uint8_t num_bits, int32_t value);
     void PutBits(uint8_t num_bits, int64_t value);
 
+    void SetBitPos(uint64_t pos);
+
 protected:
-    ByteArray *mBuffer;
+    ByteArray *mWBuffer;
+    unsigned char *mRWBytes;
+    uint32_t mRWBytesSize;
+    uint32_t mRWBytesPos;
     uint64_t mBitSize;
+
+private:
+    void Append(const unsigned char *bytes, uint32_t size);
+    unsigned char* GetBytesAvailable() const;
+    void IncrementSize(uint32_t inc);
+    void Grow(uint32_t min_size);
 };
 
 

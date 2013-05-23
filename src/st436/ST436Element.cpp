@@ -36,6 +36,8 @@
 #define __STDC_FORMAT_MACROS
 #define __STDC_LIMIT_MACROS
 
+#include <cstring>
+
 #include <mxf/mxf.h>
 
 #include <bmx/st436/ST436Element.h>
@@ -68,21 +70,26 @@ ST436Line::~ST436Line()
 
 void ST436Line::Construct(ByteArray *data)
 {
-    if ((payload_size % 4) > 0)
-        BMX_EXCEPTION(("ST 436 payload size is not padded to uint32 alignment"));
+    uint32_t aligned_payload_size = (payload_size + 3) & ~3U;
 
-    data->Grow(LINE_HEADER_SIZE);
+    data->Grow(LINE_HEADER_SIZE + aligned_payload_size);
     unsigned char *header_data = data->GetBytesAvailable();
 
-    mxf_set_uint16(line_number,            header_data);
-    mxf_set_uint8(wrapping_type,          &header_data[2]);
-    mxf_set_uint8(payload_sample_coding,  &header_data[3]);
-    mxf_set_uint16(payload_sample_count,  &header_data[4]);
-    mxf_set_array_header(payload_size, 1, &header_data[6]);
+    mxf_set_uint16(line_number,                   header_data);
+    mxf_set_uint8(wrapping_type,                  &header_data[2]);
+    mxf_set_uint8(payload_sample_coding,          &header_data[3]);
+    mxf_set_uint16(payload_sample_count,          &header_data[4]);
+    mxf_set_array_header(aligned_payload_size, 1, &header_data[6]);
     data->IncrementSize(LINE_HEADER_SIZE);
 
     if (payload_size > 0)
         data->Append(payload_data, payload_size);
+
+    if (aligned_payload_size > payload_size) {
+      uint32_t padding_size = aligned_payload_size - payload_size;
+      memset(data->GetBytesAvailable(), 0, padding_size);
+      data->IncrementSize(padding_size);
+    }
 }
 
 void ST436Line::Parse(const unsigned char *data, uint64_t *size_inout)

@@ -672,6 +672,24 @@ bool bmx::parse_checksum_type(const char *type_str, ChecksumType *type)
     return true;
 }
 
+bool bmx::parse_rdd6_lines(const char *lines_str, uint16_t *lines)
+{
+    const char *line_1_str = lines_str;
+    const char *line_2_str = strchr(lines_str, ',');
+    if (!line_2_str)
+        return false;
+    line_2_str++;
+
+    unsigned int line_1, line_2;
+    if (sscanf(line_1_str, "%u", &line_1) != 1 || sscanf(line_2_str, "%u", &line_2) != 1)
+        return false;
+
+    lines[0] = line_1;
+    lines[1] = line_2;
+
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {

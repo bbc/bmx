@@ -44,8 +44,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.;..;..\..\..\include;..\..\..\..\libMXF++;..\..\..\..\libMXF;..\..\..\..\uriparser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.;..;..\..\..\include;..\..\..\..\libMXF++;..\..\..\..\libMXF;..\..\..\..\uriparser\include;..\..\..\..\expat\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;XML_STATIC;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -62,8 +62,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.;..;..\..\..\include;..\..\..\..\libMXF++;..\..\..\..\libMXF;..\..\..\..\uriparser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.;..;..\..\..\include;..\..\..\..\libMXF++;..\..\..\..\libMXF;..\..\..\..\uriparser\include;..\..\..\..\expat\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;XML_STATIC;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
@@ -158,7 +158,7 @@
     <ClInclude Include="..\..\..\include\bmx\essence_parser\EssenceSource.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\FileEssenceSource.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\KLVEssenceSource.h" />
-    <ClInclude Include="..\..\src\essence_parser\EssenceParserUtils.h" />
+    <ClInclude Include="..\..\..\src\essence_parser\EssenceParserUtils.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\MJPEGEssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\MPEG2AspectRatioFilter.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\MPEG2EssenceParser.h" />
@@ -227,6 +227,7 @@
     <ClInclude Include="..\..\..\include\bmx\st436\RDD6BitBuffer.h" />
     <ClInclude Include="..\..\..\include\bmx\st436\RDD6Metadata.h" />
     <ClInclude Include="..\..\..\include\bmx\st436\ST436Element.h" />
+    <ClInclude Include="..\..\..\src\st436\RDD6MetadataExpat.h" />
     <ClInclude Include="..\..\..\include\bmx\wave\WaveBEXT.h" />
     <ClInclude Include="..\..\..\include\bmx\wave\WaveFileIO.h" />
     <ClInclude Include="..\..\..\include\bmx\wave\WaveIO.h" />
@@ -377,6 +378,7 @@
     <ClCompile Include="..\..\..\src\st436\RDD6BitBuffer.cpp" />
     <ClCompile Include="..\..\..\src\st436\RDD6Metadata.cpp" />
     <ClCompile Include="..\..\..\src\st436\ST436Element.cpp" />
+    <ClCompile Include="..\..\..\src\st436\RDD6MetadataExpat.cpp" />
     <ClCompile Include="..\..\..\src\wave\WaveBEXT.cpp" />
     <ClCompile Include="..\..\..\src\wave\WaveFileIO.cpp" />
     <ClCompile Include="..\..\..\src\wave\WaveIO.cpp" />

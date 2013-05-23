@@ -120,6 +120,17 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #endif
 ])],,[AC_MSG_ERROR([uriparser 0.7.2 or later is required, your copy is too old])])
 
+
+AC_CHECK_LIB(expat, XML_GetFeatureList,
+		EXPAT_LIBS="-lexpat",
+		AC_MSG_ERROR([Require expat library]))
+AC_CHECK_HEADERS(expat.h,
+		EXPAT_CFLAGS="",
+		AC_MSG_ERROR([Require expat development header files]))
+AC_SUBST(EXPAT_CFLAGS)
+AC_SUBST(EXPAT_LIBS)
+
+
 CFLAGS=$ORIGCFLAGS
 
 
@@ -191,10 +202,10 @@ AC_APPEND_SUPPORTED_CFLAGS(WARN_CFLAGS, [-W -Wall])
 AC_SUBST(WARN_CFLAGS)
 
 BMX_CFLAGS="${WARN_CFLAGS} ${LIBMXF_CFLAGS} ${LIBMXFPP_CFLAGS} \
-	${LIBURIPARSER_CFLAGS} -I\$(top_srcdir)/include"
+	${LIBURIPARSER_CFLAGS} ${EXPAT_CFLAGS} -I\$(top_srcdir)/include"
 AC_SUBST(BMX_CFLAGS)
 
-BMX_LIBADDLIBS="-lm ${RT_LIB} ${UUIDLIB} ${LIBURIPARSER_LIBS} ${LIBMXF_LIBS} ${LIBMXFPP_LIBS}"
+BMX_LIBADDLIBS="-lm ${RT_LIB} ${UUIDLIB} ${LIBURIPARSER_LIBS} ${LIBMXF_LIBS} ${LIBMXFPP_LIBS} ${EXPAT_LIBS}"
 AC_SUBST(BMX_LIBADDLIBS)
 
 BMX_LDADDLIBS="${BMX_LIBADDLIBS} \
@@ -216,9 +227,9 @@ AC_SUBST(pkgconfigdir)
 dnl add libraries to pkg config "Libs:" for static-only builds
 if test x"$enable_shared" = xyes; then
 	PC_ADD_LIBS=
-	PC_ADD_PRIVATE_LIBS="-lm ${RT_LIB} ${UUIDLIB} ${LIBURIPARSER_LIBS}"
+	PC_ADD_PRIVATE_LIBS="-lm ${RT_LIB} ${UUIDLIB} ${LIBURIPARSER_LIBS} ${EXPAT_LIBS}"
 else
-	PC_ADD_LIBS="-lm ${RT_LIB} ${UUIDLIB} ${LIBURIPARSER_LIBS}"
+	PC_ADD_LIBS="-lm ${RT_LIB} ${UUIDLIB} ${LIBURIPARSER_LIBS} ${EXPAT_LIBS}"
 	PC_ADD_PRIVATE_LIBS=
 fi
 AC_SUBST(PC_ADD_LIBS)
@@ -260,6 +271,7 @@ AC_CONFIG_FILES([
 	test/wave/Makefile
 	test/essence_parser/Makefile
 	test/growing_file/Makefile
+	test/rdd6/Makefile
 	apps/Makefile
 	apps/mxf2raw/Makefile
 	apps/mxf2raw/xsd/Makefile
@@ -268,7 +280,9 @@ AC_CONFIG_FILES([
 	tools/Makefile
 	msvc_build/Makefile
 	msvc_build/vs10/Makefile
-    bmx.pc])
+	meta/Makefile
+	meta/rdd6/Makefile
+	bmx.pc])
 
 AC_OUTPUT
 

@@ -55,6 +55,7 @@
 #include <bmx/mxf_op1a/OP1ADataTrack.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/st436/ST436Element.h>
+#include <bmx/st436/RDD6Metadata.h>
 #include <bmx/URI.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
@@ -111,6 +112,9 @@ static const char DEFAULT_BEXT_ORIGINATOR[] = "bmx";
 
 static const uint32_t DEFAULT_RW_INTL_SIZE  = (64 * 1024);
 
+static const uint16_t DEFAULT_RDD6_LINES[2] = {9, 572};     /* ST 274, line 9 field 1 and 2 */
+static const uint8_t DEFAULT_RDD6_SDID      = 4;            /* first channel pair is 5/6 */
+
 
 namespace bmx
 {
@@ -160,6 +164,27 @@ static bool filter_anc_manifest(const MXFDataTrackInfo *data_info, set<ANCDataTy
     return false;
 }
 
+static uint32_t calc_st2020_max_size(bool sample_coding_10bit, uint32_t line_count)
+{
+    // The maximum ANC packet size is limited by the Data Count (DC) byte and equals
+    //     DID (1) + SDID (1) + DC (1) + UDW (255) + CS (1) = 259 samples
+    // The ST 436 payload byte array data must be padded to a UInt32 boundary and therefore the
+    //   max size is 260 samples for 8-bit sample coding. For 10-bit encoding 3 samples are stored
+    //   in 4 bytes with 2 padding bits
+    uint32_t max_array_size;
+    if (sample_coding_10bit)
+        max_array_size = (259 + 2) / 3 * 4;
+    else
+        max_array_size = 260;
+
+    // A maximum of 2 ANC packets are required for an audio program metadata frame
+    // The maximum number of packets per video frame is 2
+    //     Method B: 2 packets if video frame rate <= 30 Hz; Method A: 2 packets if audio metadata exceeds max packet size
+    // ST 436 ANC element starts with a 2 byte packet count followed by (14 byte header + array data) for each packet
+
+    return 2 + line_count * 2 * (14 + max_array_size);
+}
+
 static uint32_t calc_st2020_max_size(const MXFDataTrackInfo *data_info)
 {
     // The SDID identifies the first channel pair in the audio program
@@ -185,23 +210,37 @@ static uint32_t calc_st2020_max_size(const MXFDataTrackInfo *data_info)
         return 0;
     }
 
-    // The maximum ANC packet size is limited by the Data Count (DC) byte and equals
-    //     DID (1) + SDID (1) + DC (1) + UDW (255) + CS (1) = 259 samples
-    // The ST 436 payload byte array data must be padded to a UInt32 boundary and therefore the
-    //   max size is 260 samples for 8-bit sample coding. For 10-bit encoding 3 samples are stored
-    //   in 4 bytes with 2 padding bits
-    uint32_t max_array_size;
-    if (sample_coding_10bit)
-        max_array_size = (259 + 2) / 3 * 4;
-    else
-        max_array_size = 260;
+    return calc_st2020_max_size(sample_coding_10bit, (uint32_t)sdids.size());
+}
 
-    // A maximum of 2 ANC packets are required for an audio program metadata frame
-    // The maximum number of packets per video frame is 2
-    //     Method B: 2 packets if video frame rate <= 30 Hz; Method A: 2 packets if audio metadata exceeds max packet size
-    // ST 436 ANC element starts with a 2 byte packet count followed by (14 byte header + array data) for each packet
+static void construct_anc_rdd6(RDD6MetadataFrame *rdd6_frame,
+                               bmx::ByteArray *rdd6_first_buffer, bmx::ByteArray *rdd6_second_buffer,
+                               uint8_t sdid, uint16_t *line_numbers,
+                               bmx::ByteArray *anc_buffer)
+{
+    rdd6_first_buffer->SetSize(0);
+    rdd6_second_buffer->SetSize(0);
+    rdd6_frame->ConstructST2020(rdd6_first_buffer,  sdid, true);
+    rdd6_frame->ConstructST2020(rdd6_second_buffer, sdid, false);
 
-    return 2 + (uint32_t)sdids.size() * 2 * (14 + max_array_size);
+    ST436Element output_element(false);
+    ST436Line line(false);
+    line.wrapping_type         = VANC_FRAME;
+    line.payload_sample_coding = ANC_8_BIT_COMP_LUMA;
+    line.line_number           = line_numbers[0];
+    line.payload_sample_count  = rdd6_first_buffer->GetSize();
+    line.payload_data          = rdd6_first_buffer->GetBytes();
+    line.payload_size          = rdd6_first_buffer->GetSize(); // alignment left to ST436Element::Construct
+    output_element.lines.push_back(line);
+
+    line.line_number           = line_numbers[1];
+    line.payload_sample_count  = rdd6_second_buffer->GetSize();
+    line.payload_data          = rdd6_second_buffer->GetBytes();
+    line.payload_size          = rdd6_second_buffer->GetSize(); // alignment left to ST436Element::Construct
+    output_element.lines.push_back(line);
+
+    anc_buffer->SetSize(0);
+    output_element.Construct(anc_buffer);
 }
 
 static uint32_t read_samples(MXFReader *reader, const vector<uint32_t> &sample_sequence,
@@ -421,6 +460,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --st2020-max            The ST 436 ANC maximum frame element data size for ST 2020 only is calculated from the extracted manifest. Option '--pass-anc st2020' is required.\n");
     fprintf(stderr, "    --vbi-const <size>      Use to indicate that the ST 436 VBI frame element data, excl. key and length, has a constant <size>. A variable size is assumed by default\n");
     fprintf(stderr, "    --vbi-max <size>        Use to indicate that the ST 436 VBI frame element data, excl. key and length, has a maximum <size>. A variable size is assumed by default\n");
+    fprintf(stderr, "    --rdd6 <file>           Add ST 436 ANC data track containing 'static' RDD-6 audio metadata from XML <file>\n");
+    fprintf(stderr, "                            The timecode fields are ignored, i.e. they are set to 'undefined' values in the RDD-6 metadata stream\n");
+    fprintf(stderr, "    --rdd6-lines <lines>    The line numbers for carriage of the RDD-6 ANC data. <lines> is a pair of numbers separated by a ','. Default is '%u,%u'\n", DEFAULT_RDD6_LINES[0], DEFAULT_RDD6_LINES[1]);
+    fprintf(stderr, "    --rdd6-sdid <sdid>      The SDID value indicating the first audio channel pair associated with the RDD-6 data. Default is %u\n", DEFAULT_RDD6_SDID);
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a:\n");
     fprintf(stderr, "    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support\n");
@@ -565,6 +608,9 @@ int main(int argc, const char** argv)
     bool st2020_max_size = false;
     uint32_t vbi_const_size = 0;
     uint32_t vbi_max_size = 0;
+    const char *rdd6_filename = 0;
+    uint16_t rdd6_lines[2] = {DEFAULT_RDD6_LINES[0], DEFAULT_RDD6_LINES[1]};
+    uint8_t rdd6_sdid = DEFAULT_RDD6_SDID;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -1218,6 +1264,51 @@ int main(int argc, const char** argv)
             vbi_max_size = (uint32_t)(uvalue);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--rdd6") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            rdd6_filename = argv[cmdln_index + 1];
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--rdd6-lines") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_rdd6_lines(argv[cmdln_index + 1], rdd6_lines))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--rdd6-sdid") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1 ||
+                uvalue < 1 || uvalue > 9)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            rdd6_sdid = (uint8_t)(uvalue);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--min-part") == 0)
         {
             min_part = true;
@@ -1524,6 +1615,40 @@ int main(int argc, const char** argv)
     int cmd_result = 0;
     try
     {
+        // open RDD-6 XML file
+
+        RDD6MetadataSequence rdd6_static_sequence;
+        RDD6MetadataFrame rdd6_frame;
+        bmx::ByteArray rdd6_first_buffer, rdd6_second_buffer;
+        bmx::ByteArray anc_buffer;
+        uint32_t rdd6_const_size = 0;
+        if (rdd6_filename) {
+            if (clip_type != CW_OP1A_CLIP_TYPE) {
+                log_error("RDD-6 file input only supported for '%s' and '%s' clip types\n",
+                          clip_type_to_string(CW_OP1A_CLIP_TYPE, NO_CLIP_SUB_TYPE).c_str(),
+                          clip_type_to_string(CW_OP1A_CLIP_TYPE, AS11_CLIP_SUB_TYPE).c_str());
+                throw false;
+            }
+
+            if (!rdd6_frame.ParseXML(rdd6_filename)) {
+                log_error("Failed to read and parse RDD-6 file '%s'\n", rdd6_filename);
+                throw false;
+            }
+            if (!rdd6_frame.first_sub_frame)
+                log_error("Missing first sub-frame in RDD-6 file\n");
+            if (!rdd6_frame.second_sub_frame)
+                log_error("Missing second sub-frame in RDD-6 file\n");
+            if (!rdd6_frame.first_sub_frame || !rdd6_frame.second_sub_frame)
+                throw false;
+
+            rdd6_frame.InitStaticSequence(&rdd6_static_sequence);
+
+            rdd6_frame.UpdateStaticFrame(&rdd6_static_sequence);
+            construct_anc_rdd6(&rdd6_frame, &rdd6_first_buffer, &rdd6_second_buffer, rdd6_sdid, rdd6_lines, &anc_buffer);
+            rdd6_const_size = anc_buffer.GetSize();
+        }
+
+
         // open an MXFReader using the input filenames
 
         AppMXFFileFactory file_factory;
@@ -1710,7 +1835,10 @@ int main(int argc, const char** argv)
                         have_vbi_track = true;
                     }
                 } else if (input_track_info->essence_type == ANC_DATA) {
-                    if (pass_anc.empty()) {
+                    if (rdd6_filename) {
+                        log_warn("Mixing RDD-6 file input and MXF ANC data input not yet supported\n");
+                        is_enabled = false;
+                    } else if (pass_anc.empty()) {
                         log_warn("Not passing through ANC data track %"PRIszt"\n", i);
                         is_enabled = false;
                     } else if (have_anc_track) {
@@ -1758,6 +1886,33 @@ int main(int argc, const char** argv)
         if (!reader->IsEnabled()) {
             log_error("All tracks are disabled\n");
             throw false;
+        }
+
+
+        // check RDD-6 support
+
+        if (rdd6_filename) {
+            if (frame_rate != FRAME_RATE_25) {
+                log_error("Frame rate %d/%d is currently not supported with RDD-6\n",
+                          frame_rate.numerator, frame_rate.denominator);
+                throw false;
+            }
+            for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+                MXFTrackReader *track_reader = reader->GetTrackReader(i);
+                if (!track_reader->IsEnabled())
+                    continue;
+
+                const MXFPictureTrackInfo *picture_info =
+                    dynamic_cast<const MXFPictureTrackInfo*>(track_reader->GetTrackInfo());
+                if (picture_info &&
+                    picture_info->frame_layout != MXF_SEPARATE_FIELDS &&
+                    picture_info->frame_layout != MXF_MIXED_FIELDS)
+                {
+                    log_error("Track %"PRIszt" frame layout %u is currently not supported with RDD-6\n",
+                              i, picture_info->frame_layout);
+                    throw false;
+                }
+            }
         }
 
 
@@ -2084,6 +2239,7 @@ int main(int argc, const char** argv)
         // create output tracks and initialize
 
         vector<OutputTrack> output_tracks;
+        size_t input_to_output_count = 0;
 
         unsigned char avci_header_data[AVCI_HEADER_SIZE];
         map<MXFDataDefEnum, uint32_t> track_count;
@@ -2401,11 +2557,38 @@ int main(int argc, const char** argv)
                 }
 
                 output_tracks.push_back(output_track);
+                input_to_output_count++;
 
                 track_count[input_track_info->data_def]++;
             }
         }
 
+        // add RDD-6 ANC data track
+
+        if (rdd6_filename) {
+            OutputTrack output_track;
+            memset(&output_track, 0, sizeof(output_track));
+            output_track.essence_type   = ANC_DATA;
+            output_track.data_def       = MXF_DATA_DDEF;
+            output_track.channel_count  = 1;
+            output_track.track          = clip->CreateTrack(ANC_DATA);
+
+            BMX_ASSERT(clip_type == CW_OP1A_CLIP_TYPE);
+            OP1ADataTrack *op1a_track = dynamic_cast<OP1ADataTrack*>(output_track.track->GetOP1ATrack());
+            if (anc_const_size)
+                op1a_track->SetConstantDataSize(anc_const_size);
+            else if (anc_max_size)
+                op1a_track->SetMaxDataSize(anc_max_size);
+            else if (st2020_max_size)
+                op1a_track->SetMaxDataSize(calc_st2020_max_size(false, 1));
+            else if (rdd6_const_size)
+                op1a_track->SetConstantDataSize(rdd6_const_size);
+
+            output_tracks.push_back(output_track);
+        }
+
+        BMX_ASSERT((rdd6_filename  && input_to_output_count + 1 == output_tracks.size()) ||
+                   (!rdd6_filename && input_to_output_count     == output_tracks.size()));
 
 
         // add AS-11 descriptive metadata
@@ -2477,7 +2660,6 @@ int main(int argc, const char** argv)
         int64_t container_duration;
         int64_t prev_container_duration = -1;
         bmx::ByteArray sound_buffer;
-        bmx::ByteArray anc_buffer;
         while (read_duration < 0 || total_read < read_duration) {
             uint32_t num_read = read_samples(reader, sample_sequence, &sample_sequence_offset, max_samples_per_read);
             if (num_read == 0) {
@@ -2499,7 +2681,7 @@ int main(int argc, const char** argv)
 
             // check whether sufficient frame data is available
             // if the frame is empty then check zero PCM sample padding is possible
-            for (i = 0; i < output_tracks.size(); i++) {
+            for (i = 0; i < input_to_output_count; i++) {
                 OutputTrack &output_track = output_tracks[i];
                 Frame *frame = output_track.input_buffer->GetLastFrame(false);
                 BMX_ASSERT(frame);
@@ -2518,7 +2700,7 @@ int main(int argc, const char** argv)
                 }
                 BMX_ASSERT(frame->IsEmpty() || frame->IsComplete());
             }
-            if (i < output_tracks.size())
+            if (i < input_to_output_count)
                 break;
 
             if (clip_type == CW_AS02_CLIP_TYPE && (precharge || rollout)) {
@@ -2535,7 +2717,7 @@ int main(int argc, const char** argv)
             }
 
             bool take_frame;
-            for (i = 0; i < output_tracks.size(); i++) {
+            for (i = 0; i < input_to_output_count; i++) {
                 OutputTrack &output_track = output_tracks[i];
 
                 if (output_track.channel_index + 1 >= output_track.channel_count)
@@ -2611,7 +2793,18 @@ int main(int argc, const char** argv)
                     delete frame;
             }
 
+            if (rdd6_filename) {
+                rdd6_frame.UpdateStaticFrame(&rdd6_static_sequence);
+
+                construct_anc_rdd6(&rdd6_frame, &rdd6_first_buffer, &rdd6_second_buffer, rdd6_sdid, rdd6_lines, &anc_buffer);
+                output_tracks.back().track->WriteSamples(anc_buffer.GetBytes(), anc_buffer.GetSize(), 1);
+
+                rdd6_static_sequence.UpdateForNextStaticFrame();
+            }
+
+
             total_read += num_read;
+
 
             if (show_progress)
                 print_progress(total_read, read_duration, &next_progress_update);
@@ -2640,7 +2833,7 @@ int main(int argc, const char** argv)
         // set precharge and rollout for non-interleaved clip types
 
         if (clip_type == CW_AS02_CLIP_TYPE && (precharge || rollout)) {
-            for (i = 0; i < output_tracks.size(); i++) {
+            for (i = 0; i < input_to_output_count; i++) {
                 OutputTrack &output_track = output_tracks[i];
                 AS02Track *as02_track = output_track.track->GetAS02Track();
                 int64_t container_duration = as02_track->GetContainerDuration();

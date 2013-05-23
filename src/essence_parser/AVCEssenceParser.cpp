@@ -139,7 +139,7 @@ void AVCGetBitBuffer::GetUE(uint64_t *value)
     }
     catch (...)
     {
-        UnskipBits(mBitPos - start_bit_pos);
+        SetBitPos(start_bit_pos);
         throw;
     }
 }
@@ -247,7 +247,7 @@ void AVCGetBitBuffer::GetRBSPBits(uint8_t num_bits, uint64_t *value)
             after_bits = num_bits - before_bits;
 
             GetBits(before_bits, &before_value);
-            SkipBits(8);
+            SetBitPos(mBitPos + 8);
             GetRBSPBits(after_bits, &after_value);
 
             *value = (before_value << after_bits) | after_value;
@@ -257,7 +257,7 @@ void AVCGetBitBuffer::GetRBSPBits(uint8_t num_bits, uint64_t *value)
     }
     catch (...)
     {
-        UnskipBits(mBitPos - start_bit_pos);
+        SetBitPos(start_bit_pos);
         throw;
     }
 }
