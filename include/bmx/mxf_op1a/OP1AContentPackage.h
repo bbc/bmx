@@ -54,8 +54,8 @@ class OP1AFile;
 class OP1AContentPackageElement
 {
 public:
-    OP1AContentPackageElement(uint32_t track_index_, mxfKey element_key_,
-                              uint32_t kag_size_, uint8_t min_llen_,
+    OP1AContentPackageElement(uint32_t track_index_, MXFDataDefEnum data_def_,
+                              mxfKey element_key_, uint32_t kag_size_, uint8_t min_llen_,
                               bool is_cbe_);
     OP1AContentPackageElement(uint32_t track_index_, mxfKey element_key_,
                               uint32_t kag_size_, uint8_t min_llen_,
@@ -80,7 +80,7 @@ public:
     uint32_t kag_size;
     uint8_t min_llen;
     uint8_t essence_llen;
-    bool is_picture;
+    MXFDataDefEnum data_def;
     bool is_cbe;
     bool is_frame_wrapped;
 
@@ -168,6 +168,7 @@ public:
     void RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,
                                    std::vector<uint32_t> sample_sequence, uint32_t sample_size);
     void RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key, uint8_t element_llen);
+    void RegisterDataTrackElement(uint32_t track_index, mxfKey element_key, bool is_cbe);
 
     void PrepareWrite();
 

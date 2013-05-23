@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2013, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,12 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_OP1A_MPEG2LG_TRACK_H_
-#define BMX_OP1A_MPEG2LG_TRACK_H_
+#ifndef BMX_OP1A_DATA_TRACK_H_
+#define BMX_OP1A_DATA_TRACK_H_
 
-#include <bmx/mxf_op1a/OP1APictureTrack.h>
-#include <bmx/writer_helper/MPEG2LGWriterHelper.h>
-#include <bmx/ByteArray.h>
+#include <bmx/mxf_op1a/OP1ATrack.h>
+#include <bmx/mxf_helper/DataMXFDescriptorHelper.h>
 
 
 
@@ -42,20 +41,22 @@ namespace bmx
 {
 
 
-class OP1AMPEG2LGTrack : public OP1APictureTrack
+class OP1ADataTrack : public OP1ATrack
 {
 public:
-    OP1AMPEG2LGTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                     mxfRational frame_rate, EssenceType essence_type);
-    virtual ~OP1AMPEG2LGTrack();
+    OP1ADataTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+                  mxfRational frame_rate, EssenceType essence_type);
+    virtual ~OP1ADataTrack();
 
 protected:
     virtual void PrepareWrite(uint8_t track_count);
     virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
-    virtual void CompleteWrite();
+
+protected:
+    DataMXFDescriptorHelper *mDataDescriptorHelper;
 
 private:
-    MPEG2LGWriterHelper mWriterHelper;
+    int64_t mPosition;
 };
 
 

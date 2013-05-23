@@ -2031,9 +2031,11 @@ int main(int argc, const char** argv)
                         if (clip_type == CW_D10_CLIP_TYPE || input_sound_info->sequence_offset)
                             output_track.track->SetSequenceOffset(input_sound_info->sequence_offset);
                         break;
-                    case D10_AES3_PCM:
                     case ANC_DATA:
+                        break;
                     case VBI_DATA:
+                        break;
+                    case D10_AES3_PCM:
                     case PICTURE_ESSENCE:
                     case SOUND_ESSENCE:
                     case DATA_ESSENCE:

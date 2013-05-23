@@ -52,8 +52,6 @@ OP1APictureTrack::OP1APictureTrack(OP1AFile *file, uint32_t track_index, uint32_
     BMX_ASSERT(mPictureDescriptorHelper);
 
     mPictureDescriptorHelper->SetAspectRatio(ASPECT_RATIO_16_9);
-
-    mIsPicture = true;
 }
 
 OP1APictureTrack::~OP1APictureTrack()
@@ -70,11 +68,9 @@ void OP1APictureTrack::SetAFD(uint8_t afd)
     mPictureDescriptorHelper->SetAFD(afd);
 }
 
-void OP1APictureTrack::PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count)
+void OP1APictureTrack::PrepareWrite(uint8_t track_count)
 {
-    (void)sound_track_count;
-
-    CompleteEssenceKeyAndTrackNum(picture_track_count);
+    CompleteEssenceKeyAndTrackNum(track_count);
 
     mCPManager->RegisterPictureTrackElement(mTrackIndex, mEssenceElementKey, true);
     mIndexTable->RegisterPictureTrackElement(mTrackIndex, true, false);

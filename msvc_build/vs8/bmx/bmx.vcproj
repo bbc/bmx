@@ -586,11 +586,19 @@
 				Name="mxf_op1a"
 				>
 				<File
+					RelativePath="..\..\..\include\bmx\mxf_op1a\OP1AANCDataTrack.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\include\bmx\mxf_op1a\OP1AAVCITrack.h"
 					>
 				</File>
 				<File
 					RelativePath="..\..\..\include\bmx\mxf_op1a\OP1AContentPackage.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\mxf_op1a\OP1ADataTrack.h"
 					>
 				</File>
 				<File
@@ -627,6 +635,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\include\bmx\mxf_op1a\OP1AUncTrack.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\mxf_op1a\OP1AVBIDataTrack.h"
 					>
 				</File>
 				<File
@@ -1196,6 +1208,10 @@
 				Name="mxf_op1a"
 				>
 				<File
+					RelativePath="..\..\..\src\mxf_op1a\OP1AANCDataTrack.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\src\mxf_op1a\OP1AAVCITrack.cpp"
 					>
 				</File>
@@ -1205,6 +1221,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\mxf_op1a\OP1AD10Track.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\mxf_op1a\OP1ADataTrack.cpp"
 					>
 				</File>
 				<File
@@ -1237,6 +1257,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\mxf_op1a\OP1AUncTrack.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\mxf_op1a\OP1AVBIDataTrack.cpp"
 					>
 				</File>
 				<File

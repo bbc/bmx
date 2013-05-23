@@ -69,7 +69,6 @@ OP1APCMTrack::OP1APCMTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
         mWaveDescriptorHelper->SetSampleRate(mEditRate);
     }
 
-    mIsPicture = false;
     if (mOP1AFile->IsFrameWrapped()) {
         mTrackNumber = MXF_AES3BWF_TRACK_NUM(0x01, MXF_BWF_FRAME_WRAPPED_EE_TYPE, 0x00);
         mEssenceElementKey = AUDIO_ELEMENT_FW_KEY;
@@ -141,11 +140,9 @@ vector<uint32_t> OP1APCMTrack::GetShiftedSampleSequence() const
     return shifted_sample_sequence;
 }
 
-void OP1APCMTrack::PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count)
+void OP1APCMTrack::PrepareWrite(uint8_t track_count)
 {
-    (void)picture_track_count;
-
-    CompleteEssenceKeyAndTrackNum(sound_track_count);
+    CompleteEssenceKeyAndTrackNum(track_count);
 
     if (mOP1AFile->IsFrameWrapped()) {
         mCPManager->RegisterSoundTrackElement(mTrackIndex, mEssenceElementKey,

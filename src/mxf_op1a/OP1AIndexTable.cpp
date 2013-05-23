@@ -60,7 +60,11 @@ using namespace mxfpp;
 
 static bool compare_element(const OP1AIndexTableElement *left, const OP1AIndexTableElement *right)
 {
-    return left->is_picture && !right->is_picture;
+    // positioning data before picture and sound
+    if (left->data_def == MXF_DATA_DDEF || right->data_def == MXF_DATA_DDEF)
+        return left->data_def == MXF_DATA_DDEF && right->data_def != MXF_DATA_DDEF;
+    else
+        return left->data_def < right->data_def;
 }
 
 
@@ -106,11 +110,11 @@ OP1ADeltaEntry::OP1ADeltaEntry()
 
 
 
-OP1AIndexTableElement::OP1AIndexTableElement(uint32_t track_index_, bool is_picture_, bool is_cbe_,
+OP1AIndexTableElement::OP1AIndexTableElement(uint32_t track_index_, MXFDataDefEnum data_def_, bool is_cbe_,
                                              bool apply_temporal_reordering_)
 {
     track_index = track_index_;
-    is_picture = is_picture_;
+    data_def = data_def_;
     is_cbe = is_cbe_;
     apply_temporal_reordering = apply_temporal_reordering_;
     slice_offset = 0;
@@ -271,7 +275,7 @@ void OP1AIndexTable::SetInputDuration(int64_t duration)
 
 void OP1AIndexTable::RegisterPictureTrackElement(uint32_t track_index, bool is_cbe, bool apply_temporal_reordering)
 {
-    mIndexElements.push_back(new OP1AIndexTableElement(track_index, true, is_cbe, apply_temporal_reordering));
+    mIndexElements.push_back(new OP1AIndexTableElement(track_index, MXF_PICTURE_DDEF, is_cbe, apply_temporal_reordering));
     mIndexElementsMap[track_index] = mIndexElements.back();
 
     mIsCBE &= is_cbe;
@@ -279,7 +283,7 @@ void OP1AIndexTable::RegisterPictureTrackElement(uint32_t track_index, bool is_c
 
 void OP1AIndexTable::RegisterAVCITrackElement(uint32_t track_index)
 {
-    mIndexElements.push_back(new OP1AIndexTableElement(track_index, true, true, false));
+    mIndexElements.push_back(new OP1AIndexTableElement(track_index, MXF_PICTURE_DDEF, true, false));
     mIndexElementsMap[track_index] = mIndexElements.back();
 
     mHaveAVCI = true;
@@ -287,13 +291,21 @@ void OP1AIndexTable::RegisterAVCITrackElement(uint32_t track_index)
 
 void OP1AIndexTable::RegisterSoundTrackElement(uint32_t track_index)
 {
-    mIndexElements.push_back(new OP1AIndexTableElement(track_index, false, true, false));
+    mIndexElements.push_back(new OP1AIndexTableElement(track_index, MXF_SOUND_DDEF, true, false));
     mIndexElementsMap[track_index] = mIndexElements.back();
+}
+
+void OP1AIndexTable::RegisterDataTrackElement(uint32_t track_index, bool is_cbe)
+{
+    mIndexElements.push_back(new OP1AIndexTableElement(track_index, MXF_DATA_DDEF, is_cbe, false));
+    mIndexElementsMap[track_index] = mIndexElements.back();
+
+    mIsCBE &= is_cbe;
 }
 
 void OP1AIndexTable::PrepareWrite()
 {
-    // order elements: picture elements followed by sound elements
+    // order elements: data - picture - sound
     stable_sort(mIndexElements.begin(), mIndexElements.end(), compare_element);
 
     mIndexEntrySize = 11;

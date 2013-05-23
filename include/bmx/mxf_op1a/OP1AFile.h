@@ -152,8 +152,7 @@ private:
 
     std::vector<OP1ATrack*> mTracks;
     std::map<uint32_t, OP1ATrack*> mTrackMap;
-    uint8_t mPictureTrackCount;
-    uint8_t mSoundTrackCount;
+    std::map<MXFDataDefEnum, uint8_t> mTrackCounts;
 
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;

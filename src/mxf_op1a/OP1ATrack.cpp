@@ -39,6 +39,7 @@
 
 #include <bmx/mxf_op1a/OP1ATrack.h>
 #include <bmx/mxf_op1a/OP1AFile.h>
+#include <bmx/mxf_op1a/OP1AANCDataTrack.h>
 #include <bmx/mxf_op1a/OP1ADVTrack.h>
 #include <bmx/mxf_op1a/OP1AD10Track.h>
 #include <bmx/mxf_op1a/OP1AAVCITrack.h>
@@ -46,6 +47,7 @@
 #include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
 #include <bmx/mxf_op1a/OP1AVC3Track.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
+#include <bmx/mxf_op1a/OP1AVBIDataTrack.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -104,6 +106,8 @@ static const OP1ASampleRateSupport OP1A_SAMPLE_RATE_SUPPORT[] =
     {VC3_720P_1252,            {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {VC3_1080P_1253,           {{24000, 1001}, {24, 1}, {25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {WAVE_PCM,                 {{48000, 1}, {0, 0}}},
+    {ANC_DATA,                 {{-1, -1}, {0, 0}}},
+    {VBI_DATA,                 {{-1, -1}, {0, 0}}},
 };
 
 
@@ -113,6 +117,9 @@ bool OP1ATrack::IsSupported(EssenceType essence_type, mxfRational sample_rate)
     size_t i;
     for (i = 0; i < BMX_ARRAY_SIZE(OP1A_SAMPLE_RATE_SUPPORT); i++) {
         if (essence_type == OP1A_SAMPLE_RATE_SUPPORT[i].essence_type) {
+            if (OP1A_SAMPLE_RATE_SUPPORT[i].sample_rate[0].numerator < 0)
+                return true;
+
             size_t j = 0;
             while (OP1A_SAMPLE_RATE_SUPPORT[i].sample_rate[j].numerator) {
                 if (sample_rate == OP1A_SAMPLE_RATE_SUPPORT[i].sample_rate[j])
@@ -176,6 +183,10 @@ OP1ATrack* OP1ATrack::Create(OP1AFile *file, uint32_t track_index, uint32_t trac
             return new OP1AVC3Track(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         case WAVE_PCM:
             return new OP1APCMTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
+        case ANC_DATA:
+            return new OP1AANCDataTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
+        case VBI_DATA:
+            return new OP1AVBIDataTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         default:
             BMX_ASSERT(false);
     }
@@ -194,7 +205,7 @@ OP1ATrack::OP1ATrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, ui
     mOutputTrackNumber = 0;
     mOutputTrackNumberSet = false;
     mTrackTypeNumber = track_type_number;
-    mIsPicture = true;
+    mDataDef = convert_essence_type_to_data_def(essence_type);
     mFrameRate = frame_rate;
     mEditRate = frame_rate;
     mTrackNumber = 0;
@@ -278,7 +289,8 @@ int64_t OP1ATrack::GetContainerDuration() const
 void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPackage *material_package,
                                   SourcePackage *file_source_package)
 {
-    mxfUL data_def = (mIsPicture ? MXF_DDEF_L(Picture) : MXF_DDEF_L(Sound));
+    mxfUL data_def_ul;
+    BMX_CHECK(mxf_get_ddef_label(mDataDef, &data_def_ul));
 
     int64_t material_track_duration = -1; // unknown - could be updated if not writing in a single pass
     int64_t source_track_duration = -1; // unknown - could be updated if not writing in a single pass
@@ -295,7 +307,7 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     // Preface - ContentStorage - MaterialPackage - Timeline Track
     Track *track = new Track(header_metadata);
     material_package->appendTracks(track);
-    track->setTrackName(get_track_name(mIsPicture, mOutputTrackNumber));
+    track->setTrackName(get_track_name(mDataDef, mOutputTrackNumber));
     track->setTrackID(mTrackId);
     track->setTrackNumber(mOutputTrackNumber);
     track->setEditRate(mEditRate);
@@ -304,13 +316,13 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     // Preface - ContentStorage - MaterialPackage - Timeline Track - Sequence
     Sequence *sequence = new Sequence(header_metadata);
     track->setSequence(sequence);
-    sequence->setDataDefinition(data_def);
+    sequence->setDataDefinition(data_def_ul);
     sequence->setDuration(material_track_duration);
 
     // Preface - ContentStorage - MaterialPackage - Timeline Track - Sequence - SourceClip
     SourceClip *source_clip = new SourceClip(header_metadata);
     sequence->appendStructuralComponents(source_clip);
-    source_clip->setDataDefinition(data_def);
+    source_clip->setDataDefinition(data_def_ul);
     source_clip->setDuration(material_track_duration);
     source_clip->setStartPosition(0);
     source_clip->setSourcePackageID(file_source_package->getPackageUID());
@@ -320,7 +332,7 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     // Preface - ContentStorage - SourcePackage - Timeline Track
     track = new Track(header_metadata);
     file_source_package->appendTracks(track);
-    track->setTrackName(get_track_name(mIsPicture, mOutputTrackNumber));
+    track->setTrackName(get_track_name(mDataDef, mOutputTrackNumber));
     track->setTrackID(mTrackId);
     track->setTrackNumber(mTrackNumber);
     track->setEditRate(mEditRate);
@@ -329,13 +341,13 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     // Preface - ContentStorage - SourcePackage - Timeline Track - Sequence
     sequence = new Sequence(header_metadata);
     track->setSequence(sequence);
-    sequence->setDataDefinition(data_def);
+    sequence->setDataDefinition(data_def_ul);
     sequence->setDuration(source_track_duration);
 
     // Preface - ContentStorage - SourcePackage - Timeline Track - Sequence - SourceClip
     source_clip = new SourceClip(header_metadata);
     sequence->appendStructuralComponents(source_clip);
-    source_clip->setDataDefinition(data_def);
+    source_clip->setDataDefinition(data_def_ul);
     source_clip->setDuration(source_track_duration);
     source_clip->setStartPosition(0);
     if (mHaveLowerLevelSourcePackage) {

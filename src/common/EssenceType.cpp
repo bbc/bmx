@@ -44,81 +44,90 @@ using namespace bmx;
 typedef struct
 {
     EssenceType essence_type;
+    EssenceType generic_essence_type;
     const char *str;
-} EssenceTypeStringMap;
+} EssenceTypeInfo;
 
-static const EssenceTypeStringMap ESSENCE_TYPE_STRING_MAP[] =
+static const EssenceTypeInfo ESSENCE_TYPE_INFO[] =
 {
-    {UNKNOWN_ESSENCE_TYPE,     "unknown essence type"},
-    {PICTURE_ESSENCE,          "picture essence"},
-    {SOUND_ESSENCE,            "sound essence"},
-    {DATA_ESSENCE,             "data essence"},
-    {D10_30,                   "D10 30Mbps"},
-    {D10_40,                   "D10 40Mbps"},
-    {D10_50,                   "D10 50Mbps"},
-    {IEC_DV25,                 "IEC DV25"},
-    {DVBASED_DV25,             "DV-Based DV25"},
-    {DV50,                     "DV50"},
-    {DV100_1080I,              "DV100 1080i"},
-    {DV100_720P,               "DV100 720p"},
-    {AVCI100_1080I,            "AVCI 100Mbps 1080i"},
-    {AVCI100_1080P,            "AVCI 100Mbps 1080p"},
-    {AVCI100_720P,             "AVCI 100Mbps 720p"},
-    {AVCI50_1080I,             "AVCI 50Mbps 1080i"},
-    {AVCI50_1080P,             "AVCI 50Mbps 1080p"},
-    {AVCI50_720P,              "AVCI 50Mbps 720p"},
-    {UNC_SD,                   "uncompressed SD"},
-    {UNC_HD_1080I,             "uncompressed HD 1080i"},
-    {UNC_HD_1080P,             "uncompressed HD 1080p"},
-    {UNC_HD_720P,              "uncompressed HD 720p"},
-    {AVID_10BIT_UNC_SD,        "Avid 10-bit uncompressed SD"},
-    {AVID_10BIT_UNC_HD_1080I,  "Avid 10-bit uncompressed HD 1080i"},
-    {AVID_10BIT_UNC_HD_1080P,  "Avid 10-bit uncompressed HD 1080p"},
-    {AVID_10BIT_UNC_HD_720P,   "Avid 10-bit uncompressed HD 720p"},
-    {AVID_ALPHA_SD,            "Avid uncompressed Alpha SD"},
-    {AVID_ALPHA_HD_1080I,      "Avid uncompressed Alpha HD 1080i"},
-    {AVID_ALPHA_HD_1080P,      "Avid uncompressed Alpha HD 1080p"},
-    {AVID_ALPHA_HD_720P,       "Avid uncompressed Alpha HD 720p"},
-    {MPEG2LG_422P_HL_1080I,    "MPEG-2 Long GOP 422P@HL 1080i"},
-    {MPEG2LG_422P_HL_1080P,    "MPEG-2 Long GOP 422P@HL 1080p"},
-    {MPEG2LG_422P_HL_720P,     "MPEG-2 Long GOP 422P@HL 720p"},
-    {MPEG2LG_MP_HL_1920_1080I, "MPEG-2 Long GOP MP@HL 1920x1080i"},
-    {MPEG2LG_MP_HL_1920_1080P, "MPEG-2 Long GOP MP@HL 1920x1080p"},
-    {MPEG2LG_MP_HL_1440_1080I, "MPEG-2 Long GOP MP@HL 1440x1080i"},
-    {MPEG2LG_MP_HL_1440_1080P, "MPEG-2 Long GOP MP@HL 1440x1080p"},
-    {MPEG2LG_MP_HL_720P,       "MPEG-2 Long GOP MP@HL 720p"},
-    {MPEG2LG_MP_H14_1080I,     "MPEG-2 Long GOP MP@H14 1080i"},
-    {MPEG2LG_MP_H14_1080P,     "MPEG-2 Long GOP MP@H14 1080p"},
-    {VC3_1080P_1235,           "VC3 1080p 1235"},
-    {VC3_1080P_1237,           "VC3 1080p 1237"},
-    {VC3_1080P_1238,           "VC3 1080p 1238"},
-    {VC3_1080I_1241,           "VC3 1080i 1241"},
-    {VC3_1080I_1242,           "VC3 1080i 1242"},
-    {VC3_1080I_1243,           "VC3 1080i 1243"},
-    {VC3_720P_1250,            "VC3 720p 1250"},
-    {VC3_720P_1251,            "VC3 720p 1251"},
-    {VC3_720P_1252,            "VC3 720p 1252"},
-    {VC3_1080P_1253,           "VC3 1080p 1253"},
-    {MJPEG_2_1,                "MJPEG 2:1"},
-    {MJPEG_3_1,                "MJPEG 3:1"},
-    {MJPEG_10_1,               "MJPEG 10:1"},
-    {MJPEG_20_1,               "MJPEG 20:1"},
-    {MJPEG_4_1M,               "MJPEG 4:1m"},
-    {MJPEG_10_1M,              "MJPEG 10:1m"},
-    {MJPEG_15_1S,              "MJPEG 15:1s"},
-    {WAVE_PCM,                 "WAVE PCM"},
-    {D10_AES3_PCM,             "D10 AES3 PCM"},
-    {ANC_DATA,                 "ANC data"},
-    {VBI_DATA,                 "VBI data"},
+    {UNKNOWN_ESSENCE_TYPE,      UNKNOWN_ESSENCE_TYPE,   "unknown essence type"},
+    {PICTURE_ESSENCE,           PICTURE_ESSENCE,        "picture essence"},
+    {SOUND_ESSENCE,             SOUND_ESSENCE,          "sound essence"},
+    {DATA_ESSENCE,              DATA_ESSENCE,           "data essence"},
+    {D10_30,                    PICTURE_ESSENCE,        "D10 30Mbps"},
+    {D10_40,                    PICTURE_ESSENCE,        "D10 40Mbps"},
+    {D10_50,                    PICTURE_ESSENCE,        "D10 50Mbps"},
+    {IEC_DV25,                  PICTURE_ESSENCE,        "IEC DV25"},
+    {DVBASED_DV25,              PICTURE_ESSENCE,        "DV-Based DV25"},
+    {DV50,                      PICTURE_ESSENCE,        "DV50"},
+    {DV100_1080I,               PICTURE_ESSENCE,        "DV100 1080i"},
+    {DV100_720P,                PICTURE_ESSENCE,        "DV100 720p"},
+    {AVCI100_1080I,             PICTURE_ESSENCE,        "AVCI 100Mbps 1080i"},
+    {AVCI100_1080P,             PICTURE_ESSENCE,        "AVCI 100Mbps 1080p"},
+    {AVCI100_720P,              PICTURE_ESSENCE,        "AVCI 100Mbps 720p"},
+    {AVCI50_1080I,              PICTURE_ESSENCE,        "AVCI 50Mbps 1080i"},
+    {AVCI50_1080P,              PICTURE_ESSENCE,        "AVCI 50Mbps 1080p"},
+    {AVCI50_720P,               PICTURE_ESSENCE,        "AVCI 50Mbps 720p"},
+    {UNC_SD,                    PICTURE_ESSENCE,        "uncompressed SD"},
+    {UNC_HD_1080I,              PICTURE_ESSENCE,        "uncompressed HD 1080i"},
+    {UNC_HD_1080P,              PICTURE_ESSENCE,        "uncompressed HD 1080p"},
+    {UNC_HD_720P,               PICTURE_ESSENCE,        "uncompressed HD 720p"},
+    {AVID_10BIT_UNC_SD,         PICTURE_ESSENCE,        "Avid 10-bit uncompressed SD"},
+    {AVID_10BIT_UNC_HD_1080I,   PICTURE_ESSENCE,        "Avid 10-bit uncompressed HD 1080i"},
+    {AVID_10BIT_UNC_HD_1080P,   PICTURE_ESSENCE,        "Avid 10-bit uncompressed HD 1080p"},
+    {AVID_10BIT_UNC_HD_720P,    PICTURE_ESSENCE,        "Avid 10-bit uncompressed HD 720p"},
+    {AVID_ALPHA_SD,             PICTURE_ESSENCE,        "Avid uncompressed Alpha SD"},
+    {AVID_ALPHA_HD_1080I,       PICTURE_ESSENCE,        "Avid uncompressed Alpha HD 1080i"},
+    {AVID_ALPHA_HD_1080P,       PICTURE_ESSENCE,        "Avid uncompressed Alpha HD 1080p"},
+    {AVID_ALPHA_HD_720P,        PICTURE_ESSENCE,        "Avid uncompressed Alpha HD 720p"},
+    {MPEG2LG_422P_HL_1080I,     PICTURE_ESSENCE,        "MPEG-2 Long GOP 422P@HL 1080i"},
+    {MPEG2LG_422P_HL_1080P,     PICTURE_ESSENCE,        "MPEG-2 Long GOP 422P@HL 1080p"},
+    {MPEG2LG_422P_HL_720P,      PICTURE_ESSENCE,        "MPEG-2 Long GOP 422P@HL 720p"},
+    {MPEG2LG_MP_HL_1920_1080I,  PICTURE_ESSENCE,        "MPEG-2 Long GOP MP@HL 1920x1080i"},
+    {MPEG2LG_MP_HL_1920_1080P,  PICTURE_ESSENCE,        "MPEG-2 Long GOP MP@HL 1920x1080p"},
+    {MPEG2LG_MP_HL_1440_1080I,  PICTURE_ESSENCE,        "MPEG-2 Long GOP MP@HL 1440x1080i"},
+    {MPEG2LG_MP_HL_1440_1080P,  PICTURE_ESSENCE,        "MPEG-2 Long GOP MP@HL 1440x1080p"},
+    {MPEG2LG_MP_HL_720P,        PICTURE_ESSENCE,        "MPEG-2 Long GOP MP@HL 720p"},
+    {MPEG2LG_MP_H14_1080I,      PICTURE_ESSENCE,        "MPEG-2 Long GOP MP@H14 1080i"},
+    {MPEG2LG_MP_H14_1080P,      PICTURE_ESSENCE,        "MPEG-2 Long GOP MP@H14 1080p"},
+    {VC3_1080P_1235,            PICTURE_ESSENCE,        "VC3 1080p 1235"},
+    {VC3_1080P_1237,            PICTURE_ESSENCE,        "VC3 1080p 1237"},
+    {VC3_1080P_1238,            PICTURE_ESSENCE,        "VC3 1080p 1238"},
+    {VC3_1080I_1241,            PICTURE_ESSENCE,        "VC3 1080i 1241"},
+    {VC3_1080I_1242,            PICTURE_ESSENCE,        "VC3 1080i 1242"},
+    {VC3_1080I_1243,            PICTURE_ESSENCE,        "VC3 1080i 1243"},
+    {VC3_720P_1250,             PICTURE_ESSENCE,        "VC3 720p 1250"},
+    {VC3_720P_1251,             PICTURE_ESSENCE,        "VC3 720p 1251"},
+    {VC3_720P_1252,             PICTURE_ESSENCE,        "VC3 720p 1252"},
+    {VC3_1080P_1253,            PICTURE_ESSENCE,        "VC3 1080p 1253"},
+    {MJPEG_2_1,                 PICTURE_ESSENCE,        "MJPEG 2:1"},
+    {MJPEG_3_1,                 PICTURE_ESSENCE,        "MJPEG 3:1"},
+    {MJPEG_10_1,                PICTURE_ESSENCE,        "MJPEG 10:1"},
+    {MJPEG_20_1,                PICTURE_ESSENCE,        "MJPEG 20:1"},
+    {MJPEG_4_1M,                PICTURE_ESSENCE,        "MJPEG 4:1m"},
+    {MJPEG_10_1M,               PICTURE_ESSENCE,        "MJPEG 10:1m"},
+    {MJPEG_15_1S,               PICTURE_ESSENCE,        "MJPEG 15:1s"},
+    {WAVE_PCM,                  SOUND_ESSENCE,          "WAVE PCM"},
+    {D10_AES3_PCM,              SOUND_ESSENCE,          "D10 AES3 PCM"},
+    {ANC_DATA,                  DATA_ESSENCE,           "ANC data"},
+    {VBI_DATA,                  DATA_ESSENCE,           "VBI data"},
 };
 
 
 
 const char* bmx::essence_type_to_string(EssenceType essence_type)
 {
-    BMX_ASSERT((size_t)essence_type < BMX_ARRAY_SIZE(ESSENCE_TYPE_STRING_MAP));
-    BMX_ASSERT(ESSENCE_TYPE_STRING_MAP[essence_type].essence_type == essence_type);
+    BMX_ASSERT((size_t)essence_type < BMX_ARRAY_SIZE(ESSENCE_TYPE_INFO));
+    BMX_ASSERT(ESSENCE_TYPE_INFO[essence_type].essence_type == essence_type);
 
-    return ESSENCE_TYPE_STRING_MAP[essence_type].str;
+    return ESSENCE_TYPE_INFO[essence_type].str;
+}
+
+EssenceType bmx::get_generic_essence_type(EssenceType essence_type)
+{
+    BMX_ASSERT((size_t)essence_type < BMX_ARRAY_SIZE(ESSENCE_TYPE_INFO));
+    BMX_ASSERT(ESSENCE_TYPE_INFO[essence_type].essence_type == essence_type);
+
+    return ESSENCE_TYPE_INFO[essence_type].generic_essence_type;
 }
 

@@ -38,6 +38,7 @@
 #include <mxf/mxf_file.h>
 
 #include <bmx/BMXTypes.h>
+#include <bmx/EssenceType.h>
 #include <bmx/Checksum.h>
 
 
@@ -54,7 +55,7 @@ void connect_libmxf_logging();
 
 int64_t convert_tc_offset(mxfRational in_edit_rate, int64_t in_offset, uint16_t out_tc_base);
 
-std::string get_track_name(bool is_video, uint32_t track_number);
+std::string get_track_name(MXFDataDefEnum data_def, uint32_t track_number);
 
 void decode_afd(uint8_t afd, uint16_t mxf_version, uint8_t *code, Rational *aspect_ratio);
 uint8_t encode_afd(uint8_t code, Rational aspect_ratio);
@@ -62,6 +63,7 @@ uint8_t encode_afd(uint8_t code, Rational aspect_ratio);
 std::string convert_utf16_string(const mxfUTF16Char *utf16_str);
 std::string convert_utf16_string(const unsigned char *utf16_str, uint16_t size);
 
+MXFDataDefEnum convert_essence_type_to_data_def(EssenceType essence_type);
 
 MXFChecksumFile* mxf_checksum_file_open(MXFFile *target, ChecksumType type);
 MXFFile* mxf_checksum_file_get_file(MXFChecksumFile *checksum_file);

@@ -65,13 +65,13 @@ OP1AD10Track::~OP1AD10Track()
 {
 }
 
-void OP1AD10Track::PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count)
+void OP1AD10Track::PrepareWrite(uint8_t track_count)
 {
     uint32_t max_sample_size = mD10DescriptorHelper->GetMaxSampleSize();
     mWriterHelper.SetMaxSampleSize(max_sample_size);
     mD10DescriptorHelper->SetSampleSize(max_sample_size);
 
-    OP1APictureTrack::PrepareWrite(picture_track_count, sound_track_count);
+    OP1APictureTrack::PrepareWrite(track_count);
 }
 
 void OP1AD10Track::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)

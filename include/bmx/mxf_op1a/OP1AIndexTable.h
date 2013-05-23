@@ -76,7 +76,7 @@ public:
 class OP1AIndexTableElement
 {
 public:
-    OP1AIndexTableElement(uint32_t track_index_, bool is_picture_, bool is_cbe_, bool apply_temporal_reordering_);
+    OP1AIndexTableElement(uint32_t track_index_, MXFDataDefEnum data_def_, bool is_cbe_, bool apply_temporal_reordering_);
 
     void CacheIndexEntry(int64_t position, int8_t temporal_offset, int8_t key_frame_offset, uint8_t flags,
                          bool can_start_partition);
@@ -87,7 +87,7 @@ public:
 
 public:
     uint32_t track_index;
-    bool is_picture;
+    MXFDataDefEnum data_def;
     bool is_cbe;
     bool apply_temporal_reordering;
 
@@ -136,6 +136,7 @@ public:
     void RegisterPictureTrackElement(uint32_t track_index, bool is_cbe, bool apply_temporal_reordering);
     void RegisterAVCITrackElement(uint32_t track_index);
     void RegisterSoundTrackElement(uint32_t track_index);
+    void RegisterDataTrackElement(uint32_t track_index, bool is_cbe);
 
     void PrepareWrite();
 

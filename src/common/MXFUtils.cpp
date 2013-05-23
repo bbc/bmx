@@ -320,10 +320,21 @@ int64_t bmx::convert_tc_offset(mxfRational in_edit_rate, int64_t in_offset, uint
     return convert_position(in_offset, out_tc_base, get_rounded_tc_base(in_edit_rate), ROUND_AUTO);
 }
 
-string bmx::get_track_name(bool is_video, uint32_t track_number)
+string bmx::get_track_name(MXFDataDefEnum data_def, uint32_t track_number)
 {
-    char buffer[32];
-    bmx_snprintf(buffer, sizeof(buffer), "%s%d", (is_video ? "V" : "A"), track_number);
+    const char *ddef_letter = "X";
+    switch (data_def)
+    {
+        case MXF_PICTURE_DDEF:  ddef_letter = "V"; break;
+        case MXF_SOUND_DDEF:    ddef_letter = "A"; break;
+        case MXF_DATA_DDEF:     ddef_letter = "D"; break;
+        case MXF_TIMECODE_DDEF: ddef_letter = "T"; break;
+        case MXF_DM_DDEF:       ddef_letter = "M"; break;
+        case MXF_UNKNOWN_DDEF:  ddef_letter = "X"; break;
+    }
+
+    char buffer[16];
+    bmx_snprintf(buffer, sizeof(buffer), "%s%u", ddef_letter, track_number);
     return buffer;
 }
 
@@ -377,6 +388,17 @@ string bmx::convert_utf16_string(const unsigned char *utf16_str_in, uint16_t siz
     delete [] utf16_str;
 
     return result;
+}
+
+MXFDataDefEnum bmx::convert_essence_type_to_data_def(EssenceType essence_type)
+{
+    switch (get_generic_essence_type(essence_type))
+    {
+        case PICTURE_ESSENCE: return MXF_PICTURE_DDEF;
+        case SOUND_ESSENCE:   return MXF_SOUND_DDEF;
+        case DATA_ESSENCE:    return MXF_DATA_DDEF;
+        default:              return MXF_UNKNOWN_DDEF;
+    }
 }
 
 MXFChecksumFile* bmx::mxf_checksum_file_open(MXFFile *target, ChecksumType type)

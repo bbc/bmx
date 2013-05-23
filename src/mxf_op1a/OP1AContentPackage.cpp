@@ -55,13 +55,17 @@ using namespace mxfpp;
 
 static bool compare_element(const OP1AContentPackageElement *left, const OP1AContentPackageElement *right)
 {
-    return left->is_picture && !right->is_picture;
+    // positioning data before picture and sound
+    if (left->data_def == MXF_DATA_DDEF || right->data_def == MXF_DATA_DDEF)
+        return left->data_def == MXF_DATA_DDEF && right->data_def != MXF_DATA_DDEF;
+    else
+        return left->data_def < right->data_def;
 }
 
 
 
-OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, mxfKey element_key_,
-                                                     uint32_t kag_size_, uint8_t min_llen_,
+OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, MXFDataDefEnum data_def_,
+                                                     mxfKey element_key_, uint32_t kag_size_, uint8_t min_llen_,
                                                      bool is_cbe_)
 {
     track_index = track_index_;
@@ -69,7 +73,7 @@ OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, mxfK
     kag_size = kag_size_;
     min_llen = min_llen_;
     essence_llen = FW_ESS_ELEMENT_LLEN;
-    is_picture = true;
+    data_def = data_def_;
     is_cbe = is_cbe_;
     is_frame_wrapped = true;
     sample_size = 0;
@@ -87,7 +91,7 @@ OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, mxfK
     kag_size = kag_size_;
     min_llen = min_llen_;
     essence_llen = FW_ESS_ELEMENT_LLEN;
-    is_picture = true;
+    data_def = MXF_PICTURE_DDEF;
     is_cbe = true;
     is_frame_wrapped = true;
     sample_size = 0;
@@ -105,7 +109,7 @@ OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, mxfK
     kag_size = kag_size_;
     min_llen = min_llen_;
     essence_llen = FW_ESS_ELEMENT_LLEN;
-    is_picture = false;
+    data_def = MXF_SOUND_DDEF;
     is_cbe = true;
     is_frame_wrapped = true;
     sample_sequence = sample_sequence_;
@@ -143,7 +147,7 @@ OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, mxfK
     kag_size = kag_size_;
     min_llen = min_llen_;
     essence_llen = essence_llen_;
-    is_picture = false;
+    data_def = MXF_SOUND_DDEF;
     is_cbe = true;
     is_frame_wrapped = false;
     sample_size = 0;
@@ -463,8 +467,8 @@ void OP1AContentPackageManager::SetClipWrapped(bool enable)
 void OP1AContentPackageManager::RegisterPictureTrackElement(uint32_t track_index, mxfKey element_key, bool is_cbe)
 {
     BMX_ASSERT(mFrameWrapped);
-    mElements.push_back(new OP1AContentPackageElement(track_index, element_key,
-                                                      mKAGSize, mMinLLen,
+    mElements.push_back(new OP1AContentPackageElement(track_index, MXF_PICTURE_DDEF,
+                                                      element_key, mKAGSize, mMinLLen,
                                                       is_cbe));
     mElementTrackIndexMap[track_index] = mElements.back();
 }
@@ -492,7 +496,19 @@ void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, 
                                                           uint8_t element_llen)
 {
     BMX_ASSERT(!mFrameWrapped);
-    mElements.push_back(new OP1AContentPackageElement(track_index, element_key, mKAGSize, mMinLLen, element_llen));
+    mElements.push_back(new OP1AContentPackageElement(track_index, element_key,
+                                                      mKAGSize, mMinLLen,
+                                                      element_llen));
+    mElementTrackIndexMap[track_index] = mElements.back();
+}
+
+void OP1AContentPackageManager::RegisterDataTrackElement(uint32_t track_index, mxfKey element_key,
+                                                         bool is_cbe)
+{
+    BMX_ASSERT(mFrameWrapped);
+    mElements.push_back(new OP1AContentPackageElement(track_index, MXF_DATA_DDEF,
+                                                      element_key, mKAGSize, mMinLLen,
+                                                      is_cbe));
     mElementTrackIndexMap[track_index] = mElements.back();
 }
 
@@ -501,14 +517,14 @@ void OP1AContentPackageManager::PrepareWrite()
     BMX_CHECK_M(mElements.size() <= 1 || mFrameWrapped,
                 ("Multiple tracks using clip wrapping is not supported"));
 
-    // order elements: picture elements followed by sound elements
+    // order elements: data - picture - sound
     stable_sort(mElements.begin(), mElements.end(), compare_element);
 
     // check sound elements have identical sequences
     bool valid_sequences = true;
     size_t i;
     for (i = 0; i < mElements.size(); i++) {
-        if (!mElements[i]->is_picture)
+        if (mElements[i]->data_def == MXF_SOUND_DDEF)
             break;
     }
     if (i + 1 < mElements.size()) {

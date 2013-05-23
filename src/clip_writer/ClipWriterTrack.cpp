@@ -866,7 +866,7 @@ bool ClipWriterTrack::IsPicture() const
         case CW_AS02_CLIP_TYPE:
             return mAS02Track->IsPicture();
         case CW_OP1A_CLIP_TYPE:
-            return mOP1ATrack->IsPicture();
+            return mOP1ATrack->GetDataDef() == MXF_PICTURE_DDEF;
         case CW_AVID_CLIP_TYPE:
             return mAvidTrack->IsPicture();
         case CW_D10_CLIP_TYPE:

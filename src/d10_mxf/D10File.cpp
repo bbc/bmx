@@ -496,7 +496,7 @@ void D10File::CreateHeaderMetadata()
     {
         bool is_picture = (i == 0);
         mxfUL data_def = (is_picture ? MXF_DDEF_L(Picture) : MXF_DDEF_L(Sound));
-        string track_name = get_track_name(is_picture, is_picture ? 1 : i);
+        string track_name = get_track_name((is_picture ? MXF_PICTURE_DDEF : MXF_SOUND_DDEF), (is_picture ? 1 : i));
 
         // Preface - ContentStorage - MaterialPackage - Timeline Track
         Track *track = new Track(mHeaderMetadata);

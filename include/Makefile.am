@@ -47,9 +47,11 @@ nobase_library_include_HEADERS = \
 	bmx/as11/UKDPPFramework.h \
 	bmx/as11/as11_extensions_data_model.h \
 	bmx/as11/uk_dpp_extensions_data_model.h \
+	bmx/mxf_op1a/OP1AANCDataTrack.h \
 	bmx/mxf_op1a/OP1AAVCITrack.h \
 	bmx/mxf_op1a/OP1AContentPackage.h \
 	bmx/mxf_op1a/OP1AD10Track.h \
+	bmx/mxf_op1a/OP1ADataTrack.h \
 	bmx/mxf_op1a/OP1ADVTrack.h \
 	bmx/mxf_op1a/OP1AFile.h \
 	bmx/mxf_op1a/OP1AIndexTable.h \
@@ -58,6 +60,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_op1a/OP1APictureTrack.h \
 	bmx/mxf_op1a/OP1ATrack.h \
 	bmx/mxf_op1a/OP1AUncTrack.h \
+	bmx/mxf_op1a/OP1AVBIDataTrack.h \
 	bmx/mxf_op1a/OP1AVC3Track.h \
 	bmx/d10_mxf/D10ContentPackage.h \
 	bmx/d10_mxf/D10File.h \

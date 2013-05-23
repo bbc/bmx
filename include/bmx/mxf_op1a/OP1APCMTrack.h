@@ -62,7 +62,7 @@ public:
     std::vector<uint32_t> GetShiftedSampleSequence() const;
 
 protected:
-    virtual void PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count);
+    virtual void PrepareWrite(uint8_t track_count);
 
 private:
     void SetSampleSequence();

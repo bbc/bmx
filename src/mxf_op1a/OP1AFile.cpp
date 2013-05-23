@@ -55,6 +55,7 @@ using namespace mxfpp;
 static const uint32_t TIMECODE_TRACK_ID         = 901;
 static const uint32_t FIRST_PICTURE_TRACK_ID    = 1001;
 static const uint32_t FIRST_SOUND_TRACK_ID      = 2001;
+static const uint32_t FIRST_DATA_TRACK_ID       = 3001;
 
 static const char TIMECODE_TRACK_NAME[]         = "TC1";
 
@@ -69,7 +70,7 @@ static const uint32_t MEMORY_WRITE_CHUNK_SIZE   = 8192;
 
 static bool compare_track(OP1ATrack *left, OP1ATrack *right)
 {
-    return left->IsPicture() && !right->IsPicture();
+    return left->GetDataDef() < right->GetDataDef();
 }
 
 
@@ -104,8 +105,6 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mFrameWrapped = true;
     mOutputStartOffset = 0;
     mOutputEndOffset = 0;
-    mPictureTrackCount = 0;
-    mSoundTrackCount = 0;
     mDataModel = 0;
     mHeaderMetadata = 0;
     mHeaderMetadataEndPos = 0;
@@ -225,19 +224,20 @@ void OP1AFile::SetOutputEndOffset(int64_t offset)
 
 OP1ATrack* OP1AFile::CreateTrack(EssenceType essence_type)
 {
+    MXFDataDefEnum data_def = convert_essence_type_to_data_def(essence_type);
     uint32_t track_id;
     uint8_t track_type_number;
-    if (essence_type == WAVE_PCM) {
-        track_id = FIRST_SOUND_TRACK_ID + mSoundTrackCount;
-        track_type_number = mSoundTrackCount;
-        mSoundTrackCount++;
-    } else {
-        track_id = FIRST_PICTURE_TRACK_ID + mPictureTrackCount;
-        track_type_number = mPictureTrackCount;
-        mPictureTrackCount++;
-    }
+    if (data_def == MXF_PICTURE_DDEF)
+        track_id = FIRST_PICTURE_TRACK_ID;
+    else if (data_def == MXF_SOUND_DDEF)
+        track_id = FIRST_SOUND_TRACK_ID;
+    else
+        track_id = FIRST_DATA_TRACK_ID;
+    track_id += mTrackCounts[data_def];
+    track_type_number = mTrackCounts[data_def];
+    mTrackCounts[data_def]++;
 
-    BMX_CHECK_M(mFrameWrapped || (mTracks.empty() && mSoundTrackCount == 1),
+    BMX_CHECK_M(mFrameWrapped || (mTracks.empty() && data_def == MXF_SOUND_DDEF && mTrackCounts[data_def] == 1),
                 ("OP-1A clip wrapping only supported for a single sound track"));
 
     mTracks.push_back(OP1ATrack::Create(this, (uint32_t)mTracks.size(), track_id, track_type_number, mEditRate,
@@ -259,26 +259,19 @@ void OP1AFile::PrepareHeaderMetadata()
 
     BMX_CHECK(!mTracks.empty());
 
-    // sort tracks, picture followed by sound
+    // sort tracks, picture - sound - data
     stable_sort(mTracks.begin(), mTracks.end(), compare_track);
 
-    uint32_t last_picture_track_number = 0;
-    uint32_t last_sound_track_number = 0;
+    map<MXFDataDefEnum, uint32_t> last_track_number;
     size_t i;
     for (i = 0; i < mTracks.size(); i++) {
-        if (mTracks[i]->IsPicture()) {
-            if (!mTracks[i]->IsOutputTrackNumberSet())
-                mTracks[i]->SetOutputTrackNumber(last_picture_track_number + 1);
-            last_picture_track_number = mTracks[i]->GetOutputTrackNumber();
-        } else {
-            if (!mTracks[i]->IsOutputTrackNumberSet())
-                mTracks[i]->SetOutputTrackNumber(last_sound_track_number + 1);
-            last_sound_track_number = mTracks[i]->GetOutputTrackNumber();
-        }
+        if (!mTracks[i]->IsOutputTrackNumberSet())
+            mTracks[i]->SetOutputTrackNumber(last_track_number[mTracks[i]->GetDataDef()] + 1);
+        last_track_number[mTracks[i]->GetDataDef()] = mTracks[i]->GetOutputTrackNumber();
     }
 
     for (i = 0; i < mTracks.size(); i++)
-        mTracks[i]->PrepareWrite(mPictureTrackCount, mSoundTrackCount);
+        mTracks[i]->PrepareWrite(mTrackCounts[mTracks[i]->GetDataDef()]);
     mCPManager->PrepareWrite();
     mIndexTable->PrepareWrite();
 

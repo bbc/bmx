@@ -231,7 +231,8 @@ SourcePackage* AvidClip::CreateDefaultTapeSource(string name, uint32_t num_video
         Track *track = new Track(mHeaderMetadata);
         tape_package->appendTracks(track);
         track->setTrackID(track_id);
-        track->setTrackName(get_track_name(is_video, (is_video ? video_track_number : audio_track_number)));
+        track->setTrackName(get_track_name((is_video ? MXF_PICTURE_DDEF : MXF_SOUND_DDEF),
+                                           (is_video ? video_track_number : audio_track_number)));
         track->setTrackNumber(is_video ? video_track_number : audio_track_number);
         track->setEditRate(mClipFrameRate);
         track->setOrigin(0);
@@ -324,7 +325,8 @@ SourcePackage* AvidClip::CreateDefaultImportSource(string uri, string name,
         Track *track = new Track(mHeaderMetadata);
         import_package->appendTracks(track);
         track->setTrackID(track_id);
-        track->setTrackName(get_track_name(is_video, (is_video ? video_track_number : audio_track_number)));
+        track->setTrackName(get_track_name((is_video ? MXF_PICTURE_DDEF : MXF_SOUND_DDEF),
+                                           (is_video ? video_track_number : audio_track_number)));
         track->setTrackNumber(is_video ? video_track_number : audio_track_number);
         track->setEditRate(mClipFrameRate);
         track->setOrigin(0);
@@ -581,7 +583,8 @@ void AvidClip::CreateMaterialPackage()
         Track *track = new Track(mHeaderMetadata);
         mMaterialPackage->appendTracks(track);
         track->setTrackID(track_id);
-        track->setTrackName(get_track_name(mTracks[i]->IsPicture(), mTracks[i]->GetOutputTrackNumber()));
+        track->setTrackName(get_track_name((mTracks[i]->IsPicture() ? MXF_PICTURE_DDEF : MXF_SOUND_DDEF),
+                                           mTracks[i]->GetOutputTrackNumber()));
         track->setTrackNumber(mTracks[i]->GetOutputTrackNumber());
         track->setEditRate(mTracks[i]->GetSampleRate());
         track->setOrigin(0);

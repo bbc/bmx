@@ -193,7 +193,7 @@ void RDD9Track::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     // Preface - ContentStorage - MaterialPackage - Timeline Track
     Track *track = new Track(header_metadata);
     material_package->appendTracks(track);
-    track->setTrackName(get_track_name(mIsPicture, mOutputTrackNumber));
+    track->setTrackName(get_track_name((mIsPicture ? MXF_PICTURE_DDEF : MXF_SOUND_DDEF), mOutputTrackNumber));
     track->setTrackID(mTrackId);
     // TODO: not sure whether setting TrackNumber in the MaterialPackage is a good idea for this MXF flavour
     //       track->setTrackNumber(mOutputTrackNumber);
@@ -220,7 +220,7 @@ void RDD9Track::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     // Preface - ContentStorage - SourcePackage - Timeline Track
     track = new Track(header_metadata);
     file_source_package->appendTracks(track);
-    track->setTrackName(get_track_name(mIsPicture, mOutputTrackNumber));
+    track->setTrackName(get_track_name((mIsPicture ? MXF_PICTURE_DDEF : MXF_SOUND_DDEF), mOutputTrackNumber));
     track->setTrackID(mTrackId);
     track->setTrackNumber(mTrackNumber);
     track->setEditRate(mEditRate);

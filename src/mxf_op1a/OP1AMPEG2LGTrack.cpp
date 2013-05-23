@@ -59,11 +59,9 @@ OP1AMPEG2LGTrack::~OP1AMPEG2LGTrack()
 {
 }
 
-void OP1AMPEG2LGTrack::PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count)
+void OP1AMPEG2LGTrack::PrepareWrite(uint8_t track_count)
 {
-    (void)sound_track_count;
-
-    CompleteEssenceKeyAndTrackNum(picture_track_count);
+    CompleteEssenceKeyAndTrackNum(track_count);
 
     mCPManager->RegisterPictureTrackElement(mTrackIndex, mEssenceElementKey, false);
     mIndexTable->RegisterPictureTrackElement(mTrackIndex, false, true);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2013, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,39 +29,50 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_OP1A_MPEG2LG_TRACK_H_
-#define BMX_OP1A_MPEG2LG_TRACK_H_
-
-#include <bmx/mxf_op1a/OP1APictureTrack.h>
-#include <bmx/writer_helper/MPEG2LGWriterHelper.h>
-#include <bmx/ByteArray.h>
-
-
-
-namespace bmx
-{
-
-
-class OP1AMPEG2LGTrack : public OP1APictureTrack
-{
-public:
-    OP1AMPEG2LGTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                     mxfRational frame_rate, EssenceType essence_type);
-    virtual ~OP1AMPEG2LGTrack();
-
-protected:
-    virtual void PrepareWrite(uint8_t track_count);
-    virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
-    virtual void CompleteWrite();
-
-private:
-    MPEG2LGWriterHelper mWriterHelper;
-};
-
-
-};
-
-
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
+
+#include <bmx/mxf_op1a/OP1ADataTrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
+
+using namespace std;
+using namespace bmx;
+using namespace mxfpp;
+
+
+
+OP1ADataTrack::OP1ADataTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+                             mxfRational frame_rate, EssenceType essence_type)
+: OP1ATrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
+{
+    mDataDescriptorHelper = dynamic_cast<DataMXFDescriptorHelper*>(mDescriptorHelper);
+    BMX_ASSERT(mDataDescriptorHelper);
+
+    mPosition = 0;
+}
+
+OP1ADataTrack::~OP1ADataTrack()
+{
+}
+
+void OP1ADataTrack::PrepareWrite(uint8_t track_count)
+{
+    CompleteEssenceKeyAndTrackNum(track_count);
+
+    mCPManager->RegisterDataTrackElement(mTrackIndex, mEssenceElementKey, false);
+    mIndexTable->RegisterDataTrackElement(mTrackIndex, false);
+}
+
+void OP1ADataTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
+{
+    BMX_CHECK(num_samples == 1);
+    BMX_CHECK(data && size);
+
+    mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
+    mIndexTable->AddIndexEntry(mTrackIndex, mPosition, 0, 0, 0, true);
+
+    mPosition++;
+}
 
