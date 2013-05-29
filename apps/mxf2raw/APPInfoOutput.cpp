@@ -112,6 +112,11 @@ void APPInfoOutput::RegisterExtensions(MXFFileReader *file_reader)
     MXFAPPInfo::RegisterExtensions(file_reader->GetDataModel());
 }
 
+bool APPInfoOutput::CheckIssues()
+{
+    return mInfo.CheckIssues(mFileReader->GetHeaderMetadata());
+}
+
 void APPInfoOutput::ExtractInfo(int event_mask)
 {
     if (!mInfo.ReadInfo(mFileReader->GetHeaderMetadata())) {

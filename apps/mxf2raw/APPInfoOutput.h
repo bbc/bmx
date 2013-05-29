@@ -56,6 +56,7 @@ public:
     ~APPInfoOutput();
 
     void RegisterExtensions(MXFFileReader *file_reader);
+    bool CheckIssues();
     void ExtractInfo(int event_mask);
 
     void AddEventTimecodes(int64_t position, Timecode vitc, Timecode ltc);

@@ -51,6 +51,8 @@ public:
     MXFAPPInfo();
     ~MXFAPPInfo();
 
+    bool CheckIssues(mxfpp::HeaderMetadata *header_metadata);
+
     bool ReadAll(mxfpp::HeaderMetadata *header_metadata);
 
     bool ReadInfo(mxfpp::HeaderMetadata *header_metadata);

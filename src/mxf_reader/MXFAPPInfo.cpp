@@ -76,6 +76,12 @@ MXFAPPInfo::~MXFAPPInfo()
     ResetAll();
 }
 
+bool MXFAPPInfo::CheckIssues(mxfpp::HeaderMetadata *header_metadata)
+{
+    return mxf_app_check_issues(header_metadata->getCHeaderMetadata());
+
+}
+
 bool MXFAPPInfo::ReadAll(HeaderMetadata *header_metadata)
 {
     ResetAll();

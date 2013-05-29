@@ -596,6 +596,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            d=digibeta dropout, p=PSE failure, t=timecode break, v=VTR error\n");
     fprintf(stderr, " --no-app-events-tc    Don't extract timecodes from the essence container to associate with the\n");
     fprintf(stderr, "                          Archive Preservation Project events metadata\n");
+    fprintf(stderr, " --app-check-issues    Check that there are no known issues with the file\n");
     fprintf(stderr, " --avid                Print Avid metadata to stdout (single file only)\n");
 }
 
@@ -639,6 +640,7 @@ int main(int argc, const char** argv)
     float gf_retry_delay = DEFAULT_GF_RETRY_DELAY;
     float gf_rate_after_fail = DEFAULT_GF_RATE_AFTER_FAIL;
     const char *app_tc_filename = 0;
+    bool app_check_issues = false;
     set<MXFDataDefEnum> wrap_klv_mask;
     int cmdln_index;
 
@@ -921,6 +923,10 @@ int main(int argc, const char** argv)
         {
             extract_app_events_tc = false;
         }
+        else if (strcmp(argv[cmdln_index], "--app-check-issues") == 0)
+        {
+            app_check_issues = true;
+        }
         else if (strcmp(argv[cmdln_index], "--avid") == 0)
         {
             do_print_avid = true;
@@ -1078,7 +1084,7 @@ int main(int argc, const char** argv)
             file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
             if (do_print_as11)
                 as11_register_extensions(file_reader);
-            if (do_print_app || app_events_mask)
+            if (do_print_app || app_events_mask || app_check_issues)
                 app_output.RegisterExtensions(file_reader);
             // avid extensions are already registered by the MXFReader
             result = file_reader->Open(filenames[0]);
@@ -1209,6 +1215,10 @@ int main(int argc, const char** argv)
         if (file_reader) {
             if (do_print_as11)
                 as11_print_info(file_reader);
+            if (app_check_issues && !app_output.CheckIssues()) {
+                log_error("APP file has issues\n");
+                throw false;
+            }
             if (do_print_app || app_events_mask) {
                 app_output.ExtractInfo(app_events_mask);
                 if (do_print_app)
