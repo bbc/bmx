@@ -335,9 +335,9 @@ static int byte_aligned(ParseContext *context)
 static int next_bits(ParseContext *context, uint8_t num_bits, uint8_t *advance_bits)
 {
     const unsigned char *byte;
-    uint8_t num_bytes;
+    uint8_t min_consume_bits;
+    int16_t consumed_bits = 0;
     uint8_t skip_bits = 0;
-    uint8_t i;
 
     CHK(num_bits > 0);
     CHK(num_bits <= 64);
@@ -345,20 +345,25 @@ static int next_bits(ParseContext *context, uint8_t num_bits, uint8_t *advance_b
     if (context->bit_pos + num_bits > context->end_bit_pos)
         return 0;
 
-    byte = context->buffer + context->bit_pos / 8;
-    num_bytes = (uint8_t)(((context->bit_pos % 8) + num_bits + 7) / 8);
+    byte = &context->buffer[context->bit_pos >> 3];
+    min_consume_bits = (context->bit_pos & 0x07) + num_bits;
     context->next_value = 0;
-    for (i = 0; i < num_bytes; i++) {
-        if (*byte == 0x03 && context->bit_pos + i * 8 >= 16 && byte[-1] == 0x00 && byte[-2] == 0x00) {
+    while (consumed_bits < min_consume_bits) {
+        if (*byte == 0x03 && context->bit_pos + consumed_bits >= 16 && byte[-1] == 0x00 && byte[-2] == 0x00) {
             skip_bits += 8;
             context->emu_prevent_count++;
             byte++;
         }
         context->next_value = (context->next_value << 8) | (*byte);
         byte++;
+        consumed_bits += 8;
     }
 
-    context->next_value >>= (7 - ((context->bit_pos + num_bits - 1) % 8));
+    context->next_value >>= consumed_bits - min_consume_bits;
+    if (consumed_bits > 64) {/* restore first byte bits that have been shifted out */
+        context->next_value |= ((uint64_t)context->buffer[context->bit_pos >> 3]) <<
+                                    (64 - (consumed_bits - min_consume_bits));
+    }
     context->next_value &= UINT64_MAX >> (64 - num_bits);
 
     if (advance_bits)
