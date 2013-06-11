@@ -122,7 +122,8 @@ class RDD9ContentPackage
 {
 public:
     RDD9ContentPackage(mxfpp::File *mxf_file, RDD9IndexTable *index_table, bool have_user_timecode,
-                       Rational frame_rate, std::vector<RDD9ContentPackageElement*> elements, int64_t position);
+                       Rational frame_rate, std::vector<RDD9ContentPackageElement*> elements, int64_t position,
+                       Timecode start_timecode);
     ~RDD9ContentPackage();
 
     void Reset(int64_t new_position);
@@ -145,6 +146,7 @@ private:
     mxfpp::File *mMXFFile;
     RDD9IndexTable *mIndexTable;
     bool mHaveInputUserTimecode;
+    Timecode mStartTimecode;
     Rational mFrameRate;
     std::vector<RDD9ContentPackageElementData*> mElementData;
     std::map<uint32_t, RDD9ContentPackageElementData*> mElementTrackIndexMap;
@@ -162,6 +164,7 @@ public:
     ~RDD9ContentPackageManager();
 
     void SetHaveInputUserTimecode(bool enable);
+    void SetStartTimecode(Timecode start_timecode);
     void SetSoundSequenceOffset(uint8_t offset);
 
     void RegisterPictureTrackElement(uint32_t track_index, mxfKey element_key);
@@ -192,6 +195,7 @@ private:
     Rational mFrameRate;
 
     bool mHaveInputUserTimecode;
+    Timecode mStartTimecode;
 
     std::vector<uint32_t> mSoundSequence;
     bool mSoundSequenceOffsetSet;

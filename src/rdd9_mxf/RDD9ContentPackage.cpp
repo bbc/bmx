@@ -277,11 +277,12 @@ void RDD9ContentPackageElementData::Reset(int64_t new_position)
 
 RDD9ContentPackage::RDD9ContentPackage(File *mxf_file, RDD9IndexTable *index_table, bool have_user_timecode,
                                        Rational frame_rate, vector<RDD9ContentPackageElement*> elements,
-                                       int64_t position)
+                                       int64_t position, Timecode start_timecode)
 {
     mMXFFile = mxf_file;
     mIndexTable = index_table;
     mHaveInputUserTimecode = have_user_timecode;
+    mStartTimecode = start_timecode;
     mFrameRate = frame_rate;
     mPosition = position;
     mHaveUpdatedIndexTable = false;
@@ -431,10 +432,17 @@ void RDD9ContentPackage::WriteSystemItem()
     BMX_CHECK(mMXFFile->write(ts_bytes, sizeof(ts_bytes)) == sizeof(ts_bytes));
 
     // User date / time stamp
+    Timecode user_timecode;
     ts_bytes[0] = 0x81; // SMPTE 12-M timecode
-    if (!mUserTimecodeSet)
-        mUserTimecode.Init(get_rounded_tc_base(mFrameRate), false, mPosition);
-    encode_smpte_timecode(mUserTimecode, false, &ts_bytes[1], sizeof(ts_bytes) - 1);
+    if (mHaveInputUserTimecode) {
+        user_timecode = mUserTimecode;
+    } else if (!mStartTimecode.IsInvalid()) {
+        user_timecode = mStartTimecode;
+        user_timecode.AddOffset(mPosition);
+    } else {
+        user_timecode.Init(get_rounded_tc_base(mFrameRate), false, mPosition);
+    }
+    encode_smpte_timecode(user_timecode, false, &ts_bytes[1], sizeof(ts_bytes) - 1);
     BMX_CHECK(mMXFFile->write(ts_bytes, sizeof(ts_bytes)) == sizeof(ts_bytes));
 
 
@@ -476,6 +484,14 @@ RDD9ContentPackageManager::~RDD9ContentPackageManager()
 void RDD9ContentPackageManager::SetHaveInputUserTimecode(bool enable)
 {
     mHaveInputUserTimecode = enable;
+}
+
+void RDD9ContentPackageManager::SetStartTimecode(Timecode start_timecode)
+{
+    if (!start_timecode.IsInvalid() && start_timecode.GetRoundedTCBase() == get_rounded_tc_base(mFrameRate))
+        mStartTimecode = start_timecode;
+    else
+        mStartTimecode.SetInvalid();
 }
 
 void RDD9ContentPackageManager::SetSoundSequenceOffset(uint8_t offset)
@@ -622,7 +638,7 @@ size_t RDD9ContentPackageManager::CreateContentPackage()
     if (mFreeContentPackages.empty()) {
         BMX_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
         mContentPackages.push_back(new RDD9ContentPackage(mMXFFile, mIndexTable, mHaveInputUserTimecode, mFrameRate,
-                                                          mElements, mPosition + cp_index));
+                                                          mElements, mPosition + cp_index, mStartTimecode));
     } else {
         mContentPackages.push_back(mFreeContentPackages.back());
         mFreeContentPackages.pop_back();

@@ -256,6 +256,7 @@ void RDD9File::PrepareHeaderMetadata()
 
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite(mPictureTrackCount, mSoundTrackCount);
+    mCPManager->SetStartTimecode(mStartTimecode);
     mCPManager->PrepareWrite();
     mIndexTable->PrepareWrite();
 
