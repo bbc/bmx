@@ -70,6 +70,7 @@ public:
     uint32_t system_item_size;
     uint32_t picture_item_size;
     uint32_t sound_item_size;
+    Timecode start_timecode;
 };
 
 
@@ -122,6 +123,7 @@ public:
     void SetMuteSoundFlags(uint8_t flags);
     void SetInvalidSoundFlags(uint8_t flags);
     void SetHaveInputUserTimecode(bool enable);
+    void SetStartTimecode(Timecode start_timecode);
     void SetSoundSequenceOffset(uint8_t offset);
 
     void RegisterMPEGTrackElement(uint32_t track_index, uint32_t sample_size);

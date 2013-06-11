@@ -259,6 +259,7 @@ void D10File::PrepareHeaderMetadata()
         mTracks[i]->PrepareWrite();
 
     mCPManager->SetEssenceContainerUL(mEssenceContainerUL);
+    mCPManager->SetStartTimecode(mStartTimecode);
     mCPManager->PrepareWrite();
 
     CreateHeaderMetadata();

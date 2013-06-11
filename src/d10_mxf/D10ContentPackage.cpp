@@ -347,14 +347,17 @@ uint32_t D10ContentPackage::WriteSystemItem(File *mxf_file)
     BMX_CHECK(mxf_file->write(ts_bytes, sizeof(ts_bytes)) == sizeof(ts_bytes));
 
     // User date / time stamp
+    Timecode user_timecode;
     ts_bytes[0] = 0x81; // SMPTE 12-M timecode
     if (mInfo->have_input_user_timecode) {
-        encode_smpte_timecode(mUserTimecode, false, &ts_bytes[1], sizeof(ts_bytes) - 1);
+        user_timecode = mUserTimecode;
+    } else if (!mInfo->start_timecode.IsInvalid()) {
+        user_timecode = mInfo->start_timecode;
+        user_timecode.AddOffset(mPosition);
     } else {
-        // default to frame count timecode
-        encode_smpte_timecode(Timecode((mInfo->is_25hz ? 25 : 30), false, mPosition), false, &ts_bytes[1],
-                              sizeof(ts_bytes) - 1);
+        user_timecode = Timecode((mInfo->is_25hz ? 25 : 30), false, mPosition);
     }
+    encode_smpte_timecode(user_timecode, false, &ts_bytes[1], sizeof(ts_bytes) - 1);
     BMX_CHECK(mxf_file->write(ts_bytes, sizeof(ts_bytes)) == sizeof(ts_bytes));
 
 
@@ -426,6 +429,20 @@ void D10ContentPackageManager::SetSoundSequenceOffset(uint8_t offset)
 
     mInfo.sound_sequence_offset = offset;
     mInfo.sound_sequence_offset_set = true;
+}
+
+void D10ContentPackageManager::SetStartTimecode(Timecode start_timecode)
+{
+    if (!start_timecode.IsInvalid() &&
+        (( mInfo.is_25hz && start_timecode.GetRoundedTCBase() == 25) ||
+         (!mInfo.is_25hz && start_timecode.GetRoundedTCBase() == 30)))
+    {
+        mInfo.start_timecode = start_timecode;
+    }
+    else
+    {
+        mInfo.start_timecode.SetInvalid();
+    }
 }
 
 void D10ContentPackageManager::RegisterMPEGTrackElement(uint32_t track_index, uint32_t sample_size)
