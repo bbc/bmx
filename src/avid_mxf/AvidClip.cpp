@@ -599,7 +599,7 @@ void AvidClip::CreateMaterialPackage()
         sequence->appendStructuralComponents(source_clip);
         source_clip->setDataDefinition(mTracks[i]->IsPicture() ? MXF_DDEF_L(Picture) : MXF_DDEF_L(Sound));
         source_clip->setDuration(track_growing_duration); // updated when writing completed
-        source_clip->setStartPosition(0);
+        source_clip->setStartPosition(mTracks[i]->GetOutputStartOffset());
         pair<mxfUMID, uint32_t> source_ref = mTracks[i]->GetSourceReference();
         source_clip->setSourcePackageID(source_ref.first);
         source_clip->setSourceTrackID(source_ref.second);

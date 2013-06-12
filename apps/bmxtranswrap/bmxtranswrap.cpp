@@ -85,6 +85,7 @@ typedef struct
     uint32_t channel_index;
     uint32_t bits_per_sample;
     uint16_t block_align;
+    int64_t rem_precharge;
 } OutputTrack;
 
 typedef struct
@@ -1448,11 +1449,7 @@ int main(int argc, const char** argv)
                 precharge = reader->GetMaxPrecharge(read_start, false);
                 rollout = reader->GetMaxRollout(read_start + output_duration - 1, false);
 
-                if (precharge != 0 && (no_precharge || clip_type == CW_AVID_CLIP_TYPE)) {
-                    if (!no_precharge) {
-                        log_warn("'%s' clip type does not support precharge\n",
-                                 clip_type_to_string(clip_type, clip_sub_type).c_str());
-                    }
+                if (precharge != 0 && no_precharge) {
                     log_info("Precharge resulted in %d frame adjustment of start position and duration\n",
                              precharge);
                     output_duration += (- precharge);
@@ -1782,6 +1779,7 @@ int main(int argc, const char** argv)
                     output_track.bits_per_sample = 0;
                     output_track.block_align     = 0;
                 }
+                output_track.rem_precharge       = 0;
 
                 if (clip_type == CW_AVID_CLIP_TYPE) {
                     string track_name = create_mxf_track_filename(output_name,
@@ -1809,6 +1807,11 @@ int main(int argc, const char** argv)
                     }
                 } else if (clip_type == CW_AVID_CLIP_TYPE) {
                     AvidTrack *avid_track = output_track.track->GetAvidTrack();
+
+                    if (avid_track->SupportOutputStartOffset())
+                        avid_track->SetOutputStartOffset(- precharge);
+                    else
+                        output_track.rem_precharge = - precharge; // skip precharge frames
 
                     if (physical_package) {
                         if (input_track_info->data_def == MXF_PICTURE_DDEF) {
@@ -2183,7 +2186,11 @@ int main(int argc, const char** argv)
                 }
 
                 uint32_t num_samples;
-                if (!frame->IsComplete())
+                if (output_track.rem_precharge > 0)
+                {
+                    output_track.rem_precharge -= num_read;
+                }
+                else if (!frame->IsComplete())
                 {
                     write_padding_samples(frame, &output_track, &sound_buffer);
                 }

@@ -48,6 +48,8 @@ public:
     AvidMPEG2LGTrack(AvidClip *clip, uint32_t track_index, EssenceType essence_type, mxfpp::File *file);
     virtual ~AvidMPEG2LGTrack();
 
+    virtual bool SupportOutputStartOffset() { return true; }
+
 public:
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
 

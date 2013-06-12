@@ -62,6 +62,9 @@ public:
     void SetFileSourcePackageUID(mxfUMID package_uid);
     void SetSourceRef(mxfUMID ref_package_uid, uint32_t ref_track_id);
 
+    virtual bool SupportOutputStartOffset() { return false; }
+    void SetOutputStartOffset(int64_t offset);
+
 public:
     virtual void PrepareWrite();
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
@@ -91,6 +94,8 @@ public:
 
     bool IsOutputTrackNumberSet() const   { return mOutputTrackNumberSet; }
     uint32_t GetOutputTrackNumber() const { return mOutputTrackNumber; }
+
+    int64_t GetOutputStartOffset() const { return mOutputStartOffset; }
 
     mxfpp::MaterialPackage* GetMaterialPackage() const { return mMaterialPackage; }
     mxfpp::SourcePackage* GetFileSourcePackage() const { return mFileSourcePackage; }
@@ -150,6 +155,7 @@ protected:
 
     int64_t mContainerDuration;
     int64_t mContainerSize;
+    int64_t mOutputStartOffset;
 
 private:
     void CreateHeaderMetadata();
