@@ -337,7 +337,8 @@ void XMLWriter::WriteElementEnd()
 void XMLWriter::WriteElement(string ns, string local_name, string content)
 {
     WriteElementStart(ns, local_name);
-    WriteElementContent(content);
+    if (!content.empty())
+        WriteElementContent(content);
     WriteElementEnd();
 }
 
