@@ -104,7 +104,6 @@ void XMLWriter::WriteElementStart(std::string ns, string local_name)
 {
     BMX_CHECK(mPrevWriteType == START ||
               mPrevWriteType == ELEMENT_START ||
-              mPrevWriteType == DELAYED_ELEMENT_START ||
               mPrevWriteType == ATTRIBUTE_START ||
               mPrevWriteType == ATTRIBUTE_CONTENT ||
               mPrevWriteType == ATTRIBUTE_END ||
