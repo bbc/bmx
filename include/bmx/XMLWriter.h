@@ -47,7 +47,7 @@ namespace bmx
 class XMLWriter
 {
 public:
-    static XMLWriter* Open(std::string filename);
+    static XMLWriter* Open(const std::string &filename);
 
 public:
     XMLWriter(FILE *xml_file);
@@ -55,32 +55,32 @@ public:
 
     void WriteDocumentStart();
     void WriteDocumentEnd();
-    void WriteElementStart(std::string ns, std::string local_name);
-    void DeclareNamespace(std::string ns, std::string prefix);
-    void WriteAttribute(std::string ns, std::string local_name, std::string value);
-    void WriteAttributeStart(std::string ns, std::string local_name);
-    void WriteAttributeContent(std::string value);
+    void WriteElementStart(const std::string &ns, const std::string &local_name);
+    void DeclareNamespace(const std::string &ns, const std::string &prefix);
+    void WriteAttribute(const std::string &ns, const std::string &local_name, const std::string &value);
+    void WriteAttributeStart(const std::string &ns, const std::string &local_name);
+    void WriteAttributeContent(const std::string &value);
     void WriteAttributeEnd();
-    void WriteElementContent(std::string content);
+    void WriteElementContent(const std::string &content);
     void WriteElementEnd();
-    void WriteElement(std::string ns, std::string local_name, std::string content);
-    void WriteComment(std::string comment);
-    void WriteProcInstruction(std::string target, std::string instruction);
-    void WriteText(std::string text);
+    void WriteElement(const std::string &ns, const std::string &local_name, const std::string &content);
+    void WriteComment(const std::string &comment);
+    void WriteProcInstruction(const std::string &target, const std::string &instruction);
+    void WriteText(const std::string &text);
 
     void Flush();
 
 private:
-    std::string GetPrefix(std::string ns);
-    std::string GetNonDefaultNSPrefix(std::string ns);
+    std::string GetPrefix(const std::string &ns);
+    std::string GetNonDefaultNSPrefix(const std::string &ns);
 
     class Element
     {
     public:
-        Element(Element* parentElement, std::string ns, std::string local_name);
+        Element(Element* parentElement, const std::string &ns, const std::string &local_name);
         ~Element();
 
-        bool AddNamespaceDecl(std::string ns, std::string prefix);
+        bool AddNamespaceDecl(const std::string &ns, const std::string &prefix);
         std::map<std::string, std::string>& GetNamespaceDecls() { return mNSpaceDecls; }
 
         const std::string& GetNamespace() const { return mNS; }
