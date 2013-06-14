@@ -75,7 +75,7 @@ XMLWriter::~XMLWriter()
 {
     size_t i;
     for (i = 0; i < mElementStack.size(); i++)
-        WriteElementEnd();
+        delete mElementStack[i];
 
     if (mXMLFile)
         fclose(mXMLFile);
@@ -96,6 +96,10 @@ void XMLWriter::WriteDocumentEnd()
     for (i = 0; i < mElementStack.size(); i++)
         WriteElementEnd();
     mElementStack.clear();
+
+    BMX_CHECK(mXMLFile);
+    fclose(mXMLFile);
+    mXMLFile = 0;
 
     mPrevWriteType = END;
 }
@@ -549,6 +553,7 @@ void XMLWriter::Write(const string &data)
 
 void XMLWriter::Write(const char *data, size_t len)
 {
+    BMX_CHECK(mXMLFile);
     if (fwrite(data, 1, len, mXMLFile) != len)
         log_error("XML fwrite failed: %s\n", bmx_strerror(errno).c_str());
 }
