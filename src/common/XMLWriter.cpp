@@ -300,7 +300,7 @@ void XMLWriter::WriteElementEnd()
 
     BMX_CHECK(!mElementStack.empty());
     Element *element = mElementStack.back();
-    const string &prefix = element->GetPrefix();
+    string prefix = element->GetPrefix();
     BMX_CHECK(!prefix.empty());
 
     if (mPrevWriteType == ATTRIBUTE_START || mPrevWriteType == ATTRIBUTE_CONTENT)
