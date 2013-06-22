@@ -258,6 +258,7 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
     for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
         frame = mTrackFrames[i];
         if (frame) {
+            frame->request_num_samples = num_samples;
             frame->first_sample_offset = first_sample_offset;
             frame->temporal_offset     = temporal_offset;
             frame->key_frame_offset    = key_frame_offset;

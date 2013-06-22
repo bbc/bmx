@@ -92,6 +92,7 @@ public:
     int64_t track_position;
     int64_t ec_position;
 
+    uint32_t request_num_samples;
     uint32_t first_sample_offset;
     uint32_t num_samples;
 

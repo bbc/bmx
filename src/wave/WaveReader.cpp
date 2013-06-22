@@ -224,6 +224,7 @@ uint32_t WaveReader::Read(uint32_t num_samples)
         frame->position             = mPosition;
         frame->track_edit_rate      = mSamplingRate;
         frame->track_position       = mPosition;
+        frame->request_num_samples  = num_samples;
         frame->first_sample_offset  = first_sample_offset;
         frame->num_samples          = read_num_samples;
         frame->file_position        = mDataStartFilePosition + mPosition * mBlockAlign;

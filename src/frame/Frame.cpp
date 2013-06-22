@@ -60,6 +60,7 @@ Frame::Frame()
     track_edit_rate = ZERO_RATIONAL;
     track_position = NULL_FRAME_POSITION;
     ec_position = NULL_FRAME_POSITION;
+    request_num_samples = 0;
     first_sample_offset = 0;
     num_samples = 0;
     temporal_reordering = false;
