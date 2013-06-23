@@ -48,6 +48,8 @@ public:
     MXFGroupReader();
     virtual ~MXFGroupReader();
 
+    virtual void SetEmptyFrames(bool enable);
+
     void AddReader(MXFReader *reader);
     bool Finalize();
 
@@ -93,6 +95,9 @@ private:
     void AbortRead();
 
 private:
+    bool mEmptyFrames;
+    bool mEmptyFramesSet;
+
     std::vector<bmx::MXFReader*> mReaders;
     std::vector<bmx::MXFTrackReader*> mTrackReaders;
 

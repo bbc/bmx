@@ -53,6 +53,8 @@ class MXFTrackReader
 public:
     virtual ~MXFTrackReader() {}
 
+    virtual void SetEmptyFrames(bool enable) = 0;
+
     virtual void SetEnable(bool enable) = 0;
 
     virtual void SetFrameBuffer(FrameBuffer *frame_buffer, bool take_ownership) = 0;

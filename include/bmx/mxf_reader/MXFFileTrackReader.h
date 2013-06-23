@@ -49,6 +49,7 @@ public:
                        mxfpp::FileDescriptor *file_descriptor, mxfpp::SourcePackage *file_source_package);
     virtual ~MXFFileTrackReader();
 
+    virtual void SetEmptyFrames(bool enable);
     virtual void SetEnable(bool enable);
     virtual void SetFrameBuffer(FrameBuffer *frame_buffer, bool take_ownership);
 

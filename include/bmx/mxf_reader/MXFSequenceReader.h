@@ -49,6 +49,8 @@ public:
     MXFSequenceReader();
     virtual ~MXFSequenceReader();
 
+    virtual void SetEmptyFrames(bool enable);
+
     void AddReader(MXFReader *reader);
     bool Finalize(bool check_is_complete, bool keep_input_order);
 
@@ -97,6 +99,9 @@ private:
                             int64_t *segment_position) const;
 
 private:
+    bool mEmptyFrames;
+    bool mEmptyFramesSet;
+
     std::vector<bmx::MXFReader*> mReaders;
     std::vector<bmx::MXFGroupReader*> mGroupSegments;
 

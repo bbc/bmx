@@ -97,6 +97,8 @@ static bool compare_group_track_reader(const GroupTrackReader &left_reader, cons
 MXFGroupReader::MXFGroupReader()
 : MXFReader()
 {
+    mEmptyFrames = false;
+    mEmptyFramesSet = false;
     mReadStartPosition = 0;
     mReadDuration = -1;
 }
@@ -106,6 +108,16 @@ MXFGroupReader::~MXFGroupReader()
     size_t i;
     for (i = 0; i < mReaders.size(); i++)
         delete mReaders[i];
+}
+
+void MXFGroupReader::SetEmptyFrames(bool enable)
+{
+    mEmptyFrames = enable;
+    mEmptyFramesSet = true;
+
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++)
+        mTrackReaders[i]->SetEmptyFrames(enable);
 }
 
 void MXFGroupReader::AddReader(MXFReader *reader)
@@ -238,6 +250,11 @@ bool MXFGroupReader::Finalize()
             SetReadLimits();
         } else if (mDuration > 0) {
             SetReadLimits(- mOrigin, mOrigin + mDuration, false);
+        }
+
+        if (mEmptyFramesSet) {
+            for (i = 0; i < mTrackReaders.size(); i++)
+                mTrackReaders[i]->SetEmptyFrames(mEmptyFrames);
         }
 
         return true;

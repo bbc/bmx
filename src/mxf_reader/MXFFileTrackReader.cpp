@@ -68,6 +68,11 @@ MXFFileTrackReader::~MXFFileTrackReader()
     delete [] mAVCIHeader;
 }
 
+void MXFFileTrackReader::SetEmptyFrames(bool enable)
+{
+    mFrameBuffer.SetEmptyFrames(enable);
+}
+
 void MXFFileTrackReader::SetEnable(bool enable)
 {
     mIsEnabled = enable;

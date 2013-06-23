@@ -73,6 +73,8 @@ static bool compare_group_reader(const MXFGroupReader *left, const MXFGroupReade
 MXFSequenceReader::MXFSequenceReader()
 : MXFReader()
 {
+    mEmptyFrames = false;
+    mEmptyFramesSet = false;
     mReadStartPosition = 0;
     mReadDuration = -1;
     mPosition = 0;
@@ -90,6 +92,16 @@ MXFSequenceReader::~MXFSequenceReader()
     }
     for (i = 0; i < mTrackReaders.size(); i++)
         delete mTrackReaders[i];
+}
+
+void MXFSequenceReader::SetEmptyFrames(bool enable)
+{
+    mEmptyFrames = enable;
+    mEmptyFramesSet = true;
+
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++)
+        mTrackReaders[i]->SetEmptyFrames(enable);
 }
 
 void MXFSequenceReader::AddReader(MXFReader *reader)
@@ -381,6 +393,12 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
             mPhysicalSourceStartTimecode = new Timecode(mGroupSegments[0]->GetPhysicalSourceTimecode(0));;
         }
 
+
+        // enable/disable empty frames
+        if (mEmptyFramesSet) {
+            for (i = 0; i < mTrackReaders.size(); i++)
+                mTrackReaders[i]->SetEmptyFrames(mEmptyFrames);
+        }
 
 
         // set default group sequence read limits

@@ -56,6 +56,8 @@ public:
     MXFReader();
     virtual ~MXFReader();
 
+    virtual void SetEmptyFrames(bool enable) = 0;
+
 public:
     virtual bool IsComplete() const = 0;
 

@@ -51,6 +51,8 @@ public:
     MXFSequenceTrackReader(MXFSequenceReader *sequence_reader, size_t track_index);
     virtual ~MXFSequenceTrackReader();
 
+    virtual void SetEmptyFrames(bool enable);
+
     bool IsCompatible(MXFTrackReader *segment) const;
     void AppendSegment(MXFTrackReader *segment);
 
@@ -113,6 +115,9 @@ private:
     MXFTrackInfo *mTrackInfo;
     mxfpp::FileDescriptor *mFileDescriptor;
     mxfpp::SourcePackage *mFileSourcePackage;
+
+    bool mEmptyFrames;
+    bool mEmptyFramesSet;
 
     bool mIsEnabled;
 

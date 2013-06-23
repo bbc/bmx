@@ -87,6 +87,7 @@ public:
 
     void SetPackageResolver(MXFPackageResolver *resolver, bool take_ownership);
     void SetFileFactory(MXFFileFactory *factory, bool take_ownership);
+    virtual void SetEmptyFrames(bool enable);
 
     OpenResult Open(std::string filename);
     OpenResult Open(mxfpp::File *file, std::string filename);
@@ -201,6 +202,9 @@ private:
     bool mOwnPackageResolver;
     MXFFileFactory *mFileFactory;
     bool mOwnFilefactory;
+
+    bool mEmptyFrames;
+    bool mEmptyFramesSet;
 
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;

@@ -143,6 +143,8 @@ MXFFileReader::MXFFileReader()
     BMX_ASSERT(MXF_RESULT_FAIL + 1 == BMX_ARRAY_SIZE(RESULT_STRINGS));
 
     mFile = 0;
+    mEmptyFrames = false;
+    mEmptyFramesSet = false;
     mHeaderMetadata = 0;
     mMXFVersion = 0;
     mOPLabel = g_Null_UL;
@@ -198,6 +200,16 @@ void MXFFileReader::SetFileFactory(MXFFileFactory *factory, bool take_ownership)
 
     mFileFactory = factory;
     mOwnFilefactory = take_ownership;
+}
+
+void MXFFileReader::SetEmptyFrames(bool enable)
+{
+    mEmptyFrames = enable;
+    mEmptyFramesSet = true;
+
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++)
+        mTrackReaders[i]->SetEmptyFrames(enable);
 }
 
 MXFFileReader::OpenResult MXFFileReader::Open(string filename)
@@ -351,6 +363,12 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
             SetReadLimits();
         } else if (mDuration > 0) {
             SetReadLimits(- mOrigin, mOrigin + mDuration, false);
+        }
+
+
+        if (mEmptyFramesSet) {
+            for (i = 0; i < mTrackReaders.size(); i++)
+                mTrackReaders[i]->SetEmptyFrames(mEmptyFrames);
         }
 
 

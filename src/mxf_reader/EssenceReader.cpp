@@ -208,75 +208,74 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
     for (i = 0; i < mTrackFrames.size(); i++)
         delete mTrackFrames[i];
     mTrackFrames.clear();
-    mTrackFrames.assign(mFileReader->GetNumInternalTrackReaders(), 0);
     mFrameMetadataReader->Reset();
-
-    int64_t end_position = mPosition + num_samples;
-
-    // check read limits
-    if (mReadDuration == 0 ||
-        mPosition >= mReadStartPosition + mReadDuration ||
-        end_position <= 0)
-    {
-        // always be positioned num_samples after previous position
-        Seek(end_position);
-        return 0;
-    }
-
-    // adjust sample count and seek to start of data if needed
-    uint32_t first_sample_offset = 0;
-    uint32_t read_num_samples = num_samples;
-    if (mPosition < 0) {
-        first_sample_offset = (uint32_t)(-mPosition);
-        read_num_samples -= first_sample_offset;
-        Seek(0);
-    }
-    if (mPosition + read_num_samples > mReadStartPosition + mReadDuration)
-        read_num_samples -= (uint32_t)(mPosition + read_num_samples - (mReadStartPosition + mReadDuration));
-    BMX_ASSERT(read_num_samples > 0);
-
-
-    // read the samples
-    int64_t start_position = mPosition;
-    uint32_t actual_read_num_samples;
-    if (mFileReader->IsClipWrapped())
-        actual_read_num_samples = ReadClipWrappedSamples(read_num_samples);
-    else
-        actual_read_num_samples = ReadFrameWrappedSamples(read_num_samples);
-
-
-    // add information for first sample in frame
-    int64_t essence_offset = 0;
-    int8_t temporal_offset = 0;
-    int8_t key_frame_offset = 0;
-    uint8_t flags = 0;
-    if (mIndexTableHelper.HaveEditUnit(start_position)) {
-        mIndexTableHelper.GetEditUnit(start_position, &temporal_offset, &key_frame_offset,
-                                      &flags, &essence_offset);
-    }
-    Frame *frame;
     for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
-        frame = mTrackFrames[i];
-        if (frame) {
-            frame->request_num_samples = num_samples;
-            frame->first_sample_offset = first_sample_offset;
-            frame->temporal_offset     = temporal_offset;
-            frame->key_frame_offset    = key_frame_offset;
-            frame->flags               = flags;
+        if (mFileReader->GetInternalTrackReader(i)->IsEnabled()) {
+            mTrackFrames.push_back(mFileReader->GetInternalTrackReader(i)->GetFrameBuffer()->CreateFrame());
+            mTrackFrames.back()->request_num_samples = num_samples;
+        } else {
+            mTrackFrames.push_back(0);
         }
     }
 
+    uint32_t actual_read_num_samples = 0;
+    int64_t end_position = mPosition + num_samples;
 
-    // complete and push frames
+    // read samples if within read limits
+    if (mReadDuration > 0 &&
+        mPosition < mReadStartPosition + mReadDuration &&
+        end_position > 0)
+    {
+        // adjust sample count and seek to start of data if needed
+        uint32_t first_sample_offset = 0;
+        uint32_t read_num_samples = num_samples;
+        if (mPosition < 0) {
+            first_sample_offset = (uint32_t)(-mPosition);
+            read_num_samples -= first_sample_offset;
+            Seek(0);
+        }
+        if (mPosition + read_num_samples > mReadStartPosition + mReadDuration)
+            read_num_samples -= (uint32_t)(mPosition + read_num_samples - (mReadStartPosition + mReadDuration));
+        BMX_ASSERT(read_num_samples > 0);
+
+        // read the samples
+        int64_t start_position = mPosition;
+        if (mFileReader->IsClipWrapped())
+            actual_read_num_samples = ReadClipWrappedSamples(read_num_samples);
+        else
+            actual_read_num_samples = ReadFrameWrappedSamples(read_num_samples);
+
+        // add frame metadata and information associated with first sample in frame
+        int64_t essence_offset = 0;
+        int8_t temporal_offset = 0;
+        int8_t key_frame_offset = 0;
+        uint8_t flags = 0;
+        if (mIndexTableHelper.HaveEditUnit(start_position)) {
+            mIndexTableHelper.GetEditUnit(start_position, &temporal_offset, &key_frame_offset,
+                                          &flags, &essence_offset);
+        }
+        Frame *frame;
+        for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
+            frame = mTrackFrames[i];
+            if (frame) {
+                frame->first_sample_offset = first_sample_offset;
+                frame->temporal_offset     = temporal_offset;
+                frame->key_frame_offset    = key_frame_offset;
+                frame->flags               = flags;
+
+                mFrameMetadataReader->InsertFrameMetadata(frame,
+                    mFileReader->GetInternalTrackReader(i)->GetTrackInfo()->file_track_number);
+            }
+        }
+    }
+
+    // push frames
     for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
         if (mTrackFrames[i]) {
-            mFrameMetadataReader->InsertFrameMetadata(mTrackFrames[i],
-                    mFileReader->GetInternalTrackReader(i)->GetTrackInfo()->file_track_number);
             mFileReader->GetInternalTrackReader(i)->GetFrameBuffer()->PushFrame(mTrackFrames[i]);
             mTrackFrames[i] = 0;
         }
     }
-
 
     // always be positioned num_samples after previous position
     if (mPosition != end_position)
@@ -326,8 +325,6 @@ uint32_t EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
     if (!IsComplete() && mPosition == 0 && !SeekEssence(mPosition, true))
         return 0;
 
-    if (mFileReader->GetInternalTrackReader(0)->IsEnabled())
-        mTrackFrames[0] = mFileReader->GetInternalTrackReader(0)->GetFrameBuffer()->CreateFrame();
     Frame *frame = mTrackFrames[0];
 
     int64_t current_file_position = mFile->tell();
@@ -431,7 +428,6 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                     // frame does not yet exist - create it if track is enabled
                     track_reader = mFileReader->GetInternalTrackReaderByNumber(track_number);
                     if (start_position == mPosition && track_reader && track_reader->IsEnabled()) {
-                        mTrackFrames[track_reader->GetTrackIndex()] = track_reader->GetFrameBuffer()->CreateFrame();
                         frame = mTrackFrames[track_reader->GetTrackIndex()];
 
                         BMX_CHECK(cp_num_read <= UINT32_MAX);

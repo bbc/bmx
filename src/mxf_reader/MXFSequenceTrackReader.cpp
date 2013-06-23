@@ -57,6 +57,8 @@ MXFSequenceTrackReader::MXFSequenceTrackReader(MXFSequenceReader *sequence_reade
     mTrackInfo = 0;
     mFileDescriptor = 0;
     mFileSourcePackage = 0;
+    mEmptyFrames = false;
+    mEmptyFramesSet = false;
     mIsEnabled = true;
     mReadStartPosition = 0;
     mReadDuration = -1;
@@ -72,6 +74,18 @@ MXFSequenceTrackReader::MXFSequenceTrackReader(MXFSequenceReader *sequence_reade
 MXFSequenceTrackReader::~MXFSequenceTrackReader()
 {
     delete mTrackInfo;
+}
+
+void MXFSequenceTrackReader::SetEmptyFrames(bool enable)
+{
+    mEmptyFrames = enable;
+    mEmptyFramesSet = true;
+
+    mFrameBuffer.SetEmptyFrames(enable);
+
+    size_t i;
+    for (i = 0; i < mTrackSegments.size(); i++)
+        mTrackSegments[i]->SetEmptyFrames(enable);
 }
 
 bool MXFSequenceTrackReader::IsCompatible(MXFTrackReader *segment) const
@@ -141,6 +155,9 @@ void MXFSequenceTrackReader::AppendSegment(MXFTrackReader *segment)
         mTrackInfo->duration += segment->GetDuration();
         mDuration += segment->GetDuration();
     }
+
+    if (mEmptyFramesSet)
+        segment->SetEmptyFrames(mEmptyFrames);
 
     mTrackSegments.push_back(segment);
 }

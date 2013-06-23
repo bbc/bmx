@@ -40,6 +40,7 @@ using namespace bmx;
 
 MXFFrameBuffer::MXFFrameBuffer()
 {
+    mEmptyFrames = false;
     mTargetBuffer = 0;
     mOwnTargetBuffer = false;
     mNextFrameEditRate = ZERO_RATIONAL;
@@ -54,6 +55,11 @@ MXFFrameBuffer::~MXFFrameBuffer()
     if (mOwnTargetBuffer)
         delete mTargetBuffer;
     mTemporaryBuffer.Clear(true);
+}
+
+void MXFFrameBuffer::SetEmptyFrames(bool enable)
+{
+    mEmptyFrames = enable;
 }
 
 void MXFFrameBuffer::SetTargetBuffer(FrameBuffer *target_buffer, bool take_ownership)
@@ -134,6 +140,9 @@ Frame* MXFFrameBuffer::CreateFrame()
 
 void MXFFrameBuffer::PushFrame(Frame *frame)
 {
+    if (frame->IsEmpty() && !mEmptyFrames)
+        return;
+
     frame->edit_rate       = mNextFrameEditRate;
     frame->position        = mNextFramePosition;
     frame->track_edit_rate = mNextFrameTrackEditRate;

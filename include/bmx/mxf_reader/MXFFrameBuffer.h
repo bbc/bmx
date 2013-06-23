@@ -46,6 +46,8 @@ public:
     MXFFrameBuffer();
     virtual ~MXFFrameBuffer();
 
+    void SetEmptyFrames(bool enable);
+
     void SetTargetBuffer(FrameBuffer *target_buffer, bool take_ownership);
 
     void SetNextFramePosition(Rational edit_rate, int64_t position);
@@ -66,6 +68,7 @@ public:
     virtual void Clear(bool del_frames);
 
 private:
+    bool mEmptyFrames;
     FrameBuffer *mTargetBuffer;
     bool mOwnTargetBuffer;
     Rational mNextFrameEditRate;
