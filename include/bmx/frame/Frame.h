@@ -78,7 +78,8 @@ public:
     virtual void IncrementSize(uint32_t inc) = 0;
 
 public:
-    bool IsEmpty() const { return num_samples == 0; }
+    bool IsEmpty() const    { return num_samples == 0; }
+    bool IsComplete() const { return num_samples == request_num_samples; }
 
     const std::map<std::string, std::vector<FrameMetadata*> >& GetMetadata() const { return mMetadata; }
     const std::vector<FrameMetadata*>* GetMetadata(std::string id) const;

@@ -287,10 +287,10 @@ bool MXFGroupReader::IsComplete() const
     return true;
 }
 
-void MXFGroupReader::GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const
+void MXFGroupReader::GetReadLimits(bool limit_to_available, int64_t *start_position, int64_t *duration) const
 {
-    int16_t precharge = GetMaxPrecharge(0, true);
-    int16_t rollout = GetMaxRollout(mDuration - 1, true);
+    int16_t precharge = GetMaxPrecharge(0, limit_to_available);
+    int16_t rollout = GetMaxRollout(mDuration - 1, limit_to_available);
     *start_position = 0 + precharge;
     *duration = - precharge + mDuration + rollout;
 }
@@ -299,7 +299,7 @@ void MXFGroupReader::SetReadLimits()
 {
     int64_t start_position;
     int64_t duration;
-    GetAvailableReadLimits(&start_position, &duration);
+    GetReadLimits(false, &start_position, &duration);
     SetReadLimits(start_position, duration, true);
 }
 
@@ -440,7 +440,7 @@ int16_t MXFGroupReader::GetMaxPrecharge(int64_t position, bool limit_to_availabl
 
         if (limit_to_available) {
             int64_t mem_start_position, mem_duration;
-            mReaders[i]->GetAvailableReadLimits(&mem_start_position, &mem_duration);
+            mReaders[i]->GetReadLimits(true, &mem_start_position, &mem_duration);
             int64_t mem_max_start_position = CONVERT_MEMBER_POS(mem_start_position);
             if (mem_max_start_position > max_start_position)
                 max_start_position = mem_max_start_position;
@@ -474,7 +474,7 @@ int16_t MXFGroupReader::GetMaxRollout(int64_t position, bool limit_to_available)
 
         if (limit_to_available) {
             int64_t mem_start_position, mem_duration;
-            mReaders[i]->GetAvailableReadLimits(&mem_start_position, &mem_duration);
+            mReaders[i]->GetReadLimits(true, &mem_start_position, &mem_duration);
             int64_t mem_min_end_position = CONVERT_MEMBER_DUR(mem_start_position + mem_duration);
             if (mem_min_end_position < min_end_position)
                 min_end_position = mem_min_end_position;

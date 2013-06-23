@@ -1428,8 +1428,8 @@ int main(int argc, const char** argv)
             }
 
             if (output_duration > 0) {
-                precharge = reader->GetMaxPrecharge(read_start, true);
-                rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
+                precharge = reader->GetMaxPrecharge(read_start, false);
+                rollout = reader->GetMaxRollout(read_start + output_duration - 1, false);
 
                 if (precharge != 0 && (no_precharge || clip_type == CW_AVID_CLIP_TYPE)) {
                     if (!no_precharge) {
@@ -1446,7 +1446,7 @@ int main(int argc, const char** argv)
                     int64_t original_output_duration = output_duration;
                     while (rollout != 0) {
                         output_duration += rollout;
-                        rollout = reader->GetMaxRollout(read_start + output_duration - 1, true);
+                        rollout = reader->GetMaxRollout(read_start + output_duration - 1, false);
                     }
                     if (!no_rollout) {
                         log_warn("'%s' clip type does not support rollout\n",

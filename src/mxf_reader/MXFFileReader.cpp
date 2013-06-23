@@ -428,12 +428,12 @@ bool MXFFileReader::IsComplete() const
     return true;
 }
 
-void MXFFileReader::GetAvailableReadLimits(int64_t *start_position, int64_t *duration) const
+void MXFFileReader::GetReadLimits(bool limit_to_available, int64_t *start_position, int64_t *duration) const
 {
     CHECK_SUPPORT_READ_LIMITS;
 
-    int16_t precharge = GetMaxPrecharge(0, true);
-    int16_t rollout = GetMaxRollout(mDuration - 1, true);
+    int16_t precharge = GetMaxPrecharge(0, limit_to_available);
+    int16_t rollout = GetMaxRollout(mDuration - 1, limit_to_available);
     *start_position = 0 + precharge;
     *duration = - precharge + mDuration + rollout;
 }
@@ -444,7 +444,7 @@ void MXFFileReader::SetReadLimits()
 
     int64_t start_position;
     int64_t duration;
-    GetAvailableReadLimits(&start_position, &duration);
+    GetReadLimits(false, &start_position, &duration);
     SetReadLimits(start_position, duration, true);
 }
 
@@ -626,7 +626,7 @@ int16_t MXFFileReader::GetMaxPrecharge(int64_t position, bool limit_to_available
 
         if (limit_to_available) {
             int64_t ext_start_position, ext_duration;
-            mExternalReaders[i]->GetAvailableReadLimits(&ext_start_position, &ext_duration);
+            mExternalReaders[i]->GetReadLimits(true, &ext_start_position, &ext_duration);
             int64_t int_max_start_position = CONVERT_EXTERNAL_POS(ext_start_position);
             if (int_max_start_position > max_start_position)
                 max_start_position = int_max_start_position;
@@ -675,7 +675,7 @@ int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available) 
 
         if (limit_to_available) {
             int64_t ext_start_position, ext_duration;
-            mExternalReaders[i]->GetAvailableReadLimits(&ext_start_position, &ext_duration);
+            mExternalReaders[i]->GetReadLimits(true, &ext_start_position, &ext_duration);
             int64_t int_min_end_position = CONVERT_EXTERNAL_DUR(ext_start_position + ext_duration);
             if (int_min_end_position < min_end_position)
                 min_end_position = int_min_end_position;
