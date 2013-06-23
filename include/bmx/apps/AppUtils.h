@@ -37,6 +37,7 @@
 
 #include <bmx/BMXTypes.h>
 #include <bmx/EssenceType.h>
+#include <bmx/Logging.h>
 #include <bmx/URI.h>
 #include <bmx/clip_writer/ClipWriterTrack.h>
 #include <bmx/as02/AS02Manifest.h>
@@ -77,6 +78,7 @@ const char* get_avci_header_format_string(size_t index);
 size_t get_num_ps_avci_header_formats();
 const char* get_ps_avci_header_format_string(size_t index);
 
+bool parse_log_level(const char *level_str, LogLevel *level);
 bool parse_frame_rate(const char *rate_str, Rational *frame_rate);
 bool parse_timecode(const char *tc_str, Rational frame_rate, Timecode *timecode);
 bool parse_position(const char *position_str, Timecode start_timecode, Rational frame_rate, int64_t *position);

@@ -264,6 +264,20 @@ void bmx::check_avid_avci_stop_bit(const unsigned char *input_data, const unsign
 }
 
 
+bool bmx::parse_log_level(const char *level_str, LogLevel *level)
+{
+    unsigned int value;
+    if (sscanf(level_str, "%u", &value) != 1)
+        return false;
+
+    if (value > ERROR_LOG)
+        *level = ERROR_LOG;
+    else
+        *level = (LogLevel)value;
+
+    return true;
+}
+
 bool bmx::parse_frame_rate(const char *rate_str, Rational *frame_rate)
 {
     unsigned int value;

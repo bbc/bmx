@@ -277,6 +277,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -h | --help             Show usage and exit\n");
     fprintf(stderr, "  -v | --version          Print version info\n");
     fprintf(stderr, "  -l <file>               Log filename. Default log to stderr/stdout\n");
+    fprintf(stderr, " --log-level <level>      Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
     fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, rdd9, wave. Default is as02\n");
     fprintf(stderr, "* -o <name>               as02: <name> is a bundle name\n");
     fprintf(stderr, "                          as11op1a/as11d10/op1a/d10/rdd9/wave: <name> is a filename\n");
@@ -478,6 +479,7 @@ static void usage(const char *cmd)
 int main(int argc, const char** argv)
 {
     const char *log_filename = 0;
+    LogLevel log_level = INFO_LOG;
     ClipWriterType clip_type = CW_AS02_CLIP_TYPE;
     ClipSubType clip_sub_type = NO_CLIP_SUB_TYPE;
     const char *output_name = "";
@@ -574,6 +576,22 @@ int main(int argc, const char** argv)
                 return 1;
             }
             log_filename = argv[cmdln_index + 1];
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--log-level") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_log_level(argv[cmdln_index + 1], &log_level))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "-t") == 0)
@@ -2170,6 +2188,7 @@ int main(int argc, const char** argv)
         product_uid     = get_bmx_product_uid();
     }
 
+    LOG_LEVEL = log_level;
     if (log_filename) {
         if (!open_log_file(log_filename))
             return 1;
