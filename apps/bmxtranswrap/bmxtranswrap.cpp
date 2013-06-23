@@ -76,10 +76,10 @@ using namespace mxfpp;
 
 typedef struct
 {
+    const MXFTrackInfo *input_track_info;
     FrameBuffer *input_buffer;
     ClipWriterTrack *track;
     EssenceType essence_type;
-    EssenceType input_essence_type;
     MXFDataDefEnum data_def;
     uint32_t channel_count;
     uint32_t channel_index;
@@ -130,6 +130,21 @@ static uint32_t read_samples(MXFReader *reader, const vector<uint32_t> &sample_s
     }
 
     return num_read;
+}
+
+static void write_padding_samples(Frame *frame, OutputTrack *output_track, bmx::ByteArray *buffer)
+{
+    const MXFSoundTrackInfo *sound_info = (const MXFSoundTrackInfo *)output_track->input_track_info;
+
+    BMX_ASSERT(sound_info->essence_type == WAVE_PCM);
+    BMX_ASSERT(sound_info->edit_rate == sound_info->sampling_rate);
+    BMX_ASSERT(frame->request_num_samples > 0);
+
+    uint32_t size = frame->request_num_samples * output_track->block_align;
+    buffer->Allocate(size);
+    memset(buffer->GetBytes(), 0, size);
+
+    output_track->track->WriteSamples(buffer->GetBytes(), size, frame->request_num_samples);
 }
 
 static void usage(const char *cmd)
@@ -1264,6 +1279,8 @@ int main(int argc, const char** argv)
             log_warn("Input file is incomplete\n");
         }
 
+        reader->SetEmptyFrames(true);
+
         Rational frame_rate = reader->GetEditRate();
 
 
@@ -1749,11 +1766,11 @@ int main(int argc, const char** argv)
             uint32_t c;
             for (c = 0; c < output_track_count; c++) {
                 OutputTrack output_track;
+                output_track.input_track_info    = input_track_info;
                 output_track.input_buffer        = input_track_reader->GetFrameBuffer();
                 output_track.data_def            = input_track_info->data_def;
                 output_track.channel_count       = output_track_count;
                 output_track.channel_index       = c;
-                output_track.input_essence_type  = input_track_info->essence_type;
                 if (input_track_info->essence_type == D10_AES3_PCM)
                     output_track.essence_type    = WAVE_PCM;
                 else
@@ -2098,6 +2115,30 @@ int main(int argc, const char** argv)
                 gf_retry_count      = 0;
             }
 
+            // check whether sufficient frame data is available
+            // if the frame is empty then check zero PCM sample padding is possible
+            for (i = 0; i < output_tracks.size(); i++) {
+                OutputTrack &output_track = output_tracks[i];
+                Frame *frame = output_track.input_buffer->GetLastFrame(false);
+                BMX_ASSERT(frame);
+                if (!frame->IsComplete()) {
+                    if (!frame->IsEmpty()) {
+                        log_warn("Partially complete frames not yet supported\n");
+                        break;
+                    }
+                    if (output_track.input_track_info->essence_type != WAVE_PCM ||
+                        output_track.input_track_info->edit_rate !=
+                            ((MXFSoundTrackInfo*)output_track.input_track_info)->sampling_rate)
+                    {
+                        log_warn("Failed to provide padding data for empty frame\n");
+                        break;
+                    }
+                }
+                BMX_ASSERT(frame->IsEmpty() || frame->IsComplete());
+            }
+            if (i < output_tracks.size())
+                break;
+
             if (clip_type == CW_AS02_CLIP_TYPE && (precharge || rollout)) {
                 container_duration = clip->GetDuration();
                 if (total_read == - precharge)
@@ -2121,11 +2162,7 @@ int main(int argc, const char** argv)
                     take_frame = false;
 
                 Frame *frame = output_track.input_buffer->GetLastFrame(take_frame);
-                if (!frame || frame->IsEmpty()) {
-                    if (frame && take_frame)
-                        delete frame;
-                    continue;
-                }
+                BMX_ASSERT(frame);
 
                 if (clip_type == CW_AVID_CLIP_TYPE && convert_ess_marks) {
                     const vector<FrameMetadata*> *metadata = frame->GetMetadata(SDTI_CP_PACKAGE_METADATA_FMETA_ID);
@@ -2146,9 +2183,15 @@ int main(int argc, const char** argv)
                 }
 
                 uint32_t num_samples;
-                if (output_track.channel_count > 1 || output_track.input_essence_type == D10_AES3_PCM) {
+                if (!frame->IsComplete())
+                {
+                    write_padding_samples(frame, &output_track, &sound_buffer);
+                }
+                else if (output_track.channel_count > 1 ||
+                         output_track.input_track_info->essence_type == D10_AES3_PCM)
+                {
                     sound_buffer.Allocate(frame->GetSize()); // more than enough
-                    if (output_track.input_essence_type == D10_AES3_PCM) {
+                    if (output_track.input_track_info->essence_type == D10_AES3_PCM) {
                         convert_aes3_to_pcm(frame->GetBytes(), frame->GetSize(),
                                             output_track.bits_per_sample, output_track.channel_index,
                                             sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
@@ -2163,7 +2206,9 @@ int main(int argc, const char** argv)
                     output_track.track->WriteSamples(sound_buffer.GetBytes(),
                                                      num_samples * output_track.block_align,
                                                      num_samples);
-                } else {
+                }
+                else
+                {
                     if (output_track.data_def == MXF_SOUND_DDEF)
                         num_samples = frame->GetSize() / output_track.block_align;
                     else
