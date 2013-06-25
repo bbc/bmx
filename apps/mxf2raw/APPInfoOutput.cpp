@@ -338,25 +338,37 @@ void APPInfoOutput::PrintEvents()
         printf("APP timecode breaks:\n");
         printf("  Count     : %"PRIszt"\n", mInfo.num_timecode_breaks);
         printf("  Breaks    :\n");
-        printf("    %10s:%14s%14s%14s%8s\n", "num", "frame", "vitc", "ltc", "type");
+        printf("    %10s:%14s%14s%14s%6s\n", "num", "frame", "vitc", "ltc", "type");
         for (i = 0; i < mInfo.num_timecode_breaks; i++) {
-            printf("    %10"PRIszt":%14s%14s%14s",
+            printf("    %10"PRIszt":%14s%14s%14s  ",
                    i,
                    get_duration_string(mInfo.timecode_breaks[i].position, frame_rate).c_str(),
                    get_timecode_string(mTimecodeBreakTimecodes[i].vitc),
                    get_timecode_string(mTimecodeBreakTimecodes[i].ltc));
-            switch (mInfo.timecode_breaks[i].timecodeType)
-            {
-                case TIMECODE_BREAK_VITC:
-                    printf("    VITC\n");
-                    break;
-                case TIMECODE_BREAK_LTC:
-                    printf("     LTC\n");
-                    break;
-                default:
-                    printf("  0x%04x\n", mInfo.timecode_breaks[i].timecodeType);
-                    break;
+
+            vector<string> type_strings;
+            int tc_type = mInfo.timecode_breaks[i].timecodeType;
+            if ((tc_type & TIMECODE_BREAK_VITC)) {
+                type_strings.push_back("VITC");
+                tc_type &= ~TIMECODE_BREAK_VITC;
             }
+            if ((tc_type & TIMECODE_BREAK_LTC)) {
+                type_strings.push_back("LTC");
+                tc_type &= ~TIMECODE_BREAK_LTC;
+            }
+            if (tc_type || type_strings.empty()) {
+                // this is unexpected; only expect vitc and ltc
+                char buf[32];
+                bmx_snprintf(buf, sizeof(buf), "0x%04x", tc_type);
+                type_strings.push_back(buf);
+            }
+            size_t j;
+            for (j = 0; j < type_strings.size(); j++) {
+                if (j != 0)
+                    printf("+");
+                printf("%s", type_strings[j].c_str());
+            }
+            printf("\n");
         }
     }
     if (mInfo.num_vtr_errors > 0) {
