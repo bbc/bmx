@@ -50,16 +50,16 @@ using namespace bmx;
 
 
 
-static char* get_date_string(mxfTimestamp timestamp)
+static string get_date_string(mxfTimestamp timestamp)
 {
-    static char buf[64];
+    char buf[64];
     bmx_snprintf(buf, sizeof(buf), "%d-%02u-%02u", timestamp.year, timestamp.month, timestamp.day);
     return buf;
 }
 
-static char* get_timecode_string(ArchiveTimecode &timecode)
+static string get_timecode_string(ArchiveTimecode &timecode)
 {
-    static char buf[64];
+    char buf[64];
     if (timecode.hour == INVALID_TIMECODE_HOUR) {
         bmx_snprintf(buf, sizeof(buf), "<unknown>");
     } else {
@@ -76,12 +76,12 @@ static void print_infax_data(const InfaxData *data)
     printf("      Format            : %s\n", data->format);
     printf("      ProgrammeTitle    : %s\n", data->progTitle);
     printf("      EpisodeTitle      : %s\n", data->epTitle);
-    printf("      TransmissionDate  : %s\n", get_date_string(data->txDate));
+    printf("      TransmissionDate  : %s\n", get_date_string(data->txDate).c_str());
     printf("      MagazinePrefix    : %s\n", data->magPrefix);
     printf("      ProgrammeNumber   : %s\n", data->progNo);
     printf("      ProductionCode    : %s\n", data->prodCode);
     printf("      SpoolStatus       : %s\n", data->spoolStatus);
-    printf("      StockDate         : %s\n", get_date_string(data->stockDate));
+    printf("      StockDate         : %s\n", get_date_string(data->stockDate).c_str());
     printf("      SpoolDescriptor   : %s\n", data->spoolDesc);
     printf("      Memo              : %s\n", data->memo);
     printf("      Duration          : %s\n", get_duration_string(data->duration, sec_rate).c_str());
@@ -299,8 +299,8 @@ void APPInfoOutput::PrintEvents()
             printf("    %10"PRIszt":%14s%14s%14s%10d\n",
                    i,
                    get_duration_string(mInfo.digibeta_dropouts[i].position, frame_rate).c_str(),
-                   get_timecode_string(mDigiBetaDropoutTimecodes[i].vitc),
-                   get_timecode_string(mDigiBetaDropoutTimecodes[i].ltc),
+                   get_timecode_string(mDigiBetaDropoutTimecodes[i].vitc).c_str(),
+                   get_timecode_string(mDigiBetaDropoutTimecodes[i].ltc).c_str(),
                    mInfo.digibeta_dropouts[i].strength);
         }
     }
@@ -314,8 +314,8 @@ void APPInfoOutput::PrintEvents()
             printf("    %10"PRIszt":%14s%14s%14s",
                    i,
                    get_duration_string(mInfo.pse_failures[i].position, frame_rate).c_str(),
-                   get_timecode_string(mPSEFailureTimecodes[i].vitc),
-                   get_timecode_string(mPSEFailureTimecodes[i].ltc));
+                   get_timecode_string(mPSEFailureTimecodes[i].vitc).c_str(),
+                   get_timecode_string(mPSEFailureTimecodes[i].ltc).c_str());
             if (mInfo.pse_failures[i].redFlash > 0)
                 printf("%9.1f", mInfo.pse_failures[i].redFlash / 1000.0);
             else
@@ -343,8 +343,8 @@ void APPInfoOutput::PrintEvents()
             printf("    %10"PRIszt":%14s%14s%14s  ",
                    i,
                    get_duration_string(mInfo.timecode_breaks[i].position, frame_rate).c_str(),
-                   get_timecode_string(mTimecodeBreakTimecodes[i].vitc),
-                   get_timecode_string(mTimecodeBreakTimecodes[i].ltc));
+                   get_timecode_string(mTimecodeBreakTimecodes[i].vitc).c_str(),
+                   get_timecode_string(mTimecodeBreakTimecodes[i].ltc).c_str());
 
             vector<string> type_strings;
             int tc_type = mInfo.timecode_breaks[i].timecodeType;
@@ -380,8 +380,8 @@ void APPInfoOutput::PrintEvents()
             printf("    %10"PRIszt":%14s%14s%14s",
                    i,
                    get_duration_string(mInfo.vtr_errors[i].position, frame_rate).c_str(),
-                   get_timecode_string(mVTRErrorTimecodes[i].vitc),
-                   get_timecode_string(mVTRErrorTimecodes[i].ltc));
+                   get_timecode_string(mVTRErrorTimecodes[i].vitc).c_str(),
+                   get_timecode_string(mVTRErrorTimecodes[i].ltc).c_str());
             printf("%5s%02x", "0x", mInfo.vtr_errors[i].errorCode);
             if (mInfo.vtr_errors[i].errorCode == 0x00) {
                 printf("   No error\n");
