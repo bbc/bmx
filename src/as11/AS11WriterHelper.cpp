@@ -82,7 +82,7 @@ void AS11WriterHelper::InsertAS11CoreFramework(AS11CoreFramework *framework)
 void AS11WriterHelper::InsertUKDPPFramework(UKDPPFramework *framework)
 {
     AppendDMSLabel(MXF_DM_L(UKDPPDescriptiveScheme));
-    InsertFramework(3101, "UK_DPP", framework);
+    InsertFramework(3101, "AS_11_UKDPP", framework);
 }
 
 void AS11WriterHelper::InsertPosSegmentation(vector<AS11PosSegment> segments)

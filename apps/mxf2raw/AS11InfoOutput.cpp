@@ -50,6 +50,9 @@ using namespace bmx;
 using namespace mxfpp;
 
 
+#define VERSION_TYPE_VAL(major, minor)  ((((major) & 0xff) << 8) | ((minor) & 0xff))
+
+
 
 static const char* CAPTIONS_TYPE_STR[] =
 {
@@ -114,7 +117,7 @@ static const char* AUDIO_TRACK_LAYOUT_STR[] =
     "EBU R 123: 16f",
 };
 
-static const char* FPA_PASS_STR[] =
+static const char* PSE_PASS_STR[] =
 {
     "Yes",
     "No",
@@ -195,10 +198,19 @@ static char* get_date_string(mxfTimestamp timestamp)
     return buf;
 }
 
-static void print_core_framework(AS11CoreFramework *cf)
+static char* get_version_type_string(mxfVersionType version)
+{
+    static char buf[16];
+    bmx_snprintf(buf, sizeof(buf), "%u.%u", (version >> 8) & 0xff, version & 0xff);
+    return buf;
+}
+
+static void print_core_framework(AS11CoreFramework *cf, mxfVersionType shim_version)
 {
     printf("  AS-11 Core Framework:\n");
     printf("      ShimName                  : %s\n", cf->GetShimName().c_str());
+    if (shim_version > VERSION_TYPE_VAL(1, 0) || cf->haveItem(&MXF_ITEM_K(AS11CoreFramework, AS11ShimVersion)))
+        printf("      ShimVersion               : %s\n", get_version_type_string(cf->GetShimVersion()));
     printf("      SeriesTitle               : %s\n", cf->GetSeriesTitle().c_str());
     printf("      ProgrammeTitle            : %s\n", cf->GetProgrammeTitle().c_str());
     printf("      EpisodeTitleNumber        : %s\n", cf->GetEpisodeTitleNumber().c_str());
@@ -216,7 +228,8 @@ static void print_core_framework(AS11CoreFramework *cf)
         printf("      ClosedCaptionsLanguage    : %s\n", cf->GetClosedCaptionsLanguage().c_str());
 }
 
-static void print_uk_dpp_framework(UKDPPFramework *udf, Timecode start_timecode, Rational frame_rate)
+static void print_uk_dpp_framework(UKDPPFramework *udf, Timecode start_timecode, Rational frame_rate,
+                                   mxfVersionType shim_version)
 {
     printf("  UK DPP Framework:\n");
     printf("      ProductionNumber          : %s\n", udf->GetProductionNumber().c_str());
@@ -241,15 +254,15 @@ static void print_uk_dpp_framework(UKDPPFramework *udf, Timecode start_timecode,
     }
     if (udf->HaveProductPlacement())
         printf("      ProductPlacement          : %s\n", get_bool_string(udf->GetProductPlacement()));
-    if (udf->HaveFPAPass()) {
-        printf("      FPAPass                   : %u (%s)\n",
-               udf->GetFPAPass(),
-               get_enum_string(udf->GetFPAPass(), FPA_PASS_STR, BMX_ARRAY_SIZE(FPA_PASS_STR)));
+    if (shim_version > VERSION_TYPE_VAL(1, 0) || udf->haveItem(&MXF_ITEM_K(UKDPPFramework, UKDPPPSEPass))) {
+        printf("      PSEPass                   : %u (%s)\n",
+               udf->GetPSEPass(),
+               get_enum_string(udf->GetPSEPass(), PSE_PASS_STR, BMX_ARRAY_SIZE(PSE_PASS_STR)));
     }
-    if (udf->HaveFPAManufacturer())
-        printf("      FPAManufacturer           : %s\n", udf->GetFPAManufacturer().c_str());
-    if (udf->HaveFPAVersion())
-        printf("      FPAVersion                : %s\n", udf->GetFPAVersion().c_str());
+    if (udf->HavePSEManufacturer())
+        printf("      PSEManufacturer           : %s\n", udf->GetPSEManufacturer().c_str());
+    if (udf->HavePSEVersion())
+        printf("      PSEVersion                : %s\n", udf->GetPSEVersion().c_str());
     if (udf->HaveVideoComments())
         printf("      VideoComments             : %s\n", udf->GetVideoComments().c_str());
     printf("      SecondaryAudioLanguage    : %s\n", udf->GetSecondaryAudioLanguage().c_str());
@@ -353,10 +366,14 @@ void bmx::as11_print_info(MXFFileReader *file_reader)
 
     printf("AS-11 Information:\n");
 
-    if (info.core)
-        print_core_framework(info.core);
+    mxfVersionType shim_version = VERSION_TYPE_VAL(1, 0);
+    if (info.core) {
+        if (info.core->haveItem(&MXF_ITEM_K(AS11CoreFramework, AS11ShimVersion)))
+            shim_version = info.core->GetShimVersion();
+        print_core_framework(info.core, shim_version);
+    }
     if (info.ukdpp)
-        print_uk_dpp_framework(info.ukdpp, start_timecode, frame_rate);
+        print_uk_dpp_framework(info.ukdpp, start_timecode, frame_rate, shim_version);
 
     if (!info.segmentation.empty()) {
         printf("  Segmentation:\n");

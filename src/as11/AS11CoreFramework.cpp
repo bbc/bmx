@@ -87,6 +87,11 @@ string AS11CoreFramework::GetShimName()
     return getStringItem(&MXF_ITEM_K(AS11CoreFramework, AS11ShimName));
 }
 
+mxfVersionType AS11CoreFramework::GetShimVersion()
+{
+    return getVersionTypeItem(&MXF_ITEM_K(AS11CoreFramework, AS11ShimVersion));
+}
+
 uint8_t AS11CoreFramework::GetAudioTrackLayout()
 {
     return getUInt8Item(&MXF_ITEM_K(AS11CoreFramework, AS11AudioTrackLayout));
@@ -140,6 +145,11 @@ void AS11CoreFramework::SetEpisodeTitleNumber(string value)
 void AS11CoreFramework::SetShimName(string value)
 {
     setStringItem(&MXF_ITEM_K(AS11CoreFramework, AS11ShimName), value);
+}
+
+void AS11CoreFramework::SetShimVersion(mxfVersionType value)
+{
+    setVersionTypeItem(&MXF_ITEM_K(AS11CoreFramework, AS11ShimVersion), value);
 }
 
 void AS11CoreFramework::SetAudioTrackLayout(uint8_t value)

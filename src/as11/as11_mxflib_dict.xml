@@ -70,11 +70,11 @@
                 <EBU_R123_16f         value="52"/>
                 <Undefined            value="255"/>
             </AudioTrackLayoutType>
-            <FPAPassType          type="UInt8">
+            <PSEPassType          type="UInt8">
                 <Yes                  value="0"/>
                 <No                   value="1"/>
                 <NotTested            value="2"/>
-            </FPAPassType>
+            </PSEPassType>
             <SigningPresentType   type="UInt8">
                 <Yes                  value="0"/>
                 <No                   value="1"/>
@@ -112,6 +112,7 @@
         <ClosedCaptionsPresent      type="Boolean"              use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 07"/>
         <ClosedCaptionsType         type="CaptionsType"         use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 08"/>
         <ClosedCaptionsLanguage     type="UTF16String"          use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 09"/>
+        <ShimVersion                type="VersionType"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 0a"/>
     </AS11CoreFramework>
 
 
@@ -136,9 +137,9 @@
         <ThreeD                     type="Boolean"            use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0a 00"/>
         <ThreeDType                 type="ThreeDTypeType"     use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0b 00"/>
         <ProductPlacement           type="Boolean"            use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0c 00"/>
-        <FPAPass                    type="FPAPassType"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0d 00"/>
-        <FPAManufacturer            type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0e 00"/>
-        <FPAVersion                 type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0f 00"/>
+        <PSEPass                    type="PSEPassType"        use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0d 00"/>
+        <PSEManufacturer            type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0e 00"/>
+        <PSEVersion                 type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 0f 00"/>
         <VideoComments              type="UTF16String"        use="optional"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 10 00"/>
         <SecondaryAudioLanguage     type="UTF16String"        use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 11 00"/>
         <TertiaryAudioLanguage      type="UTF16String"        use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 0c 01 01 01 01 12 00"/>

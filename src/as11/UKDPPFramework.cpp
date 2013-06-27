@@ -164,34 +164,29 @@ bool UKDPPFramework::GetProductPlacement()
     return getBooleanItem(&MXF_ITEM_K(UKDPPFramework, UKDPPProductPlacement));
 }
 
-bool UKDPPFramework::HaveFPAPass()
+uint8_t UKDPPFramework::GetPSEPass()
 {
-    return haveItem(&MXF_ITEM_K(UKDPPFramework, UKDPPFPAPass));
+    return getUInt8Item(&MXF_ITEM_K(UKDPPFramework, UKDPPPSEPass));
 }
 
-uint8_t UKDPPFramework::GetFPAPass()
+bool UKDPPFramework::HavePSEManufacturer()
 {
-    return getUInt8Item(&MXF_ITEM_K(UKDPPFramework, UKDPPFPAPass));
+    return haveItem(&MXF_ITEM_K(UKDPPFramework, UKDPPPSEManufacturer));
 }
 
-bool UKDPPFramework::HaveFPAManufacturer()
+string UKDPPFramework::GetPSEManufacturer()
 {
-    return haveItem(&MXF_ITEM_K(UKDPPFramework, UKDPPFPAManufacturer));
+    return getStringItem(&MXF_ITEM_K(UKDPPFramework, UKDPPPSEManufacturer));
 }
 
-string UKDPPFramework::GetFPAManufacturer()
+bool UKDPPFramework::HavePSEVersion()
 {
-    return getStringItem(&MXF_ITEM_K(UKDPPFramework, UKDPPFPAManufacturer));
+    return haveItem(&MXF_ITEM_K(UKDPPFramework, UKDPPPSEVersion));
 }
 
-bool UKDPPFramework::HaveFPAVersion()
+string UKDPPFramework::GetPSEVersion()
 {
-    return haveItem(&MXF_ITEM_K(UKDPPFramework, UKDPPFPAVersion));
-}
-
-string UKDPPFramework::GetFPAVersion()
-{
-    return getStringItem(&MXF_ITEM_K(UKDPPFramework, UKDPPFPAVersion));
+    return getStringItem(&MXF_ITEM_K(UKDPPFramework, UKDPPPSEVersion));
 }
 
 bool UKDPPFramework::HaveVideoComments()
@@ -409,19 +404,19 @@ void UKDPPFramework::SetProductPlacement(bool value)
     setBooleanItem(&MXF_ITEM_K(UKDPPFramework, UKDPPProductPlacement), value);
 }
 
-void UKDPPFramework::SetFPAPass(uint8_t value)
+void UKDPPFramework::SetPSEPass(uint8_t value)
 {
-    setUInt8Item(&MXF_ITEM_K(UKDPPFramework, UKDPPFPAPass), value);
+    setUInt8Item(&MXF_ITEM_K(UKDPPFramework, UKDPPPSEPass), value);
 }
 
-void UKDPPFramework::SetFPAManufacturer(string value)
+void UKDPPFramework::SetPSEManufacturer(string value)
 {
-    setStringItem(&MXF_ITEM_K(UKDPPFramework, UKDPPFPAManufacturer), value);
+    setStringItem(&MXF_ITEM_K(UKDPPFramework, UKDPPPSEManufacturer), value);
 }
 
-void UKDPPFramework::SetFPAVersion(string value)
+void UKDPPFramework::SetPSEVersion(string value)
 {
-    setStringItem(&MXF_ITEM_K(UKDPPFramework, UKDPPFPAVersion), value);
+    setStringItem(&MXF_ITEM_K(UKDPPFramework, UKDPPPSEVersion), value);
 }
 
 void UKDPPFramework::SetVideoComments(string value)

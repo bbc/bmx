@@ -6,9 +6,9 @@ Distributor: Rick Distributors
 PictureRatio: 16/9
 ThreeD: false
 ProductPlacement: true
-FPAPass: 1
-FPAManufacturer: Harding
-FPAVersion: 1.0 alpha
+PSEPass: 1
+PSEManufacturer: Harding
+PSEVersion: 1.0 alpha
 SecondaryAudioLanguage: zxx
 TertiaryAudioLanguage: zxx
 AudioLoudnessStandard: 0

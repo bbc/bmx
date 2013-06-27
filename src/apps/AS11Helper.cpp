@@ -59,6 +59,7 @@ static const PropertyInfo AS11_CORE_PROPERTY_INFO[] =
     {"ProgrammeTitle",              MXF_ITEM_K(AS11CoreFramework, AS11ProgrammeTitle)},
     {"EpisodeTitleNumber",          MXF_ITEM_K(AS11CoreFramework, AS11EpisodeTitleNumber)},
     {"ShimName",                    MXF_ITEM_K(AS11CoreFramework, AS11ShimName)},
+    {"ShimVersion",                 MXF_ITEM_K(AS11CoreFramework, AS11ShimVersion)},
     {"AudioTrackLayout",            MXF_ITEM_K(AS11CoreFramework, AS11AudioTrackLayout)},
     {"PrimaryAudioLanguage",        MXF_ITEM_K(AS11CoreFramework, AS11PrimaryAudioLanguage)},
     {"ClosedCaptionsPresent",       MXF_ITEM_K(AS11CoreFramework, AS11ClosedCaptionsPresent)},
@@ -92,9 +93,9 @@ static const PropertyInfo UK_DPP_PROPERTY_INFO[] =
     {"ThreeDType",                  MXF_ITEM_K(UKDPPFramework, UKDPP3DType)},
     {"3DType",                      MXF_ITEM_K(UKDPPFramework, UKDPP3DType)},
     {"ProductPlacement",            MXF_ITEM_K(UKDPPFramework, UKDPPProductPlacement)},
-    {"FPAPass",                     MXF_ITEM_K(UKDPPFramework, UKDPPFPAPass)},
-    {"FPAManufacturer",             MXF_ITEM_K(UKDPPFramework, UKDPPFPAManufacturer)},
-    {"FPAVersion",                  MXF_ITEM_K(UKDPPFramework, UKDPPFPAVersion)},
+    {"PSEPass",                     MXF_ITEM_K(UKDPPFramework, UKDPPPSEPass)},
+    {"PSEManufacturer",             MXF_ITEM_K(UKDPPFramework, UKDPPPSEManufacturer)},
+    {"PSEVersion",                  MXF_ITEM_K(UKDPPFramework, UKDPPPSEVersion)},
     {"VideoComments",               MXF_ITEM_K(UKDPPFramework, UKDPPVideoComments)},
     {"SecondaryAudioLanguage",      MXF_ITEM_K(UKDPPFramework, UKDPPSecondaryAudioLanguage)},
     {"TertiaryAudioLanguage",       MXF_ITEM_K(UKDPPFramework, UKDPPTertiaryAudioLanguage)},
@@ -287,6 +288,23 @@ static bool parse_rational(string value, mxfRational *rational_value)
     }
 
     log_warn("Invalid rational value '%s'\n", value.c_str());
+    return false;
+}
+
+static bool parse_version_type(string value, mxfVersionType *vt_value)
+{
+    unsigned int v1, v2;
+    if (sscanf(value.c_str(), "%u.%u", &v1, &v2) == 2) {
+        if (v1 < 256 && v1 < 256) {
+            *vt_value = (mxfVersionType)((v1 & 0xff) << 8 | (v2 & 0xff));
+            return true;
+        }
+    } else if (sscanf(value.c_str(), "%u", &v1) == 1 && v1 < 65536) {
+        *vt_value = (mxfVersionType)v1;
+        return true;
+    }
+
+    log_warn("Invalid version type value '%s'\n", value.c_str());
     return false;
 }
 
@@ -495,6 +513,18 @@ bool FrameworkHelper::SetProperty(string name, string value)
             }
 
             mFramework->setRationalItem(&c_item_def->key, rational_value);
+            break;
+        }
+        case MXF_VERSIONTYPE_TYPE:
+        {
+            mxfVersionType vt_value = 0;
+            if (!parse_version_type(value, &vt_value)) {
+                log_warn("Invalid framework property value %s::%s '%s'\n",  mFrameworkInfo->name, name.c_str(),
+                         value.c_str());
+                return false;
+            }
+
+            mFramework->setVersionTypeItem(&c_item_def->key, vt_value);
             break;
         }
         default:
