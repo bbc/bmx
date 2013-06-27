@@ -88,6 +88,7 @@ public:
     void SetPackageResolver(MXFPackageResolver *resolver, bool take_ownership);
     void SetFileFactory(MXFFileFactory *factory, bool take_ownership);
     virtual void SetEmptyFrames(bool enable);
+    void SetST436ManifestFrameCount(uint32_t count);     // default: 2 frames used to extract manifest
 
     OpenResult Open(std::string filename);
     OpenResult Open(mxfpp::File *file, std::string filename);
@@ -186,8 +187,8 @@ private:
 
     bool InternalIsEnabled() const;
 
-    bool CheckRequireFirstFrameInfo();
-    bool ExtractInfoFromFirstFrame();
+    void CheckRequireFrameInfo();
+    void ExtractFrameInfo();
 
     void StartRead();
     void CompleteRead();
@@ -230,7 +231,8 @@ private:
 
     EssenceReader *mEssenceReader;
 
-    bool mRequireFirstFrameInfo;
+    uint32_t mRequireFrameInfoCount;
+    uint32_t mST436ManifestCount;
 };
 
 

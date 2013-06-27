@@ -156,7 +156,8 @@ MXFFileReader::MXFFileReader()
     mReadDuration = -1;
     mFileOrigin = 0;
     mEssenceReader = 0;
-    mRequireFirstFrameInfo = false;
+    mRequireFrameInfoCount = 0;
+    mST436ManifestCount = 2;
 
     mDataModel = new DataModel();
 
@@ -211,6 +212,11 @@ void MXFFileReader::SetEmptyFrames(bool enable)
     size_t i;
     for (i = 0; i < mTrackReaders.size(); i++)
         mTrackReaders[i]->SetEmptyFrames(enable);
+}
+
+void MXFFileReader::SetST436ManifestFrameCount(uint32_t count)
+{
+    mST436ManifestCount = count;
 }
 
 MXFFileReader::OpenResult MXFFileReader::Open(string filename)
@@ -347,9 +353,9 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
         if (!mInternalTrackReaders.empty()) {
             mEssenceReader = new EssenceReader(this, file_is_complete);
 
-            mRequireFirstFrameInfo = CheckRequireFirstFrameInfo();
-            if (mRequireFirstFrameInfo)
-                mRequireFirstFrameInfo = !ExtractInfoFromFirstFrame();
+            CheckRequireFrameInfo();
+            if (mRequireFrameInfoCount > 0)
+                ExtractFrameInfo();
         }
 
 
@@ -486,11 +492,11 @@ uint32_t MXFFileReader::Read(uint32_t num_samples, bool is_top)
     mReadError = false;
     mReadErrorMessage.clear();
 
-    if (mRequireFirstFrameInfo) {
-        mRequireFirstFrameInfo = !ExtractInfoFromFirstFrame();
-        if (mRequireFirstFrameInfo) {
+    if (mRequireFrameInfoCount > 0) {
+        ExtractFrameInfo();
+        if (mRequireFrameInfoCount > 0) {
             mReadError = true;
-            mReadErrorMessage = "Failed to extract information from the first frame";
+            mReadErrorMessage = "Failed to extract information from frame(s)";
             return 0;
         }
     }
@@ -1765,7 +1771,7 @@ bool MXFFileReader::HaveInterFrameEncodingTrack() const
     return false;
 }
 
-bool MXFFileReader::CheckRequireFirstFrameInfo()
+void MXFFileReader::CheckRequireFrameInfo()
 {
     size_t i;
     for (i = 0; i < mInternalTrackReaders.size(); i++) {
@@ -1777,34 +1783,47 @@ bool MXFFileReader::CheckRequireFirstFrameInfo()
                 track_info->essence_type == AVCI100_720P ||
                 track_info->essence_type == AVCI50_1080I ||
                 track_info->essence_type == AVCI50_1080P ||
-                track_info->essence_type == AVCI50_720P ||
-                track_info->essence_type == VBI_DATA ||
-                track_info->essence_type == ANC_DATA)
+                track_info->essence_type == AVCI50_720P)
             {
-                return true;
+                if (mRequireFrameInfoCount < 1)
+                    mRequireFrameInfoCount = 1;
+            }
+            else if (track_info->essence_type == VBI_DATA ||
+                     track_info->essence_type == ANC_DATA)
+            {
+                if (mRequireFrameInfoCount < mST436ManifestCount)
+                    mRequireFrameInfoCount = mST436ManifestCount;
             }
         }
     }
-
-    return false;
 }
 
-bool MXFFileReader::ExtractInfoFromFirstFrame()
+void MXFFileReader::ExtractFrameInfo()
 {
-    bool result = false;
     int64_t ess_reader_pos = mEssenceReader->GetPosition();
 
     SetTemporaryFrameBuffer(true);
     mEssenceReader->Seek(0);
 
+    bool have_first = false;
     Frame *frame = 0;
     try
     {
+        size_t i;
+        for (i = 0; i < mInternalTrackReaders.size(); i++) {
+            MXFDataTrackInfo *data_info = dynamic_cast<MXFDataTrackInfo*>(mInternalTrackReaders[i]->GetTrackInfo());
+            if (data_info) {
+                data_info->vbi_manifest.clear();
+                data_info->anc_manifest.clear();
+            }
+        }
+
+        uint32_t f;
+        for (f = 0; f < mRequireFrameInfoCount; f++) {
         if (mEssenceReader->Read(1) != 1)
             throw true;
 
         AVCIEssenceParser avci_parser;
-        size_t i;
         for (i = 0; i < mInternalTrackReaders.size(); i++) {
             Frame *frame = mInternalTrackReaders[i]->GetFrameBuffer()->GetLastFrame(true);
             if (!frame || frame->IsEmpty()) {
@@ -1818,17 +1837,18 @@ bool MXFFileReader::ExtractInfoFromFirstFrame()
             MXFSoundTrackInfo *sound_info = dynamic_cast<MXFSoundTrackInfo*>(track_info);
             MXFDataTrackInfo *data_info = dynamic_cast<MXFDataTrackInfo*>(track_info);
 
-            if (track_info->essence_type == D10_AES3_PCM)
+            if (f == 0 && track_info->essence_type == D10_AES3_PCM)
             {
                 if (frame->GetSize() >= 4)
                     sound_info->d10_aes3_valid_flags = frame->GetBytes()[3];
             }
-            else if (track_info->essence_type == AVCI100_1080I ||
-                     track_info->essence_type == AVCI100_1080P ||
-                     track_info->essence_type == AVCI100_720P ||
-                     track_info->essence_type == AVCI50_1080I ||
-                     track_info->essence_type == AVCI50_1080P ||
-                     track_info->essence_type == AVCI50_720P)
+            else if (f == 0 &&
+                        (track_info->essence_type == AVCI100_1080I ||
+                         track_info->essence_type == AVCI100_1080P ||
+                         track_info->essence_type == AVCI100_720P ||
+                         track_info->essence_type == AVCI50_1080I ||
+                         track_info->essence_type == AVCI50_1080P ||
+                         track_info->essence_type == AVCI50_720P))
             {
                 avci_parser.ParseFrameInfo(frame->GetBytes(), frame->GetSize());
                 picture_info->have_avci_header = avci_parser.HaveSequenceParameterSet();
@@ -1902,27 +1922,28 @@ bool MXFFileReader::ExtractInfoFromFirstFrame()
 
             delete frame;
             frame = 0;
+            have_first = true;
+        }
         }
 
-        result = true;
+        mRequireFrameInfoCount = 0;
     }
     catch (const bool &ex)
     {
-        if (ex)
-            log_warn("No essence data means no information could be extracted from the first frame\n");
+        if (ex) {
+            log_warn("Reached the end of the essence data whilst extracting information\n");
+            if (have_first) // good enough to continue
+                mRequireFrameInfoCount = 0;
+        }
         delete frame;
-        result = ex;
     }
     catch (...)
     {
         delete frame;
-        result = false;
     }
 
     SetTemporaryFrameBuffer(false);
     mEssenceReader->Seek(ess_reader_pos);
-
-    return result;
 }
 
 void MXFFileReader::StartRead()
