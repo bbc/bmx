@@ -346,7 +346,7 @@ static int next_bits(ParseContext *context, uint8_t num_bits, uint8_t *advance_b
         return 0;
 
     byte = &context->buffer[context->bit_pos >> 3];
-    min_consume_bits = (context->bit_pos & 0x07) + num_bits;
+    min_consume_bits = (uint8_t)((context->bit_pos & 0x07) + num_bits);
     context->next_value = 0;
     while (consumed_bits < min_consume_bits) {
         if (*byte == 0x03 && context->bit_pos + consumed_bits >= 16 && byte[-1] == 0x00 && byte[-2] == 0x00) {
