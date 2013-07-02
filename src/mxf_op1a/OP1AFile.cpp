@@ -105,6 +105,8 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mFrameWrapped = true;
     mOutputStartOffset = 0;
     mOutputEndOffset = 0;
+    mHaveANCTrack = false;
+    mHaveVBITrack = false;
     mDataModel = 0;
     mHeaderMetadata = 0;
     mHeaderMetadataEndPos = 0;
@@ -224,6 +226,17 @@ void OP1AFile::SetOutputEndOffset(int64_t offset)
 
 OP1ATrack* OP1AFile::CreateTrack(EssenceType essence_type)
 {
+    if (essence_type == ANC_DATA) {
+        if (mHaveANCTrack)
+            BMX_EXCEPTION(("Only a single ST 436 ANC track is allowed"));
+        mHaveANCTrack = true;
+    }
+    if (essence_type == VBI_DATA) {
+        if (mHaveVBITrack)
+            BMX_EXCEPTION(("Only a single ST 436 VBI track is allowed"));
+        mHaveVBITrack = true;
+    }
+
     MXFDataDefEnum data_def = convert_essence_type_to_data_def(essence_type);
     uint32_t track_id;
     uint8_t track_type_number;

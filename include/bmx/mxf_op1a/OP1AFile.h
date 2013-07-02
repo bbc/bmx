@@ -153,6 +153,8 @@ private:
     std::vector<OP1ATrack*> mTracks;
     std::map<uint32_t, OP1ATrack*> mTrackMap;
     std::map<MXFDataDefEnum, uint8_t> mTrackCounts;
+    bool mHaveANCTrack;
+    bool mHaveVBITrack;
 
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;
