@@ -184,23 +184,23 @@ static const char* get_bool_string(bool value)
         return "false";
 }
 
-static const char* get_rational_string(mxfRational ratio)
+static string get_rational_string(mxfRational ratio)
 {
-    static char buf[32];
+    char buf[32];
     bmx_snprintf(buf, sizeof(buf), "%d/%d", ratio.numerator, ratio.denominator);
     return buf;
 }
 
-static char* get_date_string(mxfTimestamp timestamp)
+static string get_date_string(mxfTimestamp timestamp)
 {
-    static char buf[64];
+    char buf[64];
     bmx_snprintf(buf, sizeof(buf), "%d-%02u-%02u", timestamp.year, timestamp.month, timestamp.day);
     return buf;
 }
 
-static char* get_version_type_string(mxfVersionType version)
+static string get_version_type_string(mxfVersionType version)
 {
-    static char buf[16];
+    char buf[16];
     bmx_snprintf(buf, sizeof(buf), "%u.%u", (version >> 8) & 0xff, version & 0xff);
     return buf;
 }
@@ -210,7 +210,7 @@ static void print_core_framework(AS11CoreFramework *cf, mxfVersionType shim_vers
     printf("  AS-11 Core Framework:\n");
     printf("      ShimName                  : %s\n", cf->GetShimName().c_str());
     if (shim_version > VERSION_TYPE_VAL(1, 0) || cf->haveItem(&MXF_ITEM_K(AS11CoreFramework, AS11ShimVersion)))
-        printf("      ShimVersion               : %s\n", get_version_type_string(cf->GetShimVersion()));
+        printf("      ShimVersion               : %s\n", get_version_type_string(cf->GetShimVersion()).c_str());
     printf("      SeriesTitle               : %s\n", cf->GetSeriesTitle().c_str());
     printf("      ProgrammeTitle            : %s\n", cf->GetProgrammeTitle().c_str());
     printf("      EpisodeTitleNumber        : %s\n", cf->GetEpisodeTitleNumber().c_str());
@@ -245,7 +245,7 @@ static void print_uk_dpp_framework(UKDPPFramework *udf, Timecode start_timecode,
     if (udf->HaveDistributor())
         printf("      Distributor               : %s\n", udf->GetDistributor().c_str());
     if (udf->HavePictureRatio())
-        printf("      PictureRatio              : %s\n", get_rational_string(udf->GetPictureRatio()));
+        printf("      PictureRatio              : %s\n", get_rational_string(udf->GetPictureRatio()).c_str());
     printf("      ThreeD                    : %s\n", get_bool_string(udf->Get3D()));
     if (udf->Have3DType()) {
         printf("      ThreeDType                : %u (%s)\n",
@@ -313,7 +313,7 @@ static void print_uk_dpp_framework(UKDPPFramework *udf, Timecode start_timecode,
                udf->GetSignLanguage(),
                get_enum_string(udf->GetSignLanguage(), SIGN_LANGUAGE_STR, BMX_ARRAY_SIZE(SIGN_LANGUAGE_STR)));
     }
-    printf("      CompletionDate            : %s\n", get_date_string(udf->GetCompletionDate()));
+    printf("      CompletionDate            : %s\n", get_date_string(udf->GetCompletionDate()).c_str());
     if (udf->HaveTextlessElementsExist())
         printf("      TextlessElementsExist     : %s\n", get_bool_string(udf->GetTextlessElementsExist()));
     if (udf->HaveProgrammeHasText())
