@@ -1864,58 +1864,20 @@ void MXFFileReader::ExtractFrameInfo()
                 {
                     ST436Element element(track_info->essence_type == VBI_DATA);
                     element.Parse(frame->GetBytes(), frame->GetSize());
+
                     if (track_info->essence_type == VBI_DATA) {
                         size_t i;
                         for (i = 0; i < element.lines.size(); i++) {
-                            const ST436Line &line = element.lines[i];
-                            VBIManifestElement element;
-                            element.line_number   = line.line_number;
-                            element.wrapping_type = line.wrapping_type;
-                            element.sample_coding = line.payload_sample_coding;
-                            data_info->AppendUniqueVBIElement(element);
+                            VBIManifestElement manifest_element;
+                            manifest_element.Parse(&element.lines[i]);
+                            data_info->AppendUniqueVBIElement(manifest_element);
                         }
                     } else {
                         size_t i;
                         for (i = 0; i < element.lines.size(); i++) {
-                            const ST436Line &line = element.lines[i];
-                            ANCManifestElement element;
-                            element.line_number   = line.line_number;
-                            element.wrapping_type = line.wrapping_type;
-                            element.sample_coding = line.payload_sample_coding;
-                            if (line.payload_sample_coding == ANC_8_BIT_COMP_LUMA ||
-                                line.payload_sample_coding == ANC_8_BIT_COMP_COLOR ||
-                                line.payload_sample_coding == ANC_8_BIT_COMP_LUMA_COLOR ||
-                                line.payload_sample_coding == ANC_8_BIT_COMP_LUMA_ERROR ||
-                                line.payload_sample_coding == ANC_8_BIT_COMP_COLOR_ERROR ||
-                                line.payload_sample_coding == ANC_8_BIT_COMP_LUMA_COLOR_ERROR)
-                            {
-                                if (line.payload_size > 0) {
-                                    element.did = line.payload_data[0];
-                                    if (element.did && line.payload_size > 1)
-                                        element.sdid = line.payload_data[1];
-                                }
-                            }
-                            else if (line.payload_sample_coding == ANC_10_BIT_COMP_LUMA ||
-                                     line.payload_sample_coding == ANC_10_BIT_COMP_COLOR ||
-                                     line.payload_sample_coding == ANC_10_BIT_COMP_LUMA_COLOR)
-                            {
-                                // 8-bit ANC packet coding contains _lower-order_ 8 bits of 10-bit samples
-                                // the parity and inverted parity high-order bits are lost
-                                if (line.payload_size > 1) {
-                                    element.did = ((line.payload_data[0] & 0x3f) << 2) |
-                                                  ((line.payload_data[1] & 0xc0) >> 6);
-                                    if (element.did && line.payload_size > 2) {
-                                        element.sdid = ((line.payload_data[1] & 0x0f) << 4) |
-                                                       ((line.payload_data[2] & 0xf0) >> 4);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                log_warn("Unsupported sample coding %u for ANC data manifest extraction\n",
-                                         line.payload_sample_coding);
-                            }
-                            data_info->AppendUniqueANCElement(element);
+                            ANCManifestElement manifest_element;
+                            manifest_element.Parse(&element.lines[i]);
+                            data_info->AppendUniqueANCElement(manifest_element);
                         }
                     }
                 }

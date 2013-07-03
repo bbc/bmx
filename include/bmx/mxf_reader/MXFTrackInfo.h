@@ -134,10 +134,14 @@ public:
 };
 
 
+class ST436Line;
+
 class VBIManifestElement
 {
 public:
     VBIManifestElement();
+
+    void Parse(const ST436Line *line);
 
     bool operator==(const VBIManifestElement &right) const;
 
@@ -151,6 +155,8 @@ class ANCManifestElement
 {
 public:
     ANCManifestElement();
+
+    void Parse(const ST436Line *line);
 
     bool operator==(const ANCManifestElement &right) const;
 

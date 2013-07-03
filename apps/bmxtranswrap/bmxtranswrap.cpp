@@ -52,6 +52,7 @@
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as02/AS02PictureTrack.h>
 #include <bmx/wave/WaveFileIO.h>
+#include <bmx/st436/ST436Element.h>
 #include <bmx/URI.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
@@ -113,6 +114,44 @@ extern bool BMX_REGRESSION_TEST;
 
 
 
+static bool filter_anc_manifest_element(const ANCManifestElement *element, set<ANCDataType> &filter)
+{
+    set<ANCDataType>::const_iterator iter;
+    for (iter = filter.begin(); iter != filter.end(); iter++) {
+        if (*iter == ALL_ANC_DATA) {
+            return true;
+        } else if (*iter == ST2020_ANC_DATA) {
+            if (element->did == 0x45)
+                return true;
+        } else if (*iter == ST2016_ANC_DATA) {
+            if (element->did  == 0x41 && (element->sdid == 0x05 || element->sdid == 0x06))
+                return true;
+        } else if (*iter == ST12M_ANC_DATA) {
+            if (element->did  == 0x60 && element->sdid == 0x60)
+                return true;
+        } else if (*iter == ST334_ANC_DATA) {
+            if ((element->did == 0x61 && (element->sdid == 0x01 || element->sdid == 0x02)) ||
+                (element->did == 0x62 && (element->sdid == 0x02)))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+static bool filter_anc_manifest(const MXFDataTrackInfo *data_info, set<ANCDataType> &filter)
+{
+    size_t i;
+    for (i = 0; i < data_info->anc_manifest.size(); i++) {
+        if (filter_anc_manifest_element(&data_info->anc_manifest[i], filter))
+            return true;
+    }
+
+    return false;
+}
+
 static uint32_t read_samples(MXFReader *reader, const vector<uint32_t> &sample_sequence,
                              uint32_t *sample_sequence_offset, uint32_t max_samples_per_read)
 {
@@ -146,6 +185,33 @@ static void write_padding_samples(Frame *frame, OutputTrack *output_track, bmx::
     memset(buffer->GetBytes(), 0, size);
 
     output_track->track->WriteSamples(buffer->GetBytes(), size, frame->request_num_samples);
+}
+
+static void write_anc_samples(Frame *frame, OutputTrack *output_track, set<ANCDataType> &filter, bmx::ByteArray &anc_buffer)
+{
+    BMX_CHECK(frame->num_samples == 1);
+
+    if (filter.empty() || (filter.size() == 1 && (*filter.begin()) == ALL_ANC_DATA)) {
+        output_track->track->WriteSamples(frame->GetBytes(), frame->GetSize(), frame->num_samples);
+        return;
+    }
+
+    ST436Element input_element(false);
+    input_element.Parse(frame->GetBytes(), frame->GetSize());
+
+    ST436Element output_element(false);
+    size_t i;
+    for (i = 0; i < input_element.lines.size(); i++) {
+        ANCManifestElement manifest_element;
+        manifest_element.Parse(&input_element.lines[i]);
+        if (filter_anc_manifest_element(&manifest_element, filter))
+            output_element.lines.push_back(input_element.lines[i]);
+    }
+
+    anc_buffer.SetSize(0);
+    output_element.Construct(&anc_buffer);
+
+    output_track->track->WriteSamples(anc_buffer.GetBytes(), anc_buffer.GetSize(), 1);
 }
 
 static void usage(const char *cmd)
@@ -251,6 +317,17 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --single-pass           Write file in a single pass\n");
     fprintf(stderr, "                            Header and body partitions will be incomplete for as11op1a/op1a if the number if essence container bytes per edit unit is variable\n");
     fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the output file. This requires writing in a single pass (--single-pass is assumed)\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "  as11op1a/op1a:\n");
+    fprintf(stderr, "    --pass-anc <filter>     Pass through ST 436 ANC data tracks\n");
+    fprintf(stderr, "                            <filter> is a comma separated list of ANC data types to pass through\n");
+    fprintf(stderr, "                            The following ANC data types are supported in <filter>:\n");
+    fprintf(stderr, "                                all      : pass through all ANC data\n");
+    fprintf(stderr, "                                st2020   : SMPTE ST 2020 / RDD 6 audio metadata\n");
+    fprintf(stderr, "                                st2016   : SMPTE ST 2016-3/ AFD, bar and pan-scan data\n");
+    fprintf(stderr, "                                st12     : SMPTE ST 12 Ancillary timecode\n");
+    fprintf(stderr, "                                st334    : SMPTE ST 334-1 EIA 708B, EIA 608 and data broadcast (DTV)\n");
+    fprintf(stderr, "    --pass-vbi              Pass through ST 436 VBI data tracks\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a:\n");
     fprintf(stderr, "    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support\n");
@@ -384,6 +461,8 @@ int main(int argc, const char** argv)
     bool replace_avid_avcihead = false;
     bool avid_gf = false;
     int64_t avid_gf_duration = -1;
+    set<ANCDataType> pass_anc;
+    bool pass_vbi = false;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -924,6 +1003,26 @@ int main(int argc, const char** argv)
         {
             output_file_md5 = true;
         }
+        else if (strcmp(argv[cmdln_index], "--pass-anc") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_anc_data_types(argv[cmdln_index + 1], &pass_anc))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--pass-vbi") == 0)
+        {
+            pass_vbi = true;
+        }
         else if (strcmp(argv[cmdln_index], "--min-part") == 0)
         {
             min_part = true;
@@ -1323,13 +1422,15 @@ int main(int argc, const char** argv)
 
         // check support for tracks and disable unsupported track types
 
+        bool have_vbi_track = false, have_anc_track = false;
         for (i = 0; i < reader->GetNumTrackReaders(); i++) {
             MXFTrackReader *track_reader = reader->GetTrackReader(i);
             const MXFTrackInfo *input_track_info = track_reader->GetTrackInfo();
 
             const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
+            const MXFDataTrackInfo *input_data_info = dynamic_cast<const MXFDataTrackInfo*>(input_track_info);
 
-            bool is_supported = true;
+            bool is_enabled = true;
             if (input_track_info->essence_type == WAVE_PCM)
             {
                 Rational sampling_rate = input_sound_info->sampling_rate;
@@ -1339,18 +1440,18 @@ int main(int argc, const char** argv)
                              essence_type_to_string(input_track_info->essence_type),
                              sampling_rate.numerator, sampling_rate.denominator,
                              clip_type_to_string(clip_type, clip_sub_type).c_str());
-                    is_supported = false;
+                    is_enabled = false;
                 } else if (input_sound_info->bits_per_sample == 0 || input_sound_info->bits_per_sample > 32) {
                     log_warn("Track %"PRIszt" (%s) bits per sample %u not supported\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              input_sound_info->bits_per_sample);
-                    is_supported = false;
+                    is_enabled = false;
                 } else if (input_sound_info->channel_count == 0) {
                     log_warn("Track %"PRIszt" (%s) has zero channel count\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type));
-                    is_supported = false;
+                    is_enabled = false;
                 }
             }
             else if (input_track_info->essence_type == D10_AES3_PCM)
@@ -1360,14 +1461,14 @@ int main(int argc, const char** argv)
                     log_warn("Track %"PRIszt" essence type D-10 AES-3 audio sampling rate %d/%d not supported\n",
                              i,
                              input_sound_info->sampling_rate.numerator, input_sound_info->sampling_rate.denominator);
-                    is_supported = false;
+                    is_enabled = false;
                 }
                 else if (input_sound_info->bits_per_sample == 0 || input_sound_info->bits_per_sample > 32)
                 {
                     log_warn("Track %"PRIszt" essence type D-10 AES-3 audio bits per sample %u not supported\n",
                              i,
                              input_sound_info->bits_per_sample);
-                    is_supported = false;
+                    is_enabled = false;
                 }
             }
             else if (input_track_info->essence_type == UNKNOWN_ESSENCE_TYPE ||
@@ -1376,7 +1477,7 @@ int main(int argc, const char** argv)
                      input_track_info->essence_type == DATA_ESSENCE)
             {
                 log_warn("Track %"PRIszt" has unknown essence type\n", i);
-                is_supported = false;
+                is_enabled = false;
             }
             else
             {
@@ -1386,14 +1487,39 @@ int main(int argc, const char** argv)
                              essence_type_to_string(input_track_info->essence_type),
                              input_track_info->edit_rate.numerator, input_track_info->edit_rate.denominator,
                              frame_rate.numerator, frame_rate.denominator);
-                    is_supported = false;
+                    is_enabled = false;
                 } else if (!ClipWriterTrack::IsSupported(clip_type, input_track_info->essence_type, frame_rate)) {
                     log_warn("Track %"PRIszt" essence type '%s' @%d/%d fps not supported by clip type '%s'\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              frame_rate.numerator, frame_rate.denominator,
                              clip_type_to_string(clip_type, clip_sub_type).c_str());
-                    is_supported = false;
+                    is_enabled = false;
+                } else if (input_track_info->essence_type == VBI_DATA) {
+                    if (!pass_vbi) {
+                        log_warn("Not passing through VBI data track %"PRIszt"\n", i);
+                        is_enabled = false;
+                    } else if (have_vbi_track) {
+                        log_warn("Already have a VBI track; not passing through VBI data track %"PRIszt"\n", i);
+                        is_enabled = false;
+                    } else {
+                        have_vbi_track = true;
+                    }
+                } else if (input_track_info->essence_type == ANC_DATA) {
+                    if (pass_anc.empty()) {
+                        log_warn("Not passing through ANC data track %"PRIszt"\n", i);
+                        is_enabled = false;
+                    } else if (have_anc_track) {
+                        log_warn("Already have an ANC track; not passing through ANC data track %"PRIszt"\n", i);
+                        is_enabled = false;
+                    } else {
+                        if (filter_anc_manifest(input_data_info, pass_anc)) {
+                            have_anc_track = true;
+                        } else {
+                            log_warn("No match found in ANC data manifest; not passing through ANC data track %"PRIszt"\n", i);
+                            is_enabled = false;
+                        }
+                    }
                 }
 
                 if ((input_track_info->essence_type == AVCI100_1080I ||
@@ -1413,16 +1539,16 @@ int main(int argc, const char** argv)
                     log_warn("Track %"PRIszt" (essence type '%s') does not have sequence and picture parameter sets\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type));
-                    is_supported = false;
+                    is_enabled = false;
                 }
             }
 
-            if (!is_supported) {
-                log_warn("Ignoring unsupported track %"PRIszt" (essence type '%s')\n",
+            if (!is_enabled) {
+                log_warn("Ignoring track %"PRIszt" (essence type '%s')\n",
                           i, essence_type_to_string(input_track_info->essence_type));
             }
 
-            track_reader->SetEnable(is_supported);
+            track_reader->SetEnable(is_enabled);
         }
 
         if (!reader->IsEnabled()) {
@@ -2120,6 +2246,7 @@ int main(int argc, const char** argv)
         int64_t container_duration;
         int64_t prev_container_duration = -1;
         bmx::ByteArray sound_buffer;
+        bmx::ByteArray anc_buffer;
         while (read_duration < 0 || total_read < read_duration) {
             uint32_t num_read = read_samples(reader, sample_sequence, &sample_sequence_offset, max_samples_per_read);
             if (num_read == 0) {
@@ -2234,6 +2361,10 @@ int main(int argc, const char** argv)
                     output_track.track->WriteSamples(sound_buffer.GetBytes(),
                                                      num_samples * output_track.block_align,
                                                      num_samples);
+                }
+                else if (output_track.input_track_info->essence_type == ANC_DATA)
+                {
+                    write_anc_samples(frame, &output_track, pass_anc, anc_buffer);
                 }
                 else
                 {

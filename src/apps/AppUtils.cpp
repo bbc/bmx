@@ -620,6 +620,38 @@ bool bmx::parse_klv_opt(const char *klv_opt_str, mxfKey *key, uint32_t *track_nu
     return true;
 }
 
+bool bmx::parse_anc_data_types(const char *types_str, set<ANCDataType> *types)
+{
+    const char *types_str_ptr = types_str;
+
+    while (types_str_ptr && *types_str_ptr) {
+        while (*types_str_ptr && (*types_str_ptr == ' ' || *types_str_ptr == ','))
+            types_str_ptr++;
+        if (!(*types_str_ptr))
+            break;
+
+        if (strncmp(types_str_ptr, "all", strlen("all")) == 0) {
+            types->clear();
+            types->insert(ALL_ANC_DATA);
+            break;
+        } else if (strncmp(types_str_ptr, "st2020", strlen("st2020")) == 0) {
+            types->insert(ST2020_ANC_DATA);
+        } else if (strncmp(types_str_ptr, "st2016", strlen("st2016")) == 0) {
+            types->insert(ST2016_ANC_DATA);
+        } else if (strncmp(types_str_ptr, "st12", strlen("st12")) == 0) {
+            types->insert(ST12M_ANC_DATA);
+        } else if (strncmp(types_str_ptr, "st334", strlen("st334")) == 0) {
+            types->insert(ST334_ANC_DATA);
+        } else {
+            return false;
+        }
+
+        types_str_ptr = strchr(types_str_ptr, ',');
+    }
+
+    return !types->empty();
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {

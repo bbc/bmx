@@ -37,6 +37,7 @@
 
 #include <bmx/BMXTypes.h>
 #include <bmx/mxf_reader/MXFTrackInfo.h>
+#include <bmx/st436/ST436Element.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -233,6 +234,15 @@ VBIManifestElement::VBIManifestElement()
     sample_coding = 0;
 }
 
+void VBIManifestElement::Parse(const ST436Line *line)
+{
+    BMX_CHECK(line->is_vbi);
+
+    line_number   = line->line_number;
+    wrapping_type = line->wrapping_type;
+    sample_coding = line->payload_sample_coding;
+}
+
 bool VBIManifestElement::operator==(const VBIManifestElement &right) const
 {
     return line_number   == right.line_number &&
@@ -249,6 +259,51 @@ ANCManifestElement::ANCManifestElement()
     sample_coding = 0;
     did = 0;
     sdid = 0;
+}
+
+void ANCManifestElement::Parse(const ST436Line *line)
+{
+    BMX_CHECK(!line->is_vbi);
+
+    line_number   = line->line_number;
+    wrapping_type = line->wrapping_type;
+    sample_coding = line->payload_sample_coding;
+    did           = 0;
+    sdid          = 0;
+
+    if (line->payload_sample_coding == ANC_8_BIT_COMP_LUMA ||
+        line->payload_sample_coding == ANC_8_BIT_COMP_COLOR ||
+        line->payload_sample_coding == ANC_8_BIT_COMP_LUMA_COLOR ||
+        line->payload_sample_coding == ANC_8_BIT_COMP_LUMA_ERROR ||
+        line->payload_sample_coding == ANC_8_BIT_COMP_COLOR_ERROR ||
+        line->payload_sample_coding == ANC_8_BIT_COMP_LUMA_COLOR_ERROR)
+    {
+        if (line->payload_size > 0) {
+            did = line->payload_data[0];
+            if (did && line->payload_size > 1)
+                sdid = line->payload_data[1];
+        }
+    }
+    else if (line->payload_sample_coding == ANC_10_BIT_COMP_LUMA ||
+             line->payload_sample_coding == ANC_10_BIT_COMP_COLOR ||
+             line->payload_sample_coding == ANC_10_BIT_COMP_LUMA_COLOR)
+    {
+        // 8-bit ANC packet coding contains _lower-order_ 8 bits of 10-bit samples
+        // the parity and inverted parity high-order bits are lost
+        if (line->payload_size > 1) {
+            did = ((line->payload_data[0] & 0x3f) << 2) |
+                  ((line->payload_data[1] & 0xc0) >> 6);
+            if (did && line->payload_size > 2) {
+                sdid = ((line->payload_data[1] & 0x0f) << 4) |
+                       ((line->payload_data[2] & 0xf0) >> 4);
+            }
+        }
+    }
+    else
+    {
+        log_debug("Unsupported sample coding %u for ANC data manifest extraction\n",
+                  line->payload_sample_coding);
+    }
 }
 
 bool ANCManifestElement::operator==(const ANCManifestElement &right) const

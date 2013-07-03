@@ -34,6 +34,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 
 #include <bmx/BMXTypes.h>
 #include <bmx/EssenceType.h>
@@ -53,6 +54,15 @@ typedef enum
     NO_CLIP_SUB_TYPE,
     AS11_CLIP_SUB_TYPE,
 } ClipSubType;
+
+typedef enum
+{
+    ALL_ANC_DATA,
+    ST2020_ANC_DATA,
+    ST2016_ANC_DATA,
+    ST12M_ANC_DATA,
+    ST334_ANC_DATA,
+} ANCDataType;
 
 typedef struct
 {
@@ -99,6 +109,7 @@ bool parse_avid_import_name(const char *import_name, URI *uri);
 bool parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type, ClipSubType *clip_sub_type);
 bool parse_mic_type(const char *mic_type_str, MICType *mic_type);
 bool parse_klv_opt(const char *klv_opt_str, mxfKey *key, uint32_t *track_num);
+bool parse_anc_data_types(const char *types_str, std::set<ANCDataType> *types);
 
 std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def);
 
