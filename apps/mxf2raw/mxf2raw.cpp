@@ -74,6 +74,8 @@ using namespace mxfpp;
 #define DEFAULT_GF_RETRY_DELAY      1.0
 #define DEFAULT_GF_RATE_AFTER_FAIL  1.5
 
+#define DEFAULT_ST436_MANIFEST_COUNT    2
+
 
 static const char APP_NAME[]    = "mxf2raw";
 
@@ -822,6 +824,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          Archive Preservation Project events metadata\n");
     fprintf(stderr, " --app-check-issues    Check that there are no known issues with the file\n");
     fprintf(stderr, " --avid                Print Avid metadata to stdout (single file only)\n");
+    fprintf(stderr, " --st436-mf <count>    Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
 }
 
 int main(int argc, const char** argv)
@@ -867,6 +870,8 @@ int main(int argc, const char** argv)
     const char *app_tc_filename = 0;
     bool app_check_issues = false;
     set<MXFDataDefEnum> wrap_klv_mask;
+    uint32_t st436_manifest_count = DEFAULT_ST436_MANIFEST_COUNT;
+    unsigned int uvalue;
     int cmdln_index;
 
 
@@ -1172,6 +1177,23 @@ int main(int argc, const char** argv)
         {
             do_print_avid = true;
         }
+        else if (strcmp(argv[cmdln_index], "--st436-mf") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            st436_manifest_count = (uint32_t)(uvalue);
+            cmdln_index++;
+        }
         else
         {
             break;
@@ -1287,6 +1309,7 @@ int main(int argc, const char** argv)
                 MXFFileReader *grp_file_reader = new MXFFileReader();
                 grp_file_reader->SetFileFactory(&file_factory, false);
                 grp_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
+                grp_file_reader->SetST436ManifestFrameCount(st436_manifest_count);
                 result = grp_file_reader->Open(filenames[i]);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", get_input_filename(filenames[i]),
@@ -1307,6 +1330,7 @@ int main(int argc, const char** argv)
                 MXFFileReader *seq_file_reader = new MXFFileReader();
                 seq_file_reader->SetFileFactory(&file_factory, false);
                 seq_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
+                seq_file_reader->SetST436ManifestFrameCount(st436_manifest_count);
                 result = seq_file_reader->Open(filenames[i]);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", get_input_filename(filenames[i]),
@@ -1324,6 +1348,7 @@ int main(int argc, const char** argv)
             file_reader = new MXFFileReader();
             file_reader->SetFileFactory(&file_factory, false);
             file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
+            file_reader->SetST436ManifestFrameCount(st436_manifest_count);
             if (do_print_as11)
                 as11_register_extensions(file_reader);
             if (do_print_app || app_events_mask || app_check_issues)
