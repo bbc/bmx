@@ -74,6 +74,8 @@ using namespace mxfpp;
 #define DEFAULT_GF_RETRY_DELAY      1.0
 #define DEFAULT_GF_RATE_AFTER_FAIL  1.5
 
+#define DEFAULT_ST436_MANIFEST_COUNT    2
+
 
 typedef struct
 {
@@ -328,6 +330,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "                                st12     : SMPTE ST 12 Ancillary timecode\n");
     fprintf(stderr, "                                st334    : SMPTE ST 334-1 EIA 708B, EIA 608 and data broadcast (DTV)\n");
     fprintf(stderr, "    --pass-vbi              Pass through ST 436 VBI data tracks\n");
+    fprintf(stderr, "    --st436-mf <count>      Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
+    fprintf(stderr, "                            The manifest is used at the start to determine whether an output ANC data track is created\n");
+    fprintf(stderr, "                            Set <count> to 0 to always create an ANC data track if the input has one\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a:\n");
     fprintf(stderr, "    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support\n");
@@ -463,6 +468,7 @@ int main(int argc, const char** argv)
     int64_t avid_gf_duration = -1;
     set<ANCDataType> pass_anc;
     bool pass_vbi = false;
+    uint32_t st436_manifest_count = DEFAULT_ST436_MANIFEST_COUNT;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -1023,6 +1029,23 @@ int main(int argc, const char** argv)
         {
             pass_vbi = true;
         }
+        else if (strcmp(argv[cmdln_index], "--st436-mf") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            st436_manifest_count = (uint32_t)(uvalue);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--min-part") == 0)
         {
             min_part = true;
@@ -1343,6 +1366,7 @@ int main(int argc, const char** argv)
                 MXFFileReader *grp_file_reader = new MXFFileReader();
                 grp_file_reader->SetFileFactory(&file_factory, false);
                 grp_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
+                grp_file_reader->SetST436ManifestFrameCount(st436_manifest_count);
                 result = grp_file_reader->Open(input_filenames[i]);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", input_filenames[i],
@@ -1363,6 +1387,7 @@ int main(int argc, const char** argv)
                 MXFFileReader *seq_file_reader = new MXFFileReader();
                 seq_file_reader->SetFileFactory(&file_factory, false);
                 seq_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
+                seq_file_reader->SetST436ManifestFrameCount(st436_manifest_count);
                 result = seq_file_reader->Open(input_filenames[i]);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", input_filenames[i],
@@ -1380,6 +1405,7 @@ int main(int argc, const char** argv)
             file_reader = new MXFFileReader();
             file_reader->SetFileFactory(&file_factory, false);
             file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
+            file_reader->SetST436ManifestFrameCount(st436_manifest_count);
             result = file_reader->Open(input_filenames[0]);
             if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                 log_error("Failed to open MXF file '%s': %s\n", input_filenames[0],
@@ -1513,7 +1539,7 @@ int main(int argc, const char** argv)
                         log_warn("Already have an ANC track; not passing through ANC data track %"PRIszt"\n", i);
                         is_enabled = false;
                     } else {
-                        if (filter_anc_manifest(input_data_info, pass_anc)) {
+                        if (st436_manifest_count == 0 || filter_anc_manifest(input_data_info, pass_anc)) {
                             have_anc_track = true;
                         } else {
                             log_warn("No match found in ANC data manifest; not passing through ANC data track %"PRIszt"\n", i);
