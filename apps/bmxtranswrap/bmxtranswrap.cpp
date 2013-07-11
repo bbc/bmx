@@ -51,6 +51,7 @@
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as02/AS02PictureTrack.h>
+#include <bmx/mxf_op1a/OP1ADataTrack.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/st436/ST436Element.h>
 #include <bmx/URI.h>
@@ -152,6 +153,50 @@ static bool filter_anc_manifest(const MXFDataTrackInfo *data_info, set<ANCDataTy
     }
 
     return false;
+}
+
+static uint32_t calc_st2020_max_size(const MXFDataTrackInfo *data_info)
+{
+    // The SDID identifies the first channel pair in the audio program
+    // Assume the audio program count equals the number of unique SDID values
+    // Also check for 10-bit sample coding
+    bool sample_coding_10bit = false;
+    set<uint8_t> sdids;
+    size_t i;
+    for (i = 0; i < data_info->anc_manifest.size(); i++) {
+        if (data_info->anc_manifest[i].did == 0x45) {
+            sdids.insert(data_info->anc_manifest[i].sdid);
+            if (data_info->anc_manifest[i].sample_coding == ANC_10_BIT_COMP_LUMA ||
+                data_info->anc_manifest[i].sample_coding == ANC_10_BIT_COMP_COLOR ||
+                data_info->anc_manifest[i].sample_coding == ANC_10_BIT_COMP_LUMA_COLOR)
+            {
+                sample_coding_10bit = true;
+            }
+        }
+    }
+    if (sdids.empty()) {
+        log_warn("Unable to calculate the maximum ANC frame element data size for ST 2020 because extracted manifest "
+                 "includes no ST 2020 data");
+        return 0;
+    }
+
+    // The maximum ANC packet size is limited by the Data Count (DC) byte and equals
+    //     DID (1) + SDID (1) + DC (1) + UDW (255) + CS (1) = 259 samples
+    // The ST 436 payload byte array data must be padded to a UInt32 boundary and therefore the
+    //   max size is 260 samples for 8-bit sample coding. For 10-bit encoding 3 samples are stored
+    //   in 4 bytes with 2 padding bits
+    uint32_t max_array_size;
+    if (sample_coding_10bit)
+        max_array_size = (259 + 2) / 3 * 4;
+    else
+        max_array_size = 260;
+
+    // A maximum of 2 ANC packets are required for an audio program metadata frame
+    // The maximum number of packets per video frame is 2
+    //     Method B: 2 packets if video frame rate <= 30 Hz; Method A: 2 packets if audio metadata exceeds max packet size
+    // ST 436 ANC element starts with a 2 byte packet count followed by (14 byte header + array data) for each packet
+
+    return 2 + (uint32_t)sdids.size() * 2 * (14 + max_array_size);
 }
 
 static uint32_t read_samples(MXFReader *reader, const vector<uint32_t> &sample_sequence,
@@ -333,6 +378,11 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --st436-mf <count>      Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
     fprintf(stderr, "                            The manifest is used at the start to determine whether an output ANC data track is created\n");
     fprintf(stderr, "                            Set <count> to 0 to always create an ANC data track if the input has one\n");
+    fprintf(stderr, "    --anc-const <size>      Use to indicate that the ST 436 ANC frame element data, excl. key and length, has a constant <size>. A variable size is assumed by default\n");
+    fprintf(stderr, "    --anc-max <size>        Use to indicate that the ST 436 ANC frame element data, excl. key and length, has a maximum <size>. A variable size is assumed by default\n");
+    fprintf(stderr, "    --st2020-max            The ST 436 ANC maximum frame element data size for ST 2020 only is calculated from the extracted manifest. Option '--pass-anc st2020' is required.\n");
+    fprintf(stderr, "    --vbi-const <size>      Use to indicate that the ST 436 VBI frame element data, excl. key and length, has a constant <size>. A variable size is assumed by default\n");
+    fprintf(stderr, "    --vbi-max <size>        Use to indicate that the ST 436 VBI frame element data, excl. key and length, has a maximum <size>. A variable size is assumed by default\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a:\n");
     fprintf(stderr, "    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support\n");
@@ -469,6 +519,11 @@ int main(int argc, const char** argv)
     set<ANCDataType> pass_anc;
     bool pass_vbi = false;
     uint32_t st436_manifest_count = DEFAULT_ST436_MANIFEST_COUNT;
+    uint32_t anc_const_size = 0;
+    uint32_t anc_max_size = 0;
+    bool st2020_max_size = false;
+    uint32_t vbi_const_size = 0;
+    uint32_t vbi_max_size = 0;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -1046,6 +1101,78 @@ int main(int argc, const char** argv)
             st436_manifest_count = (uint32_t)(uvalue);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--anc-const") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            anc_const_size = (uint32_t)(uvalue);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--anc-max") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            anc_max_size = (uint32_t)(uvalue);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--st2020-max") == 0)
+        {
+            st2020_max_size = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--vbi-const") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            vbi_const_size = (uint32_t)(uvalue);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vbi-max") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            vbi_max_size = (uint32_t)(uvalue);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--min-part") == 0)
         {
             min_part = true;
@@ -1292,6 +1419,12 @@ int main(int argc, const char** argv)
         {
             break;
         }
+    }
+
+    if (st2020_max_size && (pass_anc.size() != 1 || *pass_anc.begin() != ST2020_ANC_DATA)) {
+        usage(argv[0]);
+        fprintf(stderr, "Option '--st2020-max' requires '--pass st2020'\n");
+        return 1;
     }
 
     if (clip_type != CW_AVID_CLIP_TYPE)
@@ -2184,8 +2317,26 @@ int main(int argc, const char** argv)
                             output_track.track->SetSequenceOffset(input_sound_info->sequence_offset);
                         break;
                     case ANC_DATA:
+                        if (clip_type == CW_OP1A_CLIP_TYPE) {
+                            OP1ADataTrack *op1a_track = dynamic_cast<OP1ADataTrack*>(output_track.track->GetOP1ATrack());
+                            if (anc_const_size) {
+                                op1a_track->SetConstantDataSize(anc_const_size);
+                            } else if (anc_max_size) {
+                                op1a_track->SetMaxDataSize(anc_max_size);
+                            } else if (st2020_max_size) {
+                                op1a_track->SetMaxDataSize(calc_st2020_max_size(
+                                    dynamic_cast<const MXFDataTrackInfo*>(output_track.input_track_info)));
+                            }
+                        }
                         break;
                     case VBI_DATA:
+                        if (clip_type == CW_OP1A_CLIP_TYPE) {
+                            OP1ADataTrack *op1a_track = dynamic_cast<OP1ADataTrack*>(output_track.track->GetOP1ATrack());
+                            if (vbi_const_size)
+                                op1a_track->SetConstantDataSize(vbi_const_size);
+                            else if (vbi_max_size)
+                                op1a_track->SetMaxDataSize(vbi_max_size);
+                        }
                         break;
                     case D10_AES3_PCM:
                     case PICTURE_ESSENCE:

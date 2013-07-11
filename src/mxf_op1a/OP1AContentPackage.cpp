@@ -65,8 +65,7 @@ static bool compare_element(const OP1AContentPackageElement *left, const OP1ACon
 
 
 OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, MXFDataDefEnum data_def_,
-                                                     mxfKey element_key_, uint32_t kag_size_, uint8_t min_llen_,
-                                                     bool is_cbe_)
+                                                     mxfKey element_key_, uint32_t kag_size_, uint8_t min_llen_)
 {
     track_index = track_index_;
     element_key = element_key_;
@@ -74,7 +73,7 @@ OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, MXFD
     min_llen = min_llen_;
     essence_llen = FW_ESS_ELEMENT_LLEN;
     data_def = data_def_;
-    is_cbe = is_cbe_;
+    is_cbe = true;
     is_frame_wrapped = true;
     sample_size = 0;
     fixed_element_size = 0;
@@ -82,42 +81,10 @@ OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, MXFD
     nonfirst_sample_size = 0;
 }
 
-OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, mxfKey element_key_,
-                                                     uint32_t kag_size_, uint8_t min_llen_,
-                                                     uint32_t first_sample_size_, uint32_t nonfirst_sample_size_)
+void OP1AContentPackageElement::SetSampleSequence(const vector<uint32_t> &sample_sequence_, uint32_t sample_size_)
 {
-    track_index = track_index_;
-    element_key = element_key_;
-    kag_size = kag_size_;
-    min_llen = min_llen_;
-    essence_llen = FW_ESS_ELEMENT_LLEN;
-    data_def = MXF_PICTURE_DDEF;
-    is_cbe = true;
-    is_frame_wrapped = true;
-    sample_size = 0;
-    fixed_element_size = 0;
-    first_sample_size = first_sample_size_;
-    nonfirst_sample_size = nonfirst_sample_size_;
-}
-
-OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, mxfKey element_key_,
-                                                     uint32_t kag_size_, uint8_t min_llen_,
-                                                     vector<uint32_t> sample_sequence_, uint32_t sample_size_)
-{
-    track_index = track_index_;
-    element_key = element_key_;
-    kag_size = kag_size_;
-    min_llen = min_llen_;
-    essence_llen = FW_ESS_ELEMENT_LLEN;
-    data_def = MXF_SOUND_DDEF;
-    is_cbe = true;
-    is_frame_wrapped = true;
     sample_sequence = sample_sequence_;
     sample_size = sample_size_;
-    first_sample_size = 0;
-    nonfirst_sample_size = 0;
-
-    // set the fixed element size
 
     uint32_t max_sample_sequence = 0;
     bool variable_sequence = false;
@@ -129,31 +96,26 @@ OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, mxfK
             max_sample_sequence = sample_sequence[i];
     }
 
-    fixed_element_size = GetKAGAlignedSize(mxfKey_extlen + essence_llen + max_sample_sequence * sample_size);
-
-    if (variable_sequence && fixed_element_size == mxfKey_extlen + essence_llen + max_sample_sequence * sample_size) {
-        // allow space to include a KLV fill
-        fixed_element_size = GetKAGAlignedSize(mxfKey_extlen + essence_llen +
-                                               max_sample_sequence * sample_size +
-                                               mxfKey_extlen + min_llen);
-    }
+    if (variable_sequence)
+        SetMaxEssenceLen(max_sample_sequence * sample_size);
+    else
+        SetConstantEssenceLen(max_sample_sequence * sample_size);
 }
 
-OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, mxfKey element_key_,
-                                                     uint32_t kag_size_, uint8_t min_llen_, uint8_t essence_llen_)
+void OP1AContentPackageElement::SetConstantEssenceLen(uint32_t constant_essence_len)
 {
-    track_index = track_index_;
-    element_key = element_key_;
-    kag_size = kag_size_;
-    min_llen = min_llen_;
-    essence_llen = essence_llen_;
-    data_def = MXF_SOUND_DDEF;
-    is_cbe = true;
-    is_frame_wrapped = false;
-    sample_size = 0;
-    fixed_element_size = 0;
-    first_sample_size = 0;
-    nonfirst_sample_size = 0;
+    fixed_element_size = GetKAGAlignedSize(mxfKey_extlen + essence_llen + constant_essence_len);
+}
+
+void OP1AContentPackageElement::SetMaxEssenceLen(uint32_t max_essence_len)
+{
+    fixed_element_size = GetKAGAlignedSize(mxfKey_extlen + essence_llen + max_essence_len);
+
+    if (fixed_element_size == mxfKey_extlen + essence_llen + max_essence_len) {
+        // allow space to include a KLV fill
+        fixed_element_size = GetKAGAlignedSize(mxfKey_extlen + essence_llen + max_essence_len +
+                                               mxfKey_extlen + min_llen);
+    }
 }
 
 uint32_t OP1AContentPackageElement::GetNumSamples(int64_t position) const
@@ -270,12 +232,23 @@ bool OP1AContentPackageElementData::IsReady() const
 
 uint32_t OP1AContentPackageElementData::GetWriteSize() const
 {
-    if (!mElement->is_frame_wrapped)
+    if (!mElement->is_frame_wrapped) {
         return mData.GetSize();
-    else if (mElement->fixed_element_size)
+    } else if (mElement->fixed_element_size) {
+        uint32_t essence_write_size = mxfKey_extlen + mElement->essence_llen + mData.GetSize();
+        if (essence_write_size != mElement->fixed_element_size) {
+            if (essence_write_size > mElement->fixed_element_size) {
+                BMX_EXCEPTION(("Essence KLV element size %u exceeds fixed size %u",
+                               essence_write_size, mElement->fixed_element_size));
+            } else if (essence_write_size + mxfKey_extlen + mElement->min_llen > mElement->fixed_element_size) {
+                BMX_EXCEPTION(("Essence KLV element size %u does not allow insertion of KLV fill (min %u) for fixed size %u",
+                               essence_write_size, mxfKey_extlen + mElement->min_llen, mElement->fixed_element_size));
+            }
+        }
         return mElement->fixed_element_size;
-    else
+    } else {
         return mElement->GetKAGAlignedSize(mxfKey_extlen + mElement->essence_llen + mData.GetSize());
+    }
 }
 
 uint32_t OP1AContentPackageElementData::Write()
@@ -285,8 +258,10 @@ uint32_t OP1AContentPackageElementData::Write()
     if (mElement->is_frame_wrapped) {
         mElement->WriteKL(mMXFFile, mData.GetSize());
         BMX_CHECK(mMXFFile->write(mData.GetBytes(), mData.GetSize()) == mData.GetSize());
-        if (write_size != mxfKey_extlen + mElement->essence_llen + mData.GetSize())
+        if (write_size > mxfKey_extlen + mElement->essence_llen + mData.GetSize())
             mMXFFile->writeFill(write_size - (mxfKey_extlen + mElement->essence_llen + mData.GetSize()));
+        else
+            BMX_ASSERT(write_size == mxfKey_extlen + mElement->essence_llen + mData.GetSize());
     } else {
         BMX_ASSERT(mTotalWriteSize == 0);
         mElementStartPos = mMXFFile->tell();
@@ -467,49 +442,72 @@ void OP1AContentPackageManager::SetClipWrapped(bool enable)
 void OP1AContentPackageManager::RegisterPictureTrackElement(uint32_t track_index, mxfKey element_key, bool is_cbe)
 {
     BMX_ASSERT(mFrameWrapped);
-    mElements.push_back(new OP1AContentPackageElement(track_index, MXF_PICTURE_DDEF,
-                                                      element_key, mKAGSize, mMinLLen,
-                                                      is_cbe));
-    mElementTrackIndexMap[track_index] = mElements.back();
+
+    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index, MXF_PICTURE_DDEF, element_key,
+                                                                       mKAGSize, mMinLLen);
+    element->is_cbe = is_cbe;
+
+    mElements.push_back(element);
+    mElementTrackIndexMap[track_index] = element;
 }
 
 void OP1AContentPackageManager::RegisterAVCITrackElement(uint32_t track_index, mxfKey element_key,
                                                          uint32_t first_sample_size, uint32_t nonfirst_sample_size)
 {
     BMX_ASSERT(mFrameWrapped);
-    mElements.push_back(new OP1AContentPackageElement(track_index, element_key,
-                                                      mKAGSize, mMinLLen,
-                                                      first_sample_size, nonfirst_sample_size));
-    mElementTrackIndexMap[track_index] = mElements.back();
+
+    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index, MXF_PICTURE_DDEF, element_key,
+                                                                       mKAGSize, mMinLLen);
+    element->first_sample_size = first_sample_size;
+    element->nonfirst_sample_size = nonfirst_sample_size;
+
+    mElements.push_back(element);
+    mElementTrackIndexMap[track_index] = element;
 }
 
 void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,
                                                           vector<uint32_t> sample_sequence, uint32_t sample_size)
 {
     BMX_ASSERT(mFrameWrapped);
-    mElements.push_back(new OP1AContentPackageElement(track_index, element_key, mKAGSize, mMinLLen,
-                                                      sample_sequence, sample_size));
-    mElementTrackIndexMap[track_index] = mElements.back();
+
+    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index, MXF_SOUND_DDEF, element_key,
+                                                                       mKAGSize, mMinLLen);
+    element->SetSampleSequence(sample_sequence, sample_size);
+
+    mElements.push_back(element);
+    mElementTrackIndexMap[track_index] = element;
 }
 
 void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,
                                                           uint8_t element_llen)
 {
     BMX_ASSERT(!mFrameWrapped);
-    mElements.push_back(new OP1AContentPackageElement(track_index, element_key,
-                                                      mKAGSize, mMinLLen,
-                                                      element_llen));
-    mElementTrackIndexMap[track_index] = mElements.back();
+
+    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index, MXF_SOUND_DDEF, element_key,
+                                                                       mKAGSize, mMinLLen);
+    element->is_frame_wrapped = false;
+    element->essence_llen = element_llen;
+
+    mElements.push_back(element);
+    mElementTrackIndexMap[track_index] = element;
 }
 
 void OP1AContentPackageManager::RegisterDataTrackElement(uint32_t track_index, mxfKey element_key,
-                                                         bool is_cbe)
+                                                         uint32_t constant_essence_len, uint32_t max_essence_len)
 {
     BMX_ASSERT(mFrameWrapped);
-    mElements.push_back(new OP1AContentPackageElement(track_index, MXF_DATA_DDEF,
-                                                      element_key, mKAGSize, mMinLLen,
-                                                      is_cbe));
-    mElementTrackIndexMap[track_index] = mElements.back();
+
+    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index, MXF_DATA_DDEF, element_key,
+                                                                       mKAGSize, mMinLLen);
+    if (constant_essence_len)
+        element->SetConstantEssenceLen(constant_essence_len);
+    else if (max_essence_len)
+        element->SetMaxEssenceLen(max_essence_len);
+    else
+        element->is_cbe = false;
+
+    mElements.push_back(element);
+    mElementTrackIndexMap[track_index] = element;
 }
 
 void OP1AContentPackageManager::PrepareWrite()

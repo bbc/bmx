@@ -51,18 +51,30 @@ OP1ADataTrack::OP1ADataTrack(OP1AFile *file, uint32_t track_index, uint32_t trac
     BMX_ASSERT(mDataDescriptorHelper);
 
     mPosition = 0;
+    mConstantDataSize = 0;
+    mMaxDataSize = 0;
 }
 
 OP1ADataTrack::~OP1ADataTrack()
 {
 }
 
+void OP1ADataTrack::SetConstantDataSize(uint32_t size)
+{
+    mConstantDataSize = size;
+}
+
+void OP1ADataTrack::SetMaxDataSize(uint32_t size)
+{
+    mMaxDataSize = size;
+}
+
 void OP1ADataTrack::PrepareWrite(uint8_t track_count)
 {
     CompleteEssenceKeyAndTrackNum(track_count);
 
-    mCPManager->RegisterDataTrackElement(mTrackIndex, mEssenceElementKey, false);
-    mIndexTable->RegisterDataTrackElement(mTrackIndex, false);
+    mCPManager->RegisterDataTrackElement(mTrackIndex, mEssenceElementKey, mConstantDataSize, mMaxDataSize);
+    mIndexTable->RegisterDataTrackElement(mTrackIndex, (mConstantDataSize || mMaxDataSize));
 }
 
 void OP1ADataTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
@@ -71,7 +83,8 @@ void OP1ADataTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, ui
     BMX_CHECK(data && size);
 
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
-    mIndexTable->AddIndexEntry(mTrackIndex, mPosition, 0, 0, 0, true);
+    if (!mConstantDataSize && !mMaxDataSize)
+        mIndexTable->AddIndexEntry(mTrackIndex, mPosition, 0, 0, 0, true);
 
     mPosition++;
 }

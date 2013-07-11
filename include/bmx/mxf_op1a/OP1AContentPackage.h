@@ -55,16 +55,11 @@ class OP1AContentPackageElement
 {
 public:
     OP1AContentPackageElement(uint32_t track_index_, MXFDataDefEnum data_def_,
-                              mxfKey element_key_, uint32_t kag_size_, uint8_t min_llen_,
-                              bool is_cbe_);
-    OP1AContentPackageElement(uint32_t track_index_, mxfKey element_key_,
-                              uint32_t kag_size_, uint8_t min_llen_,
-                              uint32_t first_sample_size_, uint32_t nonfirst_sample_size_);
-    OP1AContentPackageElement(uint32_t track_index_, mxfKey element_key_,
-                              uint32_t kag_size_, uint8_t min_llen_,
-                              std::vector<uint32_t> sample_sequence_, uint32_t sample_size_);
-    OP1AContentPackageElement(uint32_t track_index_, mxfKey element_key_,
-                              uint32_t kag_size_, uint8_t min_llen_, uint8_t essence_llen_);
+                              mxfKey element_key_, uint32_t kag_size_, uint8_t min_llen_);
+
+    void SetSampleSequence(const std::vector<uint32_t> &sample_sequence_, uint32_t sample_size_);
+    void SetConstantEssenceLen(uint32_t constant_essence_len);
+    void SetMaxEssenceLen(uint32_t max_essence_len);
 
     uint32_t GetNumSamples(int64_t position) const;
 
@@ -83,11 +78,11 @@ public:
     MXFDataDefEnum data_def;
     bool is_cbe;
     bool is_frame_wrapped;
+    uint32_t fixed_element_size;
 
     // sound
     std::vector<uint32_t> sample_sequence;
     uint32_t sample_size;
-    uint32_t fixed_element_size;
 
     // AVCI
     uint32_t first_sample_size;
@@ -168,7 +163,8 @@ public:
     void RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,
                                    std::vector<uint32_t> sample_sequence, uint32_t sample_size);
     void RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key, uint8_t element_llen);
-    void RegisterDataTrackElement(uint32_t track_index, mxfKey element_key, bool is_cbe);
+    void RegisterDataTrackElement(uint32_t track_index, mxfKey element_key, uint32_t constant_essence_len,
+                                  uint32_t max_essence_len);
 
     void PrepareWrite();
 

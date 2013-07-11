@@ -48,6 +48,9 @@ public:
                   mxfRational frame_rate, EssenceType essence_type);
     virtual ~OP1ADataTrack();
 
+    void SetConstantDataSize(uint32_t size);
+    void SetMaxDataSize(uint32_t size);
+
 protected:
     virtual void PrepareWrite(uint8_t track_count);
     virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
@@ -57,6 +60,8 @@ protected:
 
 private:
     int64_t mPosition;
+    uint32_t mConstantDataSize;
+    uint32_t mMaxDataSize;
 };
 
 
