@@ -298,8 +298,15 @@ void OP1AFile::PrepareHeaderMetadata()
             mSupportCompleteSinglePass = true;
             mIndexTable->SetInputDuration(mInputDuration);
         } else {
-            log_warn("Closing and completing the header partition in a single pass write is not supported\n");
-            mInputDuration = -1;
+            if (!mIndexTable->IsCBE()) {
+                log_warn("Closing and completing the header partition in a single pass write is not supported "
+                         "because essence edit unit size is variable\n");
+            }
+            if (mPartitionInterval != 0) {
+                log_warn("Closing and completing the header partition in a single pass write is not supported "
+                         "because partition interval is non-zero\n");
+            }
+            mSupportCompleteSinglePass = false;
         }
     }
 
