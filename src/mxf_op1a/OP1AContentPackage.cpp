@@ -278,12 +278,13 @@ uint32_t OP1AContentPackageElementData::Write()
 void OP1AContentPackageElementData::CompleteWrite()
 {
     if (!mElement->is_frame_wrapped && mTotalWriteSize > 0) {
-        int64_t pos = mMXFFile->tell();
-
-        mMXFFile->seek(mElementStartPos, SEEK_SET);
-        mElement->WriteKL(mMXFFile, mTotalWriteSize);
+        // write KAG alignment fill
         mElement->WriteFill(mMXFFile, mTotalWriteSize);
 
+        // update clip-wrapped element length
+        int64_t pos = mMXFFile->tell();
+        mMXFFile->seek(mElementStartPos, SEEK_SET);
+        mElement->WriteKL(mMXFFile, mTotalWriteSize);
         mMXFFile->seek(pos, SEEK_SET);
     }
 }
