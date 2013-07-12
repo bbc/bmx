@@ -1485,7 +1485,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type_group = DV_ESSENCE_GROUP;
@@ -1498,7 +1498,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = IEC_DV25;
@@ -1511,7 +1511,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = DVBASED_DV25;
@@ -1524,7 +1524,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = DV50;
@@ -1537,7 +1537,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = DV100_1080I;
@@ -1550,7 +1550,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = DV100_720P;
@@ -1563,7 +1563,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type_group = D10_ESSENCE_GROUP;
@@ -1576,7 +1576,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = D10_30;
@@ -1589,7 +1589,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = D10_40;
@@ -1602,7 +1602,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = D10_50;
@@ -1615,7 +1615,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = AVCI100_1080I;
@@ -1628,7 +1628,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = AVCI100_1080P;
@@ -1641,7 +1641,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = AVCI100_720P;
@@ -1654,7 +1654,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = AVCI50_1080I;
@@ -1667,7 +1667,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = AVCI50_1080P;
@@ -1680,7 +1680,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = AVCI50_720P;
@@ -1693,7 +1693,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = UNC_SD;
@@ -1706,7 +1706,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = UNC_HD_1080I;
@@ -1719,7 +1719,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = UNC_HD_1080P;
@@ -1732,7 +1732,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = UNC_HD_720P;
@@ -1745,7 +1745,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = AVID_ALPHA_SD;
@@ -1758,7 +1758,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = AVID_ALPHA_HD_1080I;
@@ -1771,7 +1771,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = AVID_ALPHA_HD_1080P;
@@ -1784,7 +1784,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = AVID_ALPHA_HD_720P;
@@ -1797,7 +1797,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type_group = MPEG2LG_ESSENCE_GROUP;
@@ -1810,7 +1810,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MPEG2LG_422P_HL_1080I;
@@ -1823,7 +1823,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MPEG2LG_422P_HL_1080P;
@@ -1836,7 +1836,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MPEG2LG_422P_HL_720P;
@@ -1849,7 +1849,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MPEG2LG_MP_HL_1920_1080I;
@@ -1862,7 +1862,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MPEG2LG_MP_HL_1920_1080P;
@@ -1875,7 +1875,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MPEG2LG_MP_HL_1440_1080I;
@@ -1888,7 +1888,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MPEG2LG_MP_HL_1440_1080P;
@@ -1901,7 +1901,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MPEG2LG_MP_HL_720P;
@@ -1914,7 +1914,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MPEG2LG_MP_H14_1080I;
@@ -1927,7 +1927,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MPEG2LG_MP_H14_1080P;
@@ -1940,7 +1940,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MJPEG_2_1;
@@ -1953,7 +1953,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MJPEG_3_1;
@@ -1966,7 +1966,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MJPEG_10_1;
@@ -1979,7 +1979,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MJPEG_20_1;
@@ -1992,7 +1992,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MJPEG_4_1M;
@@ -2005,7 +2005,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MJPEG_10_1M;
@@ -2018,7 +2018,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = MJPEG_15_1S;
@@ -2031,7 +2031,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type_group = VC3_ESSENCE_GROUP;
@@ -2044,7 +2044,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = VC3_1080P_1235;
@@ -2057,7 +2057,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = VC3_1080P_1237;
@@ -2070,7 +2070,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = VC3_1080P_1238;
@@ -2083,7 +2083,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = VC3_1080I_1241;
@@ -2096,7 +2096,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = VC3_1080I_1242;
@@ -2109,7 +2109,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = VC3_1080I_1243;
@@ -2122,7 +2122,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = VC3_720P_1250;
@@ -2135,7 +2135,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = VC3_720P_1251;
@@ -2148,7 +2148,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = VC3_720P_1252;
@@ -2161,7 +2161,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = VC3_1080P_1253;
@@ -2174,7 +2174,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = WAVE_PCM;
@@ -2187,7 +2187,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = WAVE_PCM;
@@ -2201,7 +2201,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (have_anc)
@@ -2227,7 +2227,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (have_vbi)
