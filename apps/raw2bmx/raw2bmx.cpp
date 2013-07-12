@@ -44,6 +44,7 @@
 
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as02/AS02PictureTrack.h>
+#include <bmx/mxf_op1a/OP1ADataTrack.h>
 #include <bmx/essence_parser/DVEssenceParser.h>
 #include <bmx/essence_parser/MPEG2EssenceParser.h>
 #include <bmx/essence_parser/AVCIRawEssenceReader.h>
@@ -133,6 +134,10 @@ typedef struct
     bool audio_ref_level_set;
     int8_t dial_norm;
     bool dial_norm_set;
+
+    // ANC/VBI
+    uint32_t anc_const_size;
+    uint32_t vbi_const_size;
 } RawInput;
 
 
@@ -397,6 +402,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --locked <bool>         Indicate whether the number of audio samples is locked to the video. Either true or false. Default not set\n");
     fprintf(stderr, "  --audio-ref <level>     Audio reference level, number of dBm for 0VU. Default not set\n");
     fprintf(stderr, "  --dial-norm <value>     Gain to be applied to normalize perceived loudness of the clip. Default not set\n");
+    fprintf(stderr, "  --anc-const <size>      Set the constant ANC data frame <size>\n");
+    fprintf(stderr, "  --vbi-const <size>      Set the constant VBI data frame <size>\n");
     fprintf(stderr, "  --off <bytes>           Skip <bytes> at the start of the next input/track's file\n");
     fprintf(stderr, "  --maxlen <bytes>        Maximum number of essence data bytes to read from next input/track's file\n");
     fprintf(stderr, "  --klv <key>             Essence data is read from the KLV data in the next input/track's file\n");
@@ -469,6 +476,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --vc3_1080p_1253 <name> Raw VC3/DNxHD 1920x1080p 45/36 Mbps input file\n");
     fprintf(stderr, "  --pcm <name>            Raw PCM audio input file\n");
     fprintf(stderr, "  --wave <name>           Wave PCM audio input file\n");
+    fprintf(stderr, "  --anc <name>            Raw ST 436 Ancillary data. Currently requires the --anc-const option\n");
+    fprintf(stderr, "  --vbi <name>            Raw ST 436 Vertical Blanking Interval data. Currently requires the --vbi-const option\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Notes:\n");
     fprintf(stderr, " - <umid> format is 64 hexadecimal characters and any '.' and '-' characters are ignored\n");
@@ -540,6 +549,8 @@ int main(int argc, const char** argv)
     bool ps_avcihead = false;
     bool avid_gf = false;
     int64_t avid_gf_duration = -1;
+    bool have_anc = false;
+    bool have_vbi = false;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -1321,6 +1332,42 @@ int main(int argc, const char** argv)
             }
             input.dial_norm = value;
             input.dial_norm_set = true;
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--anc-const") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            input.anc_const_size = (uint32_t)(uvalue);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--vbi-const") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            input.vbi_const_size = (uint32_t)(uvalue);
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -2147,6 +2194,58 @@ int main(int argc, const char** argv)
             input.is_wave = true;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--anc") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (have_anc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Multiple '%s' inputs are not permitted\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (input.anc_const_size == 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing or zero '--anc-const' option for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = ANC_DATA;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            have_anc = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vbi") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (have_vbi)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Multiple '%s' inputs are not permitted\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (input.vbi_const_size == 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing or zero '--vbi-const' option for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = VBI_DATA;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            have_vbi = true;
             cmdln_index++;
         }
         else
@@ -2983,9 +3082,19 @@ int main(int argc, const char** argv)
                     if (clip_type == CW_D10_CLIP_TYPE || sequence_offset_set)
                         input->track->SetSequenceOffset(sequence_offset);
                     break;
-                case D10_AES3_PCM:
                 case ANC_DATA:
+                    if (clip_type == CW_OP1A_CLIP_TYPE) {
+                        OP1ADataTrack *op1a_track = dynamic_cast<OP1ADataTrack*>(input->track->GetOP1ATrack());
+                        op1a_track->SetConstantDataSize(input->anc_const_size);
+                    }
+                    break;
                 case VBI_DATA:
+                    if (clip_type == CW_OP1A_CLIP_TYPE) {
+                        OP1ADataTrack *op1a_track = dynamic_cast<OP1ADataTrack*>(input->track->GetOP1ATrack());
+                        op1a_track->SetConstantDataSize(input->vbi_const_size);
+                    }
+                    break;
+                case D10_AES3_PCM:
                 case PICTURE_ESSENCE:
                 case SOUND_ESSENCE:
                 case DATA_ESSENCE:
@@ -3078,7 +3187,15 @@ int main(int argc, const char** argv)
                     break;
                 }
                 case ANC_DATA:
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    input->raw_reader->SetFixedSampleSize(input->anc_const_size);
+                    break;
                 case VBI_DATA:
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    input->raw_reader->SetFixedSampleSize(input->vbi_const_size);
+                    break;
                 case D10_AES3_PCM:
                 case PICTURE_ESSENCE:
                 case SOUND_ESSENCE:
