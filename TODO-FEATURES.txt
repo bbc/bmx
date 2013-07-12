@@ -173,3 +173,15 @@ example
     error to be surfaced higher up the chain (e.g. in exception messages) and
     avoid having to log the exact cause in the file I/O layer or losing the
     exact cause.
+
+74. Add KLV essence parser to raw essence reader to support variable size ANC
+    data wrapped in KLV in raw2bmx
+
+75. Allow that same file to be concatenated, i.e. ignore grouping based on
+    package identifiers and add option to mxf2raw and bmxtranswrap
+
+76. Use variadic macros for logging
+
+77. Handle WAVE padding byte required for odd chunk sizes
+
+78. Add ANC/VBI support to AS-02, RDD9 and Avid OP-Atom
