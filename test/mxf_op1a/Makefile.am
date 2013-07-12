@@ -1,4 +1,5 @@
 TESTS = \
+	anc.sh \
 	avci50_1080i.test \
 	avci50_1080p.test \
 	avci50_720p25.test \
@@ -23,6 +24,7 @@ TESTS = \
 	mpeg2lg_422p_hl_1080i.test \
 	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test \
+	vbi.sh \
 	vc3_1080p_1235.test \
 	vc3_1080p_1237.test \
 	vc3_1080p_1238.test \
@@ -37,6 +39,7 @@ TESTS = \
 
 
 EXTRA_DIST = \
+	anc.sh \
 	avci100_1080i.test \
 	avci100_1080p.test \
 	avci100_720p25.test \
@@ -61,6 +64,7 @@ EXTRA_DIST = \
 	mpeg2lg_422p_hl_1080i.test \
 	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test \
+	vbi.sh \
 	vc3_1080p_1235.test \
 	vc3_1080p_1237.test \
 	vc3_1080p_1238.test \
@@ -71,6 +75,7 @@ EXTRA_DIST = \
 	vc3_720p_1251.test \
 	vc3_720p_1252.test \
 	vc3_1080p_1253.test \
+	anc.md5 \
 	avci100_1080i.md5 \
 	avci100_1080p.md5 \
 	avci100_720p25.md5 \
@@ -95,6 +100,7 @@ EXTRA_DIST = \
 	mpeg2lg_422p_hl_1080i.md5 \
 	mpeg2lg_mp_hl_1920_1080i.md5 \
 	mpeg2lg_mp_h14_1080i.md5 \
+	vbi.md5 \
 	vc3_1080p_1235.md5 \
 	vc3_1080p_1237.md5 \
 	vc3_1080p_1238.md5 \
@@ -147,6 +153,8 @@ create-data:
 	${srcdir}/create.sh ${srcdir} 3 38 vc3_720p_1251
 	${srcdir}/create.sh ${srcdir} 3 39 vc3_720p_1252
 	${srcdir}/create.sh ${srcdir} 3 40 vc3_1080p_1253
+	${srcdir}/anc.sh create_data
+	${srcdir}/vbi.sh create_data
 
 
 .PHONY: create-samples
@@ -185,4 +193,6 @@ create-samples:
 	${srcdir}/samples.sh 3 38 vc3_720p_1251
 	${srcdir}/samples.sh 3 39 vc3_720p_1252
 	${srcdir}/samples.sh 3 40 vc3_1080p_1253
+	${srcdir}/anc.sh create_sample
+	${srcdir}/vbi.sh create_sample
 

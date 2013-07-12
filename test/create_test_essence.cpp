@@ -96,6 +96,8 @@ typedef enum
     TYPE_VC3_1080P_1253,
     TYPE_AVID_ALPHA_HD_1080I,
     TYPE_24BIT_PCM,
+    TYPE_ANC_DATA,
+    TYPE_VBI_DATA,
     TYPE_END,
 } EssenceType;
 
@@ -473,6 +475,32 @@ static void write_avid_alpha(FILE *file, int type, unsigned int duration)
     write_data(file, duration * frame_size);
 }
 
+static void write_anc_data(FILE *file, unsigned int duration)
+{
+    static const unsigned char anc_frame[24] =
+        {0x00, 0x01,                                        // single line / packet
+         0x00, 0x09, 0x01, 0x04, 0x00, 0x07,                // line 9, VANCFrame, ANC_8_BIT_COMP_LUMA, 7 samples
+         0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01,    // payload array header: 8 x 1 bytes
+         0x45, 0x04, 0x20, 0x21, 0x22, 0x23, 0x24, 0x00};   // payload array: DID (1), SDID (1), DC (1), UDW (4), padding (1)
+
+    unsigned int i;
+    for (i = 0; i < duration; i++)
+        write_buffer(file, anc_frame, sizeof(anc_frame));
+}
+
+static void write_vbi_data(FILE *file, unsigned int duration)
+{
+    static const unsigned char vbi_frame[24] =
+        {0x00, 0x01,                                        // single line
+         0x00, 0x15, 0x01, 0x04, 0x00, 0x08,                // line 21, VBIFrame, VBI_8_BIT_COMP_LUMA, 8 samples
+         0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01,    // payload array header: 8 x 1 bytes
+         0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47};   // payload array
+
+    unsigned int i;
+    for (i = 0; i < duration; i++)
+        write_buffer(file, vbi_frame, sizeof(vbi_frame));
+}
+
 
 static void print_usage(const char *cmd)
 {
@@ -520,6 +548,8 @@ static void print_usage(const char *cmd)
     fprintf(stderr, " 40: VC3/DNxHD 1253 1920x1080p 45/36 Mbps\n");
     fprintf(stderr, " 41: AVID Alpha HD 1080I\n");
     fprintf(stderr, " 42: 24-bit PCM\n");
+    fprintf(stderr, " 43: ANC data\n");
+    fprintf(stderr, " 44: VBI data\n");
 }
 
 int main(int argc, const char **argv)
@@ -675,6 +705,12 @@ int main(int argc, const char **argv)
             break;
         case TYPE_24BIT_PCM:
             write_pcm(file, 3, duration);
+            break;
+        case TYPE_ANC_DATA:
+            write_anc_data(file, duration);
+            break;
+        case TYPE_VBI_DATA:
+            write_vbi_data(file, duration);
             break;
         case TYPE_UNKNOWN:
         case TYPE_END:
