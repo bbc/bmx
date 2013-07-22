@@ -134,6 +134,8 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_reader/MXFSequenceTrackReader.h \
 	bmx/mxf_reader/MXFTrackInfo.h \
 	bmx/mxf_reader/MXFTrackReader.h \
+	bmx/st436/RDD6BitBuffer.h \
+	bmx/st436/RDD6Metadata.h \
 	bmx/st436/ST436Element.h \
 	bmx/wave/WaveBEXT.h \
 	bmx/wave/WaveIO.h \

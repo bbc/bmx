@@ -750,6 +750,18 @@
 				Name="st436"
 				>
 				<File
+					RelativePath="..\..\..\include\bmx\st436\RDD6BitBuffer.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\st436\RDD6Metadata.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\st436\RDD6MetadataXML.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\include\bmx\st436\ST436Element.h"
 					>
 				</File>
@@ -1367,6 +1379,18 @@
 			<Filter
 				Name="st436"
 				>
+				<File
+					RelativePath="..\..\..\src\st436\RDD6BitBuffer.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\st436\RDD6Metadata.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\st436\RDD6MetadataXML.cpp"
+					>
+				</File>
 				<File
 					RelativePath="..\..\..\src\st436\ST436Element.cpp"
 					>

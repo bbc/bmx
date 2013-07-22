@@ -53,6 +53,7 @@
 #include <bmx/mxf_reader/MXFFrameMetadata.h>
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/st436/ST436Element.h>
+#include <bmx/st436/RDD6Metadata.h>
 #include <bmx/MD5.h>
 #include <bmx/CRC32.h>
 #include <bmx/MXFUtils.h>
@@ -699,6 +700,56 @@ static void write_data(FILE *file, const string &filename, const unsigned char *
     CHECK_WRITE(data, size)
 }
 
+static bool extract_rdd6_xml(Frame *frame, const char *filename)
+{
+    ST436Element st436_element(false);
+    st436_element.Parse(frame->GetBytes(), frame->GetSize());
+
+    vector<const ST436Line*> rdd6_lines;
+    size_t i;
+    for (i = 0; i < st436_element.lines.size(); i++) {
+        ANCManifestElement man_element;
+        man_element.Parse(&st436_element.lines[i]);
+        if (man_element.sample_coding == ANC_8_BIT_COMP_LUMA &&
+            man_element.did == 0x45 &&
+            (man_element.sdid >= 0x01 && man_element.sdid <= 0x08))
+        {
+            if (st436_element.lines[i].payload_size >= 3 &&
+                st436_element.lines[i].payload_sample_count > 0 &&
+                st436_element.lines[i].payload_data[2] + 3 >= st436_element.lines[i].payload_sample_count)
+            {
+                rdd6_lines.push_back(&st436_element.lines[i]);
+            }
+            else
+            {
+                log_warn("Ignoring empty or invalid RDD-6 frame data\n");
+            }
+        }
+    }
+    if (rdd6_lines.empty())
+        return false;
+
+    RDD6MetadataFrame rdd6_frame;
+    if (rdd6_lines.size() >= 2) {
+        if (rdd6_lines.size() > 2)
+            log_warn("ST-436 ANC data contains %"PRIszt" RDD-6 lines; only using the first 2\n", rdd6_lines.size());
+        rdd6_frame.Parse8Bit(&rdd6_lines[0]->payload_data[3], rdd6_lines[0]->payload_data[2],
+                             &rdd6_lines[1]->payload_data[3], rdd6_lines[1]->payload_data[2]);
+    } else {
+        log_warn("ST-436 ANC data only contains a single RDD-6 line\n");
+        rdd6_frame.Parse8Bit(&rdd6_lines[0]->payload_data[3], rdd6_lines[0]->payload_data[2],
+                             0, 0);
+    }
+    if (!rdd6_frame.first_sub_frame)
+        log_warn("RDD-6 frame data does not contain the first sub-frame\n");
+    if (!rdd6_frame.second_sub_frame)
+        log_warn("RDD-6 frame data does not contain the second sub-frame\n");
+
+    rdd6_frame.UnparseXML(filename);
+
+    return true;
+}
+
 static string create_raw_filename(string prefix, bool wrap_klv, MXFDataDefEnum data_def, uint32_t index,
                                   int32_t child_index)
 {
@@ -825,6 +876,7 @@ static void usage(const char *cmd)
     fprintf(stderr, " --app-check-issues    Check that there are no known issues with the file\n");
     fprintf(stderr, " --avid                Print Avid metadata to stdout (single file only)\n");
     fprintf(stderr, " --st436-mf <count>    Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
+    fprintf(stderr, " --rdd6 <frame> <file> Extract RDD-6 audio metadata from <frame> to XML <file>\n");
 }
 
 int main(int argc, const char** argv)
@@ -871,6 +923,8 @@ int main(int argc, const char** argv)
     bool app_check_issues = false;
     set<MXFDataDefEnum> wrap_klv_mask;
     uint32_t st436_manifest_count = DEFAULT_ST436_MANIFEST_COUNT;
+    const char *rdd6_filename = 0;
+    int64_t rdd6_frame = 0;
     unsigned int uvalue;
     int cmdln_index;
 
@@ -1194,6 +1248,23 @@ int main(int argc, const char** argv)
             st436_manifest_count = (uint32_t)(uvalue);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--rdd6") == 0)
+        {
+            if (cmdln_index + 2 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &rdd6_frame) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            rdd6_filename = argv[cmdln_index + 2];
+            cmdln_index += 2;
+        }
         else
         {
             break;
@@ -1500,6 +1571,8 @@ int main(int argc, const char** argv)
 
         // read data
 
+        bool done_rdd6 = false;
+
         if (do_read) {
             // log info
             if (prefix)
@@ -1747,6 +1820,13 @@ int main(int argc, const char** argv)
                                 file_count++;
                         }
 
+                        if (rdd6_filename && !done_rdd6 &&
+                            track_info->essence_type == ANC_DATA &&
+                            frame->position == rdd6_frame)
+                        {
+                            done_rdd6 = extract_rdd6_xml(frame, rdd6_filename);
+                        }
+
                         delete frame;
                     }
                 }
@@ -1816,6 +1896,33 @@ int main(int argc, const char** argv)
                          file_factory.GetInputChecksumDigestString(i).c_str());
             }
         }
+
+        if (rdd6_filename && !done_rdd6) {
+            reader->ClearFrameBuffers(true);
+            reader->SetReadLimits();
+            reader->Seek(rdd6_frame);
+            if (reader->Read(1)) {
+                uint32_t i;
+                for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+                    while (true) {
+                        Frame *frame = reader->GetTrackReader(i)->GetFrameBuffer()->GetLastFrame(true);
+                        if (!frame)
+                            break;
+                        if (frame->IsEmpty()) {
+                            delete frame;
+                            continue;
+                        }
+
+                        if (!done_rdd6 && reader->GetTrackReader(i)->GetTrackInfo()->essence_type == ANC_DATA)
+                            done_rdd6 = extract_rdd6_xml(frame, rdd6_filename);
+
+                        delete frame;
+                    }
+                }
+            }
+        }
+        if (rdd6_filename && !done_rdd6)
+            log_warn("Failed to extract RDD-6 frame data to XML file from frame %"PRId64"\n", rdd6_frame);
 
         if (file_reader && app_events_mask && extract_app_events_tc) {
             file_reader->SetReadLimits();
