@@ -481,7 +481,7 @@ static void write_anc_data(FILE *file, unsigned int duration)
         {0x00, 0x01,                                        // single line / packet
          0x00, 0x09, 0x01, 0x04, 0x00, 0x07,                // line 9, VANCFrame, ANC_8_BIT_COMP_LUMA, 7 samples
          0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01,    // payload array header: 8 x 1 bytes
-         0x45, 0x04, 0x20, 0x21, 0x22, 0x23, 0x24, 0x00};   // payload array: DID (1), SDID (1), DC (1), UDW (4), padding (1)
+         0x45, 0x04, 0x04, 0x21, 0x22, 0x23, 0x24, 0x00};   // payload array: DID (1), SDID (1), DC (1), UDW (4), padding (1)
 
     unsigned int i;
     for (i = 0; i < duration; i++)
