@@ -129,6 +129,9 @@ static bool filter_anc_manifest_element(const ANCManifestElement *element, set<A
         } else if (*iter == ST2016_ANC_DATA) {
             if (element->did  == 0x41 && (element->sdid == 0x05 || element->sdid == 0x06))
                 return true;
+        } else if (*iter == RDD8_SDP_ANC_DATA) {
+            if (element->did  == 0x43 && element->sdid == 0x02)
+                return true;
         } else if (*iter == ST12M_ANC_DATA) {
             if (element->did  == 0x60 && element->sdid == 0x60)
                 return true;
@@ -372,6 +375,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                                all      : pass through all ANC data\n");
     fprintf(stderr, "                                st2020   : SMPTE ST 2020 / RDD 6 audio metadata\n");
     fprintf(stderr, "                                st2016   : SMPTE ST 2016-3/ AFD, bar and pan-scan data\n");
+    fprintf(stderr, "                                sdp      : SMPTE RDD 8 / OP-47 Subtitling Distribution Packet data\n");
     fprintf(stderr, "                                st12     : SMPTE ST 12 Ancillary timecode\n");
     fprintf(stderr, "                                st334    : SMPTE ST 334-1 EIA 708B, EIA 608 and data broadcast (DTV)\n");
     fprintf(stderr, "    --pass-vbi              Pass through ST 436 VBI data tracks\n");

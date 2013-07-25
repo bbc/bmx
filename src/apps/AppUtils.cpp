@@ -638,6 +638,8 @@ bool bmx::parse_anc_data_types(const char *types_str, set<ANCDataType> *types)
             types->insert(ST2020_ANC_DATA);
         } else if (strncmp(types_str_ptr, "st2016", strlen("st2016")) == 0) {
             types->insert(ST2016_ANC_DATA);
+        } else if (strncmp(types_str_ptr, "sdp", strlen("sdp")) == 0) {
+            types->insert(RDD8_SDP_ANC_DATA);
         } else if (strncmp(types_str_ptr, "st12", strlen("st12")) == 0) {
             types->insert(ST12M_ANC_DATA);
         } else if (strncmp(types_str_ptr, "st334", strlen("st334")) == 0) {

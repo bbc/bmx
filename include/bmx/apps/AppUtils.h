@@ -60,6 +60,7 @@ typedef enum
     ALL_ANC_DATA,
     ST2020_ANC_DATA,
     ST2016_ANC_DATA,
+    RDD8_SDP_ANC_DATA,
     ST12M_ANC_DATA,
     ST334_ANC_DATA,
 } ANCDataType;
