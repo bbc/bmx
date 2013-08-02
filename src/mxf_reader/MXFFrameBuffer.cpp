@@ -140,8 +140,10 @@ Frame* MXFFrameBuffer::CreateFrame()
 
 void MXFFrameBuffer::PushFrame(Frame *frame)
 {
-    if (frame->IsEmpty() && !mEmptyFrames)
+    if (frame->IsEmpty() && !mEmptyFrames) {
+        delete frame;
         return;
+    }
 
     frame->edit_rate       = mNextFrameEditRate;
     frame->position        = mNextFramePosition;
