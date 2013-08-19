@@ -490,7 +490,8 @@ void OP1AFile::CompleteWrite()
 
         // update and re-write the body partition packs
 
-        mMXFFile->updateBodyPartitions(&MXF_PP_K(ClosedComplete, Body));
+        if (!(mFlavour & OP1A_NO_BODY_PART_UPDATE_FLAVOUR))
+            mMXFFile->updateBodyPartitions(&MXF_PP_K(ClosedComplete, Body));
     }
 
 

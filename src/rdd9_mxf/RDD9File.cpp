@@ -394,7 +394,8 @@ void RDD9File::CompleteWrite()
 
         // update body partition status and re-write the partition packs
 
-        mMXFFile->updateBodyPartitions(&MXF_PP_K(ClosedComplete, Body));
+        if (!(mFlavour & RDD9_NO_BODY_PART_UPDATE_FLAVOUR))
+            mMXFFile->updateBodyPartitions(&MXF_PP_K(ClosedComplete, Body));
     }
 
 
