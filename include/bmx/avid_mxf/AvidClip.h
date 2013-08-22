@@ -83,8 +83,7 @@ public:
     // default source package creation
     mxfpp::SourcePackage* CreateDefaultTapeSource(std::string name, uint32_t num_video_tracks, uint32_t num_audio_tracks);
     mxfpp::SourcePackage* CreateDefaultImportSource(std::string uri, std::string name,
-                                                    uint32_t num_video_tracks, uint32_t num_audio_tracks,
-                                                    bool timecode_track);
+                                                    uint32_t num_video_tracks, uint32_t num_audio_tracks);
     std::vector<std::pair<mxfUMID, uint32_t> > GetSourceReferences(mxfpp::SourcePackage *source_package,
                                                                    MXFDataDefEnum data_def);
 

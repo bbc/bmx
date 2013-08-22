@@ -2866,8 +2866,7 @@ int main(int argc, const char** argv)
                         throw false;
                     }
                     physical_package = avid_clip->CreateDefaultImportSource(uri.ToString(), uri.GetLastSegment(),
-                                                                            num_picture_tracks, num_sound_tracks,
-                                                                            false);
+                                                                            num_picture_tracks, num_sound_tracks);
                 }
                 physical_package_picture_refs = avid_clip->GetSourceReferences(physical_package, MXF_PICTURE_DDEF);
                 BMX_ASSERT(physical_package_picture_refs.size() == num_picture_tracks);

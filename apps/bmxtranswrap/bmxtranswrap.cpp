@@ -2007,8 +2007,7 @@ int main(int argc, const char** argv)
                         throw false;
                     }
                     physical_package = avid_clip->CreateDefaultImportSource(uri.ToString(), uri.GetLastSegment(),
-                                                                            num_picture_tracks, num_sound_tracks,
-                                                                            false);
+                                                                            num_picture_tracks, num_sound_tracks);
                     if (reader->GetMaterialPackageUID() != g_Null_UMID)
                         physical_package->setPackageUID(reader->GetMaterialPackageUID());
                 }
