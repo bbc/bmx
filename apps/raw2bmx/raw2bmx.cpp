@@ -3318,32 +3318,32 @@ int main(int argc, const char** argv)
 
         if (regtest_end < 0) { // only complete if not regression testing partial files
 
-        // complete AS-11 descriptive metadata
+            // complete AS-11 descriptive metadata
 
-        if (clip_sub_type == AS11_CLIP_SUB_TYPE)
-            as11_helper.Complete();
-
-
-        // complete writing
-
-        clip->CompleteWrite();
-
-        log_info("Duration: %"PRId64" (%s)\n",
-                 clip->GetDuration(),
-                 get_generic_duration_string_2(clip->GetDuration(), clip->GetFrameRate()).c_str());
+            if (clip_sub_type == AS11_CLIP_SUB_TYPE)
+                as11_helper.Complete();
 
 
-        if (file_md5) {
-            if (clip_type == CW_OP1A_CLIP_TYPE) {
-                OP1AFile *op1a_clip = clip->GetOP1AClip();
+            // complete writing
 
-                log_info("File MD5: %s\n", op1a_clip->GetMD5DigestStr().c_str());
-            } else if (clip_type == CW_RDD9_CLIP_TYPE) {
-                RDD9File *rdd9_clip = clip->GetRDD9Clip();
+            clip->CompleteWrite();
 
-                log_info("File MD5: %s\n", rdd9_clip->GetMD5DigestStr().c_str());
+            log_info("Duration: %"PRId64" (%s)\n",
+                     clip->GetDuration(),
+                     get_generic_duration_string_2(clip->GetDuration(), clip->GetFrameRate()).c_str());
+
+
+            if (file_md5) {
+                if (clip_type == CW_OP1A_CLIP_TYPE) {
+                    OP1AFile *op1a_clip = clip->GetOP1AClip();
+
+                    log_info("File MD5: %s\n", op1a_clip->GetMD5DigestStr().c_str());
+                } else if (clip_type == CW_RDD9_CLIP_TYPE) {
+                    RDD9File *rdd9_clip = clip->GetRDD9Clip();
+
+                    log_info("File MD5: %s\n", rdd9_clip->GetMD5DigestStr().c_str());
+                }
             }
-        }
         }
 
 
