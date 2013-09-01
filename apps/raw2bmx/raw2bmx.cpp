@@ -549,6 +549,7 @@ int main(int argc, const char** argv)
     bool ps_avcihead = false;
     bool avid_gf = false;
     int64_t avid_gf_duration = -1;
+    int64_t regtest_end = -1;
     bool have_anc = false;
     bool have_vbi = false;
     int value, num, den;
@@ -1151,6 +1152,23 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--regtest") == 0)
         {
             BMX_REGRESSION_TEST = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--regtest-end") == 0)
+        {
+            BMX_REGRESSION_TEST = true;
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &regtest_end) != 1 || regtest_end < 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
         }
         else
         {
@@ -3247,6 +3265,10 @@ int main(int argc, const char** argv)
         // write samples
         int64_t total_read = 0;
         while (duration < 0 || total_read < duration) {
+            // break if reached end of partial file regression test
+            if (regtest_end >= 0 && total_read >= regtest_end)
+                break;
+
             // read samples into input buffers first to ensure the frame data is available for all tracks
             uint32_t min_num_samples = max_samples_per_read;
             uint32_t num_samples;
@@ -3294,6 +3316,8 @@ int main(int argc, const char** argv)
         }
 
 
+        if (regtest_end < 0) { // only complete if not regression testing partial files
+
         // complete AS-11 descriptive metadata
 
         if (clip_sub_type == AS11_CLIP_SUB_TYPE)
@@ -3319,6 +3343,7 @@ int main(int argc, const char** argv)
 
                 log_info("File MD5: %s\n", rdd9_clip->GetMD5DigestStr().c_str());
             }
+        }
         }
 
 
