@@ -422,6 +422,8 @@ void AvidTrack::CompleteWrite()
 
     // update body partition and re-write the partition packs
 
+    if (mClip->mFlavour & AVID_GROWING_FILE_FLAVOUR)
+        mMXFFile->getPartition(BODY_PARTITION).setKey(&MXF_PP_K(OpenComplete, Body));
     mMXFFile->updateBodyPartitions(&MXF_PP_K(ClosedComplete, Body));
 
 
