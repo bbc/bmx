@@ -11,6 +11,8 @@ TESTS = \
 	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test \
 	avci100_1080i.test \
+	avci100_1080i_gf.test \
+	avci100_1080i_gfp.test \
 	avci100_1080p.test \
 	avci100_720p25.test \
 	avci100_720p50.test \
@@ -48,6 +50,8 @@ EXTRA_DIST = \
 	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test \
 	avci100_1080i.test \
+	avci100_1080i_gf.test \
+	avci100_1080i_gfp.test \
 	avci100_1080p.test \
 	avci100_720p25.test \
 	avci100_720p50.test \
@@ -82,6 +86,8 @@ EXTRA_DIST = \
 	mpeg2lg_mp_hl_1920_1080i.md5s \
 	mpeg2lg_mp_h14_1080i.md5s \
 	avci100_1080i.md5s \
+	avci100_1080i_gf.md5s \
+	avci100_1080i_gfp.md5s \
 	avci100_1080p.md5s \
 	avci100_720p25.md5s \
 	avci100_720p50.md5s \
@@ -124,6 +130,8 @@ create-data:
 	${srcdir}/create.sh ${srcdir} 3 12 d10_40
 	${srcdir}/create.sh ${srcdir} 3 13 d10_30
 	${srcdir}/create.sh ${srcdir} 3 7 avci100_1080i
+	${srcdir}/create.sh ${srcdir} 3 7 avci100_1080i gf
+	${srcdir}/create.sh ${srcdir} 3 7 avci100_1080i gfp 2
 	${srcdir}/create.sh ${srcdir} 3 8 avci100_1080p
 	${srcdir}/create.sh ${srcdir} 3 29 avci100_720p 25
 	${srcdir}/create.sh ${srcdir} 3 29 avci100_720p 50
@@ -162,6 +170,8 @@ create-samples:
 	${srcdir}/samples.sh 3 12 d10_40
 	${srcdir}/samples.sh 3 13 d10_30
 	${srcdir}/samples.sh 3 7 avci100_1080i
+	${srcdir}/samples.sh 3 7 avci100_1080i gf
+	${srcdir}/samples.sh 3 7 avci100_1080i gfp 2
 	${srcdir}/samples.sh 3 8 avci100_1080p
 	${srcdir}/samples.sh 3 29 avci100_720p 25
 	${srcdir}/samples.sh 3 29 avci100_720p 50
