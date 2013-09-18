@@ -36,6 +36,7 @@
 #define __STDC_LIMIT_MACROS
 
 #include <algorithm>
+#include <set>
 
 #include <bmx/mxf_reader/MXFGroupReader.h>
 #include <bmx/mxf_reader/MXFFileReader.h>
@@ -120,8 +121,18 @@ void MXFGroupReader::SetEmptyFrames(bool enable)
         mTrackReaders[i]->SetEmptyFrames(enable);
 }
 
+void MXFGroupReader::SetFileIndex(MXFFileIndex *file_index, bool take_ownership)
+{
+    MXFReader::SetFileIndex(file_index, take_ownership);
+
+    size_t i;
+    for (i = 0; i < mReaders.size(); i++)
+        mReaders[i]->SetFileIndex(file_index, false);
+}
+
 void MXFGroupReader::AddReader(MXFReader *reader)
 {
+    reader->SetFileIndex(mFileIndex, false);
     mReaders.push_back(reader);
 }
 
@@ -274,6 +285,34 @@ bool MXFGroupReader::Finalize()
 
         return false;
     }
+}
+
+MXFFileReader* MXFGroupReader::GetFileReader(size_t file_id)
+{
+    MXFFileReader *reader = 0;
+    size_t i;
+    for (i = 0; i < mReaders.size(); i++) {
+        reader = mReaders[i]->GetFileReader(file_id);
+        if (reader)
+            break;
+    }
+
+    return reader;
+}
+
+vector<size_t> MXFGroupReader::GetFileIds(bool internal_ess_only) const
+{
+    set<size_t> file_id_set;
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++) {
+        vector<size_t> track_file_ids = mTrackReaders[i]->GetFileIds(internal_ess_only);
+        file_id_set.insert(track_file_ids.begin(), track_file_ids.end());
+    }
+
+    vector<size_t> file_ids;
+    file_ids.insert(file_ids.begin(), file_id_set.begin(), file_id_set.end());
+
+    return file_ids;
 }
 
 bool MXFGroupReader::IsComplete() const

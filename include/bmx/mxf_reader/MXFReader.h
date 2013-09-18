@@ -32,12 +32,14 @@
 #ifndef BMX_MXF_READER_H_
 #define BMX_MXF_READER_H_
 
+#include <vector>
 
 #include <libMXF++/MXF.h>
 
 #include <bmx/BMXTypes.h>
 #include <bmx/mxf_reader/MXFTrackReader.h>
 #include <bmx/mxf_reader/MXFIndexEntryExt.h>
+#include <bmx/mxf_reader/MXFFileIndex.h>
 
 
 
@@ -45,6 +47,7 @@ namespace bmx
 {
 
 
+class MXFFileReader;
 class MXFGroupReader;
 
 class MXFReader
@@ -58,7 +61,13 @@ public:
 
     virtual void SetEmptyFrames(bool enable) = 0;
 
+    virtual void SetFileIndex(MXFFileIndex *file_index, bool take_ownership);
+    const MXFFileIndex* GetFileIndex() const { return mFileIndex; }
+
 public:
+    virtual MXFFileReader* GetFileReader(size_t file_id) = 0;
+    virtual std::vector<size_t> GetFileIds(bool internal_ess_only) const = 0;
+
     virtual bool IsComplete() const = 0;
 
     virtual void GetReadLimits(bool limit_to_available, int64_t *start_position, int64_t *duration) const = 0;
@@ -135,6 +144,9 @@ protected:
     std::string mMaterialPackageName;
     mxfUMID mMaterialPackageUID;
     std::string mPhysicalSourcePackageName;
+
+    MXFFileIndex *mFileIndex;
+    bool mOwnFileIndex;
 
 private:
     Timecode CreateTimecode(const Timecode *start_timecode, int64_t position) const;

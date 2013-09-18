@@ -367,6 +367,7 @@ uint32_t EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
                 frame->temporal_reordering = mIndexTableHelper.GetTemporalReordering(0);
                 frame->cp_file_position    = current_file_position - mImageEndOffset - size;
                 frame->file_position       = frame->cp_file_position;
+                frame->file_id             = mFileReader->GetFileId();
                 frame->element_key         = element_key;
             }
 
@@ -434,7 +435,9 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
 
                         frame->ec_position         = start_position;
                         frame->cp_file_position    = cp_file_position;
-                        frame->file_position       = cp_file_position + cp_num_read;
+                        frame->file_position       = cp_file_position + cp_num_read - (mxfKey_extlen + llen);
+                        frame->kl_size             = mxfKey_extlen + llen;
+                        frame->file_id             = mFileReader->GetFileId();
                         frame->element_key         = key;
                         if (mIndexTableHelper.HaveEditUnit(start_position)) {
                             frame->temporal_reordering =

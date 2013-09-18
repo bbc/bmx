@@ -32,6 +32,7 @@
 #ifndef BMX_MXF_TRACK_READER_H_
 #define BMX_MXF_TRACK_READER_H_
 
+#include <vector>
 
 #include <libMXF++/MXF.h>
 
@@ -64,6 +65,8 @@ public:
     virtual void SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position) = 0;
 
 public:
+    virtual std::vector<size_t> GetFileIds(bool internal_ess_only) const = 0;
+
     virtual int64_t GetReadStartPosition() const = 0;
     virtual int64_t GetReadDuration() const = 0;
 

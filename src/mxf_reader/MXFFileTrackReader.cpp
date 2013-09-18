@@ -83,6 +83,12 @@ void MXFFileTrackReader::SetFrameBuffer(FrameBuffer *frame_buffer, bool take_own
     mFrameBuffer.SetTargetBuffer(frame_buffer, take_ownership);
 }
 
+vector<size_t> MXFFileTrackReader::GetFileIds(bool internal_ess_only) const
+{
+    (void)internal_ess_only;
+    return vector<size_t>(1, mFileReader->GetFileId());
+}
+
 void MXFFileTrackReader::GetReadLimits(bool limit_to_available, int64_t *start_position, int64_t *duration) const
 {
     return mFileReader->GetReadLimits(limit_to_available, start_position, duration);

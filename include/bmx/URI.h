@@ -70,6 +70,8 @@ public:
     char* GetStr() { return mStr; }
     const char* GetCStr() const { return mStr; }
 
+    bool IsEmpty() const { return (!mStr || !mStr[0]); }
+
 private:
     char *mStr;
 };
@@ -111,6 +113,8 @@ public:
 
     bool operator==(const URI &right) const;
     URI& operator=(const URI &right);
+
+    bool IsEmpty() const { return mSourceStr.IsEmpty(); }
 
 private:
     void Clear();

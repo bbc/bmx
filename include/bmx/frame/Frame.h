@@ -102,8 +102,10 @@ public:
     int8_t key_frame_offset;
     uint8_t flags;
 
-    int64_t cp_file_position;
-    int64_t file_position;
+    int64_t cp_file_position;   // position of first KLV in content package
+    int64_t file_position;      // frame wrapped: position of KLV; clip wrapped: position of sample data
+    uint8_t kl_size;            // frame wrapped: size of KL; clip wrapped: 0
+    size_t file_id;             // file index identifier for file containing sample data
 
     mxfKey element_key;
 

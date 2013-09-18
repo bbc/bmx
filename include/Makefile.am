@@ -122,6 +122,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_reader/FrameMetadataReader.h \
 	bmx/mxf_reader/IndexTableHelper.h \
 	bmx/mxf_reader/MXFAPPInfo.h \
+	bmx/mxf_reader/MXFFileIndex.h \
 	bmx/mxf_reader/MXFFileReader.h \
 	bmx/mxf_reader/MXFFileTrackReader.h \
 	bmx/mxf_reader/MXFFrameBuffer.h \

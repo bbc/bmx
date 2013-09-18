@@ -40,6 +40,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <set>
 
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
@@ -143,6 +144,7 @@ MXFFileReader::MXFFileReader()
 {
     BMX_ASSERT(MXF_RESULT_FAIL + 1 == BMX_ARRAY_SIZE(RESULT_STRINGS));
 
+    mFileId = (size_t)(-1);
     mFile = 0;
     mEmptyFrames = false;
     mEmptyFramesSet = false;
@@ -219,6 +221,18 @@ void MXFFileReader::SetST436ManifestFrameCount(uint32_t count)
     mST436ManifestCount = count;
 }
 
+void MXFFileReader::SetFileIndex(MXFFileIndex *file_index, bool take_ownership)
+{
+    if (mFileId != (size_t)(-1))
+        mFileId = file_index->RegisterFile(mFileIndex->GetEntry(mFileId));
+
+    MXFReader::SetFileIndex(file_index, take_ownership);
+
+    size_t i;
+    for (i = 0; i < mExternalReaders.size(); i++)
+        mExternalReaders[i]->SetFileIndex(file_index, false);
+}
+
 MXFFileReader::OpenResult MXFFileReader::Open(string filename)
 {
     File *file = 0;
@@ -246,14 +260,17 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
     try
     {
         mFile = file;
-        mFilename = filename;
 
-        BMX_CHECK(mAbsoluteURI.ParseFilename(filename));
-        if (mAbsoluteURI.IsRelative()) {
+        URI rel_uri, abs_uri;
+        BMX_CHECK(abs_uri.ParseFilename(filename));
+        if (abs_uri.IsRelative()) {
+            rel_uri = abs_uri;
+
             URI base_uri;
             BMX_CHECK(base_uri.ParseDirectory(get_cwd()));
-            mAbsoluteURI.MakeAbsolute(base_uri);
+            abs_uri.MakeAbsolute(base_uri);
         }
+        mFileId = mFileIndex->RegisterFile(abs_uri, rel_uri, filename);
 
 
         // read the header partition pack and check the operational pattern
@@ -425,6 +442,40 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
     }
 
     return result;
+}
+
+MXFFileReader* MXFFileReader::GetFileReader(size_t file_id)
+{
+    MXFFileReader *reader = 0;
+    if (file_id == mFileId) {
+        reader = this;
+    } else {
+        size_t i;
+        for (i = 0; i < mExternalReaders.size(); i++) {
+            reader = mExternalReaders[i]->GetFileReader(file_id);
+            if (reader)
+                break;
+        }
+    }
+
+    return reader;
+}
+
+vector<size_t> MXFFileReader::GetFileIds(bool internal_ess_only) const
+{
+    set<size_t> file_id_set;
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++) {
+        vector<size_t> track_file_ids = mTrackReaders[i]->GetFileIds(internal_ess_only);
+        file_id_set.insert(track_file_ids.begin(), track_file_ids.end());
+    }
+    if (!internal_ess_only)
+        file_id_set.insert(mFileId);
+
+    vector<size_t> file_ids;
+    file_ids.insert(file_ids.begin(), file_id_set.begin(), file_id_set.end());
+
+    return file_ids;
 }
 
 bool MXFFileReader::IsComplete() const
@@ -1319,8 +1370,10 @@ MXFTrackReader* MXFFileReader::GetExternalTrackReader(SourceClip *mp_source_clip
         if (mExternalReaders[i] == resolved_package->file_reader)
             break;
     }
-    if (i >= mExternalReaders.size())
+    if (i >= mExternalReaders.size()) {
+        resolved_package->file_reader->SetFileIndex(mFileIndex, false);
         mExternalReaders.push_back(resolved_package->file_reader);
+    }
 
     mExternalTrackReaders.push_back(external_track_reader);
     return external_track_reader;

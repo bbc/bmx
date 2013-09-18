@@ -34,6 +34,7 @@
 #endif
 
 #include <algorithm>
+#include <set>
 
 #include <bmx/mxf_reader/MXFSequenceReader.h>
 #include <bmx/mxf_reader/MXFSequenceTrackReader.h>
@@ -104,12 +105,22 @@ void MXFSequenceReader::SetEmptyFrames(bool enable)
         mTrackReaders[i]->SetEmptyFrames(enable);
 }
 
+void MXFSequenceReader::SetFileIndex(MXFFileIndex *file_index, bool take_ownership)
+{
+    MXFReader::SetFileIndex(file_index, take_ownership);
+
+    size_t i;
+    for (i = 0; i < mReaders.size(); i++)
+        mReaders[i]->SetFileIndex(file_index, false);
+}
+
 void MXFSequenceReader::AddReader(MXFReader *reader)
 {
     // TODO: support incomplete files
     if (!reader->IsComplete())
         BMX_EXCEPTION(("MXF sequence reader currently only supports complete files with known duration"));
 
+    reader->SetFileIndex(mFileIndex, false);
     mReaders.push_back(reader);
 }
 
@@ -455,6 +466,34 @@ void MXFSequenceReader::UpdateReadLimits()
             break;
         mReadDuration += CONVERT_GROUP_DUR(mGroupSegments[i]->GetReadDuration());
     }
+}
+
+MXFFileReader* MXFSequenceReader::GetFileReader(size_t file_id)
+{
+    MXFFileReader *reader = 0;
+    size_t i;
+    for (i = 0; i < mReaders.size(); i++) {
+        reader = mReaders[i]->GetFileReader(file_id);
+        if (reader)
+            break;
+    }
+
+    return reader;
+}
+
+vector<size_t> MXFSequenceReader::GetFileIds(bool internal_ess_only) const
+{
+    set<size_t> file_id_set;
+    size_t i;
+    for (i = 0; i < mTrackReaders.size(); i++) {
+        vector<size_t> track_file_ids = mTrackReaders[i]->GetFileIds(internal_ess_only);
+        file_id_set.insert(track_file_ids.begin(), track_file_ids.end());
+    }
+
+    vector<size_t> file_ids;
+    file_ids.insert(file_ids.begin(), file_id_set.begin(), file_id_set.end());
+
+    return file_ids;
 }
 
 bool MXFSequenceReader::IsComplete() const

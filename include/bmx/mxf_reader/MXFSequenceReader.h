@@ -50,6 +50,7 @@ public:
     virtual ~MXFSequenceReader();
 
     virtual void SetEmptyFrames(bool enable);
+    virtual void SetFileIndex(MXFFileIndex *file_index, bool take_ownership);
 
     void AddReader(MXFReader *reader);
     bool Finalize(bool check_is_complete, bool keep_input_order);
@@ -57,6 +58,9 @@ public:
     void UpdateReadLimits();
 
 public:
+    virtual MXFFileReader* GetFileReader(size_t file_id);
+    virtual std::vector<size_t> GetFileIds(bool internal_ess_only) const;
+
     virtual bool IsComplete() const;
 
     virtual void GetReadLimits(bool limit_to_available, int64_t *start_position, int64_t *duration) const;

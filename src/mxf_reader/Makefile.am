@@ -6,6 +6,7 @@ libmxfreader_la_SOURCES = \
 	FrameMetadataReader.cpp \
 	IndexTableHelper.cpp \
 	MXFAPPInfo.cpp \
+	MXFFileIndex.cpp \
 	MXFFileReader.cpp \
 	MXFFileTrackReader.cpp \
 	MXFFrameBuffer.cpp \

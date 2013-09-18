@@ -35,6 +35,8 @@
 
 #include <cstring>
 
+#include <set>
+
 #include <bmx/mxf_reader/MXFSequenceTrackReader.h>
 #include <bmx/mxf_reader/MXFSequenceReader.h>
 #include <bmx/essence_parser/AVCIEssenceParser.h>
@@ -210,6 +212,21 @@ void MXFSequenceTrackReader::SetEnable(bool enable)
 void MXFSequenceTrackReader::SetFrameBuffer(FrameBuffer *frame_buffer, bool take_ownership)
 {
     mFrameBuffer.SetTargetBuffer(frame_buffer, take_ownership);
+}
+
+vector<size_t> MXFSequenceTrackReader::GetFileIds(bool internal_ess_only) const
+{
+    set<size_t> file_id_set;
+    size_t i;
+    for (i = 0; i < mTrackSegments.size(); i++) {
+        vector<size_t> seg_file_ids = mTrackSegments[i]->GetFileIds(internal_ess_only);
+        file_id_set.insert(seg_file_ids.begin(), seg_file_ids.end());
+    }
+
+    vector<size_t> file_ids;
+    file_ids.insert(file_ids.begin(), file_id_set.begin(), file_id_set.end());
+
+    return file_ids;
 }
 
 void MXFSequenceTrackReader::GetReadLimits(bool limit_to_available, int64_t *start_position, int64_t *duration) const

@@ -57,6 +57,8 @@ MXFReader::MXFReader()
     mFileSourceStartTimecode = 0;
     mPhysicalSourceStartTimecode = 0;
     mMaterialPackageUID = g_Null_UMID;
+    mFileIndex = new MXFFileIndex();
+    mOwnFileIndex = true;
 }
 
 MXFReader::~MXFReader()
@@ -64,6 +66,21 @@ MXFReader::~MXFReader()
     delete mMaterialStartTimecode;
     delete mFileSourceStartTimecode;
     delete mPhysicalSourceStartTimecode;
+    if (mOwnFileIndex)
+        delete mFileIndex;
+}
+
+void MXFReader::SetFileIndex(MXFFileIndex *file_index, bool take_ownership)
+{
+    if (file_index == mFileIndex)
+        return;
+
+    file_index->RegisterFiles(mFileIndex);
+
+    if (mOwnFileIndex)
+        delete mFileIndex;
+    mFileIndex = file_index;
+    mOwnFileIndex = take_ownership;
 }
 
 void MXFReader::ClearFrameBuffers(bool del_frames)

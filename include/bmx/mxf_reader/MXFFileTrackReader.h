@@ -54,6 +54,8 @@ public:
     virtual void SetFrameBuffer(FrameBuffer *frame_buffer, bool take_ownership);
 
 public:
+    virtual std::vector<size_t> GetFileIds(bool internal_ess_only) const;
+
     virtual void GetReadLimits(bool limit_to_available, int64_t *start_position, int64_t *duration) const;
     virtual void SetReadLimits();
     virtual void SetReadLimits(int64_t start_position, int64_t duration, bool seek_start_position);

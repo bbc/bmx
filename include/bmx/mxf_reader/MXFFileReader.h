@@ -89,6 +89,7 @@ public:
     void SetFileFactory(MXFFileFactory *factory, bool take_ownership);
     virtual void SetEmptyFrames(bool enable);
     void SetST436ManifestFrameCount(uint32_t count);     // default: 2 frames used to extract manifest
+    virtual void SetFileIndex(MXFFileIndex *file_index, bool take_ownership);
 
     OpenResult Open(std::string filename);
     OpenResult Open(mxfpp::File *file, std::string filename);
@@ -98,6 +99,9 @@ public:
     MXFFileFactory* GetFileFactory() const         { return mFileFactory; }
 
 public:
+    virtual MXFFileReader* GetFileReader(size_t file_id);
+    virtual std::vector<size_t> GetFileIds(bool internal_ess_only) const;
+
     virtual bool IsComplete() const;
 
     virtual void GetReadLimits(bool limit_to_available, int64_t *start_position, int64_t *duration) const;
@@ -124,8 +128,10 @@ public:
     bool IsClipWrapped()                             { return mIsClipWrapped; }
     bool IsFrameWrapped()                            { return !mIsClipWrapped; }
 
-    std::string GetFilename() const { return mFilename; }
-    const URI& GetAbsoluteURI() const { return mAbsoluteURI; }
+    size_t GetFileId() const        { return mFileId; }
+    std::string GetFilename() const { return GetFileIndex()->GetFilename(mFileId); }
+    URI GetRelativeURI() const      { return GetFileIndex()->GetRelativeURI(mFileId); }
+    URI GetAbsoluteURI() const      { return GetFileIndex()->GetAbsoluteURI(mFileId); }
 
 public:
     virtual size_t GetNumTrackReaders() const { return mTrackReaders.size(); }
@@ -195,8 +201,7 @@ private:
     void AbortRead();
 
 private:
-    std::string mFilename;
-    URI mAbsoluteURI;
+    size_t mFileId;
     mxfpp::File *mFile;
 
     MXFPackageResolver *mPackageResolver;

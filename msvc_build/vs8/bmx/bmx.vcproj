@@ -670,6 +670,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\include\bmx\mxf_reader\MXFFileIndex.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\include\bmx\mxf_reader\MXFFileReader.h"
 					>
 				</File>
@@ -1301,6 +1305,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\mxf_reader\MXFAPPInfo.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\mxf_reader\MXFFileIndex.cpp"
 					>
 				</File>
 				<File
