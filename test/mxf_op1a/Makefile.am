@@ -1,11 +1,13 @@
 TESTS = \
 	anc.sh \
 	avci50_1080i.test \
-	avci50_1080p.test \
+	avci50_1080p25.test \
+	avci50_1080p50.test \
 	avci50_720p25.test \
 	avci50_720p50.test \
 	avci100_1080i.test \
-	avci100_1080p.test \
+	avci100_1080p25.test \
+	avci100_1080p50.test \
 	avci100_720p25.test \
 	avci100_720p50.test \
 	d10_30.test \
@@ -41,11 +43,13 @@ TESTS = \
 EXTRA_DIST = \
 	anc.sh \
 	avci100_1080i.test \
-	avci100_1080p.test \
+	avci100_1080p25.test \
+	avci100_1080p50.test \
 	avci100_720p25.test \
 	avci100_720p50.test \
 	avci50_1080i.test \
-	avci50_1080p.test \
+	avci50_1080p25.test \
+	avci50_1080p50.test \
 	avci50_720p25.test \
 	avci50_720p50.test \
 	d10_30.test \
@@ -77,11 +81,13 @@ EXTRA_DIST = \
 	vc3_1080p_1253.test \
 	anc.md5 \
 	avci100_1080i.md5 \
-	avci100_1080p.md5 \
+	avci100_1080p25.md5 \
+	avci100_1080p50.md5 \
 	avci100_720p25.md5 \
 	avci100_720p50.md5 \
 	avci50_1080i.md5 \
-	avci50_1080p.md5 \
+	avci50_1080p25.md5 \
+	avci50_1080p50.md5 \
 	avci50_720p25.md5 \
 	avci50_720p50.md5 \
 	d10_30.md5 \
@@ -126,11 +132,13 @@ create-data:
 	${srcdir}/create.sh ${srcdir} 3 6 dv100_720p 25
 	${srcdir}/create.sh ${srcdir} 3 6 dv100_720p 50
 	${srcdir}/create.sh ${srcdir} 3 7 avci100_1080i
-	${srcdir}/create.sh ${srcdir} 3 8 avci100_1080p
+	${srcdir}/create.sh ${srcdir} 3 8 avci100_1080p 25
+	${srcdir}/create.sh ${srcdir} 3 8 avci100_1080p 50
 	${srcdir}/create.sh ${srcdir} 3 29 avci100_720p 25
 	${srcdir}/create.sh ${srcdir} 3 29 avci100_720p 50
 	${srcdir}/create.sh ${srcdir} 3 9 avci50_1080i
-	${srcdir}/create.sh ${srcdir} 3 10 avci50_1080p
+	${srcdir}/create.sh ${srcdir} 3 10 avci50_1080p 25
+	${srcdir}/create.sh ${srcdir} 3 10 avci50_1080p 50
 	${srcdir}/create.sh ${srcdir} 3 30 avci50_720p 25
 	${srcdir}/create.sh ${srcdir} 3 30 avci50_720p 50
 	${srcdir}/create.sh ${srcdir} 3 11 d10_50
@@ -166,11 +174,13 @@ create-samples:
 	${srcdir}/samples.sh 3 6 dv100_720p 25
 	${srcdir}/samples.sh 3 6 dv100_720p 50
 	${srcdir}/samples.sh 3 7 avci100_1080i
-	${srcdir}/samples.sh 3 8 avci100_1080p
+	${srcdir}/samples.sh 3 8 avci100_1080p 25
+	${srcdir}/samples.sh 3 8 avci100_1080p 50
 	${srcdir}/samples.sh 3 29 avci100_720p 25
 	${srcdir}/samples.sh 3 29 avci100_720p 50
 	${srcdir}/samples.sh 3 9 avci50_1080i
-	${srcdir}/samples.sh 3 10 avci50_1080p
+	${srcdir}/samples.sh 3 10 avci50_1080p 25
+	${srcdir}/samples.sh 3 10 avci50_1080p 50
 	${srcdir}/samples.sh 3 30 avci50_720p 25
 	${srcdir}/samples.sh 3 30 avci50_720p 50
 	${srcdir}/samples.sh 3 11 d10_50

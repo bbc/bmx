@@ -104,6 +104,10 @@ static const AVCIHeaderFormatInfo AVCI_HEADER_FORMAT_INFO[] =
     {"AVC-Intra 50 720p50",       {AVCI50_720P,    {50, 1}}},
     {"AVC-Intra 50 720p29.97",    {AVCI50_720P,    {30000, 1001}}},
     {"AVC-Intra 50 720p59.94",    {AVCI50_720P,    {60000, 1001}}},
+    {"AVC-Intra 100 1080p50",     {AVCI100_1080P,  {50, 1}}},
+    {"AVC-Intra 100 1080p59.94",  {AVCI100_1080P,  {60000, 1001}}},
+    {"AVC-Intra 50 1080p50",      {AVCI100_1080P,  {50, 1}}},
+    {"AVC-Intra 50 1080p59.94",   {AVCI100_1080P,  {60000, 1001}}},
 };
 
 

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check.sh 3 8 avci100_1080p 50
+
