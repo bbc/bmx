@@ -2,6 +2,7 @@ noinst_LTLIBRARIES = libmxfhelper.la
 
 libmxfhelper_la_SOURCES = \
 	ANCDataMXFDescriptorHelper.cpp \
+	AVCIntraUncsMXFDescriptorHelper.cpp \
 	AVCIMXFDescriptorHelper.cpp \
 	D10MXFDescriptorHelper.cpp \
 	DataMXFDescriptorHelper.cpp \

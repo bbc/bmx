@@ -522,6 +522,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\include\bmx\mxf_helper\AVCIntraUncsMXFDescriptorHelper.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\include\bmx\mxf_helper\AVCIMXFDescriptorHelper.h"
 					>
 				</File>
@@ -1157,6 +1161,10 @@
 				>
 				<File
 					RelativePath="..\..\..\src\mxf_helper\ANCDataMXFDescriptorHelper.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\mxf_helper\AVCIntraUncsMXFDescriptorHelper.cpp"
 					>
 				</File>
 				<File

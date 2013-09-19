@@ -2343,6 +2343,8 @@ int main(int argc, const char** argv)
                                 op1a_track->SetMaxDataSize(vbi_max_size);
                         }
                         break;
+                    case AVC_HIGH_10_INTRA_UNCS:
+                    case AVC_HIGH_422_INTRA_UNCS:
                     case D10_AES3_PCM:
                     case PICTURE_ESSENCE:
                     case SOUND_ESSENCE:

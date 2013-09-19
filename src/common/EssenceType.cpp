@@ -68,6 +68,8 @@ static const EssenceTypeInfo ESSENCE_TYPE_INFO[] =
     {AVCI50_1080I,              PICTURE_ESSENCE,        "AVCI 50Mbps 1080i"},
     {AVCI50_1080P,              PICTURE_ESSENCE,        "AVCI 50Mbps 1080p"},
     {AVCI50_720P,               PICTURE_ESSENCE,        "AVCI 50Mbps 720p"},
+    {AVC_HIGH_10_INTRA_UNCS,    PICTURE_ESSENCE,        "AVC High 10 Intra Unconstrained"},
+    {AVC_HIGH_422_INTRA_UNCS,   PICTURE_ESSENCE,        "AVC High 4:2:2 Intra Unconstrained"},
     {UNC_SD,                    PICTURE_ESSENCE,        "uncompressed SD"},
     {UNC_HD_1080I,              PICTURE_ESSENCE,        "uncompressed HD 1080i"},
     {UNC_HD_1080P,              PICTURE_ESSENCE,        "uncompressed HD 1080p"},

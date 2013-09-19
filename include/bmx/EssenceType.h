@@ -55,13 +55,16 @@ typedef enum
     DV50,
     DV100_1080I,
     DV100_720P,
-    // AVC-Intra
+    // AVC Intra RP2027
     AVCI100_1080I,
     AVCI100_1080P,
     AVCI100_720P,
     AVCI50_1080I,
     AVCI50_1080P,
     AVCI50_720P,
+    // AVC Intra Unconstrained
+    AVC_HIGH_10_INTRA_UNCS,
+    AVC_HIGH_422_INTRA_UNCS,
     // Uncompressed video
     UNC_SD,
     UNC_HD_1080I,

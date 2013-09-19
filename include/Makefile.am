@@ -102,6 +102,7 @@ nobase_library_include_HEADERS = \
 	bmx/essence_parser/RawEssenceReader.h \
 	bmx/essence_parser/VC3EssenceParser.h \
 	bmx/mxf_helper/ANCDataMXFDescriptorHelper.h \
+	bmx/mxf_helper/AVCIntraUncsMXFDescriptorHelper.h \
 	bmx/mxf_helper/AVCIMXFDescriptorHelper.h \
 	bmx/mxf_helper/D10MXFDescriptorHelper.h \
 	bmx/mxf_helper/DataMXFDescriptorHelper.h \
