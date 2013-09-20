@@ -36,11 +36,14 @@
 #include "bmx_scm_version.h"
 
 #include <cstdio>
+#include <cstring>
+#include <ctime>
 
 #include <bmx/Version.h>
 #include <bmx/Utils.h>
 
 using namespace std;
+using namespace bmx;
 
 
 namespace bmx
@@ -97,6 +100,76 @@ string bmx::get_bmx_build_string()
         return "1970-01-01 00:00:00";
     else
         return __DATE__ " " __TIME__;
+}
+
+Timestamp bmx::get_bmx_build_timestamp()
+{
+    static const char* month_names[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+    Timestamp timestamp;
+    memset(&timestamp, 0, sizeof(timestamp));
+
+    if (BMX_REGRESSION_TEST) {
+        timestamp.year  = 1970;
+        timestamp.month = 1;
+        timestamp.day   = 1;
+        timestamp.hour  = 0;
+        timestamp.min   = 0;
+        timestamp.sec   = 0;
+        timestamp.qmsec = 0;
+        return timestamp;
+    }
+
+    const char *date_str = __DATE__;
+    const char *time_str = __TIME__;
+    if (strlen(date_str) < 11 || strlen(time_str) < 8)
+        return timestamp;
+
+    struct tm build_ltm;
+
+    // date: Mmm dd yyyy
+    int i;
+    for (i = 0; i < 12; i++) {
+        if (strncmp(month_names[i], date_str, 3) == 0)
+            break;
+    }
+    if (i >= 12)
+        return timestamp;
+    build_ltm.tm_mon = i;
+    if (sscanf(&date_str[4], "%d %d", &build_ltm.tm_mday, &build_ltm.tm_year) != 2)
+        return timestamp;
+    build_ltm.tm_year -= 1900;
+
+    // time: hh:mm:ss
+    if (sscanf(time_str, "%d:%d:%d", &build_ltm.tm_hour, &build_ltm.tm_min, &build_ltm.tm_sec) != 3)
+        return timestamp;
+
+    time_t build_ltt = mktime(&build_ltm);
+
+    struct tm build_gmt;
+#if HAVE_GMTIME_R
+    if (!gmtime_r(&build_ltt, &build_gmt))
+        return timestamp;
+#elif defined(_MSC_VER)
+    if (gmtime_s(&build_gmt, &build_ltt) != 0)
+        return timestamp;
+#else
+    const struct tm *gmt_ptr = gmtime(&build_ltt);
+    if (!gmt_ptr)
+        return timestamp;
+    build_gmt = *gmt_ptr;
+#endif
+
+    timestamp.year  = build_gmt.tm_year + 1900;
+    timestamp.month = build_gmt.tm_mon + 1;
+    timestamp.day   = build_gmt.tm_mday;
+    timestamp.hour  = build_gmt.tm_hour;
+    timestamp.min   = build_gmt.tm_min;
+    timestamp.sec   = build_gmt.tm_sec;
+    timestamp.qmsec = 0;
+
+    return timestamp;
 }
 
 string bmx::get_bmx_company_name()

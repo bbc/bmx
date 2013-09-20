@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2013, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,11 +29,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef AVID_INFO_OUTPUT_H_
-#define AVID_INFO_OUTPUT_H_
+#ifndef BMX_APP_TEXT_INFO_WRITER_H_
+#define BMX_APP_TEXT_INFO_WRITER_H_
 
+#include <cstdio>
 
-#include <bmx/mxf_reader/MXFFileReader.h>
+#include <stack>
+
 #include <bmx/apps/AppInfoWriter.h>
 
 
@@ -42,13 +44,45 @@ namespace bmx
 {
 
 
-void avid_register_extensions(MXFFileReader *file_reader);
-void avid_write_info(AppInfoWriter *info_writer, MXFFileReader *file_reader);
+class AppTextInfoWriter : public AppInfoWriter
+{
+public:
+    static AppTextInfoWriter* Open(const std::string &filename);
 
+public:
+    AppTextInfoWriter(FILE *text_file);
+    virtual ~AppTextInfoWriter();
+
+    void PushItemValueIndent(size_t value_indent);
+    void PopItemValueIndent();
+
+public:
+    virtual void Start(const std::string &name);
+    virtual void End();
+
+    virtual void StartSection(const std::string &name);
+    virtual void EndSection();
+    virtual void StartArrayItem(const std::string &name, size_t size);
+    virtual void EndArrayItem();
+    virtual void StartArrayElement(const std::string &name, size_t index);
+    virtual void EndArrayElement();
+    virtual void StartComplexItem(const std::string &name);
+    virtual void EndComplexItem();
+
+protected:
+    virtual void WriteItem(const std::string &name, const std::string &value);
+
+private:
+    void WriteAnnotations();
+
+private:
+    FILE *mTextFile;
+    int mLevel;
+    std::stack<int> mItemValueIndent;
+};
 
 
 };
-
 
 
 #endif

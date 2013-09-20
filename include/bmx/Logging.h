@@ -63,6 +63,10 @@ extern LogLevel LOG_LEVEL;
 bool open_log_file(std::string filename);
 void close_log_file();
 
+void set_stdout_log_file();
+void set_stderr_log_file();
+void set_stdio_log_file();
+
 void flush_log();
 
 

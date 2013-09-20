@@ -53,6 +53,10 @@ public:
     XMLWriter(FILE *xml_file);
     virtual ~XMLWriter();
 
+    void EscapeCR(bool escape);
+    void EscapeAttrNewlineChars(bool escape);
+    void SkipCR(bool skip);
+
     void WriteDocumentStart();
     void WriteDocumentEnd();
     void WriteElementStart(const std::string &ns, const std::string &local_name);
@@ -131,6 +135,9 @@ private:
 
 private:
     FILE *mXMLFile;
+    bool mEscapeCR;
+    bool mEscapeAttrNewlineChars;
+    bool mSkipCR;
 };
 
 

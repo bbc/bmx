@@ -119,6 +119,7 @@ typedef enum
 
 
 const char* essence_type_to_string(EssenceType essence_type);
+const char* essence_type_to_enum_string(EssenceType essence_type);
 
 EssenceType get_generic_essence_type(EssenceType essence_type);
 

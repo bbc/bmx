@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+  <xs:element name="avid">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="project_name" type="xs:string" minOccurs="0"/>
+        <xs:element name="resolution_id" type="int32_type" minOccurs="0"/>
+        <xs:element name="physical_package" type="avid_physical_package_type" minOccurs="0"/>
+        <xs:element name="user_comments" type="user_comments_type" minOccurs="0"/>
+        <xs:element name="attributes" type="attributes_type" minOccurs="0"/>
+        <xs:element name="locators" type="locators_type" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="avid_physical_package_type">
+    <xs:sequence>
+      <xs:element name="type" type="avid_pp_type"/>
+      <xs:element name="name" type="xs:string" minOccurs="0"/>
+      <xs:element name="package_uid" type="umid_type"/>
+      <xs:element name="network_locator" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="user_comments_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="user_comment" type="tagged_value_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="tagged_value_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="name" type="xs:string"/>
+          <xs:element name="value" type="xs:string"/>
+          <xs:element name="attributes" type="attributes_type" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="attributes_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="attribute" type="tagged_value_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="locators_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="locator" type="locator_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="locator_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="position" type="duration_type"/>
+          <xs:element name="color" type="avid_color_type"/>
+          <xs:element name="comment" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:simpleType name="avid_pp_type">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="Tape"/>
+      <xs:enumeration value="Import"/>
+      <xs:enumeration value="Recording"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="avid_color_type">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="White"/>
+      <xs:enumeration value="Red"/>
+      <xs:enumeration value="Yellow"/>
+      <xs:enumeration value="Green"/>
+      <xs:enumeration value="Cyan"/>
+      <xs:enumeration value="Blue"/>
+      <xs:enumeration value="Magenta"/>
+      <xs:enumeration value="Black"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

@@ -41,6 +41,7 @@
 
 #include "APPInfoOutput.h"
 #include <bmx/mxf_reader/MXFAPPInfo.h>
+#include <bmx/apps/AppTextInfoWriter.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -49,46 +50,67 @@ using namespace std;
 using namespace bmx;
 
 
-
-static string get_date_string(mxfTimestamp timestamp)
+static const EnumInfo VTR_STATUS_EINFO[] =
 {
+    {0,      "Good"},
+    {1,      "Almost_Good"},
+    {2,      "State_Cannot_Be_Determined"},
+    {3,      "State_Unclear"},
+    {4,      "No_Good"},
+    {5,      "Good"},
+    {6,      "Good"},
+    {7,      "Good"},
+    {0, 0}
+};
+
+
+
+static string get_archive_tc_string(const ArchiveTimecode &timecode)
+{
+    BMX_ASSERT(timecode.hour != INVALID_TIMECODE_HOUR);
+
     char buf[64];
-    bmx_snprintf(buf, sizeof(buf), "%d-%02u-%02u", timestamp.year, timestamp.month, timestamp.day);
+    bmx_snprintf(buf, sizeof(buf), "%02u:%02u:%02u%c%02u",
+                 timecode.hour, timecode.min, timecode.sec, (timecode.dropFrame ? ';' : ':'), timecode.frame);
     return buf;
 }
 
-static string get_timecode_string(ArchiveTimecode &timecode)
+static void write_infax_data(AppInfoWriter *info_writer, const InfaxData *data)
 {
-    char buf[64];
-    if (timecode.hour == INVALID_TIMECODE_HOUR) {
-        bmx_snprintf(buf, sizeof(buf), "<unknown>");
-    } else {
-        bmx_snprintf(buf, sizeof(buf), "%02u:%02u:%02u%c%02u", timecode.hour, timecode.min, timecode.sec,
-                     (timecode.dropFrame ? ';' : ':'), timecode.frame);
-    }
-    return buf;
-}
+    AppTextInfoWriter *text_writer = dynamic_cast<AppTextInfoWriter*>(info_writer);
+    const Rational second_rate = {1, 1};
 
-static void print_infax_data(const InfaxData *data)
-{
-    Rational sec_rate = {1, 1};
+#define WRITE_STRING_ITEM(var, name)                            \
+    if (data->var && data->var[0])                              \
+        info_writer->WriteStringItem(name, data->var);
 
-    printf("      Format            : %s\n", data->format);
-    printf("      ProgrammeTitle    : %s\n", data->progTitle);
-    printf("      EpisodeTitle      : %s\n", data->epTitle);
-    printf("      TransmissionDate  : %s\n", get_date_string(data->txDate).c_str());
-    printf("      MagazinePrefix    : %s\n", data->magPrefix);
-    printf("      ProgrammeNumber   : %s\n", data->progNo);
-    printf("      ProductionCode    : %s\n", data->prodCode);
-    printf("      SpoolStatus       : %s\n", data->spoolStatus);
-    printf("      StockDate         : %s\n", get_date_string(data->stockDate).c_str());
-    printf("      SpoolDescriptor   : %s\n", data->spoolDesc);
-    printf("      Memo              : %s\n", data->memo);
-    printf("      Duration          : %s\n", get_duration_string(data->duration, sec_rate).c_str());
-    printf("      SpoolNumber       : %s\n", data->spoolNo);
-    printf("      AccessionNumber   : %s\n", data->accNo);
-    printf("      CatalogueDetail   : %s\n", data->catDetail);
-    printf("      ItemNumber        : %u\n", data->itemNo);
+#define WRITE_TIMESTAMP_ITEM(var, name)                         \
+    if (data->var.year || data->var.month || data->var.day)     \
+        info_writer->WriteDateOnlyItem(name, data->var);
+
+    if (text_writer)
+        text_writer->PushItemValueIndent(strlen("transmission_date "));
+
+    WRITE_STRING_ITEM(format,               "format")
+    WRITE_STRING_ITEM(progTitle,            "programme_title")
+    WRITE_STRING_ITEM(epTitle,              "episode_title")
+    WRITE_TIMESTAMP_ITEM(txDate,            "transmission_date")
+    WRITE_STRING_ITEM(magPrefix,            "magazine_prefix")
+    WRITE_STRING_ITEM(progNo,               "programme_number")
+    WRITE_STRING_ITEM(prodCode,             "production_code")
+    WRITE_STRING_ITEM(spoolStatus,          "spool_status")
+    WRITE_TIMESTAMP_ITEM(stockDate,         "stock_date")
+    WRITE_STRING_ITEM(spoolDesc,            "spool_descriptor")
+    WRITE_STRING_ITEM(memo,                 "memo")
+    if (data->duration != 0)
+        info_writer->WriteDurationItem(     "duration", data->duration, second_rate); // Infax duration is in seconds
+    WRITE_STRING_ITEM(spoolNo,              "spoolNumber")
+    WRITE_STRING_ITEM(accNo,                "accession_number")
+    WRITE_STRING_ITEM(catDetail,            "catalogue_detail")
+    info_writer->WriteIntegerItem(          "item_number", data->itemNo);
+
+    if (text_writer)
+        text_writer->PopItemValueIndent();
 }
 
 
@@ -96,6 +118,7 @@ static void print_infax_data(const InfaxData *data)
 APPInfoOutput::APPInfoOutput()
 {
     mFileReader = 0;
+    mHaveInfo = false;
     mPSEFailureTCIndex = 0;
     mVTRErrorTCIndex = 0;
     mDigiBetaDropoutTCIndex = 0;
@@ -121,8 +144,10 @@ void APPInfoOutput::ExtractInfo(int event_mask)
 {
     if (!mInfo.ReadInfo(mFileReader->GetHeaderMetadata())) {
         log_warn("No APP info present in file\n");
+        mHaveInfo = false;
         return;
     }
+    mHaveInfo = true;
 
     if ((event_mask & DIGIBETA_DROPOUT_MASK) && !mInfo.ReadDigiBetaDropouts(mFileReader->GetHeaderMetadata()))
         log_warn("Failed to read APP Digibeta dropout events\n");
@@ -265,150 +290,163 @@ void APPInfoOutput::CompleteEventTimecodes()
     delete frame;
 }
 
-void APPInfoOutput::PrintInfo()
+void APPInfoOutput::WriteInfo(AppInfoWriter *info_writer, bool include_events)
 {
-    printf("APP Information:\n");
+    if (!mHaveInfo)
+        return;
 
-    printf("  Original filename  : %s\n", mInfo.original_filename.c_str());
-    printf("  Event counts       :\n");
-    printf("      VTR errors         : %u\n", mInfo.vtr_error_count);
-    printf("      PSE failures       : %u\n", mInfo.pse_failure_count);
-    printf("      Digibeta dropouts  : %u\n", mInfo.digibeta_dropout_count);
-    printf("      Timecode breaks    : %u\n", mInfo.timecode_break_count);
-    printf("  Source Infax data  :\n");
-    if (mInfo.source_record)
-        print_infax_data(mInfo.source_record);
-    printf("  LTO Infax data     :\n");
-    if (mInfo.lto_record)
-        print_infax_data(mInfo.lto_record);
+    AppTextInfoWriter *text_writer = dynamic_cast<AppTextInfoWriter*>(info_writer);
 
-    printf("\n");
+    info_writer->RegisterCCName("bbc_archive",      "BBCArchive");
+    info_writer->RegisterCCName("lto_infax",        "LTOInfax");
+    info_writer->RegisterCCName("pse_failures",     "PSEFailures");
+    info_writer->RegisterCCName("pse_failure",      "PSEFailure");
+    info_writer->RegisterCCName("vtr_error",        "VTRError");
+    info_writer->RegisterCCName("vtr_errors",       "VTRErrors");
+
+    info_writer->StartSection("bbc_archive");
+
+    info_writer->WriteStringItem("original_filename", mInfo.original_filename);
+
+    if (text_writer)
+        text_writer->PushItemValueIndent(strlen("digibeta_dropouts "));
+    info_writer->StartSection("event_counts");
+    info_writer->WriteIntegerItem("vtr_errors", mInfo.vtr_error_count);
+    info_writer->WriteIntegerItem("pse_failures", mInfo.pse_failure_count);
+    info_writer->WriteIntegerItem("digibeta_dropouts", mInfo.digibeta_dropout_count);
+    info_writer->WriteIntegerItem("timecode_breaks", mInfo.timecode_break_count);
+    info_writer->EndSection();
+    if (text_writer)
+        text_writer->PopItemValueIndent();
+
+    if (mInfo.source_record) {
+        info_writer->StartSection("source_infax");
+        write_infax_data(info_writer, mInfo.source_record);
+        info_writer->EndSection();
+    }
+    if (mInfo.lto_record) {
+        info_writer->StartSection("lto_infax");
+        write_infax_data(info_writer, mInfo.lto_record);
+        info_writer->EndSection();
+    }
+
+    if (include_events) {
+        info_writer->StartSection("events");
+        PrintEvents(info_writer);
+        info_writer->EndSection();
+    }
+
+    info_writer->EndSection();
 }
 
-void APPInfoOutput::PrintEvents()
+void APPInfoOutput::PrintEvents(AppInfoWriter *info_writer)
 {
     Rational frame_rate = mFileReader->GetEditRate();
     size_t i;
 
+    AppTextInfoWriter *text_writer = dynamic_cast<AppTextInfoWriter*>(info_writer);
+
+#define WRITE_POSITION_INFO(event, timecodes)                                               \
+    info_writer->WriteDurationItem("position", event.position, frame_rate);                 \
+    if (timecodes.vitc.hour != INVALID_TIMECODE_HOUR)                                       \
+        info_writer->WriteStringItem("vitc", get_archive_tc_string(timecodes.vitc));        \
+    if (timecodes.ltc.hour != INVALID_TIMECODE_HOUR)                                        \
+        info_writer->WriteStringItem("ltc", get_archive_tc_string(timecodes.ltc));
+
     if (mInfo.num_digibeta_dropouts > 0) {
-        printf("APP Digibeta dropouts:\n");
-        printf("  Count     : %"PRIszt"\n", mInfo.num_digibeta_dropouts);
-        printf("  Dropouts  :\n");
-        printf("    %10s:%14s%14s%14s%10s\n", "num", "frame", "vitc", "ltc", "strength");
+        if (text_writer)
+            text_writer->PushItemValueIndent(strlen("position "));
+
+        info_writer->StartArrayItem("digibeta_dropouts", mInfo.num_digibeta_dropouts);
         for (i = 0; i < mInfo.num_digibeta_dropouts; i++) {
-            printf("    %10"PRIszt":%14s%14s%14s%10d\n",
-                   i,
-                   get_duration_string(mInfo.digibeta_dropouts[i].position, frame_rate).c_str(),
-                   get_timecode_string(mDigiBetaDropoutTimecodes[i].vitc).c_str(),
-                   get_timecode_string(mDigiBetaDropoutTimecodes[i].ltc).c_str(),
-                   mInfo.digibeta_dropouts[i].strength);
+            info_writer->StartArrayElement("digibeta_dropout", i);
+            WRITE_POSITION_INFO(mInfo.digibeta_dropouts[i], mDigiBetaDropoutTimecodes[i])
+            info_writer->WriteIntegerItem("strength", mInfo.digibeta_dropouts[i].strength);
+            info_writer->EndArrayElement();
         }
+        info_writer->EndArrayItem();
+
+        if (text_writer)
+            text_writer->PopItemValueIndent();
     }
+
     if (mInfo.num_pse_failures > 0) {
-        printf("APP PSE failures:\n");
-        printf("  Count     : %"PRIszt"\n", mInfo.num_pse_failures);
-        printf("  Failures  :\n");
-        printf("    %10s:%14s%14s%14s%9s%10s%10s%6s\n",
-               "num", "frame", "vitc", "ltc", "red", "spatial", "lumin", "ext");
+        if (text_writer)
+            text_writer->PushItemValueIndent(strlen("extended_failure "));
+
+        info_writer->StartArrayItem("pse_failures", mInfo.num_pse_failures);
         for (i = 0; i < mInfo.num_pse_failures; i++) {
-            printf("    %10"PRIszt":%14s%14s%14s",
-                   i,
-                   get_duration_string(mInfo.pse_failures[i].position, frame_rate).c_str(),
-                   get_timecode_string(mPSEFailureTimecodes[i].vitc).c_str(),
-                   get_timecode_string(mPSEFailureTimecodes[i].ltc).c_str());
+            info_writer->StartArrayElement("pse_failure", i);
+            WRITE_POSITION_INFO(mInfo.pse_failures[i], mPSEFailureTimecodes[i])
             if (mInfo.pse_failures[i].redFlash > 0)
-                printf("%9.1f", mInfo.pse_failures[i].redFlash / 1000.0);
-            else
-                printf("%9.1f", 0.0);
+                info_writer->WriteFormatItem("red_flash", "%f", mInfo.pse_failures[i].redFlash / 1000.0);
             if (mInfo.pse_failures[i].spatialPattern > 0)
-                printf("%10.1f", mInfo.pse_failures[i].spatialPattern / 1000.0);
-            else
-                printf("%10.1f", 0.0);
+                info_writer->WriteFormatItem("spatial_pattern", "%f", mInfo.pse_failures[i].spatialPattern / 1000.0);
             if (mInfo.pse_failures[i].luminanceFlash > 0)
-                printf("%10.1f", mInfo.pse_failures[i].luminanceFlash / 1000.0);
-            else
-                printf("%10.1f", 0.0);
-            if (mInfo.pse_failures[i].extendedFailure == 0)
-                printf("%6s\n", "F");
-            else
-                printf("%6s\n", "T");
+                info_writer->WriteFormatItem("luminance_flash", "%f", mInfo.pse_failures[i].luminanceFlash / 1000.0);
+            if (mInfo.pse_failures[i].extendedFailure)
+                info_writer->WriteBoolItem("extended_failure", mInfo.pse_failures[i].extendedFailure != 0);
+            info_writer->EndArrayElement();
         }
+        info_writer->EndArrayItem();
+
+        if (text_writer)
+            text_writer->PopItemValueIndent();
     }
+
     if (mInfo.num_timecode_breaks > 0) {
-        printf("APP timecode breaks:\n");
-        printf("  Count     : %"PRIszt"\n", mInfo.num_timecode_breaks);
-        printf("  Breaks    :\n");
-        printf("    %10s:%14s%14s%14s%6s\n", "num", "frame", "vitc", "ltc", "type");
+        size_t tc_count = 0;
         for (i = 0; i < mInfo.num_timecode_breaks; i++) {
-            printf("    %10"PRIszt":%14s%14s%14s  ",
-                   i,
-                   get_duration_string(mInfo.timecode_breaks[i].position, frame_rate).c_str(),
-                   get_timecode_string(mTimecodeBreakTimecodes[i].vitc).c_str(),
-                   get_timecode_string(mTimecodeBreakTimecodes[i].ltc).c_str());
-
-            vector<string> type_strings;
-            int tc_type = mInfo.timecode_breaks[i].timecodeType;
-            if ((tc_type & TIMECODE_BREAK_VITC)) {
-                type_strings.push_back("VITC");
-                tc_type &= ~TIMECODE_BREAK_VITC;
-            }
-            if ((tc_type & TIMECODE_BREAK_LTC)) {
-                type_strings.push_back("LTC");
-                tc_type &= ~TIMECODE_BREAK_LTC;
-            }
-            if (tc_type || type_strings.empty()) {
-                // this is unexpected; only expect vitc and ltc
-                char buf[32];
-                bmx_snprintf(buf, sizeof(buf), "0x%04x", tc_type);
-                type_strings.push_back(buf);
-            }
-            size_t j;
-            for (j = 0; j < type_strings.size(); j++) {
-                if (j != 0)
-                    printf("+");
-                printf("%s", type_strings[j].c_str());
-            }
-            printf("\n");
+            if ((mInfo.timecode_breaks[i].timecodeType & TIMECODE_BREAK_VITC))
+                tc_count++;
+            if ((mInfo.timecode_breaks[i].timecodeType & TIMECODE_BREAK_LTC))
+                tc_count++;
         }
+
+        if (text_writer)
+            text_writer->PushItemValueIndent(strlen("position "));
+
+        info_writer->StartArrayItem("timecode_breaks", tc_count);
+        size_t index = 0;
+        for (i = 0; i < mInfo.num_timecode_breaks; i++) {
+            if ((mInfo.timecode_breaks[i].timecodeType & TIMECODE_BREAK_VITC)) {
+                info_writer->StartArrayElement("timecode_break", index);
+                WRITE_POSITION_INFO(mInfo.timecode_breaks[i], mTimecodeBreakTimecodes[i])
+                info_writer->WriteStringItem("type", "VITC");
+                info_writer->EndArrayElement();
+                index++;
+            }
+            if ((mInfo.timecode_breaks[i].timecodeType & TIMECODE_BREAK_LTC)) {
+                info_writer->StartArrayElement("timecode_break", index);
+                WRITE_POSITION_INFO(mInfo.timecode_breaks[i], mTimecodeBreakTimecodes[i])
+                info_writer->WriteStringItem("type", "LTC");
+                info_writer->EndArrayElement();
+                index++;
+            }
+        }
+        info_writer->EndArrayItem();
+
+        if (text_writer)
+            text_writer->PopItemValueIndent();
     }
-    if (mInfo.num_vtr_errors > 0) {
-        printf("APP VTR errors:\n");
-        printf("  Count     : %"PRIszt"\n", mInfo.num_vtr_errors);
-        printf("  Errors    :\n");
-        printf("    %10s:%14s%14s%14s%7s   %s\n", "num", "frame", "vitc", "ltc", "code", "description");
-        for (i = 0; i < mInfo.num_vtr_errors; i++) {
-            printf("    %10"PRIszt":%14s%14s%14s",
-                   i,
-                   get_duration_string(mInfo.vtr_errors[i].position, frame_rate).c_str(),
-                   get_timecode_string(mVTRErrorTimecodes[i].vitc).c_str(),
-                   get_timecode_string(mVTRErrorTimecodes[i].ltc).c_str());
-            printf("%5s%02x", "0x", mInfo.vtr_errors[i].errorCode);
-            if (mInfo.vtr_errors[i].errorCode == 0x00) {
-                printf("   No error\n");
-            } else {
-                if ((mInfo.vtr_errors[i].errorCode & 0x07) == 0x01)
-                    printf("   Video almost good, ");
-                else if ((mInfo.vtr_errors[i].errorCode & 0x07) == 0x02)
-                    printf("   Video state cannot be determined, ");
-                else if ((mInfo.vtr_errors[i].errorCode & 0x07) == 0x03)
-                    printf("   Video state unclear, ");
-                else if ((mInfo.vtr_errors[i].errorCode & 0x07) == 0x04)
-                    printf("   Video no good, ");
-                else
-                    printf("   Video good, ");
 
-                if ((mInfo.vtr_errors[i].errorCode & 0x70) == 0x10)
-                    printf("Audio almost good\n");
-                else if ((mInfo.vtr_errors[i].errorCode & 0x70) == 0x20)
-                    printf("Audio state cannot be determined\n");
-                else if ((mInfo.vtr_errors[i].errorCode & 0x70) == 0x30)
-                    printf("Audio state unclear\n");
-                else if ((mInfo.vtr_errors[i].errorCode & 0x70) == 0x40)
-                    printf("Audio no good\n");
-                else
-                    printf("Audio good\n");
-            }
+    if (mInfo.num_vtr_errors > 0) {
+        if (text_writer)
+            text_writer->PushItemValueIndent(strlen("audio_status "));
+
+        info_writer->StartArrayItem("vtr_errors", mInfo.num_vtr_errors);
+        for (i = 0; i < mInfo.num_vtr_errors; i++) {
+            info_writer->StartArrayElement("vtr_error", i);
+            WRITE_POSITION_INFO(mInfo.vtr_errors[i], mVTRErrorTimecodes[i])
+            info_writer->WriteIntegerItem("error_code", mInfo.vtr_errors[i].errorCode, true);
+            info_writer->WriteEnumItem("video_status", VTR_STATUS_EINFO, ( mInfo.vtr_errors[i].errorCode       & 0x07));
+            info_writer->WriteEnumItem("audio_status", VTR_STATUS_EINFO, ((mInfo.vtr_errors[i].errorCode >> 4) & 0x07));
+            info_writer->EndArrayElement();
         }
+        info_writer->EndArrayItem();
+
+        if (text_writer)
+            text_writer->PopItemValueIndent();
     }
 }
 

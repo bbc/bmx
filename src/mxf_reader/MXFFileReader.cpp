@@ -360,8 +360,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
             if (mRequireFrameInfoCount > 0)
                 ExtractFrameInfo();
         } else {
-            // TODO: the wrapping type is not required when there is external essence only
-            mWrappingType = MXF_FRAME_WRAPPED;
+            mWrappingType = MXF_UNKNOWN_WRAPPING_TYPE;
         }
 
         if (IsComplete()) {

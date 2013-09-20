@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+  <xs:element name="as11">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="core" type="core_type" minOccurs="0"/>
+        <xs:element name="uk_dpp" type="uk_dpp_type" minOccurs="0"/>
+        <xs:element name="segmentation" type="segmentation_type" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="core_type">
+    <xs:sequence>
+      <xs:element name="shim_name" type="xs:string"/>
+      <xs:element name="shim_version" type="version_type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>shim_version is required for AS-11 version >= 1.1</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="series_title" type="xs:string"/>
+      <xs:element name="programme_title" type="xs:string"/>
+      <xs:element name="episode_title_number" type="xs:string"/>
+      <xs:element name="audio_track_layout" type="audio_track_layout_type"/>
+      <xs:element name="primary_audio_language" type="language_type"/>
+      <xs:element name="closed_captions_present" type="xs:boolean"/>
+      <xs:element name="closed_captions_type" type="captions_type_type" minOccurs="0"/>
+      <xs:element name="closed_captions_language" type="language_type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="uk_dpp_type">
+    <xs:sequence>
+      <xs:element name="production_number" type="xs:string"/>
+      <xs:element name="synopsis" type="xs:string"/>
+      <xs:element name="originator" type="xs:string"/>
+      <xs:element name="copyright_year" type="uint16_type"/>
+      <xs:element name="other_identifier" type="xs:string" minOccurs="0"/>
+      <xs:element name="other_identifier_type" type="xs:string" minOccurs="0"/>
+      <xs:element name="genre" type="xs:string" minOccurs="0"/>
+      <xs:element name="distributor" type="xs:string" minOccurs="0"/>
+      <xs:element name="picture_ratio" type="rational_type" minOccurs="0"/>
+      <xs:element name="three_d" type="xs:boolean"/>
+      <xs:element name="three_d_type" type="three_d_type_type" minOccurs="0"/>
+      <xs:element name="product_placement" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="pse_pass" type="pse_pass_type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>pse_pass is required for AS-11 version >= 1.1</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="pse_manufacturer" type="xs:string" minOccurs="0"/>
+      <xs:element name="pse_version" type="xs:string" minOccurs="0"/>
+      <xs:element name="video_comments" type="xs:string" minOccurs="0"/>
+      <xs:element name="secondary_audio_language" type="language_type"/>
+      <xs:element name="tertiary_audio_language" type="language_type"/>
+      <xs:element name="audio_loudness_standard" type="audio_loudness_standard_type"/>
+      <xs:element name="audio_comments" type="xs:string" minOccurs="0"/>
+      <xs:element name="line_up_start" type="timecode_type"/>
+      <xs:element name="ident_clock_start" type="timecode_type"/>
+      <xs:element name="total_number_of_parts" type="uint16_type"/>
+      <xs:element name="total_programme_duration" type="duration_type"/>
+      <xs:element name="audio_description_present" type="xs:boolean"/>
+      <xs:element name="audio_description_type" type="audio_description_type_type" minOccurs="0"/>
+      <xs:element name="open_captions_present" type="xs:boolean"/>
+      <xs:element name="open_captions_type" type="captions_type_type" minOccurs="0"/>
+      <xs:element name="open_captions_language" type="language_type" minOccurs="0"/>
+      <xs:element name="signing_present" type="signing_present_type"/>
+      <xs:element name="sign_language" type="sign_language_type" minOccurs="0"/>
+      <xs:element name="completion_date" type="xs:date"/>
+      <xs:element name="textless_elements_exist" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="programme_has_text" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="programme_text_language" type="language_type" minOccurs="0"/>
+      <xs:element name="contact_email" type="xs:string"/>
+      <xs:element name="contact_telephone_number" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="segmentation_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="segment" type="segment_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="segment_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="part_number" type="uint16_type"/>
+          <xs:element name="part_total" type="uint16_type"/>
+          <xs:element name="som" type="timecode_type"/>
+          <xs:element name="duration" type="duration_type"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="captions_type_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="Hard_Of_Hearing"/>
+        <xs:enumeration value="Translation"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="audio_track_layout_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="EBU_R_48_1a"/>
+        <xs:enumeration value="EBU_R_48_1b"/>
+        <xs:enumeration value="EBU_R_48_1c"/>
+        <xs:enumeration value="EBU_R_48_2a"/>
+        <xs:enumeration value="EBU_R_48_2b"/>
+        <xs:enumeration value="EBU_R_48_2c"/>
+        <xs:enumeration value="EBU_R_48_3a"/>
+        <xs:enumeration value="EBU_R_48_3b"/>
+        <xs:enumeration value="EBU_R_48_4a"/>
+        <xs:enumeration value="EBU_R_48_4b"/>
+        <xs:enumeration value="EBU_R_48_4c"/>
+        <xs:enumeration value="EBU_R_48_5a"/>
+        <xs:enumeration value="EBU_R_48_5b"/>
+        <xs:enumeration value="EBU_R_48_6a"/>
+        <xs:enumeration value="EBU_R_48_6b"/>
+        <xs:enumeration value="EBU_R_48_7a"/>
+        <xs:enumeration value="EBU_R_48_7b"/>
+        <xs:enumeration value="EBU_R_48_8a"/>
+        <xs:enumeration value="EBU_R_48_8b"/>
+        <xs:enumeration value="EBU_R_48_8c"/>
+        <xs:enumeration value="EBU_R_48_9a"/>
+        <xs:enumeration value="EBU_R_48_9b"/>
+        <xs:enumeration value="EBU_R_48_10a"/>
+        <xs:enumeration value="EBU_R_48_11a"/>
+        <xs:enumeration value="EBU_R_48_11b"/>
+        <xs:enumeration value="EBU_R_48_11c"/>
+        <xs:enumeration value="EBU_R_123_2a"/>
+        <xs:enumeration value="EBU_R_123_4a"/>
+        <xs:enumeration value="EBU_R_123_4b"/>
+        <xs:enumeration value="EBU_R_123_4c"/>
+        <xs:enumeration value="EBU_R_123_8a"/>
+        <xs:enumeration value="EBU_R_123_8b"/>
+        <xs:enumeration value="EBU_R_123_8c"/>
+        <xs:enumeration value="EBU_R_123_8d"/>
+        <xs:enumeration value="EBU_R_123_8e"/>
+        <xs:enumeration value="EBU_R_123_8f"/>
+        <xs:enumeration value="EBU_R_123_8g"/>
+        <xs:enumeration value="EBU_R_123_8h"/>
+        <xs:enumeration value="EBU_R_123_8i"/>
+        <xs:enumeration value="EBU_R_123_12a"/>
+        <xs:enumeration value="EBU_R_123_12b"/>
+        <xs:enumeration value="EBU_R_123_12c"/>
+        <xs:enumeration value="EBU_R_123_12d"/>
+        <xs:enumeration value="EBU_R_123_12e"/>
+        <xs:enumeration value="EBU_R_123_12f"/>
+        <xs:enumeration value="EBU_R_123_12g"/>
+        <xs:enumeration value="EBU_R_123_12h"/>
+        <xs:enumeration value="EBU_R_123_16a"/>
+        <xs:enumeration value="EBU_R_123_16b"/>
+        <xs:enumeration value="EBU_R_123_16c"/>
+        <xs:enumeration value="EBU_R_123_16d"/>
+        <xs:enumeration value="EBU_R_123_16e"/>
+        <xs:enumeration value="EBU_R_123_16f"/>
+        <xs:enumeration value="Undefined"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="pse_pass_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="Yes"/>
+        <xs:enumeration value="No"/>
+        <xs:enumeration value="Not_Tested"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="signing_present_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="Yes"/>
+        <xs:enumeration value="No"/>
+        <xs:enumeration value="Signer_Only"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="three_d_type_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="Side_By_Side"/>
+        <xs:enumeration value="Dual"/>
+        <xs:enumeration value="Left_Eye_Only"/>
+        <xs:enumeration value="Right_Eye_Only"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="audio_loudness_standard_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="None"/>
+        <xs:enumeration value="EBU_R_128"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="audio_description_type_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="Control_Data_Narration"/>
+        <xs:enumeration value="A_D_Mix"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="sign_language_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="British_Sign_Language"/>
+        <xs:enumeration value="Makaton"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="language_type">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[a-z]{3}"/>
+      <xs:pattern value="zxx">
+        <xs:annotation>
+          <xs:documentation>'zxx' indicates that the language is not applicable</xs:documentation>
+        </xs:annotation>
+      </xs:pattern>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

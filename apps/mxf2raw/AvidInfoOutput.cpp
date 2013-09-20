@@ -33,11 +33,8 @@
 #include "config.h"
 #endif
 
-#include <cstdio>
-
 #include "AvidInfoOutput.h"
 #include <bmx/avid_mxf/AvidInfo.h>
-#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -45,51 +42,42 @@ using namespace std;
 using namespace bmx;
 
 
-static const char *COLOR_STRINGS[] =
+static const EnumInfo COLOR_EINFO[] =
 {
-    "white",
-    "red",
-    "yellow",
-    "green",
-    "cyan",
-    "blue",
-    "magenta",
-    "black"
+    {COLOR_WHITE,       "White"},
+    {COLOR_RED,         "Red"},
+    {COLOR_YELLOW,      "Yellow"},
+    {COLOR_GREEN,       "Green"},
+    {COLOR_CYAN,        "Cyan"},
+    {COLOR_BLUE,        "Blue"},
+    {COLOR_MAGENTA,     "Magenta"},
+    {COLOR_BLACK,       "Black"},
+    {0, 0}
 };
 
-static const char *PACKAGE_TYPE_STRINGS[] =
+static const EnumInfo PACKAGE_TYPE_EINFO[] =
 {
-    "unknown",
-    "tape",
-    "import",
-    "recording"
+    {TAPE_PACKAGE_TYPE,         "Tape"},
+    {IMPORT_PACKAGE_TYPE,       "Import"},
+    {RECORDING_PACKAGE_TYPE,    "Recording"},
+    {0, 0}
 };
 
 
-static char* get_umid_string(UMID umid, char *buf, size_t buf_size)
-{
-    bmx_snprintf(buf, buf_size,
-                 "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x."
-                 "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x",
-                 umid.octet0,  umid.octet1,  umid.octet2,  umid.octet3,
-                 umid.octet4,  umid.octet5,  umid.octet6,  umid.octet7,
-                 umid.octet8,  umid.octet9,  umid.octet10, umid.octet11,
-                 umid.octet12, umid.octet13, umid.octet14, umid.octet15,
-                 umid.octet16, umid.octet17, umid.octet18, umid.octet19,
-                 umid.octet20, umid.octet21, umid.octet22, umid.octet23,
-                 umid.octet24, umid.octet25, umid.octet26, umid.octet27,
-                 umid.octet28, umid.octet29, umid.octet30, umid.octet31);
-
-    return buf;
-}
-
-static void print_avid_tagged_values(vector<AvidTaggedValue*> &tags, int indent)
+static void print_avid_tagged_values(AppInfoWriter *info_writer, const vector<AvidTaggedValue*> &tags,
+                                     const string &section_name)
 {
     size_t i;
     for (i = 0; i < tags.size(); i++) {
-        printf("%*c%s: %s\n", indent, ' ', tags[i]->name.c_str(), tags[i]->value.c_str());
-        if (!tags[i]->attributes.empty())
-            print_avid_tagged_values(tags[i]->attributes, indent + 2);
+        info_writer->StartArrayElement(section_name, i);
+        info_writer->WriteStringItem("name", tags[i]->name);
+        info_writer->WriteStringItem("value", tags[i]->value);
+        if (!tags[i]->attributes.empty()) {
+            info_writer->StartArrayItem("attributes", tags[i]->attributes.size());
+            print_avid_tagged_values(info_writer, tags[i]->attributes, "attribute");
+            info_writer->EndArrayItem();
+        }
+        info_writer->EndArrayElement();
     }
 }
 
@@ -100,52 +88,57 @@ void bmx::avid_register_extensions(MXFFileReader *file_reader)
     AvidInfo::RegisterExtensions(file_reader->GetDataModel());
 }
 
-void bmx::avid_print_info(MXFFileReader *file_reader)
+void bmx::avid_write_info(AppInfoWriter *info_writer, MXFFileReader *file_reader)
 {
     AvidInfo info;
     info.ReadInfo(file_reader->GetHeaderMetadata());
 
-    printf("Avid Information:\n");
+    info_writer->StartSection("avid");
 
     if (!info.project_name.empty())
-        printf("  Project name      : %s\n", info.project_name.c_str());
+        info_writer->WriteStringItem("project_name", info.project_name);
     if (info.resolution_id)
-        printf("  Resolution id     : %d\n", info.resolution_id);
+        info_writer->WriteIntegerItem("resolution_id", info.resolution_id);
 
     if (info.have_phys_package) {
-        char buf[128];
-        printf("  Physical package  :\n");
-        printf("      Type            : %s\n", PACKAGE_TYPE_STRINGS[info.phys_package_type]);
-        printf("      Name            : %s\n", info.phys_package_name.c_str());
-        printf("      Package uid     : %s\n", get_umid_string(info.phys_package_uid, buf, sizeof(buf)));
-        if (info.phys_package_type == IMPORT_PACKAGE_TYPE)
-            printf("      Network locator : %s\n", info.phys_package_locator.c_str());
+        info_writer->StartSection("physical_package");
+        info_writer->WriteEnumStringItem("type", PACKAGE_TYPE_EINFO, info.phys_package_type);
+        if (!info.phys_package_name.empty())
+            info_writer->WriteStringItem("name", info.phys_package_name);
+        info_writer->WriteUMIDItem("package_uid", info.phys_package_uid);
+        if (info.phys_package_type == IMPORT_PACKAGE_TYPE && !info.phys_package_locator.empty())
+            info_writer->WriteStringItem("network_locator", info.phys_package_locator);
+        info_writer->EndSection();
     }
 
     Rational frame_rate = file_reader->GetEditRate();
     size_t i;
 
     if (!info.user_comments.empty()) {
-        printf("  User comments     :\n");
-        print_avid_tagged_values(info.user_comments, 6);
+        info_writer->StartArrayItem("user_comments", info.user_comments.size());
+        print_avid_tagged_values(info_writer, info.user_comments, "user_comment");
+        info_writer->EndArrayItem();
     }
 
     if (!info.material_package_attrs.empty()) {
-        printf("  Attributes        :\n");
-        print_avid_tagged_values(info.material_package_attrs, 6);
+        info_writer->StartArrayItem("attributes", info.material_package_attrs.size());
+        print_avid_tagged_values(info_writer, info.material_package_attrs, "attribute");
+        info_writer->EndArrayItem();
     }
 
     if (!info.locators.empty()) {
-        printf("  Locators          :\n");
-        printf("      %10s: %14s %10s    %s\n",
-               "num", "pos", "color", "comment");
+        info_writer->StartArrayItem("locators", info.locators.size());
         for (i = 0; i < info.locators.size(); i++) {
-            printf("      %10"PRIszt": %14s %10s    %s\n",
-                   i, get_duration_string(info.locators[i].position, frame_rate).c_str(),
-                   COLOR_STRINGS[info.locators[i].color], info.locators[i].comment.c_str());
+            info_writer->StartArrayElement("locator", i);
+            info_writer->WriteDurationItem("position", info.locators[i].position, frame_rate);
+            info_writer->WriteEnumStringItem("color", COLOR_EINFO, info.locators[i].color);
+            if (!info.locators[i].comment.empty())
+                info_writer->WriteStringItem("comment", info.locators[i].comment);
+            info_writer->EndArrayElement();
         }
+        info_writer->EndArrayItem();
     }
 
-    printf("\n");
+    info_writer->EndSection();
 }
 

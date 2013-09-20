@@ -63,6 +63,7 @@ std::string get_bmx_library_name();
 std::string get_bmx_version_string();
 std::string get_bmx_scm_version_string();
 std::string get_bmx_build_string();
+Timestamp get_bmx_build_timestamp();
 
 std::string get_bmx_company_name();
 UUID get_bmx_product_uid();

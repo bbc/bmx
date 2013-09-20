@@ -64,6 +64,7 @@ typedef enum
 
 typedef mxfRational         Rational;
 typedef mxfTimestamp        Timestamp;
+typedef mxfUL               UL;
 typedef mxfUUID             UUID;
 typedef mxfUMID             UMID;
 typedef mxfExtendedUMID     ExtendedUMID;

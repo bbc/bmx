@@ -12,7 +12,7 @@ if [ "$4" != "" ]; then
 else
   AS02_BASE_COMMAND="$AS02_BASE_COMMAND -f 25 "
 fi
-READ_COMMAND="../../apps/mxf2raw/mxf2raw -i --md5 ${TEMP_DIR}/as02test/as02test.mxf"
+READ_COMMAND="../../apps/mxf2raw/mxf2raw --regtest --info --info-format xml --track-chksum md5 ${TEMP_DIR}/as02test/as02test.mxf"
 
 # create essence data
 ../create_test_essence -t 1 -d $1 ${TEMP_DIR}/pcm.raw

@@ -1492,7 +1492,7 @@ int main(int argc, const char** argv)
         MXFFileReader *file_reader = 0;
 
         if (input_file_md5)
-            file_factory.SetInputChecksum(MD5_CHECKSUM);
+            file_factory.AddInputChecksumType(MD5_CHECKSUM);
         file_factory.SetInputFlags(input_file_flags);
         if (rw_interleave)
             file_factory.SetRWInterleave(rw_interleave_size);
@@ -2664,7 +2664,7 @@ int main(int argc, const char** argv)
             for (i = 0; i < file_factory.GetNumInputChecksumFiles(); i++) {
                 log_info("Input file MD5: %s %s\n",
                          file_factory.GetInputChecksumFilename(i).c_str(),
-                         file_factory.GetInputChecksumDigestString(i).c_str());
+                         file_factory.GetInputChecksumDigestString(i, MD5_CHECKSUM).c_str());
             }
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2013, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -34,6 +34,7 @@
 #endif
 
 #define __STDC_FORMAT_MACROS
+#define __STDC_LIMIT_MACROS
 
 #include <cstdio>
 #include <cstring>
@@ -58,8 +59,12 @@
 #include <bmx/CRC32.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
+#include <bmx/URI.h>
+#include <bmx/Version.h>
 #include <bmx/apps/AppUtils.h>
 #include <bmx/apps/AppMXFFileFactory.h>
+#include <bmx/apps/AppTextInfoWriter.h>
+#include <bmx/apps/AppXMLInfoWriter.h>
 #include "AS11InfoOutput.h"
 #include "APPInfoOutput.h"
 #include "AvidInfoOutput.h"
@@ -77,247 +82,304 @@ using namespace mxfpp;
 
 #define DEFAULT_ST436_MANIFEST_COUNT    2
 
+#define CHECK_FPRINTF(fname, pr)                                                                    \
+    do {                                                                                            \
+        if (pr < 0) {                                                                               \
+            log_error("Failed to write to '%s': %s\n", fname, bmx_strerror(errno).c_str());         \
+            throw false;                                                                            \
+        }                                                                                           \
+    } while (0)
 
-static const char APP_NAME[]    = "mxf2raw";
+
+typedef enum
+{
+    TEXT_INFO_FORMAT,
+    XML_INFO_FORMAT,
+} InfoFormat;
+
+typedef enum
+{
+    CRC32_PASSED,
+    CRC32_FAILED,
+    CRC32_MISSING_DATA,
+    CRC32_NOT_CHECKED,
+} CRC32CheckResult;
+
+typedef struct
+{
+    LogLevel level;
+    string source;
+    string message;
+} LogMessage;
+
+typedef struct
+{
+    vector<LogMessage> messages;
+    vlog2_func vlog2;
+} LogData;
+
+typedef struct
+{
+    int64_t total_read;
+    int64_t check_count;
+    int64_t error_count;
+} CRC32Data;
 
 
+static LogData LOG_DATA;
+
+static const char *APP_NAME                     = "mxf2raw";
+static const char *XML_INFO_WRITER_NAMESPACE    = "http://bbc.co.uk/rd/bmx/201312";
+static const char *XML_INFO_WRITER_VERSION      = "0.1"; // format <major>.<minor>
+
+static const char* STDIN_FILENAME = "<standard input>";
+
+namespace bmx
+{
+extern bool BMX_REGRESSION_TEST;
+};
+
+static const EnumInfo CRC32_CHECK_RESULT_EINFO[] =
+{
+    {CRC32_PASSED,          "Passed"},
+    {CRC32_FAILED,          "Failed"},
+    {CRC32_MISSING_DATA,    "Missing"},
+    {CRC32_NOT_CHECKED,     "Not_Checked"},
+    {0, 0}
+};
+
+static const EnumInfo SIGNAL_STANDARD_EINFO[] =
+{
+    {MXF_SIGNAL_STANDARD_NONE,          "None"},
+    {MXF_SIGNAL_STANDARD_ITU601,        "ITU_601"},
+    {MXF_SIGNAL_STANDARD_ITU1358,       "ITU_1358"},
+    {MXF_SIGNAL_STANDARD_SMPTE347M,     "SMPTE_347"},
+    {MXF_SIGNAL_STANDARD_SMPTE274M,     "SMPTE_274"},
+    {MXF_SIGNAL_STANDARD_SMPTE296M,     "SMPTE_296"},
+    {MXF_SIGNAL_STANDARD_SMPTE349M,     "SMPTE_349"},
+    {MXF_SIGNAL_STANDARD_SMPTE428_1,    "SMPTE_428_1"},
+    {0, 0}
+};
+
+static const EnumInfo FRAME_LAYOUT_EINFO[] =
+{
+    {MXF_FULL_FRAME,        "Full_Frame"},
+    {MXF_SEPARATE_FIELDS,   "Separate_Fields"},
+    {MXF_SINGLE_FIELD,      "Single_Field"},
+    {MXF_MIXED_FIELDS,      "Mixed_Fields"},
+    {MXF_SEGMENTED_FRAME,   "Segmented_Frame"},
+    {0, 0}
+};
+
+static const EnumInfo COLOR_SITING_EINFO[] =
+{
+    {MXF_COLOR_SITING_COSITING,         "Cositing"},
+    {MXF_COLOR_SITING_HORIZ_MIDPOINT,   "Horizontal_Midpoint"},
+    {MXF_COLOR_SITING_THREE_TAP,        "Three_Tap"},
+    {MXF_COLOR_SITING_QUINCUNX,         "Quincunx"},
+    {MXF_COLOR_SITING_REC601,           "Rec_601"},
+    {MXF_COLOR_SITING_LINE_ALTERN,      "Line_Alternating"},
+    {MXF_COLOR_SITING_VERT_MIDPOINT,    "Vertical_Midpoint"},
+    {MXF_COLOR_SITING_UNKNOWN,          "Unknown"},
+    {0, 0}
+};
+
+static const EnumInfo ESSENCE_KIND_EINFO[] =
+{
+    {MXF_PICTURE_DDEF,      "Picture"},
+    {MXF_SOUND_DDEF,        "Sound"},
+    {MXF_TIMECODE_DDEF,     "Timecode"},
+    {MXF_DATA_DDEF,         "Data"},
+    {MXF_DM_DDEF,           "Descriptive_Metadata"},
+    {0, 0}
+};
+
+static const EnumInfo VBI_WRAPPING_TYPE_EINFO[] =
+{
+    {VBI_FRAME,                 "VBI_Frame"},
+    {VBI_FIELD1,                "VBI_Field_1"},
+    {VBI_FIELD2,                "VBI_Field_2"},
+    {VBI_PROGRESSIVE_FRAME,     "VBI_Progressive_Frame"},
+    {0, 0}
+};
+
+static const EnumInfo VBI_SAMPLE_CODING_EINFO[] =
+{
+    {VBI_1_BIT_COMP_LUMA,           "VBI_1_Bit_Luma"},
+    {VBI_1_BIT_COMP_COLOR,          "VBI_1_Bit_Color_Diff"},
+    {VBI_1_BIT_COMP_LUMA_COLOR,     "VBI_1_Bit_Luma_Color_Diff"},
+    {VBI_8_BIT_COMP_LUMA,           "VBI_8_Bit_Luma"},
+    {VBI_8_BIT_COMP_COLOR,          "VBI_8_Bit_Color_Diff"},
+    {VBI_8_BIT_COMP_LUMA_COLOR,     "VBI_8_Bit_Luma_Color_Diff"},
+    {VBI_10_BIT_COMP_LUMA,          "VBI_10_Bit_Luma"},
+    {VBI_10_BIT_COMP_COLOR,         "VBI_10_Bit_Color_Diff"},
+    {VBI_10_BIT_COMP_LUMA_COLOR,    "VBI_10_Bit_Luma_Color_Diff"},
+    {10,                            "Reserved"},
+    {11,                            "Reserved"},
+    {12,                            "Reserved"},
+    {0, 0}
+};
+
+static const EnumInfo ANC_WRAPPING_TYPE_EINFO[] =
+{
+    {VANC_FRAME,                "VANC_Frame"},
+    {VANC_FIELD1,               "VANC_Field_1"},
+    {VANC_FIELD2,               "VANC_Field_2"},
+    {VANC_PROGRESSIVE_FRAME,    "VANC_Progressive_Frame"},
+    {HANC_FRAME,                "HANC_Frame"},
+    {HANC_FIELD1,               "HANC_Field_1"},
+    {HANC_FIELD2,               "HANC_Field_2"},
+    {HANC_PROGRESSIVE_FRAME,    "HANC_Progressive_Frame"},
+    {0, 0}
+};
+
+static const EnumInfo ANC_SAMPLE_CODING_EINFO[] =
+{
+    {1,                                 "Reserved"},
+    {2,                                 "Reserved"},
+    {3,                                 "Reserved"},
+    {ANC_8_BIT_COMP_LUMA,               "ANC_8_Bit_Luma"},
+    {ANC_8_BIT_COMP_COLOR,              "ANC_8_Bit_Color_Diff"},
+    {ANC_8_BIT_COMP_LUMA_COLOR,         "ANC_8_Bit_Luma_Color_Diff"},
+    {ANC_10_BIT_COMP_LUMA,              "ANC_10_Bit_Luma"},
+    {ANC_10_BIT_COMP_COLOR,             "ANC_10_Bit_Color_Diff"},
+    {ANC_10_BIT_COMP_LUMA_COLOR,        "ANC_10_Bit_Luma_Color_Diff"},
+    {ANC_8_BIT_COMP_LUMA_ERROR,         "ANC_8_Bit_Luma_Parity_Error"},
+    {ANC_8_BIT_COMP_COLOR_ERROR,        "ANC_8_Bit_Color_Diff_Parity_Error"},
+    {ANC_8_BIT_COMP_LUMA_COLOR_ERROR,   "ANC_8_Bit_Luma_Color_Diff_Parity_Error"},
+    {0, 0}
+};
+
+static const EnumInfo CHECKSUM_TYPE_EINFO[] =
+{
+    {CRC32_CHECKSUM,    "CRC32"},
+    {MD5_CHECKSUM,      "MD5"},
+    {SHA1_CHECKSUM,     "SHA1"},
+    {0, 0}
+};
+
+
+static void forward_log_message(vlog2_func lgf, LogLevel level, const char *source, const char *format, ...)
+{
+    va_list p_arg;
+    va_start(p_arg, format);
+    lgf(level, source, format, p_arg);
+    va_end(p_arg);
+}
+
+static void dump_log_messages()
+{
+    set_stderr_log_file();
+
+    size_t i;
+    for (i = 0; i < LOG_DATA.messages.size(); i++) {
+        forward_log_message(bmx::vlog2, LOG_DATA.messages[i].level,
+                            LOG_DATA.messages[i].source.empty() ? 0 : LOG_DATA.messages[i].source.c_str(),
+                            "%s\n", LOG_DATA.messages[i].message.c_str());
+    }
+}
+
+static void mxf2raw_vlog2(LogLevel level, const char *source, const char *format, va_list p_arg)
+{
+    char message[1024];
+    bmx_vsnprintf(message, sizeof(message), format, p_arg);
+
+    if (LOG_DATA.vlog2)
+        forward_log_message(LOG_DATA.vlog2, level, source, "%s", message);
+
+    // remove newline characters from the end of the message
+    size_t end = strlen(message);
+    while (end > 0 && (message[end - 1] == '\n' || message[end - 1] == '\r')) {
+        message[end - 1] = 0;
+        end--;
+    }
+
+    LogMessage log_message;
+    log_message.level = level;
+    if (source)
+        log_message.source = source;
+    log_message.message = message;
+    LOG_DATA.messages.push_back(log_message);
+}
+
+static void mxf2raw_log(LogLevel level, const char *format, ...)
+{
+    va_list p_arg;
+
+    va_start(p_arg, format);
+    mxf2raw_vlog2(level, 0, format, p_arg);
+    va_end(p_arg);
+}
+
+static void mxf2raw_vlog(LogLevel level, const char *format, va_list p_arg)
+{
+    mxf2raw_vlog2(level, 0, format, p_arg);
+}
 
 static const char* get_input_filename(const char *filename)
 {
-    static const char* stdin_filename = "<standard input>";
-
     if (filename[0] == 0)
-        return stdin_filename;
+        return STDIN_FILENAME;
     else
         return filename;
 }
 
 static const char* get_checksum_type_str(ChecksumType type)
 {
-    switch (type)
-    {
-        case CRC32_CHECKSUM: return "CRC32";
-        case MD5_CHECKSUM:   return "MD5";
-        case SHA1_CHECKSUM:  return "SHA1";
-        default:             return "";
-    }
-}
-
-static char* get_label_string(mxfUL label, char *buf, size_t buf_size)
-{
-    bmx_snprintf(buf, buf_size,
-                 "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x",
-                 label.octet0,  label.octet1,  label.octet2,  label.octet3,
-                 label.octet4,  label.octet5,  label.octet6,  label.octet7,
-                 label.octet8,  label.octet9,  label.octet10, label.octet11,
-                 label.octet12, label.octet13, label.octet14, label.octet15);
-
-    return buf;
-}
-
-static char* get_uuid_string(mxfUUID uuid, char *buf, size_t buf_size)
-{
-    return get_label_string(*(mxfUL*)&uuid, buf, buf_size);
-}
-
-static char* get_umid_string(mxfUMID umid, char *buf, size_t buf_size)
-{
-    bmx_snprintf(buf, buf_size,
-                 "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x."
-                 "%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x.%02x%02x%02x%02x",
-                 umid.octet0,  umid.octet1,  umid.octet2,  umid.octet3,
-                 umid.octet4,  umid.octet5,  umid.octet6,  umid.octet7,
-                 umid.octet8,  umid.octet9,  umid.octet10, umid.octet11,
-                 umid.octet12, umid.octet13, umid.octet14, umid.octet15,
-                 umid.octet16, umid.octet17, umid.octet18, umid.octet19,
-                 umid.octet20, umid.octet21, umid.octet22, umid.octet23,
-                 umid.octet24, umid.octet25, umid.octet26, umid.octet27,
-                 umid.octet28, umid.octet29, umid.octet30, umid.octet31);
-
-    return buf;
-}
-
-static char* get_op_label_string(mxfUL op_label, char *buf, size_t buf_size)
-{
-    static const mxfUL op_label_prefix = MXF_OP_L_LABEL(0, 0, 0, 0);
-    // check first 12 bytes, ignoring the registry version byte
-    if (memcmp(&op_label,        &op_label_prefix,        7) != 0 ||
-        memcmp(&op_label.octet8, &op_label_prefix.octet8, 4) != 0)
-    {
-        return get_label_string(op_label, buf, buf_size);
+    const EnumInfo *enum_info_ptr = CHECKSUM_TYPE_EINFO;
+    while (enum_info_ptr->name) {
+        if (enum_info_ptr->value == type)
+            return enum_info_ptr->name;
+        enum_info_ptr++;
     }
 
-    if (op_label.octet12 == 0x10)
-    {
-        // OP-Atom
-        if (op_label.octet13 <= 0x03) {
-            bmx_snprintf(buf, buf_size, "OP-Atom (%s, %s)",
-                         ((op_label.octet13 & 0x01) ? ">1 source clips"   : "1 source clip"),
-                         ((op_label.octet13 & 0x02) ? ">1 essence tracks" : "1 essence track"));
+    BMX_ASSERT(false);
+    return "";
+}
+
+static void calc_file_checksums(const vector<const char *> &filenames, const vector<ChecksumType> &checksum_types)
+{
+    size_t i, j;
+    for (i = 0; i < filenames.size(); i++) {
+        vector<string> checksum_strs;
+        if (filenames[i][0] == 0) {
+#if defined(_WIN32)
+            int res = _setmode(_fileno(stdin), _O_BINARY);
+            if (res == -1) {
+                log_error("Failed to set 'stdin' to binary mode: %s\n", bmx_strerror(errno).c_str());
+                throw false;
+            }
+#endif
+            checksum_strs = Checksum::CalcFileChecksums(stdin, checksum_types);
         } else {
-            bmx_snprintf(buf, buf_size, "OP-Atom (byte 14-16: 0x%02x%02x%02x)",
-                         op_label.octet13, op_label.octet14, op_label.octet15);
+            checksum_strs = Checksum::CalcFileChecksums(filenames[i], checksum_types);
+        }
+        if (checksum_strs.empty()) {
+            log_error("Failed to calculate checksum for file '%s'\n",
+                      get_input_filename(filenames[i]));
+            throw false;
+        }
+
+        if (checksum_types.size() == 1) {
+            // matches output format produced by md5sum and sha1sum
+            if (filenames[i] == 0)
+                printf("%s  -\n", checksum_strs[j].c_str());
+            else
+                printf("%s  %s\n", checksum_strs[j].c_str(), filenames[i]);
+        } else {
+            for (j = 0; j < checksum_types.size(); j++) {
+                if (filenames[i] == 0)
+                    printf("%s: %s  -\n", get_checksum_type_str(checksum_types[j]), checksum_strs[j].c_str());
+                else
+                    printf("%s: %s  %s\n", get_checksum_type_str(checksum_types[j]), checksum_strs[j].c_str(), filenames[i]);
+            }
         }
     }
-    else if (op_label.octet12 >= 0x01  && op_label.octet12 <= 0x03 &&
-             op_label.octet13 >= 0x01  && op_label.octet13 <= 0x03)
-    {
-        // OP-1A ... OP-3C
-        if ((op_label.octet14 & 0x01) && op_label.octet14 <= 0x0f &&
-             op_label.octet15 == 0x00)
-        {
-            bmx_snprintf(buf, buf_size, "OP-%c%c (%s, %s, %s)",
-                         '1' + op_label.octet12 - 1,
-                         'A' + op_label.octet13 - 1,
-                         ((op_label.octet14 & 0x02) ? "external essence" : "internal essence"),
-                         ((op_label.octet14 & 0x04) ? "non-stream file"  : "stream file"),
-                         ((op_label.octet14 & 0x08) ? "multi-track"      : "uni-track"));
-        }
-        else
-        {
-            bmx_snprintf(buf, buf_size, "OP-%c%c (byte 15-16: 0x%02x%02x)",
-                         '1' + op_label.octet12 - 1,
-                         'A' + op_label.octet13 - 1,
-                         op_label.octet14, op_label.octet15);
-        }
-    }
-    else
-    {
-        // unknown label
-        bmx_snprintf(buf, buf_size, "byte 13-16: 0x%02x%02x%02x%02x",
-                     op_label.octet12, op_label.octet13, op_label.octet14, op_label.octet15);
-    }
-
-    return buf;
 }
 
-static char* get_rational_string(mxfRational rat, char *buf, size_t buf_size)
+static string get_d10_sound_flags(uint8_t flags)
 {
-    bmx_snprintf(buf, buf_size, "%d/%d", rat.numerator, rat.denominator);
-    return buf;
-}
-
-static char* get_timestamp_string(mxfTimestamp timestamp, char *buf, size_t buf_size)
-{
-    bmx_snprintf(buf, buf_size, "%d-%02u-%02u %02u:%02u:%02u.%03u",
-                 timestamp.year, timestamp.month, timestamp.day,
-                 timestamp.hour, timestamp.min, timestamp.sec, timestamp.qmsec * 4);
-
-    return buf;
-}
-
-static char* get_product_version_string(mxfProductVersion version, char *buf, size_t buf_size)
-{
-    const char *release_string;
-    switch (version.release)
-    {
-        case 0:
-            release_string = "unknown version";
-            break;
-        case 1:
-            release_string = "released version";
-            break;
-        case 2:
-            release_string = "development version";
-            break;
-        case 3:
-            release_string = "released with patches version";
-            break;
-        case 4:
-            release_string = "pre-release beta version";
-            break;
-        case 5:
-            release_string = "private version";
-            break;
-        default:
-            release_string = "unrecognized release number";
-            break;
-    }
-
-    bmx_snprintf(buf, buf_size, "%u.%u.%u.%u.%u (%s)",
-                 version.major, version.minor, version.patch, version.build, version.release, release_string);
-
-    return buf;
-}
-
-static const char* get_signal_standard_string(uint8_t signal_standard)
-{
-    switch (signal_standard)
-    {
-        case MXF_SIGNAL_STANDARD_NONE:
-            return "None";
-        case MXF_SIGNAL_STANDARD_ITU601:
-            return "ITU 601";
-        case MXF_SIGNAL_STANDARD_ITU1358:
-            return "ITU 1358";
-        case MXF_SIGNAL_STANDARD_SMPTE347M:
-            return "SMPTE 347M";
-        case MXF_SIGNAL_STANDARD_SMPTE274M:
-            return "SMPTE 274M";
-        case MXF_SIGNAL_STANDARD_SMPTE296M:
-            return "SMPTE 296M";
-        case MXF_SIGNAL_STANDARD_SMPTE349M:
-            return "SMPTE 349M";
-        case MXF_SIGNAL_STANDARD_SMPTE428_1:
-            return "SMPTE 428-1";
-        default:
-            break;
-    }
-
-    return "not recognized";
-}
-
-static const char* get_frame_layout_string(uint8_t frame_layout)
-{
-    switch (frame_layout)
-    {
-        case MXF_FULL_FRAME:
-            return "Full Frame";
-        case MXF_SEPARATE_FIELDS:
-            return "Separate Fields";
-        case MXF_SINGLE_FIELD:
-            return "Single Field";
-        case MXF_MIXED_FIELDS:
-            return "Mixed Fields";
-        case MXF_SEGMENTED_FRAME:
-            return "Segmented Frame";
-        default:
-            break;
-    }
-
-    return "not recognized";
-}
-
-static const char* get_color_siting_string(uint8_t color_siting)
-{
-    switch (color_siting)
-    {
-        case MXF_COLOR_SITING_COSITING:
-            return "Co-siting";
-        case MXF_COLOR_SITING_HORIZ_MIDPOINT:
-            return "Horizontal Mid-point";
-        case MXF_COLOR_SITING_THREE_TAP:
-            return "Three Tap";
-        case MXF_COLOR_SITING_QUINCUNX:
-            return "Quincunx";
-        case MXF_COLOR_SITING_REC601:
-            return "Rec 601";
-        case MXF_COLOR_SITING_LINE_ALTERN:
-            return "Line Alternating";
-        case MXF_COLOR_SITING_VERT_MIDPOINT:
-            return "Vertical Mid-point";
-        case MXF_COLOR_SITING_UNKNOWN:
-            return "Unknown";
-        default:
-            break;
-    }
-
-    return "not recognized";
-}
-
-static const char* get_d10_sound_flags(uint8_t flags, char *buf, size_t buf_size)
-{
-    BMX_ASSERT(buf_size >= 10);
+    char buf[10];
 
     uint8_t i;
     for (i = 0; i < 8; i++) {
@@ -330,88 +392,6 @@ static const char* get_d10_sound_flags(uint8_t flags, char *buf, size_t buf_size
     buf[i + 1] = 0;
 
     return buf;
-}
-
-static const char* get_essence_kind_string(MXFDataDefEnum data_def)
-{
-    switch (data_def)
-    {
-        case MXF_PICTURE_DDEF:  return "Picture";
-        case MXF_SOUND_DDEF:    return "Sound";
-        case MXF_TIMECODE_DDEF: return "Timecode";
-        case MXF_DATA_DDEF:     return "Data";
-        case MXF_DM_DDEF:       return "Descriptive Metadata";
-        case MXF_UNKNOWN_DDEF:
-        default:                return "Unknown";
-    }
-}
-
-static const char* get_vbi_wrapping_type_string(uint8_t type)
-{
-    switch (type)
-    {
-        case VBI_FRAME:             return "Frame";
-        case VBI_FIELD1:            return "Field 1";
-        case VBI_FIELD2:            return "Field 2";
-        case VBI_PROGRESSIVE_FRAME: return "Progressive Frame";
-        default:                    return "Unknown";
-    }
-}
-
-static const char* get_vbi_sample_coding_string(uint8_t coding)
-{
-    switch (coding)
-    {
-        case VBI_1_BIT_COMP_LUMA:             return "1-bit Component Luma";
-        case VBI_1_BIT_COMP_COLOR:            return "1-bit Component Color Difference";
-        case VBI_1_BIT_COMP_LUMA_COLOR:       return "1-bit Component Luma and Color Difference";
-        case VBI_8_BIT_COMP_LUMA:             return "8-bit Component Luma";
-        case VBI_8_BIT_COMP_COLOR:            return "8-bit Component Color Difference";
-        case VBI_8_BIT_COMP_LUMA_COLOR:       return "8-bit Component Luma and Color Difference";
-        case VBI_10_BIT_COMP_LUMA:            return "10-bit Component Luma";
-        case VBI_10_BIT_COMP_COLOR:           return "10-bit Component Color Difference";
-        case VBI_10_BIT_COMP_LUMA_COLOR:      return "10-bit Component Luma and Color Difference";
-        case 10:
-        case 11:
-        case 12:                              return "Reserved";
-        default:                              return "Unknown";
-    }
-}
-
-static const char* get_anc_wrapping_type_string(uint8_t type)
-{
-    switch (type)
-    {
-        case VANC_FRAME:             return "VANC Frame";
-        case VANC_FIELD1:            return "VANC Field 1";
-        case VANC_FIELD2:            return "VANC Field 2";
-        case VANC_PROGRESSIVE_FRAME: return "VANC Progressive Frame";
-        case HANC_FRAME:             return "HANC Frame";
-        case HANC_FIELD1:            return "HANC Field 1";
-        case HANC_FIELD2:            return "HANC Field 2";
-        case HANC_PROGRESSIVE_FRAME: return "HANC Progressive Frame";
-        default:                     return "Unknown";
-    }
-}
-
-static const char* get_anc_sample_coding_string(uint8_t coding)
-{
-    switch (coding)
-    {
-        case 1:
-        case 2:
-        case 3:                               return "Reserved";
-        case ANC_8_BIT_COMP_LUMA:             return "8-bit Component Luma";
-        case ANC_8_BIT_COMP_COLOR:            return "8-bit Component Color Difference";
-        case ANC_8_BIT_COMP_LUMA_COLOR:       return "8-bit Component Luma and Color Difference";
-        case ANC_10_BIT_COMP_LUMA:            return "10-bit Component Luma";
-        case ANC_10_BIT_COMP_COLOR:           return "10-bit Component Color Difference";
-        case ANC_10_BIT_COMP_LUMA_COLOR:      return "10-bit Component Luma and Color Difference";
-        case ANC_8_BIT_COMP_LUMA_ERROR:       return "8-bit Component Luma with Parity Error";
-        case ANC_8_BIT_COMP_COLOR_ERROR:      return "8-bit Component Color Difference with Parity Error";
-        case ANC_8_BIT_COMP_LUMA_COLOR_ERROR: return "8-bit Component Luma and Color Difference with Parity Error";
-        default:                              return "Unknown";
-    }
 }
 
 static const char* get_did_type1_string(uint8_t did)
@@ -463,7 +443,7 @@ static const char* get_did_type1_string(uint8_t did)
             return did_type1_table[i].application;
     }
 
-    return "Unknown";
+    return 0;
 }
 
 static const char* get_did_type2_string(uint8_t did, uint8_t sdid)
@@ -525,158 +505,491 @@ static const char* get_did_type2_string(uint8_t did, uint8_t sdid)
             return did_type2_table[i].application;
     }
 
-    return "Unknown";
+    return 0;
 }
 
-static void print_track_info(const MXFTrackInfo *track_info)
+static void write_op_label(AppInfoWriter *info_writer, const string &name, mxfUL op_label)
 {
-    char buf[128];
+    static const mxfUL op_label_prefix = MXF_OP_L_LABEL(0, 0, 0, 0);
 
+    char label_str[32];
+    bmx_snprintf(label_str, sizeof(label_str), "%s", "Unknown");
+
+    info_writer->StartAnnotations();
+    if (memcmp(&op_label,        &op_label_prefix,        7) == 0 &&
+        memcmp(&op_label.octet8, &op_label_prefix.octet8, 4) == 0)
+    {
+        if (op_label.octet12 == 0x10)
+        {
+            // OP-Atom
+            bmx_snprintf(label_str, sizeof(label_str), "%s", "OPAtom");
+            if (op_label.octet13 <= 0x03) {
+                info_writer->WriteBoolItem("multi_source_clip",   (op_label.octet13 & 0x01) != 0);
+                info_writer->WriteBoolItem("multi_essence_track", (op_label.octet13 & 0x02) != 0);
+            }
+        }
+        else if (op_label.octet12 >= 0x01  && op_label.octet12 <= 0x03 &&
+                 op_label.octet13 >= 0x01  && op_label.octet13 <= 0x03)
+        {
+            // OP-1A ... OP-3C
+            bmx_snprintf(label_str, sizeof(label_str), "OP%c%c", '1' + op_label.octet12 - 1, 'A' + op_label.octet13 - 1);
+            if ((op_label.octet14 & 0x01) && op_label.octet14 <= 0x0f &&
+                 op_label.octet15 == 0x00)
+            {
+                info_writer->WriteBoolItem("external_essence", (op_label.octet14 & 0x02) != 0);
+                info_writer->WriteBoolItem("non_stream",       (op_label.octet14 & 0x04) != 0);
+                info_writer->WriteBoolItem("multi_track",      (op_label.octet14 & 0x08) != 0);
+            }
+        }
+    }
+    info_writer->WriteAUIDItem("label", op_label);
+    info_writer->EndAnnotations();
+
+    info_writer->WriteStringItem(name, label_str);
+}
+
+static void write_track_package_info(AppInfoWriter *info_writer, MXFTrackReader *track_reader, size_t index)
+{
+    MXFSequenceTrackReader *sequence_track = dynamic_cast<MXFSequenceTrackReader*>(track_reader);
+    if (sequence_track) {
+        info_writer->StartArrayItem("packages", sequence_track->GetNumSegments());
+        size_t i;
+        for (i = 0; i < sequence_track->GetNumSegments(); i++)
+            write_track_package_info(info_writer, sequence_track->GetSegment(i), i);
+        info_writer->EndArrayItem();
+    } else {
+        const MXFTrackInfo *track_info = track_reader->GetTrackInfo();
+        MXFFileTrackReader *file_track = dynamic_cast<MXFFileTrackReader*>(track_reader);
+        BMX_ASSERT(file_track);
+
+        if (index == (size_t)(-1)) {
+            info_writer->StartArrayItem("packages", 1);
+            info_writer->StartArrayElement("package", 0);
+        } else {
+            info_writer->StartArrayElement("package", index);
+        }
+
+        info_writer->StartSection("material");
+        info_writer->WriteUMIDItem("package_uid", track_info->material_package_uid);
+        info_writer->WriteIntegerItem("track_id", track_info->material_track_id);
+        info_writer->WriteIntegerItem("track_number", track_info->material_track_number);
+        info_writer->EndSection();
+
+        info_writer->StartSection("file_source");
+        info_writer->WriteUMIDItem("package_uid", track_info->file_package_uid);
+        info_writer->WriteIntegerItem("track_id", track_info->file_track_id);
+        info_writer->WriteIntegerItem("track_number", track_info->file_track_number, true);
+        if (BMX_REGRESSION_TEST)
+            info_writer->WriteStringItem("file_uri", "regtest_file_uri");
+        else
+            info_writer->WriteStringItem("file_uri", file_track->GetFileReader()->GetAbsoluteURI().ToString());
+        info_writer->EndSection();
+
+        info_writer->EndArrayElement();
+        if (index == (size_t)(-1))
+            info_writer->EndArrayItem();
+    }
+}
+
+static void write_crc32_check_data(AppInfoWriter *info_writer, const CRC32Data *crc32_data)
+{
+    CRC32CheckResult result = CRC32_PASSED;
+    if (crc32_data->error_count != 0)
+        result = CRC32_FAILED;
+    else if (crc32_data->total_read > crc32_data->check_count)
+        result = CRC32_MISSING_DATA;
+
+    info_writer->WriteEnumStringItem("result", CRC32_CHECK_RESULT_EINFO, result);
+    info_writer->WriteIntegerItem("error_count", crc32_data->error_count);
+    info_writer->WriteIntegerItem("check_count", crc32_data->check_count);
+    info_writer->WriteIntegerItem("total_read", crc32_data->total_read);
+}
+
+static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFTrackReader *track_reader,
+                             const vector<Checksum> *checksums, const CRC32Data *crc32_data)
+{
+    const MXFTrackInfo *track_info = track_reader->GetTrackInfo();
     const MXFPictureTrackInfo *picture_info = dynamic_cast<const MXFPictureTrackInfo*>(track_info);
     const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
     const MXFDataTrackInfo *data_info = dynamic_cast<const MXFDataTrackInfo*>(track_info);
 
-    printf("  Essence kind         : %s\n", get_essence_kind_string(track_info->data_def));
-    printf("  Essence type         : %s\n", essence_type_to_string(track_info->essence_type));
-    printf("  Essence label        : %s\n", get_label_string(track_info->essence_container_label, buf, sizeof(buf)));
-    printf("  Material package uid : %s\n", get_umid_string(track_info->material_package_uid, buf, sizeof(buf)));
-    printf("  Material track id    : %u\n", track_info->material_track_id);
-    printf("  Material track number: %u\n", track_info->material_track_number);
-    printf("  File package uid     : %s\n", get_umid_string(track_info->file_package_uid, buf, sizeof(buf)));
-    printf("  File track id        : %u\n", track_info->file_track_id);
-    printf("  File track number    : 0x%08x\n", track_info->file_track_number);
-    printf("  Edit rate            : %s\n", get_rational_string(track_info->edit_rate, buf, sizeof(buf)));
-    printf("  Duration             : %"PRId64"\n", track_info->duration);
-    printf("  Lead filler offset   : %"PRId64"\n", track_info->lead_filler_offset);
+    int16_t precharge = 0;
+    int16_t rollout = 0;
+    if (reader->IsComplete() && track_reader->GetDuration() > 0) {
+        precharge = track_reader->GetPrecharge(0, true);
+        rollout = track_reader->GetRollout(track_reader->GetDuration() - 1, true);
+    }
+
+    info_writer->WriteEnumStringItem("essence_kind", ESSENCE_KIND_EINFO, track_info->data_def);
+    info_writer->WriteStringItem("essence_type", essence_type_to_enum_string(track_info->essence_type));
+    info_writer->WriteAUIDItem("ec_label", track_info->essence_container_label);
+    info_writer->WriteRationalItem("edit_rate", track_info->edit_rate);
+    info_writer->WriteDurationItem("duration", track_info->duration, track_info->edit_rate);
+    if (track_info->lead_filler_offset != 0)
+        info_writer->WriteDurationItem("lead_filler_offset", track_info->lead_filler_offset, track_info->edit_rate);
+    if (precharge != 0)
+        info_writer->WriteIntegerItem("precharge", precharge);
+    if (rollout != 0)
+        info_writer->WriteIntegerItem("rollout", rollout);
+    if (checksums) {
+        size_t i;
+        for (i = 0; i < checksums->size(); i++) {
+            info_writer->StartAnnotations();
+            info_writer->WriteStringItem("type", get_checksum_type_str((*checksums)[i].GetType()));
+            info_writer->EndAnnotations();
+            info_writer->WriteStringItem("checksum", (*checksums)[i].GetDigestString());
+        }
+    }
+    if (crc32_data) {
+        info_writer->StartSection("crc32_check");
+        write_crc32_check_data(info_writer, crc32_data);
+        info_writer->EndSection();
+    }
+
+    write_track_package_info(info_writer, track_reader, (size_t)(-1));
 
     if (picture_info) {
-        printf("  Picture coding label : %s\n", get_label_string(picture_info->picture_essence_coding_label, buf, sizeof(buf)));
-        printf("  Signal standard      : %u (%s)\n", picture_info->signal_standard, get_signal_standard_string(picture_info->signal_standard));
-        printf("  Frame layout         : %u (%s)\n", picture_info->frame_layout, get_frame_layout_string(picture_info->frame_layout));
-        printf("  Stored dimensions    : %ux%u\n", picture_info->stored_width, picture_info->stored_height);
-        printf("  Display dimensions   : %ux%u\n", picture_info->display_width, picture_info->display_height);
-        printf("  Display x offset     : %u\n", picture_info->display_x_offset);
-        printf("  Display y offset     : %u\n", picture_info->display_y_offset);
-        printf("  Aspect ratio         : %s\n", get_rational_string(picture_info->aspect_ratio, buf, sizeof(buf)));
-        printf("  AFD                  : ");
+        info_writer->StartSection("picture_descriptor");
+        if (picture_info->picture_essence_coding_label != g_Null_UL)
+            info_writer->WriteAUIDItem("coding_label", picture_info->picture_essence_coding_label);
+        info_writer->WriteEnumItem("signal_standard", SIGNAL_STANDARD_EINFO, picture_info->signal_standard);
+        info_writer->WriteEnumItem("frame_layout", FRAME_LAYOUT_EINFO, picture_info->frame_layout);
+        info_writer->WriteIntegerItem("stored_width", picture_info->stored_width);
+        info_writer->WriteIntegerItem("stored_height", picture_info->stored_height);
+        info_writer->WriteIntegerItem("display_width", picture_info->display_width);
+        info_writer->WriteIntegerItem("display_height", picture_info->display_height);
+        if (picture_info->display_x_offset != 0)
+            info_writer->WriteIntegerItem("display_x_offset", picture_info->display_x_offset);
+        if (picture_info->display_y_offset != 0)
+            info_writer->WriteIntegerItem("display_y_offset", picture_info->display_y_offset);
+        info_writer->WriteRationalItem("aspect_ratio", picture_info->aspect_ratio);
         if (picture_info->afd)
-            printf("%u\n", picture_info->afd);
-        else
-            printf("(not set)\n");
+            info_writer->WriteIntegerItem("afd", picture_info->afd);
+        if (track_info->essence_type == AVCI100_1080I ||
+            track_info->essence_type == AVCI100_1080P ||
+            track_info->essence_type == AVCI100_720P ||
+            track_info->essence_type == AVCI50_1080I ||
+            track_info->essence_type == AVCI50_1080P ||
+            track_info->essence_type == AVCI50_720P)
+        {
+            info_writer->WriteBoolItem("avci_header", picture_info->have_avci_header);
+        }
         if (picture_info->is_cdci) {
-            printf("  Component depth      : %u\n", picture_info->component_depth);
-            printf("  Horiz subsampling    : %u\n", picture_info->horiz_subsampling);
-            printf("  Vert subsampling     : %u\n", picture_info->vert_subsampling);
-            printf("  Color siting         : %u (%s)\n", picture_info->color_siting, get_color_siting_string(picture_info->color_siting));
-            if (track_info->essence_type == AVCI100_1080I ||
-                track_info->essence_type == AVCI100_1080P ||
-                track_info->essence_type == AVCI100_720P ||
-                track_info->essence_type == AVCI50_1080I ||
-                track_info->essence_type == AVCI50_1080P ||
-                track_info->essence_type == AVCI50_720P)
-            {
-                printf("  AVCI header          : %s\n", picture_info->have_avci_header ? "true" : "false");
-            }
+            info_writer->StartSection("cdci_descriptor");
+            info_writer->WriteIntegerItem("component_depth", picture_info->component_depth);
+            info_writer->WriteIntegerItem("horiz_subsamp", picture_info->horiz_subsampling);
+            info_writer->WriteIntegerItem("vert_subsamp", picture_info->vert_subsampling);
+            info_writer->WriteEnumItem("color_siting", COLOR_SITING_EINFO, picture_info->color_siting);
+            info_writer->EndSection();
         }
+        info_writer->EndSection();
     } else if (sound_info) {
-        printf("  Sampling rate        : %s\n", get_rational_string(sound_info->sampling_rate, buf, sizeof(buf)));
-        printf("  Bits per sample      : %u\n", sound_info->bits_per_sample);
-        printf("  Block align          : %u\n", sound_info->block_align);
-        printf("  Channel count        : %u\n", sound_info->channel_count);
+        info_writer->StartSection("sound_descriptor");
+        info_writer->WriteRationalItem("sampling_rate", sound_info->sampling_rate);
+        info_writer->WriteIntegerItem("bits_per_sample", sound_info->bits_per_sample);
+        info_writer->WriteIntegerItem("block_align", sound_info->block_align);
+        info_writer->WriteIntegerItem("channel_count", sound_info->channel_count);
         if (track_info->essence_type == D10_AES3_PCM) {
-            printf("  D10 AES3 valid flags : %s\n", get_d10_sound_flags(sound_info->d10_aes3_valid_flags, buf,
-                                                                        sizeof(buf)));
+            info_writer->WriteStringItem("d10_aes3_valid_flags",
+                                         get_d10_sound_flags(sound_info->d10_aes3_valid_flags));
         }
-        printf("  Sequence offset      : %u\n", sound_info->sequence_offset);
-        printf("  Locked               : %s\n", (sound_info->locked_set ? (sound_info->locked ? "true" : "false") : "(not set)"));
-        printf("  Audio ref level      : ");
+        if (sound_info->sequence_offset != 0)
+            info_writer->WriteIntegerItem("sequence_offset", sound_info->sequence_offset);
+        if (sound_info->locked_set)
+            info_writer->WriteBoolItem("locked", sound_info->locked);
         if (sound_info->audio_ref_level_set)
-            printf("%d\n", sound_info->audio_ref_level);
-        else
-            printf("(not set)\n");
-        printf("  Dial norm            : ");
+            info_writer->WriteIntegerItem("audio_ref_level", sound_info->audio_ref_level);
         if (sound_info->dial_norm_set)
-            printf("%d\n", sound_info->dial_norm);
-        else
-            printf("(not set)\n");
+            info_writer->WriteIntegerItem("dial_norm", sound_info->dial_norm);
+        info_writer->EndSection();
     } else if (data_info) {
+        info_writer->StartSection("data_descriptor");
         if (!data_info->vbi_manifest.empty()) {
-            printf("  VBI data manifest    :\n");
+            info_writer->StartSection("vbi_descriptor");
+            info_writer->StartArrayItem("manifest", data_info->vbi_manifest.size());
             size_t i;
             for (i = 0; i < data_info->vbi_manifest.size(); i++) {
-                printf("    Element %"PRIszt":\n", i);
-                printf("      Line number    : %u\n", data_info->vbi_manifest[i].line_number);
-                printf("      Wrapping type  : %s (0x%02x)\n",
-                       get_vbi_wrapping_type_string(data_info->vbi_manifest[i].wrapping_type),
-                       data_info->vbi_manifest[i].wrapping_type);
-                printf("      Sample coding  : %s (0x%02x)\n",
-                       get_vbi_sample_coding_string(data_info->vbi_manifest[i].sample_coding),
-                       data_info->vbi_manifest[i].sample_coding);
+                info_writer->StartArrayElement("element", i);
+                info_writer->WriteIntegerItem("line_number", data_info->vbi_manifest[i].line_number);
+                info_writer->WriteEnumItem("wrapping_type", VBI_WRAPPING_TYPE_EINFO,
+                                           data_info->vbi_manifest[i].wrapping_type);
+                info_writer->WriteEnumItem("sample_coding", VBI_SAMPLE_CODING_EINFO,
+                                           data_info->vbi_manifest[i].sample_coding);
+                info_writer->EndArrayElement();
             }
+            info_writer->EndArrayItem();
+            info_writer->EndSection();
         } else if (!data_info->anc_manifest.empty()) {
-            printf("  ANC data manifest    :\n");
+            info_writer->StartSection("anc_descriptor");
+            info_writer->StartArrayItem("manifest", data_info->anc_manifest.size());
             size_t i;
             for (i = 0; i < data_info->anc_manifest.size(); i++) {
-                printf("    Element %"PRIszt":\n", i);
-                printf("      Line number    : %u\n", data_info->anc_manifest[i].line_number);
-                printf("      Wrapping type  : %s (0x%02x)\n",
-                       get_anc_wrapping_type_string(data_info->anc_manifest[i].wrapping_type),
-                       data_info->anc_manifest[i].wrapping_type);
-                printf("      Sample coding  : %s (0x%02x)\n",
-                       get_anc_sample_coding_string(data_info->anc_manifest[i].sample_coding),
-                       data_info->anc_manifest[i].sample_coding);
+                info_writer->StartArrayElement("element", i);
+                info_writer->WriteIntegerItem("line_number", data_info->anc_manifest[i].line_number);
+                info_writer->WriteEnumItem("wrapping_type", ANC_WRAPPING_TYPE_EINFO,
+                                           data_info->anc_manifest[i].wrapping_type);
+                info_writer->WriteEnumItem("sample_coding", ANC_SAMPLE_CODING_EINFO,
+                                           data_info->anc_manifest[i].sample_coding);
                 if (data_info->anc_manifest[i].did) {
                     if ((data_info->anc_manifest[i].did & 0x80)) {
-                        printf("      DID Type 1     : %s (0x%02x)\n",
-                               get_did_type1_string(data_info->anc_manifest[i].did),
-                               data_info->anc_manifest[i].did);
+                        const char *description = get_did_type1_string(data_info->anc_manifest[i].did);
+                        info_writer->StartSection("did_type_1");
+                        info_writer->WriteIntegerItem("did", data_info->anc_manifest[i].did, true);
+                        if (description)
+                            info_writer->WriteStringItem("description", description);
+                        info_writer->EndSection();
                     } else {
-                        printf("      DID Type 2     : %s (0x%02x, 0x%02x)\n",
-                               get_did_type2_string(data_info->anc_manifest[i].did, data_info->anc_manifest[i].sdid),
-                               data_info->anc_manifest[i].did, data_info->anc_manifest[i].sdid);
+                        const char *description = get_did_type2_string(data_info->anc_manifest[i].did,
+                                                                       data_info->anc_manifest[i].sdid);
+                        info_writer->StartSection("did_type_2");
+                        info_writer->WriteIntegerItem("did", data_info->anc_manifest[i].did, true);
+                        info_writer->WriteIntegerItem("sdid", data_info->anc_manifest[i].sdid, true);
+                        if (description)
+                            info_writer->WriteStringItem("description", description);
+                        info_writer->EndSection();
                     }
                 }
+                info_writer->EndArrayElement();
             }
+            info_writer->EndArrayItem();
+            info_writer->EndSection();
+        }
+        info_writer->EndSection();
+    }
+}
+
+static void write_clip_info(AppInfoWriter *info_writer, MXFReader *reader,
+                            const vector<vector<Checksum> > &track_checksums,
+                            const vector<CRC32Data> &track_crc32_data)
+{
+    Rational edit_rate = reader->GetEditRate();
+    bool have_track_checksums = (track_checksums.size() == reader->GetNumTrackReaders());
+    bool have_track_crc32_data = (track_crc32_data.size() == reader->GetNumTrackReaders());
+
+    int16_t max_precharge = 0;
+    int16_t max_rollout = 0;
+    if (reader->IsComplete() && reader->GetDuration() > 0) {
+        max_precharge = reader->GetMaxPrecharge(0, false);
+        max_rollout = reader->GetMaxRollout(reader->GetDuration() - 1, false);
+    }
+
+    info_writer->WriteRationalItem("edit_rate", edit_rate);
+    info_writer->WriteDurationItem("duration", reader->GetDuration(), edit_rate);
+    if (max_precharge != 0)
+        info_writer->WriteIntegerItem("max_precharge", max_precharge);
+    if (max_rollout != 0)
+        info_writer->WriteIntegerItem("max_rollout", max_rollout);
+
+    info_writer->StartSection("start_timecodes");
+    if (reader->HaveMaterialTimecode()) {
+
+        int64_t lead_filler_offset = 0;
+        if (!reader->HaveFixedLeadFillerOffset())
+            log_warn("No fixed lead filler offset\n");
+        else
+            lead_filler_offset = reader->GetFixedLeadFillerOffset();
+        info_writer->WriteTimecodeItem("material", reader->GetMaterialTimecode(lead_filler_offset));
+        if (lead_filler_offset != 0) {
+            info_writer->WriteTimecodeItem("material_origin",
+                                           reader->GetMaterialTimecode(0));
+        }
+    }
+    if (reader->HaveFileSourceTimecode())
+        info_writer->WriteTimecodeItem("file_source", reader->GetFileSourceTimecode(0));
+    if (reader->HavePhysicalSourceTimecode()) {
+        if (!reader->GetPhysicalSourcePackageName().empty()) {
+            info_writer->StartAnnotations();
+            info_writer->WriteStringItem("name", reader->GetPhysicalSourcePackageName());
+            info_writer->EndAnnotations();
+        }
+        info_writer->WriteTimecodeItem("physical_source", reader->GetPhysicalSourceTimecode(0));
+    }
+    info_writer->EndSection();
+
+    if (reader->GetNumTrackReaders() > 0) {
+        info_writer->StartArrayItem("tracks", reader->GetNumTrackReaders());
+        uint32_t i;
+        for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+            info_writer->StartArrayElement("track", i);
+            write_track_info(info_writer, reader, reader->GetTrackReader(i),
+                             (have_track_checksums ? &track_checksums[i] : 0),
+                             (have_track_crc32_data ? &track_crc32_data[i] : 0));
+            info_writer->EndArrayElement();
+        }
+        info_writer->EndArrayItem();
+    }
+}
+
+static void write_identification_info(AppInfoWriter *info_writer, Identification *identification)
+{
+    info_writer->WriteIDAUItem("generation_uid", identification->getThisGenerationUID());
+    info_writer->WriteStringItem("company_name", identification->getCompanyName());
+    info_writer->WriteStringItem("product_name", identification->getProductName());
+    if (identification->haveProductVersion())
+        info_writer->WriteProductVersionItem("product_version", identification->getProductVersion());
+    info_writer->WriteStringItem("version_string", identification->getVersionString());
+    info_writer->WriteIDAUItem("product_uid", identification->getProductUID());
+    info_writer->WriteTimestampItem("modified_date", identification->getModificationDate());
+    if (identification->haveToolkitVersion())
+        info_writer->WriteProductVersionItem("toolkit_version", identification->getToolkitVersion());
+    if (identification->havePlatform())
+        info_writer->WriteStringItem("platform", identification->getPlatform());
+}
+
+static void write_package_info(AppInfoWriter *info_writer, GenericPackage *package)
+{
+    info_writer->WriteUMIDItem("package_uid", package->getPackageUID());
+    if (package->haveName())
+        info_writer->WriteStringItem("name", package->getName());
+    info_writer->WriteTimestampItem("creation_date", package->getPackageCreationDate());
+    info_writer->WriteTimestampItem("modified_date", package->getPackageModifiedDate());
+}
+
+static void write_file_checksum_info(AppInfoWriter *info_writer, MXFFileReader *file_reader,
+                                     AppMXFFileFactory *file_factory)
+{
+    URI abs_uri = file_reader->GetAbsoluteURI();
+
+    size_t i;
+    for (i = 0; i < file_factory->GetNumInputChecksumFiles(); i++) {
+        if (abs_uri == file_factory->GetInputChecksumAbsURI(i)) {
+            vector<ChecksumType> checksum_types = file_factory->GetInputChecksumTypes(i);
+            size_t j;
+            for (j = 0; j < checksum_types.size(); j++) {
+                info_writer->StartAnnotations();
+                info_writer->WriteStringItem("type", get_checksum_type_str(checksum_types[j]));
+                info_writer->EndAnnotations();
+                info_writer->WriteStringItem("checksum",
+                                             file_factory->GetInputChecksumDigestString(i, checksum_types[j]).c_str());
+            }
+            break;
         }
     }
 }
 
-static void print_identification_info(Identification *identification)
+static void write_file_info(AppInfoWriter *info_writer, MXFFileReader *file_reader, AppMXFFileFactory *file_factory)
 {
-    char buf[128];
+    if (BMX_REGRESSION_TEST) {
+        info_writer->WriteStringItem("file_uri", "regtest_file_uri");
+    } else {
+        info_writer->WriteStringItem("file_uri", file_reader->GetAbsoluteURI().ToString());
+        write_file_checksum_info(info_writer, file_reader, file_factory);
+    }
 
-    printf("      Generation UID    : %s\n", get_uuid_string(identification->getThisGenerationUID(), buf, sizeof(buf)));
-    printf("      Company name      : %s\n", identification->getCompanyName().c_str());
-    printf("      Product name      : %s\n", identification->getProductName().c_str());
-    printf("      Product version   : ");
-    if (identification->haveProductVersion())
-        printf("%s\n", get_product_version_string(identification->getProductVersion(), buf, sizeof(buf)));
-    else
-        printf("(not set)\n");
-    printf("      Version string    : %s\n", identification->getVersionString().c_str());
-    printf("      Product UID       : %s\n", get_uuid_string(identification->getProductUID(), buf, sizeof(buf)));
-    printf("      Modification date : %s\n", get_timestamp_string(identification->getModificationDate(), buf,
-                                                                  sizeof(buf)));
-    printf("      Toolkit version   : ");
-    if (identification->haveToolkitVersion())
-        printf("%s\n", get_product_version_string(identification->getToolkitVersion(), buf, sizeof(buf)));
-    else
-        printf("(not set)\n");
-    printf("      Platform          : ");
-    if (identification->havePlatform())
-        printf("%s\n", identification->getPlatform().c_str());
-    else
-        printf("(not set)\n");
+    info_writer->WriteVersionTypeItem("mxf_version", file_reader->GetMXFVersion());
+    write_op_label(info_writer, "op_label", file_reader->GetOPLabel());
+    if (file_reader->HaveInternalEssence())
+        info_writer->WriteBoolItem("frame_wrapped", file_reader->IsFrameWrapped());
+
+    vector<Identification*> identifications = file_reader->GetHeaderMetadata()->getPreface()->getIdentifications();
+    info_writer->StartArrayItem("identifications", identifications.size());
+    size_t i;
+    for (i = 0; i < identifications.size(); i++) {
+        info_writer->StartArrayElement("identification", i);
+        write_identification_info(info_writer, identifications[i]);
+        info_writer->EndArrayElement();
+    }
+    info_writer->EndArrayItem();
+
+    vector<GenericPackage*> packages = file_reader->GetHeaderMetadata()->getPreface()->getContentStorage()->getPackages();
+
+    size_t mp_count = 0;
+    size_t fsp_count = 0;
+    size_t psp_count = 0;
+    for (i = 0; i < packages.size(); i++) {
+        MaterialPackage *mp = dynamic_cast<MaterialPackage*>(packages[i]);
+        SourcePackage *sp = dynamic_cast<SourcePackage*>(packages[i]);
+        if (mp) {
+            mp_count++;
+        } else if (sp && sp->haveDescriptor()) {
+            if (dynamic_cast<FileDescriptor*>(sp->getDescriptor()))
+                fsp_count++;
+            else
+                psp_count++;
+        }
+    }
+
+    if (mp_count > 0) {
+        info_writer->StartArrayItem("material_packages", mp_count);
+        size_t index = 0;
+        for (i = 0; i < packages.size(); i++) {
+            if (dynamic_cast<MaterialPackage*>(packages[i])) {
+                info_writer->StartArrayElement("material_package", index);
+                write_package_info(info_writer, packages[i]);
+                info_writer->EndArrayElement();
+                index++;
+            }
+        }
+        info_writer->EndArrayItem();
+    }
+
+    if (fsp_count > 0) {
+        info_writer->StartArrayItem("file_source_packages", fsp_count);
+        size_t index = 0;
+        for (i = 0; i < packages.size(); i++) {
+            SourcePackage *sp = dynamic_cast<SourcePackage*>(packages[i]);
+            if (sp && sp->haveDescriptor() && dynamic_cast<FileDescriptor*>(sp->getDescriptor())) {
+                info_writer->StartArrayElement("file_source_package", index);
+                write_package_info(info_writer, packages[i]);
+                info_writer->EndArrayElement();
+                index++;
+            }
+        }
+        info_writer->EndArrayItem();
+    }
+
+    if (psp_count > 0) {
+        info_writer->StartArrayItem("physical_source_packages", psp_count);
+        size_t index = 0;
+        for (i = 0; i < packages.size(); i++) {
+            SourcePackage *sp = dynamic_cast<SourcePackage*>(packages[i]);
+            if (sp && sp->haveDescriptor() && !dynamic_cast<FileDescriptor*>(sp->getDescriptor())) {
+                info_writer->StartArrayElement("physical_source_package", index);
+                write_package_info(info_writer, packages[i]);
+                info_writer->EndArrayElement();
+                index++;
+            }
+        }
+        info_writer->EndArrayItem();
+    }
 }
 
-static string timecode_to_string(Timecode timecode)
+static void write_application_info(AppInfoWriter *info_writer)
 {
-    char buffer[64];
-    bmx_snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d%c%02d (@ %dfps)",
-                 timecode.GetHour(), timecode.GetMin(), timecode.GetSec(),
-                 timecode.IsDropFrame() ? ';' : ':', timecode.GetFrame(),
-                 timecode.GetRoundedTCBase());
-    return buffer;
+    info_writer->WriteStringItem("name", APP_NAME);
+    info_writer->WriteStringItem("lib_name", get_bmx_library_name());
+    info_writer->WriteStringItem("lib_version", get_bmx_version_string());
+    info_writer->WriteTimestampItem("build_timestamp", get_bmx_build_timestamp());
+    if (!get_bmx_scm_version_string().empty())
+        info_writer->WriteStringItem("scm_version", get_bmx_scm_version_string());
+}
+
+static void write_log_messages(AppInfoWriter *info_writer)
+{
+    static const char *level_names[] = {"debug", "info", "warning", "error"};
+
+    AppTextInfoWriter *text_writer = dynamic_cast<AppTextInfoWriter*>(info_writer);
+    if (text_writer)
+        text_writer->PushItemValueIndent(strlen("warning "));
+
+    size_t i;
+    for (i = 0; i < LOG_DATA.messages.size(); i++) {
+        if (!LOG_DATA.messages[i].source.empty()) {
+            info_writer->StartAnnotations();
+            info_writer->WriteStringItem("source", LOG_DATA.messages[i].source);
+            info_writer->EndAnnotations();
+        }
+        const char *level_name = level_names[0];
+        if (LOG_DATA.messages[i].level >= 0 &&
+            (size_t)LOG_DATA.messages[i].level <= BMX_ARRAY_SIZE(level_names))
+        {
+            level_name = level_names[LOG_DATA.messages[i].level];
+        }
+        info_writer->WriteStringItem(level_name, LOG_DATA.messages[i].message);
+    }
+
+    if (text_writer)
+        text_writer->PopItemValueIndent();
 }
 
 static void write_data(FILE *file, const string &filename, const unsigned char *data, uint32_t size,
@@ -750,7 +1063,7 @@ static bool extract_rdd6_xml(Frame *frame, const char *filename)
     return true;
 }
 
-static string create_raw_filename(string prefix, bool wrap_klv, MXFDataDefEnum data_def, uint32_t index,
+static string create_raw_filename(string ess_prefix, bool wrap_klv, MXFDataDefEnum data_def, uint32_t index,
                                   int32_t child_index)
 {
     const char *ddef_letter = "x";
@@ -773,7 +1086,7 @@ static string create_raw_filename(string prefix, bool wrap_klv, MXFDataDefEnum d
     else
         bmx_snprintf(buffer, sizeof(buffer), "_%s%u%s", ddef_letter, index, suffix);
 
-    return prefix + buffer;
+    return ess_prefix + buffer;
 }
 
 static bool parse_app_events_mask(const char *mask_str, int *mask_out)
@@ -820,6 +1133,18 @@ static bool parse_wrap_klv_mask(const char *mask_str, set<MXFDataDefEnum> *mask)
     return true;
 }
 
+static bool parse_info_format(const char *format_str, InfoFormat *format)
+{
+    if (strcmp(format_str, "text") == 0)
+        *format = TEXT_INFO_FORMAT;
+    else if (strcmp(format_str, "xml") == 0)
+        *format = XML_INFO_FORMAT;
+    else
+        return false;
+
+    return true;
+}
+
 static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
@@ -827,104 +1152,118 @@ static void usage(const char *cmd)
     fprintf(stderr, "   Use <filename> '-' for standard input\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, " -h | --help           Show usage and exit\n");
-    fprintf(stderr, " -v | --version        Print version info\n");
-    fprintf(stderr, " -l <file>             Log filename. Default log to stderr/stdout\n");
+    fprintf(stderr, " -v | --version        Print version info to stderr\n");
+    fprintf(stderr, " -l <file>             Log filename. Default log to stderr\n");
     fprintf(stderr, " --log-level <level>   Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
-    fprintf(stderr, " -p <prefix>           Raw output filename prefix\n");
-    fprintf(stderr, " --wrap-klv <mask>     Wrap output frames in KLV using the source Key and an 8-byte Length\n");
-    fprintf(stderr, "                       The filename suffix will be '.klv' rather than '.raw'\n");
-    fprintf(stderr, "                         <mask> is a sequence of characters which identify which data types to wrap (e.g. 'ad' for audio and data):\n");
-    fprintf(stderr, "                            v=video, a=audio, d=data\n");
-    fprintf(stderr, " -r                    Read frames even if -p or --md5 not used\n");
-    fprintf(stderr, " -i                    Print file information to stdout\n");
-    fprintf(stderr, " -d                    De-interleave multi-channel / AES-3 sound\n");
-    fprintf(stderr, " --start <frame>       Set the start frame. Default is 0\n");
-    fprintf(stderr, " --dur <frame>         Set the duration in frames. Default is minimum avaliable duration\n");
-    fprintf(stderr, " --check-end           Check at the start that the last (start + duration - 1) frame can be read\n");
-    fprintf(stderr, " --check-complete      Check that the input file is complete\n");
-    fprintf(stderr, " --nopc                Don't include pre-charge frames\n");
-    fprintf(stderr, " --noro                Don't include roll-out frames\n");
-    fprintf(stderr, " --md5                 Calculate md5 checksum of essence data\n");
-    fprintf(stderr, " --file-md5            Calculate md5 checksum of the file(s)\n");
-    fprintf(stderr, " --file-sha1           Calculate sha1 checksum of the file(s)\n");
-    fprintf(stderr, " --file-md5-only       Calculate md5 checksum of the file(s) and exit\n");
-    fprintf(stderr, " --file-sha1-only      Calculate sha1 checksum of the file(s) and exit\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, " --file-chksum-only <type>\n");
+    fprintf(stderr, "                       Calculate checksum of the file(s) and exit\n");
+    fprintf(stderr, "                       <type> is one of the following: 'crc32', 'md5', 'sha1'\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, " --group               Use the group reader instead of the sequence reader\n");
     fprintf(stderr, "                       Use this option if the files have different material packages\n");
     fprintf(stderr, "                       but actually belong to the same virtual package / group\n");
-    fprintf(stderr, " --no-reorder          Don't attempt to order the inputs in a sequence\n");
+    fprintf(stderr, " --no-reorder          Don't attempt to re-order the inputs, based on timecode, when constructing a sequence\n");
     fprintf(stderr, "                       Use this option for files with broken timecode\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, " --check-end           Check that the last frame (start + duration - 1) can be read when opening the files\n");
+    fprintf(stderr, " --check-complete      Check that the input files are complete\n");
+    fprintf(stderr, " --check-app-issues    Check that there are no known issues with the APP (Archive Preservation Project) file\n");
+    fprintf(stderr, " --check-app-crc32     Check APP essence CRC-32 data\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, " --info                Extract input information. Default output is to stdout\n");
+    fprintf(stderr, " --info-format <fmt>   Input info format. 'text' or 'xml'. Default 'text'\n");
+    fprintf(stderr, " --info-file <name>    Input info output file <name>\n");
+    fprintf(stderr, " --track-chksum <type> Calculate checksum of the track essence data\n");
+    fprintf(stderr, "                       <type> is one of the following: 'crc32', 'md5', 'sha1'\n");
+    fprintf(stderr, " --file-chksum <type>  Calculate checksum of the input file(s)\n");
+    fprintf(stderr, "                       <type> is one of the following: 'crc32', 'md5', 'sha1'\n");
+    fprintf(stderr, " --as11                Extract AS-11 and UK DPP metadata\n");
+    fprintf(stderr, " --app                 Extract APP metadata\n");
+    fprintf(stderr, " --app-events <mask>   Extract APP events metadata\n");
+    fprintf(stderr, "                       <mask> is a sequence of event types (e.g. dtv) identified using the following characters:\n");
+    fprintf(stderr, "                           d=digibeta dropout, p=PSE failure, t=timecode break, v=VTR error\n");
+    fprintf(stderr, " --no-app-events-tc    Don't extract timecodes from the essence container to associate with the APP events metadata\n");
+    fprintf(stderr, " --app-crc32 <fname>   Extract APP CRC-32 frame data to <fname>\n");
+    fprintf(stderr, " --app-tc <fname>      Extract APP timecodes to <fname>\n");
+    fprintf(stderr, " --avid                Extract Avid metadata\n");
+    fprintf(stderr, " --st436-mf <count>    Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
+    fprintf(stderr, " --rdd6 <frame> <fname>\n");
+    fprintf(stderr, "                       Extract RDD-6 audio metadata from <frame> to XML <fname>\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, " --ess-out <prefix>    Extract essence to files starting with <prefix> and suffix '.raw'\n");
+    fprintf(stderr, " --wrap-klv <mask>     Wrap essence frames in KLV using the input Key and an 8-byte Length\n");
+    fprintf(stderr, "                       The filename suffix is '.klv' rather than '.raw'\n");
+    fprintf(stderr, "                       <mask> is a sequence of characters which identify which data types to wrap\n");
+    fprintf(stderr, "                           v=video, a=audio, d=data\n");
+    fprintf(stderr, " --read-ess            Read the essence data, even when no other option requires it\n");
+    fprintf(stderr, " --deint               De-interleave multi-channel / AES-3 sound\n");
+    fprintf(stderr, " --start <frame>       Set the start frame to read. Default is 0\n");
+    fprintf(stderr, " --dur <frame>         Set the duration in frames. Default is minimum avaliable duration\n");
+    fprintf(stderr, " --nopc                Don't include pre-charge frames\n");
+    fprintf(stderr, " --noro                Don't include roll-out frames\n");
     fprintf(stderr, " --rt <factor>         Read at realtime rate x <factor>, where <factor> is a floating point value\n");
     fprintf(stderr, "                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
+#if defined(_WIN32)
+    fprintf(stderr, " --no-seq-scan         Do not set the sequential scan hint for optimizing file caching\n");
+#endif
     fprintf(stderr, " --gf                  Support growing files. Retry reading a frame when it fails\n");
     fprintf(stderr, " --gf-retries <max>    Set the maximum times to retry reading a frame. The default is %u.\n", DEFAULT_GF_RETRIES);
     fprintf(stderr, " --gf-delay <sec>      Set the delay (in seconds) between a failure to read and a retry. The default is %f.\n", DEFAULT_GF_RETRY_DELAY);
     fprintf(stderr, " --gf-rate <factor>    Limit the read rate to realtime rate x <factor> after a read failure. The default is %f\n", DEFAULT_GF_RATE_AFTER_FAIL);
     fprintf(stderr, "                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
-    fprintf(stderr, " --as11                Print AS-11 and UK DPP metadata to stdout (single file only)\n");
-#if defined(_WIN32)
-    fprintf(stderr, " --no-seq-scan         Do not set the sequential scan hint for optimizing file caching\n");
-#endif
-    fprintf(stderr, " --check-crc32         Check frame's essence data using CRC-32 frame metadata if available\n");
-    fprintf(stderr, " --app                 Print Archive Preservation Project metadata to stdout (single file only)\n");
-    fprintf(stderr, " --app-tc <filename>   Extract Archive Preservation Project timecodes to <filename> (single file only)\n");
-    fprintf(stderr, " --app-events <mask>   Print Archive Preservation Project events metadata to stdout (single file only)\n");
-    fprintf(stderr, "                         <mask> is a sequence of event types (e.g. dtv) identified using the following characters:\n");
-    fprintf(stderr, "                            d=digibeta dropout, p=PSE failure, t=timecode break, v=VTR error\n");
-    fprintf(stderr, " --no-app-events-tc    Don't extract timecodes from the essence container to associate with the\n");
-    fprintf(stderr, "                          Archive Preservation Project events metadata\n");
-    fprintf(stderr, " --app-check-issues    Check that there are no known issues with the file\n");
-    fprintf(stderr, " --avid                Print Avid metadata to stdout (single file only)\n");
-    fprintf(stderr, " --st436-mf <count>    Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
-    fprintf(stderr, " --rdd6 <frame> <file> Extract RDD-6 audio metadata from <frame> to XML <file>\n");
+    fprintf(stderr, "\n");
 }
 
 int main(int argc, const char** argv)
 {
+    std::vector<const char *> input_filenames;
     const char *log_filename = 0;
     LogLevel log_level = INFO_LOG;
-    std::vector<const char *> filenames;
-    const char *prefix = 0;
-    bool do_read = false;
-    bool do_print_info = false;
+    set<ChecksumType> file_checksum_only_types;
+    bool use_group_reader = false;
+    bool keep_input_order = false;
+    bool check_end = false;
+    bool check_complete = false;
+    bool check_app_issues = false;
+    bool do_write_info = false;
+    InfoFormat info_format = TEXT_INFO_FORMAT;
+    const char *info_filename = 0;
+    set<ChecksumType> track_checksum_types;
+    set<ChecksumType> file_checksum_types;
+    bool do_as11_info = false;
+    bool do_app_info = false;
+    int app_events_mask = 0;
+    bool extract_app_events_tc = true;
+    bool check_app_crc32 = false;
+    const char *app_crc32_filename = 0;
+    const char *app_tc_filename = 0;
+    bool do_avid_info = false;
+    uint32_t st436_manifest_count = DEFAULT_ST436_MANIFEST_COUNT;
+    const char *rdd6_filename = 0;
+    int64_t rdd6_frame = 0;
+    bool do_ess_read = false;
+    const char *ess_output_prefix = 0;
+    set<MXFDataDefEnum> wrap_klv_mask;
     bool deinterleave = false;
     int64_t start = 0;
     bool start_set = false;
     int64_t duration = -1;
-    bool check_end = false;
-    bool check_complete = false;
     bool no_precharge = false;
     bool no_rollout = false;
-    bool calc_md5 = false;
-    bool calc_file_checksum = false;
-    ChecksumType file_checksum_type = MD5_CHECKSUM;
-    bool calc_file_only_checksum = false;
-    bool use_group_reader = false;
-    bool keep_input_order = false;
-    bool do_print_version = false;
-    bool do_print_as11 = false;
 #if defined(_WIN32)
     int file_flags = MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
 #else
     int file_flags = 0;
 #endif
-    bool check_crc32 = false;
-    bool do_print_app = false;
-    int app_events_mask = 0;
-    bool extract_app_events_tc = true;
-    bool do_print_avid = false;
     bool realtime = false;
     float rt_factor = 1.0;
     bool growing_file = false;
     unsigned int gf_retries = DEFAULT_GF_RETRIES;
     float gf_retry_delay = DEFAULT_GF_RETRY_DELAY;
     float gf_rate_after_fail = DEFAULT_GF_RATE_AFTER_FAIL;
-    const char *app_tc_filename = 0;
-    bool app_check_issues = false;
-    set<MXFDataDefEnum> wrap_klv_mask;
-    uint32_t st436_manifest_count = DEFAULT_ST436_MANIFEST_COUNT;
-    const char *rdd6_filename = 0;
-    int64_t rdd6_frame = 0;
+
+    ChecksumType checkum_type;
     unsigned int uvalue;
     int cmdln_index;
 
@@ -945,11 +1284,7 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--version") == 0 ||
                  strcmp(argv[cmdln_index], "-v") == 0)
         {
-            if (argc == 2) {
-                printf("%s\n", get_app_version_info(APP_NAME).c_str());
-                return 0;
-            }
-            do_print_version = true;
+            fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
         }
         else if (strcmp(argv[cmdln_index], "-l") == 0)
         {
@@ -978,7 +1313,7 @@ int main(int argc, const char** argv)
             }
             cmdln_index++;
         }
-        else if (strcmp(argv[cmdln_index], "-p") == 0)
+        else if (strcmp(argv[cmdln_index], "--file-chksum-only") == 0)
         {
             if (cmdln_index + 1 >= argc)
             {
@@ -986,8 +1321,216 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            prefix = argv[cmdln_index + 1];
-            do_read = true;
+            if (!parse_checksum_type(argv[cmdln_index + 1], &checkum_type))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            file_checksum_only_types.insert(checkum_type);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--group") == 0)
+        {
+            use_group_reader = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--no-reorder") == 0)
+        {
+            keep_input_order = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--check-end") == 0)
+        {
+            check_end = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--check-complete") == 0)
+        {
+            check_complete = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--check-app-issues") == 0)
+        {
+            check_app_issues = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--check-app-crc32") == 0)
+        {
+            check_app_crc32 = true;
+            do_ess_read = true;
+            do_write_info = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--info") == 0)
+        {
+            do_write_info = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--info-format") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_info_format(argv[cmdln_index + 1], &info_format))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            do_write_info = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--info-file") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            info_filename = argv[cmdln_index + 1];
+            do_write_info = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--track-chksum") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_checksum_type(argv[cmdln_index + 1], &checkum_type))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            track_checksum_types.insert(checkum_type);
+            do_write_info = true;
+            do_ess_read = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--file-chksum") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_checksum_type(argv[cmdln_index + 1], &checkum_type))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            file_checksum_types.insert(checkum_type);
+            do_write_info = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--as11") == 0)
+        {
+            do_as11_info = true;
+            do_write_info = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--app") == 0)
+        {
+            do_app_info = true;
+            do_write_info = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--app-events") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_app_events_mask(argv[cmdln_index + 1], &app_events_mask))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            do_app_info = true;
+            do_write_info = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--no-app-events-tc") == 0)
+        {
+            extract_app_events_tc = false;
+        }
+        else if (strcmp(argv[cmdln_index], "--app-crc32") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            app_crc32_filename = argv[cmdln_index + 1];
+            do_ess_read = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--app-tc") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            app_tc_filename = argv[cmdln_index + 1];
+            do_ess_read = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avid") == 0)
+        {
+            do_avid_info = true;
+            do_write_info = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--st436-mf") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            st436_manifest_count = (uint32_t)(uvalue);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--rdd6") == 0)
+        {
+            if (cmdln_index + 2 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &rdd6_frame) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            rdd6_filename = argv[cmdln_index + 2];
+            cmdln_index += 2;
+        }
+        else if (strcmp(argv[cmdln_index], "--ess-out") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            ess_output_prefix = argv[cmdln_index + 1];
+            do_ess_read = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--wrap-klv") == 0)
@@ -1006,15 +1549,11 @@ int main(int argc, const char** argv)
             }
             cmdln_index++;
         }
-        else if (strcmp(argv[cmdln_index], "-r") == 0)
+        else if (strcmp(argv[cmdln_index], "--read-ess") == 0)
         {
-            do_read = true;
+            do_ess_read = true;
         }
-        else if (strcmp(argv[cmdln_index], "-i") == 0)
-        {
-            do_print_info = true;
-        }
-        else if (strcmp(argv[cmdln_index], "-d") == 0)
+        else if (strcmp(argv[cmdln_index], "--deint") == 0)
         {
             deinterleave = true;
         }
@@ -1051,14 +1590,6 @@ int main(int argc, const char** argv)
             }
             cmdln_index++;
         }
-        else if (strcmp(argv[cmdln_index], "--check-end") == 0)
-        {
-            check_end = true;
-        }
-        else if (strcmp(argv[cmdln_index], "--check-complete") == 0)
-        {
-            check_complete = true;
-        }
         else if (strcmp(argv[cmdln_index], "--nopc") == 0)
         {
             no_precharge = true;
@@ -1066,39 +1597,6 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--noro") == 0)
         {
             no_rollout = true;
-        }
-        else if (strcmp(argv[cmdln_index], "--md5") == 0)
-        {
-            calc_md5 = true;
-            do_read = true;
-        }
-        else if (strcmp(argv[cmdln_index], "--file-md5") == 0)
-        {
-            calc_file_checksum = true;
-            file_checksum_type = MD5_CHECKSUM;
-        }
-        else if (strcmp(argv[cmdln_index], "--file-sha1") == 0)
-        {
-            calc_file_checksum = true;
-            file_checksum_type = SHA1_CHECKSUM;
-        }
-        else if (strcmp(argv[cmdln_index], "--file-md5-only") == 0)
-        {
-            calc_file_only_checksum = true;
-            file_checksum_type = MD5_CHECKSUM;
-        }
-        else if (strcmp(argv[cmdln_index], "--file-sha1-only") == 0)
-        {
-            calc_file_only_checksum = true;
-            file_checksum_type = SHA1_CHECKSUM;
-        }
-        else if (strcmp(argv[cmdln_index], "--group") == 0)
-        {
-            use_group_reader = true;
-        }
-        else if (strcmp(argv[cmdln_index], "--no-reorder") == 0)
-        {
-            keep_input_order = true;
         }
         else if (strcmp(argv[cmdln_index], "--rt") == 0)
         {
@@ -1117,6 +1615,12 @@ int main(int argc, const char** argv)
             realtime = true;
             cmdln_index++;
         }
+#if defined(_WIN32)
+        else if (strcmp(argv[cmdln_index], "--no-seq-scan") == 0)
+        {
+            file_flags &= ~MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
+        }
+#endif
         else if (strcmp(argv[cmdln_index], "--gf") == 0)
         {
             growing_file = true;
@@ -1172,98 +1676,9 @@ int main(int argc, const char** argv)
             growing_file = true;
             cmdln_index++;
         }
-        else if (strcmp(argv[cmdln_index], "--as11") == 0)
+        else if (strcmp(argv[cmdln_index], "--regtest") == 0)
         {
-            do_print_as11 = true;
-        }
-#if defined(_WIN32)
-        else if (strcmp(argv[cmdln_index], "--no-seq-scan") == 0)
-        {
-            file_flags &= ~MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
-        }
-#endif
-        else if (strcmp(argv[cmdln_index], "--check-crc32") == 0)
-        {
-            check_crc32 = true;
-            do_read = true;
-        }
-        else if (strcmp(argv[cmdln_index], "--app") == 0)
-        {
-            do_print_app = true;
-        }
-        else if (strcmp(argv[cmdln_index], "--app-tc") == 0)
-        {
-            if (cmdln_index + 1 >= argc)
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
-                return 1;
-            }
-            app_tc_filename = argv[cmdln_index + 1];
-            do_read = true;
-            cmdln_index++;
-        }
-        else if (strcmp(argv[cmdln_index], "--app-events") == 0)
-        {
-            if (cmdln_index + 1 >= argc)
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
-                return 1;
-            }
-            if (!parse_app_events_mask(argv[cmdln_index + 1], &app_events_mask))
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
-                return 1;
-            }
-            cmdln_index++;
-        }
-        else if (strcmp(argv[cmdln_index], "--no-app-events-tc") == 0)
-        {
-            extract_app_events_tc = false;
-        }
-        else if (strcmp(argv[cmdln_index], "--app-check-issues") == 0)
-        {
-            app_check_issues = true;
-        }
-        else if (strcmp(argv[cmdln_index], "--avid") == 0)
-        {
-            do_print_avid = true;
-        }
-        else if (strcmp(argv[cmdln_index], "--st436-mf") == 0)
-        {
-            if (cmdln_index + 1 >= argc)
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
-                return 1;
-            }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
-                return 1;
-            }
-            st436_manifest_count = (uint32_t)(uvalue);
-            cmdln_index++;
-        }
-        else if (strcmp(argv[cmdln_index], "--rdd6") == 0)
-        {
-            if (cmdln_index + 2 >= argc)
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
-                return 1;
-            }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &rdd6_frame) != 1)
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
-                return 1;
-            }
-            rdd6_filename = argv[cmdln_index + 2];
-            cmdln_index += 2;
+            BMX_REGRESSION_TEST = true;
         }
         else
         {
@@ -1284,7 +1699,7 @@ int main(int argc, const char** argv)
     for (; cmdln_index < argc; cmdln_index++) {
         if (strcmp(argv[cmdln_index], "-") == 0) {
             // standard input
-            filenames.push_back("");
+            input_filenames.push_back("");
         } else {
             if (!check_file_exists(argv[cmdln_index])) {
                 if (argv[cmdln_index][0] == '-') {
@@ -1295,59 +1710,49 @@ int main(int argc, const char** argv)
                 }
                 return 1;
             }
-            filenames.push_back(argv[cmdln_index]);
+            input_filenames.push_back(argv[cmdln_index]);
         }
     }
 
 
     LOG_LEVEL = log_level;
-    if (log_filename) {
-        if (!open_log_file(log_filename))
-            return 1;
+    if (log_filename && !open_log_file(log_filename))
+        return 1;
+    if (do_write_info) {
+        // intercept log messages for adding to structured info output
+        if (log_filename)
+            LOG_DATA.vlog2 = bmx::vlog2;
+        else
+            LOG_DATA.vlog2 = 0;
+        bmx::log   = mxf2raw_log;
+        bmx::vlog  = mxf2raw_vlog;
+        bmx::vlog2 = mxf2raw_vlog2;
     }
 
     connect_libmxf_logging();
 
-    if (do_print_version)
-        log_info("%s\n", get_app_version_info(APP_NAME).c_str());
-
 
     int cmd_result = 0;
 
-    if (calc_file_only_checksum) {
+    if (!file_checksum_only_types.empty()) {
         try
         {
-            size_t i;
-            for (i = 0; i < filenames.size(); i++) {
-                string checksum_str;
-                if (filenames[i][0] == 0) {
-#if defined(_WIN32)
-                    int res = _setmode(_fileno(stdin), _O_BINARY);
-                    if (res == -1) {
-                        log_error("Failed to set 'stdin' to binary mode: %s\n", bmx_strerror(errno).c_str());
-                        cmd_result = 1;
-                        break;
-                    }
-#endif
-                    checksum_str = Checksum::CalcFileChecksum(stdin, file_checksum_type);
-                } else {
-                    checksum_str = Checksum::CalcFileChecksum(filenames[i], file_checksum_type);
-                }
-                if (checksum_str.empty()) {
-                    log_error("Failed to calculate %s checksum for file '%s'\n",
-                              get_checksum_type_str(file_checksum_type),
-                              get_input_filename(filenames[i]));
-                    cmd_result = 1;
-                    break;
-                }
-                log_info("File %s: %s %s\n", get_checksum_type_str(file_checksum_type),
-                         get_input_filename(filenames[i]), checksum_str.c_str());
-            }
+            vector<ChecksumType> types_vec;
+            types_vec.insert(types_vec.begin(), file_checksum_only_types.begin(), file_checksum_only_types.end());
+
+            calc_file_checksums(input_filenames, types_vec);
         }
         catch (const BMXException &ex)
         {
             log_error("BMX exception caught: %s\n", ex.what());
             cmd_result = 1;
+        }
+        catch (const bool &ex)
+        {
+            if (ex)
+                cmd_result = 0;
+            else
+                cmd_result = 1;
         }
         catch (...)
         {
@@ -1361,29 +1766,47 @@ int main(int argc, const char** argv)
         return cmd_result;
     }
 
+
     try
     {
+        bool complete_result = true;
+        bool last_frame_result = true;
+        bool app_issues_result = true;
+        CRC32CheckResult app_crc32_result = CRC32_NOT_CHECKED;
+
+
+        FILE *info_file = stdout;
+        if (info_filename) {
+            info_file = fopen(info_filename, "wb");
+            if (!info_file) {
+                log_error("Failed to open info file '%s': %s\n",
+                          info_filename, bmx_strerror(errno).c_str());
+                throw false;
+            }
+        }
+
+
         AppMXFFileFactory file_factory;
         APPInfoOutput app_output;
         MXFReader *reader = 0;
         MXFFileReader *file_reader = 0;
 
-        if (calc_file_checksum)
-            file_factory.SetInputChecksum(file_checksum_type);
+        if (!file_checksum_types.empty())
+            file_factory.SetInputChecksumTypes(file_checksum_types);
         file_factory.SetInputFlags(file_flags);
 
-        if (use_group_reader && filenames.size() > 1) {
+        if (use_group_reader && input_filenames.size() > 1) {
             MXFGroupReader *group_reader = new MXFGroupReader();
             MXFFileReader::OpenResult result;
             size_t i;
-            for (i = 0; i < filenames.size(); i++) {
+            for (i = 0; i < input_filenames.size(); i++) {
                 MXFFileReader *grp_file_reader = new MXFFileReader();
                 grp_file_reader->SetFileFactory(&file_factory, false);
                 grp_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
                 grp_file_reader->SetST436ManifestFrameCount(st436_manifest_count);
-                result = grp_file_reader->Open(filenames[i]);
+                result = grp_file_reader->Open(input_filenames[i]);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-                    log_error("Failed to open MXF file '%s': %s\n", get_input_filename(filenames[i]),
+                    log_error("Failed to open MXF file '%s': %s\n", get_input_filename(input_filenames[i]),
                               MXFFileReader::ResultToString(result).c_str());
                     throw false;
                 }
@@ -1393,18 +1816,18 @@ int main(int argc, const char** argv)
                 throw false;
 
             reader = group_reader;
-        } else if (filenames.size() > 1) {
+        } else if (input_filenames.size() > 1) {
             MXFSequenceReader *seq_reader = new MXFSequenceReader();
             MXFFileReader::OpenResult result;
             size_t i;
-            for (i = 0; i < filenames.size(); i++) {
+            for (i = 0; i < input_filenames.size(); i++) {
                 MXFFileReader *seq_file_reader = new MXFFileReader();
                 seq_file_reader->SetFileFactory(&file_factory, false);
                 seq_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
                 seq_file_reader->SetST436ManifestFrameCount(st436_manifest_count);
-                result = seq_file_reader->Open(filenames[i]);
+                result = seq_file_reader->Open(input_filenames[i]);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-                    log_error("Failed to open MXF file '%s': %s\n", get_input_filename(filenames[i]),
+                    log_error("Failed to open MXF file '%s': %s\n", get_input_filename(input_filenames[i]),
                               MXFFileReader::ResultToString(result).c_str());
                     throw false;
                 }
@@ -1420,14 +1843,14 @@ int main(int argc, const char** argv)
             file_reader->SetFileFactory(&file_factory, false);
             file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
             file_reader->SetST436ManifestFrameCount(st436_manifest_count);
-            if (do_print_as11)
+            if (do_as11_info)
                 as11_register_extensions(file_reader);
-            if (do_print_app || app_events_mask || app_check_issues)
+            if (do_app_info || check_app_issues)
                 app_output.RegisterExtensions(file_reader);
             // avid extensions are already registered by the MXFReader
-            result = file_reader->Open(filenames[0]);
+            result = file_reader->Open(input_filenames[0]);
             if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-                log_error("Failed to open MXF file '%s': %s\n", get_input_filename(filenames[0]),
+                log_error("Failed to open MXF file '%s': %s\n", get_input_filename(input_filenames[0]),
                           MXFFileReader::ResultToString(result).c_str());
                 throw false;
             }
@@ -1438,15 +1861,16 @@ int main(int argc, const char** argv)
         if (!reader->IsComplete()) {
             if (check_complete) {
                 log_error("Input file is incomplete\n");
-                throw false;
+                complete_result = false;
+                cmd_result = 1;
             }
             log_warn("Input file is incomplete\n");
         }
 
-        mxfRational sample_rate = reader->GetEditRate();
+        mxfRational edit_rate = reader->GetEditRate();
 
 
-        // set read limits
+        // set read limits and checks
         int64_t output_duration;
         int64_t max_precharge = 0;
         int64_t max_rollout = 0;
@@ -1457,7 +1881,8 @@ int main(int argc, const char** argv)
             }
             if (check_end) {
                 log_error("Checking last frame is present (--check-end) is not supported for incomplete files\n");
-                throw false;
+                last_frame_result = false;
+                cmd_result = 1;
             }
             output_duration = reader->GetDuration();
         } else {
@@ -1485,117 +1910,65 @@ int main(int argc, const char** argv)
 
             if (check_end && !reader->CheckReadLastFrame()) {
                 log_error("Check for last frame failed\n");
-                throw false;
+                last_frame_result = false;
+                cmd_result = 1;
             }
-        }
-
-        int64_t lead_filler_offset = 0;
-        if (!reader->HaveFixedLeadFillerOffset())
-            log_warn("No fixed lead filler offset\n");
-        else
-            lead_filler_offset = reader->GetFixedLeadFillerOffset();
-
-
-        // print info
-
-        if (do_print_info) {
-            if (file_reader) {
-                char buf[128];
-
-                printf("MXF File Information:\n");
-                printf("  Filename                   : %s\n", get_input_filename(filenames[0]));
-                printf("  MXF version                : %d.%d\n",
-                       file_reader->GetMXFVersion() >> 8, file_reader->GetMXFVersion() & 0xff);
-                printf("  OP label                   : %s\n",
-                       get_op_label_string(file_reader->GetOPLabel(), buf, sizeof(buf)));
-                printf("  Wrapping type              : %s\n",
-                       (file_reader->IsFrameWrapped() ? "Frame" : "Clip"));
-                printf("  Material package name      : %s\n", reader->GetMaterialPackageName().c_str());
-                if (reader->HaveMaterialTimecode()) {
-                        printf("  Material start timecode    : %s\n",
-                           timecode_to_string(reader->GetMaterialTimecode(0)).c_str());
-                    if (lead_filler_offset != 0) {
-                        printf("  Material start timecode including lead filler offset: %s\n",
-                               timecode_to_string(reader->GetMaterialTimecode(lead_filler_offset)).c_str());
-                    }
-                }
-                if (reader->HaveFileSourceTimecode())
-                    printf("  File src start timecode    : %s\n", timecode_to_string(reader->GetFileSourceTimecode(0)).c_str());
-                if (reader->HavePhysicalSourceTimecode()) {
-                    printf("  Physical src start timecode: %s\n",
-                           timecode_to_string(reader->GetPhysicalSourceTimecode(0)).c_str());
-                    printf("  Physical src package name  : %s\n", reader->GetPhysicalSourcePackageName().c_str());
-                }
-                printf("  Edit rate                  : %d/%d\n", sample_rate.numerator, sample_rate.denominator);
-                // TODO: only true if actually set
-                printf("  Precharge                  : %"PRId64"\n", max_precharge);
-                printf("  Duration                   : %"PRId64"\n", output_duration);
-                // TODO: only true if actually set
-                printf("  Rollout                    : %"PRId64"\n", max_rollout);
-
-                printf("  Identifications            :\n");
-                vector<Identification*> identifications = file_reader->GetHeaderMetadata()->getPreface()->getIdentifications();
-                size_t i;
-                for (i = 0; i < identifications.size(); i++) {
-                    printf("    Identification %"PRIszt":\n", i);
-                    print_identification_info(identifications[i]);
-                }
-            }
-
-            size_t i;
-            for (i = 0; i < reader->GetNumTrackReaders(); i++) {
-                printf("Track %"PRIszt":\n", i);
-                print_track_info(reader->GetTrackReader(i)->GetTrackInfo());
-            }
-            printf("\n");
         }
 
         if (file_reader) {
-            if (do_print_as11)
-                as11_print_info(file_reader);
-            if (app_check_issues && !app_output.CheckIssues()) {
-                log_error("APP file has issues\n");
-                throw false;
-            }
-            if (do_print_app || app_events_mask) {
+            if (do_app_info)
                 app_output.ExtractInfo(app_events_mask);
-                if (do_print_app)
-                    app_output.PrintInfo();
-                if (app_events_mask && !extract_app_events_tc)
-                    app_output.PrintEvents();
+
+            if (check_app_issues && !app_output.CheckIssues()) {
+                log_error("APP file has issues\n");
+                app_issues_result = false;
+                cmd_result = 1;
             }
-            if (do_print_avid)
-                avid_print_info(file_reader);
         }
+
+
+        // force file checksum update now that reading/seeking will generally be forwards only
+        if (!file_checksum_types.empty())
+            file_factory.ForceInputChecksumUpdate();
 
 
         // read data
 
         bool done_rdd6 = false;
+        vector<vector<Checksum> > track_checksums;
+        vector<CRC32Data> track_crc32_data;
 
-        if (do_read) {
-            // log info
-            if (prefix)
-                log_info("Output prefix: %s\n", prefix);
-            if (log_filename || !do_print_info) {
-                if (file_reader) {
-                    log_info("Input filename: %s\n", get_input_filename(filenames[0]));
-                    log_info("Material package name: %s\n", reader->GetMaterialPackageName().c_str());
+        if (do_ess_read) {
+
+            // track checksum calculation initialization
+            if (!track_checksum_types.empty()) {
+                size_t i;
+                for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+                    track_checksums.push_back(vector<Checksum>());
+                    set<ChecksumType>::const_iterator iter;
+                    for (iter = track_checksum_types.begin(); iter != track_checksum_types.end(); iter++)
+                        track_checksums[i].push_back(Checksum(*iter));
                 }
-                log_info("Edit rate: %d/%d\n", sample_rate.numerator, sample_rate.denominator);
-                // TODO: only true if actually set
-                log_info("Precharge: %"PRId64"\n", max_precharge);
-                log_info("Duration: %"PRId64"\n", output_duration);
-                // TODO: only true if actually set
-                log_info("Rollout: %"PRId64"\n", max_rollout);
             }
 
-            // md5 calculation initialization
-            vector<Checksum> md5_contexts;
-            if (calc_md5) {
+            // APP crc32 check initialization
+            if (check_app_crc32) {
                 size_t i;
-                for (i = 0; i < reader->GetNumTrackReaders(); i++)
-                    md5_contexts.push_back(Checksum(MD5_CHECKSUM));
+                for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+                    CRC32Data data = {0, 0, 0};
+                    track_crc32_data.push_back(data);
+                }
+            }
+
+            // open APP crc32 output file
+            FILE *app_crc32_file = 0;
+            if (file_reader && app_crc32_filename) {
+                app_crc32_file = fopen(app_crc32_filename, "wb");
+                if (!app_crc32_file) {
+                    log_error("Failed to open APP CRC-32 file '%s': %s\n",
+                              app_crc32_filename, bmx_strerror(errno).c_str());
+                    throw false;
+                }
             }
 
             // open APP timecode output file
@@ -1613,7 +1986,7 @@ int main(int argc, const char** argv)
             bool have_video = false;
             vector<FILE*> raw_files;
             vector<string> raw_filenames;
-            if (prefix) {
+            if (ess_output_prefix) {
                 map<MXFDataDefEnum, uint32_t> ddef_count;
                 size_t i;
                 for (i = 0; i < reader->GetNumTrackReaders(); i++) {
@@ -1622,10 +1995,11 @@ int main(int argc, const char** argv)
                     if (sound_info && deinterleave && sound_info->channel_count > 1) {
                         uint32_t c;
                         for (c = 0; c < sound_info->channel_count; c++) {
-                            string raw_filename = create_raw_filename(prefix,
-                                                      (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
-                                                      track_info->data_def,
-                                                      ddef_count[track_info->data_def], c);
+                            string raw_filename =
+                                create_raw_filename(ess_output_prefix,
+                                                    (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
+                                                    track_info->data_def,
+                                                    ddef_count[track_info->data_def], c);
                             FILE *raw_file = fopen(raw_filename.c_str(), "wb");
                             if (!raw_file) {
                                 log_error("Failed to open raw file '%s': %s\n",
@@ -1636,10 +2010,11 @@ int main(int argc, const char** argv)
                             raw_filenames.push_back(raw_filename);
                         }
                     } else {
-                        string raw_filename = create_raw_filename(prefix,
-                                                        (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
-                                                        track_info->data_def,
-                                                        ddef_count[track_info->data_def], -1);
+                        string raw_filename =
+                            create_raw_filename(ess_output_prefix,
+                                                (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
+                                                track_info->data_def,
+                                                ddef_count[track_info->data_def], -1);
                         FILE *raw_file = fopen(raw_filename.c_str(), "wb");
                         if (!raw_file) {
                             log_error("Failed to open raw file '%s': %s\n",
@@ -1656,13 +2031,9 @@ int main(int argc, const char** argv)
                 }
             }
 
-            // force file checksum update now that reading/seeking will be forwards only
-            if (calc_file_checksum)
-                file_factory.ForceInputChecksumUpdate();
-
             // choose number of samples to read in one go
             uint32_t max_samples_per_read = 1;
-            if (!have_video && sample_rate == SAMPLING_RATE_48K)
+            if (!have_video && edit_rate == SAMPLING_RATE_48K)
                 max_samples_per_read = 1920;
 
             // realtime reading
@@ -1678,8 +2049,6 @@ int main(int argc, const char** argv)
 
             // read data
             bmx::ByteArray sound_buffer;
-            int64_t crc32_error_count = 0;
-            int64_t crc32_check_count = 0;
             int64_t total_num_read = 0;
             while (true)
             {
@@ -1690,8 +2059,8 @@ int main(int argc, const char** argv)
                     gf_retry_count++;
                     gf_read_failure = true;
                     if (gf_retry_delay > 0.0) {
-                        rt_sleep(1.0f / gf_retry_delay, get_tick_count(), sample_rate,
-                                 sample_rate.numerator / sample_rate.denominator);
+                        rt_sleep(1.0f / gf_retry_delay, get_tick_count(), edit_rate,
+                                 edit_rate.numerator / edit_rate.denominator);
                     }
                     continue;
                 }
@@ -1702,6 +2071,7 @@ int main(int argc, const char** argv)
                 }
                 total_num_read += num_read;
 
+                vector<uint64_t> crc32_data(reader->GetNumTrackReaders(), UINT64_MAX);
                 bool have_app_tc = false;
                 int file_count = 0;
                 size_t i;
@@ -1716,33 +2086,43 @@ int main(int argc, const char** argv)
                             continue;
                         }
 
-                        if (calc_md5)
-                            md5_contexts[i].Update(frame->GetBytes(), frame->GetSize());
+                        if (!track_checksums.empty()) {
+                            size_t m;
+                            for (m = 0; m < track_checksums[i].size(); m++)
+                                track_checksums[i][m].Update(frame->GetBytes(), frame->GetSize());
+                        }
 
-                        if (check_crc32) {
+                        if (check_app_crc32 || app_crc32_file) {
                             const vector<FrameMetadata*> *metadata = frame->GetMetadata(SYSTEM_SCHEME_1_FMETA_ID);
                             if (metadata) {
-                                size_t i;
-                                for (i = 0; i < metadata->size(); i++) {
+                                size_t m;
+                                for (m = 0; m < metadata->size(); m++) {
                                     const SystemScheme1Metadata *ss1_meta =
-                                        dynamic_cast<const SystemScheme1Metadata*>((*metadata)[i]);
+                                        dynamic_cast<const SystemScheme1Metadata*>((*metadata)[m]);
                                     if (ss1_meta->GetType() != SystemScheme1Metadata::APP_CHECKSUM)
                                         continue;
 
                                     const SS1APPChecksum *checksum = dynamic_cast<const SS1APPChecksum*>(ss1_meta);
 
-                                    uint32_t crc32;
-                                    crc32_init(&crc32);
-                                    crc32_update(&crc32, frame->GetBytes(), frame->GetSize());
-                                    crc32_final(&crc32);
+                                    if (app_crc32_file)
+                                        crc32_data[i] = checksum->mCRC32;
 
-                                    if (crc32 != checksum->mCRC32)
-                                        crc32_error_count++;
-                                    crc32_check_count++;
+                                    if (check_app_crc32) {
+                                        uint32_t crc32;
+                                        crc32_init(&crc32);
+                                        crc32_update(&crc32, frame->GetBytes(), frame->GetSize());
+                                        crc32_final(&crc32);
+
+                                        if (crc32 != checksum->mCRC32)
+                                            track_crc32_data[i].error_count++;
+                                        track_crc32_data[i].check_count++;
+                                    }
 
                                     break;
                                 }
                             }
+                            if (check_app_crc32)
+                                track_crc32_data[i].total_read++;
                         }
 
                         if (!have_app_tc && file_reader &&
@@ -1763,16 +2143,12 @@ int main(int argc, const char** argv)
                                                                      tc_array->GetLTC());
                                     }
                                     if (app_tc_file) {
-                                        Timecode ctc(sample_rate, false, frame->position);
-                                        int res = fprintf(app_tc_file, "C%s V%s L%s\n",
-                                                          get_timecode_string(ctc).c_str(),
-                                                          get_timecode_string(tc_array->GetVITC()).c_str(),
-                                                          get_timecode_string(tc_array->GetLTC()).c_str());
-                                        if (res < 0) {
-                                            log_error("Failed to write to APP timecode file: %s\n",
-                                                      bmx_strerror(errno).c_str());
-                                            throw false;
-                                        }
+                                        Timecode ctc(edit_rate, false, frame->position);
+                                        CHECK_FPRINTF(app_tc_filename,
+                                                      fprintf(app_tc_file, "C%s V%s L%s\n",
+                                                              get_timecode_string(ctc).c_str(),
+                                                              get_timecode_string(tc_array->GetVITC()).c_str(),
+                                                              get_timecode_string(tc_array->GetLTC()).c_str()));
                                     }
 
                                     have_app_tc = true;
@@ -1781,7 +2157,7 @@ int main(int argc, const char** argv)
                             }
                         }
 
-                        if (prefix) {
+                        if (ess_output_prefix) {
                             const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
                             if (sound_info && deinterleave && sound_info->channel_count > 1) {
                                 sound_buffer.Allocate(frame->GetSize()); // more than enough
@@ -1831,10 +2207,27 @@ int main(int argc, const char** argv)
                     }
                 }
 
+                if (app_crc32_file) {
+                    CHECK_FPRINTF(app_crc32_filename,
+                                  fprintf(app_crc32_file, "%"PRId64, total_num_read - num_read));
+                    size_t i;
+                    for (i = 0; i < crc32_data.size(); i++) {
+                        if (crc32_data[i] == UINT64_MAX) {
+                            CHECK_FPRINTF(app_crc32_filename,
+                                          fprintf(app_crc32_file, " ????"));
+                        } else {
+                            CHECK_FPRINTF(app_crc32_filename,
+                                          fprintf(app_crc32_file, " %04x", (uint32_t)crc32_data[i]));
+                        }
+                    }
+                    CHECK_FPRINTF(app_crc32_filename,
+                                  fprintf(app_crc32_file, "\n"));
+                }
+
                 if (gf_read_failure)
-                    rt_sleep(gf_rate_after_fail, gf_failure_start, sample_rate, total_num_read - gf_failure_num_read);
+                    rt_sleep(gf_rate_after_fail, gf_failure_start, edit_rate, total_num_read - gf_failure_num_read);
                 else if (realtime)
-                    rt_sleep(rt_factor, rt_start, sample_rate, total_num_read);
+                    rt_sleep(rt_factor, rt_start, edit_rate, total_num_read);
             }
             if (reader->ReadError()) {
                 bmx::log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
@@ -1845,40 +2238,52 @@ int main(int argc, const char** argv)
                     cmd_result = 1;
             }
 
+            if (!track_checksums.empty()) {
+                size_t i, m;
+                for (i = 0; i < track_checksums.size(); i++) {
+                    for (m = 0; m < track_checksums[i].size(); m++)
+                        track_checksums[i][m].Final();
+                }
+            }
+
+            if (check_app_crc32) {
+                app_crc32_result = CRC32_PASSED;
+
+                bool file_missing_crc32 = true;
+                size_t i;
+                for (i = 0; i < track_crc32_data.size(); i++) {
+                    if (track_crc32_data[i].check_count > 0) {
+                        file_missing_crc32 = false;
+                        break;
+                    }
+                }
+                if (file_missing_crc32) {
+                    log_warn("File does not contain CRC-32 data\n");
+                    app_crc32_result = CRC32_MISSING_DATA;
+                } else {
+                    for (i = 0; i < track_crc32_data.size(); i++) {
+                        if (track_crc32_data[i].error_count > 0) {
+                            log_error("Track %"PRIszt" has %"PRId64" CRC-32 errors\n",
+                                      i, track_crc32_data[i].error_count);
+                            app_crc32_result = CRC32_FAILED;
+                            cmd_result = 1;
+                        }
+                        if (track_crc32_data[i].total_read > track_crc32_data[i].check_count) {
+                            if (track_crc32_data[i].check_count == 0) {
+                                log_warn("Track %"PRIszt" does not contain CRC-32 data\n", i);
+                            } else {
+                                log_warn("Track %"PRIszt" is missing CRC-32 data in %"PRId64" frames\n",
+                                          i, track_crc32_data[i].total_read - track_crc32_data[i].check_count);
+                            }
+                            app_crc32_result = CRC32_MISSING_DATA;
+                        }
+                    }
+                }
+            }
+
             log_info("Read %"PRId64" samples (%s)\n",
                      total_num_read,
-                     get_generic_duration_string_2(total_num_read, sample_rate).c_str());
-
-            if (check_crc32 && total_num_read > 0) {
-                if (crc32_error_count > 0) {
-                    log_error("CRC-32 check: FAILED (%"PRId64" of %"PRId64" track frames failed)\n",
-                              crc32_error_count, crc32_check_count);
-                    throw false;
-                }
-
-                if (crc32_check_count == 0)
-                    log_info("CRC-32 check: not done (no CRC-32 frame metadata)\n");
-                else
-                    log_info("CRC-32 check: PASSED (%"PRId64" track frames checked)\n", crc32_check_count);
-            }
-
-            if (calc_md5) {
-                size_t i;
-                for (i = 0; i < reader->GetNumTrackReaders(); i++) {
-                    md5_contexts[i].Final();
-                    log_info("MD5 Track %"PRIszt": %s\n", i, md5_contexts[i].GetDigestString().c_str());
-                }
-            }
-
-            if (calc_file_checksum) {
-                file_factory.FinalizeInputChecksum();
-                size_t i;
-                for (i = 0; i < file_factory.GetNumInputChecksumFiles(); i++) {
-                    log_info("File %s: %s %s\n", get_checksum_type_str(file_checksum_type),
-                             get_input_filename(file_factory.GetInputChecksumFilename(i).c_str()),
-                             file_factory.GetInputChecksumDigestString(i).c_str());
-                }
-            }
+                     get_generic_duration_string_2(total_num_read, edit_rate).c_str());
 
 
             // clean-up
@@ -1887,14 +2292,8 @@ int main(int argc, const char** argv)
                 fclose(raw_files[i]);
             if (app_tc_file)
                 fclose(app_tc_file);
-        } else if (calc_file_checksum) {
-            file_factory.FinalizeInputChecksum();
-            size_t i;
-            for (i = 0; i < file_factory.GetNumInputChecksumFiles(); i++) {
-                log_info("File %s: %s %s\n", get_checksum_type_str(file_checksum_type),
-                         get_input_filename(file_factory.GetInputChecksumFilename(i).c_str()),
-                         file_factory.GetInputChecksumDigestString(i).c_str());
-            }
+            if (app_crc32_file)
+                fclose(app_crc32_file);
         }
 
         if (rdd6_filename && !done_rdd6) {
@@ -1936,11 +2335,93 @@ int main(int argc, const char** argv)
                     file_reader->GetTrackReader(i - 1)->SetEnable(false);
             }
             app_output.CompleteEventTimecodes();
-            app_output.PrintEvents();
+        }
+
+        file_factory.FinalizeInputChecksum();
+
+
+        if (do_write_info) {
+            AppInfoWriter *info_writer;
+            if (info_format == XML_INFO_FORMAT) {
+                AppXMLInfoWriter *xml_info_writer = new AppXMLInfoWriter(info_file);
+                xml_info_writer->SetNamespace(XML_INFO_WRITER_NAMESPACE, "");
+                xml_info_writer->SetVersion(XML_INFO_WRITER_VERSION);
+                info_writer = xml_info_writer;
+            } else {
+                info_writer = new AppTextInfoWriter(info_file);
+            }
+
+            info_writer->RegisterCCName("cdci_descriptor",  "CDCIDescriptor");
+            info_writer->RegisterCCName("anc_descriptor",   "ANCDescriptor");
+            info_writer->RegisterCCName("vbi_descriptor",   "VBIDescriptor");
+            info_writer->RegisterCCName("crc32_check",      "CRC32Check");
+            info_writer->RegisterCCName("did_type_1",       "DIDType1");
+            info_writer->RegisterCCName("did_type_2",       "DIDType2");
+            info_writer->SetClipEditRate(edit_rate);
+
+            info_writer->StartAnnotations();
+            info_writer->WriteTimestampItem("created", generate_timestamp_now());
+            info_writer->EndAnnotations();
+            info_writer->Start("bmx");
+
+            info_writer->StartSection("application");
+            write_application_info(info_writer);
+            info_writer->EndSection();
+
+            vector<size_t> file_ids = reader->GetFileIds(false);
+            info_writer->StartArrayItem("files", file_ids.size());
+            size_t i;
+            for (i = 0; i < file_ids.size(); i++) {
+                info_writer->StartArrayElement("file", i);
+                write_file_info(info_writer, reader->GetFileReader(i), &file_factory);
+                info_writer->EndArrayElement();
+            }
+            info_writer->EndArrayItem();
+
+            info_writer->StartSection("clip");
+            write_clip_info(info_writer, reader, track_checksums, track_crc32_data);
+            if (file_reader) {
+                if (do_as11_info)
+                    as11_write_info(info_writer, file_reader);
+                if (do_avid_info)
+                    avid_write_info(info_writer, file_reader);
+                if (do_app_info)
+                    app_output.WriteInfo(info_writer, app_events_mask != 0);
+            } else {
+                if (do_as11_info)
+                    log_warn("AS-11 info only supported for a single input file\n");
+                if (do_avid_info)
+                    log_warn("Avid info only supported for a single input file\n");
+                if (do_app_info)
+                    log_warn("APP info only supported for a single input file\n");
+            }
+            info_writer->EndSection();
+
+            if (check_complete || check_end || (file_reader && check_app_issues) || check_app_crc32) {
+                info_writer->StartSection("checks");
+                if (check_complete)
+                    info_writer->WriteBoolItem("is_complete", complete_result);
+                if (check_end)
+                    info_writer->WriteBoolItem("last_frame", last_frame_result);
+                if (file_reader && check_app_issues)
+                    info_writer->WriteBoolItem("no_app_issues", app_issues_result);
+                if (check_app_crc32)
+                    info_writer->WriteEnumStringItem("app_crc32", CRC32_CHECK_RESULT_EINFO, app_crc32_result);
+                info_writer->EndSection();
+            }
+
+            if (!LOG_DATA.messages.empty()) {
+                info_writer->StartArrayItem("log_messages", LOG_DATA.messages.size());
+                write_log_messages(info_writer);
+                info_writer->EndArrayItem();
+            }
+
+            info_writer->End();
+
+            delete info_writer;
         }
 
 
-        // clean-up
         delete reader;
     }
     catch (const MXFException &ex)
@@ -1955,8 +2436,10 @@ int main(int argc, const char** argv)
     }
     catch (const bool &ex)
     {
-        (void)ex;
-        cmd_result = 1;
+        if (ex)
+            cmd_result = 0;
+        else
+            cmd_result = 1;
     }
     catch (...)
     {
@@ -1966,6 +2449,8 @@ int main(int argc, const char** argv)
 
     if (log_filename)
         close_log_file();
+    else if (cmd_result != 0 && !LOG_DATA.messages.empty())
+        dump_log_messages();
 
 
     return cmd_result;

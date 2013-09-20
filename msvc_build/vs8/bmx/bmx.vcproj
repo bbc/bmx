@@ -234,11 +234,23 @@
 				Name="apps"
 				>
 				<File
+					RelativePath="..\..\..\include\bmx\apps\AppInfoWriter.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\include\bmx\apps\AppMXFFileFactory.h"
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\include\bmx\apps\AppTextInfoWriter.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\include\bmx\apps\AppUtils.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\apps\AppXMLInfoWriter.h"
 					>
 				</File>
 				<File
@@ -840,11 +852,23 @@
 				Name="apps"
 				>
 				<File
+					RelativePath="..\..\..\src\apps\AppInfoWriter.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\src\apps\AppMXFFileFactory.cpp"
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\src\apps\AppTextInfoWriter.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\src\apps\AppUtils.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\apps\AppXMLInfoWriter.cpp"
 					>
 				</File>
 				<File

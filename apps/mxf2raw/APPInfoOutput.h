@@ -36,6 +36,7 @@
 
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_reader/MXFAPPInfo.h>
+#include <bmx/apps/AppInfoWriter.h>
 
 
 #define DIGIBETA_DROPOUT_MASK   0x01
@@ -62,8 +63,10 @@ public:
     void AddEventTimecodes(int64_t position, Timecode vitc, Timecode ltc);
     void CompleteEventTimecodes();
 
-    void PrintInfo();
-    void PrintEvents();
+    void WriteInfo(AppInfoWriter *info_writer, bool include_events);
+
+private:
+    void PrintEvents(AppInfoWriter *info_writer);
 
 private:
     typedef struct
@@ -74,6 +77,7 @@ private:
 
 private:
     MXFFileReader *mFileReader;
+    bool mHaveInfo;
     MXFAPPInfo mInfo;
 
     std::vector<APPTimecodeInfo> mPSEFailureTimecodes;

@@ -121,11 +121,13 @@ static void file_vlog2(LogLevel level, const char *source, const char *format, v
     if (level < LOG_LEVEL || !LOG_FILE)
         return;
 
-    if (gmt) {
-        strftime(time_str, 128, "%Y-%m-%d %H:%M:%S", gmt);
-        fprintf(LOG_FILE, "(%s) ", time_str);
-    } else {
-        fprintf(LOG_FILE, "(?) ");
+    if (LOG_FILE != stderr && LOG_FILE != stdout) {
+        if (gmt) {
+            strftime(time_str, 128, "%Y-%m-%d %H:%M:%S", gmt);
+            fprintf(LOG_FILE, "(%s) ", time_str);
+        } else {
+            fprintf(LOG_FILE, "(?) ");
+        }
     }
 
     log_message(LOG_FILE, level, source, format, p_arg);
@@ -149,10 +151,7 @@ static void file_log(LogLevel level, const char* format, ...)
 
 bool bmx::open_log_file(string filename)
 {
-    if (LOG_FILE) {
-        fclose(LOG_FILE);
-        LOG_FILE = 0;
-    }
+    close_log_file();
 
     LOG_FILE = fopen(filename.c_str(), "wb");
     if (!LOG_FILE) {
@@ -169,9 +168,39 @@ bool bmx::open_log_file(string filename)
 void bmx::close_log_file()
 {
     if (LOG_FILE) {
-        fclose(LOG_FILE);
+        if (LOG_FILE != stdout && LOG_FILE != stderr)
+            fclose(LOG_FILE);
         LOG_FILE = 0;
     }
+    vlog2 = stdio_vlog2;
+    vlog = stdio_vlog;
+    log = stdio_log;
+}
+
+void bmx::set_stdout_log_file()
+{
+    close_log_file();
+    LOG_FILE = stdout;
+    vlog2 = file_vlog2;
+    vlog = file_vlog;
+    log = file_log;
+}
+
+void bmx::set_stderr_log_file()
+{
+    close_log_file();
+    LOG_FILE = stderr;
+    vlog2 = file_vlog2;
+    vlog = file_vlog;
+    log = file_log;
+}
+
+void bmx::set_stdio_log_file()
+{
+    close_log_file();
+    vlog2 = stdio_vlog2;
+    vlog = stdio_vlog;
+    log = stdio_log;
 }
 
 void bmx::flush_log()

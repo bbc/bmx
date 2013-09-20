@@ -80,6 +80,12 @@ static const SampleSequence SAMPLE_SEQUENCES[] =
 };
 
 
+namespace bmx
+{
+extern bool BMX_REGRESSION_TEST;
+};
+
+
 
 static int32_t gcd(int32_t a, int32_t b)
 {
@@ -535,6 +541,17 @@ bmx::Timestamp bmx::generate_timestamp_now()
 {
     Timestamp now;
     struct tm gmt;
+
+    if (BMX_REGRESSION_TEST) {
+        now.year  = 1970;
+        now.month = 1;
+        now.day   = 1;
+        now.hour  = 0;
+        now.min   = 0;
+        now.sec   = 0;
+        now.qmsec = 0;
+        return now;
+    }
 
 #if HAVE_GMTIME_R
     time_t t = time(0);

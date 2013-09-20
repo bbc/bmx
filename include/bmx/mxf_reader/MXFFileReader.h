@@ -125,6 +125,7 @@ public:
     mxfpp::HeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }
     uint16_t GetMXFVersion() const                   { return mMXFVersion; }
     mxfUL GetOPLabel() const                         { return mOPLabel; }
+    bool HaveInternalEssence() const                 { return !mInternalTrackReaders.empty(); }
     bool IsClipWrapped()                             { return mWrappingType == MXF_CLIP_WRAPPED; }
     bool IsFrameWrapped()                            { return mWrappingType == MXF_FRAME_WRAPPED; }
 

@@ -30,7 +30,7 @@ create_test_file()
 
 read_file()
 {
-    $appsdir/mxf2raw/mxf2raw --md5 $testmxf
+    $appsdir/mxf2raw/mxf2raw --regtest --track-chksum md5 $testmxf
 }
 
 calc_md5()

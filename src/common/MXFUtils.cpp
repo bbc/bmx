@@ -62,6 +62,7 @@ struct MXFFileSysData
     int64_t position;
     int64_t checksum_position;
     bool force_update;
+    bool checksum_final;
 };
 
 
@@ -85,7 +86,7 @@ static bool update_checksum_to_position(MXFChecksumFile *checksum_file, int64_t 
     MXFFile *mxf_file = checksum_file->mxf_file;
     MXFFileSysData *sys_data = mxf_file->sysData;
 
-    if (sys_data->checksum_position >= position)
+    if (sys_data->checksum_final || sys_data->checksum_position >= position)
         return true;
 
     // set force update to false to avoid endless update loop
@@ -130,6 +131,9 @@ static void update_checksum_to_nonseekable_end(MXFChecksumFile *checksum_file)
     MXFFile *mxf_file = checksum_file->mxf_file;
     MXFFileSysData *sys_data = mxf_file->sysData;
 
+    if (sys_data->checksum_final)
+        return;
+
     // set force update to false to avoid endless update loop
     bool original_force_update = sys_data->force_update;
     sys_data->force_update = false;
@@ -162,7 +166,8 @@ static uint32_t checksum_file_read(MXFFileSysData *sys_data, uint8_t *data, uint
     uint32_t result = mxf_file_read(sys_data->target, data, count);
 
     if (result > 0) {
-        if (sys_data->position          <= sys_data->checksum_position &&
+        if (!sys_data->checksum_final &&
+            sys_data->position          <= sys_data->checksum_position &&
             sys_data->position + result >  sys_data->checksum_position)
         {
             uint32_t checksum_count = (uint32_t)(sys_data->position + result - sys_data->checksum_position);
@@ -185,8 +190,10 @@ static uint32_t checksum_file_write(MXFFileSysData *sys_data, const uint8_t *dat
 
     if (result > 0) {
         // sys_data->position == sys_data->checksum_position
-        sys_data->checksum->Update(data, result);
-        sys_data->checksum_position += result;
+        if (!sys_data->checksum_final) {
+            sys_data->checksum->Update(data, result);
+            sys_data->checksum_position += result;
+        }
         sys_data->position += result;
     }
 
@@ -204,7 +211,7 @@ static int checksum_file_getc(MXFFileSysData *sys_data)
     int result = mxf_file_getc(sys_data->target);
 
     if (result != EOF) {
-        if (sys_data->position == sys_data->checksum_position) {
+        if (!sys_data->checksum_final && sys_data->position == sys_data->checksum_position) {
             unsigned char byte = (unsigned char)result;
             sys_data->checksum->Update(&byte, 1);
             sys_data->checksum_position++;
@@ -224,9 +231,11 @@ static int checksum_file_putc(MXFFileSysData *sys_data, int c)
 
     if (result != EOF) {
         // sys_data->position == sys_data->checksum_position
-        unsigned char byte = (unsigned char)c;
-        sys_data->checksum->Update(&byte, 1);
-        sys_data->checksum_position++;
+        if (!sys_data->checksum_final) {
+            unsigned char byte = (unsigned char)c;
+            sys_data->checksum->Update(&byte, 1);
+            sys_data->checksum_position++;
+        }
         sys_data->position++;
     }
 
@@ -417,6 +426,7 @@ MXFChecksumFile* bmx::mxf_checksum_file_open(MXFFile *target, ChecksumType type)
         checksum_file->sysData->position          = mxf_file_tell(target);
         checksum_file->sysData->checksum_position = 0;
         checksum_file->sysData->force_update      = false;
+        checksum_file->sysData->checksum_final    = false;
 
         checksum_file->sysData->checksum_file.mxf_file = checksum_file;
 
@@ -463,15 +473,22 @@ bool bmx::mxf_checksum_file_final(MXFChecksumFile *checksum_file)
     MXFFile *mxf_file = checksum_file->mxf_file;
     MXFFileSysData *sys_data = mxf_file->sysData;
 
+    if (sys_data->checksum_final)
+        return true;
+
     if (mxf_file_is_seekable(mxf_file)) {
+        int64_t file_pos = mxf_file_tell(mxf_file);
         int64_t file_size = mxf_file_size(mxf_file);
         if (!update_checksum_to_position(checksum_file, file_size))
+            return false;
+        if (!mxf_file_seek(mxf_file, file_pos, SEEK_SET))
             return false;
     } else {
         update_checksum_to_nonseekable_end(checksum_file);
     }
 
     sys_data->checksum->Final();
+    sys_data->checksum_final = true;
 
     return true;
 }

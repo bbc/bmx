@@ -1,0 +1,886 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema
+  targetNamespace="http://bbc.co.uk/rd/bmx/201312"
+  xmlns="http://bbc.co.uk/rd/bmx/201312"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+  <xs:include schemaLocation="bbc_archive_info.xsd"/>
+  <xs:include schemaLocation="avid_info.xsd"/>
+  <xs:include schemaLocation="as11_info.xsd"/>
+
+  <xs:element name="bmx">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="application" type="application_type"/>
+        <xs:element name="files" type="files_type"/>
+        <xs:element name="clip" type="clip_type"/>
+        <xs:element name="checks" type="checks_type" minOccurs="0"/>
+        <xs:element name="log_messages" type="log_messages_type" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute name="version" type="version_type" use="required"/>
+      <xs:attribute name="created" type="xs:dateTime" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="application_type">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="lib_name" type="xs:string"/>
+      <xs:element name="lib_version" type="xs:string"/>
+      <xs:element name="build_timestamp" type="xs:dateTime"/>
+      <xs:element name="scm_version" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="log_messages_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:group ref="log_message" maxOccurs="unbounded"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:group name="log_message">
+    <xs:choice>
+      <xs:element name="debug" type="xs:string"/>
+      <xs:element name="info" type="xs:string"/>
+      <xs:element name="warning" type="xs:string"/>
+      <xs:element name="error" type="xs:string"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:complexType name="checks_type">
+    <xs:sequence>
+      <xs:element name="is_complete" type="xs:boolean" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Set to true if all the files are complete when opening the clip file(s)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="last_frame" type="xs:boolean" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Set to true if the last frame in the clip could be read when opening the clip file(s)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="no_app_issues" type="xs:boolean" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Set to true if no known Archive Preservation Project issues were detected</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="app_crc32" type="crc32_result_type" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>The overall result of the CRC-32 checksum validation for all tracks in the clip</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="files_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="file" type="file_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="file_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="file_uri" type="xs:anyURI"/>
+          <xs:element name="checksum" type="checksum_type" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="mxf_version" type="version_type"/>
+          <xs:element name="op_label" type="op_label_type"/>
+          <xs:element name="frame_wrapped" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>Only present when there is essence data held internally in the file</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="identifications" type="identifications_type">
+            <xs:annotation>
+              <xs:documentation>List of Identification sets contained within the MXF file, identifying which applications created and modified the file</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="material_packages" type="material_packages_type" minOccurs="0"/>
+          <xs:element name="file_source_packages" type="file_source_packages_type" minOccurs="0"/>
+          <xs:element name="physical_source_packages" type="physical_source_packages_type" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="identifications_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="identification" type="identification_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="identification_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="generation_uid" type="label_type"/>
+          <xs:element name="company_name" type="xs:string"/>
+          <xs:element name="product_name" type="xs:string"/>
+          <xs:element name="product_version" type="product_version_type" minOccurs="0"/>
+          <xs:element name="version_string" type="xs:string"/>
+          <xs:element name="product_uid" type="label_type"/>
+          <xs:element name="modified_date" type="xs:dateTime"/>
+          <xs:element name="toolkit_version" type="product_version_type" minOccurs="0"/>
+          <xs:element name="platform" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="material_packages_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="material_package" type="package_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="file_source_packages_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="file_source_package" type="package_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="physical_source_packages_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="physical_source_package" type="package_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="package_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="package_uid" type="umid_type"/>
+          <xs:element name="name" type="xs:string" minOccurs="0"/>
+          <xs:element name="creation_date" type="xs:dateTime"/>
+          <xs:element name="modified_date" type="xs:dateTime"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="clip_type">
+    <xs:sequence>
+      <xs:element name="edit_rate" type="rational_type"/>
+      <xs:element name="duration" type="duration_type"/>
+      <xs:element name="max_precharge" type="int16_type" minOccurs="0"/>
+      <xs:element name="max_rollout" type="int16_type" minOccurs="0"/>
+      <xs:element name="start_timecodes" type="start_timecodes_type"/>
+      <xs:element name="tracks" type="tracks_type"/>
+      <xs:element ref="bbc_archive" minOccurs="0"/>
+      <xs:element ref="avid" minOccurs="0"/>
+      <xs:element ref="as11" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="start_timecodes_type">
+    <xs:sequence>
+      <xs:element name="material" type="timecode_type" minOccurs="0"/>
+      <xs:element name="material_origin" type="timecode_type" minOccurs="0"/>
+      <xs:element name="file_source" type="timecode_type" minOccurs="0"/>
+      <xs:element name="physical_source" type="physical_source_tc_type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="physical_source_tc_type">
+    <xs:simpleContent>
+      <xs:extension base="timecode_type">
+        <xs:attribute name="name" type="xs:string" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="tracks_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="track" type="track_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="track_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="essence_kind" type="essence_kind_type"/>
+          <xs:element name="essence_type" type="essence_type_type"/>
+          <xs:element name="ec_label" type="label_type"/>
+          <xs:element name="edit_rate" type="rational_type"/>
+          <xs:element name="duration" type="duration_type"/>
+          <xs:element name="lead_filler_offset" type="duration_type" minOccurs="0"/>
+          <xs:element name="precharge" type="int16_type" minOccurs="0"/>
+          <xs:element name="rollout" type="int16_type" minOccurs="0"/>
+          <xs:element name="checksum" type="checksum_type" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="crc32_check" type="crc32_check_type" minOccurs="0"/>
+          <xs:element name="packages" type="track_packages_type"/>
+          <xs:element name="picture_descriptor" type="picture_descriptor_type" minOccurs="0"/>
+          <xs:element name="sound_descriptor" type="sound_descriptor_type" minOccurs="0"/>
+          <xs:element name="data_descriptor" type="data_descriptor_type" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="track_packages_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="package" type="track_package_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="track_package_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="material" type="material_package_ref_type"/>
+          <xs:element name="file_source" type="file_source_package_ref_type"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="material_package_ref_type">
+    <xs:complexContent>
+      <xs:extension base="package_ref_type"/>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="file_source_package_ref_type">
+    <xs:complexContent>
+      <xs:extension base="package_ref_type">
+        <xs:sequence>
+          <xs:element name="file_uri" type="xs:anyURI"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="package_ref_type">
+    <xs:sequence>
+      <xs:element name="package_uid" type="umid_type"/>
+      <xs:element name="track_id" type="uint32_type"/>
+      <xs:element name="track_number" type="hex_uint32_type"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="picture_descriptor_type">
+    <xs:sequence>
+      <xs:element name="coding_label" type="label_type" minOccurs="0"/>
+      <xs:element name="signal_standard" type="signal_standard_type"/>
+      <xs:element name="frame_layout" type="frame_layout_type"/>
+      <xs:element name="stored_width" type="uint32_type"/>
+      <xs:element name="stored_height" type="uint32_type"/>
+      <xs:element name="display_width" type="uint32_type"/>
+      <xs:element name="display_height" type="uint32_type"/>
+      <xs:element name="display_x_offset" type="uint32_type" minOccurs="0"/>
+      <xs:element name="display_y_offset" type="uint32_type" minOccurs="0"/>
+      <xs:element name="aspect_ratio" type="rational_type"/>
+      <xs:element name="afd" type="uint8_type" minOccurs="0"/>
+      <xs:element name="avci_header" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="cdci_descriptor" type="cdci_descriptor_type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="cdci_descriptor_type">
+    <xs:sequence>
+      <xs:element name="component_depth" type="uint32_type"/>
+      <xs:element name="horiz_subsamp" type="uint32_type"/>
+      <xs:element name="vert_subsamp" type="uint32_type"/>
+      <xs:element name="color_siting" type="color_siting_type"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="sound_descriptor_type">
+    <xs:sequence>
+      <xs:element name="sampling_rate" type="rational_type"/>
+      <xs:element name="bits_per_sample" type="uint32_type"/>
+      <xs:element name="block_align" type="uint16_type"/>
+      <xs:element name="channel_count" type="uint32_type"/>
+      <xs:element name="d10_aes3_valid_flags" type="d10_aes3_valid_flags_type" minOccurs="0"/>
+      <xs:element name="sequence_offset" type="uint8_type" minOccurs="0"/>
+      <xs:element name="locked" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="audio_ref_level" type="int8_type" minOccurs="0"/>
+      <xs:element name="dial_norm" type="int8_type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="data_descriptor_type">
+    <xs:choice>
+      <xs:element name="vbi_descriptor" type="vbi_descriptor_type"/>
+      <xs:element name="anc_descriptor" type="anc_descriptor_type"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="vbi_descriptor_type">
+    <xs:sequence>
+      <xs:element name="manifest" type="vbi_manifest_type"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="vbi_manifest_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="element" type="vbi_manifest_element_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="vbi_manifest_element_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="line_number" type="uint16_type"/>
+          <xs:element name="wrapping_type" type="vbi_wrapping_type_type"/>
+          <xs:element name="sample_coding" type="vbi_sample_coding_type"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="anc_descriptor_type">
+    <xs:sequence>
+      <xs:element name="manifest" type="anc_manifest_type"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="anc_manifest_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="element" type="anc_manifest_element_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="anc_manifest_element_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="line_number" type="uint16_type"/>
+          <xs:element name="wrapping_type" type="anc_wrapping_type_type"/>
+          <xs:element name="sample_coding" type="anc_sample_coding_type"/>
+          <xs:element name="did_type_1" type="did_type_1_type" minOccurs="0"/>
+          <xs:element name="did_type_2" type="did_type_2_type" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="did_type_1_type">
+    <xs:sequence>
+      <xs:element name="did" type="hex_uint8_type"/>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="did_type_2_type">
+    <xs:sequence>
+      <xs:element name="did" type="hex_uint8_type"/>
+      <xs:element name="sdid" type="hex_uint8_type"/>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="crc32_check_type">
+    <xs:sequence>
+      <xs:element name="result" type="crc32_result_type"/>
+      <xs:element name="error_count" type="duration_count_type">
+        <xs:annotation>
+          <xs:documentation>Number of track frames that had checksum errors</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="check_count" type="duration_count_type">
+        <xs:annotation>
+          <xs:documentation>Number of track frames checked</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="total_read" type="duration_count_type">
+        <xs:annotation>
+          <xs:documentation>Number of track frames read for checksum validation</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+
+  <xs:complexType name="array_type">
+    <xs:attribute name="size" type="xs:nonNegativeInteger" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="array_element_type">
+    <xs:attribute name="index" type="xs:nonNegativeInteger" use="required"/>
+  </xs:complexType>
+
+
+  <xs:complexType name="op_label_type">
+    <xs:simpleContent>
+       <xs:extension base="xs:string">
+         <xs:attribute name="multi_source_clip" type="xs:boolean" use="optional"/>
+         <xs:attribute name="multi_essence_track" type="xs:boolean" use="optional"/>
+         <xs:attribute name="external_essence" type="xs:boolean" use="optional"/>
+         <xs:attribute name="non_stream" type="xs:boolean" use="optional"/>
+         <xs:attribute name="multi_track" type="xs:boolean" use="optional"/>
+         <xs:attribute name="label" type="label_type" use="required"/>
+       </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="duration_type">
+    <xs:simpleContent>
+       <xs:extension base="duration_string_type">
+         <xs:attribute name="count" type="duration_count_type" use="required"/>
+         <xs:attribute name="rate" type="rational_type" use="optional">
+          <xs:annotation>
+            <xs:documentation>The default value is the clip element's edit_rate</xs:documentation>
+          </xs:annotation>
+         </xs:attribute>
+       </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="timecode_type">
+    <xs:simpleContent>
+       <xs:extension base="timecode_string_type">
+         <xs:attribute name="rate" type="rational_type" use="optional">
+          <xs:annotation>
+            <xs:documentation>The default value is the clip element's edit_rate</xs:documentation>
+          </xs:annotation>
+         </xs:attribute>
+       </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="checksum_type">
+    <xs:simpleContent>
+      <xs:extension base="checksum_value_type">
+        <xs:attribute name="type" type="checksum_type_type" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+
+  <xs:complexType name="signal_standard_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="None"/>
+        <xs:enumeration value="ITU_601"/>
+        <xs:enumeration value="ITU_1358"/>
+        <xs:enumeration value="SMPTE_347"/>
+        <xs:enumeration value="SMPTE_274"/>
+        <xs:enumeration value="SMPTE_296"/>
+        <xs:enumeration value="SMPTE_349"/>
+        <xs:enumeration value="SMPTE_428_1"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="frame_layout_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="Full_Frame"/>
+        <xs:enumeration value="Separate_Fields"/>
+        <xs:enumeration value="Single_Field"/>
+        <xs:enumeration value="Mixed_Fields"/>
+        <xs:enumeration value="Segmented_Frame"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="color_siting_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="Cositing"/>
+        <xs:enumeration value="Horizontal_Midpoint"/>
+        <xs:enumeration value="Three_Tap"/>
+        <xs:enumeration value="Quincunx"/>
+        <xs:enumeration value="Rec_601"/>
+        <xs:enumeration value="Line_Alternating"/>
+        <xs:enumeration value="Vertical_Midpoint"/>
+        <xs:enumeration value="Unknown"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="vbi_wrapping_type_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="VBI_Frame"/>
+        <xs:enumeration value="VBI_Field_1"/>
+        <xs:enumeration value="VBI_Field_2"/>
+        <xs:enumeration value="VBI_Progressive_Frame"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="vbi_sample_coding_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="VBI_1_Bit_Luma"/>
+        <xs:enumeration value="VBI_1_Bit_Color_Diff"/>
+        <xs:enumeration value="VBI_1_Bit_Luma_Color_Diff"/>
+        <xs:enumeration value="VBI_8_Bit_Luma"/>
+        <xs:enumeration value="VBI_8_Bit_Color_Diff"/>
+        <xs:enumeration value="VBI_8_Bit_Luma_Color_Diff"/>
+        <xs:enumeration value="VBI_10_Bit_Luma"/>
+        <xs:enumeration value="VBI_10_Bit_Color_Diff"/>
+        <xs:enumeration value="VBI_10_Bit_Luma_Color_Diff"/>
+        <xs:enumeration value="Reserved"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="anc_wrapping_type_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="VANC_Frame"/>
+        <xs:enumeration value="VANC_Field_1"/>
+        <xs:enumeration value="VANC_Field_2"/>
+        <xs:enumeration value="VANC_Progressive_Frame"/>
+        <xs:enumeration value="HANC_Frame"/>
+        <xs:enumeration value="HANC_Field_1"/>
+        <xs:enumeration value="HANC_Field_2"/>
+        <xs:enumeration value="HANC_Progressive_Frame"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="anc_sample_coding_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="Reserved"/>
+        <xs:enumeration value="ANC_8_Bit_Luma"/>
+        <xs:enumeration value="ANC_8_Bit_Color_Diff"/>
+        <xs:enumeration value="ANC_8_Bit_Luma_Color_Diff"/>
+        <xs:enumeration value="ANC_10_Bit_Luma"/>
+        <xs:enumeration value="ANC_10_Bit_Color_Diff"/>
+        <xs:enumeration value="ANC_10_Bit_Luma_Color_Diff"/>
+        <xs:enumeration value="ANC_8_Bit_Luma_Parity_Error"/>
+        <xs:enumeration value="ANC_8_Bit_Color_Diff_Parity_Error"/>
+        <xs:enumeration value="ANC_8_Bit_Luma_Color_Diff_Parity_Error"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="enum_type">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="value" type="uint8_type" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+
+  <xs:simpleType name="crc32_result_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Passed">
+        <xs:annotation>
+          <xs:documentation>All track frames contained CRC-32 data and all checksums validated</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="Failed">
+        <xs:annotation>
+          <xs:documentation>There are track frames that failed CRC-32 checksum validation</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="Missing">
+        <xs:annotation>
+          <xs:documentation>The track is missing CRC-32 data</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="Not_Checked">
+        <xs:annotation>
+          <xs:documentation>CRC-32 checksum validation was not performed</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="op_label_name">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="OPAtom"/>
+      <xs:enumeration value="OP1A"/>
+      <xs:enumeration value="OP1B"/>
+      <xs:enumeration value="OP1C"/>
+      <xs:enumeration value="OP2A"/>
+      <xs:enumeration value="OP2B"/>
+      <xs:enumeration value="OP2C"/>
+      <xs:enumeration value="OP3A"/>
+      <xs:enumeration value="OP3B"/>
+      <xs:enumeration value="OP3C"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="checksum_type_type">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="CRC32"/>
+      <xs:enumeration value="MD5"/>
+      <xs:enumeration value="SHA1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="essence_kind_type">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="Picture"/>
+      <xs:enumeration value="Sound"/>
+      <xs:enumeration value="Timecode"/>
+      <xs:enumeration value="Data"/>
+      <xs:enumeration value="Descriptive_Metadata"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="essence_type_type">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="Unknown"/>
+      <xs:enumeration value="Picture"/>
+      <xs:enumeration value="Sound"/>
+      <xs:enumeration value="Data"/>
+      <xs:enumeration value="D10_30"/>
+      <xs:enumeration value="D10_40"/>
+      <xs:enumeration value="D10_50"/>
+      <xs:enumeration value="IEC_DV_25"/>
+      <xs:enumeration value="DV_Based_DV_25"/>
+      <xs:enumeration value="DV_50"/>
+      <xs:enumeration value="DV_100_1080i"/>
+      <xs:enumeration value="DV_100_720p"/>
+      <xs:enumeration value="AVCI_100_1080i"/>
+      <xs:enumeration value="AVCI_100_1080p"/>
+      <xs:enumeration value="AVCI_100_720p"/>
+      <xs:enumeration value="AVCI_50_1080i"/>
+      <xs:enumeration value="AVCI_50_1080p"/>
+      <xs:enumeration value="AVCI_50_720p"/>
+      <xs:enumeration value="AVC_High_10_Intra_Uncs"/>
+      <xs:enumeration value="AVC_High_422_Intra_Uncs"/>
+      <xs:enumeration value="Unc_SD"/>
+      <xs:enumeration value="Unc_HD_1080i"/>
+      <xs:enumeration value="Unc_HD_1080p"/>
+      <xs:enumeration value="Unc_HD_720p"/>
+      <xs:enumeration value="Unc_UHD_3840"/>
+      <xs:enumeration value="Avid_10b_Unc_SD"/>
+      <xs:enumeration value="Avid_10b_Unc_HD_1080i"/>
+      <xs:enumeration value="Avid_10b_Unc_HD_1080p"/>
+      <xs:enumeration value="Avid_10b_Unc_HD_720p"/>
+      <xs:enumeration value="Avid_Unc_Alpha_SD"/>
+      <xs:enumeration value="Avid_Unc_Alpha_HD_1080i"/>
+      <xs:enumeration value="Avid_Unc_Alpha_HD_1080p"/>
+      <xs:enumeration value="Avid_Unc_Alpha_HD_720p"/>
+      <xs:enumeration value="MPEG_2_Long_GOP_422P_HL_1080i"/>
+      <xs:enumeration value="MPEG_2_Long_GOP_422P_HL_1080p"/>
+      <xs:enumeration value="MPEG_2_Long_GOP_422P_HL_720p"/>
+      <xs:enumeration value="MPEG_2_Long_GOP_MP_HL_1920_1080i"/>
+      <xs:enumeration value="MPEG_2_Long_GOP_MP_HL_1920_1080p"/>
+      <xs:enumeration value="MPEG_2_Long_GOP_MP_HL_1440_1080i"/>
+      <xs:enumeration value="MPEG_2_Long_GOP_MP_HL_1440_1080p"/>
+      <xs:enumeration value="MPEG_2_Long_GOP_MP_HL_720p"/>
+      <xs:enumeration value="MPEG_2_Long_GOP_MP_H14_1080i"/>
+      <xs:enumeration value="MPEG_2_Long_GOP_MP_H14_1080p"/>
+      <xs:enumeration value="VC3_1080p_1235"/>
+      <xs:enumeration value="VC3_1080p_1237"/>
+      <xs:enumeration value="VC3_1080p_1238"/>
+      <xs:enumeration value="VC3_1080i_1241"/>
+      <xs:enumeration value="VC3_1080i_1242"/>
+      <xs:enumeration value="VC3_1080i_1243"/>
+      <xs:enumeration value="VC3_720p_1250"/>
+      <xs:enumeration value="VC3_720p_1251"/>
+      <xs:enumeration value="VC3_720p_1252"/>
+      <xs:enumeration value="VC3_1080p_1253"/>
+      <xs:enumeration value="MJPEG_2_1"/>
+      <xs:enumeration value="MJPEG_3_1"/>
+      <xs:enumeration value="MJPEG_10_1"/>
+      <xs:enumeration value="MJPEG_20_1"/>
+      <xs:enumeration value="MJPEG_4_1_M"/>
+      <xs:enumeration value="MJPEG_10_1_M"/>
+      <xs:enumeration value="MJPEG_15_1_S"/>
+      <xs:enumeration value="WAVE_PCM"/>
+      <xs:enumeration value="D10_AES3_PCM"/>
+      <xs:enumeration value="ANC_Data"/>
+      <xs:enumeration value="VBI_Data"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+
+  <xs:simpleType name="checksum_value_type">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9a-fA-F]{8}">
+        <xs:annotation>
+          <xs:documentation>CRC-32</xs:documentation>
+        </xs:annotation>
+      </xs:pattern>
+      <xs:pattern value="[0-9a-fA-F]{32}">
+        <xs:annotation>
+          <xs:documentation>MD5</xs:documentation>
+        </xs:annotation>
+      </xs:pattern>
+      <xs:pattern value="[0-9a-fA-F]{40}">
+        <xs:annotation>
+          <xs:documentation>SHA-1</xs:documentation>
+        </xs:annotation>
+      </xs:pattern>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="version_type">
+   <xs:restriction base="xs:string">
+     <xs:pattern value="\d{1,3}\.\d{1,3}"/>
+   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="product_version_type">
+   <xs:restriction base="xs:string">
+     <xs:pattern value="\d{1,5}(\.\d{1,5}){4}"/>
+   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="d10_aes3_valid_flags_type">
+   <xs:restriction base="xs:string">
+     <xs:pattern value="[01]{8}b"/>
+   </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="duration_string_type">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\d+:\d{1,2}:\d{1,2}:\d+"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="timecode_string_type">
+    <xs:restriction base="xs:string">
+       <xs:pattern value="\d{1,2}:\d{1,2}:\d{1,2}[;:]\d{1,5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="umid_type">
+    <xs:restriction base="xs:anyURI">
+       <xs:pattern value="urn:smpte:umid:[0-9a-fA-F]{8}(\.[0-9a-fA-F]{8}){7}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="label_type">
+    <xs:restriction base="xs:anyURI">
+      <xs:pattern value="urn:smpte:ul:[0-9a-fA-F]{8}(\.[0-9a-fA-F]{8}){3}"/>
+      <xs:pattern value="urn:uuid:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="rational_type">
+    <xs:restriction base="xs:string">
+       <xs:pattern value="\-?\d{1,10}(/\-?\d{1,10})?"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="int8_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="-128"/>
+      <xs:maxInclusive value="127"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="int16_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="-32768"/>
+      <xs:maxInclusive value="32767"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="int32_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="-2147483648"/>
+      <xs:maxInclusive value="2147483647"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="uint8_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="255"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="uint16_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="65535"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="uint32_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="4294967295"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="hex_uint8_type">
+    <xs:union>
+      <xs:simpleType>
+        <xs:restriction base="xs:integer">
+          <xs:minInclusive value="0"/>
+          <xs:maxInclusive value="255"/>
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:pattern value="0x[0-9a-fA-F]{1,2}"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:simpleType name="hex_uint32_type">
+    <xs:union>
+      <xs:simpleType>
+        <xs:restriction base="xs:integer">
+          <xs:minInclusive value="0"/>
+          <xs:maxInclusive value="4294967295"/>
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:pattern value="0x[0-9a-fA-F]{1,8}"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:simpleType name="duration_count_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="9223372036854775807">
+        <xs:annotation>
+          <xs:documentation>Maximum signed 64-bit integer</xs:documentation>
+        </xs:annotation>
+      </xs:maxInclusive>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

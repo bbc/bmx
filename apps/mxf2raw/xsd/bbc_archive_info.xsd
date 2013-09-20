@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+  <xs:element name="bbc_archive">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="original_filename" type="xs:string"/>
+        <xs:element name="event_counts" type="event_counts_type"/>
+        <xs:element name="source_infax" type="infax_type" minOccurs="0"/>
+        <xs:element name="lto_infax" type="infax_type" minOccurs="0"/>
+        <xs:element name="events" type="events_type" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="event_counts_type">
+    <xs:sequence>
+      <xs:element name="vtr_errors" type="uint32_type"/>
+      <xs:element name="pse_failures" type="uint32_type"/>
+      <xs:element name="digibeta_dropouts" type="uint32_type"/>
+      <xs:element name="timecode_breaks" type="uint32_type">
+        <xs:annotation>
+          <xs:documentation>Number of unique positions that contained a timecode break event, i.e. a VITC and LTC break on the same frame counts as 1</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="infax_type">
+    <xs:sequence>
+      <xs:element name="format" type="xs:string" minOccurs="0"/>
+      <xs:element name="programme_title" type="xs:string" minOccurs="0"/>
+      <xs:element name="episode_title" type="xs:string" minOccurs="0"/>
+      <xs:element name="transmission_date" type="xs:date" minOccurs="0"/>
+      <xs:element name="magazine_prefix" type="xs:string" minOccurs="0"/>
+      <xs:element name="programme_number" type="xs:string" minOccurs="0"/>
+      <xs:element name="production_code" type="xs:string" minOccurs="0"/>
+      <xs:element name="spool_status" type="xs:string" minOccurs="0"/>
+      <xs:element name="stock_date" type="xs:date" minOccurs="0"/>
+      <xs:element name="spool_descriptor" type="xs:string" minOccurs="0"/>
+      <xs:element name="memo" type="xs:string" minOccurs="0"/>
+      <xs:element name="duration" type="duration_type" minOccurs="0"/>
+      <xs:element name="spoolNumber" type="xs:string" minOccurs="0"/>
+      <xs:element name="accession_number" type="xs:string" minOccurs="0"/>
+      <xs:element name="catalogue_detail" type="xs:string" minOccurs="0"/>
+      <xs:element name="item_number" type="uint32_type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="events_type">
+    <xs:sequence>
+      <xs:element name="digibeta_dropouts" type="digibeta_dropouts_type" minOccurs="0"/>
+      <xs:element name="pse_failures" type="pse_failures_type" minOccurs="0"/>
+      <xs:element name="timecode_breaks" type="timecode_breaks_type" minOccurs="0"/>
+      <xs:element name="vtr_errors" type="vtr_errors_type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="digibeta_dropouts_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="digibeta_dropout" type="digibeta_dropout_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="digibeta_dropout_type">
+    <xs:complexContent>
+      <xs:extension base="event_type">
+        <xs:sequence>
+          <xs:element name="strength" type="int32_type"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="pse_failures_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="pse_failure" type="pse_failure_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="pse_failure_type">
+    <xs:complexContent>
+      <xs:extension base="event_type">
+        <xs:sequence>
+          <xs:element name="red_flash" type="xs:float" minOccurs="0"/>
+          <xs:element name="spatial_pattern" type="xs:float" minOccurs="0"/>
+          <xs:element name="luminance_flash" type="xs:float" minOccurs="0"/>
+          <xs:element name="extended_failure" type="xs:boolean" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="timecode_breaks_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="timecode_break" type="timecode_break_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="timecode_break_type">
+    <xs:complexContent>
+      <xs:extension base="event_type">
+        <xs:sequence>
+          <xs:element name="type" type="timecode_break_type_type"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:simpleType name="timecode_break_type_type">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="VITC"/>
+      <xs:enumeration value="LTC"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="vtr_errors_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="vtr_error" type="vtr_error_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="vtr_error_type">
+    <xs:complexContent>
+      <xs:extension base="event_type">
+        <xs:sequence>
+          <xs:element name="error_code" type="hex_uint8_type"/>
+          <xs:element name="video_status" type="vtr_error_status_type"/>
+          <xs:element name="audio_status" type="vtr_error_status_type"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="vtr_error_status_type">
+    <xs:simpleContent>
+      <xs:restriction base="enum_type">
+        <xs:enumeration value="Good"/>
+        <xs:enumeration value="Almost_Good"/>
+        <xs:enumeration value="State_Cannot_Be_Determined"/>
+        <xs:enumeration value="State_Unclear"/>
+        <xs:enumeration value="No_Good"/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="event_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="position" type="duration_type"/>
+          <xs:element name="vitc" type="timecode_type" minOccurs="0"/>
+          <xs:element name="ltc" type="timecode_type" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+</xs:schema>

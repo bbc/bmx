@@ -1,3 +1,5 @@
+SUBDIRS = . xsd
+
 bin_PROGRAMS = mxf2raw
 
 mxf2raw_SOURCES = \

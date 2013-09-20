@@ -32,6 +32,8 @@
 #ifndef BMX_CHECKSUM_H_
 #define BMX_CHECKSUM_H_
 
+#include <vector>
+
 #include <bmx/CRC32.h>
 #include <bmx/MD5.h>
 #include <bmx/SHA1.h>
@@ -56,6 +58,10 @@ public:
     static std::string CalcFileChecksum(const std::string &filename, ChecksumType type);
     static std::string CalcFileChecksum(FILE *file, ChecksumType type);
 
+    static std::vector<std::string> CalcFileChecksums(const std::string &filename,
+                                                      const std::vector<ChecksumType> &types);
+    static std::vector<std::string> CalcFileChecksums(FILE *file, const std::vector<ChecksumType> &types);
+
 public:
     Checksum();
     Checksum(ChecksumType type);
@@ -65,6 +71,8 @@ public:
 
     void Update(const unsigned char *data, uint32_t size);
     void Final();
+
+    ChecksumType GetType() const { return mType; }
 
     size_t GetDigestSize() const;
     void GetDigest(unsigned char *digest, size_t size) const;

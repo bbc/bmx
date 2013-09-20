@@ -262,6 +262,7 @@ AC_CONFIG_FILES([
 	test/growing_file/Makefile
 	apps/Makefile
 	apps/mxf2raw/Makefile
+	apps/mxf2raw/xsd/Makefile
 	apps/raw2bmx/Makefile
 	apps/bmxtranswrap/Makefile
 	tools/Makefile

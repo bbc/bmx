@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2013, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,12 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef AVID_INFO_OUTPUT_H_
-#define AVID_INFO_OUTPUT_H_
+#ifndef BMX_APP_XML_INFO_WRITER_H_
+#define BMX_APP_XML_INFO_WRITER_H_
 
-
-#include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/apps/AppInfoWriter.h>
+#include <bmx/XMLWriter.h>
 
 
 
@@ -42,13 +41,49 @@ namespace bmx
 {
 
 
-void avid_register_extensions(MXFFileReader *file_reader);
-void avid_write_info(AppInfoWriter *info_writer, MXFFileReader *file_reader);
+class AppXMLInfoWriter : public AppInfoWriter
+{
+public:
+    static AppXMLInfoWriter* Open(const std::string &filename);
 
+public:
+    AppXMLInfoWriter(FILE *xml_file);
+    AppXMLInfoWriter(XMLWriter *xml_writer);
+    virtual ~AppXMLInfoWriter();
+
+    void SetNamespace(const std::string &ns, const std::string &prefix);
+    void SetVersion(const std::string &version);
+
+public:
+    virtual void Start(const std::string &name);
+    virtual void End();
+
+    virtual void StartSection(const std::string &name);
+    virtual void EndSection();
+    virtual void StartArrayItem(const std::string &name, size_t size);
+    virtual void EndArrayItem();
+    virtual void StartArrayElement(const std::string &name, size_t index);
+    virtual void EndArrayElement();
+    virtual void StartComplexItem(const std::string &name)  { StartSection(name); }
+    virtual void EndComplexItem()                           { EndSection(); }
+
+    virtual void WriteTimestampItem(const std::string &name, Timestamp value);
+
+protected:
+    virtual void WriteItem(const std::string &name, const std::string &value);
+
+private:
+    void WriteElementStart(const std::string &name);
+
+private:
+    XMLWriter *mXMLWriter;
+    std::string mNamespace;
+    std::string mPrefix;
+    std::string mVersion;
+};
 
 
 };
-
 
 
 #endif

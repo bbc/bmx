@@ -48,13 +48,37 @@ using namespace bmx;
 
 string Checksum::CalcFileChecksum(const string &filename, ChecksumType type)
 {
+    vector<ChecksumType> types;
+    types.push_back(type);
+
+    vector<string> result = CalcFileChecksums(filename, types);
+    if (result.empty())
+        return "";
+
+    return result.front();
+}
+
+string Checksum::CalcFileChecksum(FILE *file, ChecksumType type)
+{
+    vector<ChecksumType> types;
+    types.push_back(type);
+
+    vector<string> result = CalcFileChecksums(file, types);
+    if (result.empty())
+        return "";
+
+    return result.front();
+}
+
+vector<string> Checksum::CalcFileChecksums(const string &filename, const vector<ChecksumType> &types)
+{
     FILE *file = fopen(filename.c_str(), "rb");
     if (!file) {
         log_warn("Failed to open file '%s' to calculate checksum: %s\n", filename.c_str(), bmx_strerror(errno).c_str());
-        return "";
+        return vector<string>();
     }
 
-    string result = CalcFileChecksum(file, type);
+    vector<string> result = CalcFileChecksums(file, types);
     if (result.empty())
         log_warn("Failed to calculate checksum for file '%s'\n", filename.c_str());
 
@@ -63,9 +87,12 @@ string Checksum::CalcFileChecksum(const string &filename, ChecksumType type)
     return result;
 }
 
-string Checksum::CalcFileChecksum(FILE *file, ChecksumType type)
+vector<string> Checksum::CalcFileChecksums(FILE *file, const vector<ChecksumType> &types)
 {
-    Checksum checksum(type);
+    vector<Checksum> checksums;
+    size_t i;
+    for (i = 0; i < types.size(); i++)
+        checksums.push_back(Checksum(types[i]));
 
     const size_t buffer_size = 8192;
     unsigned char *buffer = new unsigned char[buffer_size];
@@ -75,17 +102,23 @@ string Checksum::CalcFileChecksum(FILE *file, ChecksumType type)
         if (num_read != buffer_size && ferror(file)) {
             log_warn("Read failure when calculating checksum: %s\n", bmx_strerror(errno).c_str());
             delete [] buffer;
-            return "";
+            return vector<string>();
         }
 
-        if (num_read > 0)
-            checksum.Update(buffer, (uint32_t)num_read);
+        if (num_read > 0) {
+            for (i = 0; i < checksums.size(); i++)
+                checksums[i].Update(buffer, (uint32_t)num_read);
+        }
     }
     delete [] buffer;
 
-    checksum.Final();
+    vector<string> result;
+    for (i = 0; i < checksums.size(); i++) {
+        checksums[i].Final();
+        result.push_back(checksums[i].GetDigestString());
+    }
 
-    return checksum.GetDigestString();
+    return result;
 }
 
 

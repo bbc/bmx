@@ -658,6 +658,20 @@ bool bmx::parse_anc_data_types(const char *types_str, set<ANCDataType> *types)
     return !types->empty();
 }
 
+bool bmx::parse_checksum_type(const char *type_str, ChecksumType *type)
+{
+    if (strcmp(type_str, "crc32") == 0)
+        *type = CRC32_CHECKSUM;
+    else if (strcmp(type_str, "md5") == 0)
+        *type = MD5_CHECKSUM;
+    else if (strcmp(type_str, "sha1") == 0)
+        *type = SHA1_CHECKSUM;
+    else
+        return false;
+
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {

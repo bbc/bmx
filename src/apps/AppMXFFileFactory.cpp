@@ -38,6 +38,7 @@
 #include <climits>
 
 #include <bmx/apps/AppMXFFileFactory.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -49,8 +50,6 @@ using namespace mxfpp;
 
 AppMXFFileFactory::AppMXFFileFactory()
 {
-    mChecksumInput = false;
-    mInputChecksumType = MD5_CHECKSUM;
     mInputFlags = 0;
     mRWInterleaver = 0;
 }
@@ -60,10 +59,15 @@ AppMXFFileFactory::~AppMXFFileFactory()
     mxf_free_rw_intl(&mRWInterleaver);
 }
 
-void AppMXFFileFactory::SetInputChecksum(ChecksumType type)
+void AppMXFFileFactory::SetInputChecksumTypes(const set<ChecksumType> &types)
 {
-    mChecksumInput     = true;
-    mInputChecksumType = type;
+    mInputChecksumTypes.clear();
+    mInputChecksumTypes.insert(types.begin(), types.end());
+}
+
+void AppMXFFileFactory::AddInputChecksumType(ChecksumType type)
+{
+    mInputChecksumTypes.insert(type);
 }
 
 void AppMXFFileFactory::SetInputFlags(int flags)
@@ -127,10 +131,27 @@ File* AppMXFFileFactory::OpenRead(string filename)
 #endif
         }
 
-        if (mChecksumInput) {
-            MXFChecksumFile *checksum_file = mxf_checksum_file_open(mxf_file, mInputChecksumType);
-            mInputChecksumFiles.push_back(make_pair(filename, checksum_file));
-            mxf_file = mxf_checksum_file_get_file(checksum_file);
+        if (!mInputChecksumTypes.empty()) {
+            URI abs_uri;
+            BMX_CHECK(abs_uri.ParseFilename(filename));
+            if (abs_uri.IsRelative()) {
+                URI base_uri;
+                BMX_CHECK(base_uri.ParseDirectory(get_cwd()));
+                abs_uri.MakeAbsolute(base_uri);
+            }
+
+            InputChecksumFile input_checksum_file;
+            input_checksum_file.filename = filename;
+            input_checksum_file.abs_uri = abs_uri;
+
+            set<ChecksumType>::const_iterator types_iter;
+            for (types_iter = mInputChecksumTypes.begin(); types_iter != mInputChecksumTypes.end(); types_iter++) {
+                MXFChecksumFile *checksum_file = mxf_checksum_file_open(mxf_file, *types_iter);
+                input_checksum_file.checksum_files.push_back(make_pair(*types_iter, checksum_file));
+                mxf_file = mxf_checksum_file_get_file(checksum_file);
+            }
+
+            mInputChecksumFiles.push_back(input_checksum_file);
         }
 
         if (mRWInterleaver) {
@@ -179,37 +200,72 @@ void AppMXFFileFactory::ForceInputChecksumUpdate()
 {
     size_t i;
     for (i = 0; i < mInputChecksumFiles.size(); i++)
-        mxf_checksum_file_force_update(mInputChecksumFiles[i].second);
+        mxf_checksum_file_force_update(mInputChecksumFiles[i].checksum_files.back().second);
 }
 
 void AppMXFFileFactory::FinalizeInputChecksum()
 {
     size_t i;
-    for (i = 0; i < mInputChecksumFiles.size(); i++)
-        BMX_CHECK(mxf_checksum_file_final(mInputChecksumFiles[i].second));
+    for (i = 0; i < mInputChecksumFiles.size(); i++) {
+        size_t j;
+        for (j = 0; j < mInputChecksumFiles[i].checksum_files.size(); j++)
+            BMX_CHECK(mxf_checksum_file_final(mInputChecksumFiles[i].checksum_files[j].second));
+    }
 }
 
-string AppMXFFileFactory::GetInputChecksumFilename(size_t index) const
+string AppMXFFileFactory::GetInputChecksumFilename(size_t file_index) const
 {
-    BMX_ASSERT(index < mInputChecksumFiles.size());
-    return mInputChecksumFiles[index].first;
+    BMX_ASSERT(file_index < mInputChecksumFiles.size());
+    return mInputChecksumFiles[file_index].filename;
 }
 
-size_t AppMXFFileFactory::GetInputChecksumDigestSize(size_t index) const
+URI AppMXFFileFactory::GetInputChecksumAbsURI(size_t file_index) const
 {
-    BMX_ASSERT(index < mInputChecksumFiles.size());
-    return mxf_checksum_file_digest_size(mInputChecksumFiles[index].second);
+    BMX_ASSERT(file_index < mInputChecksumFiles.size());
+    return mInputChecksumFiles[file_index].abs_uri;
 }
 
-void AppMXFFileFactory::GetInputChecksumDigest(size_t index, unsigned char *digest, size_t size) const
+vector<ChecksumType> AppMXFFileFactory::GetInputChecksumTypes(size_t file_index) const
 {
-    BMX_ASSERT(index < mInputChecksumFiles.size());
-    return mxf_checksum_file_digest(mInputChecksumFiles[index].second, digest, size);
+    BMX_ASSERT(file_index < mInputChecksumFiles.size());
+    vector<ChecksumType> types;
+    size_t i;
+    for (i = 0; i < mInputChecksumFiles[file_index].checksum_files.size(); i++)
+        types.push_back(mInputChecksumFiles[file_index].checksum_files[i].first);
+    return types;
 }
 
-string AppMXFFileFactory::GetInputChecksumDigestString(size_t index) const
+size_t AppMXFFileFactory::GetInputChecksumDigestSize(size_t file_index, ChecksumType type) const
 {
-    BMX_ASSERT(index < mInputChecksumFiles.size());
-    return mxf_checksum_file_digest_str(mInputChecksumFiles[index].second);
+    return mxf_checksum_file_digest_size(GetChecksumFile(file_index, type));
+}
+
+void AppMXFFileFactory::GetInputChecksumDigest(size_t file_index, ChecksumType type, unsigned char *digest,
+                                               size_t size) const
+{
+    return mxf_checksum_file_digest(GetChecksumFile(file_index, type), digest, size);
+}
+
+string AppMXFFileFactory::GetInputChecksumDigestString(size_t file_index, ChecksumType type) const
+{
+    return mxf_checksum_file_digest_str(GetChecksumFile(file_index, type));
+}
+
+MXFChecksumFile* AppMXFFileFactory::GetChecksumFile(size_t file_index, ChecksumType type) const
+{
+    BMX_ASSERT(file_index < mInputChecksumFiles.size());
+
+    MXFChecksumFile *checksum_file = 0;
+    vector<ChecksumType> types;
+    size_t i;
+    for (i = 0; i < mInputChecksumFiles[file_index].checksum_files.size(); i++) {
+        if (mInputChecksumFiles[file_index].checksum_files[i].first == type) {
+            checksum_file = mInputChecksumFiles[file_index].checksum_files[i].second;
+            break;
+        }
+    }
+    BMX_ASSERT(checksum_file);
+
+    return checksum_file;
 }
 

@@ -1,150 +1,1041 @@
 5941560
-Info: Input filename: /tmp/gftest.mxf
-Info: Material package name: 
-Info: Edit rate: 25/1
-Info: Precharge: 0
-Info: Duration: 24
-Info: Rollout: 0
-Info: Read 24 samples (00:00:00:24 @25fps)
-Info: MD5 Track 0: dd8fb89170d3e4bbfd21c3f55a6e6288
-Info: MD5 Track 1: bdc3d1a5ad30870eafc32cbb3beebbf6
+ (created='1970-01-01 00:00:00.000')
+Application
+  name            : mxf2raw
+  lib_name        : RegLib
+  lib_version     : 0.0.0
+  build_timestamp : 1970-01-01 00:00:00.000
+  scm_version     : regtest-head
+Files: (1)
+  File #0:
+    file_uri        : regtest_file_uri
+    mxf_version     : 1.3
+    op_label        : OP1A (external_essence='false', non_stream='false', multi_track='true', label='urn:smpte:ul:060e2b34.04010101.0d010201.01010900')
+    frame_wrapped   : true
+    Identifications: (1)
+      Identification #0:
+        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        company_name    : RegCo
+        product_name    : RegLib
+        product_version : 1.0.0.0.0
+        version_string  : 0.0.0
+        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        modified_date   : 0-00-00 00:00:00.000
+        toolkit_version : 1.0.0.0.0
+        platform        : libMXF (Linux)
+    MaterialPackages: (1)
+      MaterialPackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+    FileSourcePackages: (1)
+      FileSourcePackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+Clip
+  edit_rate       : 25/1
+  duration        : 00:00:00:24 (count='24')
+  StartTimecodes:
+    material        : 00:00:00:00
+    file_source     : 00:00:00:00
+  Tracks: (2)
+    Track #0:
+      essence_kind    : Picture
+      essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
+      ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
+      edit_rate       : 25/1
+      duration        : 00:00:00:24 (count='24')
+      checksum        : dd8fb89170d3e4bbfd21c3f55a6e6288 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 1001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 1001
+            track_number    : 0x15010500
+            file_uri        : regtest_file_uri
+      PictureDescriptor:
+        coding_label    : urn:smpte:ul:060e2b34.04010103.04010202.01040300
+        signal_standard : SMPTE_274 (value='4')
+        frame_layout    : Separate_Fields (value='1')
+        stored_width    : 1920
+        stored_height   : 1088
+        display_width   : 1920
+        display_height  : 1080
+        aspect_ratio    : 16/9
+        CDCIDescriptor:
+          component_depth : 8
+          horiz_subsamp   : 2
+          vert_subsamp    : 1
+          color_siting    : Cositing (value='0')
+    Track #1:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:24 (count='24')
+      checksum        : bdc3d1a5ad30870eafc32cbb3beebbf6 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 2001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 2001
+            track_number    : 0x16010100
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate   : 48000/1
+        bits_per_sample : 16
+        block_align     : 2
+        channel_count   : 1
+LogMessages: (1)
+  info    : Read 24 samples (00:00:00:24 @25fps)
 5941464
-Warning (libMXF): File is missing both a RIP and a footer partition offset 
-Info: Input filename: /tmp/gftest.mxf
-Info: Material package name: 
-Info: Edit rate: 25/1
-Info: Precharge: 0
-Info: Duration: 24
-Info: Rollout: 0
-Info: Read 24 samples (00:00:00:24 @25fps)
-Info: MD5 Track 0: dd8fb89170d3e4bbfd21c3f55a6e6288
-Info: MD5 Track 1: bdc3d1a5ad30870eafc32cbb3beebbf6
+ (created='1970-01-01 00:00:00.000')
+Application
+  name            : mxf2raw
+  lib_name        : RegLib
+  lib_version     : 0.0.0
+  build_timestamp : 1970-01-01 00:00:00.000
+  scm_version     : regtest-head
+Files: (1)
+  File #0:
+    file_uri        : regtest_file_uri
+    mxf_version     : 1.3
+    op_label        : OP1A (external_essence='false', non_stream='false', multi_track='true', label='urn:smpte:ul:060e2b34.04010101.0d010201.01010900')
+    frame_wrapped   : true
+    Identifications: (1)
+      Identification #0:
+        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        company_name    : RegCo
+        product_name    : RegLib
+        product_version : 1.0.0.0.0
+        version_string  : 0.0.0
+        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        modified_date   : 0-00-00 00:00:00.000
+        toolkit_version : 1.0.0.0.0
+        platform        : libMXF (Linux)
+    MaterialPackages: (1)
+      MaterialPackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+    FileSourcePackages: (1)
+      FileSourcePackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+Clip
+  edit_rate       : 25/1
+  duration        : 00:00:00:24 (count='24')
+  StartTimecodes:
+    material        : 00:00:00:00
+    file_source     : 00:00:00:00
+  Tracks: (2)
+    Track #0:
+      essence_kind    : Picture
+      essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
+      ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
+      edit_rate       : 25/1
+      duration        : 00:00:00:24 (count='24')
+      checksum        : dd8fb89170d3e4bbfd21c3f55a6e6288 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 1001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 1001
+            track_number    : 0x15010500
+            file_uri        : regtest_file_uri
+      PictureDescriptor:
+        coding_label    : urn:smpte:ul:060e2b34.04010103.04010202.01040300
+        signal_standard : SMPTE_274 (value='4')
+        frame_layout    : Separate_Fields (value='1')
+        stored_width    : 1920
+        stored_height   : 1088
+        display_width   : 1920
+        display_height  : 1080
+        aspect_ratio    : 16/9
+        CDCIDescriptor:
+          component_depth : 8
+          horiz_subsamp   : 2
+          vert_subsamp    : 1
+          color_siting    : Cositing (value='0')
+    Track #1:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:24 (count='24')
+      checksum        : bdc3d1a5ad30870eafc32cbb3beebbf6 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 2001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 2001
+            track_number    : 0x16010100
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate   : 48000/1
+        bits_per_sample : 16
+        block_align     : 2
+        channel_count   : 1
+LogMessages: (2)
+  warning : File is missing both a RIP and a footer partition offset 
+  info    : Read 24 samples (00:00:00:24 @25fps)
 5927832
-ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
-ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
-ERROR (libMXF): 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
-ERROR (libMXF): 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
-Warning: Input file is incomplete
-Info: Input filename: /tmp/gftest.mxf
-Info: Material package name: 
-Info: Edit rate: 25/1
-Info: Precharge: 0
-Info: Duration: -1
-Info: Rollout: 0
-Warning: A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
-Info: Read 24 samples (00:00:00:24 @25fps)
-Info: MD5 Track 0: dd8fb89170d3e4bbfd21c3f55a6e6288
-Info: MD5 Track 1: bdc3d1a5ad30870eafc32cbb3beebbf6
+ (created='1970-01-01 00:00:00.000')
+Application
+  name            : mxf2raw
+  lib_name        : RegLib
+  lib_version     : 0.0.0
+  build_timestamp : 1970-01-01 00:00:00.000
+  scm_version     : regtest-head
+Files: (1)
+  File #0:
+    file_uri        : regtest_file_uri
+    mxf_version     : 1.3
+    op_label        : OP1A (external_essence='false', non_stream='false', multi_track='true', label='urn:smpte:ul:060e2b34.04010101.0d010201.01010900')
+    frame_wrapped   : true
+    Identifications: (1)
+      Identification #0:
+        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        company_name    : RegCo
+        product_name    : RegLib
+        product_version : 1.0.0.0.0
+        version_string  : 0.0.0
+        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        modified_date   : 0-00-00 00:00:00.000
+        toolkit_version : 1.0.0.0.0
+        platform        : libMXF (Linux)
+    MaterialPackages: (1)
+      MaterialPackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+    FileSourcePackages: (1)
+      FileSourcePackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+Clip
+  edit_rate       : 25/1
+  duration        : 00:00:00:00 (count='-1')
+  StartTimecodes:
+    material        : 00:00:00:00
+    file_source     : 00:00:00:00
+  Tracks: (2)
+    Track #0:
+      essence_kind    : Picture
+      essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
+      ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : dd8fb89170d3e4bbfd21c3f55a6e6288 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 1001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 1001
+            track_number    : 0x15010500
+            file_uri        : regtest_file_uri
+      PictureDescriptor:
+        coding_label    : urn:smpte:ul:060e2b34.04010103.04010202.01040300
+        signal_standard : SMPTE_274 (value='4')
+        frame_layout    : Separate_Fields (value='1')
+        stored_width    : 1920
+        stored_height   : 1088
+        display_width   : 1920
+        display_height  : 1080
+        aspect_ratio    : 16/9
+        CDCIDescriptor:
+          component_depth : 8
+          horiz_subsamp   : 2
+          vert_subsamp    : 1
+          color_siting    : Cositing (value='0')
+    Track #1:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : bdc3d1a5ad30870eafc32cbb3beebbf6 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 2001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 2001
+            track_number    : 0x16010100
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate   : 48000/1
+        bits_per_sample : 16
+        block_align     : 2
+        channel_count   : 1
+LogMessages: (7)
+  warning : Input file is incomplete
+  error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+  error   : 'mxf_read_k(mxfFile, key)' failed, 
+  error   : 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
+  error   : 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+  warning : A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+  info    : Read 24 samples (00:00:00:24 @25fps)
 5927350
-ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
-ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
-ERROR (libMXF): 'mxf_read_kl(_cFile, key, llen, len)' failed, 
-Warning: Input file is incomplete
-Info: Input filename: /tmp/gftest.mxf
-Info: Material package name: 
-Info: Edit rate: 25/1
-Info: Precharge: 0
-Info: Duration: -1
-Info: Rollout: 0
-Warning: A read error occurred: 'mxf_read_kl(_cFile, key, llen, len)' failed, 
-Info: Read 23 samples (00:00:00:23 @25fps)
-Info: MD5 Track 0: 290a268469d4df657d7bb80a2c8dc531
-Info: MD5 Track 1: bebb193b9967aa36399295279abb1831
+ (created='1970-01-01 00:00:00.000')
+Application
+  name            : mxf2raw
+  lib_name        : RegLib
+  lib_version     : 0.0.0
+  build_timestamp : 1970-01-01 00:00:00.000
+  scm_version     : regtest-head
+Files: (1)
+  File #0:
+    file_uri        : regtest_file_uri
+    mxf_version     : 1.3
+    op_label        : OP1A (external_essence='false', non_stream='false', multi_track='true', label='urn:smpte:ul:060e2b34.04010101.0d010201.01010900')
+    frame_wrapped   : true
+    Identifications: (1)
+      Identification #0:
+        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        company_name    : RegCo
+        product_name    : RegLib
+        product_version : 1.0.0.0.0
+        version_string  : 0.0.0
+        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        modified_date   : 0-00-00 00:00:00.000
+        toolkit_version : 1.0.0.0.0
+        platform        : libMXF (Linux)
+    MaterialPackages: (1)
+      MaterialPackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+    FileSourcePackages: (1)
+      FileSourcePackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+Clip
+  edit_rate       : 25/1
+  duration        : 00:00:00:00 (count='-1')
+  StartTimecodes:
+    material        : 00:00:00:00
+    file_source     : 00:00:00:00
+  Tracks: (2)
+    Track #0:
+      essence_kind    : Picture
+      essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
+      ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : 290a268469d4df657d7bb80a2c8dc531 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 1001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 1001
+            track_number    : 0x15010500
+            file_uri        : regtest_file_uri
+      PictureDescriptor:
+        coding_label    : urn:smpte:ul:060e2b34.04010103.04010202.01040300
+        signal_standard : SMPTE_274 (value='4')
+        frame_layout    : Separate_Fields (value='1')
+        stored_width    : 1920
+        stored_height   : 1088
+        display_width   : 1920
+        display_height  : 1080
+        aspect_ratio    : 16/9
+        CDCIDescriptor:
+          component_depth : 8
+          horiz_subsamp   : 2
+          vert_subsamp    : 1
+          color_siting    : Cositing (value='0')
+    Track #1:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : bebb193b9967aa36399295279abb1831 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 2001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 2001
+            track_number    : 0x16010100
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate   : 48000/1
+        bits_per_sample : 16
+        block_align     : 2
+        channel_count   : 1
+LogMessages: (6)
+  warning : Input file is incomplete
+  error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+  error   : 'mxf_read_k(mxfFile, key)' failed, 
+  error   : 'mxf_read_kl(_cFile, key, llen, len)' failed, 
+  warning : A read error occurred: 'mxf_read_kl(_cFile, key, llen, len)' failed, 
+  info    : Read 23 samples (00:00:00:23 @25fps)
 5683470
-ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
-ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
-ERROR (libMXF): 'mxf_read_kl(_cFile, key, llen, len)' failed, 
-Warning: Input file is incomplete
-Info: Input filename: /tmp/gftest.mxf
-Info: Material package name: 
-Info: Edit rate: 25/1
-Info: Precharge: 0
-Info: Duration: -1
-Info: Rollout: 0
-Warning: A read error occurred: 'mxf_read_kl(_cFile, key, llen, len)' failed, 
-Info: Read 22 samples (00:00:00:22 @25fps)
-Info: MD5 Track 0: c3472a0f842662dc9ec402a882bcf4b0
-Info: MD5 Track 1: 21bde5d4750f84e81f007a14f0d81274
+ (created='1970-01-01 00:00:00.000')
+Application
+  name            : mxf2raw
+  lib_name        : RegLib
+  lib_version     : 0.0.0
+  build_timestamp : 1970-01-01 00:00:00.000
+  scm_version     : regtest-head
+Files: (1)
+  File #0:
+    file_uri        : regtest_file_uri
+    mxf_version     : 1.3
+    op_label        : OP1A (external_essence='false', non_stream='false', multi_track='true', label='urn:smpte:ul:060e2b34.04010101.0d010201.01010900')
+    frame_wrapped   : true
+    Identifications: (1)
+      Identification #0:
+        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        company_name    : RegCo
+        product_name    : RegLib
+        product_version : 1.0.0.0.0
+        version_string  : 0.0.0
+        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        modified_date   : 0-00-00 00:00:00.000
+        toolkit_version : 1.0.0.0.0
+        platform        : libMXF (Linux)
+    MaterialPackages: (1)
+      MaterialPackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+    FileSourcePackages: (1)
+      FileSourcePackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+Clip
+  edit_rate       : 25/1
+  duration        : 00:00:00:00 (count='-1')
+  StartTimecodes:
+    material        : 00:00:00:00
+    file_source     : 00:00:00:00
+  Tracks: (2)
+    Track #0:
+      essence_kind    : Picture
+      essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
+      ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : c3472a0f842662dc9ec402a882bcf4b0 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 1001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 1001
+            track_number    : 0x15010500
+            file_uri        : regtest_file_uri
+      PictureDescriptor:
+        coding_label    : urn:smpte:ul:060e2b34.04010103.04010202.01040300
+        signal_standard : SMPTE_274 (value='4')
+        frame_layout    : Separate_Fields (value='1')
+        stored_width    : 1920
+        stored_height   : 1088
+        display_width   : 1920
+        display_height  : 1080
+        aspect_ratio    : 16/9
+        CDCIDescriptor:
+          component_depth : 8
+          horiz_subsamp   : 2
+          vert_subsamp    : 1
+          color_siting    : Cositing (value='0')
+    Track #1:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : 21bde5d4750f84e81f007a14f0d81274 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 2001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 2001
+            track_number    : 0x16010100
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate   : 48000/1
+        bits_per_sample : 16
+        block_align     : 2
+        channel_count   : 1
+LogMessages: (6)
+  warning : Input file is incomplete
+  error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+  error   : 'mxf_read_k(mxfFile, key)' failed, 
+  error   : 'mxf_read_kl(_cFile, key, llen, len)' failed, 
+  warning : A read error occurred: 'mxf_read_kl(_cFile, key, llen, len)' failed, 
+  info    : Read 22 samples (00:00:00:22 @25fps)
 5679610
-ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
-ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
-ERROR (libMXF): 'mxf_read_kl(_cFile, key, llen, len)' failed, 
-Warning: Input file is incomplete
-Info: Input filename: /tmp/gftest.mxf
-Info: Material package name: 
-Info: Edit rate: 25/1
-Info: Precharge: 0
-Info: Duration: -1
-Info: Rollout: 0
-Warning: A read error occurred: 'mxf_read_kl(_cFile, key, llen, len)' failed, 
-Info: Read 22 samples (00:00:00:22 @25fps)
-Info: MD5 Track 0: c3472a0f842662dc9ec402a882bcf4b0
-Info: MD5 Track 1: 21bde5d4750f84e81f007a14f0d81274
+ (created='1970-01-01 00:00:00.000')
+Application
+  name            : mxf2raw
+  lib_name        : RegLib
+  lib_version     : 0.0.0
+  build_timestamp : 1970-01-01 00:00:00.000
+  scm_version     : regtest-head
+Files: (1)
+  File #0:
+    file_uri        : regtest_file_uri
+    mxf_version     : 1.3
+    op_label        : OP1A (external_essence='false', non_stream='false', multi_track='true', label='urn:smpte:ul:060e2b34.04010101.0d010201.01010900')
+    frame_wrapped   : true
+    Identifications: (1)
+      Identification #0:
+        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        company_name    : RegCo
+        product_name    : RegLib
+        product_version : 1.0.0.0.0
+        version_string  : 0.0.0
+        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        modified_date   : 0-00-00 00:00:00.000
+        toolkit_version : 1.0.0.0.0
+        platform        : libMXF (Linux)
+    MaterialPackages: (1)
+      MaterialPackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+    FileSourcePackages: (1)
+      FileSourcePackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+Clip
+  edit_rate       : 25/1
+  duration        : 00:00:00:00 (count='-1')
+  StartTimecodes:
+    material        : 00:00:00:00
+    file_source     : 00:00:00:00
+  Tracks: (2)
+    Track #0:
+      essence_kind    : Picture
+      essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
+      ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : c3472a0f842662dc9ec402a882bcf4b0 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 1001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 1001
+            track_number    : 0x15010500
+            file_uri        : regtest_file_uri
+      PictureDescriptor:
+        coding_label    : urn:smpte:ul:060e2b34.04010103.04010202.01040300
+        signal_standard : SMPTE_274 (value='4')
+        frame_layout    : Separate_Fields (value='1')
+        stored_width    : 1920
+        stored_height   : 1088
+        display_width   : 1920
+        display_height  : 1080
+        aspect_ratio    : 16/9
+        CDCIDescriptor:
+          component_depth : 8
+          horiz_subsamp   : 2
+          vert_subsamp    : 1
+          color_siting    : Cositing (value='0')
+    Track #1:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : 21bde5d4750f84e81f007a14f0d81274 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 2001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 2001
+            track_number    : 0x16010100
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate   : 48000/1
+        bits_per_sample : 16
+        block_align     : 2
+        channel_count   : 1
+LogMessages: (6)
+  warning : Input file is incomplete
+  error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+  error   : 'mxf_read_k(mxfFile, key)' failed, 
+  error   : 'mxf_read_kl(_cFile, key, llen, len)' failed, 
+  warning : A read error occurred: 'mxf_read_kl(_cFile, key, llen, len)' failed, 
+  info    : Read 22 samples (00:00:00:22 @25fps)
 2970790
-ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
-ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
-ERROR (libMXF): 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
-ERROR (libMXF): 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
-Warning: Input file is incomplete
-Info: Input filename: /tmp/gftest.mxf
-Info: Material package name: 
-Info: Edit rate: 25/1
-Info: Precharge: 0
-Info: Duration: -1
-Info: Rollout: 0
-Warning: A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
-Info: Read 12 samples (00:00:00:12 @25fps)
-Info: MD5 Track 0: eff9ee12e2632b37781752113e5ca718
-Info: MD5 Track 1: 7777a1ecc367c9e0134453829e2f44ab
+ (created='1970-01-01 00:00:00.000')
+Application
+  name            : mxf2raw
+  lib_name        : RegLib
+  lib_version     : 0.0.0
+  build_timestamp : 1970-01-01 00:00:00.000
+  scm_version     : regtest-head
+Files: (1)
+  File #0:
+    file_uri        : regtest_file_uri
+    mxf_version     : 1.3
+    op_label        : OP1A (external_essence='false', non_stream='false', multi_track='true', label='urn:smpte:ul:060e2b34.04010101.0d010201.01010900')
+    frame_wrapped   : true
+    Identifications: (1)
+      Identification #0:
+        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        company_name    : RegCo
+        product_name    : RegLib
+        product_version : 1.0.0.0.0
+        version_string  : 0.0.0
+        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        modified_date   : 0-00-00 00:00:00.000
+        toolkit_version : 1.0.0.0.0
+        platform        : libMXF (Linux)
+    MaterialPackages: (1)
+      MaterialPackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+    FileSourcePackages: (1)
+      FileSourcePackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+Clip
+  edit_rate       : 25/1
+  duration        : 00:00:00:00 (count='-1')
+  StartTimecodes:
+    material        : 00:00:00:00
+    file_source     : 00:00:00:00
+  Tracks: (2)
+    Track #0:
+      essence_kind    : Picture
+      essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
+      ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : eff9ee12e2632b37781752113e5ca718 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 1001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 1001
+            track_number    : 0x15010500
+            file_uri        : regtest_file_uri
+      PictureDescriptor:
+        coding_label    : urn:smpte:ul:060e2b34.04010103.04010202.01040300
+        signal_standard : SMPTE_274 (value='4')
+        frame_layout    : Separate_Fields (value='1')
+        stored_width    : 1920
+        stored_height   : 1088
+        display_width   : 1920
+        display_height  : 1080
+        aspect_ratio    : 16/9
+        CDCIDescriptor:
+          component_depth : 8
+          horiz_subsamp   : 2
+          vert_subsamp    : 1
+          color_siting    : Cositing (value='0')
+    Track #1:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : 7777a1ecc367c9e0134453829e2f44ab (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 2001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 2001
+            track_number    : 0x16010100
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate   : 48000/1
+        bits_per_sample : 16
+        block_align     : 2
+        channel_count   : 1
+LogMessages: (7)
+  warning : Input file is incomplete
+  error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+  error   : 'mxf_read_k(mxfFile, key)' failed, 
+  error   : 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
+  error   : 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+  warning : A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+  info    : Read 12 samples (00:00:00:12 @25fps)
 2970328
-ERROR (libMXF): 'mxf_file_read(mxfFile, buffer, 2) == 2' failed, 
-ERROR (libMXF): 'mxf_read_local_tag(mxfFile, tag)' failed, 
-ERROR (libMXF): 'mxf_read_local_tl(mxfFile, &localTag, &localLen)' failed, 
-ERROR: 'mxf_avid_read_index_table_segment_2(file->getCFile(), segment_len, mxf_default_add_delta_entry, 0, add_frame_offset_index_entry, this, &_cSegment)' check failed
-ERROR:     
-Warning: Input file is incomplete
-Info: Input filename: /tmp/gftest.mxf
-Info: Material package name: 
-Info: Edit rate: 25/1
-Info: Precharge: 0
-Info: Duration: -1
-Info: Rollout: 0
-Warning: A read error occurred: 'mxf_avid_read_index_table_segment_2(file->getCFile(), segment_len, mxf_default_add_delta_entry, 0, add_frame_offset_index_entry, this, &_cSegment)' check failed
-Info: Read 12 samples (00:00:00:12 @25fps)
-Info: MD5 Track 0: eff9ee12e2632b37781752113e5ca718
-Info: MD5 Track 1: 7777a1ecc367c9e0134453829e2f44ab
+
+ (created='1970-01-01 00:00:00.000')
+Application
+  name            : mxf2raw
+  lib_name        : RegLib
+  lib_version     : 0.0.0
+  build_timestamp : 1970-01-01 00:00:00.000
+  scm_version     : regtest-head
+Files: (1)
+  File #0:
+    file_uri        : regtest_file_uri
+    mxf_version     : 1.3
+    op_label        : OP1A (external_essence='false', non_stream='false', multi_track='true', label='urn:smpte:ul:060e2b34.04010101.0d010201.01010900')
+    frame_wrapped   : true
+    Identifications: (1)
+      Identification #0:
+        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        company_name    : RegCo
+        product_name    : RegLib
+        product_version : 1.0.0.0.0
+        version_string  : 0.0.0
+        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        modified_date   : 0-00-00 00:00:00.000
+        toolkit_version : 1.0.0.0.0
+        platform        : libMXF (Linux)
+    MaterialPackages: (1)
+      MaterialPackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+    FileSourcePackages: (1)
+      FileSourcePackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+Clip
+  edit_rate       : 25/1
+  duration        : 00:00:00:00 (count='-1')
+  StartTimecodes:
+    material        : 00:00:00:00
+    file_source     : 00:00:00:00
+  Tracks: (2)
+    Track #0:
+      essence_kind    : Picture
+      essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
+      ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : eff9ee12e2632b37781752113e5ca718 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 1001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 1001
+            track_number    : 0x15010500
+            file_uri        : regtest_file_uri
+      PictureDescriptor:
+        coding_label    : urn:smpte:ul:060e2b34.04010103.04010202.01040300
+        signal_standard : SMPTE_274 (value='4')
+        frame_layout    : Separate_Fields (value='1')
+        stored_width    : 1920
+        stored_height   : 1088
+        display_width   : 1920
+        display_height  : 1080
+        aspect_ratio    : 16/9
+        CDCIDescriptor:
+          component_depth : 8
+          horiz_subsamp   : 2
+          vert_subsamp    : 1
+          color_siting    : Cositing (value='0')
+    Track #1:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : 7777a1ecc367c9e0134453829e2f44ab (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 2001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 2001
+            track_number    : 0x16010100
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate   : 48000/1
+        bits_per_sample : 16
+        block_align     : 2
+        channel_count   : 1
+LogMessages: (8)
+  warning : Input file is incomplete
+  error   : 'mxf_file_read(mxfFile, buffer, 2) == 2' failed, 
+  error   : 'mxf_read_local_tag(mxfFile, tag)' failed, 
+  error   : 'mxf_read_local_tl(mxfFile, &localTag, &localLen)' failed, 
+  error   : 'mxf_avid_read_index_table_segment_2(file->getCFile(), segment_len, mxf_default_add_delta_entry, 0, add_frame_offset_index_entry, this, &_cSegment)' check failed
+  error   :     
+  warning : A read error occurred: 'mxf_avid_read_index_table_segment_2(file->getCFile(), segment_len, mxf_default_add_delta_entry, 0, add_frame_offset_index_entry, this, &_cSegment)' check failed
+  info    : Read 12 samples (00:00:00:12 @25fps)
 2970308
-ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
-ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
-ERROR (libMXF): 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
-ERROR (libMXF): 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
-Warning: Input file is incomplete
-Info: Input filename: /tmp/gftest.mxf
-Info: Material package name: 
-Info: Edit rate: 25/1
-Info: Precharge: 0
-Info: Duration: -1
-Info: Rollout: 0
-Warning: A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
-Info: Read 12 samples (00:00:00:12 @25fps)
-Info: MD5 Track 0: eff9ee12e2632b37781752113e5ca718
-Info: MD5 Track 1: 7777a1ecc367c9e0134453829e2f44ab
+ (created='1970-01-01 00:00:00.000')
+Application
+  name            : mxf2raw
+  lib_name        : RegLib
+  lib_version     : 0.0.0
+  build_timestamp : 1970-01-01 00:00:00.000
+  scm_version     : regtest-head
+Files: (1)
+  File #0:
+    file_uri        : regtest_file_uri
+    mxf_version     : 1.3
+    op_label        : OP1A (external_essence='false', non_stream='false', multi_track='true', label='urn:smpte:ul:060e2b34.04010101.0d010201.01010900')
+    frame_wrapped   : true
+    Identifications: (1)
+      Identification #0:
+        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        company_name    : RegCo
+        product_name    : RegLib
+        product_version : 1.0.0.0.0
+        version_string  : 0.0.0
+        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        modified_date   : 0-00-00 00:00:00.000
+        toolkit_version : 1.0.0.0.0
+        platform        : libMXF (Linux)
+    MaterialPackages: (1)
+      MaterialPackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+    FileSourcePackages: (1)
+      FileSourcePackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+Clip
+  edit_rate       : 25/1
+  duration        : 00:00:00:00 (count='-1')
+  StartTimecodes:
+    material        : 00:00:00:00
+    file_source     : 00:00:00:00
+  Tracks: (2)
+    Track #0:
+      essence_kind    : Picture
+      essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
+      ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : eff9ee12e2632b37781752113e5ca718 (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 1001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 1001
+            track_number    : 0x15010500
+            file_uri        : regtest_file_uri
+      PictureDescriptor:
+        coding_label    : urn:smpte:ul:060e2b34.04010103.04010202.01040300
+        signal_standard : SMPTE_274 (value='4')
+        frame_layout    : Separate_Fields (value='1')
+        stored_width    : 1920
+        stored_height   : 1088
+        display_width   : 1920
+        display_height  : 1080
+        aspect_ratio    : 16/9
+        CDCIDescriptor:
+          component_depth : 8
+          horiz_subsamp   : 2
+          vert_subsamp    : 1
+          color_siting    : Cositing (value='0')
+    Track #1:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : 7777a1ecc367c9e0134453829e2f44ab (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 2001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 2001
+            track_number    : 0x16010100
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate   : 48000/1
+        bits_per_sample : 16
+        block_align     : 2
+        channel_count   : 1
+LogMessages: (7)
+  warning : Input file is incomplete
+  error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+  error   : 'mxf_read_k(mxfFile, key)' failed, 
+  error   : 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
+  error   : 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+  warning : A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+  info    : Read 12 samples (00:00:00:12 @25fps)
 13592
-ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
-ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 
-ERROR (libMXF): 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
-ERROR (libMXF): 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
-Warning: Input file is incomplete
-Info: Input filename: /tmp/gftest.mxf
-Info: Material package name: 
-Info: Edit rate: 25/1
-Info: Precharge: 0
-Info: Duration: -1
-Info: Rollout: 0
-Warning: A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
-Info: Read 0 samples (00:00:00:00 @25fps)
-Info: MD5 Track 0: d41d8cd98f00b204e9800998ecf8427e
-Info: MD5 Track 1: d41d8cd98f00b204e9800998ecf8427e
+ (created='1970-01-01 00:00:00.000')
+Application
+  name            : mxf2raw
+  lib_name        : RegLib
+  lib_version     : 0.0.0
+  build_timestamp : 1970-01-01 00:00:00.000
+  scm_version     : regtest-head
+Files: (1)
+  File #0:
+    file_uri        : regtest_file_uri
+    mxf_version     : 1.3
+    op_label        : OP1A (external_essence='false', non_stream='false', multi_track='true', label='urn:smpte:ul:060e2b34.04010101.0d010201.01010900')
+    frame_wrapped   : true
+    Identifications: (1)
+      Identification #0:
+        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        company_name    : RegCo
+        product_name    : RegLib
+        product_version : 1.0.0.0.0
+        version_string  : 0.0.0
+        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        modified_date   : 0-00-00 00:00:00.000
+        toolkit_version : 1.0.0.0.0
+        platform        : libMXF (Linux)
+    MaterialPackages: (1)
+      MaterialPackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+    FileSourcePackages: (1)
+      FileSourcePackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+Clip
+  edit_rate       : 25/1
+  duration        : 00:00:00:00 (count='-1')
+  StartTimecodes:
+    material        : 00:00:00:00
+    file_source     : 00:00:00:00
+  Tracks: (2)
+    Track #0:
+      essence_kind    : Picture
+      essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
+      ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : d41d8cd98f00b204e9800998ecf8427e (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 1001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 1001
+            track_number    : 0x15010500
+            file_uri        : regtest_file_uri
+      PictureDescriptor:
+        coding_label    : urn:smpte:ul:060e2b34.04010103.04010202.01040300
+        signal_standard : SMPTE_274 (value='4')
+        frame_layout    : Separate_Fields (value='1')
+        stored_width    : 1920
+        stored_height   : 1088
+        display_width   : 1920
+        display_height  : 1080
+        aspect_ratio    : 16/9
+        CDCIDescriptor:
+          component_depth : 8
+          horiz_subsamp   : 2
+          vert_subsamp    : 1
+          color_siting    : Cositing (value='0')
+    Track #1:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:00 (count='-1')
+      checksum        : d41d8cd98f00b204e9800998ecf8427e (type='MD5')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+            track_id        : 2001
+            track_number    : 1
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 2001
+            track_number    : 0x16010100
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate   : 48000/1
+        bits_per_sample : 16
+        block_align     : 2
+        channel_count   : 1
+LogMessages: (7)
+  warning : Input file is incomplete
+  error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
+  error   : 'mxf_read_k(mxfFile, key)' failed, 
+  error   : 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
+  error   : 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+  warning : A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
+  info    : Read 0 samples (00:00:00:00 @25fps)
 4866
 ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
 ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 

@@ -49,6 +49,8 @@ static const string GT   = "&gt;";
 static const string AMP  = "&amp;";
 static const string QUOT = "&quot;";
 static const string APOS = "&apos;";
+static const string LF   = "&#x0A;";
+static const string CR   = "&#x0D;";
 
 
 
@@ -69,6 +71,9 @@ XMLWriter::XMLWriter(FILE *xml_file)
     mXMLFile = xml_file;
     mPrevWriteType = NONE;
     mLevel = 0;
+    mEscapeCR = false;
+    mEscapeAttrNewlineChars = false;
+    mSkipCR = false;
 }
 
 XMLWriter::~XMLWriter()
@@ -77,8 +82,23 @@ XMLWriter::~XMLWriter()
     for (i = 0; i < mElementStack.size(); i++)
         delete mElementStack[i];
 
-    if (mXMLFile)
+    if (mXMLFile && mXMLFile != stdout && mXMLFile != stderr)
         fclose(mXMLFile);
+}
+
+void XMLWriter::EscapeCR(bool escape)
+{
+    mEscapeCR = escape;
+}
+
+void XMLWriter::EscapeAttrNewlineChars(bool escape)
+{
+    mEscapeAttrNewlineChars = escape;
+}
+
+void XMLWriter::SkipCR(bool skip)
+{
+    mSkipCR = skip;
 }
 
 void XMLWriter::WriteDocumentStart()
@@ -501,14 +521,22 @@ void XMLWriter::WriteElementData(const string &data)
     const char *data_ptr = data.c_str();
     size_t i;
     for (i = 0; i < data.size(); i++) {
-        if (*data_ptr == '>')
+        if (*data_ptr == '>') {
             escaped_data.append(GT);
-        else if (*data_ptr == '<')
+        } else if (*data_ptr == '<') {
             escaped_data.append(LT);
-        else if (*data_ptr == '&')
+        } else if (*data_ptr == '&') {
             escaped_data.append(AMP);
-        else
+        } else if (*data_ptr == 0x0d) {
+            if (!mSkipCR) {
+                if (mEscapeCR)
+                    escaped_data.append(CR);
+                else
+                    escaped_data.append(data_ptr, 1);
+            }
+        } else {
             escaped_data.append(data_ptr, 1);
+        }
 
         data_ptr++;
     }
@@ -523,14 +551,24 @@ void XMLWriter::WriteAttributeData(const string &data)
     const char *data_ptr = data.c_str();
     size_t i;
     for (i = 0; i < data.size(); i++) {
-        if (*data_ptr == '\"')
+        if (*data_ptr == '\"') {
             escaped_data.append(QUOT);
-        else if (*data_ptr == '\'')
+        } else if (*data_ptr == '\'') {
             escaped_data.append(APOS);
-        else if (*data_ptr == '&')
+        } else if (*data_ptr == '&') {
             escaped_data.append(AMP);
-        else
+        } else if (*data_ptr == 0x0a && mEscapeAttrNewlineChars) {
+            escaped_data.append(LF);
+        } else if (*data_ptr == 0x0d) {
+            if (!mSkipCR) {
+                if (mEscapeAttrNewlineChars || mEscapeCR)
+                    escaped_data.append(CR);
+                else
+                    escaped_data.append(data_ptr, 1);
+            }
+        } else {
             escaped_data.append(data_ptr, 1);
+        }
 
         data_ptr++;
     }
