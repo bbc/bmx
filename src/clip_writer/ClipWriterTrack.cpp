@@ -477,7 +477,19 @@ void ClipWriterTrack::SetInputHeight(uint32_t height)
     switch (mClipType)
     {
         case CW_AS02_CLIP_TYPE:
+        {
+            AS02UncTrack *unc_track = dynamic_cast<AS02UncTrack*>(mAS02Track);
+            if (unc_track)
+                unc_track->SetInputHeight(height);
+            break;
+        }
         case CW_OP1A_CLIP_TYPE:
+        {
+            OP1AUncTrack *unc_track = dynamic_cast<OP1AUncTrack*>(mOP1ATrack);
+            if (unc_track)
+                unc_track->SetInputHeight(height);
+            break;
+        }
         case CW_D10_CLIP_TYPE:
         case CW_RDD9_CLIP_TYPE:
             break;

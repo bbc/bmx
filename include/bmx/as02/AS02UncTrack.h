@@ -49,9 +49,17 @@ public:
     virtual ~AS02UncTrack();
 
     void SetComponentDepth(uint32_t depth);             // default 8; alternative is 10
+    void SetInputHeight(uint32_t height);               // default stored height
+
+protected:
+    virtual void PrepareWrite();
+    virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
 
 private:
     UncCDCIMXFDescriptorHelper *mUncDescriptorHelper;
+    uint32_t mInputHeight;
+    uint32_t mInputSampleSize;
+    uint32_t mSkipSize;
 };
 
 
