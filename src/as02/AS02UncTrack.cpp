@@ -102,7 +102,7 @@ void AS02UncTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32
     const unsigned char *sample_data = data;
     uint32_t i;
     for (i = 0; i < num_samples; i++) {
-        AS02PictureTrack::WriteSamples(sample_data, mInputSampleSize - mSkipSize, 1);
+        AS02PictureTrack::WriteSamples(sample_data + mSkipSize, mInputSampleSize - mSkipSize, 1);
         sample_data += mInputSampleSize;
     }
 }

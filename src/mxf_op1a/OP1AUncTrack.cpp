@@ -102,7 +102,7 @@ void OP1AUncTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uin
     const unsigned char *sample_data = data;
     uint32_t i;
     for (i = 0; i < num_samples; i++) {
-        OP1APictureTrack::WriteSamplesInt(sample_data, mInputSampleSize - mSkipSize, 1);
+        OP1APictureTrack::WriteSamplesInt(sample_data + mSkipSize, mInputSampleSize - mSkipSize, 1);
         sample_data += mInputSampleSize;
     }
 }
