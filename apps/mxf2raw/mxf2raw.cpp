@@ -683,7 +683,7 @@ static void write_data(FILE *file, const string &filename, const unsigned char *
                        bool wrap_klv, const mxfKey *key)
 {
 #define CHECK_WRITE(dt, sz)                                                                                     \
-    if (fwrite(dt, sz, 1, file) != 1) {                                                                         \
+    if (fwrite(dt, 1, sz, file) != sz) {                                                                        \
         log_error("Failed to write to raw file '%s': %s\n", filename.c_str(), bmx_strerror(errno).c_str());     \
         throw false;                                                                                            \
     }
