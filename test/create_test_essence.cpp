@@ -185,7 +185,7 @@ static void fill_mpeg_frame(unsigned char *data, uint32_t data_size,
 
 static void write_buffer(FILE *file, const unsigned char *buffer, size_t size)
 {
-    if (fwrite(buffer, size, 1, file) != 1) {
+    if (fwrite(buffer, 1, size, file) != size) {
         fprintf(stderr, "Failed to write data: %s\n", strerror(errno));
         exit(1);
     }
