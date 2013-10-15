@@ -145,6 +145,9 @@ void ST436Element::Parse(const unsigned char *data, uint64_t size)
 {
     lines.clear();
 
+    if (size == 0)
+        return;
+
     if (size < 2)
         BMX_EXCEPTION(("ST 436 element data size %"PRIu64" is too small", size));
 
