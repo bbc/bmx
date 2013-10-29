@@ -1312,7 +1312,7 @@ static int slice_data_partition_a_layer(ParseContext *context)
 
 static int slice_data_partition_b_layer(ParseContext *context)
 {
-    printf("%*c slice_data_partition_a_layer:\n", context->indent * 4, ' ');
+    printf("%*c slice_data_partition_b_layer:\n", context->indent * 4, ' ');
     context->indent++;
 
     ue(); PRINT_UINT("slice_id");
@@ -1333,7 +1333,7 @@ static int slice_data_partition_b_layer(ParseContext *context)
 
 static int slice_data_partition_c_layer(ParseContext *context)
 {
-    printf("%*c slice_data_partition_a_layer:\n", context->indent * 4, ' ');
+    printf("%*c slice_data_partition_c_layer:\n", context->indent * 4, ' ');
     context->indent++;
 
     ue(); PRINT_UINT("slice_id");
