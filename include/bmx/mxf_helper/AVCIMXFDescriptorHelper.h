@@ -47,6 +47,8 @@ public:
     static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
     static bool IsSupported(EssenceType essence_type);
 
+    static uint32_t GetSampleSize(EssenceType essence_type, mxfRational sample_rate);
+
 public:
     AVCIMXFDescriptorHelper();
     virtual ~AVCIMXFDescriptorHelper();

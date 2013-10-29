@@ -310,7 +310,7 @@ public:
 public:
     RDD6DataSegment();
 
-    void Construct8Bit(RDD6PutBitBuffer *buffer);
+    void Construct8Bit(PutBitBuffer *buffer);
     void Parse8Bit(RDD6GetBitBuffer *buffer);
 
     void Construct8BitPayload(const RDD6ParsedPayload *data);
@@ -359,7 +359,7 @@ public:
     RDD6MetadataSubFrame();
     ~RDD6MetadataSubFrame();
 
-    void Construct8Bit(RDD6PutBitBuffer *buffer);
+    void Construct8Bit(PutBitBuffer *buffer);
     void Parse8Bit(RDD6GetBitBuffer *buffer);
 
     void UnparseXML(XMLWriter *writer) const;
@@ -389,7 +389,7 @@ public:
     ~RDD6MetadataFrame();
 
     void Construct8Bit(ByteArray *data, uint32_t *first_end_offset);
-    void Construct8Bit(RDD6PutBitBuffer *buffer, uint32_t *first_end_offset);
+    void Construct8Bit(PutBitBuffer *buffer, uint32_t *first_end_offset);
     void Parse8Bit(const unsigned char *data_a, uint32_t size_a,
                    const unsigned char *data_b, uint32_t size_b);
     void Parse8Bit(RDD6GetBitBuffer *buffer);

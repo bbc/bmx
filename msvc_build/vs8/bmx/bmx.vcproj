@@ -159,6 +159,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\bmx\BitBuffer.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\include\bmx\BMXException.h"
 				>
 			</File>
@@ -445,6 +449,10 @@
 			<Filter
 				Name="essence_parser"
 				>
+				<File
+					RelativePath="..\..\..\include\bmx\essence_parser\AVCEssenceParser.h"
+					>
+				</File>
 				<File
 					RelativePath="..\..\..\include\bmx\essence_parser\AVCIEssenceParser.h"
 					>
@@ -1004,6 +1012,10 @@
 				Name="common"
 				>
 				<File
+					RelativePath="..\..\..\src\common\BitBuffer.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\src\common\BMXException.cpp"
 					>
 				</File>
@@ -1095,6 +1107,10 @@
 			<Filter
 				Name="essence_parser"
 				>
+				<File
+					RelativePath="..\..\..\src\essence_parser\AVCEssenceParser.cpp"
+					>
+				</File>
 				<File
 					RelativePath="..\..\..\src\essence_parser\AVCIEssenceParser.cpp"
 					>

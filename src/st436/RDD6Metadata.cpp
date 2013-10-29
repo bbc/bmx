@@ -163,7 +163,7 @@ void RDD6DolbyEComplete::Construct8BitPayload(RDD6DataSegment *segment) const
 
     segment->PrepareConstruct8BitPayload();
 
-    RDD6PutBitBuffer buffer(&segment->payload_buffer);
+    PutBitBuffer buffer(&segment->payload_buffer);
     buffer.PutBits( 6, program_config);
     buffer.PutBits( 4, frame_rate_code);
     buffer.PutBits(12, pitch_shift_code);
@@ -301,7 +301,7 @@ void RDD6DolbyEEssential::Construct8BitPayload(RDD6DataSegment *segment) const
 
     segment->PrepareConstruct8BitPayload();
 
-    RDD6PutBitBuffer buffer(&segment->payload_buffer);
+    PutBitBuffer buffer(&segment->payload_buffer);
     buffer.PutBits( 6, program_config);
     buffer.PutBits( 4, frame_rate_code);
     buffer.PutBits(12, pitch_shift_code);
@@ -475,7 +475,7 @@ void RDD6DolbyDigitalCompleteExtBSI::Construct8BitPayload(RDD6DataSegment *segme
 
     segment->PrepareConstruct8BitPayload();
 
-    RDD6PutBitBuffer buffer(&segment->payload_buffer);
+    PutBitBuffer buffer(&segment->payload_buffer);
     buffer.PutBits(5, program_id);
     buffer.PutBits(5, ac3_datarate);
     buffer.PutBits(3, ac3_bsmod);
@@ -734,7 +734,7 @@ void RDD6DolbyDigitalEssentialExtBSI::Construct8BitPayload(RDD6DataSegment *segm
 
     segment->PrepareConstruct8BitPayload();
 
-    RDD6PutBitBuffer buffer(&segment->payload_buffer);
+    PutBitBuffer buffer(&segment->payload_buffer);
     buffer.PutBits(5, program_id);
     buffer.PutBits(5, ac3_datarate);
     buffer.PutBits(3, ac3_bsmod);
@@ -943,7 +943,7 @@ void RDD6DolbyDigitalComplete::Construct8BitPayload(RDD6DataSegment *segment) co
 
     segment->PrepareConstruct8BitPayload();
 
-    RDD6PutBitBuffer buffer(&segment->payload_buffer);
+    PutBitBuffer buffer(&segment->payload_buffer);
     buffer.PutBits( 5, program_id);
     buffer.PutBits( 5, reserved_1);
     buffer.PutBits( 3, ac3_bsmod);
@@ -1168,7 +1168,7 @@ void RDD6DolbyDigitalEssential::Construct8BitPayload(RDD6DataSegment *segment) c
 
     segment->PrepareConstruct8BitPayload();
 
-    RDD6PutBitBuffer buffer(&segment->payload_buffer);
+    PutBitBuffer buffer(&segment->payload_buffer);
     buffer.PutBits(5, program_id);
     buffer.PutBits(5, ac3_datarate);
     buffer.PutBits(3, ac3_bsmod);
@@ -1271,7 +1271,7 @@ RDD6DataSegment::RDD6DataSegment()
     checksum = 0;
 }
 
-void RDD6DataSegment::Construct8Bit(RDD6PutBitBuffer *buffer)
+void RDD6DataSegment::Construct8Bit(PutBitBuffer *buffer)
 {
     BMX_CHECK(size > 0 && size <= 256);
 
@@ -1419,7 +1419,7 @@ RDD6MetadataSubFrame::~RDD6MetadataSubFrame()
     ClearDataSegments();
 }
 
-void RDD6MetadataSubFrame::Construct8Bit(RDD6PutBitBuffer *buffer)
+void RDD6MetadataSubFrame::Construct8Bit(PutBitBuffer *buffer)
 {
     buffer->PutBits(16, sync_segment.start_subframe_sync_word);
     buffer->PutBits( 4, sync_segment.revision_id);
@@ -1534,11 +1534,11 @@ RDD6MetadataFrame::~RDD6MetadataFrame()
 
 void RDD6MetadataFrame::Construct8Bit(ByteArray *data, uint32_t *first_end_offset)
 {
-    RDD6PutBitBuffer buffer(data);
+    PutBitBuffer buffer(data);
     Construct8Bit(&buffer, first_end_offset);
 }
 
-void RDD6MetadataFrame::Construct8Bit(RDD6PutBitBuffer *buffer, uint32_t *first_end_offset)
+void RDD6MetadataFrame::Construct8Bit(PutBitBuffer *buffer, uint32_t *first_end_offset)
 {
     if (first_sub_frame)
         first_sub_frame->Construct8Bit(buffer);

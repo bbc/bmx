@@ -93,7 +93,7 @@ void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
 {
     mEssenceParser.ParseFrameInfo(data, size);
 
-    MPEG2FrameType frame_type = mEssenceParser.GetFrameType();
+    MPEGFrameType frame_type = mEssenceParser.GetFrameType();
     BMX_CHECK(frame_type != UNKNOWN_FRAME_TYPE);
     BMX_CHECK(mPosition > 0 || frame_type == I_FRAME); // require first frame to be an I-frame
 

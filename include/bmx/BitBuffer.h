@@ -29,11 +29,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_RDD6_BIT_BUFFER_H_
-#define BMX_RDD6_BIT_BUFFER_H_
+#ifndef BMX_BIT_BUFFER_H_
+#define BMX_BIT_BUFFER_H_
 
 
-#include <bmx/BitBuffer.h>
+#include <bmx/BMXTypes.h>
+#include <bmx/ByteArray.h>
 
 
 
@@ -42,18 +43,23 @@ namespace bmx
 
 
 
-class RDD6GetBitBuffer
+class GetBitBuffer
 {
 public:
-    RDD6GetBitBuffer(const unsigned char *data_a, uint32_t size_a,
-                     const unsigned char *data_b, uint32_t size_b);
+    GetBitBuffer(const unsigned char *data, uint32_t size);
 
-    uint32_t GetRemSize() const;
-    uint64_t GetRemBitSize() const;
+    const unsigned char* GetData() const { return mData; }
 
-    void GetBytes(uint32_t size,
-                  const unsigned char **data_a, uint32_t *size_a,
-                  const unsigned char **data_b, uint32_t *size_b);
+    uint32_t GetSize() const             { return mSize; }
+    uint32_t GetPos() const              { return mPos; }
+    uint32_t GetRemSize() const          { return mSize - mPos; }
+
+    uint64_t GetBitSize() const          { return mBitSize; }
+    uint64_t GetBitPos() const           { return mBitPos; }
+    uint64_t GetRemBitSize() const       { return mBitSize - mBitPos; }
+
+
+    void GetBytes(uint32_t request_size, const unsigned char **data, uint32_t *size);
 
     bool GetUInt8(uint8_t *value);
 
@@ -67,20 +73,47 @@ public:
     bool GetBits(uint8_t num_bits, int32_t *value);
     bool GetBits(uint8_t num_bits, int64_t *value);
 
-private:
+    bool SkipBits(uint64_t num_bits);
+    bool UnskipBits(uint64_t num_bits);
+
+protected:
     void GetBits(const unsigned char *data, uint32_t *pos_io, uint64_t *bit_pos_io, uint8_t num_bits, uint64_t *value);
 
-private:
-    const unsigned char *mDataA;
-    uint32_t mSizeA;
-    uint32_t mPosA;
-    uint64_t mBitSizeA;
-    uint64_t mBitPosA;
-    const unsigned char *mDataB;
-    uint32_t mSizeB;
-    uint32_t mPosB;
-    uint64_t mBitSizeB;
-    uint64_t mBitPosB;
+protected:
+    const unsigned char *mData;
+    uint32_t mSize;
+    uint32_t mPos;
+    uint64_t mBitSize;
+    uint64_t mBitPos;
+};
+
+
+class PutBitBuffer
+{
+public:
+    PutBitBuffer(ByteArray *buffer);
+
+    ByteArray* GetBuffer() const { return mBuffer; }
+
+    uint32_t GetSize() const     { return mBuffer->GetSize(); }
+    uint64_t GetBitSize() const  { return mBitSize; }
+
+    void PutBytes(const unsigned char *data, uint32_t size);
+
+    void PutUInt8(uint8_t value);
+
+    void PutBits(uint8_t num_bits, uint8_t value);
+    void PutBits(uint8_t num_bits, uint16_t value);
+    void PutBits(uint8_t num_bits, uint32_t value);
+    void PutBits(uint8_t num_bits, uint64_t value);
+    void PutBits(uint8_t num_bits, int8_t value);
+    void PutBits(uint8_t num_bits, int16_t value);
+    void PutBits(uint8_t num_bits, int32_t value);
+    void PutBits(uint8_t num_bits, int64_t value);
+
+protected:
+    ByteArray *mBuffer;
+    uint64_t mBitSize;
 };
 
 

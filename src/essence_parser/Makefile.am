@@ -1,6 +1,7 @@
 noinst_LTLIBRARIES = libessenceparser.la
 
 libessenceparser_la_SOURCES = \
+	AVCEssenceParser.cpp \
 	AVCIEssenceParser.cpp \
 	AVCIRawEssenceReader.cpp \
 	DVEssenceParser.cpp \

@@ -67,7 +67,7 @@ public:
     bool HaveGOPHeader() const                  { return mHaveGOPHeader; }
     bool IsClosedGOP() const                    { return mClosedGOP; }
 
-    MPEG2FrameType GetFrameType() const         { return mFrameType; }
+    MPEGFrameType GetFrameType() const          { return mFrameType; }
     uint32_t GetTemporalReference() const       { return mTemporalReference; }
 
 private:
@@ -94,7 +94,7 @@ private:
 
     bool mHaveSequenceHeader;
     bool mHaveGOPHeader;
-    MPEG2FrameType mFrameType;
+    MPEGFrameType mFrameType;
     uint32_t mTemporalReference;
 };
 

@@ -1,6 +1,7 @@
 noinst_LTLIBRARIES = libcommon.la
 
 libcommon_la_SOURCES = \
+	BitBuffer.cpp \
 	BMXException.cpp \
 	BMXTypes.cpp \
 	ByteArray.cpp \

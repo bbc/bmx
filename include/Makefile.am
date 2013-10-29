@@ -1,5 +1,6 @@
 library_includedir = $(includedir)/bmx-@BMX_MAJORMINOR@
 nobase_library_include_HEADERS = \
+	bmx/BitBuffer.h \
 	bmx/ByteArray.h \
 	bmx/Checksum.h \
 	bmx/CRC32.h \
@@ -90,6 +91,7 @@ nobase_library_include_HEADERS = \
 	bmx/clip_writer/ClipWriter.h \
 	bmx/clip_writer/ClipWriterTrack.h \
 	bmx/essence_parser/SoundConversion.h \
+	bmx/essence_parser/AVCEssenceParser.h \
 	bmx/essence_parser/AVCIEssenceParser.h \
 	bmx/essence_parser/AVCIRawEssenceReader.h \
 	bmx/essence_parser/DVEssenceParser.h \

@@ -47,7 +47,7 @@ typedef enum
     I_FRAME,
     P_FRAME,
     B_FRAME
-} MPEG2FrameType;
+} MPEGFrameType;
 
 typedef enum
 {

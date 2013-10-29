@@ -128,6 +128,20 @@ bool AVCIMXFDescriptorHelper::IsSupported(EssenceType essence_type)
     return false;
 }
 
+uint32_t AVCIMXFDescriptorHelper::GetSampleSize(EssenceType essence_type, mxfRational sample_rate)
+{
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(SUPPORTED_ESSENCE); i++) {
+        if (essence_type == SUPPORTED_ESSENCE[i].essence_type &&
+            sample_rate  == SUPPORTED_ESSENCE[i].sample_rate)
+        {
+            return SUPPORTED_ESSENCE[i].frame_size;
+        }
+    }
+
+    return 0;
+}
+
 AVCIMXFDescriptorHelper::AVCIMXFDescriptorHelper()
 : PictureMXFDescriptorHelper()
 {
