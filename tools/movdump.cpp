@@ -1223,7 +1223,7 @@ static void dump_stsz_atom()
             indent(4);
             printf("...none\n");
         }
-        MOV_CHECK(sample_size > 0);
+        MOV_CHECK(sample_size > 0 || num_entries == 0);
         return;
     }
 
