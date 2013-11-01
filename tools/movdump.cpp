@@ -61,6 +61,8 @@ using namespace std;
         throw MOVException("%s failed at line %d", #cmd, __LINE__); \
     }
 
+#define ARRAY_SIZE(array)   (sizeof(array) / sizeof((array)[0]))
+
 #define MKTAG(cs) ((((uint32_t)cs[0])<<24)|(((uint32_t)cs[1])<<16)|(((uint32_t)cs[2])<<8)|(((uint32_t)cs[3])))
 
 #define ATOM_INDENT             "    "
@@ -382,6 +384,45 @@ static bool read_matrix(uint32_t *value)
     return true;
 }
 
+static const char* get_profile_string(uint8_t profile_idc, uint8_t constraint_flags_byte)
+{
+    typedef struct
+    {
+        uint8_t profile_idc;
+        uint8_t flags_mask;
+        const char *profile_str;
+    } ProfileName;
+
+    static const ProfileName PROFILE_NAMES[] =
+    {
+        { 66,   0x40,   "Constrained Baseline"},
+        { 66,   0x00,   "Baseline"},
+        { 77,   0x00,   "Main"},
+        { 88,   0x00,   "Extended"},
+        {100,   0x00,   "High"},
+        {110,   0x10,   "High 10 Intra"},
+        {110,   0x00,   "High 10"},
+        {122,   0x10,   "High 4:2:2 Intra"},
+        {122,   0x00,   "High 4:2:2"},
+        {244,   0x10,   "High 4:4:4 Intra"},
+        {244,   0x00,   "High 4:4:4"},
+        { 44,   0x00,   "CAVLC 4:4:4 Intra"},
+    };
+
+    const char *profile_str = "unknown";
+    size_t i;
+    for (i = 0; i < ARRAY_SIZE(PROFILE_NAMES); i++) {
+        if (profile_idc == PROFILE_NAMES[i].profile_idc &&
+            (PROFILE_NAMES[i].flags_mask == 0 ||
+                (constraint_flags_byte & PROFILE_NAMES[i].flags_mask)))
+        {
+            profile_str = PROFILE_NAMES[i].profile_str;
+            break;
+        }
+    }
+
+    return profile_str;
+}
 
 static void indent_atom_header()
 {
@@ -420,6 +461,14 @@ static void dump_uint32_index(uint32_t count, uint32_t index)
         printf("%06x", index);
     else
         printf("%08x", index);
+}
+
+static void dump_uint16_index(uint16_t count, uint16_t index)
+{
+    if (count < 0xff)
+        printf("%02x", index);
+    else
+        printf("%04x", index);
 }
 
 static void dump_inline_bytes(unsigned char *bytes, uint32_t size)
@@ -605,7 +654,6 @@ static void dump_uint32_size(uint32_t value)
     printf("%10u (0x%08x)", value, value);
 }
 
-#if 0
 static void dump_uint64(uint64_t value, bool hex)
 {
     if (hex)
@@ -613,7 +661,6 @@ static void dump_uint64(uint64_t value, bool hex)
     else
         printf("%20"PRIu64, value);
 }
-#endif
 
 static void dump_uint32(uint32_t value, bool hex)
 {
@@ -634,6 +681,14 @@ static void dump_uint16(uint16_t value, bool hex)
         printf("0x%04x", value);
     else
         printf("%5u", value);
+}
+
+static void dump_uint8(uint8_t value, bool hex)
+{
+    if (hex)
+        printf("0x%02x", value);
+    else
+        printf("%3u", value);
 }
 
 static void dump_uint32_chars(uint32_t value)
@@ -717,6 +772,18 @@ static void dump_color(uint16_t red, uint16_t green, uint16_t blue)
     printf("RGB(0x%04x,0x%04x,0x%04x)", red, green, blue);
 }
 
+static void dump_fragment_sample_flags(uint32_t flags)
+{
+    printf("reserved=0x%x, ",                    (flags >> 28) &   0x0f);
+    printf("is_leading=0x%x, ",                  (flags >> 26) &   0x03);
+    printf("sample_depends_on=0x%x, ",           (flags >> 24) &   0x03);
+    printf("sample_is_depended_on=0x%x, ",       (flags >> 22) &   0x03);
+    printf("sample_has_redundancy=0x%x, ",       (flags >> 20) &   0x03);
+    printf("sample_padding_value=0x%x, ",        (flags >> 17) &   0x07);
+    printf("sample_is_non_sync_sample=0x%x, ",   (flags >> 16) &   0x01);
+    printf("sample_degradation_priority=0x%04x",  flags        & 0xffff);
+}
+
 static void dump_atom_header()
 {
     indent_atom_header();
@@ -797,7 +864,7 @@ static void dump_unknown_version(uint8_t version)
 }
 
 
-static void dump_ftyp_atom()
+static void dump_ftyp_styp_atom()
 {
     dump_atom_header();
 
@@ -944,30 +1011,32 @@ static void dump_stts_atom()
     dump_uint32(num_entries, false);
     printf("):\n");
 
-    indent(4);
-    if (num_entries < 0xffff)
-        printf("   i");
-    else if (num_entries < 0xffffff)
-        printf("     i");
-    else
-        printf("       i");
-    printf("       count   duration\n");
-
-    uint32_t i;
-    for (i = 0; i < num_entries; i++) {
-        uint32_t sample_count;
-        MOV_CHECK(read_uint32(&sample_count));
-        uint32_t sample_duration;
-        MOV_CHECK(read_uint32(&sample_duration));
-
+    if (num_entries > 0) {
         indent(4);
-        dump_uint32_index(num_entries, i);
-        printf("  ");
+        if (num_entries < 0xffff)
+            printf("   i");
+        else if (num_entries < 0xffffff)
+            printf("     i");
+        else
+            printf("       i");
+        printf("       count   duration\n");
 
-        dump_uint32(sample_count, true);
-        printf(" ");
-        dump_uint32(sample_duration, true);
-        printf("\n");
+        uint32_t i;
+        for (i = 0; i < num_entries; i++) {
+            uint32_t sample_count;
+            MOV_CHECK(read_uint32(&sample_count));
+            uint32_t sample_duration;
+            MOV_CHECK(read_uint32(&sample_duration));
+
+            indent(4);
+            dump_uint32_index(num_entries, i);
+            printf("  ");
+
+            dump_uint32(sample_count, true);
+            printf(" ");
+            dump_uint32(sample_duration, true);
+            printf("\n");
+        }
     }
 }
 
@@ -990,30 +1059,32 @@ static void dump_ctts_atom()
     dump_uint32(num_entries, false);
     printf("):\n");
 
-    indent(4);
-    if (num_entries < 0xffff)
-        printf("   i");
-    else if (num_entries < 0xffffff)
-        printf("     i");
-    else
-        printf("       i");
-    printf("       count     offset\n");
-
-    uint32_t i;
-    for (i = 0; i < num_entries; i++) {
-        uint32_t sample_count;
-        MOV_CHECK(read_uint32(&sample_count));
-        int32_t sample_offset;
-        MOV_CHECK(read_int32(&sample_offset));
-
+    if (num_entries > 0) {
         indent(4);
-        dump_uint32_index(num_entries, i);
-        printf("  ");
+        if (num_entries < 0xffff)
+            printf("   i");
+        else if (num_entries < 0xffffff)
+            printf("     i");
+        else
+            printf("       i");
+        printf("       count     offset\n");
 
-        dump_uint32(sample_count, true);
-        printf(" ");
-        dump_int32(sample_offset);
-        printf("\n");
+        uint32_t i;
+        for (i = 0; i < num_entries; i++) {
+            uint32_t sample_count;
+            MOV_CHECK(read_uint32(&sample_count));
+            int32_t sample_offset;
+            MOV_CHECK(read_int32(&sample_offset));
+
+            indent(4);
+            dump_uint32_index(num_entries, i);
+            printf("  ");
+
+            dump_uint32(sample_count, true);
+            printf(" ");
+            dump_int32(sample_offset);
+            printf("\n");
+        }
     }
 }
 
@@ -1074,26 +1145,28 @@ static void dump_stss_stps_atom()
     dump_uint32(num_entries, false);
     printf("):\n");
 
-    indent(4);
-    if (num_entries < 0xffff)
-        printf("   i");
-    else if (num_entries < 0xffffff)
-        printf("     i");
-    else
-        printf("       i");
-    printf("      sample\n");
-
-    uint32_t i;
-    for (i = 0; i < num_entries; i++) {
-        uint32_t sample;
-        MOV_CHECK(read_uint32(&sample));
-
+    if (num_entries > 0) {
         indent(4);
-        dump_uint32_index(num_entries, i);
-        printf("  ");
+        if (num_entries < 0xffff)
+            printf("   i");
+        else if (num_entries < 0xffffff)
+            printf("     i");
+        else
+            printf("       i");
+        printf("      sample\n");
 
-        dump_uint32(sample, true);
-        printf("\n");
+        uint32_t i;
+        for (i = 0; i < num_entries; i++) {
+            uint32_t sample;
+            MOV_CHECK(read_uint32(&sample));
+
+            indent(4);
+            dump_uint32_index(num_entries, i);
+            printf("  ");
+
+            dump_uint32(sample, true);
+            printf("\n");
+        }
     }
 }
 
@@ -1115,33 +1188,35 @@ static void dump_sdtp_atom()
     dump_uint32(num_entries, false);
     printf("):\n");
 
-    indent(4);
-    if (num_entries < 0xffff)
-        printf("   i");
-    else if (num_entries < 0xffffff)
-        printf("     i");
-    else
-        printf("       i");
-    printf("      reserved  depends  dependent  redundancy\n");
-
-    uint32_t i;
-    for (i = 0; i < num_entries; i++) {
-        uint8_t sample;
-        MOV_CHECK(read_uint8(&sample));
-
-        // NOTE: not sure whether this is correct for qt
-        // sample files had reserved == 1 for I and P-frames, and depends_on only 2 when I-frame
-        uint8_t reserved = (sample & 0xc0) >> 6;
-        uint8_t depends_on = (sample & 0x30) >> 4;
-        uint8_t dependent_on = (sample & 0x0c) >> 2;
-        uint8_t has_redundancy = (sample & 0x03);
-
+    if (num_entries > 0) {
         indent(4);
-        dump_uint32_index(num_entries, i);
-        printf("  ");
+        if (num_entries < 0xffff)
+            printf("   i");
+        else if (num_entries < 0xffffff)
+            printf("     i");
+        else
+            printf("       i");
+        printf("    is_leading  depends  dependent  redundancy\n");
 
-        printf("           %d        %d          %d           %d\n",
-               reserved, depends_on, dependent_on, has_redundancy);
+        uint32_t i;
+        for (i = 0; i < num_entries; i++) {
+            uint8_t sample;
+            MOV_CHECK(read_uint8(&sample));
+
+            // NOTE: not sure whether this is correct for qt
+            // sample files had reserved == 1 for I and P-frames, and depends_on only 2 when I-frame
+            uint8_t is_leading = (sample & 0xc0) >> 6;
+            uint8_t depends_on = (sample & 0x30) >> 4;
+            uint8_t dependent_on = (sample & 0x0c) >> 2;
+            uint8_t has_redundancy = (sample & 0x03);
+
+            indent(4);
+            dump_uint32_index(num_entries, i);
+            printf("  ");
+
+            printf("           %d        %d          %d           %d\n",
+                   is_leading, depends_on, dependent_on, has_redundancy);
+        }
     }
 }
 
@@ -1164,35 +1239,37 @@ static void dump_stsc_atom()
     dump_uint32(num_entries, false);
     printf("):\n");
 
-    indent(4);
-    if (num_entries < 0xffff)
-        printf("   i");
-    else if (num_entries < 0xffffff)
-        printf("     i");
-    else
-        printf("       i");
-    printf("  first chunk  samples-per-chunk         descr. id\n");
-
-    uint32_t i;
-    for (i = 0; i < num_entries; i++) {
-        uint32_t first_chunk;
-        MOV_CHECK(read_uint32(&first_chunk));
-        uint32_t samples_per_chunk;
-        MOV_CHECK(read_uint32(&samples_per_chunk));
-        uint32_t sample_description_id;
-        MOV_CHECK(read_uint32(&sample_description_id));
-
+    if (num_entries > 0) {
         indent(4);
-        dump_uint32_index(num_entries, i);
-        printf("  ");
+        if (num_entries < 0xffff)
+            printf("   i");
+        else if (num_entries < 0xffffff)
+            printf("     i");
+        else
+            printf("       i");
+        printf("  first chunk  samples-per-chunk         descr. id\n");
 
-        printf(" ");
-        dump_uint32(first_chunk, true);
-        printf("         ");
-        dump_uint32(samples_per_chunk, true);
-        printf("        ");
-        dump_uint32(sample_description_id, false);
-        printf("\n");
+        uint32_t i;
+        for (i = 0; i < num_entries; i++) {
+            uint32_t first_chunk;
+            MOV_CHECK(read_uint32(&first_chunk));
+            uint32_t samples_per_chunk;
+            MOV_CHECK(read_uint32(&samples_per_chunk));
+            uint32_t sample_description_id;
+            MOV_CHECK(read_uint32(&sample_description_id));
+
+            indent(4);
+            dump_uint32_index(num_entries, i);
+            printf("  ");
+
+            printf(" ");
+            dump_uint32(first_chunk, true);
+            printf("         ");
+            dump_uint32(samples_per_chunk, true);
+            printf("        ");
+            dump_uint32(sample_description_id, false);
+            printf("\n");
+        }
     }
 }
 
@@ -1229,27 +1306,29 @@ static void dump_stsz_atom()
         return;
     }
 
-    indent(4);
-    if (num_entries < 0xffff)
-        printf("   i");
-    else if (num_entries < 0xffffff)
-        printf("     i");
-    else
-        printf("       i");
-    printf("         size\n");
-
-    uint32_t i;
-    for (i = 0; i < num_entries; i++) {
-        int32_t size;
-        MOV_CHECK(read_int32(&size));
-
+    if (num_entries > 0) {
         indent(4);
-        dump_uint32_index(num_entries, i);
-        printf("  ");
+        if (num_entries < 0xffff)
+            printf("   i");
+        else if (num_entries < 0xffffff)
+            printf("     i");
+        else
+            printf("       i");
+        printf("         size\n");
 
-        printf(" ");
-        dump_uint32(size, true);
-        printf("\n");
+        uint32_t i;
+        for (i = 0; i < num_entries; i++) {
+            int32_t size;
+            MOV_CHECK(read_int32(&size));
+
+            indent(4);
+            dump_uint32_index(num_entries, i);
+            printf("  ");
+
+            printf(" ");
+            dump_uint32(size, true);
+            printf("\n");
+        }
     }
 }
 
@@ -1272,26 +1351,28 @@ static void dump_stco_atom()
     dump_uint32(num_entries, false);
     printf("):\n");
 
-    indent(4);
-    if (num_entries < 0xffff)
-        printf("   i");
-    else if (num_entries < 0xffffff)
-        printf("     i");
-    else
-        printf("       i");
-    printf("      offset (hex offset)\n");
-
-    uint32_t i;
-    for (i = 0; i < num_entries; i++) {
-        uint32_t offset;
-        MOV_CHECK(read_uint32(&offset));
-
+    if (num_entries > 0) {
         indent(4);
-        dump_uint32_index(num_entries, i);
-        printf("  ");
+        if (num_entries < 0xffff)
+            printf("   i");
+        else if (num_entries < 0xffffff)
+            printf("     i");
+        else
+            printf("       i");
+        printf("      offset (hex offset)\n");
 
-        dump_uint32_size(offset);
-        printf("\n");
+        uint32_t i;
+        for (i = 0; i < num_entries; i++) {
+            uint32_t offset;
+            MOV_CHECK(read_uint32(&offset));
+
+            indent(4);
+            dump_uint32_index(num_entries, i);
+            printf("  ");
+
+            dump_uint32_size(offset);
+            printf("\n");
+        }
     }
 }
 
@@ -1314,26 +1395,28 @@ static void dump_co64_atom()
     dump_uint32(num_entries, false);
     printf("):\n");
 
-    indent(4);
-    if (num_entries < 0xffff)
-        printf("   i");
-    else if (num_entries < 0xffffff)
-        printf("     i");
-    else
-        printf("       i");
-    printf("                offset         (hex offset)\n");
-
-    uint32_t i;
-    for (i = 0; i < num_entries; i++) {
-        uint64_t offset;
-        MOV_CHECK(read_uint64(&offset));
-
+    if (num_entries > 0) {
         indent(4);
-        dump_uint32_index(num_entries, i);
-        printf("  ");
+        if (num_entries < 0xffff)
+            printf("   i");
+        else if (num_entries < 0xffffff)
+            printf("     i");
+        else
+            printf("       i");
+        printf("                offset         (hex offset)\n");
 
-        dump_uint64_size(offset);
-        printf("\n");
+        uint32_t i;
+        for (i = 0; i < num_entries; i++) {
+            uint64_t offset;
+            MOV_CHECK(read_uint64(&offset));
+
+            indent(4);
+            dump_uint32_index(num_entries, i);
+            printf("  ");
+
+            dump_uint64_size(offset);
+            printf("\n");
+        }
     }
 }
 
@@ -1506,6 +1589,35 @@ static void dump_clap_atom()
     printf("vert_offset: %d/%d\n", vert_offset_num, vert_offset_den);
 }
 
+static void dump_avcc_atom()
+{
+    dump_atom_header();
+
+    uint8_t configuration_version;
+    MOV_CHECK(read_uint8(&configuration_version));
+    indent();
+    printf("configuration_version: %u\n", configuration_version);
+
+    uint8_t profile_idc;
+    MOV_CHECK(read_uint8(&profile_idc));
+    uint8_t constraint_flags_byte;
+    MOV_CHECK(read_uint8(&constraint_flags_byte));
+    indent();
+    printf("profile_idc: %u ('%s')\n", profile_idc, get_profile_string(profile_idc, constraint_flags_byte));
+    indent();
+    printf("constraint_flags_byte: ");
+    dump_uint8(constraint_flags_byte, true);
+    printf("\n");
+
+    uint8_t level_idc;
+    MOV_CHECK(read_uint8(&level_idc));
+    indent();
+    if (level_idc == 11 && (constraint_flags_byte & 0x10))
+        printf("level_idc: %u (1b)\n", level_idc);
+    else
+        printf("level_idc: %u (%.1f)\n", level_idc, level_idc / 10.0);
+}
+
 static void dump_stbl_vide()
 {
     static const DumpFuncMap dump_func_map[] =
@@ -1514,6 +1626,7 @@ static void dump_stbl_vide()
         {{'f','i','e','l'}, dump_fiel_atom},
         {{'p','a','s','p'}, dump_pasp_atom},
         {{'c','l','a','p'}, dump_clap_atom},
+        {{'a','v','c','C'}, dump_avcc_atom},
     };
 
     uint16_t version;
@@ -1678,9 +1791,9 @@ static void dump_stsd_atom()
     uint32_t num_entries;
     MOV_CHECK(read_uint32(&num_entries));
     indent();
-    printf("sample_descriptions: (");
+    printf("sample_descriptions (");
     dump_uint32(num_entries, true);
-    printf(")\n");
+    printf("):\n");
 
     uint32_t i;
     for (i = 0; i < num_entries; i++) {
@@ -2700,6 +2813,80 @@ static void dump_mvhd_atom()
     printf("next_track_id: %u\n", next_track_id);
 }
 
+static void dump_mehd_atom()
+{
+    uint8_t version;
+    uint32_t flags;
+    dump_full_atom_header(&version, &flags);
+
+
+    if (version == 0) {
+        uint32_t fragment_duration;
+        MOV_CHECK(read_uint32(&fragment_duration));
+        indent();
+        printf("fragment_duration: ");
+        dump_uint32(fragment_duration, true);
+        printf("\n");
+    } else {
+        uint64_t fragment_duration;
+        MOV_CHECK(read_uint64(&fragment_duration));
+        indent();
+        printf("fragment_duration: ");
+        dump_uint64(fragment_duration, true);
+        printf("\n");
+    }
+}
+
+static void dump_trex_atom()
+{
+    uint8_t version;
+    uint32_t flags;
+    dump_full_atom_header(&version, &flags);
+
+
+    uint32_t track_id;
+    MOV_CHECK(read_uint32(&track_id));
+    indent();
+    printf("track_id: %u\n", track_id);
+
+    uint32_t default_sample_description_index;
+    MOV_CHECK(read_uint32(&default_sample_description_index));
+    indent();
+    printf("default_sample_description_index: %u\n", default_sample_description_index);
+
+    uint32_t default_sample_duration;
+    MOV_CHECK(read_uint32(&default_sample_duration));
+    indent();
+    printf("default_sample_duration: ");
+    dump_uint32(default_sample_duration, true);
+    printf("\n");
+
+    uint32_t default_sample_size;
+    MOV_CHECK(read_uint32(&default_sample_size));
+    indent();
+    printf("default_sample_size: ");
+    dump_uint32(default_sample_size, true);
+    printf("\n");
+
+    uint32_t default_sample_flags;
+    MOV_CHECK(read_uint32(&default_sample_flags));
+    indent();
+    printf("default_sample_flags: 0x%08x (", default_sample_flags);
+    dump_fragment_sample_flags(default_sample_flags);
+    printf(")\n");
+}
+
+static void dump_mvex_atom()
+{
+    static const DumpFuncMap dump_func_map[] =
+    {
+        {{'m','e','h','d'}, dump_mehd_atom},
+        {{'t','r','e','x'}, dump_trex_atom},
+    };
+
+    dump_container_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
+}
+
 static void dump_moov_atom()
 {
     static const DumpFuncMap dump_func_map[] =
@@ -2708,20 +2895,373 @@ static void dump_moov_atom()
         {{'t','r','a','k'}, dump_trak_atom},
         {{'m','e','t','a'}, dump_meta_atom},
         {{'u','d','t','a'}, dump_udta_atom},
+        {{'m','v','e','x'}, dump_mvex_atom},
     };
 
     dump_container_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
+}
+
+static void dump_sidx_atom()
+{
+    uint8_t version;
+    uint32_t flags;
+    dump_full_atom_header(&version, &flags);
+
+
+    uint32_t reference_id;
+    MOV_CHECK(read_uint32(&reference_id));
+    indent();
+    printf("reference_id: %u\n", reference_id);
+
+    uint32_t timescale;
+    MOV_CHECK(read_uint32(&timescale));
+    indent();
+    printf("timescale: %u\n", timescale);
+
+    if (version == 0x00) {
+        uint32_t earliest_pres_time;
+        MOV_CHECK(read_uint32(&earliest_pres_time));
+        indent();
+        printf("earliest_presentation_time: %u\n", earliest_pres_time);
+
+        uint32_t first_offset;
+        MOV_CHECK(read_uint32(&first_offset));
+        indent();
+        printf("first_offset: %u\n", first_offset);
+    } else {
+        uint64_t earliest_pres_time;
+        MOV_CHECK(read_uint64(&earliest_pres_time));
+        indent();
+        printf("earliest_presentation_time: %"PRIu64"\n", earliest_pres_time);
+
+        uint64_t first_offset;
+        MOV_CHECK(read_uint64(&first_offset));
+        indent();
+        printf("first_offset: %"PRIu64"\n", first_offset);
+    }
+
+    uint16_t reserved_uint16;
+    MOV_CHECK(read_uint16(&reserved_uint16));
+    indent();
+    printf("reserved: ");
+    dump_uint16(reserved_uint16, true);
+    printf("\n");
+
+    uint16_t num_entries;
+    MOV_CHECK(read_uint16(&num_entries));
+    indent();
+    printf("references (");
+    dump_uint16(num_entries, false);
+    printf("):\n");
+
+    indent(4);
+    if (num_entries < 0xff)
+        printf("%2s", "i");
+    else
+        printf("%4s", "i");
+    printf("%10s%12s%14s%16s%10s%16s\n",
+           "ref_type", "ref_size",  "subseg_dur", "start_with_sap", "sap_type", "sap_delta_time");
+
+    uint16_t i;
+    for (i = 0; i < num_entries; i++) {
+        uint32_t reference_word;
+        MOV_CHECK(read_uint32(&reference_word));
+        uint32_t subsegment_duration;
+        MOV_CHECK(read_uint32(&subsegment_duration));
+        uint32_t sap_word;
+        MOV_CHECK(read_uint32(&sap_word));
+
+        indent(4);
+        dump_uint16_index(num_entries, i);
+
+        if (reference_word & 0x80000000)
+            printf("%10s", "sidx");
+        else
+            printf("%10s", "media");
+
+        printf("%*c", 2, ' ');
+        dump_uint32(reference_word & 0x7fffffff, true);
+
+        printf("%*c", 4, ' ');
+        dump_uint32(subsegment_duration, true);
+
+        if (sap_word & 0x80000000)
+            printf("%16s", "true");
+        else
+            printf("%16s", "false");
+
+        printf("%*c", 7, ' ');
+        dump_uint8((sap_word >> 28) & ((1 << 3) - 1), false);
+
+        printf("%*c", 6, ' ');
+        dump_uint32(sap_word & ((1 << 28) - 1), false);
+        printf("\n");
+    }
+}
+
+static void dump_mfhd_atom()
+{
+    uint8_t version;
+    uint32_t flags;
+    dump_full_atom_header(&version, &flags);
+
+
+    uint32_t sequence_number;
+    MOV_CHECK(read_uint32(&sequence_number));
+    indent();
+    printf("sequence_number: %u\n", sequence_number);
+}
+
+static void dump_tfhd_atom()
+{
+    uint8_t version;
+    uint32_t flags;
+    dump_full_atom_header(&version, &flags);
+
+
+    uint32_t track_id;
+    MOV_CHECK(read_uint32(&track_id));
+    indent();
+    printf("track_id: %u\n", track_id);
+
+    if (flags & 0x000001) {
+        uint64_t base_data_offset;
+        MOV_CHECK(read_uint64(&base_data_offset));
+        indent();
+        printf("base_data_offset: %"PRIu64"\n", base_data_offset);
+    }
+    if (flags & 0x000002) {
+        uint32_t sample_description_index;
+        MOV_CHECK(read_uint32(&sample_description_index));
+        indent();
+        printf("sample_description_index: %u\n", sample_description_index);
+    }
+    if (flags & 0x000008) {
+        uint32_t default_sample_duration;
+        MOV_CHECK(read_uint32(&default_sample_duration));
+        indent();
+        printf("default_sample_duration: %u\n", default_sample_duration);
+    }
+    if (flags & 0x000010) {
+        uint32_t default_sample_size;
+        MOV_CHECK(read_uint32(&default_sample_size));
+        indent();
+        printf("default_sample_size: %u\n", default_sample_size);
+    }
+    if (flags & 0x000020) {
+        uint32_t default_sample_flags;
+        MOV_CHECK(read_uint32(&default_sample_flags));
+        indent();
+        printf("default_sample_flags: 0x%08x (", default_sample_flags);
+        dump_fragment_sample_flags(default_sample_flags);
+        printf(")\n");
+    }
+}
+
+static void dump_trun_atom()
+{
+    uint8_t version;
+    uint32_t flags;
+    dump_full_atom_header(&version, &flags);
+
+
+    uint32_t num_entries;
+    MOV_CHECK(read_uint32(&num_entries));
+
+    if (flags & 0x000001) {
+        int32_t data_offset;
+        MOV_CHECK(read_int32(&data_offset));
+        indent();
+        printf("data_offset: %d\n", data_offset);
+    }
+    if (flags & 0x000004) {
+        uint32_t first_sample_flags;
+        MOV_CHECK(read_uint32(&first_sample_flags));
+        indent();
+        printf("first_sample_flags: 0x%08x (", first_sample_flags);
+        dump_fragment_sample_flags(first_sample_flags);
+        printf(")\n");
+    }
+
+    if (num_entries > 0) {
+        indent();
+        printf("samples (");
+        dump_uint32(num_entries, false);
+        printf("):\n");
+
+        indent(4);
+        if (num_entries < 0xffff)
+            printf("%4s", "i");
+        else if (num_entries < 0xffffff)
+            printf("%6s", "i");
+        else
+            printf("%8s", "i");
+        printf("%12s%12s%12s%12s\n",
+               "duration", "size",  "flags", "ct_offset");
+
+        uint32_t i;
+        for (i = 0; i < num_entries; i++) {
+            indent(4);
+            dump_uint32_index(num_entries, i);
+
+            if (flags & 0x000100) {
+                uint32_t sample_duration;
+                MOV_CHECK(read_uint32(&sample_duration));
+                printf("%*c", 2, ' ');
+                dump_uint32(sample_duration, true);
+            } else {
+                printf("%12s", "x");
+            }
+            if (flags & 0x000200) {
+                uint32_t sample_size;
+                MOV_CHECK(read_uint32(&sample_size));
+                printf("%*c", 2, ' ');
+                dump_uint32(sample_size, true);
+            } else {
+                printf("%12s", "x");
+            }
+            if (flags & 0x000400) {
+                uint32_t sample_flags;
+                MOV_CHECK(read_uint32(&sample_flags));
+                printf("%*c", 2, ' ');
+                dump_uint32(sample_flags, true);
+            } else {
+                printf("%12s", "x");
+            }
+            if (flags & 0x000800) {
+                if (version == 0) {
+                    uint32_t composition_time_offset;
+                    MOV_CHECK(read_uint32(&composition_time_offset));
+                    printf("%*c", 2, ' ');
+                    dump_uint32(composition_time_offset, false);
+                } else {
+                    int32_t composition_time_offset;
+                    MOV_CHECK(read_int32(&composition_time_offset));
+                    printf("%*c", 2, ' ');
+                    dump_int32(composition_time_offset);
+                }
+            } else {
+                printf("%12s", "x");
+            }
+            printf("\n");
+        }
+    }
+}
+
+static void dump_tfdt_atom()
+{
+    uint8_t version;
+    uint32_t flags;
+    dump_full_atom_header(&version, &flags);
+
+
+    if (version == 0) {
+        uint32_t base_media_decode_time;
+        MOV_CHECK(read_uint32(&base_media_decode_time));
+        indent();
+        printf("base_media_decode_time: ");
+        dump_uint32(base_media_decode_time, true);
+        printf("\n");
+    } else {
+        uint64_t base_media_decode_time;
+        MOV_CHECK(read_uint64(&base_media_decode_time));
+        indent();
+        printf("base_media_decode_time: ");
+        dump_uint64(base_media_decode_time, true);
+        printf("\n");
+    }
+}
+
+static void dump_traf_atom()
+{
+    static const DumpFuncMap dump_func_map[] =
+    {
+        {{'t','f','h','d'}, dump_tfhd_atom},
+        {{'t','r','u','n'}, dump_trun_atom},
+        {{'t','f','d','t'}, dump_tfdt_atom},
+    };
+
+    dump_container_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
+}
+
+static void dump_moof_atom()
+{
+    static const DumpFuncMap dump_func_map[] =
+    {
+        {{'m','f','h','d'}, dump_mfhd_atom},
+        {{'t','r','a','f'}, dump_traf_atom},
+    };
+
+    dump_container_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
+}
+
+static void dump_ssix_atom()
+{
+    uint8_t version;
+    uint32_t flags;
+    dump_full_atom_header(&version, &flags);
+
+
+    uint32_t sub_seg_count;
+    MOV_CHECK(read_uint32(&sub_seg_count));
+    indent();
+    printf("sub_segments (");
+    dump_uint32(sub_seg_count, false);
+    printf("):\n");
+
+    uint32_t i;
+    for (i = 0; i < sub_seg_count; i++) {
+        indent(4);
+        dump_uint32_index(sub_seg_count, i);
+
+        uint32_t ranges_count;
+        MOV_CHECK(read_uint32(&ranges_count));
+        printf(": ranges (");
+        dump_uint32(ranges_count, false);
+        printf("):\n");
+
+        indent(4);
+        if (ranges_count < 0xffff)
+            printf("%4s", "i");
+        else if (ranges_count < 0xffffff)
+            printf("%6s", "i");
+        else
+            printf("%8s", "i");
+        printf("%8s%12s\n",
+               "level", "range_size");
+
+        uint32_t j;
+        for (j = 0; j < ranges_count; j++) {
+            indent(4);
+            dump_uint32_index(ranges_count, j);
+
+            uint8_t level;
+            MOV_CHECK(read_uint8(&level));
+            printf("%*c", 4, ' ');
+            dump_uint8(level, true);
+
+            uint32_t range_size;
+            MOV_CHECK(read_uint24(&range_size));
+            printf("%*c", 2, ' ');
+            dump_uint32(range_size, true);
+            printf("\n");
+        }
+    }
 }
 
 static void dump_top_atom()
 {
     static const DumpFuncMap dump_func_map[] =
     {
-        {{'f','t','y','p'}, dump_ftyp_atom},
+        {{'f','t','y','p'}, dump_ftyp_styp_atom},
+        {{'s','t','y','p'}, dump_ftyp_styp_atom},
         {{'m','d','a','t'}, dump_mdat_atom},
         {{'f','r','e','e'}, dump_free_atom},
         {{'s','k','i','p'}, dump_skip_atom},
         {{'m','o','o','v'}, dump_moov_atom},
+        {{'s','i','d','x'}, dump_sidx_atom},
+        {{'m','o','o','f'}, dump_moof_atom},
+        {{'s','s','i','x'}, dump_ssix_atom},
     };
 
     dump_child_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
