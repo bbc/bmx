@@ -736,7 +736,7 @@ static void dump_timestamp(uint64_t value)
         printf("%"PRIu64" seconds since 1904-01-01", value);
     } else {
         printf("%04d-%02d-%02dT%02d:%02d:%02dZ (%"PRIu64" sec since 1904-01-01)",
-               utc->tm_year + 1900, utc->tm_mon, utc->tm_mday,
+               utc->tm_year + 1900, utc->tm_mon + 1, utc->tm_mday,
                utc->tm_hour, utc->tm_min, utc->tm_sec,
                value);
     }
