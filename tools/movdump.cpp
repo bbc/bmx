@@ -103,6 +103,7 @@ static vector<string> g_meta_keys;
 static uint32_t g_movie_timescale;
 static uint32_t g_component_type = 0;
 static uint32_t g_component_sub_type = 0;
+static bool g_qt_brand = true;
 
 
 class MOVException : public std::exception
@@ -802,6 +803,7 @@ static void dump_ftyp_atom()
 
     uint32_t major_brand;
     MOV_CHECK(read_uint32(&major_brand));
+    g_qt_brand = (major_brand == MKTAG("qt  "));
     indent();
     printf("major_brand: ");
     dump_uint32_chars(major_brand);
@@ -1382,7 +1384,11 @@ static void dump_hdlr_atom()
     printf("component_flags_mask: 0x%08x\n", component_flags_mask);
 
     uint8_t component_name_len;
-    MOV_CHECK(read_uint8(&component_name_len));
+    if (g_qt_brand) {
+        MOV_CHECK(read_uint8(&component_name_len));
+    } else {
+        component_name_len = CURRENT_ATOM.rem_size;
+    }
     indent();
     printf("component_name: ");
     if (component_name_len == 0) {
