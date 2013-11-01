@@ -1436,7 +1436,7 @@ static void dump_hdlr_atom()
     MOV_CHECK(read_uint32(&component_type));
     indent();
     printf("component_type: ");
-    dump_uint32_tag(component_type);
+    dump_uint32_chars(component_type);
     printf("\n");
 
     uint32_t component_sub_type;
@@ -1822,13 +1822,20 @@ static void dump_stsd_atom()
         indent(2);
         printf("data_ref_index: 0x%04x\n", data_ref_index);
 
-        if (g_component_type == MHLR_COMPONENT_TYPE && g_component_sub_type == VIDE_COMPONENT_SUB_TYPE) {
-            dump_stbl_vide();
-        } else if (g_component_type == MHLR_COMPONENT_TYPE && g_component_sub_type == SOUN_COMPONENT_SUB_TYPE) {
-            dump_stbl_soun();
-        } else if (g_component_type == MHLR_COMPONENT_TYPE && g_component_sub_type == TMCD_COMPONENT_SUB_TYPE) {
-            dump_stbl_tmcd();
+        bool have_dumped = true;
+        if (g_component_type == MHLR_COMPONENT_TYPE || (!g_component_type && !g_qt_brand)) {
+            if (g_component_sub_type == VIDE_COMPONENT_SUB_TYPE)
+                dump_stbl_vide();
+            else if (g_component_sub_type == SOUN_COMPONENT_SUB_TYPE)
+                dump_stbl_soun();
+            else if (g_component_sub_type == TMCD_COMPONENT_SUB_TYPE)
+                dump_stbl_tmcd();
+            else
+                have_dumped = false;
         } else {
+            have_dumped = false;
+        }
+        if (!have_dumped) {
             indent(2);
             printf("remainder...: %u unparsed bytes\n", size - 16);
             dump_bytes(size - 16, 4);
