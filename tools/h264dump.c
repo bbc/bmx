@@ -327,6 +327,39 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
     return 1;
 }
 
+static int parse_isom_nal_unit(ParseContext *context, unsigned int isom_llen)
+{
+    uint8_t byte;
+    uint32_t rem_size;
+    uint32_t nal_size = 0;
+    unsigned int i;
+
+    rem_size = context->data_size - (context->nal_start + context->nal_size);
+    if (rem_size > 0)
+        memmove(context->buffer, &context->buffer[context->nal_start + context->nal_size], rem_size);
+    context->data_start_file_pos += context->data_size - rem_size;
+    context->data_size            = rem_size;
+    context->data_pos             = 0;
+
+    for (i = 0; i < isom_llen; i++) {
+        if (!load_byte(context, &byte))
+            return 0;
+        nal_size = (nal_size << 8) | byte;
+    }
+
+    while (context->data_size < context->data_pos + nal_size) {
+        if (!read_next_page(context))
+            return 0;
+    }
+
+    context->nal_start   = context->data_pos;
+    context->nal_size    = nal_size;
+    context->bit_pos     = context->nal_start * 8;
+    context->end_bit_pos = context->bit_pos + context->nal_size * 8;
+
+    return 1;
+}
+
 static int byte_aligned(ParseContext *context)
 {
     return !(context->bit_pos & 7);
@@ -2227,13 +2260,19 @@ static int parse_nal_unit(ParseContext *context)
 
 static void print_usage(const char *cmd)
 {
-    fprintf(stderr, "Usage: %s <filename>\n", cmd);
+    fprintf(stderr, "Usage: %s [options] <filename>\n", cmd);
+    fprintf(stderr, "Options:\n");
+    fprintf(stderr, "  -h | --help      Show help and exit\n");
+    fprintf(stderr, "  --isom <llen>    NAL units are prefixed by a <llen> big-endian size word\n");
+    fprintf(stderr, "                   NOTE: NAL units will not be parsed correctly if there is no SPS or PPS\n");
+    fprintf(stderr, "                   An Annex B byte stream format is assumed by default\n");
 }
 
 int main(int argc, const char **argv)
 {
     const char *filename;
     ParseContext context;
+    unsigned int isom_llen = 0;
     int cmdln_index;
 
     if (argc <= 1) {
@@ -2247,6 +2286,22 @@ int main(int argc, const char **argv)
         {
             print_usage(argv[0]);
             return 0;
+        }
+        else if (strcmp(argv[cmdln_index], "--isom") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                print_usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &isom_llen) != 1 || isom_llen == 0 || isom_llen > 4)
+            {
+                print_usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
         }
         else
         {
@@ -2271,10 +2326,19 @@ int main(int argc, const char **argv)
     if (!init_context(&context, filename))
         return 1;
 
-    while (parse_byte_stream_nal_unit(&context)) {
-        if (!parse_nal_unit(&context)) {
-            fprintf(stderr, "Failed to parse NAL unit\n");
-            break;
+    if (isom_llen == 0) {
+        while (parse_byte_stream_nal_unit(&context)) {
+            if (!parse_nal_unit(&context)) {
+                fprintf(stderr, "Failed to parse NAL unit\n");
+                break;
+            }
+        }
+    } else {
+        while (parse_isom_nal_unit(&context, isom_llen)) {
+            if (!parse_nal_unit(&context)) {
+                fprintf(stderr, "Failed to parse NAL unit\n");
+                break;
+            }
         }
     }
 
