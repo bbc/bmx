@@ -36,6 +36,7 @@
 #define __STDC_FORMAT_MACROS
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <cerrno>
 #include <cstdarg>
@@ -106,6 +107,8 @@ static uint32_t g_movie_timescale;
 static uint32_t g_component_type = 0;
 static uint32_t g_component_sub_type = 0;
 static bool g_qt_brand = true;
+static const char *g_avcc_filename = 0;
+static FILE *g_avcc_file = 0;
 
 
 class MOVException : public std::exception
@@ -203,7 +206,7 @@ static void pop_atom()
 
 static bool read_bytes(unsigned char *bytes, uint32_t size)
 {
-    if (fread(bytes, size, 1, g_mov_file) != 1) {
+    if (fread(bytes, 1, size, g_mov_file) != size) {
         if (ferror(g_mov_file))
             throw MOVException("Failed to read bytes: %s", strerror(errno));
         return false;
@@ -329,6 +332,46 @@ static bool read_int8(int8_t *value)
 
     *value = (int8_t)uvalue;
     return true;
+}
+
+static void write_avcc_ps(unsigned char **buffer, size_t *buffer_size, uint8_t length_size, uint16_t ps_size)
+{
+    if (!g_avcc_file) {
+        g_avcc_file = fopen(g_avcc_filename, "wb");
+        if (!g_avcc_file)
+            throw MOVException("Failed to open avcc file '%s': %s", g_avcc_filename, strerror(errno));
+    }
+
+    unsigned char length_bytes[4];
+    if (length_size == 1) {
+        length_bytes[0] = (unsigned char)(ps_size & 0xff);
+    } else if (length_size == 2) {
+        length_bytes[0] = (unsigned char)((ps_size >> 8) & 0xff);
+        length_bytes[1] = (unsigned char)( ps_size       & 0xff);
+    } else if (length_size == 3) {
+        length_bytes[0] = (unsigned char)((ps_size >> 16) & 0xff);
+        length_bytes[1] = (unsigned char)((ps_size >>  8) & 0xff);
+        length_bytes[2] = (unsigned char)( ps_size        & 0xff);
+    } else { // length_size == 4
+        length_bytes[0] = (unsigned char)((ps_size >> 24) & 0xff);
+        length_bytes[1] = (unsigned char)((ps_size >> 16) & 0xff);
+        length_bytes[2] = (unsigned char)((ps_size >>  8) & 0xff);
+        length_bytes[3] = (unsigned char)( ps_size        & 0xff);
+    }
+    MOV_CHECK(fwrite(length_bytes, 1, length_size, g_avcc_file) == length_size);
+
+    if (ps_size > 0) {
+        if ((*buffer_size) < ps_size) {
+            size_t new_buffer_size = (ps_size + 255) & ~255;
+            void *new_buffer = realloc((*buffer), new_buffer_size);
+            if (!new_buffer)
+                throw MOVException("Failed to allocate buffer");
+            *buffer = (unsigned char*)new_buffer;
+            *buffer_size = new_buffer_size;
+        }
+        MOV_CHECK(read_bytes(*buffer, ps_size));
+        MOV_CHECK(fwrite(*buffer, 1, ps_size, g_avcc_file) == ps_size);
+    }
 }
 
 static bool read_type(char *type)
@@ -1616,6 +1659,57 @@ static void dump_avcc_atom()
         printf("level_idc: %u (1b)\n", level_idc);
     else
         printf("level_idc: %u (%.1f)\n", level_idc, level_idc / 10.0);
+
+    uint8_t length_size_minus1_byte, length_size;
+    MOV_CHECK(read_uint8(&length_size_minus1_byte));
+    length_size = (length_size_minus1_byte & 0x03) + 1;
+    indent();
+    printf("length_size_minus1_byte: 0x%02x (length_size=%u)\n", length_size_minus1_byte, length_size);
+
+    uint8_t num_sps_byte, num_sps;
+    MOV_CHECK(read_uint8(&num_sps_byte));
+    num_sps = num_sps_byte & 0x1f;
+    indent();
+    printf("num_sps_byte: 0x%02x (count=%u)\n", num_sps_byte, num_sps);
+
+    unsigned char *buffer = 0;
+    size_t buffer_size = 0;
+    uint8_t i;
+    for (i = 0; i < num_sps; i++) {
+        uint16_t sps_size;
+        MOV_CHECK(read_uint16(&sps_size));
+
+        indent(4);
+        printf("sps %u:\n", i);
+
+        if (g_avcc_filename) {
+            write_avcc_ps(&buffer, &buffer_size, length_size, sps_size);
+            dump_bytes(buffer, sps_size, 6);
+        } else {
+            dump_bytes(sps_size, 6);
+        }
+    }
+
+    uint8_t num_pps;
+    MOV_CHECK(read_uint8(&num_pps));
+    indent();
+    printf("num_pps: %u\n", num_pps);
+
+    for (i = 0; i < num_pps; i++) {
+        uint16_t pps_size;
+        MOV_CHECK(read_uint16(&pps_size));
+
+        indent(4);
+        printf("pps %u:\n", i);
+        if (g_avcc_filename) {
+            write_avcc_ps(&buffer, &buffer_size, length_size, pps_size);
+            dump_bytes(buffer, pps_size, 6);
+        } else {
+            dump_bytes(pps_size, 6);
+        }
+    }
+
+    free(buffer);
 }
 
 static void dump_stbl_vide()
@@ -3294,6 +3388,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "Usage: %s [options] <quicktime filename>\n", cmd);
     fprintf(stderr, "Options:\n");
     fprintf(stderr, " -h | --help       Print this usage message and exit\n");
+    fprintf(stderr, "  --avcc <fname>   Write SPS and PPS NAL units in the 'avcC' box to <fname> file\n");
+    fprintf(stderr, "                   The NAL units are prefixed by a length word with size defined in the 'avcC' box\n");
 }
 
 int main(int argc, const char **argv)
@@ -3309,6 +3405,17 @@ int main(int argc, const char **argv)
         {
             usage(argv[0]);
             return 0;
+        }
+        else if (strcmp(argv[cmdln_index], "--avcc") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            g_avcc_filename = argv[cmdln_index + 1];
+            cmdln_index++;
         }
         else
         {
@@ -3371,6 +3478,8 @@ int main(int argc, const char **argv)
 
     if (g_mov_file)
         fclose(g_mov_file);
+    if (g_avcc_file)
+        fclose(g_avcc_file);
 
     return 0;
 }
