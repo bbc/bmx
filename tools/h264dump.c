@@ -796,7 +796,7 @@ static void print_uuid(ParseContext *context, uint64_t uuid_high, uint64_t uuid_
 {
     int i;
 
-    printf("%*c uuid_iso_iec11576: ", context->indent * 4, ' ');
+    printf("%*c uuid_iso_iec11578: ", context->indent * 4, ' ');
     for (i = 0; i < 4; i++)
         printf("%02x", (unsigned char)((uuid_high >> ((7 - i) * 8)) & 0xff));
     printf("-");
