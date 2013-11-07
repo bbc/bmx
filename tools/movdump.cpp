@@ -467,6 +467,19 @@ static const char* get_profile_string(uint8_t profile_idc, uint8_t constraint_fl
     return profile_str;
 }
 
+static const char* get_chroma_format_string(uint8_t chroma_format_idc)
+{
+    static const char *CHROMA_FORMAT_STRINGS[] =
+    {
+        "Monochrome",
+        "4:2:0",
+        "4:2:2",
+        "4:4:4",
+    };
+
+    return CHROMA_FORMAT_STRINGS[chroma_format_idc & 0x03];
+}
+
 static void indent_atom_header()
 {
     size_t i;
@@ -1670,7 +1683,7 @@ static void dump_avcc_atom()
     MOV_CHECK(read_uint8(&num_sps_byte));
     num_sps = num_sps_byte & 0x1f;
     indent();
-    printf("num_sps_byte: 0x%02x (count=%u)\n", num_sps_byte, num_sps);
+    printf("num_sps_byte: 0x%02x (num_sps=%u)\n", num_sps_byte, num_sps);
 
     unsigned char *buffer = 0;
     size_t buffer_size = 0;
@@ -1706,6 +1719,48 @@ static void dump_avcc_atom()
             dump_bytes(buffer, pps_size, 6);
         } else {
             dump_bytes(pps_size, 6);
+        }
+    }
+
+    if (CURRENT_ATOM.rem_size >= 4) {
+        uint8_t chroma_format_byte, chroma_format;
+        MOV_CHECK(read_uint8(&chroma_format_byte));
+        chroma_format = chroma_format_byte & 0x03;
+        indent();
+        printf("chroma_format_byte: 0x%02x (chroma_format=%u '%s')\n", chroma_format_byte, chroma_format,
+               get_chroma_format_string(chroma_format));
+
+        uint8_t bit_depth_luma_minus8_byte, bit_depth_luma;
+        MOV_CHECK(read_uint8(&bit_depth_luma_minus8_byte));
+        bit_depth_luma = (bit_depth_luma_minus8_byte & 0x07) + 8;
+        indent();
+        printf("bit_depth_luma_minus8_byte: 0x%02x (bit_depth_luma=%u)\n",
+               bit_depth_luma_minus8_byte, bit_depth_luma);
+
+        uint8_t bit_depth_chroma_minus8_byte, bit_depth_chroma;
+        MOV_CHECK(read_uint8(&bit_depth_chroma_minus8_byte));
+        bit_depth_chroma = (bit_depth_chroma_minus8_byte & 0x07) + 8;
+        indent();
+        printf("bit_depth_chroma_minus8_byte: 0x%02x (bit_depth_chroma=%u)\n",
+               bit_depth_chroma_minus8_byte, bit_depth_chroma);
+
+        uint8_t num_sps_ext;
+        MOV_CHECK(read_uint8(&num_sps_ext));
+        indent();
+        printf("num_sps_ext: %u\n", num_sps_ext);
+
+        for (i = 0; i < num_sps_ext; i++) {
+            uint16_t sps_ext_size;
+            MOV_CHECK(read_uint16(&sps_ext_size));
+
+            indent(4);
+            printf("sps ext %u:\n", i);
+            if (g_avcc_filename) {
+                write_avcc_ps(&buffer, &buffer_size, length_size, sps_ext_size);
+                dump_bytes(buffer, sps_ext_size, 6);
+            } else {
+                dump_bytes(sps_ext_size, 6);
+            }
         }
     }
 
