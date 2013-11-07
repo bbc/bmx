@@ -157,6 +157,9 @@ typedef struct
     uint64_t pic_width_in_mbs_minus1;
     uint64_t pic_height_in_map_units_minus1;
     uint64_t slice_group_change_rate_minus1;
+    uint64_t cpb_cnt_minus1;
+    uint8_t nal_hrd_parameters_present_flag;
+    uint8_t vcl_hrd_parameters_present_flag;
 
     int indent;
 } ParseContext;
@@ -857,14 +860,13 @@ static int read_and_print_bytes(ParseContext *context, uint64_t num_bytes)
 static int hrd_parameters(ParseContext *context)
 {
     uint64_t sched_sel_idx;
-    uint64_t cpb_cnt_minus1;
 
     ue(); PRINT_UINT("cpb_cnt_minus1");
-    cpb_cnt_minus1 = context->value;
+    context->cpb_cnt_minus1 = context->value;
     u(4); PRINT_UINT("bit_rate_scale");
     u(4); PRINT_UINT("cpb_size_scale");
     context->indent++;
-    for (sched_sel_idx = 0; sched_sel_idx <= cpb_cnt_minus1; sched_sel_idx++) {
+    for (sched_sel_idx = 0; sched_sel_idx <= context->cpb_cnt_minus1; sched_sel_idx++) {
         ue(); PRINT_UINT("bit_rate_value_minus1");
         ue(); PRINT_UINT("cpb_size_value_minus1");
         u(1); PRINT_UINT("cbr_flag");
@@ -883,9 +885,6 @@ static int hrd_parameters(ParseContext *context)
 
 static int vui_parameters(ParseContext *context)
 {
-    uint8_t nal_hrd_parameters_present_flag;
-    uint8_t vcl_hrd_parameters_present_flag;
-
     u(1); PRINT_UINT("aspect_ratio_present_flag");
     if (context->value) {
         context->indent++;
@@ -933,23 +932,23 @@ static int vui_parameters(ParseContext *context)
         context->indent--;
     }
     u(1); PRINT_UINT("nal_hrd_parameters_present_flag");
-    nal_hrd_parameters_present_flag = (uint8_t)context->value;
+    context->nal_hrd_parameters_present_flag = (uint8_t)context->value;
     if (context->value) {
         context->indent++;
         CHK(hrd_parameters(context));
         context->indent--;
     }
     u(1); PRINT_UINT("vcl_hrd_parameters_present_flag");
-    vcl_hrd_parameters_present_flag = (uint8_t)context->value;
+    context->vcl_hrd_parameters_present_flag = (uint8_t)context->value;
     if (context->value) {
         context->indent++;
         CHK(hrd_parameters(context));
         context->indent--;
     }
-    if (nal_hrd_parameters_present_flag || vcl_hrd_parameters_present_flag) {
+    if (context->nal_hrd_parameters_present_flag || context->vcl_hrd_parameters_present_flag) {
         u(1); PRINT_UINT("low_delay_hrd_flag");
     }
-    context->cpb_dpb_delays_present_flag = nal_hrd_parameters_present_flag || vcl_hrd_parameters_present_flag;
+    context->cpb_dpb_delays_present_flag = context->nal_hrd_parameters_present_flag || context->vcl_hrd_parameters_present_flag;
     u(1); PRINT_UINT("pict_struct_present_flag");
     context->pict_struct_present_flag = (uint8_t)context->value;
     u(1); PRINT_UINT("bitstream_restriction_flag");
@@ -1385,6 +1384,43 @@ static int slice_data_partition_c_layer(ParseContext *context)
     return 1;
 }
 
+static int buffering_period(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
+{
+    uint64_t sched_sel_idx;
+
+    printf("%*c buffering_period (type=%"PRIu64", size=%"PRIu64"):\n", context->indent * 4, ' ', payload_type, payload_size);
+    context->indent++;
+
+    ue(); PRINT_UINT("seq_parameter_set_id");
+
+    if (context->nal_hrd_parameters_present_flag) {
+        printf("%*c nal:\n", context->indent * 4, ' ');
+        context->indent++;
+        for (sched_sel_idx = 0; sched_sel_idx <= context->cpb_cnt_minus1; sched_sel_idx++) {
+            u(context->cpb_removal_delay_length_minus1 + 1);
+            printf("%*c initial_cpb_removal_delay[%"PRIu64"]        : %"PRId64"\n", context->indent * 4, ' ', sched_sel_idx, context->value);
+            u(context->cpb_removal_delay_length_minus1 + 1);
+            printf("%*c initial_cpb_removal_delay_offset[%"PRIu64"] : %"PRId64"\n", context->indent * 4, ' ', sched_sel_idx, context->value);
+        }
+        context->indent--;
+    }
+
+    if (context->vcl_hrd_parameters_present_flag) {
+        printf("%*c vcl:\n", context->indent * 4, ' ');
+        context->indent++;
+        for (sched_sel_idx = 0; sched_sel_idx <= context->cpb_cnt_minus1; sched_sel_idx++) {
+            u(context->cpb_removal_delay_length_minus1 + 1);
+            printf("%*c initial_cpb_removal_delay [%"PRIu64"]       : %"PRId64"\n", context->indent * 4, ' ', sched_sel_idx, context->value);
+            u(context->cpb_removal_delay_length_minus1 + 1);
+            printf("%*c initial_cpb_removal_delay_offset[%"PRIu64"] : %"PRId64"\n", context->indent * 4, ' ', sched_sel_idx, context->value);
+        }
+        context->indent--;
+    }
+
+    context->indent--;
+    return 1;
+}
+
 static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
 {
     printf("%*c pic_timing (type=%"PRIu64", size=%"PRIu64"):\n", context->indent * 4, ' ', payload_type, payload_size);
@@ -1580,7 +1616,9 @@ static int sei_payload(ParseContext *context, uint64_t payload_type, uint64_t pa
     uint64_t next_bit_pos = context->bit_pos + payload_size * 8;
     context->emu_prevent_count = 0;
 
-    if (payload_type == 1) {
+    if (payload_type == 0) {
+        CHK(buffering_period(context, payload_type, payload_size));
+    } else if (payload_type == 1) {
         CHK(pic_timing(context, payload_type, payload_size));
     } else if (payload_type == 5) {
         CHK(user_data_unregistered(context, payload_type, payload_size));
