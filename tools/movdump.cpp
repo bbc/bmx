@@ -1712,6 +1712,26 @@ static void dump_avcc_atom()
     free(buffer);
 }
 
+static void dump_btrt_atom()
+{
+    dump_atom_header();
+
+    uint32_t buffer_size_db;
+    MOV_CHECK(read_uint32(&buffer_size_db));
+    indent();
+    printf("buffer_size_db: 0x%04x\n", buffer_size_db);
+
+    uint32_t max_bitrate;
+    MOV_CHECK(read_uint32(&max_bitrate));
+    indent();
+    printf("max_bitrate: %u\n", max_bitrate);
+
+    uint32_t avg_bitrate;
+    MOV_CHECK(read_uint32(&avg_bitrate));
+    indent();
+    printf("avg_bitrate: %u\n", avg_bitrate);
+}
+
 static void dump_stbl_vide()
 {
     static const DumpFuncMap dump_func_map[] =
@@ -1721,6 +1741,7 @@ static void dump_stbl_vide()
         {{'p','a','s','p'}, dump_pasp_atom},
         {{'c','l','a','p'}, dump_clap_atom},
         {{'a','v','c','C'}, dump_avcc_atom},
+        {{'b','t','r','t'}, dump_btrt_atom},
     };
 
     uint16_t version;
