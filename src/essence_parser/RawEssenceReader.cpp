@@ -197,7 +197,7 @@ bool RawEssenceReader::ReadAndParseSample()
         sample_num_read += num_read;
     }
 
-    if (sample_size == 0) {
+    if (sample_size == ESSENCE_PARSER_NULL_FRAME_SIZE) {
         // invalid or null sample data
         mLastSampleRead = true;
         return false;

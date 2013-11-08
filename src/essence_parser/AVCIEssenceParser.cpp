@@ -72,7 +72,7 @@ uint32_t AVCIEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t d
     (void)data_size;
 
     BMX_ASSERT(false);
-    return 0;
+    return ESSENCE_PARSER_NULL_FRAME_SIZE;
 }
 
 void AVCIEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)

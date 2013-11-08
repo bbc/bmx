@@ -112,7 +112,7 @@ int main(int argc, const char **argv)
         fill_buffer(file, &buffer, 8192);
         frame_size = parser.ParseFrameSize(buffer.data, buffer.data_size);
     }
-    if (frame_size == 0 || frame_size == ESSENCE_PARSER_NULL_OFFSET) {
+    if (frame_size == ESSENCE_PARSER_NULL_FRAME_SIZE || frame_size == ESSENCE_PARSER_NULL_OFFSET) {
         fprintf(stderr, "Failed to parse frame size within %u bytes\n", buffer.data_size);
         return 1;
     }

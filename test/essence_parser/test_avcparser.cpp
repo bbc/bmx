@@ -167,7 +167,7 @@ int main(int argc, const char **argv)
         if (frame_size == ESSENCE_PARSER_NULL_OFFSET) {
             if (fill_buffer(file, &buffer) == 0)
                 break;
-        } else if (frame_size == 0) {
+        } else if (frame_size == ESSENCE_PARSER_NULL_FRAME_SIZE) {
             fprintf(stderr, "Invalid frame start\n");
             return 1;
         } else {

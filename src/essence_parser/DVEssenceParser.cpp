@@ -87,17 +87,17 @@ uint32_t DVEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t dat
         (data[AUDIO_SECTION_OFFSET]   & 0xe0) != 0x60 ||
         (data[VIDEO_SECTION_OFFSET]   & 0xe0) != 0x80)
     {
-        return 0;
+        return ESSENCE_PARSER_NULL_FRAME_SIZE;
     }
 
     // check video and vaux section are transmitted
     if ((data[HEADER_SECTION_OFFSET + 6] & 0x80)) {
-        return 0;
+        return ESSENCE_PARSER_NULL_FRAME_SIZE;
     }
 
     // check starts with first channel
     if ((data[HEADER_SECTION_OFFSET + 1] & 0x0c) != 0x04) {
-        return 0;
+        return ESSENCE_PARSER_NULL_FRAME_SIZE;
     }
 
     uint32_t frame_size = ParseFrameSizeInt(data, data_size);
@@ -186,6 +186,6 @@ uint32_t DVEssenceParser::ParseFrameSizeInt(const unsigned char *data, uint32_t 
     }
 
     // unknown DV type
-    return 0;
+    return ESSENCE_PARSER_NULL_FRAME_SIZE;
 }
 

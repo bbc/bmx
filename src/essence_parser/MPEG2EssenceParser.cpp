@@ -143,7 +143,7 @@ uint32_t MPEG2EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t 
         {
             // not a valid frame start
             Reset();
-            return 0;
+            return ESSENCE_PARSER_NULL_FRAME_SIZE;
         }
 
         mOffset++;

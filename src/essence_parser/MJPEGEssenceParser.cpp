@@ -87,7 +87,7 @@ uint32_t MJPEGEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t 
                 } else {
                     // invalid image start
                     Reset();
-                    return 0;
+                    return ESSENCE_PARSER_NULL_FRAME_SIZE;
                 }
                 break;
             case 1:

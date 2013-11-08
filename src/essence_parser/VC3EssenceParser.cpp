@@ -157,7 +157,7 @@ uint32_t VC3EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
         }
     }
 
-    return ESSENCE_PARSER_NULL_OFFSET;
+    return ESSENCE_PARSER_NULL_FRAME_SIZE;
 }
 
 void VC3EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)

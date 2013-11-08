@@ -139,9 +139,9 @@ int main(int argc, const char **argv)
         if (image_size == ESSENCE_PARSER_NULL_OFFSET) {
             if (fill_buffer(file, &buffer) == 0)
                 break;
-        } else if (image_size == 0) {
+        } else if (image_size == ESSENCE_PARSER_NULL_FRAME_SIZE) {
             fprintf(stderr, "Invalid image data start\n");
-            break;
+            return 1;
         } else {
             print_image_info(&parser, &buffer, image_size);
             image_start = image_size;
