@@ -6,8 +6,9 @@ SUBDIRS = common frame essence_parser writer_helper mxf_helper st436 \
 lib_LTLIBRARIES = libbmx-@BMX_MAJORMINOR@.la
 
 libbmx_@BMX_MAJORMINOR@_la_SOURCES =
+libbmx_@BMX_MAJORMINOR@_la_LIBTOOLFLAGS = --tag=CXX
 libbmx_@BMX_MAJORMINOR@_la_LDFLAGS = \
-	-version-info $(BMX_LIBVERSION)
+	$(BMX_LDFLAGS) -version-info $(BMX_LIBVERSION)
 libbmx_@BMX_MAJORMINOR@_la_LIBADD = \
 	apps/libapps.la \
 	common/libcommon.la \
