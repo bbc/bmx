@@ -1715,11 +1715,11 @@ static int sequence_parameter_set_data(ParseContext *context)
         if (context->chroma_format_idc == 3) {
             u(1); PRINT_UINT("separate_colour_plane_flag");
             context->separate_colour_plane_flag = (uint8_t)context->value;
-            if (context->value == 0)
-                context->chroma_array_type = context->chroma_format_idc;
-            else
-                context->chroma_array_type = 0;
         }
+        if (context->separate_colour_plane_flag == 0)
+            context->chroma_array_type = context->chroma_format_idc;
+        else
+            context->chroma_array_type = 0;
         ue(); PRINT_UINT("bit_depth_luma_minus8");
         ue(); PRINT_UINT("bit_depth_chroma_minus8");
         u(1); PRINT_UINT("qpprime_y_zero_transform_bypass_flag");
