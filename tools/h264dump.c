@@ -133,7 +133,7 @@ typedef struct
     uint8_t cpb_dpb_delays_present_flag;
     uint8_t cpb_removal_delay_length_minus1;
     uint8_t dpb_removal_delay_length_minus1;
-    uint8_t pict_struct_present_flag;
+    uint8_t pic_struct_present_flag;
     uint8_t time_offset_length;
     uint8_t separate_colour_plane_flag;
     uint8_t log2_max_frame_num_minus4;
@@ -709,9 +709,9 @@ static void print_video_format(ParseContext *context, uint8_t video_format)
            VIDEO_FORMAT_STRINGS[video_format & 0x07]);
 }
 
-static void print_pict_struct(ParseContext *context, uint8_t pict_struct)
+static void print_pic_struct(ParseContext *context, uint8_t pic_struct)
 {
-    static const char *PICT_STRUCT_STRINGS[] =
+    static const char *PIC_STRUCT_STRINGS[] =
     {
         "(progressive) frame",
         "top field",
@@ -724,11 +724,11 @@ static void print_pict_struct(ParseContext *context, uint8_t pict_struct)
         "frame tripling",
     };
 
-    if (pict_struct < ARRAY_SIZE(PICT_STRUCT_STRINGS)) {
-        printf("%*c pict_struct: %u (%s)\n", context->indent * 4, ' ', pict_struct,
-               PICT_STRUCT_STRINGS[pict_struct]);
+    if (pic_struct < ARRAY_SIZE(PIC_STRUCT_STRINGS)) {
+        printf("%*c pic_struct: %u (%s)\n", context->indent * 4, ' ', pic_struct,
+               PIC_STRUCT_STRINGS[pic_struct]);
     } else {
-        printf("%*c pict_struct: %u (reserved)\n", context->indent * 4, ' ', pict_struct);
+        printf("%*c pic_struct: %u (reserved)\n", context->indent * 4, ' ', pic_struct);
     }
 }
 
@@ -949,8 +949,8 @@ static int vui_parameters(ParseContext *context)
         u(1); PRINT_UINT("low_delay_hrd_flag");
     }
     context->cpb_dpb_delays_present_flag = context->nal_hrd_parameters_present_flag || context->vcl_hrd_parameters_present_flag;
-    u(1); PRINT_UINT("pict_struct_present_flag");
-    context->pict_struct_present_flag = (uint8_t)context->value;
+    u(1); PRINT_UINT("pic_struct_present_flag");
+    context->pic_struct_present_flag = (uint8_t)context->value;
     u(1); PRINT_UINT("bitstream_restriction_flag");
     if (context->value) {
         u(1); PRINT_UINT("motion_vectors_over_pic_boundaries_flag");
@@ -1430,14 +1430,14 @@ static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t pay
         u(context->cpb_removal_delay_length_minus1 + 1); PRINT_UINT("cpb_removal_delay");
         u(context->dpb_removal_delay_length_minus1 + 1); PRINT_UINT("dpb_removal_delay");
     }
-    if (context->pict_struct_present_flag) {
-        uint64_t pict_struct;
+    if (context->pic_struct_present_flag) {
+        uint64_t pic_struct;
         uint8_t num_clock_ts = 0;
         uint8_t i;
 
-        u(4); print_pict_struct(context, (uint8_t)context->value);
-        pict_struct = context->value;
-        switch (pict_struct)
+        u(4); print_pic_struct(context, (uint8_t)context->value);
+        pic_struct = context->value;
+        switch (pic_struct)
         {
             case 0:
             case 1:
@@ -1455,7 +1455,7 @@ static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t pay
                 num_clock_ts = 3;
                 break;
             default:
-                CHK(pict_struct <= 8);
+                CHK(pic_struct <= 8);
                 break;
         }
 
