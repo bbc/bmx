@@ -601,7 +601,7 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
     mFrameMBSOnlyFlag = sps->frame_mbs_only_flag;
 }
 
-EssenceType AVCEssenceParser::GetAVCIEssenceType(uint32_t data_size) const
+EssenceType AVCEssenceParser::GetAVCIEssenceType(uint32_t data_size, bool is_interlaced, bool is_progressive) const
 {
     if (!mIsIDRFrame || !mFixedFrameRate)
         return UNKNOWN_ESSENCE_TYPE;
@@ -621,8 +621,12 @@ EssenceType AVCEssenceParser::GetAVCIEssenceType(uint32_t data_size) const
                 if (mFrameRate == FRAME_RATE_23976) {
                     essence_type = AVCI50_1080P;
                 } else if (mFrameRate == FRAME_RATE_2997 || mFrameRate == FRAME_RATE_25) {
+                    if (is_progressive)
+                        essence_type = AVCI50_1080P;
+                    else if (is_interlaced)
+                        essence_type = AVCI50_1080I;
                     // guessing interlaced/progressive using RP2027 recommended frame_mbs_only_flag value
-                    if (mFrameMBSOnlyFlag)
+                    else if (mFrameMBSOnlyFlag)
                         essence_type = AVCI50_1080P;
                     else
                         essence_type = AVCI50_1080I;
@@ -652,8 +656,12 @@ EssenceType AVCEssenceParser::GetAVCIEssenceType(uint32_t data_size) const
                 if (mFrameRate == FRAME_RATE_23976) {
                     essence_type = AVCI100_1080P;
                 } else if (mFrameRate == FRAME_RATE_2997 || mFrameRate == FRAME_RATE_25) {
+                    if (is_progressive)
+                        essence_type = AVCI100_1080P;
+                    else if (is_interlaced)
+                        essence_type = AVCI100_1080I;
                     // guessing interlaced/progressive using RP2027 recommended frame_mbs_only_flag value
-                    if (mFrameMBSOnlyFlag)
+                    else if (mFrameMBSOnlyFlag)
                         essence_type = AVCI100_1080P;
                     else
                         essence_type = AVCI100_1080I;

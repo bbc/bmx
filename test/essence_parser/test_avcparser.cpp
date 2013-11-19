@@ -123,7 +123,7 @@ static void print_frame_info(AVCEssenceParser *parser, Buffer *buffer, uint32_t 
             default:      printf("Unknown\n"); break;
         }
     }
-    printf("    AVC-I essence type: %s\n", essence_type_to_string(parser->GetAVCIEssenceType(frame_size)));
+    printf("    AVC-I essence type: %s\n", essence_type_to_string(parser->GetAVCIEssenceType(frame_size, false, false)));
 }
 
 

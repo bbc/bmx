@@ -98,7 +98,7 @@ public:
     MPEGFrameType GetFrameType() const    { return mFrameType; }
     bool IsIDRFrame() const               { return mIsIDRFrame; }
 
-    EssenceType GetAVCIEssenceType(uint32_t data_size) const;
+    EssenceType GetAVCIEssenceType(uint32_t data_size, bool is_interlaced, bool is_progressive) const;
 
 private:
     typedef struct

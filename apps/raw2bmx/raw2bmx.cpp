@@ -47,6 +47,7 @@
 #include <bmx/mxf_op1a/OP1ADataTrack.h>
 #include <bmx/essence_parser/DVEssenceParser.h>
 #include <bmx/essence_parser/MPEG2EssenceParser.h>
+#include <bmx/essence_parser/AVCEssenceParser.h>
 #include <bmx/essence_parser/AVCIRawEssenceReader.h>
 #include <bmx/essence_parser/MJPEGEssenceParser.h>
 #include <bmx/essence_parser/VC3EssenceParser.h>
@@ -79,6 +80,7 @@ typedef enum
     VC3_ESSENCE_GROUP,
     MPEG2LG_ESSENCE_GROUP,
     D10_ESSENCE_GROUP,
+    AVCI_ESSENCE_GROUP,
 } EssenceTypeGroup;
 
 
@@ -91,6 +93,8 @@ typedef struct
 typedef struct
 {
     EssenceTypeGroup essence_type_group;
+    bool avci_guess_interlaced;
+    bool avci_guess_progressive;
     EssenceType essence_type;
     bool is_wave;
 
@@ -274,6 +278,21 @@ static void clear_input(RawInput *input)
         delete input->wave_reader;
 }
 
+static bool parse_avci_guess(const char *str, bool *interlaced, bool *progressive)
+{
+    if (strcmp(str, "i") == 0) {
+        *interlaced  = true;
+        *progressive = false;
+        return true;
+    } else if (strcmp(str, "p") == 0) {
+        *interlaced  = false;
+        *progressive = true;
+        return true;
+    }
+
+    return false;
+}
+
 static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
@@ -413,6 +432,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            - 32 hexadecimal characters representing a 16-byte Key\n");
     fprintf(stderr, "  --track-num <num>       Set the output track number. Default track number equals last track number of same picture/sound type + 1\n");
     fprintf(stderr, "                          For as11d10/d10 the track number must be > 0 and <= 8 because the AES-3 channel index equals track number - 1\n");
+    fprintf(stderr, "  --avci-guess <i/p>      Guess interlaced ('i') or progressive ('p') AVC-Intra when using the --avci option with 1080p25/i50 or 1080p30/i60\n");
+    fprintf(stderr, "                          The default guess uses the H.264 frame_mbs_only_flag field\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02:\n");
     fprintf(stderr, "    --trk-out-start <offset>   Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
@@ -431,6 +452,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --d10_30 <name>         Raw D10 30Mbps video input file\n");
     fprintf(stderr, "  --d10_40 <name>         Raw D10 40Mbps video input file\n");
     fprintf(stderr, "  --d10_50 <name>         Raw D10 50Mbps video input file\n");
+    fprintf(stderr, "  --avci <name>           Raw AVC-Intra video input file. See also --avci-guess option\n");
     fprintf(stderr, "  --avci100_1080i <name>  Raw AVC-Intra 100 1080i video input file\n");
     fprintf(stderr, "  --avci100_1080p <name>  Raw AVC-Intra 100 1080p video input file\n");
     fprintf(stderr, "  --avci100_720p <name>   Raw AVC-Intra 100 720p video input file\n");
@@ -1463,6 +1485,25 @@ int main(int argc, const char** argv)
             cmdln_index++;
             continue; // skip input reset at the end
         }
+        else if (strcmp(argv[cmdln_index], "--avci-guess") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_avci_guess(argv[cmdln_index + 1],
+                                  &input.avci_guess_interlaced,
+                                  &input.avci_guess_progressive))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
         else if (strcmp(argv[cmdln_index], "--trk-out-start") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -1625,6 +1666,19 @@ int main(int argc, const char** argv)
                 return 1;
             }
             input.essence_type = D10_50;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avci") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type_group = AVCI_ESSENCE_GROUP;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -2692,6 +2746,33 @@ int main(int argc, const char** argv)
                     if (!input->aspect_ratio_set)
                         input->aspect_ratio = mpeg2_parser->GetAspectRatio();
                 }
+            }
+            else if (input->essence_type_group == AVCI_ESSENCE_GROUP)
+            {
+                AVCEssenceParser *avc_parser = new AVCEssenceParser();
+                input->raw_reader->SetEssenceParser(avc_parser);
+
+                input->raw_reader->ReadSamples(1);
+                if (input->raw_reader->GetNumSamples() == 0) {
+                    log_error("Failed to read and parse first AVC-I frame to determine essence type\n");
+                    throw false;
+                }
+
+                avc_parser->ParseFrameInfo(input->raw_reader->GetSampleData(),
+                                           input->raw_reader->GetSampleDataSize());
+                input->essence_type = avc_parser->GetAVCIEssenceType(input->raw_reader->GetSampleDataSize(),
+                                                                     input->avci_guess_interlaced,
+                                                                     input->avci_guess_progressive);
+                if (input->essence_type == UNKNOWN_ESSENCE_TYPE) {
+                    log_error("AVC-I essence type not recognised\n");
+                    throw false;
+                }
+
+                // re-open the raw reader to use the special AVCI reader
+                delete input->raw_reader;
+                input->raw_reader = 0;
+                if (!open_raw_reader(input))
+                    throw false;
             }
         }
 
