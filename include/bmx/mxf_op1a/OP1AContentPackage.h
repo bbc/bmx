@@ -158,6 +158,7 @@ public:
     void SetClipWrapped(bool enable);
 
     void RegisterPictureTrackElement(uint32_t track_index, mxfKey element_key, bool is_cbe);
+    void RegisterPictureTrackElement(uint32_t track_index, mxfKey element_key, bool is_cbe, uint8_t element_llen);
     void RegisterAVCITrackElement(uint32_t track_index, mxfKey element_key,
                                   uint32_t first_sample_size, uint32_t nonfirst_sample_size);
     void RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,

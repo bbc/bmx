@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#define __STDC_LIMIT_MACROS
+
 #include <bmx/mxf_op1a/OP1AUncTrack.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -79,8 +81,6 @@ void OP1AUncTrack::SetInputHeight(uint32_t height)
 
 void OP1AUncTrack::PrepareWrite(uint8_t track_count)
 {
-    OP1APictureTrack::PrepareWrite(track_count);
-
     uint32_t sample_size = mUncDescriptorHelper->GetSampleSize();
     if (mInputHeight != 0)
         mInputSampleSize = mUncDescriptorHelper->GetSampleSize(mInputHeight);
@@ -90,6 +90,15 @@ void OP1AUncTrack::PrepareWrite(uint8_t track_count)
     BMX_CHECK_M(mInputSampleSize >= sample_size,
                 ("Insufficient input height %u for uncompressed track", mInputHeight));
     mSkipSize = mInputSampleSize - sample_size;
+
+
+    CompleteEssenceKeyAndTrackNum(track_count);
+
+    if (sample_size > (UINT32_MAX >> 8)) // > max length for llen 4
+        mCPManager->RegisterPictureTrackElement(mTrackIndex, mEssenceElementKey, true, 8);
+    else
+        mCPManager->RegisterPictureTrackElement(mTrackIndex, mEssenceElementKey, true);
+    mIndexTable->RegisterPictureTrackElement(mTrackIndex, true, false);
 }
 
 void OP1AUncTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)

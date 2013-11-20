@@ -119,6 +119,7 @@ protected:
     uint32_t mIndexSID;
     uint32_t mBodySID;
     uint8_t mLLen;
+    uint8_t mEssenceElementLLen;
     uint32_t mKAGSize;
     mxfKey mEssenceElementKey;
 

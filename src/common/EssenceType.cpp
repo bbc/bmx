@@ -74,6 +74,7 @@ static const EssenceTypeInfo ESSENCE_TYPE_INFO[] =
     {UNC_HD_1080I,              PICTURE_ESSENCE,        "uncompressed HD 1080i"},
     {UNC_HD_1080P,              PICTURE_ESSENCE,        "uncompressed HD 1080p"},
     {UNC_HD_720P,               PICTURE_ESSENCE,        "uncompressed HD 720p"},
+    {UNC_UHD_3840,              PICTURE_ESSENCE,        "uncompressed UHD 3840x2160"},
     {AVID_10BIT_UNC_SD,         PICTURE_ESSENCE,        "Avid 10-bit uncompressed SD"},
     {AVID_10BIT_UNC_HD_1080I,   PICTURE_ESSENCE,        "Avid 10-bit uncompressed HD 1080i"},
     {AVID_10BIT_UNC_HD_1080P,   PICTURE_ESSENCE,        "Avid 10-bit uncompressed HD 1080p"},

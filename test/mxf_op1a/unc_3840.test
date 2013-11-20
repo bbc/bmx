@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check.sh 3 45 unc_3840
+

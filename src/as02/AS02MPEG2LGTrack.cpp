@@ -108,7 +108,7 @@ void AS02MPEG2LGTrack::WriteSamples(const unsigned char *data, uint32_t size, ui
 
     HandlePartitionInterval(mWriterHelper.HaveGOPHeader());
 
-    mMXFFile->writeFixedKL(&mEssenceElementKey, mLLen, size);
+    mMXFFile->writeFixedKL(&mEssenceElementKey, mEssenceElementLLen, size);
     BMX_CHECK(mMXFFile->write(data, size) == size);
 
     UpdateEssenceOnlyChecksum(data, size);
@@ -135,7 +135,7 @@ void AS02MPEG2LGTrack::WriteSamples(const unsigned char *data, uint32_t size, ui
 
 
     mContainerDuration++;
-    mContainerSize += mxfKey_extlen + mLLen + size;
+    mContainerSize += mxfKey_extlen + mEssenceElementLLen + size;
 }
 
 void AS02MPEG2LGTrack::WriteVBEIndexTable(Partition *partition)

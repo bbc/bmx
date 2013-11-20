@@ -93,6 +93,7 @@ static const AS02SampleRateSupport AS02_SAMPLE_RATE_SUPPORT[] =
     {UNC_HD_1080I,             {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {UNC_HD_1080P,             {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {UNC_HD_720P,              {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {UNC_UHD_3840,             {{-1, -1}, {0, 0}}},
     {MPEG2LG_422P_HL_1080I,    {{25, 1}, {30000, 1001}, {0, 0}}},
     {MPEG2LG_422P_HL_1080P,    {{24000, 1001}, {24, 1}, {25, 1}, {30000, 1001}, {0, 0}}},
     {MPEG2LG_422P_HL_720P,     {{24000, 1001}, {24, 1}, {25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
@@ -123,6 +124,9 @@ bool AS02Track::IsSupported(EssenceType essence_type, mxfRational sample_rate)
     size_t i;
     for (i = 0; i < BMX_ARRAY_SIZE(AS02_SAMPLE_RATE_SUPPORT); i++) {
         if (essence_type == AS02_SAMPLE_RATE_SUPPORT[i].essence_type) {
+            if (AS02_SAMPLE_RATE_SUPPORT[i].sample_rate[0].numerator < 0)
+                return true;
+
             size_t j = 0;
             while (AS02_SAMPLE_RATE_SUPPORT[i].sample_rate[j].numerator) {
                 if (sample_rate == AS02_SAMPLE_RATE_SUPPORT[i].sample_rate[j])
@@ -161,6 +165,7 @@ AS02Track* AS02Track::OpenNew(AS02Clip *clip, File *file, string rel_uri, uint32
         case UNC_HD_1080I:
         case UNC_HD_1080P:
         case UNC_HD_720P:
+        case UNC_UHD_3840:
             return new AS02UncTrack(clip, track_index, essence_type, file, rel_uri);
         case MPEG2LG_422P_HL_1080I:
         case MPEG2LG_422P_HL_1080P:
@@ -201,6 +206,7 @@ AS02Track::AS02Track(AS02Clip *clip, uint32_t track_index, EssenceType essence_t
     mIndexSID = 1;
     mBodySID = 2;
     mLLen = 4;
+    mEssenceElementLLen = 4;
     mKAGSize = 1;
     mxf_generate_umid(&mMaterialPackageUID);
     mxf_generate_umid(&mFileSourcePackageUID);
@@ -545,7 +551,7 @@ void AS02Track::WriteCBEIndexTable(Partition *partition)
         mCBEIndexSegment->setBodySID(mBodySID);
         if (mIsPicture) {
             // frame wrapped include KL
-            mCBEIndexSegment->setEditUnitByteCount(mxfKey_extlen + mLLen + mSampleSize);
+            mCBEIndexSegment->setEditUnitByteCount(mxfKey_extlen + mEssenceElementLLen + mSampleSize);
         } else {
             // clip wrapped
             mCBEIndexSegment->setEditUnitByteCount(mSampleSize);

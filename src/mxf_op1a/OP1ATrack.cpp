@@ -85,6 +85,7 @@ static const OP1ASampleRateSupport OP1A_SAMPLE_RATE_SUPPORT[] =
     {UNC_HD_1080I,             {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {UNC_HD_1080P,             {{25, 1}, {30000, 1001}, {30, 1}, {50, 1}, {60000, 1001}, {60, 1}, {0, 0}}},
     {UNC_HD_720P,              {{25, 1}, {30000, 1001}, {30, 1}, {50, 1}, {60000, 1001}, {60, 1}, {0, 0}}},
+    {UNC_UHD_3840,             {{-1, -1}, {0, 0}}},
     {MPEG2LG_422P_HL_1080I,    {{25, 1}, {30000, 1001}, {0, 0}}},
     {MPEG2LG_422P_HL_1080P,    {{24000, 1001}, {24, 1}, {25, 1}, {30000, 1001}, {0, 0}}},
     {MPEG2LG_422P_HL_720P,     {{24000, 1001}, {24, 1}, {25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
@@ -158,6 +159,7 @@ OP1ATrack* OP1ATrack::Create(OP1AFile *file, uint32_t track_index, uint32_t trac
         case UNC_HD_1080I:
         case UNC_HD_1080P:
         case UNC_HD_720P:
+        case UNC_UHD_3840:
             return new OP1AUncTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         case MPEG2LG_422P_HL_1080I:
         case MPEG2LG_422P_HL_1080P:

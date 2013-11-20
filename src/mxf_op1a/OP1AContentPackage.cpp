@@ -442,11 +442,18 @@ void OP1AContentPackageManager::SetClipWrapped(bool enable)
 
 void OP1AContentPackageManager::RegisterPictureTrackElement(uint32_t track_index, mxfKey element_key, bool is_cbe)
 {
+    RegisterPictureTrackElement(track_index, element_key, is_cbe, mMinLLen);
+}
+
+void OP1AContentPackageManager::RegisterPictureTrackElement(uint32_t track_index, mxfKey element_key, bool is_cbe,
+                                                            uint8_t element_llen)
+{
     BMX_ASSERT(mFrameWrapped);
 
     OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index, MXF_PICTURE_DDEF, element_key,
                                                                        mKAGSize, mMinLLen);
     element->is_cbe = is_cbe;
+    element->essence_llen = element_llen;
 
     mElements.push_back(element);
     mElementTrackIndexMap[track_index] = element;

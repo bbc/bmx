@@ -103,8 +103,8 @@ void AS02PictureTrack::WriteSample(const CDataBuffer *data_array, uint32_t array
 
     HandlePartitionInterval(true);
 
-    mMXFFile->writeFixedKL(&mEssenceElementKey, mLLen, dba_get_total_size(data_array, array_size));
-    mContainerSize += mxfKey_extlen + mLLen;
+    mMXFFile->writeFixedKL(&mEssenceElementKey, mEssenceElementLLen, dba_get_total_size(data_array, array_size));
+    mContainerSize += mxfKey_extlen + mEssenceElementLLen;
 
     uint32_t i;
     for (i = 0; i < array_size; i++) {

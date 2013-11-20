@@ -441,6 +441,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --unc_1080i <name>      Raw uncompressed HD 1080i UYVY 422 video input file\n");
     fprintf(stderr, "  --unc_1080p <name>      Raw uncompressed HD 1080p UYVY 422 video input file\n");
     fprintf(stderr, "  --unc_720p <name>       Raw uncompressed HD 720p UYVY 422 video input file\n");
+    fprintf(stderr, "  --unc_3840 <name>       Raw uncompressed UHD 3840x2160 UYVY 422 video input file\n");
     fprintf(stderr, "  --avid_alpha <name>               Raw Avid alpha component SD video input file\n");
     fprintf(stderr, "  --avid_alpha_1080i <name>         Raw Avid alpha component HD 1080i video input file\n");
     fprintf(stderr, "  --avid_alpha_1080p <name>         Raw Avid alpha component HD 1080p video input file\n");
@@ -1758,6 +1759,19 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--unc_3840") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = UNC_UHD_3840;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--avid_alpha") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -3028,6 +3042,7 @@ int main(int argc, const char** argv)
                 case UNC_HD_1080I:
                 case UNC_HD_1080P:
                 case UNC_HD_720P:
+                case UNC_UHD_3840:
                 case AVID_10BIT_UNC_SD:
                 case AVID_10BIT_UNC_HD_1080I:
                 case AVID_10BIT_UNC_HD_1080P:
@@ -3154,6 +3169,7 @@ int main(int argc, const char** argv)
                 case UNC_HD_1080I:
                 case UNC_HD_1080P:
                 case UNC_HD_720P:
+                case UNC_UHD_3840:
                 case AVID_10BIT_UNC_SD:
                 case AVID_10BIT_UNC_HD_1080I:
                 case AVID_10BIT_UNC_HD_1080P:

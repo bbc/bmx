@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#define __STDC_LIMIT_MACROS
+
 #include <bmx/as02/AS02UncTrack.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -79,8 +81,6 @@ void AS02UncTrack::SetInputHeight(uint32_t height)
 
 void AS02UncTrack::PrepareWrite()
 {
-    AS02PictureTrack::PrepareWrite();
-
     uint32_t sample_size = mUncDescriptorHelper->GetSampleSize();
     if (mInputHeight != 0)
         mInputSampleSize = mUncDescriptorHelper->GetSampleSize(mInputHeight);
@@ -90,6 +90,13 @@ void AS02UncTrack::PrepareWrite()
     BMX_CHECK_M(mInputSampleSize >= sample_size,
                 ("Insufficient input height %u for uncompressed track", mInputHeight));
     mSkipSize = mInputSampleSize - sample_size;
+
+    if (sample_size > (UINT32_MAX >> 8)) // > max length for llen 4
+        mEssenceElementLLen = 8;
+    else
+        mEssenceElementLLen = 4;
+
+    AS02PictureTrack::PrepareWrite();
 }
 
 void AS02UncTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)

@@ -23,6 +23,7 @@ TESTS = \
 	unc_720p.test \
 	unc_1080i.test \
 	unc_1080p.test \
+	unc_3840.test \
 	mpeg2lg_422p_hl_1080i.test \
 	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test \
@@ -65,6 +66,7 @@ EXTRA_DIST = \
 	unc_1080p.test \
 	unc_720p.test \
 	unc.test \
+	unc_3840.test \
 	mpeg2lg_422p_hl_1080i.test \
 	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test \
@@ -103,6 +105,7 @@ EXTRA_DIST = \
 	unc_1080p.md5 \
 	unc_720p.md5 \
 	unc.md5 \
+	unc_3840.md5 \
 	mpeg2lg_422p_hl_1080i.md5 \
 	mpeg2lg_mp_hl_1920_1080i.md5 \
 	mpeg2lg_mp_h14_1080i.md5 \
@@ -151,6 +154,7 @@ create-data:
 	${srcdir}/create.sh ${srcdir} 3 18 unc_1080i
 	${srcdir}/create.sh ${srcdir} 3 19 unc_1080p
 	${srcdir}/create.sh ${srcdir} 3 20 unc_720p
+	${srcdir}/create.sh ${srcdir} 3 45 unc_3840
 	${srcdir}/create.sh ${srcdir} 3 31 vc3_1080p_1235
 	${srcdir}/create.sh ${srcdir} 3 32 vc3_1080p_1237
 	${srcdir}/create.sh ${srcdir} 3 33 vc3_1080p_1238
@@ -193,6 +197,7 @@ create-samples:
 	${srcdir}/samples.sh 3 18 unc_1080i
 	${srcdir}/samples.sh 3 19 unc_1080p
 	${srcdir}/samples.sh 3 20 unc_720p
+	${srcdir}/samples.sh 3 45 unc_3840
 	${srcdir}/samples.sh 3 31 vc3_1080p_1235
 	${srcdir}/samples.sh 3 32 vc3_1080p_1237
 	${srcdir}/samples.sh 3 33 vc3_1080p_1238

@@ -98,6 +98,7 @@ typedef enum
     TYPE_24BIT_PCM,
     TYPE_ANC_DATA,
     TYPE_VBI_DATA,
+    TYPE_UNC_UHD_3840,
     TYPE_END,
 } EssenceType;
 
@@ -411,6 +412,9 @@ static void write_unc(FILE *file, int type, unsigned int duration)
         case TYPE_UNC_HD_1080P:
             frame_size = 1920 * 1080 * 2;
             break;
+        case TYPE_UNC_UHD_3840:
+            frame_size = 3840 * 2160 * 2;
+            break;
         case TYPE_UNC_HD_720P:
         default:
             frame_size = 1280 * 720 * 2;
@@ -550,6 +554,7 @@ static void print_usage(const char *cmd)
     fprintf(stderr, " 42: 24-bit PCM\n");
     fprintf(stderr, " 43: ANC data\n");
     fprintf(stderr, " 44: VBI data\n");
+    fprintf(stderr, " 45: UNC UHD 3840\n");
 }
 
 int main(int argc, const char **argv)
@@ -686,6 +691,7 @@ int main(int argc, const char **argv)
         case TYPE_UNC_HD_1080I:
         case TYPE_UNC_HD_1080P:
         case TYPE_UNC_HD_720P:
+        case TYPE_UNC_UHD_3840:
             write_unc(file, type, duration);
             break;
         case TYPE_VC3_1080P_1235:

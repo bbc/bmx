@@ -2237,6 +2237,7 @@ int main(int argc, const char** argv)
                     case UNC_HD_1080I:
                     case UNC_HD_1080P:
                     case UNC_HD_720P:
+                    case UNC_UHD_3840:
                     case AVID_10BIT_UNC_SD:
                     case AVID_10BIT_UNC_HD_1080I:
                     case AVID_10BIT_UNC_HD_1080P:
