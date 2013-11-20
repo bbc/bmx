@@ -391,10 +391,10 @@ void UncCDCIMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setComponentDepth(mComponentDepth);
     cdci_descriptor->setHorizontalSubsampling(2);
     cdci_descriptor->setVerticalSubsampling(1);
-    if (mEssenceType == UNC_UHD_3840)
-        SetColorSiting(MXF_COLOR_SITING_COSITING);
-    else
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR) || (mFlavour & MXFDESC_SMPTE_377_2004_FLAVOUR))
         SetColorSiting(MXF_COLOR_SITING_REC601);
+    else
+        SetColorSiting(MXF_COLOR_SITING_COSITING);
     cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
     if (!(mFlavour & MXFDESC_AVID_FLAVOUR) &&
         SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_MIXED_FIELDS)
