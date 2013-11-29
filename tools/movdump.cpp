@@ -1522,9 +1522,11 @@ static void dump_hdlr_atom()
     indent();
     printf("component_flags_mask: 0x%08x\n", component_flags_mask);
 
-    uint8_t component_name_len;
+    uint64_t component_name_len;
     if (g_qt_brand) {
-        MOV_CHECK(read_uint8(&component_name_len));
+        uint8_t qt_component_name_len;
+        MOV_CHECK(read_uint8(&qt_component_name_len));
+        component_name_len = qt_component_name_len;
     } else {
         component_name_len = CURRENT_ATOM.rem_size;
     }
