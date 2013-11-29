@@ -86,7 +86,16 @@ void MXFFileTrackReader::SetFrameBuffer(FrameBuffer *frame_buffer, bool take_own
 vector<size_t> MXFFileTrackReader::GetFileIds(bool internal_ess_only) const
 {
     (void)internal_ess_only;
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4267) // avoid bogus VS8 warning: 'argument' : conversion from 'size_t' to 'const uint32_t', possible loss of data
+#endif
+
     return vector<size_t>(1, mFileReader->GetFileId());
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 }
 
 void MXFFileTrackReader::GetReadLimits(bool limit_to_available, int64_t *start_position, int64_t *duration) const
