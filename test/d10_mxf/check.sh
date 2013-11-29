@@ -1,22 +1,24 @@
 #!/bin/sh
 
 MD5TOOL=../file_md5
+TEMP_DIR=/tmp/d10test_temp$$
+
+mkdir -p ${TEMP_DIR}
 
 
-OUTPUT=/tmp/d10test.mxf
-BASE_COMMAND="../../apps/raw2bmx/raw2bmx --regtest -t d10 -o $OUTPUT -y 10:11:12:13 --clip test -f $4 "
+BASE_COMMAND="../../apps/raw2bmx/raw2bmx --regtest -t d10 -o ${TEMP_DIR}/d10test.mxf -y 10:11:12:13 --clip test -f $4 "
 
 
 # create essence data
-../create_test_essence -t 1 -d $1 /tmp/pcm.raw
-../create_test_essence -t $2 -d $1 /tmp/test_in.raw
+../create_test_essence -t 1 -d $1 ${TEMP_DIR}/pcm.raw
+../create_test_essence -t $2 -d $1 ${TEMP_DIR}/test_in.raw
 
 # write
-$BASE_COMMAND -a 16:9 --$3 /tmp/test_in.raw -q 16 --locked true --pcm /tmp/pcm.raw -q 16 --locked true --pcm /tmp/pcm.raw >/dev/null
+$BASE_COMMAND -a 16:9 --$3 ${TEMP_DIR}/test_in.raw -q 16 --locked true --pcm ${TEMP_DIR}/pcm.raw -q 16 --locked true --pcm ${TEMP_DIR}/pcm.raw >/dev/null
 
 # calculate md5sum and compare with expected value
-$MD5TOOL < $OUTPUT > /tmp/test.md5
-if diff /tmp/test.md5 ${srcdir}/$3_$4.md5
+$MD5TOOL < ${TEMP_DIR}/d10test.mxf > ${TEMP_DIR}/test.md5
+if diff ${TEMP_DIR}/test.md5 ${srcdir}/$3_$4.md5
 then
 	RESULT=0
 else
@@ -25,7 +27,7 @@ else
 fi
 
 # clean-up
-rm -Rf /tmp/pcm.raw /tmp/test_in.raw $OUTPUT /tmp/test.md5
+rm -Rf ${TEMP_DIR}
 
 
 exit $RESULT

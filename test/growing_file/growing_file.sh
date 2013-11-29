@@ -6,7 +6,7 @@ md5tool=../file_md5
 
 appsdir=../../apps
 testdir=..
-tmpdir=/tmp
+tmpdir=/tmp/gf_temp$$
 
 testpcm="$tmpdir/pcm.raw"
 testm2v="$tmpdir/test_in.raw"
@@ -14,7 +14,8 @@ testmxf="$tmpdir/gftest.mxf"
 testrawtxt="$tmpdir/gftest_raw.txt"
 testtxt="$tmpdir/gftest.txt"
 testmd5="$tmpdir/gftest.md5"
-sampletxt="$tmpdir/sample_gftest.txt"
+
+sampletxt="/tmp/sample_gftest.txt"
 
 md5file="$base/growing_file.md5"
 gftxt="$base/growing_file.txt"
@@ -30,11 +31,6 @@ create_test_file()
 read_file()
 {
     $appsdir/mxf2raw/mxf2raw --md5 $testmxf
-}
-
-clean_test_files()
-{
-    rm -f $testpcm $testm2v $testmxf $testrawtxt $testtxt $testmd5
 }
 
 calc_md5()
@@ -63,7 +59,7 @@ run_test()
         $testdir/file_truncate $tlen $testmxf && read_file >>$testrawtxt 2>&1
     done
 
-    sed 's/at\ .*//g' $testrawtxt | sed 's/in\ .*//g' | sed 's/near\ .*//g' >$testtxt
+    sed 's/at\ .*//g' $testrawtxt | sed 's/in\ .*//g' | sed 's/near\ .*//g' | sed "s:$tmpdir:/tmp:g" >$testtxt
 
     calc_md5 $testtxt $1
 }
@@ -89,6 +85,8 @@ create_sample()
 }
 
 
+mkdir -p $tmpdir
+
 create_test_file
 
 if test -z "$1" ; then
@@ -100,7 +98,7 @@ elif test "$1" = "create_sample" ; then
 fi
 res=$?
 
-clean_test_files
+rm -Rf $tmpdir
 
 exit $res
 
