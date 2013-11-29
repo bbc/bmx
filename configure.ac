@@ -187,9 +187,7 @@ dnl -- Compiler flags etc.
 dnl-----------------------------------------------------------------------------
 
 WARN_CFLAGS=
-if test x"$GCC" = xyes; then
-	WARN_CFLAGS="-W -Wall"
-fi
+AC_APPEND_SUPPORTED_CFLAGS(WARN_CFLAGS, [-W -Wall])
 AC_SUBST(WARN_CFLAGS)
 
 BMX_CFLAGS="${WARN_CFLAGS} ${LIBMXF_CFLAGS} ${LIBMXFPP_CFLAGS} \
@@ -204,17 +202,7 @@ BMX_LDADDLIBS="${BMX_LIBADDLIBS} \
 AC_SUBST(BMX_LDADDLIBS)
 
 BMX_LDFLAGS=
-AC_MSG_CHECKING([whether $CC supports -Wl,--no-undefined])
-orig_ldflags="$LDFLAGS"
-LDFLAGS="$LDFLAGS -Werror -Wl,--no-undefined"
-AC_LINK_IFELSE([AC_LANG_PROGRAM()],
-			[support_ld_flag=yes],
-			[support_ld_flag=no])
-if test "x$support_ld_flag" = "xyes"; then
-	BMX_LDFLAGS="$BMX_LDFLAGS -Wl,--no-undefined"
-fi
-LDFLAGS="$orig_ldflags"
-AC_MSG_RESULT([$support_ld_flag])
+AC_APPEND_SUPPORTED_LDFLAGS(BMX_LDFLAGS, [-Wl,--no-undefined])
 AC_SUBST(BMX_LDFLAGS)
 
 
