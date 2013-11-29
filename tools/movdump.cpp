@@ -349,12 +349,12 @@ static void write_avcc_ps(unsigned char **buffer, size_t *buffer_size, uint8_t l
         length_bytes[0] = (unsigned char)((ps_size >> 8) & 0xff);
         length_bytes[1] = (unsigned char)( ps_size       & 0xff);
     } else if (length_size == 3) {
-        length_bytes[0] = (unsigned char)((ps_size >> 16) & 0xff);
+        length_bytes[0] = 0; // ps_size is uint16_t
         length_bytes[1] = (unsigned char)((ps_size >>  8) & 0xff);
         length_bytes[2] = (unsigned char)( ps_size        & 0xff);
     } else { // length_size == 4
-        length_bytes[0] = (unsigned char)((ps_size >> 24) & 0xff);
-        length_bytes[1] = (unsigned char)((ps_size >> 16) & 0xff);
+        length_bytes[0] = 0; // ps_size is uint16_t
+        length_bytes[1] = 0; // ps_size is uint16_t
         length_bytes[2] = (unsigned char)((ps_size >>  8) & 0xff);
         length_bytes[3] = (unsigned char)( ps_size        & 0xff);
     }
