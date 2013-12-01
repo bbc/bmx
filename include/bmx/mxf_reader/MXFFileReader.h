@@ -125,8 +125,8 @@ public:
     mxfpp::HeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }
     uint16_t GetMXFVersion() const                   { return mMXFVersion; }
     mxfUL GetOPLabel() const                         { return mOPLabel; }
-    bool IsClipWrapped()                             { return mIsClipWrapped; }
-    bool IsFrameWrapped()                            { return !mIsClipWrapped; }
+    bool IsClipWrapped()                             { return mWrappingType == MXF_CLIP_WRAPPED; }
+    bool IsFrameWrapped()                            { return mWrappingType == MXF_FRAME_WRAPPED; }
 
     size_t GetFileId() const        { return mFileId; }
     std::string GetFilename() const { return GetFileIndex()->GetFilename(mFileId); }
@@ -217,7 +217,8 @@ private:
 
     uint16_t mMXFVersion;
     mxfUL mOPLabel;
-    bool mIsClipWrapped;
+    MXFEssenceWrappingType mGuessedWrappingType;
+    MXFEssenceWrappingType mWrappingType;
     uint32_t mBodySID;
     uint32_t mIndexSID;
 

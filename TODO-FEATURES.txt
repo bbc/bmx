@@ -13,8 +13,6 @@ AAF/Avid TaggedValues
 info than "unknown essence". Supports apps where specific essence type
 info is not required, e.g. FFmpeg decoder
 
-8. determine clip/frame wrapping type by analyzing the file structure
-
 9. read and display material package timecode in avidmxfinfo
 
 10. add general support for setting track id and numbers for material packages.

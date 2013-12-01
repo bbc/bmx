@@ -151,7 +151,8 @@ MXFFileReader::MXFFileReader()
     mHeaderMetadata = 0;
     mMXFVersion = 0;
     mOPLabel = g_Null_UL;
-    mIsClipWrapped = false;
+    mGuessedWrappingType = MXF_FRAME_WRAPPED;
+    mWrappingType = MXF_UNKNOWN_WRAPPING_TYPE;
     mBodySID = 0;
     mIndexSID = 0;
     mReadStartPosition = 0;
@@ -291,34 +292,19 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
 
         mOPLabel = *header_partition.getOperationalPattern();
 
-        // check specific cases that would be guessed incorrectly:
-        // e.g. AS-02 clip wrapped OP-1A and Digital Cinema frame wrapped OP-Atom
-        // TODO: require a table that maps essence container labels to wrapping type
+
+        // get or guess the essence wrapping type
+
         vector<mxfUL> essence_labels = header_partition.getEssenceContainers();
         size_t i;
         for (i = 0; i < essence_labels.size(); i++) {
-            if (mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(BWFFrameWrapped)) ||
-                mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(AES3FrameWrapped)))
-            {
-                mIsClipWrapped = false;
+            mWrappingType = mxf_get_essence_wrapping_type(&essence_labels[i]);
+            if (mWrappingType != MXF_UNKNOWN_WRAPPING_TYPE)
                 break;
-            }
-            else if (mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(BWFClipWrapped)) ||
-                     mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(AES3ClipWrapped)))
-            {
-                mIsClipWrapped = true;
-                break;
-            }
-            else if (mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(VBIData)) ||
-                     mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(ANCData)))
-            {
-                mIsClipWrapped = false;
-                break;
-            }
         }
-        if (i >= essence_labels.size()) {
+        if (mWrappingType == MXF_UNKNOWN_WRAPPING_TYPE) {
             // guess the wrapping type based on the OP
-            mIsClipWrapped = mxf_is_op_atom(&mOPLabel);
+            mGuessedWrappingType = (mxf_is_op_atom(&mOPLabel) ? MXF_CLIP_WRAPPED : MXF_FRAME_WRAPPED);
         }
 
 
@@ -373,8 +359,10 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
             CheckRequireFrameInfo();
             if (mRequireFrameInfoCount > 0)
                 ExtractFrameInfo();
+        } else {
+            // TODO: the wrapping type is not required when there is external essence only
+            mWrappingType = MXF_FRAME_WRAPPED;
         }
-
 
         if (IsComplete()) {
             if (mIndexSID && mEssenceReader && mEssenceReader->GetIndexedDuration() < mDuration) {
@@ -1044,10 +1032,6 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         if (skipped_track_count > 0)
             log_warn("Skipped %u material package tracks whilst processing header metadata\n", skipped_track_count);
         THROW_RESULT(MXF_RESULT_NO_ESSENCE);
-    }
-    if (mIsClipWrapped && mInternalTrackReaders.size() > 1) {
-        log_error("Multiple tracks and clip wrapped essence container is not supported\n");
-        THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
     }
 
     // order tracks by material track number / id

@@ -84,9 +84,7 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
 
 
     // get ImageStartOffset and ImageEndOffset properties which are used in Avid uncompressed files
-    if (mFileReader->IsClipWrapped() &&
-        mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->data_def == MXF_PICTURE_DDEF)
-    {
+    if (mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->data_def == MXF_PICTURE_DDEF) {
         auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
             mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),
             mFileReader->GetMXFVersion(),
@@ -108,13 +106,24 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
         }
     }
 
-    // if file is complete then extract essence container layout and index table segments
+    // if file is complete then read the index table segments, essence container layout and
+    // determine the essence wrapping type
     if (file_is_complete) {
-        mEssenceChunkHelper.CreateEssenceChunkIndex();
-        BMX_ASSERT(mEssenceChunkHelper.IsComplete());
-
         if (mFileReader->mIndexSID)
             mIndexTableHelper.ExtractIndexTable();
+
+        // first edit unit size is used to determine the essence wrapping type
+        int64_t first_edit_unit_size = 0;
+        if (mIndexTableHelper.HaveEditUnitSize(0)) {
+            int64_t offset;
+            mIndexTableHelper.GetEditUnit(0, &offset, &first_edit_unit_size);
+        }
+        mEssenceChunkHelper.CreateEssenceChunkIndex(first_edit_unit_size);
+        BMX_ASSERT(mEssenceChunkHelper.IsComplete());
+
+        // if the essence wrapping type still unknown then go with the guessed type
+        if (mFileReader->mWrappingType == MXF_UNKNOWN_WRAPPING_TYPE)
+            mFileReader->mWrappingType = mFileReader->mGuessedWrappingType;
 
         if (mIndexTableHelper.IsComplete()) {
             BMX_CHECK(mIndexTableHelper.GetEditRate() == mFileReader->GetEditRate());
@@ -129,6 +138,8 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
                          mFileReader->mIndexSID, mEssenceChunkHelper.GetEssenceDataSize());
             }
         }
+    } else if (mFileReader->mWrappingType == MXF_UNKNOWN_WRAPPING_TYPE) {
+        mFileReader->mWrappingType = mFileReader->mGuessedWrappingType;
     }
 
     // if index table is empty (incomplete) then fill in some known index table information

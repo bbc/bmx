@@ -75,9 +75,7 @@ EssenceChunkHelper::EssenceChunkHelper(MXFFileReader *file_reader)
     mNumIndexedPartitions = 0;
     mIsComplete = false;
 
-    if (mFileReader->IsClipWrapped() &&
-        mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->data_def == MXF_PICTURE_DDEF)
-    {
+    if (mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->data_def == MXF_PICTURE_DDEF) {
         auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
             mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),
             mFileReader->GetMXFVersion(),
@@ -93,12 +91,25 @@ EssenceChunkHelper::~EssenceChunkHelper()
 {
 }
 
-void EssenceChunkHelper::CreateEssenceChunkIndex()
+void EssenceChunkHelper::CreateEssenceChunkIndex(int64_t first_edit_unit_size)
 {
     mxfKey key;
     uint8_t llen;
     uint64_t len;
     File *mxf_file = mFileReader->mFile;
+    bool set_wrapping_type = (mFileReader->mWrappingType == MXF_UNKNOWN_WRAPPING_TYPE);
+    mxfKey first_key;
+    uint8_t first_llen = 0;
+    uint64_t first_len = 0;
+    int64_t first_pos = 0;
+    bool first_element = false;
+    mxfKey matched_key;
+    uint8_t matched_llen = 0;
+    uint64_t matched_len = 0;
+    int64_t matched_pos = 0;
+    bool matched_element = false;
+    bool delayed_decision = false;
+    bool current_element_matches;
 
     const vector<Partition*> &partitions = mFileReader->mFile->getPartitions();
     size_t i;
@@ -111,6 +122,10 @@ void EssenceChunkHelper::CreateEssenceChunkIndex()
             partition_end = partitions[i + 1]->getThisPartition();
         else
             partition_end = mxf_file->size();
+
+        delayed_decision = false;
+        matched_element = false;
+        first_element = false;
 
         mxf_file->seek(partitions[i]->getThisPartition(), SEEK_SET);
         mxf_file->readKL(&key, &llen, &len);
@@ -132,24 +147,74 @@ void EssenceChunkHelper::CreateEssenceChunkIndex()
                 else
                     mxf_file->skip(len);
             } else if (mxf_is_gc_essence_element(&key) || mxf_avid_is_essence_element(&key)) {
-                if (mFileReader->IsClipWrapped()) {
-                    // check whether this is the target essence container; skip and continue if not
-                    if (!mFileReader->GetInternalTrackReaderByNumber(mxf_get_track_number(&key))) {
-                        mxf_file->skip(len);
-                        continue;
-                    }
+                current_element_matches = (mFileReader->GetInternalTrackReaderByNumber(mxf_get_track_number(&key)) != 0);
+                if (!matched_element && current_element_matches) {
+                    matched_key     = key;
+                    matched_llen    = llen;
+                    matched_len     = len;
+                    matched_pos     = mxf_file->tell();
+                    matched_element = true;
+                }
+                if (!first_element) {
+                    first_key     = key;
+                    first_llen    = llen;
+                    first_len     = len;
+                    first_pos     = mxf_file->tell();
+                    first_element = true;
                 }
 
-                AppendChunk(i, mxf_file->tell(), &key, llen, len);
+                if (set_wrapping_type) {
+                    if (current_element_matches && first_edit_unit_size > 0) {
+                        if (len >= (uint64_t)first_edit_unit_size)
+                            mFileReader->mWrappingType = MXF_CLIP_WRAPPED;
+                        else
+                            mFileReader->mWrappingType = MXF_FRAME_WRAPPED;
+                    }
+
+                    if (mFileReader->mWrappingType == MXF_UNKNOWN_WRAPPING_TYPE) {
+                        if (delayed_decision && mxf_equals_key(&key, &first_key)) {
+                            // there shall only be a single content package for clip-wrapped essence and
+                            // so a second occurance of the first essence element means it must be frame-wrapped
+                            mFileReader->mWrappingType = MXF_FRAME_WRAPPED;
+                        } else {
+                            // delay decision and continue
+                            delayed_decision = true;
+                            mxf_file->skip(len);
+                            continue;
+                        }
+                    }
+
+                    set_wrapping_type = false;
+                }
+
                 if (mFileReader->IsFrameWrapped()) {
+                    AppendChunk(i, first_pos, &first_key, first_llen, first_len);
                     UpdateLastChunk(partition_end, true);
                     break;
-                } else {
-                    // continue with clip-wrapped to support multiple essence container elements in this partition
-                    mxf_file->skip(len);
+                } else { // clip-wrapped
+                    if (matched_element) {
+                        AppendChunk(i, matched_pos, &matched_key, matched_llen, matched_len);
+                        break;
+                    } else {
+                        // continue until matched element is found
+                        mxf_file->skip(len);
+                    }
                 }
             } else {
                 mxf_file->skip(len);
+            }
+        }
+
+        if (matched_element && mFileReader->mWrappingType == MXF_UNKNOWN_WRAPPING_TYPE) {
+            // go with the guess
+            mFileReader->mWrappingType = mFileReader->mGuessedWrappingType;
+            set_wrapping_type = false;
+
+            if (mFileReader->IsFrameWrapped()) {
+                AppendChunk(i, first_pos, &first_key, first_llen, first_len);
+                UpdateLastChunk(partition_end, true);
+            } else { // clip-wrapped
+                AppendChunk(i, matched_pos, &matched_key, matched_llen, matched_len);
             }
         }
     }

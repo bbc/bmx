@@ -66,7 +66,7 @@ public:
     EssenceChunkHelper(MXFFileReader *file_reader);
     ~EssenceChunkHelper();
 
-    void CreateEssenceChunkIndex();
+    void CreateEssenceChunkIndex(int64_t first_edit_unit_size);
 
     void AppendChunk(size_t partition_id, int64_t file_position, const mxfKey *element_key, uint8_t element_llen,
                      uint64_t element_len);
