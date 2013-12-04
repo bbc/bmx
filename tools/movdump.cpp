@@ -480,6 +480,14 @@ static const char* get_chroma_format_string(uint8_t chroma_format_idc)
     return CHROMA_FORMAT_STRINGS[chroma_format_idc & 0x03];
 }
 
+static double get_duration_sec(int64_t duration, uint32_t timescale)
+{
+  if (timescale)
+    return duration / (double)timescale;
+  else
+    return 0.0;
+}
+
 static void indent_atom_header()
 {
     size_t i;
@@ -1923,7 +1931,7 @@ static void dump_stbl_tmcd()
     int32_t frame_duration;
     MOV_CHECK(read_int32(&frame_duration));
     indent(2);
-    printf("frame_duration: %d (%f sec)\n", frame_duration, frame_duration / (double)(timescale));
+    printf("frame_duration: %d (%f sec)\n", frame_duration, get_duration_sec(frame_duration, timescale));
 
     uint8_t number_of_frames;
     MOV_CHECK(read_uint8(&number_of_frames));
@@ -2290,12 +2298,12 @@ static void dump_mdhd_atom()
         int32_t duration;
         MOV_CHECK(read_int32(&duration));
         indent();
-        printf("duration: %d (%f sec)\n", duration, duration / (double)(timescale));
+        printf("duration: %d (%f sec)\n", duration, get_duration_sec(duration, timescale));
     } else {
         int64_t duration;
         MOV_CHECK(read_int64(&duration));
         indent();
-        printf("duration: %"PRId64" (%f sec)\n", duration, duration / (double)(timescale));
+        printf("duration: %"PRId64" (%f sec)\n", duration, get_duration_sec(duration, timescale));
     }
 
     uint16_t language;
@@ -2761,12 +2769,12 @@ static void dump_tkhd_atom()
         int32_t duration;
         MOV_CHECK(read_int32(&duration));
         indent();
-        printf("duration: %d (%f sec)\n", duration, duration / (double)(g_movie_timescale));
+        printf("duration: %d (%f sec)\n", duration, get_duration_sec(duration, g_movie_timescale));
     } else {
         int64_t duration;
         MOV_CHECK(read_int64(&duration));
         indent();
-        printf("duration: %"PRId64" (%f sec)\n", duration, duration / (double)(g_movie_timescale));
+        printf("duration: %"PRId64" (%f sec)\n", duration, get_duration_sec(duration, g_movie_timescale));
     }
 
     unsigned char reserved_bytes[8];
@@ -2918,12 +2926,12 @@ static void dump_mvhd_atom()
         int32_t duration;
         MOV_CHECK(read_int32(&duration));
         indent();
-        printf("duration: %d (%f sec)\n", duration, duration / (double)(g_movie_timescale));
+        printf("duration: %d (%f sec)\n", duration, get_duration_sec(duration, g_movie_timescale));
     } else {
         int64_t duration;
         MOV_CHECK(read_int64(&duration));
         indent();
-        printf("duration: %"PRId64" (%f sec)\n", duration, duration / (double)(g_movie_timescale));
+        printf("duration: %"PRId64" (%f sec)\n", duration, get_duration_sec(duration, g_movie_timescale));
     }
 
     uint32_t preferred_rate;
@@ -2964,7 +2972,7 @@ static void dump_mvhd_atom()
     uint32_t preview_duration;
     MOV_CHECK(read_uint32(&preview_duration));
     indent();
-    printf("preview_duration: %u (%f sec)\n", preview_duration, preview_duration / (double)g_movie_timescale);
+    printf("preview_duration: %u (%f sec)\n", preview_duration, get_duration_sec(preview_duration, g_movie_timescale));
 
     uint32_t poster_time;
     MOV_CHECK(read_uint32(&poster_time));
@@ -2979,7 +2987,7 @@ static void dump_mvhd_atom()
     uint32_t selection_duration;
     MOV_CHECK(read_uint32(&selection_duration));
     indent();
-    printf("selection_duration: %u (%f sec)\n", selection_duration, selection_duration / (double)g_movie_timescale);
+    printf("selection_duration: %u (%f sec)\n", selection_duration, get_duration_sec(selection_duration, g_movie_timescale));
 
     uint32_t current_time;
     MOV_CHECK(read_uint32(&current_time));
