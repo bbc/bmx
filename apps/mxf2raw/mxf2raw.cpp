@@ -1171,7 +1171,7 @@ static void usage(const char *cmd)
     fprintf(stderr, " --check-app-issues    Check that there are no known issues with the APP (Archive Preservation Project) file\n");
     fprintf(stderr, " --check-app-crc32     Check APP essence CRC-32 data\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, " --info                Extract input information. Default output is to stdout\n");
+    fprintf(stderr, " -i | --info           Extract input information. Default output is to stdout\n");
     fprintf(stderr, " --info-format <fmt>   Input info format. 'text' or 'xml'. Default 'text'\n");
     fprintf(stderr, " --info-file <name>    Input info output file <name>\n");
     fprintf(stderr, " --track-chksum <type> Calculate checksum of the track essence data\n");
@@ -1191,7 +1191,8 @@ static void usage(const char *cmd)
     fprintf(stderr, " --rdd6 <frame> <fname>\n");
     fprintf(stderr, "                       Extract RDD-6 audio metadata from <frame> to XML <fname>\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, " --ess-out <prefix>    Extract essence to files starting with <prefix> and suffix '.raw'\n");
+    fprintf(stderr, " -p | --ess-out <prefix>\n");
+    fprintf(stderr, "                       Extract essence to files starting with <prefix> and suffix '.raw'\n");
     fprintf(stderr, " --wrap-klv <mask>     Wrap essence frames in KLV using the input Key and an 8-byte Length\n");
     fprintf(stderr, "                       The filename suffix is '.klv' rather than '.raw'\n");
     fprintf(stderr, "                       <mask> is a sequence of characters which identify which data types to wrap\n");
@@ -1356,7 +1357,8 @@ int main(int argc, const char** argv)
             do_ess_read = true;
             do_write_info = true;
         }
-        else if (strcmp(argv[cmdln_index], "--info") == 0)
+        else if (strcmp(argv[cmdln_index], "-i") == 0 ||
+                 strcmp(argv[cmdln_index], "--info") == 0)
         {
             do_write_info = true;
         }
@@ -1521,7 +1523,8 @@ int main(int argc, const char** argv)
             rdd6_filename = argv[cmdln_index + 2];
             cmdln_index += 2;
         }
-        else if (strcmp(argv[cmdln_index], "--ess-out") == 0)
+        else if (strcmp(argv[cmdln_index], "-p") == 0 ||
+                 strcmp(argv[cmdln_index], "--ess-out") == 0)
         {
             if (cmdln_index + 1 >= argc)
             {
