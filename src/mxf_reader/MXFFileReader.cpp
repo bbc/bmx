@@ -1280,10 +1280,24 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
 
     // use the essence container label in the partition to workaround issue with Avid files where
     // the essence container label in the descriptor is a generic KLV label
+    // Also workaround an issue with Blackmagic Design, DaVinci Resolve, 10.0b_lite,
+    // Avid compatible MXF OP-Atom files where the essence container label in the partition pack
+    // is set to the picture coding label
     if (mxf_is_op_atom(partition->getOperationalPattern())) {
         vector<mxfUL> ec_labels = partition->getEssenceContainers();
-        if (ec_labels.size() == 1)
+        if (ec_labels.size() == 1) {
             track_info->essence_container_label = ec_labels[0];
+            GenericPictureEssenceDescriptor *picture_desc = dynamic_cast<GenericPictureEssenceDescriptor*>(file_desc);
+            if (picture_desc && picture_desc->havePictureEssenceCoding()) {
+                mxfUL pc_label = picture_desc->getPictureEssenceCoding();
+                if (mxf_equals_ul(&track_info->essence_container_label, &pc_label)) {
+                    log_error("Essence container label in the partition pack is set to the picture coding label\n");
+                    // set to null so that this alternative essence container label is ignored
+                    // in the MXFDescriptorHelper sub-classes
+                    track_info->essence_container_label = g_Null_UL;
+                }
+            }
+        }
     }
 
     if (data_def == MXF_PICTURE_DDEF)
