@@ -1221,6 +1221,8 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
     FileDescriptor *file_desc     = dynamic_cast<FileDescriptor*>(descriptor);
     MultipleDescriptor *mult_desc = dynamic_cast<MultipleDescriptor*>(descriptor);
     if (mult_desc) {
+        file_desc = 0; // need to find it in the child descriptors
+
         BMX_CHECK(fsp_track->haveTrackID());
         uint32_t fsp_track_id = fsp_track->getTrackID();
 
@@ -1237,8 +1239,6 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
         }
         if (!file_desc)
             BMX_EXCEPTION(("Failed to find file descriptor for track id %u", fsp_track_id));
-    } else if (!file_desc) {
-        BMX_EXCEPTION(("File source package descriptor is not a known sub-class of FileDescriptor"));
     }
 
 
