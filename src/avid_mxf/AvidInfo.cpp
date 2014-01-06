@@ -126,7 +126,7 @@ void AvidInfo::ReadInfo(HeaderMetadata *header_metadata)
 
     vector<SourcePackage*> file_source_packages = header_metadata->getPreface()->findFileSourcePackages();
     if (file_source_packages.size() == 1) {
-        FileDescriptor *file_desc = dynamic_cast<FileDescriptor*>(file_source_packages[0]->getDescriptor());
+        FileDescriptor *file_desc = dynamic_cast<FileDescriptor*>(file_source_packages[0]->getDescriptorLight());
         if (file_desc && file_desc->haveItem(&MXF_ITEM_K(GenericPictureEssenceDescriptor, ResolutionID)))
             resolution_id = file_desc->getInt32Item(&MXF_ITEM_K(GenericPictureEssenceDescriptor, ResolutionID));
     }
@@ -217,8 +217,8 @@ void AvidInfo::GetPhysicalPackageInfo(HeaderMetadata *header_metadata)
         if (!sp || !sp->haveDescriptor())
             continue;
 
-        GenericDescriptor *descriptor = sp->getDescriptor();
-        if (!mxf_set_is_subclass_of(descriptor->getCMetadataSet(), &MXF_SET_K(PhysicalDescriptor)))
+        GenericDescriptor *descriptor = sp->getDescriptorLight();
+        if (!descriptor || !mxf_set_is_subclass_of(descriptor->getCMetadataSet(), &MXF_SET_K(PhysicalDescriptor)))
             continue;
         have_phys_package = true;
 

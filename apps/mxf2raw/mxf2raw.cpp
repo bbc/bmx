@@ -902,9 +902,10 @@ static void write_file_info(AppInfoWriter *info_writer, MXFFileReader *file_read
         if (mp) {
             mp_count++;
         } else if (sp && sp->haveDescriptor()) {
-            if (dynamic_cast<FileDescriptor*>(sp->getDescriptor()))
+            GenericDescriptor *descriptor = sp->getDescriptorLight();
+            if (dynamic_cast<FileDescriptor*>(descriptor))
                 fsp_count++;
-            else
+            else if (descriptor && mxf_set_is_subclass_of(descriptor->getCMetadataSet(), &MXF_SET_K(PhysicalDescriptor)))
                 psp_count++;
         }
     }
@@ -928,11 +929,14 @@ static void write_file_info(AppInfoWriter *info_writer, MXFFileReader *file_read
         size_t index = 0;
         for (i = 0; i < packages.size(); i++) {
             SourcePackage *sp = dynamic_cast<SourcePackage*>(packages[i]);
-            if (sp && sp->haveDescriptor() && dynamic_cast<FileDescriptor*>(sp->getDescriptor())) {
-                info_writer->StartArrayElement("file_source_package", index);
-                write_package_info(info_writer, packages[i]);
-                info_writer->EndArrayElement();
-                index++;
+            if (sp && sp->haveDescriptor()) {
+                GenericDescriptor *descriptor = sp->getDescriptorLight();
+                if (dynamic_cast<FileDescriptor*>(descriptor)) {
+                    info_writer->StartArrayElement("file_source_package", index);
+                    write_package_info(info_writer, packages[i]);
+                    info_writer->EndArrayElement();
+                    index++;
+                }
             }
         }
         info_writer->EndArrayItem();
@@ -943,11 +947,14 @@ static void write_file_info(AppInfoWriter *info_writer, MXFFileReader *file_read
         size_t index = 0;
         for (i = 0; i < packages.size(); i++) {
             SourcePackage *sp = dynamic_cast<SourcePackage*>(packages[i]);
-            if (sp && sp->haveDescriptor() && !dynamic_cast<FileDescriptor*>(sp->getDescriptor())) {
-                info_writer->StartArrayElement("physical_source_package", index);
-                write_package_info(info_writer, packages[i]);
-                info_writer->EndArrayElement();
-                index++;
+            if (sp && sp->haveDescriptor()) {
+                GenericDescriptor *descriptor = sp->getDescriptorLight();
+                if (descriptor && mxf_set_is_subclass_of(descriptor->getCMetadataSet(), &MXF_SET_K(PhysicalDescriptor))) {
+                    info_writer->StartArrayElement("physical_source_package", index);
+                    write_package_info(info_writer, packages[i]);
+                    info_writer->EndArrayElement();
+                    index++;
+                }
             }
         }
         info_writer->EndArrayItem();
