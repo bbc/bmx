@@ -1286,6 +1286,8 @@ int main(int argc, const char** argv)
                  strcmp(argv[cmdln_index], "-v") == 0)
         {
             fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
+            if (argc == 2)
+                return 0;
         }
         else if (strcmp(argv[cmdln_index], "-l") == 0)
         {
