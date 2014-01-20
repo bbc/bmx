@@ -62,6 +62,7 @@ public:
     virtual std::vector<size_t> GetFileIds(bool internal_ess_only) const;
 
     virtual bool IsComplete() const;
+    virtual bool IsSeekable() const;
 
     virtual void GetReadLimits(bool limit_to_available, int64_t *start_position, int64_t *duration) const;
     virtual void SetReadLimits();

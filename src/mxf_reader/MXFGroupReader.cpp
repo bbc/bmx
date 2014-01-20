@@ -326,6 +326,17 @@ bool MXFGroupReader::IsComplete() const
     return true;
 }
 
+bool MXFGroupReader::IsSeekable() const
+{
+    size_t i;
+    for (i = 0; i < mReaders.size(); i++) {
+        if (!mReaders[i]->IsSeekable())
+            return false;
+    }
+
+    return true;
+}
+
 void MXFGroupReader::GetReadLimits(bool limit_to_available, int64_t *start_position, int64_t *duration) const
 {
     int16_t precharge = GetMaxPrecharge(0, limit_to_available);

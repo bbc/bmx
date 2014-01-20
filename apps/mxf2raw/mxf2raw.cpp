@@ -1878,7 +1878,10 @@ int main(int argc, const char** argv)
                 complete_result = false;
                 cmd_result = 1;
             }
-            log_warn("Input file is incomplete\n");
+            if (reader->IsSeekable())
+                log_warn("Input file is incomplete\n");
+            else
+                log_debug("Input file is not seekable\n");
         }
 
         mxfRational edit_rate = reader->GetEditRate();

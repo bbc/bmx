@@ -502,6 +502,17 @@ bool MXFSequenceReader::IsComplete() const
     return true;
 }
 
+bool MXFSequenceReader::IsSeekable() const
+{
+    size_t i;
+    for (i = 0; i < mReaders.size(); i++) {
+        if (!mReaders[i]->IsSeekable())
+            return false;
+    }
+
+    return true;
+}
+
 void MXFSequenceReader::GetReadLimits(bool limit_to_available, int64_t *start_position, int64_t *duration) const
 {
     int16_t precharge = GetMaxPrecharge(0, limit_to_available);

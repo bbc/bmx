@@ -479,6 +479,20 @@ bool MXFFileReader::IsComplete() const
     return true;
 }
 
+bool MXFFileReader::IsSeekable() const
+{
+    if (mEssenceReader && !mFile->isSeekable())
+        return false;
+
+    size_t i;
+    for (i = 0; i < mExternalReaders.size(); i++) {
+        if (!mExternalReaders[i]->IsSeekable())
+            return false;
+    }
+
+    return true;
+}
+
 void MXFFileReader::GetReadLimits(bool limit_to_available, int64_t *start_position, int64_t *duration) const
 {
     CHECK_SUPPORT_READ_LIMITS;
