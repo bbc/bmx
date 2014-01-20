@@ -166,7 +166,7 @@
     <xs:complexContent>
       <xs:extension base="array_element_type">
         <xs:sequence>
-          <xs:element name="position" type="duration_type"/>
+          <xs:element name="position" type="position_type"/>
           <xs:element name="vitc" type="timecode_type" minOccurs="0"/>
           <xs:element name="ltc" type="timecode_type" minOccurs="0"/>
         </xs:sequence>

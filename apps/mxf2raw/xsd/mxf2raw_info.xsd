@@ -232,7 +232,7 @@
           <xs:element name="ec_label" type="label_type"/>
           <xs:element name="edit_rate" type="rational_type"/>
           <xs:element name="duration" type="duration_type"/>
-          <xs:element name="lead_filler_offset" type="duration_type" minOccurs="0"/>
+          <xs:element name="lead_filler_offset" type="position_type" minOccurs="0"/>
           <xs:element name="precharge" type="int16_type" minOccurs="0"/>
           <xs:element name="rollout" type="int16_type" minOccurs="0"/>
           <xs:element name="checksum" type="checksum_type" minOccurs="0" maxOccurs="unbounded"/>
@@ -460,6 +460,19 @@
     <xs:simpleContent>
        <xs:extension base="duration_string_type">
          <xs:attribute name="count" type="duration_count_type" use="required"/>
+         <xs:attribute name="rate" type="rational_type" use="optional">
+          <xs:annotation>
+            <xs:documentation>The default value is the clip element's edit_rate</xs:documentation>
+          </xs:annotation>
+         </xs:attribute>
+       </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="position_type">
+    <xs:simpleContent>
+       <xs:extension base="position_string_type">
+         <xs:attribute name="count" type="position_count_type" use="required"/>
          <xs:attribute name="rate" type="rational_type" use="optional">
           <xs:annotation>
             <xs:documentation>The default value is the clip element's edit_rate</xs:documentation>
@@ -769,7 +782,13 @@
 
   <xs:simpleType name="duration_string_type">
     <xs:restriction base="xs:string">
-      <xs:pattern value="\d+:\d{1,2}:\d{1,2}:\d+"/>
+      <xs:pattern value="(\d+:\d{1,2}:\d{1,2}:\d+)?"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="position_string_type">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="(\-)?\d+:\d{1,2}:\d{1,2}:\d+"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -874,10 +893,21 @@
 
   <xs:simpleType name="duration_count_type">
     <xs:restriction base="xs:integer">
-      <xs:minInclusive value="0"/>
+      <xs:minInclusive value="-1"/>
       <xs:maxInclusive value="9223372036854775807">
         <xs:annotation>
-          <xs:documentation>Maximum signed 64-bit integer</xs:documentation>
+          <xs:documentation>-1 to maximum signed 64-bit integer</xs:documentation>
+        </xs:annotation>
+      </xs:maxInclusive>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="position_count_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="-9223372036854775808"/>
+      <xs:maxInclusive value="9223372036854775807">
+        <xs:annotation>
+          <xs:documentation>Minumum to maximum signed 64-bit integer</xs:documentation>
         </xs:annotation>
       </xs:maxInclusive>
     </xs:restriction>

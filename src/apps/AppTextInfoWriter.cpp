@@ -178,6 +178,27 @@ void AppTextInfoWriter::EndComplexItem()
     mLevel--;
 }
 
+void AppTextInfoWriter::WriteDurationItem(const string &name, int64_t duration, Rational rate)
+{
+    string duration_str;
+    if (duration >= 0)
+        duration_str = get_duration_string(duration, rate);
+    else
+        duration_str = "unknown";
+
+    if (mIsAnnotation) {
+        mAnnotations.push_back(make_pair(name, duration_str));
+    } else {
+        StartAnnotations();
+        WriteIntegerItem("count", duration);
+        if (rate != mClipEditRate)
+            WriteIntegerItem("rate", get_rounded_tc_base(rate));
+        EndAnnotations();
+
+        WriteItem(name, duration_str);
+    }
+}
+
 void AppTextInfoWriter::WriteItem(const string &name, const string &value)
 {
     int value_indent = mItemValueIndent.top();

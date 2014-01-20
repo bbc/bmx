@@ -347,7 +347,7 @@ void APPInfoOutput::PrintEvents(AppInfoWriter *info_writer)
     AppTextInfoWriter *text_writer = dynamic_cast<AppTextInfoWriter*>(info_writer);
 
 #define WRITE_POSITION_INFO(event, timecodes)                                               \
-    info_writer->WriteDurationItem("position", event.position, frame_rate);                 \
+    info_writer->WritePositionItem("position", event.position, frame_rate);                 \
     if (timecodes.vitc.hour != INVALID_TIMECODE_HOUR)                                       \
         info_writer->WriteStringItem("vitc", get_archive_tc_string(timecodes.vitc));        \
     if (timecodes.ltc.hour != INVALID_TIMECODE_HOUR)                                        \

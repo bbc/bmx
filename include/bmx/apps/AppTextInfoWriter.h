@@ -69,6 +69,8 @@ public:
     virtual void StartComplexItem(const std::string &name);
     virtual void EndComplexItem();
 
+    virtual void WriteDurationItem(const std::string &name, int64_t duration, Rational rate);
+
 protected:
     virtual void WriteItem(const std::string &name, const std::string &value);
 

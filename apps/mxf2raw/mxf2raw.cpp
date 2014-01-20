@@ -626,7 +626,7 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
     info_writer->WriteRationalItem("edit_rate", track_info->edit_rate);
     info_writer->WriteDurationItem("duration", track_info->duration, track_info->edit_rate);
     if (track_info->lead_filler_offset != 0)
-        info_writer->WriteDurationItem("lead_filler_offset", track_info->lead_filler_offset, track_info->edit_rate);
+        info_writer->WritePositionItem("lead_filler_offset", track_info->lead_filler_offset, track_info->edit_rate);
     if (precharge != 0)
         info_writer->WriteIntegerItem("precharge", precharge);
     if (rollout != 0)

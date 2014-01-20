@@ -71,7 +71,7 @@
     <xs:complexContent>
       <xs:extension base="array_element_type">
         <xs:sequence>
-          <xs:element name="position" type="duration_type"/>
+          <xs:element name="position" type="position_type"/>
           <xs:element name="color" type="avid_color_type"/>
           <xs:element name="comment" type="xs:string" minOccurs="0"/>
         </xs:sequence>

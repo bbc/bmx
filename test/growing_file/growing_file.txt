@@ -234,7 +234,7 @@ Files: (1)
         modified_date   : 0-00-00 00:00:00.000
 Clip
   edit_rate       : 25/1
-  duration        : 00:00:00:00 (count='-1')
+  duration        : unknown (count='-1')
   StartTimecodes:
     material        : 00:00:00:00
     file_source     : 00:00:00:00
@@ -244,7 +244,7 @@ Clip
       essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
       ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : dd8fb89170d3e4bbfd21c3f55a6e6288 (type='MD5')
       Packages: (1)
         Package #0:
@@ -276,7 +276,7 @@ Clip
       essence_type    : WAVE_PCM
       ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : bdc3d1a5ad30870eafc32cbb3beebbf6 (type='MD5')
       Packages: (1)
         Package #0:
@@ -339,7 +339,7 @@ Files: (1)
         modified_date   : 0-00-00 00:00:00.000
 Clip
   edit_rate       : 25/1
-  duration        : 00:00:00:00 (count='-1')
+  duration        : unknown (count='-1')
   StartTimecodes:
     material        : 00:00:00:00
     file_source     : 00:00:00:00
@@ -349,7 +349,7 @@ Clip
       essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
       ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : 290a268469d4df657d7bb80a2c8dc531 (type='MD5')
       Packages: (1)
         Package #0:
@@ -381,7 +381,7 @@ Clip
       essence_type    : WAVE_PCM
       ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : bebb193b9967aa36399295279abb1831 (type='MD5')
       Packages: (1)
         Package #0:
@@ -443,7 +443,7 @@ Files: (1)
         modified_date   : 0-00-00 00:00:00.000
 Clip
   edit_rate       : 25/1
-  duration        : 00:00:00:00 (count='-1')
+  duration        : unknown (count='-1')
   StartTimecodes:
     material        : 00:00:00:00
     file_source     : 00:00:00:00
@@ -453,7 +453,7 @@ Clip
       essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
       ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : c3472a0f842662dc9ec402a882bcf4b0 (type='MD5')
       Packages: (1)
         Package #0:
@@ -485,7 +485,7 @@ Clip
       essence_type    : WAVE_PCM
       ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : 21bde5d4750f84e81f007a14f0d81274 (type='MD5')
       Packages: (1)
         Package #0:
@@ -547,7 +547,7 @@ Files: (1)
         modified_date   : 0-00-00 00:00:00.000
 Clip
   edit_rate       : 25/1
-  duration        : 00:00:00:00 (count='-1')
+  duration        : unknown (count='-1')
   StartTimecodes:
     material        : 00:00:00:00
     file_source     : 00:00:00:00
@@ -557,7 +557,7 @@ Clip
       essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
       ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : c3472a0f842662dc9ec402a882bcf4b0 (type='MD5')
       Packages: (1)
         Package #0:
@@ -589,7 +589,7 @@ Clip
       essence_type    : WAVE_PCM
       ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : 21bde5d4750f84e81f007a14f0d81274 (type='MD5')
       Packages: (1)
         Package #0:
@@ -651,7 +651,7 @@ Files: (1)
         modified_date   : 0-00-00 00:00:00.000
 Clip
   edit_rate       : 25/1
-  duration        : 00:00:00:00 (count='-1')
+  duration        : unknown (count='-1')
   StartTimecodes:
     material        : 00:00:00:00
     file_source     : 00:00:00:00
@@ -661,7 +661,7 @@ Clip
       essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
       ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : eff9ee12e2632b37781752113e5ca718 (type='MD5')
       Packages: (1)
         Package #0:
@@ -693,7 +693,7 @@ Clip
       essence_type    : WAVE_PCM
       ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : 7777a1ecc367c9e0134453829e2f44ab (type='MD5')
       Packages: (1)
         Package #0:
@@ -757,7 +757,7 @@ Files: (1)
         modified_date   : 0-00-00 00:00:00.000
 Clip
   edit_rate       : 25/1
-  duration        : 00:00:00:00 (count='-1')
+  duration        : unknown (count='-1')
   StartTimecodes:
     material        : 00:00:00:00
     file_source     : 00:00:00:00
@@ -767,7 +767,7 @@ Clip
       essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
       ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : eff9ee12e2632b37781752113e5ca718 (type='MD5')
       Packages: (1)
         Package #0:
@@ -799,7 +799,7 @@ Clip
       essence_type    : WAVE_PCM
       ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : 7777a1ecc367c9e0134453829e2f44ab (type='MD5')
       Packages: (1)
         Package #0:
@@ -863,7 +863,7 @@ Files: (1)
         modified_date   : 0-00-00 00:00:00.000
 Clip
   edit_rate       : 25/1
-  duration        : 00:00:00:00 (count='-1')
+  duration        : unknown (count='-1')
   StartTimecodes:
     material        : 00:00:00:00
     file_source     : 00:00:00:00
@@ -873,7 +873,7 @@ Clip
       essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
       ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : eff9ee12e2632b37781752113e5ca718 (type='MD5')
       Packages: (1)
         Package #0:
@@ -905,7 +905,7 @@ Clip
       essence_type    : WAVE_PCM
       ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : 7777a1ecc367c9e0134453829e2f44ab (type='MD5')
       Packages: (1)
         Package #0:
@@ -968,7 +968,7 @@ Files: (1)
         modified_date   : 0-00-00 00:00:00.000
 Clip
   edit_rate       : 25/1
-  duration        : 00:00:00:00 (count='-1')
+  duration        : unknown (count='-1')
   StartTimecodes:
     material        : 00:00:00:00
     file_source     : 00:00:00:00
@@ -978,7 +978,7 @@ Clip
       essence_type    : MPEG_2_Long_GOP_422P_HL_1080i
       ec_label        : urn:smpte:ul:060e2b34.04010102.0d010301.02046001
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : d41d8cd98f00b204e9800998ecf8427e (type='MD5')
       Packages: (1)
         Package #0:
@@ -1010,7 +1010,7 @@ Clip
       essence_type    : WAVE_PCM
       ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
       edit_rate       : 25/1
-      duration        : 00:00:00:00 (count='-1')
+      duration        : unknown (count='-1')
       checksum        : d41d8cd98f00b204e9800998ecf8427e (type='MD5')
       Packages: (1)
         Package #0:

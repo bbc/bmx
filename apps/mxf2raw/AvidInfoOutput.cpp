@@ -130,7 +130,7 @@ void bmx::avid_write_info(AppInfoWriter *info_writer, MXFFileReader *file_reader
         info_writer->StartArrayItem("locators", info.locators.size());
         for (i = 0; i < info.locators.size(); i++) {
             info_writer->StartArrayElement("locator", i);
-            info_writer->WriteDurationItem("position", info.locators[i].position, frame_rate);
+            info_writer->WritePositionItem("position", info.locators[i].position, frame_rate);
             info_writer->WriteEnumStringItem("color", COLOR_EINFO, info.locators[i].color);
             if (!info.locators[i].comment.empty())
                 info_writer->WriteStringItem("comment", info.locators[i].comment);

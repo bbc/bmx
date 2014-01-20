@@ -361,8 +361,12 @@ void AppInfoWriter::WriteProductVersionItem(const string &name, mxfProductVersio
 
 void AppInfoWriter::WriteDurationItem(const string &name, int64_t duration, Rational rate)
 {
+    string duration_str;
+    if (duration >= 0)
+        duration_str = get_duration_string(duration, rate);
+
     if (mIsAnnotation) {
-        mAnnotations.push_back(make_pair(name, get_duration_string(duration, rate)));
+        mAnnotations.push_back(make_pair(name, duration_str));
     } else {
         StartAnnotations();
         WriteIntegerItem("count", duration);
@@ -370,7 +374,30 @@ void AppInfoWriter::WriteDurationItem(const string &name, int64_t duration, Rati
             WriteIntegerItem("rate", get_rounded_tc_base(rate));
         EndAnnotations();
 
-        WriteItem(name, get_duration_string(duration, rate));
+        WriteItem(name, duration_str);
+    }
+}
+
+void AppInfoWriter::WritePositionItem(const string &name, int64_t position, Rational rate)
+{
+    string position_str;
+    if (position >= 0) {
+        position_str = get_duration_string(position, rate);
+    } else {
+        position_str = "-";
+        position_str.append(get_duration_string(- position, rate));
+    }
+
+    if (mIsAnnotation) {
+        mAnnotations.push_back(make_pair(name, position_str));
+    } else {
+        StartAnnotations();
+        WriteIntegerItem("count", position);
+        if (rate != mClipEditRate)
+            WriteIntegerItem("rate", get_rounded_tc_base(rate));
+        EndAnnotations();
+
+        WriteItem(name, position_str);
     }
 }
 
