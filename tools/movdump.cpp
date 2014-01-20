@@ -775,6 +775,24 @@ static void dump_uint32_chars(uint32_t value)
     printf(")");
 }
 
+static void dump_language(uint16_t value)
+{
+    unsigned char letter_1 = (unsigned char)((value >> 10) & 0x1f);
+    unsigned char letter_2 = (unsigned char)((value >> 5)  & 0x1f);
+    unsigned char letter_3 = (unsigned char)( value        & 0x1f);
+
+    if (letter_1 >= 1 && letter_1 <= 26 &&
+        letter_2 >= 1 && letter_2 <= 26 &&
+        letter_3 >= 1 && letter_3 <= 26)
+    {
+        printf("0x%04x (%c%c%c)", value, letter_1 + 0x60, letter_2 + 0x60, letter_3 + 0x60);
+    }
+    else
+    {
+        printf("0x%04x", value);
+    }
+}
+
 static void dump_uint32_fp(uint32_t value, uint8_t bits_left)
 {
     printf("%f", value / (double)(1 << (32 - bits_left)));
@@ -2309,7 +2327,9 @@ static void dump_mdhd_atom()
     uint16_t language;
     MOV_CHECK(read_uint16(&language));
     indent();
-    printf("language: %u\n", language);
+    printf("language: ");
+    dump_language(language);
+    printf("\n");
 
     uint16_t quality;
     MOV_CHECK(read_uint16(&quality));
