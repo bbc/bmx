@@ -1292,9 +1292,11 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--version") == 0 ||
                  strcmp(argv[cmdln_index], "-v") == 0)
         {
-            fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
-            if (argc == 2)
+            if (argc == 2) {
+                printf("%s\n", get_app_version_info(APP_NAME).c_str());
                 return 0;
+            }
+            fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
         }
         else if (strcmp(argv[cmdln_index], "-l") == 0)
         {
