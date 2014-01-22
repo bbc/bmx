@@ -2278,7 +2278,6 @@ int main(int argc, const char** argv)
                     }
                 }
                 if (file_missing_crc32) {
-                    log_warn("File does not contain CRC-32 data\n");
                     app_crc32_result = CRC32_MISSING_DATA;
                 } else {
                     for (i = 0; i < track_crc32_data.size(); i++) {
