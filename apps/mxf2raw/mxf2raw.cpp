@@ -2317,7 +2317,8 @@ int main(int argc, const char** argv)
 
         if (rdd6_filename && !done_rdd6) {
             reader->ClearFrameBuffers(true);
-            reader->SetReadLimits();
+            if (reader->IsComplete())
+                reader->SetReadLimits();
             reader->Seek(rdd6_frame);
             if (reader->Read(1)) {
                 uint32_t i;
@@ -2343,7 +2344,8 @@ int main(int argc, const char** argv)
             log_warn("Failed to extract RDD-6 frame data to XML file from frame %"PRId64"\n", rdd6_frame);
 
         if (file_reader && app_events_mask && extract_app_events_tc) {
-            file_reader->SetReadLimits();
+            if (file_reader->IsComplete())
+                file_reader->SetReadLimits();
             // enabling just 1 track is sufficient to get the timecode metadata
             bool have_track = false;
             size_t i;
