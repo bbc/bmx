@@ -281,6 +281,9 @@ static void dump_log_messages()
 
 static void mxf2raw_vlog2(LogLevel level, const char *source, const char *format, va_list p_arg)
 {
+    if (level < LOG_LEVEL)
+        return;
+
     char message[1024];
     bmx_vsnprintf(message, sizeof(message), format, p_arg);
 
