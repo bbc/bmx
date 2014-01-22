@@ -132,7 +132,7 @@ static const char *APP_NAME                     = "mxf2raw";
 static const char *XML_INFO_WRITER_NAMESPACE    = "http://bbc.co.uk/rd/bmx/201312";
 static const char *XML_INFO_WRITER_VERSION      = "0.1"; // format <major>.<minor>
 
-static const char* STDIN_FILENAME = "<standard input>";
+static const char* STDIN_FILENAME = "stdin:";
 
 namespace bmx
 {

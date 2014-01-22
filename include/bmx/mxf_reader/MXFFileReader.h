@@ -93,6 +93,7 @@ public:
 
     OpenResult Open(std::string filename);
     OpenResult Open(mxfpp::File *file, std::string filename);
+    OpenResult Open(mxfpp::File *file, const URI &abs_uri, const URI &rel_uri, const std::string &filename);
 
     mxfpp::DataModel* GetDataModel() const         { return mDataModel; }
     MXFPackageResolver* GetPackageResolver() const { return mPackageResolver; }

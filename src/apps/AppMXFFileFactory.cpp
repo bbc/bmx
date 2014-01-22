@@ -133,11 +133,15 @@ File* AppMXFFileFactory::OpenRead(string filename)
 
         if (!mInputChecksumTypes.empty()) {
             URI abs_uri;
-            BMX_CHECK(abs_uri.ParseFilename(filename));
-            if (abs_uri.IsRelative()) {
-                URI base_uri;
-                BMX_CHECK(base_uri.ParseDirectory(get_cwd()));
-                abs_uri.MakeAbsolute(base_uri);
+            if (filename.empty()) {
+              abs_uri = URI("stdin:");
+            } else {
+                BMX_CHECK(abs_uri.ParseFilename(filename));
+                if (abs_uri.IsRelative()) {
+                    URI base_uri;
+                    BMX_CHECK(base_uri.ParseDirectory(get_cwd()));
+                    abs_uri.MakeAbsolute(base_uri);
+                }
             }
 
             InputChecksumFile input_checksum_file;

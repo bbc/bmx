@@ -241,7 +241,11 @@ MXFFileReader::OpenResult MXFFileReader::Open(string filename)
     {
         file = mFileFactory->OpenRead(filename);
 
-        OpenResult result = Open(file, filename);
+        OpenResult result;
+        if (filename.empty())
+            result = Open(file, URI("stdin:"), URI(), "");
+        else
+            result = Open(file, filename);
         if (result != MXF_RESULT_SUCCESS)
             delete file;
 
@@ -256,12 +260,8 @@ MXFFileReader::OpenResult MXFFileReader::Open(string filename)
 
 MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
 {
-    OpenResult result;
-
     try
     {
-        mFile = file;
-
         URI rel_uri, abs_uri;
         BMX_CHECK(abs_uri.ParseFilename(filename));
         if (abs_uri.IsRelative()) {
@@ -271,8 +271,23 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
             BMX_CHECK(base_uri.ParseDirectory(get_cwd()));
             abs_uri.MakeAbsolute(base_uri);
         }
-        mFileId = mFileIndex->RegisterFile(abs_uri, rel_uri, filename);
 
+        return Open(file, abs_uri, rel_uri, filename);
+    }
+    catch (...)
+    {
+        return MXF_RESULT_OPEN_FAIL;
+    }
+}
+
+MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, const URI &rel_uri, const string &filename)
+{
+    OpenResult result;
+
+    try
+    {
+        mFile = file;
+        mFileId = mFileIndex->RegisterFile(abs_uri, rel_uri, filename);
 
         // read the header partition pack and check the operational pattern
         if (!file->readHeaderPartition()) {

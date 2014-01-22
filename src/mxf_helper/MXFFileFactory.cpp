@@ -50,7 +50,13 @@ File* DefaultMXFFileFactory::OpenNew(string filename)
 
 File* DefaultMXFFileFactory::OpenRead(string filename)
 {
-    return File::openRead(filename);
+    if (filename.empty()) {
+        MXFFile *mxf_file;
+        BMX_CHECK(mxf_stdin_wrap_read(&mxf_file));
+        return new File(mxf_file);
+    } else {
+       return File::openRead(filename);
+    }
 }
 
 File* DefaultMXFFileFactory::OpenModify(string filename)
