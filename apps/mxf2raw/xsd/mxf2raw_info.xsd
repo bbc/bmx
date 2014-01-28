@@ -43,12 +43,20 @@
 
   <xs:group name="log_message">
     <xs:choice>
-      <xs:element name="debug" type="xs:string"/>
-      <xs:element name="info" type="xs:string"/>
-      <xs:element name="warning" type="xs:string"/>
-      <xs:element name="error" type="xs:string"/>
+      <xs:element name="debug" type="log_message_type"/>
+      <xs:element name="info" type="log_message_type"/>
+      <xs:element name="warning" type="log_message_type"/>
+      <xs:element name="error" type="log_message_type"/>
     </xs:choice>
   </xs:group>
+
+  <xs:complexType name="log_message_type">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="source" type="xs:string" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
 
   <xs:complexType name="checks_type">
     <xs:sequence>
