@@ -2004,6 +2004,7 @@ int main(int argc, const char** argv)
 
             // open raw files and check if have video
             bool have_video = false;
+            map<size_t, size_t> track_raw_file_map;
             vector<FILE*> raw_files;
             vector<string> raw_filenames;
             if (ess_output_prefix) {
@@ -2012,6 +2013,7 @@ int main(int argc, const char** argv)
                 for (i = 0; i < reader->GetNumTrackReaders(); i++) {
                     const MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
                     const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
+                    track_raw_file_map[i] = raw_files.size();
                     if (sound_info && deinterleave && sound_info->channel_count > 1) {
                         uint32_t c;
                         for (c = 0; c < sound_info->channel_count; c++) {
@@ -2093,7 +2095,6 @@ int main(int argc, const char** argv)
 
                 vector<uint64_t> crc32_data(reader->GetNumTrackReaders(), UINT64_MAX);
                 bool have_app_tc = false;
-                int file_count = 0;
                 size_t i;
                 for (i = 0; i < reader->GetNumTrackReaders(); i++) {
                     MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
@@ -2178,6 +2179,7 @@ int main(int argc, const char** argv)
                         }
 
                         if (ess_output_prefix) {
+                            size_t file_index = track_raw_file_map[i];
                             const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
                             if (sound_info && deinterleave && sound_info->channel_count > 1) {
                                 sound_buffer.Allocate(frame->GetSize()); // more than enough
@@ -2195,25 +2197,18 @@ int main(int argc, const char** argv)
                                                            sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
                                         sound_buffer.SetSize(frame->GetSize() / sound_info->channel_count);
                                     }
-                                    write_data(raw_files[file_count], raw_filenames[file_count],
+                                    write_data(raw_files[file_index], raw_filenames[file_index],
                                                sound_buffer.GetBytes(), sound_buffer.GetSize(),
                                                (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
                                                &frame->element_key);
-                                    file_count++;
+                                    file_index++;
                                 }
                             } else {
-                                write_data(raw_files[file_count], raw_filenames[file_count],
+                                write_data(raw_files[file_index], raw_filenames[file_index],
                                            frame->GetBytes(), frame->GetSize(),
                                            (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
                                            &frame->element_key);
-                                file_count++;
                             }
-                        } else {
-                            const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
-                            if (sound_info && deinterleave && sound_info->channel_count > 1)
-                                file_count += sound_info->channel_count;
-                            else
-                                file_count++;
                         }
 
                         if (rdd6_filename && !done_rdd6 &&
