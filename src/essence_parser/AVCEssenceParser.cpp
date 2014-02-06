@@ -979,9 +979,9 @@ bool AVCEssenceParser::ParseSliceHeader(const unsigned char *data, uint32_t data
             buffer.GetU(2, &temp); // colour_plane_id
         buffer.GetU((uint8_t)(sps->log2_max_frame_num_minus4 + 4), &slice_header->frame_num);
         if (!sps->frame_mbs_only_flag) {
-            buffer.GetU(2, &slice_header->field_pic_flag);
+            buffer.GetU(1, &slice_header->field_pic_flag);
             if (slice_header->field_pic_flag)
-                buffer.GetU(2, &slice_header->bottom_field_flag);
+                buffer.GetU(1, &slice_header->bottom_field_flag);
         }
         if (slice_header->idr_pic_flag)
             buffer.GetUE(&slice_header->idr_pic_id);
