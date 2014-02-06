@@ -248,16 +248,36 @@ uint32_t AVCIWriterHelper::StripFrameHeader(const unsigned char *data, uint32_t 
 
 uint32_t AVCIWriterHelper::PrependFrameHeader(const unsigned char *data, uint32_t size, uint32_t *array_size)
 {
-    // prepend header and replace access unit delimiter with filler
+    static const unsigned char aud_overwrite_padding[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+    // prepend header
     BMX_ASSERT(mHeader);
     if (memcmp(data, AVCI_ACCESS_UNIT_DELIMITER, sizeof(AVCI_ACCESS_UNIT_DELIMITER)) == 0) {
-        mDataArray[0].data = mHeader;
-        mDataArray[0].size = AVCI_HEADER_SIZE;
-        mDataArray[1].data = (unsigned char*)AVCI_FILLER;
-        mDataArray[1].size = sizeof(AVCI_FILLER);
-        mDataArray[2].data = (unsigned char*)(data + sizeof(AVCI_FILLER));
-        mDataArray[2].size = size - sizeof(AVCI_FILLER);
-        *array_size = 3;
+        // check whether the bytes following the access unit delimiter (upto 512) is padding
+        uint32_t i;
+        for (i = sizeof(AVCI_ACCESS_UNIT_DELIMITER); i < 512 && i < size; i++) {
+            if (data[i])
+              break;
+        }
+        if (i < 512) { // non-padding bytes found
+            // replace access unit delimiter with filler
+            mDataArray[0].data = mHeader;
+            mDataArray[0].size = AVCI_HEADER_SIZE;
+            mDataArray[1].data = (unsigned char*)AVCI_FILLER;
+            mDataArray[1].size = sizeof(AVCI_FILLER);
+            mDataArray[2].data = (unsigned char*)(data + sizeof(AVCI_FILLER));
+            mDataArray[2].size = size - sizeof(AVCI_FILLER);
+            *array_size = 3;
+        } else {
+            // replace access unit delimiter with padding
+            mDataArray[0].data = mHeader;
+            mDataArray[0].size = AVCI_HEADER_SIZE;
+            mDataArray[1].data = (unsigned char*)aud_overwrite_padding;
+            mDataArray[1].size = sizeof(aud_overwrite_padding);
+            mDataArray[2].data = (unsigned char*)(data + sizeof(aud_overwrite_padding));
+            mDataArray[2].size = size - sizeof(aud_overwrite_padding);
+            *array_size = 3;
+        }
     } else {
         mDataArray[0].data = mHeader;
         mDataArray[0].size = AVCI_HEADER_SIZE;
