@@ -232,15 +232,24 @@ uint32_t AVCIWriterHelper::StripFrameHeader(const unsigned char *data, uint32_t 
         mDataArray[0].data = (unsigned char*)(data + AVCI_HEADER_SIZE);
         mDataArray[0].size = size - AVCI_HEADER_SIZE;
         *array_size = 1;
-    } else if (memcmp(data + AVCI_HEADER_SIZE, AVCI_FILLER, sizeof(AVCI_FILLER)) == 0) {
+    } else {
+        if (memcmp(data + AVCI_HEADER_SIZE, AVCI_FILLER, sizeof(AVCI_FILLER)) != 0) {
+            // if it is not filler or access unit delimiter, then check it is padding
+            uint32_t i;
+            for (i = 0; i < sizeof(AVCI_ACCESS_UNIT_DELIMITER); i++) {
+                if (data[AVCI_HEADER_SIZE + i])
+                    break;
+            }
+            if (i < sizeof(AVCI_ACCESS_UNIT_DELIMITER)) {
+                BMX_EXCEPTION(("Failed to strip AVCI header because there is no padding, filler or access unit delimiter "
+                               "at offset %u", AVCI_HEADER_SIZE));
+            }
+        }
         mDataArray[0].data = (unsigned char*)AVCI_ACCESS_UNIT_DELIMITER;
         mDataArray[0].size = sizeof(AVCI_ACCESS_UNIT_DELIMITER);
         mDataArray[1].data = (unsigned char*)(data + AVCI_HEADER_SIZE + sizeof(AVCI_ACCESS_UNIT_DELIMITER));
         mDataArray[1].size = size - AVCI_HEADER_SIZE - sizeof(AVCI_ACCESS_UNIT_DELIMITER);
         *array_size = 2;
-    } else {
-        BMX_EXCEPTION(("Failed to strip AVCI header because filler or access unit delimiter "
-                      "not found at offset %u", AVCI_HEADER_SIZE));
     }
 
     return size - AVCI_HEADER_SIZE;
