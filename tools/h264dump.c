@@ -907,7 +907,7 @@ static int vui_parameters(ParseContext *context)
     if (context->value) {
         context->indent++;
         u(3); print_video_format(context, (uint8_t)context->value);
-        u(1); PRINT_UINT("video_full_range");
+        u(1); PRINT_UINT("video_full_range_flag");
         u(1); PRINT_UINT("colour_description_present_flag");
         if (context->value) {
             u(8); PRINT_UINT("colour_primaries");

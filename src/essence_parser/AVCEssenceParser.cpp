@@ -803,7 +803,7 @@ bool AVCEssenceParser::ParseSPS(const unsigned char *data, uint32_t data_size, S
             buffer.GetU(1, &temp); // video_signal_type_present_flag
             if (temp) {
                 buffer.GetU(3, &temp); // video_format
-                buffer.GetU(1, &temp); // video_full_range
+                buffer.GetU(1, &temp); // video_full_range_flag
                 buffer.GetU(1, &temp); // colour_description_present_flag
                 if (temp) {
                     buffer.GetU(8, &temp); // colour_primaries
