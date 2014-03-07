@@ -54,6 +54,7 @@
 #include <bmx/essence_parser/RawEssenceReader.h>
 #include <bmx/essence_parser/FileEssenceSource.h>
 #include <bmx/essence_parser/KLVEssenceSource.h>
+#include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/wave/WaveReader.h>
 #include <bmx/URI.h>
@@ -120,6 +121,9 @@ typedef struct
 
     uint32_t track_number;
     bool track_number_set;
+
+    EssenceFilter *filter;
+    bool set_bs_aspect_ratio;
 
     // picture
     Rational aspect_ratio;
@@ -255,6 +259,32 @@ static bool open_wave_reader(RawInput *input)
     return true;
 }
 
+static void write_samples(RawInput *input, unsigned char *data, uint32_t size, uint32_t num_samples)
+{
+    if (input->filter) {
+        if (input->filter->SupportsInPlaceFilter()) {
+            input->filter->Filter(data, size);
+            input->track->WriteSamples(data, size, num_samples);
+        } else {
+            unsigned char *f_data = 0;
+            try
+            {
+                uint32_t f_size;
+                input->filter->Filter(data, size, &f_data, &f_size);
+                input->track->WriteSamples(f_data, f_size, num_samples);
+                delete [] f_data;
+            }
+            catch (...)
+            {
+                delete [] f_data;
+                throw;
+            }
+        }
+    } else {
+        input->track->WriteSamples(data, size, num_samples);
+    }
+}
+
 static void init_input(RawInput *input)
 {
     memset(input, 0, sizeof(*input));
@@ -276,6 +306,7 @@ static void clear_input(RawInput *input)
     delete input->raw_reader;
     if (input->wave_track_index == 0)
         delete input->wave_reader;
+    delete input->filter;
 }
 
 static bool parse_avci_guess(const char *str, bool *interlaced, bool *progressive)
@@ -413,6 +444,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "\n");
     fprintf(stderr, "Input Options (must precede the input to which it applies):\n");
     fprintf(stderr, "  -a <n:d>                Image aspect ratio. Either 4:3 or 16:9. Default parsed or 16:9\n");
+    fprintf(stderr, "  --bsar                  Set image aspect ratio in video bitstream. Currently supports D-10 essence types only\n");
     fprintf(stderr, "  --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default not set\n");
     fprintf(stderr, "  -c <depth>              Component depth for uncompressed/DV100 video. Either 8 or 10. Default parsed or 8\n");
     fprintf(stderr, "  --height                Height of input uncompressed video data. Default is the production aperture height, except for PAL (592) and NTSC (496)\n");
@@ -1223,6 +1255,11 @@ int main(int argc, const char** argv)
                 input.aspect_ratio = ASPECT_RATIO_16_9;
             input.aspect_ratio_set = true;
             cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--bsar") == 0)
+        {
+            input.set_bs_aspect_ratio = true;
             continue; // skip input reset at the end
         }
         else if (strcmp(argv[cmdln_index], "--afd") == 0)
@@ -2811,6 +2848,21 @@ int main(int argc, const char** argv)
             }
         }
 
+        for (i = 0; i < inputs.size(); i++) {
+            RawInput *input = &inputs[i];
+            if (input->set_bs_aspect_ratio) {
+                if (!(input->essence_type == D10_30 ||
+                      input->essence_type == D10_40 ||
+                      input->essence_type == D10_50))
+                {
+                    usage(argv[0]);
+                    log_error("Setting aspect ratio in the bitstream is only supported for D-10 essence types\n");
+                    throw false;
+                }
+                input->filter = new MPEG2AspectRatioFilter(input->aspect_ratio);
+            }
+        }
+
 
         // check support for essence type and frame/sampling rates
 
@@ -3393,18 +3445,15 @@ int main(int argc, const char** argv)
                     num_samples = input->raw_reader->GetNumSamples();
                     if (max_samples_per_read > 1 && num_samples > min_num_samples)
                         num_samples = min_num_samples;
-                    input->track->WriteSamples(input->raw_reader->GetSampleData(),
-                                               input->raw_reader->GetSampleDataSize(),
-                                               num_samples);
+                    write_samples(input, input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize(),
+                                  num_samples);
                 } else {
                     Frame *frame = input->wave_reader->GetTrack(input->wave_track_index)->GetFrameBuffer()->GetLastFrame(true);
                     BMX_ASSERT(frame);
                     num_samples = frame->num_samples;
                     if (max_samples_per_read > 1 && num_samples > min_num_samples)
                         num_samples = min_num_samples;
-                    input->track->WriteSamples(frame->GetBytes(),
-                                               frame->GetSize(),
-                                               num_samples);
+                    write_samples(input, (unsigned char*)frame->GetBytes(), frame->GetSize(), num_samples);
                     delete frame;
                 }
             }

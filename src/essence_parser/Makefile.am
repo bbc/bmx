@@ -10,6 +10,7 @@ libessenceparser_la_SOURCES = \
 	FileEssenceSource.cpp \
 	KLVEssenceSource.cpp \
 	MJPEGEssenceParser.cpp \
+	MPEG2AspectRatioFilter.cpp \
 	MPEG2EssenceParser.cpp \
 	RawEssenceReader.cpp \
 	SoundConversion.cpp \

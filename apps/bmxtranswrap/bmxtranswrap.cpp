@@ -49,6 +49,7 @@
 #include <bmx/mxf_reader/MXFSequenceReader.h>
 #include <bmx/mxf_reader/MXFFrameMetadata.h>
 #include <bmx/essence_parser/SoundConversion.h>
+#include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as02/AS02PictureTrack.h>
 #include <bmx/mxf_op1a/OP1ADataTrack.h>
@@ -90,6 +91,7 @@ typedef struct
     uint32_t bits_per_sample;
     uint16_t block_align;
     int64_t rem_precharge;
+    EssenceFilter *filter;
 } OutputTrack;
 
 typedef struct
@@ -222,6 +224,32 @@ static uint32_t read_samples(MXFReader *reader, const vector<uint32_t> &sample_s
     return num_read;
 }
 
+static void write_samples(OutputTrack *output_track, unsigned char *data, uint32_t size, uint32_t num_samples)
+{
+    if (output_track->filter) {
+        if (output_track->filter->SupportsInPlaceFilter()) {
+            output_track->filter->Filter(data, size);
+            output_track->track->WriteSamples(data, size, num_samples);
+        } else {
+            unsigned char *f_data = 0;
+            try
+            {
+                uint32_t f_size;
+                output_track->filter->Filter(data, size, &f_data, &f_size);
+                output_track->track->WriteSamples(f_data, f_size, num_samples);
+                delete [] f_data;
+            }
+            catch (...)
+            {
+                delete [] f_data;
+                throw;
+            }
+        }
+    } else {
+        output_track->track->WriteSamples(data, size, num_samples);
+    }
+}
+
 static void write_padding_samples(Frame *frame, OutputTrack *output_track, bmx::ByteArray *buffer)
 {
     const MXFSoundTrackInfo *sound_info = (const MXFSoundTrackInfo *)output_track->input_track_info;
@@ -234,7 +262,7 @@ static void write_padding_samples(Frame *frame, OutputTrack *output_track, bmx::
     buffer->Allocate(size);
     memset(buffer->GetBytes(), 0, size);
 
-    output_track->track->WriteSamples(buffer->GetBytes(), size, frame->request_num_samples);
+    write_samples(output_track, buffer->GetBytes(), size, frame->request_num_samples);
 }
 
 static void write_anc_samples(Frame *frame, OutputTrack *output_track, set<ANCDataType> &filter, bmx::ByteArray &anc_buffer)
@@ -242,7 +270,7 @@ static void write_anc_samples(Frame *frame, OutputTrack *output_track, set<ANCDa
     BMX_CHECK(frame->num_samples == 1);
 
     if (filter.empty() || (filter.size() == 1 && (*filter.begin()) == ALL_ANC_DATA)) {
-        output_track->track->WriteSamples(frame->GetBytes(), frame->GetSize(), frame->num_samples);
+        write_samples(output_track, (unsigned char*)frame->GetBytes(), frame->GetSize(), frame->num_samples);
         return;
     }
 
@@ -261,7 +289,12 @@ static void write_anc_samples(Frame *frame, OutputTrack *output_track, set<ANCDa
     anc_buffer.SetSize(0);
     output_element.Construct(&anc_buffer);
 
-    output_track->track->WriteSamples(anc_buffer.GetBytes(), anc_buffer.GetSize(), 1);
+    write_samples(output_track, anc_buffer.GetBytes(), anc_buffer.GetSize(), 1);
+}
+
+static void clear_output_track(OutputTrack *output_track)
+{
+    delete output_track->filter;
 }
 
 static void usage(const char *cmd)
@@ -341,6 +374,7 @@ static void usage(const char *cmd)
     }
     fprintf(stderr, "\n");
     fprintf(stderr, "  -a <n:d>                Override or set the image aspect ratio. Either 4:3 or 16:9.\n");
+    fprintf(stderr, "  --bsar                  Set image aspect ratio in video bitstream. Currently supports D-10 essence types only\n");
     fprintf(stderr, "  --locked <bool>         Override or set flag indicating whether the number of audio samples is locked to the video. Either true or false\n");
     fprintf(stderr, "  --audio-ref <level>     Override or set audio reference level, number of dBm for 0VU\n");
     fprintf(stderr, "  --dial-norm <value>     Override or set gain to be applied to normalize perceived loudness of the clip\n");
@@ -477,6 +511,7 @@ int main(int argc, const char** argv)
     bool output_file_md5 = false;
     Rational user_aspect_ratio = ASPECT_RATIO_16_9;
     bool user_aspect_ratio_set = false;
+    bool set_bs_aspect_ratio = false;
     bool user_locked = false;
     bool user_locked_set = false;
     int8_t user_audio_ref_level = 0;
@@ -879,6 +914,10 @@ int main(int argc, const char** argv)
                 user_aspect_ratio = ASPECT_RATIO_16_9;
             user_aspect_ratio_set = true;
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--bsar") == 0)
+        {
+            set_bs_aspect_ratio = true;
         }
         else if (strcmp(argv[cmdln_index], "--locked") == 0)
         {
@@ -2072,6 +2111,8 @@ int main(int argc, const char** argv)
             uint32_t c;
             for (c = 0; c < output_track_count; c++) {
                 OutputTrack output_track;
+                memset(&output_track, 0, sizeof(output_track));
+
                 output_track.input_track_info    = input_track_info;
                 output_track.input_buffer        = input_track_reader->GetFrameBuffer();
                 output_track.data_def            = input_track_info->data_def;
@@ -2158,10 +2199,15 @@ int main(int argc, const char** argv)
                     case D10_30:
                     case D10_40:
                     case D10_50:
-                        if (user_aspect_ratio_set)
+                        if (user_aspect_ratio_set) {
                             output_track.track->SetAspectRatio(user_aspect_ratio);
-                        else
+                            if (set_bs_aspect_ratio)
+                                output_track.filter = new MPEG2AspectRatioFilter(user_aspect_ratio);
+                        } else {
                             output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
+                            if (set_bs_aspect_ratio)
+                                output_track.filter = new MPEG2AspectRatioFilter(input_picture_info->aspect_ratio);
+                        }
                         if (afd)
                             output_track.track->SetAFD(afd);
                         break;
@@ -2543,9 +2589,10 @@ int main(int argc, const char** argv)
                                            sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
                         num_samples = frame->GetSize() / (output_track.channel_count * output_track.block_align);
                     }
-                    output_track.track->WriteSamples(sound_buffer.GetBytes(),
-                                                     num_samples * output_track.block_align,
-                                                     num_samples);
+                    write_samples(&output_track,
+                                  sound_buffer.GetBytes(),
+                                  num_samples * output_track.block_align,
+                                  num_samples);
                 }
                 else if (output_track.input_track_info->essence_type == ANC_DATA)
                 {
@@ -2557,7 +2604,7 @@ int main(int argc, const char** argv)
                         num_samples = frame->GetSize() / output_track.block_align;
                     else
                         num_samples = frame->num_samples;
-                    output_track.track->WriteSamples(frame->GetBytes(), frame->GetSize(), num_samples);
+                    write_samples(&output_track, (unsigned char*)frame->GetBytes(), frame->GetSize(), num_samples);
                 }
 
                 if (take_frame)
@@ -2671,6 +2718,8 @@ int main(int argc, const char** argv)
 
         delete reader;
         delete clip;
+        for (i = 0; i < output_tracks.size(); i++)
+            clear_output_track(&output_tracks[i]);
     }
     catch (const MXFException &ex)
     {

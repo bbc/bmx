@@ -478,6 +478,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\include\bmx\essence_parser\EssenceFilter.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\include\bmx\essence_parser\EssenceParser.h"
 					>
 				</File>
@@ -499,6 +503,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\include\bmx\essence_parser\MJPEGEssenceParser.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\include\bmx\essence_parser\MPEG2AspectRatioFilter.h"
 					>
 				</File>
 				<File
@@ -1161,6 +1169,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\essence_parser\MJPEGEssenceParser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\essence_parser\MPEG2AspectRatioFilter.cpp"
 					>
 				</File>
 				<File

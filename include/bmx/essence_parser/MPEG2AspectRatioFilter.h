@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2014, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,13 +29,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_RAW_ESSENCE_READER_H_
-#define BMX_RAW_ESSENCE_READER_H_
+#ifndef BMX_MPEG2_ASPECT_RATIO_FILTER_H_
+#define BMX_MPEG2_ASPECT_RATIO_FILTER_H_
 
 
-#include <bmx/essence_parser/EssenceParser.h>
-#include <bmx/essence_parser/EssenceSource.h>
-#include <bmx/ByteArray.h>
+#include <bmx/BMXTypes.h>
+#include <bmx/essence_parser/EssenceFilter.h>
 
 
 
@@ -43,53 +42,24 @@ namespace bmx
 {
 
 
-class RawEssenceReader
+class MPEG2AspectRatioFilter : public EssenceFilter
 {
 public:
-    RawEssenceReader(EssenceSource *essence_source);
-    virtual ~RawEssenceReader();
+    MPEG2AspectRatioFilter();
+    MPEG2AspectRatioFilter(Rational aspect_ratio);
+    virtual ~MPEG2AspectRatioFilter();
 
-    void SetMaxReadLength(int64_t len);
-
-    void SetFixedSampleSize(uint32_t size);
-
-    virtual void SetEssenceParser(EssenceParser *essence_parser);
-    void SetCheckMaxSampleSize(uint32_t size);
-
-    uint32_t GetFixedSampleSize() const     { return mFixedSampleSize; }
-    EssenceParser* GetEssenceParser() const { return mEssenceParser; }
-    EssenceSource* GetEssenceSource() const { return mEssenceSource; }
+    void SetAspectRatio(Rational aspect_ratio);
 
 public:
-    virtual uint32_t ReadSamples(uint32_t num_samples);
+    virtual void Filter(const unsigned char *data_in, uint32_t size_in,
+                        unsigned char **data_out, uint32_t *size_out);
 
-    virtual unsigned char* GetSampleData() const        { return mSampleBuffer.GetBytes(); }
-    uint32_t GetSampleDataSize() const                  { return mSampleDataSize; }
-    uint32_t GetNumSamples() const                      { return mNumSamples; }
-    uint32_t GetSampleSize() const;
+    virtual bool SupportsInPlaceFilter() const  { return true; }
+    virtual void Filter(unsigned char *data, uint32_t size);
 
-    virtual void Reset();
-
-protected:
-    bool ReadAndParseSample();
-    uint32_t ReadBytes(uint32_t size);
-    void ShiftSampleData(uint32_t to_offset, uint32_t from_offset);
-
-protected:
-    EssenceSource *mEssenceSource;
-
-    int64_t mMaxReadLength;
-    int64_t mTotalReadLength;
-    uint32_t mMaxSampleSize;
-
-    uint32_t mFixedSampleSize;
-    EssenceParser *mEssenceParser;
-
-    ByteArray mSampleBuffer;
-    uint32_t mSampleDataSize;
-    uint32_t mNumSamples;
-    bool mReadFirstSample;
-    bool mLastSampleRead;
+private:
+    uint8_t mAspectRatioInfo;
 };
 
 
@@ -98,4 +68,3 @@ protected:
 
 
 #endif
-
