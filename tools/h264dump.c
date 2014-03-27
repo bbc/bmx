@@ -268,7 +268,7 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
         nal_unit_type = byte & 0x1f;
         /* TODO: this is incomplete. Need to get the last VCL unit. See section 7.4.1.2.3  and B.1.2 */
         if (context->data_start_file_pos == 0 || nal_unit_type == 7 || nal_unit_type == 8)
-            fprintf(stderr, "Warning: missing zero_byte before start_code_prefix_one_3bytes\n");
+            printf("Warning: missing zero_byte before start_code_prefix_one_3bytes\n");
     }
     context->nal_start = context->data_pos;
     context->nal_size = 0;
@@ -307,7 +307,7 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
             /* TODO: this is incomplete. Need to get the last VCL unit. See section 7.4.1.2.3 and B.1.2 */
             if ((nal_unit_type == 7 || nal_unit_type == 8) || nal_unit_type == 9) {
                 if (state != 0x00000001)
-                    fprintf(stderr, "Warning: missing zero_byte before start_code_prefix_one_3bytes\n");
+                    printf("Warning: missing zero_byte before start_code_prefix_one_3bytes\n");
                 else
                     context->nal_size -= 1;
             }
@@ -440,7 +440,7 @@ static int exp_golumb(ParseContext *context)
         b = (uint8_t)context->value;
     }
     if (!b) {
-        fprintf(stderr, "Exp-Golumb size >= %d not supported\n", leading_zero_bits);
+        printf("Warning: Exp-Golumb size >= %d not supported\n", leading_zero_bits);
         return 0;
     }
 
@@ -536,7 +536,7 @@ static int rbsp_trailing_bits(ParseContext *context)
     }
 
     if (!valid)
-        fprintf(stderr, "Warning: invalid rbsp_trailing_bits\n");
+        printf("Warning: invalid rbsp_trailing_bits\n");
 
     return 1;
 }
