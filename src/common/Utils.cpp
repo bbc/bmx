@@ -465,7 +465,7 @@ string bmx::get_cwd()
             throw BMXException("Failed to get current working directory: %s", bmx_strerror(errno).c_str());
         } else if (path_size >= MAX_REASONABLE_PATH_SIZE) {
             throw BMXException("Maximum path size (%d) for current working directory exceeded",
-                               MAX_REASONABLE_PATH_SIZE, bmx_strerror(errno).c_str());
+                               MAX_REASONABLE_PATH_SIZE);
         }
         path_size += 1024;
     }
