@@ -1,2 +1,2 @@
-SUBDIRS = vs8
+SUBDIRS = vs10
 

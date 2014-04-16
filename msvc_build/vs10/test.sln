@@ -1,10 +1,10 @@
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual C++ Express 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "create_test_essence", "test\create_test_essence\create_test_essence.vcproj", "{F63EB469-A33F-4428-BCD2-DA0237FB2DE1}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C++ Express 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "create_test_essence", "test\create_test_essence\create_test_essence.vcxproj", "{F63EB469-A33F-4428-BCD2-DA0237FB2DE1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "file_md5", "test\file_md5\file_md5.vcproj", "{ACDED37E-B073-400F-8F8F-52054BB679A2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "file_md5", "test\file_md5\file_md5.vcxproj", "{ACDED37E-B073-400F-8F8F-52054BB679A2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "file_truncate", "test\file_truncate\file_truncate.vcproj", "{937CE41C-FAA5-471A-A8C3-648913EEB46C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "file_truncate", "test\file_truncate\file_truncate.vcxproj", "{937CE41C-FAA5-471A-A8C3-648913EEB46C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

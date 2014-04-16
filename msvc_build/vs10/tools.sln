@@ -1,8 +1,9 @@
-﻿Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual C++ Express 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "h264dump", "tools\h264dump\h264dump.vcproj", "{2FD73F77-1CC7-4C56-B311-F752B98840B0}"
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C++ Express 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "h264dump", "tools\h264dump\h264dump.vcxproj", "{2FD73F77-1CC7-4C56-B311-F752B98840B0}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "movdump", "tools\movdump\movdump.vcproj", "{CE40AAAA-5112-4893-82CA-6CF5166C9E85}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "movdump", "tools\movdump\movdump.vcxproj", "{CE40AAAA-5112-4893-82CA-6CF5166C9E85}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
