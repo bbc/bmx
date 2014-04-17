@@ -1,1 +1,1 @@
-SUBDIRS = rdd6
+SUBDIRS = as11 mxf2raw rdd6

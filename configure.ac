@@ -274,13 +274,14 @@ AC_CONFIG_FILES([
 	test/rdd6/Makefile
 	apps/Makefile
 	apps/mxf2raw/Makefile
-	apps/mxf2raw/xsd/Makefile
 	apps/raw2bmx/Makefile
 	apps/bmxtranswrap/Makefile
 	tools/Makefile
 	msvc_build/Makefile
 	msvc_build/vs10/Makefile
 	meta/Makefile
+	meta/as11/Makefile
+	meta/mxf2raw/Makefile
 	meta/rdd6/Makefile
 	bmx.pc])
 
