@@ -1023,7 +1023,9 @@ static void write_data(FILE *file, const string &filename, const unsigned char *
     CHECK_WRITE(data, size)
 }
 
-static bool extract_rdd6_xml(Frame *frame, const char *filename)
+static bool update_rdd6_xml(Frame *frame, RDD6MetadataFrame *rdd6_frame, vector<string> *cumulative_desc_chars,
+                            vector<bool> *have_start, vector<bool> *have_end, bool *done,
+                            bool *is_empty)
 {
     ST436Element st436_element(false);
     st436_element.Parse(frame->GetBytes(), frame->GetSize());
@@ -1040,28 +1042,62 @@ static bool extract_rdd6_xml(Frame *frame, const char *filename)
             rdd6_lines.push_back(&st436_element.lines[i]);
         }
     }
-    if (rdd6_lines.empty())
-        return false;
+    if (rdd6_lines.empty()) {
+        *is_empty = true;
+        return true;
+    }
 
-    RDD6MetadataFrame rdd6_frame;
+    RDD6MetadataFrame next_rdd6_frame;
+    RDD6MetadataFrame *parse_rdd6_frame;
+    if (rdd6_frame->first_sub_frame || rdd6_frame->second_sub_frame)
+        parse_rdd6_frame = &next_rdd6_frame;
+    else
+        parse_rdd6_frame = rdd6_frame;
+
     if (rdd6_lines.size() >= 2) {
         if (rdd6_lines.size() > 2)
             log_warn("ST-436 ANC data contains %"PRIszt" RDD-6 lines; only using the first 2\n", rdd6_lines.size());
-        rdd6_frame.ParseST2020(rdd6_lines[0]->payload_data, rdd6_lines[0]->payload_size,
-                               rdd6_lines[1]->payload_data, rdd6_lines[1]->payload_size);
+        parse_rdd6_frame->ParseST2020(rdd6_lines[0]->payload_data, rdd6_lines[0]->payload_size,
+                                      rdd6_lines[1]->payload_data, rdd6_lines[1]->payload_size);
     } else {
         log_warn("ST-436 ANC data only contains a single RDD-6 line\n");
-        rdd6_frame.ParseST2020(rdd6_lines[0]->payload_data, rdd6_lines[0]->payload_size,
-                               0, 0);
+        parse_rdd6_frame->ParseST2020(rdd6_lines[0]->payload_data, rdd6_lines[0]->payload_size,
+                                      0, 0);
     }
-    if (!rdd6_frame.first_sub_frame)
-        log_warn("RDD-6 frame data does not contain the first sub-frame\n");
-    if (!rdd6_frame.second_sub_frame)
-        log_warn("RDD-6 frame data does not contain the second sub-frame\n");
-    if (!rdd6_frame.first_sub_frame && !rdd6_frame.second_sub_frame)
+    if (!parse_rdd6_frame->IsComplete()) {
+        log_warn("RDD-6 frame data is incomplete\n");
         return false;
+    }
 
-    rdd6_frame.UnparseXML(filename);
+    if (parse_rdd6_frame == rdd6_frame)
+        parse_rdd6_frame->BufferPayloads(); // buffer because referenced frame data will de deleted
+
+    bool all_done = true;
+    vector<uint8_t> desc_chars;
+    parse_rdd6_frame->GetDescriptionTextChars(&desc_chars);
+    if (cumulative_desc_chars->size() != desc_chars.size()) {
+        if (!cumulative_desc_chars->empty()) {
+            log_warn("Cannot extract description text chars because RDD-6 program config has changed");
+            return false;
+        }
+        cumulative_desc_chars->resize(desc_chars.size());
+        have_start->resize(desc_chars.size(), false);
+        have_end->resize(desc_chars.size(), false);
+    }
+    for (i = 0; i < desc_chars.size(); i++) {
+        if (desc_chars[i] && !(*have_end)[i]) {
+            (*cumulative_desc_chars)[i].append(1, (char)desc_chars[i]);
+
+            if (!(*have_start)[i] && desc_chars[i] == RDD6_START_TEXT)
+                (*have_start)[i] = true;
+            else if ((*have_start)[i] && desc_chars[i] == RDD6_END_TEXT)
+                (*have_end)[i] = true;
+        }
+        if (!(*have_end)[i])
+            all_done = false;
+    }
+
+    *done = all_done;
 
     return true;
 }
@@ -1090,6 +1126,18 @@ static string create_raw_filename(string ess_prefix, bool wrap_klv, MXFDataDefEn
         bmx_snprintf(buffer, sizeof(buffer), "_%s%u%s", ddef_letter, index, suffix);
 
     return ess_prefix + buffer;
+}
+
+static bool parse_rdd6_frames(const char *frames_str, int64_t *min, int64_t *max)
+{
+    if (sscanf(frames_str, "%"PRId64"-%"PRId64, min, max) == 2) {
+        return *min <= *max;
+    } else if (sscanf(frames_str, "%"PRId64, min) == 1) {
+        *max = *min;
+        return *min >= 0;
+    } else {
+        return false;
+    }
 }
 
 static bool parse_app_events_mask(const char *mask_str, int *mask_out)
@@ -1191,8 +1239,11 @@ static void usage(const char *cmd)
     fprintf(stderr, " --app-tc <fname>      Extract APP timecodes to <fname>\n");
     fprintf(stderr, " --avid                Extract Avid metadata\n");
     fprintf(stderr, " --st436-mf <count>    Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
-    fprintf(stderr, " --rdd6 <frame> <fname>\n");
-    fprintf(stderr, "                       Extract RDD-6 audio metadata from <frame> to XML <fname>\n");
+    fprintf(stderr, " --rdd6 <frames> <filename>\n");
+    fprintf(stderr, "                       Extract RDD-6 audio metadata from <frames> to XML <filename>.\n");
+    fprintf(stderr, "                       <frames> can either be a single frame or a range using '-' as a separator\n");
+    fprintf(stderr, "                       RDD-6 metadata is extracted from the first frame and program description text is accumulated using the other frames\n");
+    fprintf(stderr, "                       Not all frames will be required if a complete program text has been extracted\n");
     fprintf(stderr, "\n");
     fprintf(stderr, " -p | --ess-out <prefix>\n");
     fprintf(stderr, "                       Extract essence to files starting with <prefix> and suffix '.raw'\n");
@@ -1245,7 +1296,8 @@ int main(int argc, const char** argv)
     bool do_avid_info = false;
     uint32_t st436_manifest_count = DEFAULT_ST436_MANIFEST_COUNT;
     const char *rdd6_filename = 0;
-    int64_t rdd6_frame = 0;
+    int64_t rdd6_frame_min = 0;
+    int64_t rdd6_frame_max = 0;
     bool do_ess_read = false;
     const char *ess_output_prefix = 0;
     set<MXFDataDefEnum> wrap_klv_mask;
@@ -1521,7 +1573,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &rdd6_frame) != 1)
+            if (parse_rdd6_frames(argv[cmdln_index + 1], &rdd6_frame_min, &rdd6_frame_max) != 1)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -1947,7 +1999,13 @@ int main(int argc, const char** argv)
 
         // read data
 
-        bool done_rdd6 = false;
+        int64_t last_rdd6_frame = -1;
+        bool rdd6_failed = false;
+        bool rdd6_done = false;
+        RDD6MetadataFrame rdd6_frame;
+        vector<string> rdd6_desc_chars;
+        vector<bool> rdd6_have_start;
+        vector<bool> rdd6_have_end;
         vector<vector<Checksum> > track_checksums;
         vector<CRC32Data> track_crc32_data;
 
@@ -2204,11 +2262,22 @@ int main(int argc, const char** argv)
                             }
                         }
 
-                        if (rdd6_filename && !done_rdd6 &&
-                            track_info->essence_type == ANC_DATA &&
-                            frame->position == rdd6_frame)
-                        {
-                            done_rdd6 = extract_rdd6_xml(frame, rdd6_filename);
+                        if (track_info->essence_type == ANC_DATA && rdd6_filename && !rdd6_failed && !rdd6_done) {
+                            if ((last_rdd6_frame  < 0 && frame->position == rdd6_frame_min) ||
+                                (last_rdd6_frame >= 0 && frame->position <= rdd6_frame_max &&
+                                    frame->position == last_rdd6_frame + 1))
+                            {
+                                bool is_empty;
+                                if (update_rdd6_xml(frame, &rdd6_frame, &rdd6_desc_chars, &rdd6_have_start,
+                                                    &rdd6_have_end, &rdd6_done, &is_empty))
+                                {
+                                    last_rdd6_frame = frame->position;
+                                }
+                                else
+                                {
+                                    rdd6_failed = true;
+                                }
+                            }
                         }
 
                         delete frame;
@@ -2303,15 +2372,19 @@ int main(int argc, const char** argv)
                 fclose(app_crc32_file);
         }
 
-        if (rdd6_filename && !done_rdd6) {
+        if (rdd6_filename && !rdd6_failed && last_rdd6_frame != rdd6_frame_max && !rdd6_done) {
             reader->ClearFrameBuffers(true);
             if (reader->IsComplete())
                 reader->SetReadLimits();
-            reader->Seek(rdd6_frame);
-            if (reader->Read(1)) {
+            if (last_rdd6_frame < 0)
+                reader->Seek(rdd6_frame_min);
+            else
+                reader->Seek(last_rdd6_frame + 1);
+            while (!rdd6_failed && !rdd6_done && last_rdd6_frame < rdd6_frame_max && reader->Read(1)) {
+                bool have_anc_track = false;
                 uint32_t i;
-                for (i = 0; i < reader->GetNumTrackReaders(); i++) {
-                    while (true) {
+                for (i = 0; i < reader->GetNumTrackReaders() && !have_anc_track; i++) {
+                    while (!rdd6_failed && last_rdd6_frame < rdd6_frame_max) {
                         Frame *frame = reader->GetTrackReader(i)->GetFrameBuffer()->GetLastFrame(true);
                         if (!frame)
                             break;
@@ -2320,16 +2393,34 @@ int main(int argc, const char** argv)
                             continue;
                         }
 
-                        if (!done_rdd6 && reader->GetTrackReader(i)->GetTrackInfo()->essence_type == ANC_DATA)
-                            done_rdd6 = extract_rdd6_xml(frame, rdd6_filename);
+                        if (reader->GetTrackReader(i)->GetTrackInfo()->essence_type == ANC_DATA) {
+                            bool is_empty;
+                            if (update_rdd6_xml(frame, &rdd6_frame, &rdd6_desc_chars, &rdd6_have_start,
+                                                &rdd6_have_end, &rdd6_done, &is_empty))
+                            {
+                                last_rdd6_frame = frame->position;
+                            }
+                            else
+                            {
+                                rdd6_failed = true;
+                            }
+                            have_anc_track = true;
+                        }
 
                         delete frame;
                     }
                 }
             }
         }
-        if (rdd6_filename && !done_rdd6)
-            log_warn("Failed to extract RDD-6 frame data to XML file from frame %"PRId64"\n", rdd6_frame);
+        if (rdd6_filename) {
+            if (rdd6_frame.IsEmpty()) {
+                log_warn("Failed to extract RDD-6 frame data to XML file\n");
+            } else {
+                if (!rdd6_failed && last_rdd6_frame > rdd6_frame_min)
+                    rdd6_frame.SetCumulativeDescriptionTextChars(rdd6_desc_chars);
+                rdd6_frame.UnparseXML(rdd6_filename);
+            }
+        }
 
         if (file_reader && app_events_mask && extract_app_events_tc) {
             if (file_reader->IsComplete())

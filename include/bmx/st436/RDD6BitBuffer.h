@@ -67,6 +67,8 @@ public:
     bool GetBits(uint8_t num_bits, int32_t *value);
     bool GetBits(uint8_t num_bits, int64_t *value);
 
+    void SetBitPos(uint64_t pos);
+
 private:
     void GetBits(const unsigned char *data, uint32_t *pos_io, uint64_t *bit_pos_io, uint8_t num_bits, uint64_t *value);
 

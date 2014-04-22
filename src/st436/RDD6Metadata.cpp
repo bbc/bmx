@@ -86,10 +86,6 @@ static const ProgramConfigInfo PROGRAM_CONFIG_INFO[] =
     {23, 1, 8},
 };
 
-static const uint8_t START_TEXT = 0x02; // next character is the start of the text description
-static const uint8_t END_TEXT   = 0x03; // previous character was the last character of the text description
-static const uint8_t NUL_TEXT   = 0x00; // no text description
-
 static const uint64_t INVALID_SMPTE_TC_HOURS = (uint64_t)0x3f << 48;
 
 
@@ -141,6 +137,26 @@ void RDD6DolbyEComplete::UpdateStatic(unsigned char *payload, uint32_t size, con
     for (i = 0; i < description_text_chars.size(); i++) {
         buffer.SetBitPos(6+4+12+64+8 + 10 * i);
         buffer.PutBits(8, description_text_chars[i]);
+    }
+}
+
+void RDD6DolbyEComplete::GetDescriptionTextChars(const unsigned char *payload, uint32_t size,
+                                                 vector<uint8_t> *desc_chars)
+{
+    uint8_t program_config;
+    RDD6GetBitBuffer buffer(payload, size, 0, 0);
+    buffer.GetBits(6, &program_config);
+
+    uint8_t program_count;
+    uint8_t channel_count;
+    get_program_config_info(program_config, &program_count, &channel_count);
+
+    desc_chars->resize(program_count, 0);
+
+    size_t i;
+    for (i = 0; i < desc_chars->size(); i++) {
+        buffer.SetBitPos(6+4+12+64+8 + 10 * i);
+        buffer.GetBits(8, &(*desc_chars)[i]);
     }
 }
 
@@ -275,8 +291,8 @@ void RDD6DolbyEComplete::UnparseXML(XMLWriter *writer) const
     bool write_descr_text = false;
     for (i = 0; i < program_count; i++) {
         if (!xml_desc_elements[i].empty() ||
-            desc_elements[i].description_text == START_TEXT ||
-            desc_elements[i].description_text == END_TEXT ||
+            desc_elements[i].description_text == RDD6_START_TEXT ||
+            desc_elements[i].description_text == RDD6_END_TEXT ||
             (desc_elements[i].description_text >= 0x20 && desc_elements[i].description_text <= 0x7e))
         {
             write_descr_text = true;
@@ -1442,6 +1458,55 @@ void RDD6DataSegment::UpdateStatic(const vector<uint8_t> &description_text_chars
     checksum = CalcChecksum();
 }
 
+void RDD6DataSegment::GetDescriptionTextChars(vector<uint8_t> *desc_chars)
+{
+    BMX_ASSERT(id == DS_DOLBY_E_COMPLETE);
+    RDD6DolbyEComplete::GetDescriptionTextChars(payload, size, desc_chars);
+}
+
+void RDD6DataSegment::SetCumulativeDescriptionTextChars(const vector<string> &cumulative_desc_chars)
+{
+    BMX_ASSERT(id == DS_DOLBY_E_COMPLETE);
+    BMX_ASSERT(cumulative_desc_chars.size() <= 8);
+
+    size_t i;
+    for (i = 0; i < cumulative_desc_chars.size(); i++) {
+        const string &desc_chars = cumulative_desc_chars[i];
+        size_t start = (size_t)(-1) - 1;
+        size_t j;
+        for (j = 0; j < desc_chars.size(); j++) {
+            if (desc_chars[j] == RDD6_START_TEXT) {
+                start = j;
+                break;
+            }
+        }
+        string clean_description;
+        for (j = start + 1; j < desc_chars.size(); j++) {
+            if (desc_chars[j] < 0x20 || desc_chars[j] > 0x7e)
+                break;
+            clean_description.append(1, (char)desc_chars[j]);
+        }
+        xml_desc_elements[i] = clean_description;
+    }
+    for (; i < 8; i++)
+        xml_desc_elements[i].clear();
+}
+
+void RDD6DataSegment::BufferPayload()
+{
+    if (!payload)
+        return;
+
+    if (payload_buffer.GetSize() == 0 ||
+        payload < payload_buffer.GetBytes() ||
+        payload >= &payload_buffer.GetBytes()[payload_buffer.GetSize() - 1])
+    {
+        payload_buffer.Clear();
+        payload_buffer.CopyBytes(payload, size);
+        payload = payload_buffer.GetBytes();
+    }
+}
+
 void RDD6DataSegment::PrepareConstruct8BitPayload()
 {
     payload_buffer.Clear();
@@ -1557,6 +1622,35 @@ void RDD6MetadataSubFrame::UpdateStatic(const vector<uint8_t> &description_text_
     size_t i;
     for (i = 0; i < data_segments.size(); i++)
         data_segments[i]->UpdateStatic(description_text_chars);
+}
+
+void RDD6MetadataSubFrame::GetDescriptionTextChars(vector<uint8_t> *desc_chars)
+{
+    size_t i;
+    for (i = 0; i < data_segments.size(); i++) {
+        if (data_segments[i]->id == RDD6DataSegment::DS_DOLBY_E_COMPLETE) {
+            data_segments[i]->GetDescriptionTextChars(desc_chars);
+            break;
+        }
+    }
+}
+
+void RDD6MetadataSubFrame::SetCumulativeDescriptionTextChars(const vector<string> &cumulative_desc_chars)
+{
+    size_t i;
+    for (i = 0; i < data_segments.size(); i++) {
+        if (data_segments[i]->id == RDD6DataSegment::DS_DOLBY_E_COMPLETE) {
+            data_segments[i]->SetCumulativeDescriptionTextChars(cumulative_desc_chars);
+            break;
+        }
+    }
+}
+
+void RDD6MetadataSubFrame::BufferPayloads()
+{
+    size_t i;
+    for (i = 0; i < data_segments.size(); i++)
+        data_segments[i]->BufferPayload();
 }
 
 void RDD6MetadataSubFrame::ClearDataSegments()
@@ -1792,6 +1886,26 @@ void RDD6MetadataFrame::UpdateStaticFrameForXML(const RDD6MetadataSequence *sequ
     }
 }
 
+void RDD6MetadataFrame::GetDescriptionTextChars(vector<uint8_t> *desc_chars)
+{
+    if (first_sub_frame)
+        first_sub_frame->GetDescriptionTextChars(desc_chars);
+}
+
+void RDD6MetadataFrame::SetCumulativeDescriptionTextChars(const vector<string> &cumulative_desc_chars)
+{
+    if (first_sub_frame)
+        first_sub_frame->SetCumulativeDescriptionTextChars(cumulative_desc_chars);
+}
+
+void RDD6MetadataFrame::BufferPayloads()
+{
+    if (first_sub_frame)
+        first_sub_frame->BufferPayloads();
+    if (second_sub_frame)
+        second_sub_frame->BufferPayloads();
+}
+
 void RDD6MetadataFrame::Reset()
 {
     delete first_sub_frame;
@@ -1861,11 +1975,11 @@ vector<uint8_t> RDD6MetadataSequence::GetDescriptionTextChars() const
 
         uint8_t next_char;
         if (dt_ref.first.empty())
-            next_char = NUL_TEXT;
+            next_char = RDD6_NUL_TEXT;
         else if (dt_ref.second < 0)
-            next_char = START_TEXT;
+            next_char = RDD6_START_TEXT;
         else if (dt_ref.second >= (int)dt_ref.first.size())
-            next_char = END_TEXT;
+            next_char = RDD6_END_TEXT;
         else
             next_char = dt_ref.first[dt_ref.second];
 

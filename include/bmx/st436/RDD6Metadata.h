@@ -40,6 +40,10 @@
 #include <bmx/st436/RDD6BitBuffer.h>
 
 
+#define RDD6_START_TEXT   0x02 // next character is the start of the text description
+#define RDD6_END_TEXT     0x03 // previous character was the last character of the text description
+#define RDD6_NUL_TEXT     0x00 // no text description
+
 
 namespace bmx
 {
@@ -72,6 +76,7 @@ public:
     static void GetProgramConfigInfo(const unsigned char *payload, uint32_t size,
                                      uint8_t *program_count, uint8_t *channel_count);
     static void UpdateStatic(unsigned char *payload, uint32_t size, const std::vector<uint8_t> &description_text_chars);
+    static void GetDescriptionTextChars(const unsigned char *payload, uint32_t size, std::vector<uint8_t> *desc_chars);
 
 public:
     RDD6DolbyEComplete();
@@ -337,6 +342,11 @@ public:
 
     void UpdateStatic(const std::vector<uint8_t> &description_text_chars);
 
+    void GetDescriptionTextChars(std::vector<uint8_t> *desc_chars);
+    void SetCumulativeDescriptionTextChars(const std::vector<std::string> &cumulative_desc_chars);
+
+    void BufferPayload();
+
 public:
     uint8_t id;                         // 8 bits
     uint16_t size;                      // 8 bits (input value 0 interpreted as 256)
@@ -385,6 +395,11 @@ public:
 
     void UpdateStatic(const std::vector<uint8_t> &description_text_chars, uint16_t frame_count);
 
+    void GetDescriptionTextChars(std::vector<uint8_t> *desc_chars);
+    void SetCumulativeDescriptionTextChars(const std::vector<std::string> &cumulative_desc_chars);
+
+    void BufferPayloads();
+
     bool IsFirst() const { return sync_segment.start_subframe_sync_word == FIRST_SUBFRAME_SYNC_WORD; }
 
 public:
@@ -427,6 +442,14 @@ public:
     void InitStaticSequence(RDD6MetadataSequence *sequence);
     void UpdateStaticFrame(const RDD6MetadataSequence *sequence);
     void UpdateStaticFrameForXML(const RDD6MetadataSequence *sequence);
+
+    void GetDescriptionTextChars(std::vector<uint8_t> *desc_chars);
+    void SetCumulativeDescriptionTextChars(const std::vector<std::string> &cumulative_desc_chars);
+
+    void BufferPayloads();
+
+    bool IsEmpty() const    { return !first_sub_frame && !second_sub_frame; }
+    bool IsComplete() const { return first_sub_frame && second_sub_frame; }
 
 public:
     RDD6MetadataSubFrame *first_sub_frame;

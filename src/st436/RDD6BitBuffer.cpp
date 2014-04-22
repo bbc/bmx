@@ -224,6 +224,21 @@ bool RDD6GetBitBuffer::GetBits(uint8_t num_bits, int64_t *value)
     return true;
 }
 
+void RDD6GetBitBuffer::SetBitPos(uint64_t pos)
+{
+    if (pos < mBitSizeA) {
+        mBitPosA = pos;
+        mPosA = mBitPosA >> 3;
+        mBitPosB = 0;
+        mPosB = 0;
+    } else {
+        mBitPosA = mBitSizeA;
+        mPosA = mSizeA;
+        mBitPosB = pos - mBitSizeA;
+        mPosB = mBitPosB >> 3;
+    }
+}
+
 void RDD6GetBitBuffer::GetBits(const unsigned char *data, uint32_t *pos_io, uint64_t *bit_pos_io, uint8_t num_bits,
                                uint64_t *value)
 {
