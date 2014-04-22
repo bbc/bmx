@@ -309,10 +309,10 @@ uint64_t bmx::parse_xml_smpte_timecode(const string &context, const string &str)
     if (sscanf(str.c_str(), "%d:%d:%d%c%d", &hour, &min, &sec, &c, &frame) != 5)
         throw BMXException("Failed to parse smpte timecode value '%s' for '%s'", str.c_str(), context.c_str());
 
-    uint64_t value = ((((uint64_t)hour  / 10) << 52) & 0x30) | ((((uint64_t)hour  % 10) << 48) & 0x0f) |
-                     ((((uint64_t)min   / 10) << 36) & 0x70) | ((((uint64_t)min   % 10) << 32) & 0x0f) |
-                     ((((uint64_t)sec   / 10) << 20) & 0x70) | ((((uint64_t)sec   % 10) << 16) & 0x0f) |
-                     ((((uint64_t)frame / 10) <<  4) & 0x30) | ((((uint64_t)frame % 10)      ) & 0x0f);
+    uint64_t value = ((((uint64_t)hour  / 10) & 0x03) << 52) | ((((uint64_t)hour  % 10) & 0x0f) << 48) |
+                     ((((uint64_t)min   / 10) & 0x07) << 36) | ((((uint64_t)min   % 10) & 0x0f) << 32) |
+                     ((((uint64_t)sec   / 10) & 0x07) << 20) | ((((uint64_t)sec   % 10) & 0x0f) << 16) |
+                     ((((uint64_t)frame / 10) & 0x03) <<  4) |  (((uint64_t)frame % 10) & 0x0f);
     if (c != ':')
         value |= 0x40;
 
@@ -454,11 +454,11 @@ string bmx::unparse_xml_smpte_timecode(uint64_t value)
 {
     int hour, min, sec, frame;
     bool drop;
-    hour =  (int)((((value >> 48) & 0x30) >> 4) * 10 + ((value >> 48) & 0x0f));
-    min =   (int)((((value >> 32) & 0x70) >> 4) * 10 + ((value >> 32) & 0x0f));
-    sec =   (int)((((value >> 16) & 0x70) >> 4) * 10 + ((value >> 16) & 0x0f));
-    frame = (int)((((value      ) & 0x30) >> 4) * 10 + ((value      ) & 0x0f));
-    drop =        (((value      ) & 0x40) != 0);
+    hour =  (int)((((value >> 52) & 0x03) * 10) + ((value >> 48) & 0x0f));
+    min =   (int)((((value >> 36) & 0x07) * 10) + ((value >> 32) & 0x0f));
+    sec =   (int)((((value >> 20) & 0x07) * 10) + ((value >> 16) & 0x0f));
+    frame = (int)((((value >>  4) & 0x03) * 10) + ((value      ) & 0x0f));
+    drop =        (((value >>  4) & 0x04) != 0);
 
     char c;
     if (drop)
