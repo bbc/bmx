@@ -372,10 +372,12 @@ void PutBitBuffer::IncrementSize(uint32_t inc)
 
 void PutBitBuffer::Grow(uint32_t min_size)
 {
-    if (mWBuffer)
+    if (mWBuffer) {
         mWBuffer->Grow(min_size);
-    else
+        if (min_size > 0)
+            memset(mWBuffer->GetBytesAvailable(), 0, min_size);
+    } else {
         BMX_CHECK(min_size <= mRWBytesSize && mRWBytesPos <= mRWBytesSize - min_size);
-
+    }
 }
 
