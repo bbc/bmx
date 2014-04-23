@@ -193,6 +193,7 @@ void ByteArray::Reallocate(uint32_t min_size)
         delete [] mBytes;
         mBytes = 0;
     }
+    memset(&newBytes[mSize], 0, size - mSize);
     mBytes = newBytes;
     mAllocatedSize = size;
 
