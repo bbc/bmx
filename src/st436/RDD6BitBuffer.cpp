@@ -228,14 +228,14 @@ void RDD6GetBitBuffer::SetBitPos(uint64_t pos)
 {
     if (pos < mBitSizeA) {
         mBitPosA = pos;
-        mPosA = mBitPosA >> 3;
+        mPosA = (uint32_t)(mBitPosA >> 3);
         mBitPosB = 0;
         mPosB = 0;
     } else {
         mBitPosA = mBitSizeA;
         mPosA = mSizeA;
         mBitPosB = pos - mBitSizeA;
-        mPosB = mBitPosB >> 3;
+        mPosB = (uint32_t)(mBitPosB >> 3);
     }
 }
 
