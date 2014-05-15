@@ -586,7 +586,15 @@ bmx::UUID bmx::generate_uuid()
 #if defined(_WIN32)
     GUID guid;
     CoCreateGuid(&guid);
-    memcpy(&bmx_uuid, &guid, sizeof(bmx_uuid));
+    bmx_uuid.octet0 = (uint8_t)((guid.Data1 >> 24) & 0xff);
+    bmx_uuid.octet1 = (uint8_t)((guid.Data1 >> 16) & 0xff);
+    bmx_uuid.octet2 = (uint8_t)((guid.Data1 >>  8) & 0xff);
+    bmx_uuid.octet3 = (uint8_t)((guid.Data1      ) & 0xff);
+    bmx_uuid.octet4 = (uint8_t)((guid.Data2 >>  8) & 0xff);
+    bmx_uuid.octet5 = (uint8_t)((guid.Data2      ) & 0xff);
+    bmx_uuid.octet6 = (uint8_t)((guid.Data3 >>  8) & 0xff);
+    bmx_uuid.octet7 = (uint8_t)((guid.Data3      ) & 0xff);
+    memcpy(&bmx_uuid.octet8, guid.Data4, 8);
 #else
     uuid_t uuid;
     uuid_generate(uuid);
