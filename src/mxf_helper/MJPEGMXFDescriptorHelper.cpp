@@ -91,7 +91,7 @@ EssenceType MJPEGMXFDescriptorHelper::IsSupported(FileDescriptor *file_descripto
         return UNKNOWN_ESSENCE_TYPE;
     }
 
-    mxfRational sample_rate = file_descriptor->getSampleRate();
+    mxfRational sample_rate = normalize_rate(file_descriptor->getSampleRate());
 
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     if (!pic_descriptor || !pic_descriptor->havePictureEssenceCoding())

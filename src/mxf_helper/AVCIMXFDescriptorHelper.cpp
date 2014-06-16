@@ -98,7 +98,7 @@ EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor
         return UNKNOWN_ESSENCE_TYPE;
     }
 
-    mxfRational sample_rate = file_descriptor->getSampleRate();
+    mxfRational sample_rate = normalize_rate(file_descriptor->getSampleRate());
 
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     if (!pic_descriptor || !pic_descriptor->havePictureEssenceCoding())
@@ -162,7 +162,7 @@ void AVCIMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16
 
     PictureMXFDescriptorHelper::Initialize(file_descriptor, mxf_version, alternative_ec_label);
 
-    mxfRational sample_rate = file_descriptor->getSampleRate();
+    mxfRational sample_rate = normalize_rate(file_descriptor->getSampleRate());
 
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     mFrameWrapped = (mxf_is_avc_ec(&ec_label, 1) || mxf_is_avc_ec(&alternative_ec_label, 1));

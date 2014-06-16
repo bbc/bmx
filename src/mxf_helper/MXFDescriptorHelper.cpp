@@ -120,7 +120,7 @@ void MXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16_t m
     (void)mxf_version;
     (void)alternative_ec_label;
 
-    mSampleRate = file_descriptor->getSampleRate();
+    mSampleRate = normalize_rate(file_descriptor->getSampleRate());
     // mEssenceType and mFrameWrapped are set by subclass
 
     mFileDescriptor = file_descriptor;

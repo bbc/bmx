@@ -132,7 +132,7 @@ size_t MPEG2LGMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descript
         return (size_t)(-1);
     }
 
-    mxfRational sample_rate = file_descriptor->getSampleRate();
+    mxfRational sample_rate = normalize_rate(file_descriptor->getSampleRate());
 
     GenericPictureEssenceDescriptor *pic_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     if (!pic_descriptor || !pic_descriptor->havePictureEssenceCoding())

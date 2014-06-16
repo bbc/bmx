@@ -116,7 +116,7 @@ size_t UncRGBAMXFDescriptorHelper::GetEssenceIndex(FileDescriptor *file_descript
     if (!rgba_descriptor || !rgba_descriptor->havePixelLayout())
         return (size_t)(-1);
 
-    mxfRational sample_rate = file_descriptor->getSampleRate();
+    mxfRational sample_rate = normalize_rate(file_descriptor->getSampleRate());
     mxfUL ec_label = file_descriptor->getEssenceContainer();
     mxfRGBALayout pixel_layout = rgba_descriptor->getPixelLayout();
 
