@@ -40,6 +40,7 @@
 #include <bmx/as11/AS11Info.h>
 #include <bmx/as11/AS11DMS.h>
 #include <bmx/as11/UKDPPDMS.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -172,7 +173,7 @@ void AS11Info::GetSegmentation(vector<GenericTrack*> &tracks)
             continue;
         }
 
-        segmentation_rate = tt->getEditRate();
+        segmentation_rate = normalize_rate(tt->getEditRate());
         break;
     }
 }
