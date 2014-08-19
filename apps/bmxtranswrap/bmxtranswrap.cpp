@@ -336,10 +336,45 @@ static void clear_output_track(OutputTrack *output_track)
     delete output_track->filter;
 }
 
+static void disable_tracks(MXFReader *reader, const set<uint32_t> &track_indexes)
+{
+    set<uint32_t>::const_iterator iter;
+    for (iter = track_indexes.begin(); iter != track_indexes.end(); iter++) {
+        if (*iter < reader->GetNumTrackReaders())
+            reader->GetTrackReader(*iter)->SetEnable(false);
+    }
+}
+
+static bool parse_track_indexes(const char *tracks_str, set<uint32_t> *track_indexes)
+{
+    unsigned int first_index, last_index;
+    const char *tracks_str_ptr = tracks_str;
+    while (tracks_str_ptr) {
+        size_t result = sscanf(tracks_str_ptr, "%u-%u", &first_index, &last_index);
+        if (result == 2) {
+            if (first_index > last_index)
+                return false;
+            uint32_t index;
+            for (index = first_index; index <= last_index; index++)
+                track_indexes->insert(index);
+        } else if (result == 1) {
+            track_indexes->insert(first_index);
+        } else {
+            return false;
+        }
+
+        tracks_str_ptr = strchr(tracks_str_ptr, ',');
+        if (tracks_str_ptr)
+            tracks_str_ptr++;
+    }
+
+    return true;
+}
+
 static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
-    fprintf(stderr, "Usage: %s <<options>> [<mxf input>]+\n", cmd);
+    fprintf(stderr, "Usage: %s <<options>> [<<input options>> <mxf input>]+\n", cmd);
     fprintf(stderr, "Options (* means option is required):\n");
     fprintf(stderr, "  -h | --help             Show usage and exit\n");
     fprintf(stderr, "  -v | --version          Print version info\n");
@@ -504,6 +539,11 @@ static void usage(const char *cmd)
     fprintf(stderr, "\n");
     fprintf(stderr, "  wave:\n");
     fprintf(stderr, "    --orig <name>           Set originator in the Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Input options:\n");
+    fprintf(stderr, "  --disable-tracks <tracks> A comma separated list of track indexes and/or ranges to disable.\n");
+    fprintf(stderr, "                            A track is identified by the index reported by mxf2raw\n");
+    fprintf(stderr, "                            A range of track indexes is specified as '<first>-<last>', e.g. 0-3\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Notes:\n");
     fprintf(stderr, " - <umid> format is 64 hexadecimal characters and any '.' and '-' characters are ignored\n");
@@ -516,6 +556,7 @@ int main(int argc, const char** argv)
     Rational timecode_rate = FRAME_RATE_25;
     bool timecode_rate_set = false;
     vector<const char *> input_filenames;
+    map<size_t, set<uint32_t> > disable_track_indexes;
     const char *log_filename = 0;
     LogLevel log_level = INFO_LOG;
     ClipWriterType clip_type = CW_AS02_CLIP_TYPE;
@@ -1577,16 +1618,35 @@ int main(int argc, const char** argv)
     }
 
     for (; cmdln_index < argc; cmdln_index++) {
-        if (!check_file_exists(argv[cmdln_index])) {
-            if (argv[cmdln_index][0] == '-') {
+        if (strcmp(argv[cmdln_index], "--disable-tracks") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
                 usage(argv[0]);
-                fprintf(stderr, "Unknown argument '%s'\n", argv[cmdln_index]);
-            } else {
-                fprintf(stderr, "Failed to open input filename '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
             }
-            return 1;
+            if (!parse_track_indexes(argv[cmdln_index + 1], &disable_track_indexes[input_filenames.size()]))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
         }
-        input_filenames.push_back(argv[cmdln_index]);
+        else
+        {
+            if (!check_file_exists(argv[cmdln_index])) {
+                if (argv[cmdln_index][0] == '-') {
+                    usage(argv[0]);
+                    fprintf(stderr, "Unknown argument '%s'\n", argv[cmdln_index]);
+                } else {
+                    fprintf(stderr, "Failed to open input filename '%s'\n", argv[cmdln_index]);
+                }
+                return 1;
+            }
+            input_filenames.push_back(argv[cmdln_index]);
+        }
     }
 
     if (input_filenames.empty()) {
@@ -1676,6 +1736,7 @@ int main(int argc, const char** argv)
                               MXFFileReader::ResultToString(result).c_str());
                     throw false;
                 }
+                disable_tracks(grp_file_reader, disable_track_indexes[i]);
                 group_reader->AddReader(grp_file_reader);
             }
             if (!group_reader->Finalize())
@@ -1697,6 +1758,7 @@ int main(int argc, const char** argv)
                               MXFFileReader::ResultToString(result).c_str());
                     throw false;
                 }
+                disable_tracks(seq_file_reader, disable_track_indexes[i]);
                 seq_reader->AddReader(seq_file_reader);
             }
             if (!seq_reader->Finalize(false, keep_input_order))
@@ -1715,6 +1777,7 @@ int main(int argc, const char** argv)
                           MXFFileReader::ResultToString(result).c_str());
                 throw false;
             }
+            disable_tracks(file_reader, disable_track_indexes[0]);
 
             reader = file_reader;
         }
@@ -1754,6 +1817,9 @@ int main(int argc, const char** argv)
         bool have_vbi_track = false, have_anc_track = false;
         for (i = 0; i < reader->GetNumTrackReaders(); i++) {
             MXFTrackReader *track_reader = reader->GetTrackReader(i);
+            if (!track_reader->IsEnabled())
+                continue;
+
             const MXFTrackInfo *input_track_info = track_reader->GetTrackInfo();
 
             const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
