@@ -71,7 +71,8 @@ void OP1ADataTrack::SetMaxDataSize(uint32_t size)
 
 void OP1ADataTrack::PrepareWrite(uint8_t track_count)
 {
-    CompleteEssenceKeyAndTrackNum(track_count);
+    BMX_ASSERT(track_count == 1);
+    // track number and essence element key are already complete
 
     mCPManager->RegisterDataTrackElement(mTrackIndex, mEssenceElementKey, mConstantDataSize, mMaxDataSize);
     mIndexTable->RegisterDataTrackElement(mTrackIndex, (mConstantDataSize || mMaxDataSize));
