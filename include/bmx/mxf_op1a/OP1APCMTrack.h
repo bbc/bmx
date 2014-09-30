@@ -48,6 +48,7 @@ public:
                  mxfRational frame_rate, EssenceType essence_type);
     virtual ~OP1APCMTrack();
 
+    void SetAES3Mapping(bool enable);                   // default BWF mapping
     void SetSamplingRate(mxfRational sampling_rate);    // default 48000/1
     void SetQuantizationBits(uint32_t bits);            // default 16
     void SetChannelCount(uint32_t count);               // default 1

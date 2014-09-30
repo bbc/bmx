@@ -45,8 +45,10 @@ using namespace bmx;
 using namespace mxfpp;
 
 
-static const mxfKey AUDIO_ELEMENT_FW_KEY    = MXF_AES3BWF_EE_K(0x01, MXF_BWF_FRAME_WRAPPED_EE_TYPE, 0x00);
-static const mxfKey AUDIO_ELEMENT_CW_KEY    = MXF_AES3BWF_EE_K(0x01, MXF_BWF_CLIP_WRAPPED_EE_TYPE, 0x00);
+static const mxfKey BWF_ELEMENT_FW_KEY    = MXF_AES3BWF_EE_K(0x01, MXF_BWF_FRAME_WRAPPED_EE_TYPE, 0x00);
+static const mxfKey BWF_ELEMENT_CW_KEY    = MXF_AES3BWF_EE_K(0x01, MXF_BWF_CLIP_WRAPPED_EE_TYPE, 0x00);
+static const mxfKey AES3_ELEMENT_FW_KEY   = MXF_AES3BWF_EE_K(0x01, MXF_AES3_FRAME_WRAPPED_EE_TYPE, 0x00);
+static const mxfKey AES3_ELEMENT_CW_KEY   = MXF_AES3BWF_EE_K(0x01, MXF_AES3_CLIP_WRAPPED_EE_TYPE, 0x00);
 static const uint8_t AUDIO_ELEMENT_CW_LLEN  = 8;
 
 
@@ -69,19 +71,36 @@ OP1APCMTrack::OP1APCMTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
         mWaveDescriptorHelper->SetSampleRate(mEditRate);
     }
 
-    if (mOP1AFile->IsFrameWrapped()) {
-        mTrackNumber = MXF_AES3BWF_TRACK_NUM(0x01, MXF_BWF_FRAME_WRAPPED_EE_TYPE, 0x00);
-        mEssenceElementKey = AUDIO_ELEMENT_FW_KEY;
-    } else {
-        mTrackNumber = MXF_AES3BWF_TRACK_NUM(0x01, MXF_BWF_CLIP_WRAPPED_EE_TYPE, 0x00);
-        mEssenceElementKey = AUDIO_ELEMENT_CW_KEY;
-    }
+    SetAES3Mapping(false);
 
     SetSampleSequence();
 }
 
 OP1APCMTrack::~OP1APCMTrack()
 {
+}
+
+void OP1APCMTrack::SetAES3Mapping(bool enable)
+{
+    if (enable) {
+        mWaveDescriptorHelper->SetUseAES3AudioDescriptor(true);
+        if (mOP1AFile->IsFrameWrapped()) {
+            mTrackNumber = MXF_AES3BWF_TRACK_NUM(0x01, MXF_AES3_FRAME_WRAPPED_EE_TYPE, 0x00);
+            mEssenceElementKey = AES3_ELEMENT_FW_KEY;
+        } else {
+            mTrackNumber = MXF_AES3BWF_TRACK_NUM(0x01, MXF_AES3_CLIP_WRAPPED_EE_TYPE, 0x00);
+            mEssenceElementKey = AES3_ELEMENT_CW_KEY;
+        }
+    } else {
+        mWaveDescriptorHelper->SetUseAES3AudioDescriptor(false);
+        if (mOP1AFile->IsFrameWrapped()) {
+            mTrackNumber = MXF_AES3BWF_TRACK_NUM(0x01, MXF_BWF_FRAME_WRAPPED_EE_TYPE, 0x00);
+            mEssenceElementKey = BWF_ELEMENT_FW_KEY;
+        } else {
+            mTrackNumber = MXF_AES3BWF_TRACK_NUM(0x01, MXF_BWF_CLIP_WRAPPED_EE_TYPE, 0x00);
+            mEssenceElementKey = BWF_ELEMENT_CW_KEY;
+        }
+    }
 }
 
 void OP1APCMTrack::SetSamplingRate(mxfRational sampling_rate)

@@ -88,6 +88,7 @@ public:
     void SetInputHeight(uint32_t height);                           // uncompressed; default 0
 
     // Sound properties
+    void SetAES3Mapping(bool enable);               // default BWF mapping
     void SetSamplingRate(Rational sampling_rate);   // default 48000/1
     void SetQuantizationBits(uint32_t bits);        // default 16
     void SetChannelCount(uint32_t count);           // default 1

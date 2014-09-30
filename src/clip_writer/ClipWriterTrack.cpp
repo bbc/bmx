@@ -511,6 +511,29 @@ void ClipWriterTrack::SetInputHeight(uint32_t height)
     }
 }
 
+void ClipWriterTrack::SetAES3Mapping(bool enable)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
+            if (pcm_track)
+                pcm_track->SetAES3Mapping(enable);
+            break;
+        }
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_D10_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
 void ClipWriterTrack::SetSamplingRate(Rational sampling_rate)
 {
     switch (mClipType)
