@@ -503,6 +503,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  op1a:\n");
     fprintf(stderr, "    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support\n");
     fprintf(stderr, "                                separate partitions for header metadata, index tables, essence container data and footer\n");
+    fprintf(stderr, "    --body-part             Create separate body partitions for essence data\n");
+    fprintf(stderr, "                                and don't create separate body partitions for index table segments\n");
     fprintf(stderr, "    --clip-wrap             Use clip wrapping for a single sound track\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11d10/d10:\n");
@@ -624,6 +626,7 @@ int main(int argc, const char** argv)
     bool allow_no_avci_head = false;
     bool force_no_avci_head = false;
     bool min_part = false;
+    bool body_part = false;
     bool clip_wrap = false;
     bool realtime = false;
     float rt_factor = 1.0;
@@ -1353,6 +1356,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--min-part") == 0)
         {
             min_part = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--body-part") == 0)
+        {
+            body_part = true;
         }
         else if (strcmp(argv[cmdln_index], "--clip-wrap") == 0)
         {
@@ -2111,8 +2118,12 @@ int main(int argc, const char** argv)
         int flavour = 0;
         if (clip_type == CW_OP1A_CLIP_TYPE) {
             flavour = OP1A_DEFAULT_FLAVOUR;
-            if (clip_sub_type != AS11_CLIP_SUB_TYPE && min_part)
-                flavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
+            if (clip_sub_type != AS11_CLIP_SUB_TYPE) {
+                if (min_part)
+                    flavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
+                else if (body_part)
+                    flavour |= OP1A_BODY_PARTITIONS_FLAVOUR;
+            }
             if (output_file_md5)
                 flavour |= OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
