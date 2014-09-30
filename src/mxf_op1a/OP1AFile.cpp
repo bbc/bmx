@@ -122,7 +122,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mMXFChecksumFile = 0;
 
     mIndexTable = new OP1AIndexTable(INDEX_SID, BODY_SID, frame_rate);
-    mCPManager = new OP1AContentPackageManager(mMXFFile, mIndexTable, mEssencePartitionKAGSize, MIN_LLEN);
+    mCPManager = new OP1AContentPackageManager(mMXFFile, mIndexTable, frame_rate, mEssencePartitionKAGSize, MIN_LLEN);
 
     if (flavour & OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR) {
         mMXFChecksumFile = mxf_checksum_file_open(mMXFFile->getCFile(), MD5_CHECKSUM);
@@ -154,6 +154,11 @@ void OP1AFile::SetClipName(string name)
 void OP1AFile::SetStartTimecode(Timecode start_timecode)
 {
     mStartTimecode = start_timecode;
+}
+
+void OP1AFile::SetHaveInputUserTimecode(bool enable)
+{
+    mCPManager->SetHaveInputUserTimecode(enable);
 }
 
 void OP1AFile::SetProductInfo(string company_name, string product_name, mxfProductVersion product_version,
@@ -208,6 +213,14 @@ void OP1AFile::SetClipWrapped(bool enable)
     BMX_CHECK(mTracks.empty());
     mFrameWrapped = !enable;
     mCPManager->SetClipWrapped(enable);
+}
+
+void OP1AFile::SetAddSystemItem(bool enable)
+{
+    if (enable) {
+        mCPManager->RegisterSystemItem();
+        mIndexTable->RegisterSystemItem();
+    }
 }
 
 void OP1AFile::SetOutputStartOffset(int64_t offset)
@@ -285,6 +298,7 @@ void OP1AFile::PrepareHeaderMetadata()
 
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite(mTrackCounts[mTracks[i]->GetDataDef()]);
+    mCPManager->SetStartTimecode(mStartTimecode);
     mCPManager->PrepareWrite();
     mIndexTable->PrepareWrite();
 
@@ -321,6 +335,13 @@ void OP1AFile::PrepareWrite()
         PrepareHeaderMetadata();
 
     CreateFile();
+}
+
+void OP1AFile::WriteUserTimecode(Timecode user_timecode)
+{
+    mCPManager->WriteUserTimecode(user_timecode);
+
+    WriteContentPackages(false);
 }
 
 void OP1AFile::WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples)

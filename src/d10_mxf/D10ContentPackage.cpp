@@ -62,23 +62,6 @@ static const uint32_t KAG_SIZE = 0x200;
 
 
 
-static uint32_t get_kag_aligned_size(uint32_t data_size)
-{
-    // assuming the partition pack is aligned to the kag working from the first byte of the file
-
-    uint32_t fill_size = 0;
-    uint32_t data_in_kag_size = data_size % KAG_SIZE;
-    if (data_in_kag_size > 0) {
-        fill_size = KAG_SIZE - data_in_kag_size;
-        while (fill_size < (uint32_t)LLEN + mxfKey_extlen)
-            fill_size += KAG_SIZE;
-    }
-
-    return data_size + fill_size;
-}
-
-
-
 D10ContentPackageInfo::D10ContentPackageInfo()
 {
     is_25hz = true;
@@ -493,10 +476,13 @@ void D10ContentPackageManager::PrepareWrite()
     BMX_CHECK_M(mInfo.picture_track_index != (uint32_t)(-1), ("Require video track for D10 MXF"));
 
     mInfo.system_item_size = get_kag_aligned_size(mxfKey_extlen + LLEN + SYSTEM_ITEM_METADATA_PACK_SIZE +
-                                                  mxfKey_extlen + LLEN);
-    mInfo.picture_item_size = get_kag_aligned_size(mxfKey_extlen + LLEN + mInfo.picture_sample_size);
+                                                  mxfKey_extlen + LLEN,
+                                                  KAG_SIZE, LLEN);
+    mInfo.picture_item_size = get_kag_aligned_size(mxfKey_extlen + LLEN + mInfo.picture_sample_size,
+                                                   KAG_SIZE, LLEN);
     BMX_ASSERT(mxfKey_extlen + LLEN < 4 * 8); // can add fill for mInfo.max_sound_sample_count - 1
-    mInfo.sound_item_size = get_kag_aligned_size(mxfKey_extlen + LLEN + mInfo.max_sound_sample_count * 4 * 8 + 4);
+    mInfo.sound_item_size = get_kag_aligned_size(mxfKey_extlen + LLEN + mInfo.max_sound_sample_count * 4 * 8 + 4,
+                                                 KAG_SIZE, LLEN);
 
 
     // delta entry array

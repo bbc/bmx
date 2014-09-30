@@ -53,21 +53,6 @@ using namespace mxfpp;
 #define SYSTEM_ITEM_TRACK_INDEX     (uint32_t)(-1)
 
 
-typedef struct
-{
-    uint8_t cp_rate_id;
-    int32_t frame_rate_per_sec;
-} ContentPackageRate;
-
-
-static const ContentPackageRate CONTENT_PACKAGE_RATES[] =
-{
-    { 1, 24}, { 2,  25}, { 3,  30},
-    { 4, 48}, { 5,  50}, { 6,  60},
-    { 7, 72}, { 8,  75}, { 9,  90},
-    {10, 96}, {11, 100}, {12, 120}
-};
-
 static const mxfKey MXF_EE_K(EmptyPackageMetadataSet) = MXF_SDTI_CP_PACKAGE_METADATA_KEY(0x00);
 
 static const uint32_t KAG_SIZE = 0x200;
@@ -79,24 +64,6 @@ static const uint8_t LLEN      = 4;
 static bool compare_element(const RDD9ContentPackageElement *left, const RDD9ContentPackageElement *right)
 {
     return left->IsPicture() && !right->IsPicture();
-}
-
-static uint8_t get_content_package_rate(Rational frame_rate)
-{
-    if (frame_rate.denominator != 1 && frame_rate.denominator != 1001)
-        return 0;
-
-    int32_t frame_rate_per_sec = frame_rate.numerator;
-    if (frame_rate.denominator == 1001)
-        frame_rate_per_sec /= 1000;
-
-    size_t i;
-    for (i = 0; i < BMX_ARRAY_SIZE(CONTENT_PACKAGE_RATES); i++) {
-        if (CONTENT_PACKAGE_RATES[i].frame_rate_per_sec == frame_rate_per_sec)
-            return (CONTENT_PACKAGE_RATES[i].cp_rate_id << 1) | (frame_rate.denominator == 1 ? 0 : 1);
-    }
-
-    return 0;
 }
 
 
@@ -195,22 +162,12 @@ void RDD9ContentPackageElement::Write(File *mxf_file, unsigned char *data, uint3
 
 uint32_t RDD9ContentPackageElement::GetKAGAlignedSize(uint32_t klv_size) const
 {
-    return klv_size + GetKAGFillSize(klv_size);
+    return get_kag_aligned_size(klv_size, KAG_SIZE, LLEN);
 }
 
 uint32_t RDD9ContentPackageElement::GetKAGFillSize(int64_t klv_size) const
 {
-    // assuming the partition pack is aligned to the kag working from the first byte of the file
-
-    uint32_t fill_size = 0;
-    uint32_t klv_in_kag_size = (uint32_t)(klv_size % KAG_SIZE);
-    if (klv_in_kag_size > 0) {
-        fill_size = KAG_SIZE - klv_in_kag_size;
-        while (fill_size < (uint32_t)LLEN + mxfKey_extlen)
-            fill_size += KAG_SIZE;
-    }
-
-    return fill_size;
+    return get_kag_fill_size(klv_size, KAG_SIZE, LLEN);
 }
 
 
@@ -418,7 +375,7 @@ void RDD9ContentPackage::WriteSystemItem()
 
     // core fields
     mMXFFile->writeUInt8(0x5c);                                         // system metadata bitmap
-    mMXFFile->writeUInt8(get_content_package_rate(mFrameRate));         // content package rate
+    mMXFFile->writeUInt8(get_system_item_cp_rate(mFrameRate));          // content package rate
     mMXFFile->writeUInt8(0x00);                                         // content package type (default)
     mMXFFile->writeUInt16(0x0000);                                      // channel handle (default)
     mMXFFile->writeUInt16((uint16_t)(mPosition & 0xffff));              // continuity count

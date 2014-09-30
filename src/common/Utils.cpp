@@ -80,6 +80,21 @@ static const SampleSequence SAMPLE_SEQUENCES[] =
 };
 
 
+typedef struct
+{
+    uint8_t cp_rate_id;
+    int32_t frame_rate_per_sec;
+} ContentPackageRate;
+
+static const ContentPackageRate CONTENT_PACKAGE_RATES[] =
+{
+    { 1, 24}, { 2,  25}, { 3,  30},
+    { 4, 48}, { 5,  50}, { 6,  60},
+    { 7, 72}, { 8,  75}, { 9,  90},
+    {10, 96}, {11, 100}, {12, 120}
+};
+
+
 namespace bmx
 {
 extern bool BMX_REGRESSION_TEST;
@@ -748,6 +763,44 @@ bmx::Rational bmx::normalize_rate(Rational rate)
         return FRAME_RATE_5994;
 
     return result;
+}
+
+uint8_t bmx::get_system_item_cp_rate(Rational frame_rate)
+{
+    if (frame_rate.denominator != 1 && frame_rate.denominator != 1001)
+        return 0;
+
+    int32_t frame_rate_per_sec = frame_rate.numerator;
+    if (frame_rate.denominator == 1001)
+        frame_rate_per_sec /= 1000;
+
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(CONTENT_PACKAGE_RATES); i++) {
+        if (CONTENT_PACKAGE_RATES[i].frame_rate_per_sec == frame_rate_per_sec)
+            return (CONTENT_PACKAGE_RATES[i].cp_rate_id << 1) | (frame_rate.denominator == 1 ? 0 : 1);
+    }
+
+    return 0;
+}
+
+uint32_t bmx::get_kag_fill_size(int64_t klv_size, uint32_t kag_size, uint8_t min_llen)
+{
+    // assuming the partition pack is aligned to the kag working from the first byte of the file
+
+    uint32_t fill_size = 0;
+    uint32_t klv_in_kag_size = (uint32_t)(klv_size % kag_size);
+    if (klv_in_kag_size > 0) {
+        fill_size = kag_size - klv_in_kag_size;
+        while (fill_size < (uint32_t)min_llen + mxfKey_extlen)
+            fill_size += kag_size;
+    }
+
+    return fill_size;
+}
+
+uint32_t bmx::get_kag_aligned_size(int64_t klv_size, uint32_t kag_size, uint8_t min_llen)
+{
+    return klv_size + get_kag_fill_size(klv_size, kag_size, min_llen);
 }
 
 void bmx::decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_tc, unsigned int size,

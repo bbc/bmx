@@ -34,11 +34,13 @@
 #endif
 
 #include <cstdio>
+#include <cstring>
 
 #include <algorithm>
 
 #include <bmx/mxf_op1a/OP1AContentPackage.h>
 #include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -47,24 +49,31 @@ using namespace bmx;
 using namespace mxfpp;
 
 
-#define MAX_CONTENT_PACKAGES    250
+#define MAX_CONTENT_PACKAGES        250
+#define FW_ESS_ELEMENT_LLEN         4
 
-#define FW_ESS_ELEMENT_LLEN     4
+#define SYS_META_PICTURE_ITEM_FLAG  0x08
+#define SYS_META_SOUND_ITEM_FLAG    0x04
+#define SYS_META_DATA_ITEM_FLAG     0x02
+
+
+static const mxfKey MXF_EE_K(EmptyPackageMetadataSet) = MXF_SDTI_CP_PACKAGE_METADATA_KEY(0x00);
+
+static const uint32_t SYSTEM_ITEM_TRACK_INDEX = (uint32_t)(-1);
+static const uint32_t SYSTEM_ITEM_METADATA_PACK_SIZE = 7 + 16 + 17 + 17;
+static const uint32_t NA_SYSTEM_ITEM_SIZE = mxfKey_extlen + FW_ESS_ELEMENT_LLEN + SYSTEM_ITEM_METADATA_PACK_SIZE +
+                                            mxfKey_extlen + FW_ESS_ELEMENT_LLEN;
 
 
 
 static bool compare_element(const OP1AContentPackageElement *left, const OP1AContentPackageElement *right)
 {
-    // positioning data before picture and sound
-    if (left->data_def == MXF_DATA_DDEF || right->data_def == MXF_DATA_DDEF)
-        return left->data_def == MXF_DATA_DDEF && right->data_def != MXF_DATA_DDEF;
-    else
-        return left->data_def < right->data_def;
+  return left->element_type < right->element_type;
 }
 
 
 
-OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, MXFDataDefEnum data_def_,
+OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, ElementType element_type_,
                                                      mxfKey element_key_, uint32_t kag_size_, uint8_t min_llen_)
 {
     track_index = track_index_;
@@ -72,7 +81,7 @@ OP1AContentPackageElement::OP1AContentPackageElement(uint32_t track_index_, MXFD
     kag_size = kag_size_;
     min_llen = min_llen_;
     essence_llen = FW_ESS_ELEMENT_LLEN;
-    data_def = data_def_;
+    element_type = element_type_;
     is_cbe = true;
     is_frame_wrapped = true;
     sample_size = 0;
@@ -130,22 +139,12 @@ uint32_t OP1AContentPackageElement::GetNumSamples(int64_t position) const
 
 uint32_t OP1AContentPackageElement::GetKAGAlignedSize(uint32_t klv_size)
 {
-    return klv_size + GetKAGFillSize(klv_size);
+    return get_kag_aligned_size(klv_size, kag_size, min_llen);
 }
 
 uint32_t OP1AContentPackageElement::GetKAGFillSize(int64_t klv_size)
 {
-    // assuming the partition pack is aligned to the kag working from the first byte of the file
-
-    uint32_t fill_size = 0;
-    uint32_t klv_in_kag_size = (uint32_t)(klv_size % kag_size);
-    if (klv_in_kag_size > 0) {
-        fill_size = kag_size - klv_in_kag_size;
-        while (fill_size < (uint32_t)min_llen + mxfKey_extlen)
-            fill_size += kag_size;
-    }
-
-    return fill_size;
+    return get_kag_fill_size(klv_size, kag_size, min_llen);
 }
 
 void OP1AContentPackageElement::WriteKL(File *mxf_file, int64_t essence_len)
@@ -298,13 +297,43 @@ void OP1AContentPackageElementData::Reset(int64_t new_position)
     mElementStartPos = 0;
 }
 
-
-
-OP1AContentPackage::OP1AContentPackage(File *mxf_file, OP1AIndexTable *index_table,
-                                       vector<OP1AContentPackageElement*> elements, int64_t position)
+OP1AContentPackage::OP1AContentPackage(File *mxf_file, OP1AIndexTable *index_table, uint32_t kag_size, uint8_t min_llen,
+                                       bool have_system_item, bool have_user_timecode, Rational frame_rate,
+                                       uint8_t sys_meta_item_flags, vector<OP1AContentPackageElement*> elements,
+                                       int64_t position, Timecode start_timecode)
 {
+    mMXFFile = mxf_file;
     mIndexTable = index_table;
     mFrameWrapped = true;
+    mHaveSystemItem = have_system_item;
+    if (have_system_item) {
+      mSystemItemSize = get_kag_aligned_size(NA_SYSTEM_ITEM_SIZE, kag_size, min_llen);
+
+      // system metadata bitmap = 0x5c
+      // b7 = 0 (FEC not used)
+      // b6 = 1 (SMPTE Universal label)
+      // b5 = 0 (creation date/time stamp)
+      // b4 = 1 (user date/time stamp)
+      // b3 = 0/1 (picture item)
+      // b2 = 0/1 (sound item)
+      // b1 = 0/1 (data item)
+      // b0 = 0 (control element)
+      mSystemMetadataBitmap = 0x50 | sys_meta_item_flags;
+
+      mHaveInputUserTimecode = have_user_timecode;
+      mFrameRate = frame_rate;
+      mStartTimecode = start_timecode;
+      mContentPackageRate = get_system_item_cp_rate(frame_rate);
+      mUserTimecodeSet = false;
+    } else {
+      mSystemItemSize = 0;
+      mSystemMetadataBitmap = 0;
+      mHaveInputUserTimecode = false;
+      mFrameRate = g_Null_Rational;
+      mContentPackageRate = 0;
+      mUserTimecodeSet = false;
+    }
+    mPosition = position;
     mHaveUpdatedIndexTable = false;
 
     if (!elements.empty())
@@ -329,14 +358,24 @@ void OP1AContentPackage::Reset(int64_t new_position)
     size_t i;
     for (i = 0; i < mElementData.size(); i++)
         mElementData[i]->Reset(new_position);
+    mPosition = new_position;
     mHaveUpdatedIndexTable = false;
+    mUserTimecodeSet = false;
 }
 
 bool OP1AContentPackage::IsReady(uint32_t track_index)
 {
-    BMX_ASSERT(mElementTrackIndexMap.find(track_index) != mElementTrackIndexMap.end());
+    if (mHaveSystemItem && track_index == SYSTEM_ITEM_TRACK_INDEX)
+        return mUserTimecodeSet || !mHaveInputUserTimecode;
 
+    BMX_ASSERT(mElementTrackIndexMap.find(track_index) != mElementTrackIndexMap.end());
     return mElementTrackIndexMap[track_index]->IsReady();
+}
+
+void OP1AContentPackage::WriteUserTimecode(Timecode user_timecode)
+{
+    mUserTimecode    = user_timecode;
+    mUserTimecodeSet = true;
 }
 
 uint32_t OP1AContentPackage::WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size,
@@ -356,6 +395,9 @@ void OP1AContentPackage::WriteSample(uint32_t track_index, const CDataBuffer *da
 
 bool OP1AContentPackage::IsReady()
 {
+    if (mHaveSystemItem && mHaveInputUserTimecode && !mUserTimecodeSet)
+        return false;
+
     size_t i;
     for (i = 0; i < mElementData.size(); i++) {
         if (!mElementData[i]->IsReady())
@@ -373,6 +415,11 @@ void OP1AContentPackage::UpdateIndexTable()
     if (mFrameWrapped) {
         uint32_t size = 0;
         vector<uint32_t> element_sizes;
+
+        if (mHaveSystemItem) {
+            element_sizes.push_back(mSystemItemSize);
+            size += mSystemItemSize;
+        }
 
         size_t i;
         for (i = 0; i < mElementData.size(); i++) {
@@ -393,12 +440,55 @@ uint32_t OP1AContentPackage::Write()
 {
     BMX_ASSERT(mHaveUpdatedIndexTable);
 
+    if (mHaveSystemItem)
+        WriteSystemItem();
+
     uint32_t size = 0;
     size_t i;
     for (i = 0; i < mElementData.size(); i++)
         size += mElementData[i]->Write();
 
     return size;
+}
+
+void OP1AContentPackage::WriteSystemItem()
+{
+    mMXFFile->writeFixedKL(&MXF_EE_K(SDTI_CP_System_Pack), FW_ESS_ELEMENT_LLEN, SYSTEM_ITEM_METADATA_PACK_SIZE);
+
+    // core fields
+    mMXFFile->writeUInt8(mSystemMetadataBitmap);                        // system metadata bitmap
+    mMXFFile->writeUInt8(mContentPackageRate);                          // content package rate
+    mMXFFile->writeUInt8(0x00);                                         // content package type (default)
+    mMXFFile->writeUInt16(0x0000);                                      // channel handle (default)
+    mMXFFile->writeUInt16((uint16_t)(mPosition & 0xffff));              // continuity count
+
+    // SMPTE Universal Label
+    mMXFFile->writeUL(&MXF_EC_L(MultipleWrappings));
+
+    // (null) Package creation date / time stamp
+    unsigned char ts_bytes[17];
+    memset(ts_bytes, 0, sizeof(ts_bytes));
+    BMX_CHECK(mMXFFile->write(ts_bytes, sizeof(ts_bytes)) == sizeof(ts_bytes));
+
+    // User date / time stamp
+    Timecode user_timecode;
+    ts_bytes[0] = 0x81; // SMPTE 12-M timecode
+    if (mHaveInputUserTimecode) {
+        user_timecode = mUserTimecode;
+    } else if (!mStartTimecode.IsInvalid()) {
+        user_timecode = mStartTimecode;
+        user_timecode.AddOffset(mPosition);
+    } else {
+        user_timecode.Init(get_rounded_tc_base(mFrameRate), false, mPosition);
+    }
+    encode_smpte_timecode(user_timecode, false, &ts_bytes[1], sizeof(ts_bytes) - 1);
+    BMX_CHECK(mMXFFile->write(ts_bytes, sizeof(ts_bytes)) == sizeof(ts_bytes));
+
+    // empty Package Metadata Set
+    mMXFFile->writeFixedKL(&MXF_EE_K(EmptyPackageMetadataSet), FW_ESS_ELEMENT_LLEN, 0);
+
+    if (mSystemItemSize > NA_SYSTEM_ITEM_SIZE)
+        mMXFFile->writeFill(mSystemItemSize - NA_SYSTEM_ITEM_SIZE);
 }
 
 void OP1AContentPackage::CompleteWrite()
@@ -409,17 +499,21 @@ void OP1AContentPackage::CompleteWrite()
 
 
 
-OP1AContentPackageManager::OP1AContentPackageManager(File *mxf_file, OP1AIndexTable *index_table, uint32_t kag_size,
-                                                     uint8_t min_llen)
+OP1AContentPackageManager::OP1AContentPackageManager(File *mxf_file, OP1AIndexTable *index_table, Rational frame_rate,
+                                                     uint32_t kag_size, uint8_t min_llen)
 {
     // check assumption that filler will have llen == min_llen
     BMX_ASSERT(min_llen >= mxf_get_llen(0, kag_size + mxfKey_extlen + min_llen));
 
     mMXFFile = mxf_file;
     mIndexTable = index_table;
+    mFrameRate = frame_rate;
     mKAGSize = kag_size;
     mMinLLen = min_llen;
     mFrameWrapped = true;
+    mHaveSystemItem = false;
+    mHaveInputUserTimecode = false;
+    mSysMetaItemFlags = 0;
     mPosition = 0;
 }
 
@@ -435,9 +529,29 @@ OP1AContentPackageManager::~OP1AContentPackageManager()
         delete mFreeContentPackages[i];
 }
 
+void OP1AContentPackageManager::SetHaveInputUserTimecode(bool enable)
+{
+    mHaveInputUserTimecode = enable;
+}
+
+void OP1AContentPackageManager::SetStartTimecode(Timecode start_timecode)
+{
+    if (!start_timecode.IsInvalid() && start_timecode.GetRoundedTCBase() == get_rounded_tc_base(mFrameRate))
+        mStartTimecode = start_timecode;
+    else
+        mStartTimecode.SetInvalid();
+}
+
 void OP1AContentPackageManager::SetClipWrapped(bool enable)
 {
+    BMX_ASSERT(!enable || !mHaveSystemItem);
     mFrameWrapped = !enable;
+}
+
+void OP1AContentPackageManager::RegisterSystemItem()
+{
+    BMX_ASSERT(mFrameWrapped);
+    mHaveSystemItem = true;
 }
 
 void OP1AContentPackageManager::RegisterPictureTrackElement(uint32_t track_index, mxfKey element_key, bool is_cbe)
@@ -450,13 +564,16 @@ void OP1AContentPackageManager::RegisterPictureTrackElement(uint32_t track_index
 {
     BMX_ASSERT(mFrameWrapped);
 
-    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index, MXF_PICTURE_DDEF, element_key,
-                                                                       mKAGSize, mMinLLen);
+    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index,
+                                                                       OP1AContentPackageElement::PICTURE_ELEMENT,
+                                                                       element_key, mKAGSize, mMinLLen);
     element->is_cbe = is_cbe;
     element->essence_llen = element_llen;
 
     mElements.push_back(element);
     mElementTrackIndexMap[track_index] = element;
+
+    mSysMetaItemFlags |= SYS_META_PICTURE_ITEM_FLAG;
 }
 
 void OP1AContentPackageManager::RegisterAVCITrackElement(uint32_t track_index, mxfKey element_key,
@@ -464,13 +581,16 @@ void OP1AContentPackageManager::RegisterAVCITrackElement(uint32_t track_index, m
 {
     BMX_ASSERT(mFrameWrapped);
 
-    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index, MXF_PICTURE_DDEF, element_key,
-                                                                       mKAGSize, mMinLLen);
+    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index,
+                                                                       OP1AContentPackageElement::PICTURE_ELEMENT,
+                                                                       element_key, mKAGSize, mMinLLen);
     element->first_sample_size = first_sample_size;
     element->nonfirst_sample_size = nonfirst_sample_size;
 
     mElements.push_back(element);
     mElementTrackIndexMap[track_index] = element;
+
+    mSysMetaItemFlags |= SYS_META_PICTURE_ITEM_FLAG;
 }
 
 void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,
@@ -478,12 +598,15 @@ void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, 
 {
     BMX_ASSERT(mFrameWrapped);
 
-    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index, MXF_SOUND_DDEF, element_key,
-                                                                       mKAGSize, mMinLLen);
+    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index,
+                                                                       OP1AContentPackageElement::SOUND_ELEMENT,
+                                                                       element_key, mKAGSize, mMinLLen);
     element->SetSampleSequence(sample_sequence, sample_size);
 
     mElements.push_back(element);
     mElementTrackIndexMap[track_index] = element;
+
+    mSysMetaItemFlags |= SYS_META_SOUND_ITEM_FLAG;
 }
 
 void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,
@@ -491,13 +614,16 @@ void OP1AContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, 
 {
     BMX_ASSERT(!mFrameWrapped);
 
-    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index, MXF_SOUND_DDEF, element_key,
-                                                                       mKAGSize, mMinLLen);
+    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index,
+                                                                       OP1AContentPackageElement::SOUND_ELEMENT,
+                                                                       element_key, mKAGSize, mMinLLen);
     element->is_frame_wrapped = false;
     element->essence_llen = element_llen;
 
     mElements.push_back(element);
     mElementTrackIndexMap[track_index] = element;
+
+    mSysMetaItemFlags |= SYS_META_SOUND_ITEM_FLAG;
 }
 
 void OP1AContentPackageManager::RegisterDataTrackElement(uint32_t track_index, mxfKey element_key,
@@ -505,8 +631,9 @@ void OP1AContentPackageManager::RegisterDataTrackElement(uint32_t track_index, m
 {
     BMX_ASSERT(mFrameWrapped);
 
-    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index, MXF_DATA_DDEF, element_key,
-                                                                       mKAGSize, mMinLLen);
+    OP1AContentPackageElement *element = new OP1AContentPackageElement(track_index,
+                                                                       OP1AContentPackageElement::DATA_ELEMENT,
+                                                                       element_key, mKAGSize, mMinLLen);
     if (constant_essence_len)
         element->SetConstantEssenceLen(constant_essence_len);
     else if (max_essence_len)
@@ -516,6 +643,8 @@ void OP1AContentPackageManager::RegisterDataTrackElement(uint32_t track_index, m
 
     mElements.push_back(element);
     mElementTrackIndexMap[track_index] = element;
+
+    mSysMetaItemFlags |= SYS_META_DATA_ITEM_FLAG;
 }
 
 void OP1AContentPackageManager::PrepareWrite()
@@ -530,7 +659,7 @@ void OP1AContentPackageManager::PrepareWrite()
     bool valid_sequences = true;
     size_t i;
     for (i = 0; i < mElements.size(); i++) {
-        if (mElements[i]->data_def == MXF_SOUND_DDEF)
+        if (mElements[i]->element_type == OP1AContentPackageElement::SOUND_ELEMENT)
             break;
     }
     if (i + 1 < mElements.size()) {
@@ -551,6 +680,12 @@ void OP1AContentPackageManager::PrepareWrite()
         }
     }
     BMX_CHECK_M(valid_sequences, ("Sound tracks have different number of samples per frame"));
+}
+
+void OP1AContentPackageManager::WriteUserTimecode(Timecode user_timecode)
+{
+    if (mHaveSystemItem && mHaveInputUserTimecode)
+        mContentPackages[GetCurrentContentPackage(SYSTEM_ITEM_TRACK_INDEX)]->WriteUserTimecode(user_timecode);
 }
 
 void OP1AContentPackageManager::WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size,
@@ -662,7 +797,9 @@ size_t OP1AContentPackageManager::CreateContentPackage()
 
     if (mFreeContentPackages.empty()) {
         BMX_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
-        mContentPackages.push_back(new OP1AContentPackage(mMXFFile, mIndexTable, mElements, mPosition + cp_index));
+        mContentPackages.push_back(new OP1AContentPackage(mMXFFile, mIndexTable, mKAGSize, mMinLLen, mHaveSystemItem,
+                                                          mHaveInputUserTimecode, mFrameRate, mSysMetaItemFlags,
+                                                          mElements, mPosition + cp_index, mStartTimecode));
     } else {
         mContentPackages.push_back(mFreeContentPackages.back());
         mFreeContentPackages.pop_back();

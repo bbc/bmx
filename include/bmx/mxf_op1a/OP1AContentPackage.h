@@ -54,7 +54,15 @@ class OP1AFile;
 class OP1AContentPackageElement
 {
 public:
-    OP1AContentPackageElement(uint32_t track_index_, MXFDataDefEnum data_def_,
+  typedef enum
+  {
+    DATA_ELEMENT,
+    PICTURE_ELEMENT,
+    SOUND_ELEMENT,
+  } ElementType;
+
+public:
+    OP1AContentPackageElement(uint32_t track_index_, ElementType element_type_,
                               mxfKey element_key_, uint32_t kag_size_, uint8_t min_llen_);
 
     void SetSampleSequence(const std::vector<uint32_t> &sample_sequence_, uint32_t sample_size_);
@@ -75,7 +83,7 @@ public:
     uint32_t kag_size;
     uint8_t min_llen;
     uint8_t essence_llen;
-    MXFDataDefEnum data_def;
+    ElementType element_type;
     bool is_cbe;
     bool is_frame_wrapped;
     uint32_t fixed_element_size;
@@ -123,14 +131,17 @@ private:
 class OP1AContentPackage
 {
 public:
-    OP1AContentPackage(mxfpp::File *mxf_file, OP1AIndexTable *index_table,
-                       std::vector<OP1AContentPackageElement*> elements, int64_t position);
+    OP1AContentPackage(mxfpp::File *mxf_file, OP1AIndexTable *index_table, uint32_t kag_size, uint8_t min_llen,
+                       bool have_system_item, bool have_user_timecode, Rational frame_rate, uint8_t sys_meta_item_flags,
+                       std::vector<OP1AContentPackageElement*> elements, int64_t position, Timecode start_timecode);
     ~OP1AContentPackage();
 
     void Reset(int64_t new_position);
 
 public:
     bool IsReady(uint32_t track_index);
+
+    void WriteUserTimecode(Timecode user_timecode);
     uint32_t WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
     void WriteSample(uint32_t track_index, const CDataBuffer *data_array, uint32_t array_size);
 
@@ -138,25 +149,41 @@ public:
     bool IsReady();
     void UpdateIndexTable();
     uint32_t Write();
+    void WriteSystemItem();
     void CompleteWrite();
 
 private:
+    mxfpp::File *mMXFFile;
     OP1AIndexTable *mIndexTable;
     bool mFrameWrapped;
+    bool mHaveSystemItem;
+    uint32_t mSystemItemSize;
+    uint8_t mSystemMetadataBitmap;
+    bool mHaveInputUserTimecode;
+    Rational mFrameRate;
+    Timecode mStartTimecode;
+    uint8_t mContentPackageRate;
     std::vector<OP1AContentPackageElementData*> mElementData;
     std::map<uint32_t, OP1AContentPackageElementData*> mElementTrackIndexMap;
+    int64_t mPosition;
     bool mHaveUpdatedIndexTable;
+    Timecode mUserTimecode;
+    bool mUserTimecodeSet;
 };
 
 
 class OP1AContentPackageManager
 {
 public:
-    OP1AContentPackageManager(mxfpp::File *mxf_file, OP1AIndexTable *index_table, uint32_t kag_size, uint8_t min_llen);
+    OP1AContentPackageManager(mxfpp::File *mxf_file, OP1AIndexTable *index_table, Rational frame_rate,
+                              uint32_t kag_size, uint8_t min_llen);
     ~OP1AContentPackageManager();
 
+    void SetHaveInputUserTimecode(bool enable);
+    void SetStartTimecode(Timecode start_timecode);
     void SetClipWrapped(bool enable);
 
+    void RegisterSystemItem();
     void RegisterPictureTrackElement(uint32_t track_index, mxfKey element_key, bool is_cbe);
     void RegisterPictureTrackElement(uint32_t track_index, mxfKey element_key, bool is_cbe, uint8_t element_llen);
     void RegisterAVCITrackElement(uint32_t track_index, mxfKey element_key,
@@ -170,6 +197,7 @@ public:
     void PrepareWrite();
 
 public:
+    void WriteUserTimecode(Timecode user_timecode);
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
     void WriteSample(uint32_t track_index, const CDataBuffer *data_array, uint32_t array_size);
 
@@ -190,9 +218,14 @@ private:
 private:
     mxfpp::File *mMXFFile;
     OP1AIndexTable *mIndexTable;
+    Rational mFrameRate;
     uint32_t mKAGSize;
     uint8_t mMinLLen;
     bool mFrameWrapped;
+    bool mHaveSystemItem;
+    bool mHaveInputUserTimecode;
+    Timecode mStartTimecode;
+    uint8_t mSysMetaItemFlags;
 
     std::vector<OP1AContentPackageElement*> mElements;
     std::map<uint32_t, OP1AContentPackageElement*> mElementTrackIndexMap;

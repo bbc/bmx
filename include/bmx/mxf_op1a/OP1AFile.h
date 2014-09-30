@@ -70,6 +70,7 @@ public:
 
     void SetClipName(std::string name);                                 // default ""
     void SetStartTimecode(Timecode start_timecode);                     // default 00:00:00:00, non-drop frame
+    void SetHaveInputUserTimecode(bool enable);                         // default false (generated)
     void SetProductInfo(std::string company_name, std::string product_name, mxfProductVersion product_version,
                         std::string version, mxfUUID product_uid);
     void SetCreationDate(mxfTimestamp creation_date);                   // default generated ('now')
@@ -80,6 +81,7 @@ public:
     void SetPartitionInterval(int64_t frame_count);                     // default 0 (single partition)
     void SetInputDuration(int64_t duration);                            // single pass flavours only
     void SetClipWrapped(bool enable);                                   // default false (frame wrapped)
+    void SetAddSystemItem(bool enable);                                 // default false, no system item
 
 public:
     void SetOutputStartOffset(int64_t offset);
@@ -90,6 +92,7 @@ public:
 public:
     void PrepareHeaderMetadata();
     void PrepareWrite();
+    void WriteUserTimecode(Timecode user_timecode);
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
     void CompleteWrite();
 

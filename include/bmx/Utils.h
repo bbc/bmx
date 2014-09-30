@@ -116,6 +116,11 @@ std::string get_umid_string(UMID umid);
 
 Rational normalize_rate(Rational rate);
 
+uint8_t get_system_item_cp_rate(Rational frame_rate);
+
+uint32_t get_kag_fill_size(int64_t klv_size, uint32_t kag_size, uint8_t min_llen);
+uint32_t get_kag_aligned_size(int64_t klv_size, uint32_t kag_size, uint8_t min_llen);
+
 void decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_tc, unsigned int size,
                            Timecode *timecode, bool *field_mark);
 Timecode decode_smpte_timecode(Rational frame_rate, const unsigned char *smpte_tc, unsigned int size);
