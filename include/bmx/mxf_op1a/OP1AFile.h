@@ -45,12 +45,13 @@
 
 
 #define OP1A_DEFAULT_FLAVOUR                0x0000
-#define OP1A_MIN_PARTITIONS_FLAVOUR         0x0001
+#define OP1A_MIN_PARTITIONS_FLAVOUR         0x0001      // header and footer partition only
 #define OP1A_512_KAG_FLAVOUR                0x0002
 #define OP1A_377_2004_FLAVOUR               0x0004
 #define OP1A_SINGLE_PASS_WRITE_FLAVOUR      0x0008
 #define OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR  0x0018
 #define OP1A_NO_BODY_PART_UPDATE_FLAVOUR    0x0020
+#define OP1A_BODY_PARTITIONS_FLAVOUR        0x0040      // separate body partitions; index tables not in separate partition
 
 
 

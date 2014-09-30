@@ -400,6 +400,7 @@ void OP1AFile::CompleteWrite()
     // non-minimal partition flavour: write any remaining VBE index segments
 
     if (!(mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) &&
+        !(mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR) &&
         mIndexTable->IsVBE() && mIndexTable->HaveSegments())
     {
         Partition &index_partition = mMXFFile->createPartition();
@@ -424,10 +425,15 @@ void OP1AFile::CompleteWrite()
 
     Partition &footer_partition = mMXFFile->createPartition();
     footer_partition.setKey(&MXF_PP_K(ClosedComplete, Footer)); // will be complete when memory flushed
-    if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) && mIndexTable->IsVBE() && mIndexTable->HaveSegments())
+    if (((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR)) &&
+          mIndexTable->IsVBE() && mIndexTable->HaveSegments())
+    {
         footer_partition.setIndexSID(INDEX_SID);
+    }
     else
+    {
         footer_partition.setIndexSID(0);
+    }
     footer_partition.setBodySID(0);
     footer_partition.setKagSize(mKAGSize);
     footer_partition.write(mMXFFile);
@@ -441,9 +447,9 @@ void OP1AFile::CompleteWrite()
     }
 
 
-    // minimal partitions flavour: write any remaining VBE index segments
+    // minimal/body partitions flavour: write any remaining VBE index segments
 
-    if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) &&
+    if (((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) &&
         mIndexTable->IsVBE() && mIndexTable->HaveSegments())
     {
         mIndexTable->WriteSegments(mMXFFile, &footer_partition, true);
@@ -490,7 +496,7 @@ void OP1AFile::CompleteWrite()
 
         if (!mFirstWrite && mIndexTable->IsCBE()) {
             Partition *index_partition;
-            if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR)) {
+            if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) {
                 index_partition = &mMXFFile->getPartition(0);
             } else {
                 index_partition = &mMXFFile->getPartition(1);
@@ -712,10 +718,15 @@ void OP1AFile::CreateFile()
     else
         header_partition.setKey(&MXF_PP_K(OpenIncomplete, Header));
     header_partition.setVersion(1, ((mFlavour & OP1A_377_2004_FLAVOUR) ? 2 : 3));
-    if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) && mIndexTable->IsCBE())
+    if (((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) &&
+        mIndexTable->IsCBE())
+    {
         header_partition.setIndexSID(INDEX_SID);
+    }
     else
+    {
         header_partition.setIndexSID(0);
+    }
     if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR))
         header_partition.setBodySID(BODY_SID);
     else
@@ -816,7 +827,7 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                 // make sure edit unit byte count and delta entries are known
                 mCPManager->UpdateIndexTable(mCPManager->HaveContentPackages(2) ? 2 : 1);
 
-                if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR)) {
+                if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) {
                     mIndexTable->WriteSegments(mMXFFile, &mMXFFile->getPartition(0), false);
                 } else {
                     Partition &index_partition = mMXFFile->createPartition();
@@ -842,18 +853,29 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
         {
             BMX_ASSERT(!mSupportCompleteSinglePass);
 
+            start_ess_partition = true;
+            mPartitionFrameCount = 0;
+
             // write VBE index table segments and ensure new essence partition is started
 
             if (mIndexTable->IsVBE()) {
                 BMX_ASSERT(mIndexTable->HaveSegments());
+                BMX_ASSERT(!mSupportCompleteSinglePass);
 
                 mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
 
                 Partition &index_partition = mMXFFile->createPartition();
                 index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
                 index_partition.setIndexSID(INDEX_SID);
-                index_partition.setBodySID(0);
-                index_partition.setKagSize(mKAGSize);
+                if ((mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) {
+                    index_partition.setBodySID(BODY_SID);
+                    index_partition.setKagSize(mEssencePartitionKAGSize);
+                    index_partition.setBodyOffset(ess_partition_body_offset);
+                    start_ess_partition = false;
+                } else {
+                    index_partition.setBodySID(0);
+                    index_partition.setKagSize(mKAGSize);
+                }
                 index_partition.write(mMXFFile);
 
                 mIndexTable->WriteSegments(mMXFFile, &index_partition, true);
@@ -861,9 +883,6 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                 mMXFFile->updatePartitions();
                 mMXFFile->closeMemoryFile();
             }
-
-            start_ess_partition = true;
-            mPartitionFrameCount = 0;
         }
 
         if (start_ess_partition) {
