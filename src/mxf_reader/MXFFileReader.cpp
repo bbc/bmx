@@ -1048,6 +1048,11 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         } else {
             track_reader = CreateInternalTrackReader(partition, material_package, mp_track, mp_source_clip,
                                                      data_def, resolved_package);
+            if (!track_reader) {
+                log_warn("Skipping material package track %u\n", mp_track_id);
+                skipped_track_count++;
+                continue;
+            }
             track_reader->GetTrackInfo()->lead_filler_offset = lead_filler_offset;
         }
         mTrackReaders.push_back(track_reader);
@@ -1266,8 +1271,10 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
                 break;
             }
         }
-        if (!file_desc)
-            BMX_EXCEPTION(("Failed to find file descriptor for track id %u", fsp_track_id));
+        if (!file_desc) {
+            log_warn("Failed to find file descriptor for source package track %u\n", fsp_track_id);
+            return 0;
+        }
     }
 
 
