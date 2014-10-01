@@ -52,6 +52,7 @@
 #define OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR  0x0018
 #define OP1A_NO_BODY_PART_UPDATE_FLAVOUR    0x0020
 #define OP1A_BODY_PARTITIONS_FLAVOUR        0x0040      // separate body partitions; index tables not in separate partition
+#define OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR    0x0080
 
 
 
@@ -116,6 +117,8 @@ public:
     OP1ATrack* GetTrack(uint32_t track_index);
 
     std::string GetMD5DigestStr() const { return mMD5DigestStr; }
+
+    int GetFlavour() const { return mFlavour; }
 
 private:
     OP1AIndexTable* GetIndexTable() const { return mIndexTable; }

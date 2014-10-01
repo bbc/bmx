@@ -156,16 +156,15 @@ bool RDD9IndexTableElement::CanStartPartition(int64_t position)
 
 
 RDD9IndexTableSegment::RDD9IndexTableSegment(uint32_t index_sid, uint32_t body_sid, Rational frame_rate,
-                                             int64_t start_position, uint32_t index_entry_size, uint32_t slice_count)
+                                             int64_t start_position, uint32_t index_entry_size, uint32_t slice_count,
+                                             mxfOptBool single_index_location, mxfOptBool single_essence_location,
+                                             mxfOptBool forward_index_direction)
 {
     mIndexEntrySize = index_entry_size;
 
     mEntries.SetAllocBlockSize(INDEX_ENTRIES_INCREMENT * index_entry_size);
 
-    mxfUUID uuid;
-    mxf_generate_uuid(&uuid);
-
-    mSegment.setInstanceUID(uuid);
+    // InstanceUID is set when writing to account for repeats
     mSegment.setIndexEditRate(frame_rate);
     mSegment.setIndexStartPosition(start_position);
     mSegment.setIndexDuration(0);
@@ -173,6 +172,9 @@ RDD9IndexTableSegment::RDD9IndexTableSegment(uint32_t index_sid, uint32_t body_s
     mSegment.setBodySID(body_sid);
     mSegment.setEditUnitByteCount(0);
     mSegment.setSliceCount(slice_count);
+    mSegment.setSingleIndexLocation(single_index_location);
+    mSegment.setSingleEssenceLocation(single_essence_location);
+    mSegment.setForwardIndexDirection(forward_index_direction);
 }
 
 RDD9IndexTableSegment::~RDD9IndexTableSegment()
@@ -219,11 +221,15 @@ uint32_t RDD9IndexTableSegment::GetDuration() const
 
 
 
-RDD9IndexTable::RDD9IndexTable(uint32_t index_sid, uint32_t body_sid, Rational edit_rate)
+RDD9IndexTable::RDD9IndexTable(uint32_t index_sid, uint32_t body_sid, Rational edit_rate, bool repeat_in_footer)
 {
     mIndexSID = index_sid;
     mBodySID = body_sid;
     mEditRate = edit_rate;
+    mRepeatInFooter = repeat_in_footer;
+    mSingleIndexLocation = MXF_OPT_BOOL_NOT_PRESENT;
+    mSingleEssenceLocation = MXF_OPT_BOOL_NOT_PRESENT;
+    mForwardIndexDirection = MXF_OPT_BOOL_NOT_PRESENT;
     mSliceCount = 0;
     mIndexEntrySize = 0;
     mDuration = 0;
@@ -238,6 +244,16 @@ RDD9IndexTable::~RDD9IndexTable()
 
     for (i = 0; i < mIndexSegments.size(); i++)
         delete mIndexSegments[i];
+    for (i = 0; i < mWrittenIndexSegments.size(); i++)
+        delete mWrittenIndexSegments[i];
+}
+
+void RDD9IndexTable::SetExtensions(mxfOptBool single_index_location, mxfOptBool single_essence_location,
+                                   mxfOptBool forward_index_direction)
+{
+    mSingleIndexLocation   = single_index_location;
+    mSingleEssenceLocation = single_essence_location;
+    mForwardIndexDirection = forward_index_direction;
 }
 
 void RDD9IndexTable::RegisterSystemItem()
@@ -274,7 +290,8 @@ void RDD9IndexTable::PrepareWrite()
     }
 
     mIndexSegments.push_back(new RDD9IndexTableSegment(mIndexSID, mBodySID, mEditRate, 0, mIndexEntrySize,
-                                                       mSliceCount));
+                                                       mSliceCount, mSingleIndexLocation, mSingleEssenceLocation,
+                                                       mForwardIndexDirection));
 }
 
 void RDD9IndexTable::AddIndexEntry(uint32_t track_index, int64_t position, int8_t temporal_offset,
@@ -336,6 +353,11 @@ bool RDD9IndexTable::HaveSegments()
     return !mIndexSegments.empty() && mIndexSegments[0]->GetDuration() > 0;
 }
 
+bool RDD9IndexTable::HaveWrittenSegments()
+{
+    return !mWrittenIndexSegments.empty();
+}
+
 void RDD9IndexTable::WriteSegments(File *mxf_file, Partition *partition)
 {
     BMX_ASSERT(HaveSegments());
@@ -343,10 +365,29 @@ void RDD9IndexTable::WriteSegments(File *mxf_file, Partition *partition)
 
     partition->markIndexStart(mxf_file);
 
-    WriteVBESegments(mxf_file);
+    if (partition->isFooter() && mRepeatInFooter)
+        WriteVBESegments(mxf_file, mWrittenIndexSegments);
+    WriteVBESegments(mxf_file, mIndexSegments);
 
     partition->fillToKag(mxf_file);
     partition->markIndexEnd(mxf_file);
+
+
+    if (!partition->isFooter() && mRepeatInFooter) {
+        size_t i;
+        for (i = 0; i < mIndexSegments.size(); i++)
+            mWrittenIndexSegments.push_back(mIndexSegments[i]);
+    } else {
+        size_t i;
+        for (i = 0; i < mIndexSegments.size(); i++)
+            delete mIndexSegments[i];
+        if (partition->isFooter() && mRepeatInFooter) {
+            for (i = 0; i < mWrittenIndexSegments.size(); i++)
+                delete mWrittenIndexSegments[i];
+            mWrittenIndexSegments.clear();
+        }
+    }
+    mIndexSegments.clear();
 }
 
 void RDD9IndexTable::CreateDeltaEntries(const vector<uint32_t> &element_sizes)
@@ -419,18 +460,23 @@ void RDD9IndexTable::UpdateVBEIndex(const vector<uint32_t> &element_sizes)
 
     if (mIndexSegments.empty() || mIndexSegments.back()->RequireNewSegment(can_start_partition)) {
         mIndexSegments.push_back(new RDD9IndexTableSegment(mIndexSID, mBodySID, mEditRate, mDuration,
-                                                           mIndexEntrySize, mSliceCount));
+                                                           mIndexEntrySize, mSliceCount, mSingleIndexLocation,
+                                                           mSingleEssenceLocation, mForwardIndexDirection));
     }
 
     mIndexSegments.back()->AddIndexEntry(&entry, mStreamOffset, slice_cp_offsets);
 }
 
-void RDD9IndexTable::WriteVBESegments(File *mxf_file)
+void RDD9IndexTable::WriteVBESegments(File *mxf_file, vector<RDD9IndexTableSegment*> &segments)
 {
     size_t i;
-    for (i = 0; i < mIndexSegments.size(); i++) {
-        IndexTableSegment *segment = mIndexSegments[i]->GetSegment();
-        ByteArray *entries = mIndexSegments[i]->GetEntries();
+    for (i = 0; i < segments.size(); i++) {
+        IndexTableSegment *segment = segments[i]->GetSegment();
+        ByteArray *entries = segments[i]->GetEntries();
+
+        mxfUUID uuid;
+        mxf_generate_uuid(&uuid);
+        segment->setInstanceUID(uuid);
 
         // Note: RDD9 states that PosTableCount is not encoded but mxf_write_index_table_segment will write it with
         //       the default value 0
@@ -447,10 +493,6 @@ void RDD9IndexTable::WriteVBESegments(File *mxf_file)
 
         segment->writeIndexEntryArrayHeader(mxf_file, mSliceCount, 0, (uint32_t)segment->getIndexDuration());
         mxf_file->write(entries->GetBytes(), entries->GetSize());
-
-        delete mIndexSegments[i];
     }
-
-    mIndexSegments.clear();
 }
 

@@ -129,6 +129,11 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
         mMXFFile->swapCFile(mxf_checksum_file_get_file(mMXFChecksumFile));
     }
 
+    if ((flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+        ReserveHeaderMetadataSpace(2 * 1024 * 1024 + 8192);
+        SetAddSystemItem(true);
+    }
+
     // use fill key with correct version number
     g_KLVFill_key = g_CompliantKLVFill_key;
 }
@@ -294,6 +299,13 @@ void OP1AFile::PrepareHeaderMetadata()
         if (!mTracks[i]->IsOutputTrackNumberSet())
             mTracks[i]->SetOutputTrackNumber(last_track_number[mTracks[i]->GetDataDef()] + 1);
         last_track_number[mTracks[i]->GetDataDef()] = mTracks[i]->GetOutputTrackNumber();
+    }
+
+    if ((mFlavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+        if (mIndexTable->IsCBE())
+            mIndexTable->SetExtensions(MXF_OPT_BOOL_TRUE, MXF_OPT_BOOL_TRUE, MXF_OPT_BOOL_TRUE);
+        else
+            mIndexTable->SetExtensions(MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE);
     }
 
     for (i = 0; i < mTracks.size(); i++)
@@ -589,6 +601,8 @@ void OP1AFile::CreateHeaderMetadata()
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         preface->appendEssenceContainers(*iter);
     preface->setDMSchemes(vector<mxfUL>());
+    if ((mFlavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+        preface->setIsRIPPresent(true);
 
     // Preface - Identification
     Identification *ident = new Identification(mHeaderMetadata);

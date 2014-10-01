@@ -84,6 +84,45 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
     {MXF_CMDEF_L(AVCI_50_720_60_P),     AVCI50_720P,     {24000, 1001},  116736,  0x0d4b},
 };
 
+typedef struct
+{
+    EssenceType essence_type;
+    mxfRational sample_rate;
+    uint8_t coded_content_kind;
+    uint32_t bit_rate;
+    uint8_t profile;
+    uint8_t profile_constraint;
+    uint8_t level;
+} AVCDescriptorInfo;
+
+static const AVCDescriptorInfo AVC_DESCRIPTOR_INFO[] =
+{
+    {AVCI100_1080I,   {25, 1},        MXF_AVC_INTERLACED_FRAME_PICTURE,   111820800,  122, 0x10, 41},
+    {AVCI100_1080I,   {30000, 1001},  MXF_AVC_INTERLACED_FRAME_PICTURE,   110972544,  122, 0x10, 41},
+    {AVCI100_1080P,   {50, 1},        MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  223641600,  122, 0x10, 42},
+    {AVCI100_1080P,   {25, 1},        MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  111820800,  122, 0x10, 41},
+    {AVCI100_1080P,   {60000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  221945088,  122, 0x10, 42},
+    {AVCI100_1080P,   {30000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  110972544,  122, 0x10, 41},
+    {AVCI100_1080P,   {24000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   88777984,  122, 0x10, 41},
+    {AVCI100_720P,    {50, 1},        MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  111616000,  122, 0x10, 41},
+    {AVCI100_720P,    {25, 1},        MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   55808000,  122, 0x10, 41},
+    {AVCI100_720P,    {60000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  110726976,  122, 0x10, 41},
+    {AVCI100_720P,    {30000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   55363456,  122, 0x10, 41},
+    {AVCI100_720P,    {24000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   44290752,  122, 0x10, 41},
+    {AVCI50_1080I,    {25, 1},        MXF_AVC_INTERLACED_FRAME_PICTURE,    54272000,  110, 0x10, 40},
+    {AVCI50_1080I,    {30000, 1001},  MXF_AVC_INTERLACED_FRAME_PICTURE,    53522112,  110, 0x10, 40},
+    {AVCI50_1080P,    {50, 1},        MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  108544000,  110, 0x10, 42},
+    {AVCI50_1080P,    {25, 1},        MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   54272000,  110, 0x10, 40},
+    {AVCI50_1080P,    {60000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  107044288,  110, 0x10, 42},
+    {AVCI50_1080P,    {30000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   53522112,  110, 0x10, 40},
+    {AVCI50_1080P,    {24000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   42817664,  110, 0x10, 40},
+    {AVCI50_720P,     {50, 1},        MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   54067200,  110, 0x10, 32},
+    {AVCI50_720P,     {25, 1},        MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   27033600,  110, 0x10, 32},
+    {AVCI50_720P,     {60000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   53276608,  110, 0x10, 32},
+    {AVCI50_720P,     {30000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   26638272,  110, 0x10, 32},
+    {AVCI50_720P,     {24000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   21310656,  110, 0x10, 32},
+};
+
 
 
 EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
@@ -149,6 +188,7 @@ AVCIMXFDescriptorHelper::AVCIMXFDescriptorHelper()
     mEssenceType = SUPPORTED_ESSENCE[0].essence_type;
     mIncludeHeader = false;
     mIncludeHeaderSet = false;
+    mAVCSubDescriptor = 0;
 }
 
 AVCIMXFDescriptorHelper::~AVCIMXFDescriptorHelper()
@@ -180,6 +220,15 @@ void AVCIMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint16
             break;
         }
     }
+
+    if (file_descriptor->haveSubDescriptors()) {
+        vector<SubDescriptor*> sub_descriptors = file_descriptor->getSubDescriptors();
+        for (i = 0; i < sub_descriptors.size(); i++) {
+            mAVCSubDescriptor = dynamic_cast<AVCSubDescriptor*>(sub_descriptors[i]);
+            if (mAVCSubDescriptor)
+                break;
+        }
+    }
 }
 
 void AVCIMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
@@ -204,10 +253,15 @@ FileDescriptor* AVCIMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetad
 {
     UpdateEssenceIndex();
 
-    if ((mFlavour & MXFDESC_AVID_FLAVOUR))
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR) || (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
         mFileDescriptor = new CDCIEssenceDescriptor(header_metadata);
-    else
+        if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+            mAVCSubDescriptor = new AVCSubDescriptor(header_metadata);
+            mFileDescriptor->appendSubDescriptors(mAVCSubDescriptor);
+        }
+    } else {
         mFileDescriptor = new MPEGVideoDescriptor(header_metadata);
+    }
     UpdateFileDescriptor();
     return mFileDescriptor;
 }
@@ -225,7 +279,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(cdci_descriptor);
     MPEGVideoDescriptor *mpeg_descriptor = dynamic_cast<MPEGVideoDescriptor*>(mFileDescriptor);
-    BMX_ASSERT((mFlavour & MXFDESC_AVID_FLAVOUR) || mpeg_descriptor);
+    BMX_ASSERT((mFlavour & MXFDESC_AVID_FLAVOUR) || (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) || mpeg_descriptor);
 
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
     switch (mEssenceType)
@@ -247,6 +301,11 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
     {
         case AVCI100_1080I:
         case AVCI50_1080I:
+            if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+                cdci_descriptor->setStoredF2Offset(0);
+                cdci_descriptor->setDisplayF2Offset(0);
+                cdci_descriptor->setFieldDominance(1);
+            }
             cdci_descriptor->setFrameLayout(MXF_SEPARATE_FIELDS);
             break;
         case AVCI100_1080P:
@@ -263,20 +322,29 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setBlackRefLevel(64);
     cdci_descriptor->setWhiteReflevel(940);
     cdci_descriptor->setColorRange(897);
-    SetCodingEquations(ITUR_BT709_CODING_EQ);
+    if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+        cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
+    else
+        SetCodingEquations(ITUR_BT709_CODING_EQ);
     switch (mEssenceType)
     {
         case AVCI100_1080I:
         case AVCI50_1080I:
             cdci_descriptor->setStoredWidth(1920);
-            cdci_descriptor->setStoredHeight(540);
+            if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+                cdci_descriptor->setStoredHeight(544);
+            else
+                cdci_descriptor->setStoredHeight(540);
             cdci_descriptor->appendVideoLineMap(21);
             cdci_descriptor->appendVideoLineMap(584);
             break;
         case AVCI100_1080P:
         case AVCI50_1080P:
             cdci_descriptor->setStoredWidth(1920);
-            cdci_descriptor->setStoredHeight(1080);
+            if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+                cdci_descriptor->setStoredHeight(1088);
+            else
+                cdci_descriptor->setStoredHeight(1080);
             cdci_descriptor->appendVideoLineMap(42);
             cdci_descriptor->appendVideoLineMap(0);
             break;
@@ -290,10 +358,40 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
         default:
             BMX_ASSERT(false);
     }
-    cdci_descriptor->setDisplayWidth(cdci_descriptor->getStoredWidth());
-    cdci_descriptor->setDisplayHeight(cdci_descriptor->getStoredHeight());
-    cdci_descriptor->setSampledWidth(cdci_descriptor->getStoredWidth());
-    cdci_descriptor->setSampledHeight(cdci_descriptor->getStoredHeight());
+    switch (mEssenceType)
+    {
+        case AVCI100_1080I:
+        case AVCI50_1080I:
+            cdci_descriptor->setDisplayWidth(cdci_descriptor->getStoredWidth());
+            cdci_descriptor->setDisplayHeight(540);
+            cdci_descriptor->setSampledWidth(cdci_descriptor->getStoredWidth());
+            cdci_descriptor->setSampledHeight(540);
+            break;
+        case AVCI100_1080P:
+        case AVCI50_1080P:
+            cdci_descriptor->setDisplayWidth(cdci_descriptor->getStoredWidth());
+            cdci_descriptor->setDisplayHeight(1080);
+            cdci_descriptor->setSampledWidth(cdci_descriptor->getStoredWidth());
+            cdci_descriptor->setSampledHeight(1080);
+            break;
+        case AVCI100_720P:
+        case AVCI50_720P:
+            cdci_descriptor->setDisplayWidth(cdci_descriptor->getStoredWidth());
+            cdci_descriptor->setDisplayHeight(cdci_descriptor->getStoredHeight());
+            cdci_descriptor->setSampledWidth(cdci_descriptor->getStoredWidth());
+            cdci_descriptor->setSampledHeight(cdci_descriptor->getStoredHeight());
+            break;
+        default:
+            BMX_ASSERT(false);
+    }
+    if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+        cdci_descriptor->setSampledXOffset(0);
+        cdci_descriptor->setSampledYOffset(0);
+        cdci_descriptor->setDisplayXOffset(0);
+        cdci_descriptor->setDisplayYOffset(0);
+        cdci_descriptor->setImageStartOffset(0);
+        cdci_descriptor->setPaddingBits(0);
+    }
     switch (mEssenceType)
     {
         case AVCI100_1080I:
@@ -310,6 +408,28 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
             break;
         default:
             BMX_ASSERT(false);
+    }
+
+    if (mAVCSubDescriptor) {
+        BMX_ASSERT(BMX_ARRAY_SIZE(SUPPORTED_ESSENCE) == BMX_ARRAY_SIZE(AVC_DESCRIPTOR_INFO));
+        BMX_ASSERT(mEssenceIndex < BMX_ARRAY_SIZE(AVC_DESCRIPTOR_INFO));
+        const AVCDescriptorInfo *avc_info = &AVC_DESCRIPTOR_INFO[mEssenceIndex];
+
+        // TODO: should be extracting and checking this information from the bitstream
+        mAVCSubDescriptor->setAVCDecodingDelay(0);
+        mAVCSubDescriptor->setAVCCodedContentKind(avc_info->coded_content_kind);
+        mAVCSubDescriptor->setAVCIdenticalGOPIndicator(true);
+        mAVCSubDescriptor->setAVCMaximumGOPSize(1);
+        mAVCSubDescriptor->setAVCMaximumBPictureCount(0);
+        mAVCSubDescriptor->setAVCMaximumBitrate(avc_info->bit_rate);
+        mAVCSubDescriptor->setAVCAverageBitrate(avc_info->bit_rate);
+        mAVCSubDescriptor->setAVCProfile(avc_info->profile);
+        mAVCSubDescriptor->setAVCProfileConstraint(avc_info->profile_constraint);
+        mAVCSubDescriptor->setAVCLevel(avc_info->level);
+
+        BMX_ASSERT((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR));
+        mAVCSubDescriptor->setAVCSequenceParameterSetFlag(0xa0);    // constant and present in every access unit
+        mAVCSubDescriptor->setAVCPictureParameterSetFlag(0xa0);     // constant and present in every access unit
     }
 }
 

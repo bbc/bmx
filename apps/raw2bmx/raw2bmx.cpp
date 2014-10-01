@@ -411,6 +411,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "                                and don't create separate body partitions for index table segments\n");
     fprintf(stderr, "    --clip-wrap             Use clip wrapping for a single sound track\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "  op1a/rdd9:\n");
+    fprintf(stderr, "    --ard-zdf-hdf           Use the ARD ZDF HDF profile\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "  as11d10/d10:\n");
     fprintf(stderr, "    --d10-mute <flags>      Indicate using a string of 8 '0' or '1' which sound channels should be muted. The lsb is the rightmost digit\n");
     fprintf(stderr, "    --d10-invalid <flags>   Indicate using a string of 8 '0' or '1' which sound channels should be flagged invalid. The lsb is the rightmost digit\n");
@@ -548,6 +551,7 @@ int main(int argc, const char** argv)
     LogLevel log_level = INFO_LOG;
     ClipWriterType clip_type = CW_AS02_CLIP_TYPE;
     ClipSubType clip_sub_type = NO_CLIP_SUB_TYPE;
+    bool ard_zdf_hdf_profile = false;
     const char *output_name = "";
     vector<RawInput> inputs;
     RawInput input;
@@ -984,6 +988,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--clip-wrap") == 0)
         {
             clip_wrap = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--ard-zdf-hdf") == 0)
+        {
+            ard_zdf_hdf_profile = true;
         }
         else if (strcmp(argv[cmdln_index], "--d10-mute") == 0)
         {
@@ -2898,7 +2906,9 @@ int main(int argc, const char** argv)
         int flavour = 0;
         if (clip_type == CW_OP1A_CLIP_TYPE) {
             flavour = OP1A_DEFAULT_FLAVOUR;
-            if (clip_sub_type != AS11_CLIP_SUB_TYPE) {
+            if (ard_zdf_hdf_profile) {
+                flavour |= OP1A_BODY_PARTITIONS_FLAVOUR | OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR;
+            } else if (clip_sub_type != AS11_CLIP_SUB_TYPE) {
                 if (min_part)
                     flavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
                 else if (body_part)
@@ -2912,7 +2922,10 @@ int main(int argc, const char** argv)
             flavour = D10_DEFAULT_FLAVOUR;
             // single pass flavours not (yet) supported
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
-            flavour = RDD9_SMPTE_377_2004_FLAVOUR;
+            if (ard_zdf_hdf_profile)
+                flavour = RDD9_SMPTE_377_1_FLAVOUR | RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR;
+            else
+                flavour = RDD9_SMPTE_377_2004_FLAVOUR;
             if (file_md5)
                 flavour |= RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)

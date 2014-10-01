@@ -34,6 +34,7 @@
 #endif
 
 #include <bmx/mxf_op1a/OP1AAVCITrack.h>
+#include <bmx/mxf_op1a/OP1AFile.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -57,7 +58,7 @@ OP1AAVCITrack::OP1AAVCITrack(OP1AFile *file, uint32_t track_index, uint32_t trac
     mTrackNumber = MXF_MPEG_PICT_TRACK_NUM(0x01, MXF_MPEG_PICT_FRAME_WRAPPED_EE_TYPE, 0x00);
     mEssenceElementKey = VIDEO_ELEMENT_KEY;
 
-    mWriterHelper.SetMode(AVCI_ALL_FRAME_HEADER_MODE);
+    SetMode(OP1A_AVCI_ALL_FRAME_HEADER_MODE);
 }
 
 OP1AAVCITrack::~OP1AAVCITrack()
@@ -66,6 +67,9 @@ OP1AAVCITrack::~OP1AAVCITrack()
 
 void OP1AAVCITrack::SetMode(OP1AAVCIMode mode)
 {
+    if ((mOP1AFile->GetFlavour() & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR) && mode != OP1A_AVCI_ALL_FRAME_HEADER_MODE)
+        BMX_EXCEPTION(("ARD ZDF HDF flavour requires all AVC-I frames to contain SPS+PPS header data"));
+
     switch (mode)
     {
         case OP1A_AVCI_FIRST_OR_ALL_FRAME_HEADER_MODE:

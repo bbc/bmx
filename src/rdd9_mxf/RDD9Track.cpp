@@ -134,12 +134,17 @@ RDD9Track::RDD9Track(RDD9File *file, uint32_t track_index, uint32_t track_id, ui
     mEditRate = frame_rate;
     mTrackNumber = 0;
 
+    int descriptor_flavour = MXFDESC_RDD9_FLAVOUR;
+    if ((file->mFlavour & RDD9_SMPTE_377_2004_FLAVOUR))
+        descriptor_flavour |= MXFDESC_SMPTE_377_2004_FLAVOUR;
+    else
+        descriptor_flavour |= MXFDESC_SMPTE_377_1_FLAVOUR;
+    if ((file->mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+        descriptor_flavour |= MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR;
+
     mEssenceType = essence_type;
     mDescriptorHelper = MXFDescriptorHelper::Create(essence_type);
-    if ((file->mFlavour & RDD9_SMPTE_377_2004_FLAVOUR))
-        mDescriptorHelper->SetFlavour(MXFDESC_SMPTE_377_2004_FLAVOUR | MXFDESC_RDD9_FLAVOUR);
-    else
-        mDescriptorHelper->SetFlavour(MXFDESC_SMPTE_377_1_FLAVOUR | MXFDESC_RDD9_FLAVOUR);
+    mDescriptorHelper->SetFlavour(descriptor_flavour);
     mDescriptorHelper->SetFrameWrapped(true);
     mDescriptorHelper->SetSampleRate(frame_rate);
 }

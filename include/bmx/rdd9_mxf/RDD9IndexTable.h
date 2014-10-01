@@ -113,7 +113,9 @@ class RDD9IndexTableSegment
 {
 public:
     RDD9IndexTableSegment(uint32_t index_sid, uint32_t body_sid, Rational edit_rate, int64_t start_position,
-                           uint32_t index_entry_size, uint32_t slice_count);
+                          uint32_t index_entry_size, uint32_t slice_count,
+                          mxfOptBool single_index_location, mxfOptBool single_essence_location,
+                          mxfOptBool forward_index_direction);
     ~RDD9IndexTableSegment();
 
     bool RequireNewSegment(uint8_t flags);
@@ -137,8 +139,11 @@ private:
 class RDD9IndexTable
 {
 public:
-    RDD9IndexTable(uint32_t index_sid, uint32_t body_sid, Rational edit_rate);
+    RDD9IndexTable(uint32_t index_sid, uint32_t body_sid, Rational edit_rate, bool repeat_in_footer);
     ~RDD9IndexTable();
+
+    void SetExtensions(mxfOptBool single_index_location, mxfOptBool single_essence_location,
+                       mxfOptBool forward_index_direction);
 
     void RegisterSystemItem();
     void RegisterPictureTrackElement(uint32_t track_index);
@@ -161,6 +166,7 @@ public:
 
 public:
     bool HaveSegments();
+    bool HaveWrittenSegments();
     void WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition);
 
 private:
@@ -169,12 +175,16 @@ private:
 
     void UpdateVBEIndex(const std::vector<uint32_t> &element_sizes);
 
-    void WriteVBESegments(mxfpp::File *mxf_file);
+    void WriteVBESegments(mxfpp::File *mxf_file, std::vector<RDD9IndexTableSegment*> &segments);
 
 private:
     uint32_t mIndexSID;
     uint32_t mBodySID;
+    mxfOptBool mSingleIndexLocation;
+    mxfOptBool mSingleEssenceLocation;
+    mxfOptBool mForwardIndexDirection;
     Rational mEditRate;
+    bool mRepeatInFooter;
 
     std::vector<RDD9IndexTableElement*> mIndexElements;
     std::map<uint32_t, RDD9IndexTableElement*> mIndexElementsMap;
@@ -186,6 +196,8 @@ private:
     std::vector<RDD9IndexTableSegment*> mIndexSegments;
     int64_t mDuration;
     int64_t mStreamOffset;
+
+    std::vector<RDD9IndexTableSegment*> mWrittenIndexSegments;
 };
 
 

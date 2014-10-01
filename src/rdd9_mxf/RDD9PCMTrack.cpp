@@ -64,7 +64,8 @@ RDD9PCMTrack::RDD9PCMTrack(RDD9File *file, uint32_t track_index, uint32_t track_
     mWaveDescriptorHelper->SetQuantizationBits(16);
     mWaveDescriptorHelper->SetChannelCount(1);
     mWaveDescriptorHelper->SetLocked(true);
-    mWaveDescriptorHelper->SetAudioRefLevel(0);
+    if (!(file->mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+        mWaveDescriptorHelper->SetAudioRefLevel(0);
 
     mIsPicture = false;
     mTrackNumber = MXF_AES3BWF_TRACK_NUM(0x01, MXF_AES3_FRAME_WRAPPED_EE_TYPE, 0x00);
@@ -111,7 +112,7 @@ void RDD9PCMTrack::SetLocked(bool locked)
 
 void RDD9PCMTrack::SetAudioRefLevel(int8_t level)
 {
-    if (level != 0)
+    if (level != 0 && !(mRDD9File->GetFlavour() & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR))
         log_warn("Audio reference level is set to %d; RDD9 requires audio reference level 0\n", level);
     mWaveDescriptorHelper->SetAudioRefLevel(level);
 }

@@ -66,12 +66,18 @@ OP1APCMTrack::OP1APCMTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
     mWaveDescriptorHelper->SetQuantizationBits(16);
     mWaveDescriptorHelper->SetChannelCount(1);
 
-    if (!mOP1AFile->IsFrameWrapped()) {
+    if (mOP1AFile->IsFrameWrapped()) {
+        if ((file->GetFlavour() & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+            mWaveDescriptorHelper->SetSampleRate(SAMPLING_RATE_48K);
+    } else {
         mEditRate = mWaveDescriptorHelper->GetSamplingRate();
         mWaveDescriptorHelper->SetSampleRate(mEditRate);
     }
 
-    SetAES3Mapping(false);
+    if ((file->GetFlavour() & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+        SetAES3Mapping(true);
+    else
+        SetAES3Mapping(false);
 
     SetSampleSequence();
 }

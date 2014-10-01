@@ -140,10 +140,16 @@ void WaveMXFDescriptorHelper::SetUseAES3AudioDescriptor(bool enable)
 
 FileDescriptor* WaveMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata)
 {
-    if ((mFlavour & MXFDESC_RDD9_FLAVOUR) || mUseAES3AudioDescriptor)
+    if ((mFlavour & MXFDESC_RDD9_FLAVOUR) ||
+        (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) ||
+        mUseAES3AudioDescriptor)
+    {
         mFileDescriptor = new AES3AudioDescriptor(header_metadata);
+    }
     else
+    {
         mFileDescriptor = new WaveAudioDescriptor(header_metadata);
+    }
     UpdateFileDescriptor();
     return mFileDescriptor;
 }
@@ -160,7 +166,23 @@ void WaveMXFDescriptorHelper::UpdateFileDescriptor()
     wav_descriptor->setAvgBps(sample_size * mSamplingRate.numerator / mSamplingRate.denominator);
     if (mSequenceOffset > 0)
         wav_descriptor->setSequenceOffset(mSequenceOffset);
-    if ((mFlavour & MXFDESC_RDD9_FLAVOUR)) {
+    if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) { // Note: this trumps RDD9 flavour
+        // Professional use, linear PCM, no emphasis, 48KHz sampling, CRCC value 60
+        static const mxfAES3FixedData fixed_channel_status_data =
+        {
+            {
+                0x85, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x60
+            }
+        };
+
+        AES3AudioDescriptor *aes3_descriptor = dynamic_cast<AES3AudioDescriptor*>(mFileDescriptor);
+        BMX_ASSERT(aes3_descriptor);
+
+        aes3_descriptor->appendChannelStatusMode(2); // STANDARD mode
+        aes3_descriptor->appendFixedChannelStatusData(fixed_channel_status_data);
+    } else if ((mFlavour & MXFDESC_RDD9_FLAVOUR)) {
         // Professional use, linear PCM, no emphasis, 48KHz sampling
         static const mxfAES3FixedData fixed_channel_status_data =
         {
@@ -186,12 +208,17 @@ uint32_t WaveMXFDescriptorHelper::GetSampleSize()
 
 mxfUL WaveMXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
-    if ((mFlavour & MXFDESC_RDD9_FLAVOUR) || mUseAES3AudioDescriptor) {
+    if ((mFlavour & MXFDESC_RDD9_FLAVOUR) ||
+        (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) ||
+        mUseAES3AudioDescriptor)
+    {
         if (mFrameWrapped)
             return MXF_EC_L(AES3FrameWrapped);
         else
             return MXF_EC_L(AES3ClipWrapped);
-    } else {
+    }
+    else
+    {
         if (mFrameWrapped)
             return MXF_EC_L(BWFFrameWrapped);
         else

@@ -111,12 +111,20 @@ RDD9File::RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate)
     mPartitionFrameCount = 0;
     mMXFChecksumFile = 0;
 
-    mIndexTable = new RDD9IndexTable(INDEX_SID, BODY_SID, frame_rate);
+    mIndexTable = new RDD9IndexTable(INDEX_SID, BODY_SID, frame_rate, (flavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR));
     mCPManager = new RDD9ContentPackageManager(mMXFFile, mIndexTable, frame_rate);
 
     if (flavour & RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR) {
         mMXFChecksumFile = mxf_checksum_file_open(mMXFFile->getCFile(), MD5_CHECKSUM);
         mMXFFile->swapCFile(mxf_checksum_file_get_file(mMXFChecksumFile));
+    }
+
+    if ((flavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+        ReserveHeaderMetadataSpace(2 * 1024 * 1024 + 8192);
+
+    if (!(flavour & RDD9_SMPTE_377_2004_FLAVOUR)) {
+        // use fill key with correct version number
+        g_KLVFill_key = g_CompliantKLVFill_key;
     }
 }
 
@@ -254,6 +262,9 @@ void RDD9File::PrepareHeaderMetadata()
         }
     }
 
+    if ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+        mIndexTable->SetExtensions(MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE);
+
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite(mPictureTrackCount, mSoundTrackCount);
     mCPManager->SetStartTimecode(mStartTimecode);
@@ -328,10 +339,15 @@ void RDD9File::CompleteWrite()
 
     Partition &footer_partition = mMXFFile->createPartition();
     footer_partition.setKey(&MXF_PP_K(ClosedComplete, Footer));
-    if (mIndexTable->HaveSegments())
+    if (mIndexTable->HaveSegments() ||
+        ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR) && mIndexTable->HaveWrittenSegments()))
+    {
         footer_partition.setIndexSID(INDEX_SID);
+    }
     else
+    {
         footer_partition.setIndexSID(0);
+    }
     footer_partition.setBodySID(0);
     footer_partition.setKagSize(KAG_SIZE);
     footer_partition.write(mMXFFile);
@@ -347,8 +363,11 @@ void RDD9File::CompleteWrite()
 
     // write any remaining VBE index segments
 
-    if (mIndexTable->HaveSegments())
+    if (mIndexTable->HaveSegments() ||
+        ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR) && mIndexTable->HaveWrittenSegments()))
+    {
         mIndexTable->WriteSegments(mMXFFile, &footer_partition);
+    }
 
 
     // write the RIP
@@ -459,6 +478,8 @@ void RDD9File::CreateHeaderMetadata()
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         preface->appendEssenceContainers(*iter);
     preface->setDMSchemes(vector<mxfUL>());
+    if ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+        preface->setIsRIPPresent(true);
 
     // Preface - Identification
     Identification *ident = new Identification(mHeaderMetadata);

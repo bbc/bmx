@@ -270,7 +270,7 @@ void SoundMXFDescriptorHelper::UpdateFileDescriptor()
     sound_descriptor->setAudioSamplingRate(mSamplingRate);
     if (mLockedSet)
         sound_descriptor->setLocked(mLocked);
-    else if ((mFlavour & MXFDESC_RDD9_FLAVOUR))
+    else if ((mFlavour & MXFDESC_RDD9_FLAVOUR) || (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR))
         sound_descriptor->setLocked(true);
     sound_descriptor->setChannelCount(mChannelCount);
     sound_descriptor->setQuantizationBits(mQuantizationBits);

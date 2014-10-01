@@ -216,12 +216,17 @@ OP1ATrack::OP1ATrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, ui
     mLowerLevelSourcePackageUID = g_Null_UMID;
     mLowerLevelTrackId = 0;
 
+    int descriptor_flavour = 0;
+    if ((file->mFlavour & OP1A_377_2004_FLAVOUR))
+        descriptor_flavour |= MXFDESC_SMPTE_377_2004_FLAVOUR;
+    else
+        descriptor_flavour |= MXFDESC_SMPTE_377_1_FLAVOUR;
+    if ((file->mFlavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+        descriptor_flavour |= MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR;
+
     mEssenceType = essence_type;
     mDescriptorHelper = MXFDescriptorHelper::Create(essence_type);
-    if ((file->mFlavour & OP1A_377_2004_FLAVOUR))
-        mDescriptorHelper->SetFlavour(MXFDESC_SMPTE_377_2004_FLAVOUR);
-    else
-        mDescriptorHelper->SetFlavour(MXFDESC_SMPTE_377_1_FLAVOUR);
+    mDescriptorHelper->SetFlavour(descriptor_flavour);
     mDescriptorHelper->SetFrameWrapped(file->IsFrameWrapped());
     mDescriptorHelper->SetSampleRate(frame_rate);
 }
@@ -311,7 +316,10 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     material_package->appendTracks(track);
     track->setTrackName(get_track_name(mDataDef, mOutputTrackNumber));
     track->setTrackID(mTrackId);
-    track->setTrackNumber(mOutputTrackNumber);
+    if ((mOP1AFile->GetFlavour() & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+        track->setTrackNumber(0);
+    else
+        track->setTrackNumber(mOutputTrackNumber);
     track->setEditRate(mEditRate);
     track->setOrigin(0);
 

@@ -80,6 +80,7 @@ private:
     size_t mEssenceIndex;
     bool mIncludeHeader;
     bool mIncludeHeaderSet;
+    mxfpp::AVCSubDescriptor *mAVCSubDescriptor;
 };
 
 

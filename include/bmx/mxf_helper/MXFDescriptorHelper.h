@@ -38,10 +38,11 @@
 #include <bmx/EssenceType.h>
 
 
-#define MXFDESC_SMPTE_377_2004_FLAVOUR   0x0001
-#define MXFDESC_SMPTE_377_1_FLAVOUR      0x0002
-#define MXFDESC_AVID_FLAVOUR             0x0004
-#define MXFDESC_RDD9_FLAVOUR             0x0008
+#define MXFDESC_SMPTE_377_2004_FLAVOUR        0x0001
+#define MXFDESC_SMPTE_377_1_FLAVOUR           0x0002
+#define MXFDESC_AVID_FLAVOUR                  0x0004
+#define MXFDESC_RDD9_FLAVOUR                  0x0008
+#define MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR   0x0010
 
 
 
