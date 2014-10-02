@@ -798,7 +798,7 @@ uint32_t bmx::get_kag_fill_size(int64_t klv_size, uint32_t kag_size, uint8_t min
     return fill_size;
 }
 
-uint32_t bmx::get_kag_aligned_size(int64_t klv_size, uint32_t kag_size, uint8_t min_llen)
+int64_t bmx::get_kag_aligned_size(int64_t klv_size, uint32_t kag_size, uint8_t min_llen)
 {
     return klv_size + get_kag_fill_size(klv_size, kag_size, min_llen);
 }

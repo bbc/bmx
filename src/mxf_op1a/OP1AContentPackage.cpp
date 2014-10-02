@@ -139,7 +139,7 @@ uint32_t OP1AContentPackageElement::GetNumSamples(int64_t position) const
 
 uint32_t OP1AContentPackageElement::GetKAGAlignedSize(uint32_t klv_size)
 {
-    return get_kag_aligned_size(klv_size, kag_size, min_llen);
+    return (uint32_t)get_kag_aligned_size(klv_size, kag_size, min_llen);
 }
 
 uint32_t OP1AContentPackageElement::GetKAGFillSize(int64_t klv_size)
@@ -307,7 +307,7 @@ OP1AContentPackage::OP1AContentPackage(File *mxf_file, OP1AIndexTable *index_tab
     mFrameWrapped = true;
     mHaveSystemItem = have_system_item;
     if (have_system_item) {
-      mSystemItemSize = get_kag_aligned_size(NA_SYSTEM_ITEM_SIZE, kag_size, min_llen);
+      mSystemItemSize = (uint32_t)get_kag_aligned_size(NA_SYSTEM_ITEM_SIZE, kag_size, min_llen);
 
       // system metadata bitmap = 0x5c
       // b7 = 0 (FEC not used)

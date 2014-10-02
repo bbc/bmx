@@ -475,14 +475,14 @@ void D10ContentPackageManager::PrepareWrite()
 {
     BMX_CHECK_M(mInfo.picture_track_index != (uint32_t)(-1), ("Require video track for D10 MXF"));
 
-    mInfo.system_item_size = get_kag_aligned_size(mxfKey_extlen + LLEN + SYSTEM_ITEM_METADATA_PACK_SIZE +
-                                                  mxfKey_extlen + LLEN,
-                                                  KAG_SIZE, LLEN);
-    mInfo.picture_item_size = get_kag_aligned_size(mxfKey_extlen + LLEN + mInfo.picture_sample_size,
-                                                   KAG_SIZE, LLEN);
+    mInfo.system_item_size = (uint32_t)get_kag_aligned_size(mxfKey_extlen + LLEN + SYSTEM_ITEM_METADATA_PACK_SIZE +
+                                                            mxfKey_extlen + LLEN,
+                                                            KAG_SIZE, LLEN);
+    mInfo.picture_item_size = (uint32_t)get_kag_aligned_size(mxfKey_extlen + LLEN + mInfo.picture_sample_size,
+                                                             KAG_SIZE, LLEN);
     BMX_ASSERT(mxfKey_extlen + LLEN < 4 * 8); // can add fill for mInfo.max_sound_sample_count - 1
-    mInfo.sound_item_size = get_kag_aligned_size(mxfKey_extlen + LLEN + mInfo.max_sound_sample_count * 4 * 8 + 4,
-                                                 KAG_SIZE, LLEN);
+    mInfo.sound_item_size = (uint32_t)get_kag_aligned_size(mxfKey_extlen + LLEN + mInfo.max_sound_sample_count * 4 * 8 + 4,
+                                                           KAG_SIZE, LLEN);
 
 
     // delta entry array

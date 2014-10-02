@@ -162,7 +162,7 @@ void RDD9ContentPackageElement::Write(File *mxf_file, unsigned char *data, uint3
 
 uint32_t RDD9ContentPackageElement::GetKAGAlignedSize(uint32_t klv_size) const
 {
-    return get_kag_aligned_size(klv_size, KAG_SIZE, LLEN);
+    return (uint32_t)get_kag_aligned_size(klv_size, KAG_SIZE, LLEN);
 }
 
 uint32_t RDD9ContentPackageElement::GetKAGFillSize(int64_t klv_size) const
