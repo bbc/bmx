@@ -96,7 +96,7 @@ public:
     virtual bool EndElement(const std::string &ns, const std::string &name);
     virtual void CharacterData(const char *s, int len);
 
-    virtual const std::string& GetCData() const { return mCData; }
+    virtual std::string GetCData() { return mCData; }
 
 protected:
     std::string mCData;
