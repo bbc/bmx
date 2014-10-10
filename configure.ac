@@ -261,6 +261,7 @@ AC_CONFIG_FILES([
 	src/clip_writer/Makefile
 	src/st436/Makefile
 	test/Makefile
+	test/ard_zdf_hdf/Makefile
 	test/as02/Makefile
 	test/as11/Makefile
 	test/mxf_op1a/Makefile
