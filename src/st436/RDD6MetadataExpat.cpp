@@ -814,14 +814,14 @@ bool RawDataSegmentExpatHandler::EndElement(const string &ns, const string &name
     SimpleTextExpatHandler::EndElement(ns, name);
 
     if (mCData.size() > 1) {
-        mDataSegment->payload_buffer.Allocate(mCData.size() / 2); // hex digits
+        mDataSegment->payload_buffer.Allocate((uint32_t)(mCData.size() / 2)); // 2 hex digits per byte
         size_t parsed_size = parse_xml_bytes(name, mCData,
                                              mDataSegment->payload_buffer.GetBytesAvailable(),
                                              mDataSegment->payload_buffer.GetSizeAvailable());
         if (parsed_size > 256)
             throw BMXException("Data segment size %"PRIszt" exceeds maximum size 256", parsed_size);
 
-        mDataSegment->size = parsed_size;
+        mDataSegment->size = (uint16_t)parsed_size;
         mDataSegment->payload_buffer.SetSize(mDataSegment->size);
         if (mDataSegment->size > 0)
             mDataSegment->payload = mDataSegment->payload_buffer.GetBytes();
