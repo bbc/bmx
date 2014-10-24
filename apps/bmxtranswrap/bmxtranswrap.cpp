@@ -2147,8 +2147,6 @@ int main(int argc, const char** argv)
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
             if (ard_zdf_hdf_profile)
                 flavour = RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR;
-            else
-                flavour = RDD9_SMPTE_377_2004_FLAVOUR;
             if (output_file_md5)
                 flavour |= RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
