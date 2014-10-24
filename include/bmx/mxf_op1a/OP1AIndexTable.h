@@ -113,7 +113,7 @@ class OP1AIndexTableSegment
 {
 public:
     OP1AIndexTableSegment(uint32_t index_sid, uint32_t body_sid, mxfRational edit_rate, int64_t start_position,
-                          uint32_t index_entry_size, uint32_t slice_count,
+                          uint32_t index_entry_size, uint32_t slice_count, bool force_write_slice_count,
                           mxfOptBool single_index_location, mxfOptBool single_essence_location,
                           mxfOptBool forward_index_direction);
     ~OP1AIndexTableSegment();
@@ -139,7 +139,7 @@ private:
 class OP1AIndexTable
 {
 public:
-    OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRational edit_rate);
+    OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRational edit_rate, bool force_write_slice_count);
     ~OP1AIndexTable();
 
     void SetEditRate(mxfRational edit_rate);
@@ -194,6 +194,7 @@ private:
     uint32_t mIndexSID;
     uint32_t mBodySID;
     mxfRational mEditRate;
+    bool mForceWriteSliceCount;
     mxfOptBool mSingleIndexLocation;
     mxfOptBool mSingleEssenceLocation;
     mxfOptBool mForwardIndexDirection;

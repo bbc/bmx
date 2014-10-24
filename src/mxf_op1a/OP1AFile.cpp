@@ -121,7 +121,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mFooterPartitionOffset = 0;
     mMXFChecksumFile = 0;
 
-    mIndexTable = new OP1AIndexTable(INDEX_SID, BODY_SID, frame_rate);
+    mIndexTable = new OP1AIndexTable(INDEX_SID, BODY_SID, frame_rate, (flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR));
     mCPManager = new OP1AContentPackageManager(mMXFFile, mIndexTable, frame_rate, mEssencePartitionKAGSize, MIN_LLEN);
 
     if (flavour & OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR) {

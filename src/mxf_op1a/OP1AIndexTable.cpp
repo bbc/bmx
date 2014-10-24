@@ -157,7 +157,8 @@ bool OP1AIndexTableElement::CanStartPartition(int64_t position)
 
 
 OP1AIndexTableSegment::OP1AIndexTableSegment(uint32_t index_sid, uint32_t body_sid, mxfRational frame_rate,
-                                             int64_t start_position, uint32_t index_entry_size, uint32_t slice_count,
+                                             int64_t start_position, uint32_t index_entry_size,
+                                             uint32_t slice_count, bool force_write_slice_count,
                                              mxfOptBool single_index_location, mxfOptBool single_essence_location,
                                              mxfOptBool forward_index_direction)
 {
@@ -176,6 +177,7 @@ OP1AIndexTableSegment::OP1AIndexTableSegment(uint32_t index_sid, uint32_t body_s
     mSegment.setBodySID(body_sid);
     mSegment.setEditUnitByteCount(0);
     mSegment.setSliceCount(slice_count);
+    mSegment.forceWriteSliceCount(force_write_slice_count);
     mSegment.setSingleIndexLocation(single_index_location);
     mSegment.setSingleEssenceLocation(single_essence_location);
     mSegment.setForwardIndexDirection(forward_index_direction);
@@ -237,11 +239,12 @@ uint32_t OP1AIndexTableSegment::GetDuration() const
 
 
 
-OP1AIndexTable::OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRational edit_rate)
+OP1AIndexTable::OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRational edit_rate, bool force_write_slice_count)
 {
     mIndexSID = index_sid;
     mBodySID = body_sid;
     mEditRate = edit_rate;
+    mForceWriteSliceCount = force_write_slice_count;
     mSingleIndexLocation = MXF_OPT_BOOL_NOT_PRESENT;
     mSingleEssenceLocation = MXF_OPT_BOOL_NOT_PRESENT;
     mForwardIndexDirection = MXF_OPT_BOOL_NOT_PRESENT;
@@ -339,11 +342,13 @@ void OP1AIndexTable::PrepareWrite()
     BMX_ASSERT(!mIsCBE || mSliceCount == 0);
 
     mIndexSegments.push_back(new OP1AIndexTableSegment(mIndexSID, mBodySID, mEditRate, 0, mIndexEntrySize,
-                                                       mSliceCount, mSingleIndexLocation, mSingleEssenceLocation,
+                                                       mSliceCount, mForceWriteSliceCount,
+                                                       mSingleIndexLocation, mSingleEssenceLocation,
                                                        mForwardIndexDirection));
     if (RequireIndexTableSegmentPair()) {
         mAVCIFirstIndexSegment = new OP1AIndexTableSegment(mIndexSID, mBodySID, mEditRate, 0, mIndexEntrySize,
-                                                           mSliceCount, mSingleIndexLocation, mSingleEssenceLocation,
+                                                           mSliceCount, mForceWriteSliceCount,
+                                                           mSingleIndexLocation, mSingleEssenceLocation,
                                                            mForwardIndexDirection);
     }
 }
@@ -583,8 +588,9 @@ void OP1AIndexTable::UpdateVBEIndex(vector<uint32_t> &element_sizes)
 
     if (mIndexSegments.empty() || mIndexSegments.back()->RequireNewSegment(can_start_partition)) {
         mIndexSegments.push_back(new OP1AIndexTableSegment(mIndexSID, mBodySID, mEditRate, mDuration,
-                                                           mIndexEntrySize, mSliceCount, mSingleIndexLocation,
-                                                           mSingleEssenceLocation, mForwardIndexDirection));
+                                                           mIndexEntrySize, mSliceCount, mForceWriteSliceCount,
+                                                           mSingleIndexLocation, mSingleEssenceLocation,
+                                                           mForwardIndexDirection));
     }
 
     mIndexSegments.back()->AddIndexEntry(&entry, mStreamOffset, slice_cp_offsets);
