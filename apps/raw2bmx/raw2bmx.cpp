@@ -2923,7 +2923,7 @@ int main(int argc, const char** argv)
             // single pass flavours not (yet) supported
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
             if (ard_zdf_hdf_profile)
-                flavour = RDD9_SMPTE_377_1_FLAVOUR | RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR;
+                flavour = RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR;
             else
                 flavour = RDD9_SMPTE_377_2004_FLAVOUR;
             if (file_md5)
