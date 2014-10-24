@@ -2996,6 +2996,9 @@ int main(int argc, const char** argv)
         } else if (clip_type == CW_OP1A_CLIP_TYPE) {
             OP1AFile *op1a_clip = clip->GetOP1AClip();
 
+            if (clip_sub_type == AS11_CLIP_SUB_TYPE)
+                op1a_clip->ReserveHeaderMetadataSpace(16384); // min is 8192
+
             if (clip_sub_type != AS11_CLIP_SUB_TYPE)
                 op1a_clip->SetClipWrapped(clip_wrap);
             if (partition_interval_set)
@@ -3065,6 +3068,9 @@ int main(int argc, const char** argv)
 
             d10_clip->SetMuteSoundFlags(d10_mute_sound_flags);
             d10_clip->SetInvalidSoundFlags(d10_invalid_sound_flags);
+
+            if (clip_sub_type == AS11_CLIP_SUB_TYPE)
+                d10_clip->ReserveHeaderMetadataSpace(16384); // min is 8192
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
             RDD9File *rdd9_clip = clip->GetRDD9Clip();
 

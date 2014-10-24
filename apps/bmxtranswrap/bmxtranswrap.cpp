@@ -2220,6 +2220,9 @@ int main(int argc, const char** argv)
             if (flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)
                 op1a_clip->SetInputDuration(reader->GetReadDuration());
 
+            if (clip_sub_type == AS11_CLIP_SUB_TYPE)
+                op1a_clip->ReserveHeaderMetadataSpace(16384); // min is 8192
+
             if (clip_sub_type != AS11_CLIP_SUB_TYPE)
                 op1a_clip->SetClipWrapped(clip_wrap);
             if (partition_interval_set)
@@ -2309,6 +2312,9 @@ int main(int argc, const char** argv)
 
             if (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR)
                 d10_clip->SetInputDuration(reader->GetReadDuration());
+
+            if (clip_sub_type == AS11_CLIP_SUB_TYPE)
+                d10_clip->ReserveHeaderMetadataSpace(16384); // min is 8192
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
             RDD9File *rdd9_clip = clip->GetRDD9Clip();
 
