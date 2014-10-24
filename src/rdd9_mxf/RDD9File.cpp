@@ -271,10 +271,11 @@ void RDD9File::PrepareHeaderMetadata()
     mCPManager->PrepareWrite();
     mIndexTable->PrepareWrite();
 
-    // Note: Sony RDD9 sample files don't include the MultipleWrappings label in the partition packs and preface
-    //       mEssenceContainerULs.insert(MXF_EC_L(MultipleWrappings));
     for (i = 0; i < mTracks.size(); i++)
         mEssenceContainerULs.insert(mTracks[i]->GetEssenceContainerUL());
+    // ST 377-2004 Sony RDD9 sample files didn't include the MultipleWrappings label in the partition packs and preface
+    if (!(mFlavour & RDD9_SMPTE_377_2004_FLAVOUR))
+        mEssenceContainerULs.insert(MXF_EC_L(MultipleWrappings));
 
     CreateHeaderMetadata();
 }
