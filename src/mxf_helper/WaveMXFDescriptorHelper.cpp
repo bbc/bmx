@@ -162,6 +162,8 @@ void WaveMXFDescriptorHelper::UpdateFileDescriptor()
     BMX_ASSERT(wav_descriptor);
 
     uint32_t sample_size = GetSampleSize();
+    if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+        wav_descriptor->setSoundEssenceCompression(MXF_CMDEF_L(UNDEFINED_SOUND));
     wav_descriptor->setBlockAlign(sample_size);
     wav_descriptor->setAvgBps(sample_size * mSamplingRate.numerator / mSamplingRate.denominator);
     if (mSequenceOffset > 0)
