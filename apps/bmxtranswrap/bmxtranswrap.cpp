@@ -399,6 +399,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --input-file-md5        Calculate an MD5 checksum of the input file\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Override input start timecode. Default 00:00:00:00\n");
     fprintf(stderr, "                          The c character in the pattern should be ':' for non-drop frame; any other character indicates drop frame\n");
+    fprintf(stderr, "  --mtc                   Check first and use the input material package start timecode if present\n");
+    fprintf(stderr, "  --fstc                  Check first and use the file source package timecode if present\n");
+    fprintf(stderr, "  --pstc                  Check first and use the physical source package timecode if present\n");
     fprintf(stderr, "  --tc-rate <rate>        Start timecode rate to use when input is audio only\n");
     fprintf(stderr, "                          Values are 23976 (24000/1001), 24, 25 (default), 2997 (30000/1001), 30, 50, 5994 (60000/1001) or 60\n");
     fprintf(stderr, "  --clip <name>           Set the clip name\n");
@@ -570,6 +573,9 @@ int main(int argc, const char** argv)
     const char *output_name = "";
     Timecode start_timecode;
     const char *start_timecode_str = 0;
+    bool use_mtc = false;
+    bool use_fstc = false;
+    bool use_pstc = false;
     int64_t start = 0;
     bool start_set = false;
     int64_t duration = -1;
@@ -775,6 +781,18 @@ int main(int argc, const char** argv)
             }
             start_timecode_str = argv[cmdln_index + 1];
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--mtc") == 0)
+        {
+            use_mtc = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--fstc") == 0)
+        {
+            use_fstc = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--pstc") == 0)
+        {
+            use_pstc = true;
         }
         else if (strcmp(argv[cmdln_index], "--tc-rate") == 0)
         {
@@ -2067,15 +2085,24 @@ int main(int argc, const char** argv)
 
         // get input start timecode
 
-        if (!start_timecode_str && reader->HavePlayoutTimecode()) {
-            start_timecode = reader->GetPlayoutTimecode(read_start);
+        if (!start_timecode_str) {
+            if (use_mtc && reader->HaveMaterialTimecode())
+                start_timecode = reader->GetMaterialTimecode(read_start);
+            if (use_fstc && start_timecode.IsInvalid() && reader->HaveFileSourceTimecode())
+                start_timecode = reader->GetFileSourceTimecode(read_start);
+            if (use_pstc && start_timecode.IsInvalid() && reader->HavePhysicalSourceTimecode())
+                start_timecode = reader->GetPhysicalSourceTimecode(read_start);
+            if (start_timecode.IsInvalid() && reader->HavePlayoutTimecode())
+                start_timecode = reader->GetPlayoutTimecode(read_start);
 
-            // adjust start timecode to be at the point after the leading filler segments
-            // this corresponds to the zero position in the MXF reader
-            if (!reader->HaveFixedLeadFillerOffset())
-                log_warn("No fixed lead filler offset\n");
-            else
-                start_timecode.AddOffset(reader->GetFixedLeadFillerOffset(), frame_rate);
+            if (!start_timecode.IsInvalid()) {
+                // adjust start timecode to be at the point after the leading filler segments
+                // this corresponds to the zero position in the MXF reader
+                if (!reader->HaveFixedLeadFillerOffset())
+                    log_warn("No fixed lead filler offset\n");
+                else
+                    start_timecode.AddOffset(reader->GetFixedLeadFillerOffset(), frame_rate);
+            }
         }
 
 
