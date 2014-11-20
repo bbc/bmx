@@ -437,7 +437,7 @@ void OP1AFile::CompleteWrite()
 
     Partition &footer_partition = mMXFFile->createPartition();
     footer_partition.setKey(&MXF_PP_K(ClosedComplete, Footer)); // will be complete when memory flushed
-    if (((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR)) &&
+    if (((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) &&
           mIndexTable->IsVBE() && mIndexTable->HaveSegments())
     {
         footer_partition.setIndexSID(INDEX_SID);
