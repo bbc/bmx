@@ -239,10 +239,14 @@ void RDD9File::PrepareHeaderMetadata()
 
     if (mPictureTrackCount == 0)
         BMX_EXCEPTION(("Require a MPEG-2 Long GOP picture track"));
-    if (mTracks.size() < 2)
+    if (mSoundTrackCount == 0)
         BMX_EXCEPTION(("Require at least 1 sound track"));
-    if (mTracks.size() != 3 && mTracks.size() != 5 && mTracks.size() != 9)
-        log_warn("There are %"PRIszt" audio tracks; RDD9 requires 2, 4, or 8 audio tracks\n", mTracks.size() - 1);
+    if ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+        if (mSoundTrackCount != 8 && mSoundTrackCount != 16)
+            log_warn("There are %u audio tracks; ARD ZDF profile requires 8 or 16 audio tracks\n", mSoundTrackCount);
+    } else if (mSoundTrackCount != 2 && mSoundTrackCount != 4 && mSoundTrackCount != 8) {
+        log_warn("There are %u audio tracks; RDD9 requires 2, 4, or 8 audio tracks\n", mSoundTrackCount);
+    }
 
     // sort tracks, picture followed by sound
     stable_sort(mTracks.begin(), mTracks.end(), compare_track);
