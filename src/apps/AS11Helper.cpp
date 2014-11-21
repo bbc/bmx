@@ -403,14 +403,17 @@ bool FrameworkHelper::SetProperty(string name, string value)
         {
             bool invalid = false;
             bool truncated = false;
-            size_t clip_len = get_utf8_clip_len(value.c_str(), 127, &invalid, &truncated);
+            size_t max_unicode_len = 127;
+            if (property_info->item_key == MXF_ITEM_K(UKDPPFramework, UKDPPSynopsis))
+                max_unicode_len = 250;
+            size_t clip_len = get_utf8_clip_len(value.c_str(), max_unicode_len, &invalid, &truncated);
             if (truncated) {
                 if (invalid) {
                     log_warn("Truncating string property %s::%s to %"PRIszt" chars because it contains invalid UTF-8 data\n",
                              mFrameworkInfo->name, name.c_str(), clip_len);
                 } else {
-                    log_warn("Truncating string property %s::%s because it's length exceeds 127 unicode chars\n",
-                             mFrameworkInfo->name, name.c_str());
+                    log_warn("Truncating string property %s::%s because it's length exceeds %"PRIszt" unicode chars\n",
+                             mFrameworkInfo->name, name.c_str(), max_unicode_len);
                 }
             }
             if (clip_len == 0)
