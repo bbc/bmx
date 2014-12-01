@@ -41,7 +41,7 @@
 #include <bmx/d10_mxf/D10PCMTrack.h>
 #include <bmx/mxf_helper/MXFFileFactory.h>
 #include <bmx/BMXTypes.h>
-#include <bmx/MXFUtils.h>
+#include <bmx/MXFChecksumFile.h>
 
 
 #define D10_DEFAULT_FLAVOUR                 0x0000

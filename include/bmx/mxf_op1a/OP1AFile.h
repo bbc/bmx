@@ -41,7 +41,7 @@
 #include <bmx/mxf_op1a/OP1ATrack.h>
 #include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
 #include <bmx/BMXTypes.h>
-#include <bmx/MXFUtils.h>
+#include <bmx/MXFChecksumFile.h>
 
 
 #define OP1A_DEFAULT_FLAVOUR                0x0000

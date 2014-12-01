@@ -91,6 +91,7 @@
     <ClInclude Include="..\..\..\include\bmx\KLVParser.h" />
     <ClInclude Include="..\..\..\include\bmx\Logging.h" />
     <ClInclude Include="..\..\..\include\bmx\MD5.h" />
+    <ClInclude Include="..\..\..\include\bmx\MXFChecksumFile.h" />
     <ClInclude Include="..\..\..\include\bmx\MXFUtils.h" />
     <ClInclude Include="..\..\..\include\bmx\SHA1.h" />
     <ClInclude Include="..\..\..\include\bmx\URI.h" />
@@ -292,6 +293,7 @@
     <ClCompile Include="..\..\..\src\common\KLVParser.cpp" />
     <ClCompile Include="..\..\..\src\common\Logging.cpp" />
     <ClCompile Include="..\..\..\src\common\MD5.cpp" />
+    <ClCompile Include="..\..\..\src\common\MXFChecksumFile.cpp" />
     <ClCompile Include="..\..\..\src\common\MXFUtils.cpp" />
     <ClCompile Include="..\..\..\src\common\SHA1.cpp" />
     <ClCompile Include="..\..\..\src\common\URI.cpp" />

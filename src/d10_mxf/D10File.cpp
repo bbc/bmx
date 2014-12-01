@@ -40,6 +40,7 @@
 
 #include <bmx/d10_mxf/D10File.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
+#include <bmx/MXFUtils.h>
 #include <bmx/Version.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>

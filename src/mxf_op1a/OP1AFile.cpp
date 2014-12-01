@@ -42,6 +42,7 @@
 #include <bmx/mxf_op1a/OP1AFile.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
+#include <bmx/MXFUtils.h>
 #include <bmx/Version.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>

@@ -11,6 +11,7 @@ libcommon_la_SOURCES = \
 	KLVParser.cpp \
 	Logging.cpp \
 	MD5.cpp \
+	MXFChecksumFile.cpp \
 	MXFUtils.cpp \
 	SHA1.cpp \
 	URI.cpp \

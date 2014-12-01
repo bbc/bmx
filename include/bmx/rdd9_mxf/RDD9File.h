@@ -40,7 +40,7 @@
 #include <bmx/rdd9_mxf/RDD9MPEG2LGTrack.h>
 #include <bmx/rdd9_mxf/RDD9PCMTrack.h>
 #include <bmx/BMXTypes.h>
-#include <bmx/MXFUtils.h>
+#include <bmx/MXFChecksumFile.h>
 
 
 #define RDD9_SMPTE_377_2004_FLAVOUR          0x0001

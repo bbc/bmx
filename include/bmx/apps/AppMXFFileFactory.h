@@ -37,7 +37,7 @@
 #include <set>
 
 #include <bmx/mxf_helper/MXFFileFactory.h>
-#include <bmx/MXFUtils.h>
+#include <bmx/MXFChecksumFile.h>
 #include <bmx/URI.h>
 
 #include <mxf/mxf_rw_intl_file.h>

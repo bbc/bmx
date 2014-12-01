@@ -10,6 +10,7 @@ nobase_library_include_HEADERS = \
 	bmx/KLVParser.h \
 	bmx/Logging.h \
 	bmx/MD5.h \
+	bmx/MXFChecksumFile.h \
 	bmx/MXFUtils.h \
 	bmx/SHA1.h \
 	bmx/URI.h \
