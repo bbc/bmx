@@ -127,6 +127,7 @@ Timestamp bmx::get_bmx_build_timestamp()
         return timestamp;
 
     struct tm build_ltm;
+    memset(&build_ltm, 0, sizeof(build_ltm));
 
     // date: Mmm dd yyyy
     int i;
