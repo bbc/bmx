@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2014, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,47 +29,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef BMX_MXF_HTTP_FILE_H_
+#define BMX_MXF_HTTP_FILE_H_
+
+#include <string>
+
+#include <mxf/mxf_file.h>
+
+
+namespace bmx
+{
+
+
+bool mxf_http_is_supported();
+
+bool mxf_http_is_url(const std::string &url_str);
+
+MXFFile* mxf_http_file_open_read(const std::string &url_str, uint32_t min_read_size);
+
+
+};
+
+
+
 #endif
-
-#include <bmx/mxf_helper/MXFFileFactory.h>
-#include <bmx/MXFHTTPFile.h>
-#include <bmx/BMXException.h>
-#include <bmx/Logging.h>
-
-using namespace std;
-using namespace bmx;
-using namespace mxfpp;
-
-
-
-File* DefaultMXFFileFactory::OpenNew(string filename)
-{
-    if (mxf_http_is_url(filename))
-        BMX_EXCEPTION(("HTTP file access is not supported for writing new files"));
-    else
-        return File::openNew(filename);
-}
-
-File* DefaultMXFFileFactory::OpenRead(string filename)
-{
-    if (filename.empty()) {
-        MXFFile *mxf_file;
-        BMX_CHECK(mxf_stdin_wrap_read(&mxf_file));
-        return new File(mxf_file);
-    } else if (mxf_http_is_url(filename)) {
-        return new File(mxf_http_file_open_read(filename, 64 * 1024));
-    } else {
-        return File::openRead(filename);
-    }
-}
-
-File* DefaultMXFFileFactory::OpenModify(string filename)
-{
-    if (mxf_http_is_url(filename))
-        BMX_EXCEPTION(("HTTP file access is not supported for modifying files"));
-    else
-        return File::openModify(filename);
-}
-

@@ -62,6 +62,7 @@ public:
     void AddInputChecksumType(ChecksumType type);
     void SetInputFlags(int flags);
     void SetRWInterleave(uint32_t rw_interleave_size);
+    void SetHTTPMinReadSize(uint32_t size);
 
 public:
     virtual mxfpp::File* OpenNew(std::string filename);
@@ -97,6 +98,7 @@ private:
     int mInputFlags;
     std::vector<InputChecksumFile> mInputChecksumFiles;
     MXFRWInterleaver *mRWInterleaver;
+    uint32_t mHTTPMinReadSize;
 };
 
 

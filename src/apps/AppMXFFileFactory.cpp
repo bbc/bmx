@@ -38,6 +38,7 @@
 #include <climits>
 
 #include <bmx/apps/AppMXFFileFactory.h>
+#include <bmx/MXFHTTPFile.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -52,6 +53,7 @@ AppMXFFileFactory::AppMXFFileFactory()
 {
     mInputFlags = 0;
     mRWInterleaver = 0;
+    mHTTPMinReadSize = 64 * 1024;
 }
 
 AppMXFFileFactory::~AppMXFFileFactory()
@@ -88,9 +90,17 @@ void AppMXFFileFactory::SetRWInterleave(uint32_t rw_interleave_size)
     BMX_CHECK(mxf_create_rw_intl(rw_interleave_size, cache_size, &mRWInterleaver));
 }
 
+void AppMXFFileFactory::SetHTTPMinReadSize(uint32_t size)
+{
+    mHTTPMinReadSize = size;
+}
+
 File* AppMXFFileFactory::OpenNew(string filename)
 {
     MXFFile *mxf_file = 0;
+
+    if (mxf_http_is_url(filename))
+        BMX_EXCEPTION(("HTTP file access is not supported for writing new files"));
 
     try
     {
@@ -121,20 +131,27 @@ File* AppMXFFileFactory::OpenRead(string filename)
 
     try
     {
+        string uri_str;
         if (filename.empty()) {
             BMX_CHECK(mxf_stdin_wrap_read(&mxf_file));
+            uri_str = "stdin:";
         } else {
+            if (mxf_http_is_url(filename)) {
+                mxf_file = mxf_http_file_open_read(filename, mHTTPMinReadSize);
+                uri_str = filename;
+            } else {
 #if defined(_WIN32)
-            BMX_CHECK(mxf_win32_file_open_read(filename.c_str(), mInputFlags, &mxf_file));
+                BMX_CHECK(mxf_win32_file_open_read(filename.c_str(), mInputFlags, &mxf_file));
 #else
-            BMX_CHECK(mxf_disk_file_open_read(filename.c_str(), &mxf_file));
+                BMX_CHECK(mxf_disk_file_open_read(filename.c_str(), &mxf_file));
 #endif
+            }
         }
 
         if (!mInputChecksumTypes.empty()) {
             URI abs_uri;
-            if (filename.empty()) {
-              abs_uri = URI("stdin:");
+            if (!uri_str.empty()) {
+              abs_uri = URI(uri_str);
             } else {
                 BMX_CHECK(abs_uri.ParseFilename(filename));
                 if (abs_uri.IsRelative()) {
@@ -176,6 +193,9 @@ File* AppMXFFileFactory::OpenRead(string filename)
 File* AppMXFFileFactory::OpenModify(string filename)
 {
     MXFFile *mxf_file = 0;
+
+    if (mxf_http_is_url(filename))
+        BMX_EXCEPTION(("HTTP file access is not supported for updating files"));
 
     try
     {

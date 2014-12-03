@@ -151,6 +151,14 @@ PKG_CHECK_MODULES(LIBMXFPP, libMXF++-${LIBMXFPP_MAJORMINOR} >= 1.0.3)
 AC_SUBST(LIBMXFPP_CFLAGS)
 AC_SUBST(LIBMXFPP_LIBS)
 
+LIBCURL_VER="7.22.0"
+PKG_CHECK_MODULES(LIBCURL, libcurl >= $LIBCURL_VER, HAVE_LIBCURL=yes, HAVE_LIBCURL=no)
+if test "x${HAVE_LIBCURL}" == xyes; then
+	AC_DEFINE([HAVE_LIBCURL], [1], [Define to 1 if you have the libcurl library])
+else
+	AC_MSG_WARN([Disabled HTTP file access because libcurl >= $LIBCURL_VER not found])
+fi
+
 
 dnl-----------------------------------------------------------------------------
 dnl -- Checks for header files.
@@ -202,10 +210,11 @@ AC_APPEND_SUPPORTED_CFLAGS(WARN_CFLAGS, [-W -Wall])
 AC_SUBST(WARN_CFLAGS)
 
 BMX_CFLAGS="${WARN_CFLAGS} ${LIBMXF_CFLAGS} ${LIBMXFPP_CFLAGS} \
-	${LIBURIPARSER_CFLAGS} ${EXPAT_CFLAGS} -I\$(top_srcdir)/include"
+	${LIBURIPARSER_CFLAGS} ${EXPAT_CFLAGS} ${LIBCURL_LIBS} -I\$(top_srcdir)/include"
 AC_SUBST(BMX_CFLAGS)
 
-BMX_LIBADDLIBS="-lm ${RT_LIB} ${UUIDLIB} ${LIBURIPARSER_LIBS} ${LIBMXF_LIBS} ${LIBMXFPP_LIBS} ${EXPAT_LIBS}"
+BMX_LIBADDLIBS="-lm ${RT_LIB} ${UUIDLIB} ${LIBURIPARSER_LIBS} ${LIBMXF_LIBS} \
+	${LIBMXFPP_LIBS} ${EXPAT_LIBS} ${LIBCURL_LIBS}"
 AC_SUBST(BMX_LIBADDLIBS)
 
 BMX_LDADDLIBS="${BMX_LIBADDLIBS} \

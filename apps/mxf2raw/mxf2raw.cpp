@@ -57,6 +57,7 @@
 #include <bmx/st436/RDD6Metadata.h>
 #include <bmx/MD5.h>
 #include <bmx/CRC32.h>
+#include <bmx/MXFHTTPFile.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/URI.h>
@@ -133,6 +134,9 @@ static const char *XML_INFO_WRITER_NAMESPACE    = "http://bbc.co.uk/rd/bmx/20131
 static const char *XML_INFO_WRITER_VERSION      = "0.1"; // format <major>.<minor>
 
 static const char* STDIN_FILENAME = "stdin:";
+
+static const uint32_t DEFAULT_HTTP_MIN_READ = 64 * 1024;
+
 
 namespace bmx
 {
@@ -1267,6 +1271,10 @@ static void usage(const char *cmd)
     fprintf(stderr, " --gf-delay <sec>      Set the delay (in seconds) between a failure to read and a retry. The default is %f.\n", DEFAULT_GF_RETRY_DELAY);
     fprintf(stderr, " --gf-rate <factor>    Limit the read rate to realtime rate x <factor> after a read failure. The default is %f\n", DEFAULT_GF_RATE_AFTER_FAIL);
     fprintf(stderr, "                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
+    if (mxf_http_is_supported()) {
+        fprintf(stderr, " --http-min-read <bytes>\n");
+        fprintf(stderr, "                       Set the minimum number of bytes to read when accessing a file over HTTP. The default is %u.\n", DEFAULT_HTTP_MIN_READ);
+    }
     fprintf(stderr, "\n");
 }
 
@@ -1318,7 +1326,7 @@ int main(int argc, const char** argv)
     unsigned int gf_retries = DEFAULT_GF_RETRIES;
     float gf_retry_delay = DEFAULT_GF_RETRY_DELAY;
     float gf_rate_after_fail = DEFAULT_GF_RATE_AFTER_FAIL;
-
+    uint32_t http_min_read = DEFAULT_HTTP_MIN_READ;
     ChecksumType checkum_type;
     unsigned int uvalue;
     int cmdln_index;
@@ -1738,6 +1746,23 @@ int main(int argc, const char** argv)
             growing_file = true;
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--http-min-read") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            http_min_read = (uint32_t)(uvalue);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--regtest") == 0)
         {
             BMX_REGRESSION_TEST = true;
@@ -1763,7 +1788,12 @@ int main(int argc, const char** argv)
             // standard input
             input_filenames.push_back("");
         } else {
-            if (!check_file_exists(argv[cmdln_index])) {
+            if (mxf_http_is_url(argv[cmdln_index])) {
+                if (!mxf_http_is_supported()) {
+                    fprintf(stderr, "HTTP file access is not supported in this build\n");
+                    return 1;
+                }
+            } else if (!check_file_exists(argv[cmdln_index])) {
                 if (argv[cmdln_index][0] == '-') {
                     usage(argv[0]);
                     fprintf(stderr, "Unknown argument '%s'\n", argv[cmdln_index]);
@@ -1856,6 +1886,7 @@ int main(int argc, const char** argv)
         if (!file_checksum_types.empty())
             file_factory.SetInputChecksumTypes(file_checksum_types);
         file_factory.SetInputFlags(file_flags);
+        file_factory.SetHTTPMinReadSize(http_min_read);
 
         if (use_group_reader && input_filenames.size() > 1) {
             MXFGroupReader *group_reader = new MXFGroupReader();

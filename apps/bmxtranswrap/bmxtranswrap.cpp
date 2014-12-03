@@ -57,6 +57,7 @@
 #include <bmx/st436/ST436Element.h>
 #include <bmx/st436/RDD6Metadata.h>
 #include <bmx/URI.h>
+#include <bmx/MXFHTTPFile.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/Version.h>
@@ -114,6 +115,8 @@ static const uint32_t DEFAULT_RW_INTL_SIZE  = (64 * 1024);
 
 static const uint16_t DEFAULT_RDD6_LINES[2] = {9, 572};     /* ST 274, line 9 field 1 and 2 */
 static const uint8_t DEFAULT_RDD6_SDID      = 4;            /* first channel pair is 5/6 */
+
+static const uint32_t DEFAULT_HTTP_MIN_READ = 64 * 1024;
 
 
 namespace bmx
@@ -421,6 +424,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --gf-delay <sec>        Set the delay (in seconds) between a failure to read and a retry. The default is %f.\n", DEFAULT_GF_RETRY_DELAY);
     fprintf(stderr, "  --gf-rate <factor>      Limit the read rate to realtime rate x <factor> after a read failure. The default is %f\n", DEFAULT_GF_RATE_AFTER_FAIL);
     fprintf(stderr, "                          <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
+    if (mxf_http_is_supported()) {
+        fprintf(stderr, " --http-min-read <bytes>\n");
+        fprintf(stderr, "                          Set the minimum number of bytes to read when accessing a file over HTTP. The default is %u.\n", DEFAULT_HTTP_MIN_READ);
+    }
     fprintf(stderr, "  --no-precharge          Don't output clip/track with precharge. Adjust the start position and duration instead\n");
     fprintf(stderr, "  --no-rollout            Don't output clip/track with rollout. Adjust the duration instead\n");
     fprintf(stderr, "  --rw-intl               Interleave input reads with output writes\n");
@@ -665,6 +672,7 @@ int main(int argc, const char** argv)
     const char *rdd6_filename = 0;
     uint16_t rdd6_lines[2] = {DEFAULT_RDD6_LINES[0], DEFAULT_RDD6_LINES[1]};
     uint8_t rdd6_sdid = DEFAULT_RDD6_SDID;
+    uint32_t http_min_read = DEFAULT_HTTP_MIN_READ;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -941,6 +949,23 @@ int main(int argc, const char** argv)
                 return 1;
             }
             growing_file = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--http-min-read") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            http_min_read = (uint32_t)(uvalue);
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--no-precharge") == 0)
@@ -1669,7 +1694,12 @@ int main(int argc, const char** argv)
         }
         else
         {
-            if (!check_file_exists(argv[cmdln_index])) {
+            if (mxf_http_is_url(argv[cmdln_index])) {
+                if (!mxf_http_is_supported()) {
+                    fprintf(stderr, "HTTP file access is not supported in this build\n");
+                    return 1;
+                }
+            } else if (!check_file_exists(argv[cmdln_index])) {
                 if (argv[cmdln_index][0] == '-') {
                     usage(argv[0]);
                     fprintf(stderr, "Unknown argument '%s'\n", argv[cmdln_index]);
@@ -1753,6 +1783,7 @@ int main(int argc, const char** argv)
         file_factory.SetInputFlags(input_file_flags);
         if (rw_interleave)
             file_factory.SetRWInterleave(rw_interleave_size);
+        file_factory.SetHTTPMinReadSize(http_min_read);
 
         if (use_group_reader && input_filenames.size() > 1) {
             MXFGroupReader *group_reader = new MXFGroupReader();

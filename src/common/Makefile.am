@@ -12,6 +12,7 @@ libcommon_la_SOURCES = \
 	Logging.cpp \
 	MD5.cpp \
 	MXFChecksumFile.cpp \
+	MXFHTTPFile.cpp \
 	MXFUtils.cpp \
 	SHA1.cpp \
 	URI.cpp \

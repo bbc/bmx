@@ -46,6 +46,7 @@
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
 #include <bmx/essence_parser/AVCIEssenceParser.h>
 #include <bmx/st436/ST436Element.h>
+#include <bmx/MXFHTTPFile.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -263,13 +264,17 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
     try
     {
         URI rel_uri, abs_uri;
-        BMX_CHECK(abs_uri.ParseFilename(filename));
-        if (abs_uri.IsRelative()) {
-            rel_uri = abs_uri;
+        if (mxf_http_is_url(filename)) {
+            BMX_CHECK(abs_uri.Parse(filename));
+        } else {
+            BMX_CHECK(abs_uri.ParseFilename(filename));
+            if (abs_uri.IsRelative()) {
+                rel_uri = abs_uri;
 
-            URI base_uri;
-            BMX_CHECK(base_uri.ParseDirectory(get_cwd()));
-            abs_uri.MakeAbsolute(base_uri);
+                URI base_uri;
+                BMX_CHECK(base_uri.ParseDirectory(get_cwd()));
+                abs_uri.MakeAbsolute(base_uri);
+            }
         }
 
         return Open(file, abs_uri, rel_uri, filename);

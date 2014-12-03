@@ -213,12 +213,16 @@ vector<ResolvedPackage> DefaultMXFPackageResolver::ResolveSourceClip(SourceClip 
         if (j < mExternalReaders.size() || mFileReader->GetAbsoluteURI() == uri)
             continue;
 
-        string filename = uri.ToFilename();
+        string file_location;
+        if (uri.IsAbsFile())
+            file_location = uri.ToFilename();
+        else
+            file_location = uri.ToString();
         MXFFileReader *file_reader = new MXFFileReader();
         file_reader->SetFileFactory(mFileFactory, false);
-        MXFFileReader::OpenResult result = file_reader->Open(filename);
+        MXFFileReader::OpenResult result = file_reader->Open(file_location);
         if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
-            log_warn("Failed to open external MXF file '%s'\n", filename.c_str());
+            log_warn("Failed to open external MXF file '%s'\n", url.c_str());
             delete file_reader;
             continue;
         }
