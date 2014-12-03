@@ -49,6 +49,11 @@ using namespace bmx;
 using namespace mxfpp;
 
 
+static const uint32_t AS11_CORE_TRACK_ID          = 5001;
+static const uint32_t AS11_SEGMENTATION_TRACK_ID  = 5002;
+static const uint32_t AS11_UKDPP_TRACK_ID         = 5101;
+
+
 
 static int64_t get_offset(uint16_t to_tc_base, uint16_t from_tc_base, int64_t from_offset)
 {
@@ -76,13 +81,13 @@ AS11WriterHelper::~AS11WriterHelper()
 void AS11WriterHelper::InsertAS11CoreFramework(AS11CoreFramework *framework)
 {
     AppendDMSLabel(MXF_DM_L(AS11CoreDescriptiveScheme));
-    InsertFramework(3001, "AS_11_Core", framework);
+    InsertFramework(AS11_CORE_TRACK_ID, "AS_11_Core", framework);
 }
 
 void AS11WriterHelper::InsertUKDPPFramework(UKDPPFramework *framework)
 {
     AppendDMSLabel(MXF_DM_L(UKDPPDescriptiveScheme));
-    InsertFramework(3101, "AS_11_UKDPP", framework);
+    InsertFramework(AS11_UKDPP_TRACK_ID, "AS_11_UKDPP", framework);
 }
 
 void AS11WriterHelper::InsertPosSegmentation(vector<AS11PosSegment> segments)
@@ -101,7 +106,7 @@ void AS11WriterHelper::InsertPosSegmentation(vector<AS11PosSegment> segments)
     Track *dm_track = new Track(header_metadata);
     material_package->appendTracks(dm_track);
     dm_track->setTrackName("AS_11_Segmentation");
-    dm_track->setTrackID(3002);
+    dm_track->setTrackID(AS11_SEGMENTATION_TRACK_ID);
     dm_track->setTrackNumber(0);
     dm_track->setEditRate(mClip->GetFrameRate());
     dm_track->setOrigin(0);
