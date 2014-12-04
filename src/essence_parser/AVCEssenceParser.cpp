@@ -645,7 +645,13 @@ EssenceType AVCEssenceParser::GetAVCIEssenceType(uint32_t data_size, bool is_int
         }
     } else if (mProfile == 122 && (mProfileConstraint & 0x10)) {
         if (mStoredWidth == 1920 && mStoredHeight == 1088) {
-            if (mLevel == 42 &&
+            if (mLevel == 50 &&
+                (mFrameRate == FRAME_RATE_5994 ||
+                 mFrameRate == FRAME_RATE_50))
+            {
+                essence_type = AVCI200_1080P;
+            }
+            else if (mLevel == 42 &&
                 (mFrameRate == FRAME_RATE_5994 ||
                  mFrameRate == FRAME_RATE_50))
             {
@@ -653,18 +659,24 @@ EssenceType AVCEssenceParser::GetAVCIEssenceType(uint32_t data_size, bool is_int
             }
             else if (mLevel == 41)
             {
+                // level 4.1 is used by class 100 and class 200, lets says if
+                // data size is much too big for class 100 its class 200
+                bool class200 = false;
+                if (data_size > 700000)
+                    class200 = true;
+
                 if (mFrameRate == FRAME_RATE_23976) {
-                    essence_type = AVCI100_1080P;
+                    essence_type = class200 ? AVCI200_1080P : AVCI100_1080P;
                 } else if (mFrameRate == FRAME_RATE_2997 || mFrameRate == FRAME_RATE_25) {
                     if (is_progressive)
-                        essence_type = AVCI100_1080P;
+                        essence_type = class200 ? AVCI200_1080P : AVCI100_1080P;
                     else if (is_interlaced)
-                        essence_type = AVCI100_1080I;
+                        essence_type = class200 ? AVCI200_1080I : AVCI100_1080I;
                     // guessing interlaced/progressive using RP2027 recommended frame_mbs_only_flag value
                     else if (mFrameMBSOnlyFlag)
-                        essence_type = AVCI100_1080P;
+                        essence_type = class200 ? AVCI200_1080P : AVCI100_1080P;
                     else
-                        essence_type = AVCI100_1080I;
+                        essence_type = class200 ? AVCI200_1080I : AVCI100_1080I;
                 }
             }
         } else if (mStoredWidth == 1280 && mStoredHeight == 720) {
@@ -675,7 +687,13 @@ EssenceType AVCEssenceParser::GetAVCIEssenceType(uint32_t data_size, bool is_int
                  mFrameRate == FRAME_RATE_25 ||
                  mFrameRate == FRAME_RATE_23976))
             {
-                essence_type = AVCI100_720P;
+
+                // level 4.1 is used by class 100 and class 200, lets says if
+                // data size is much too big for class 100 its class 200
+                if (data_size > 375000)
+                    essence_type = AVCI200_720P;
+                else
+                    essence_type = AVCI100_720P;
             }
         }
     }

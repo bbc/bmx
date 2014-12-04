@@ -672,7 +672,10 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
         info_writer->WriteRationalItem("aspect_ratio", picture_info->aspect_ratio);
         if (picture_info->afd)
             info_writer->WriteIntegerItem("afd", picture_info->afd);
-        if (track_info->essence_type == AVCI100_1080I ||
+        if (track_info->essence_type == AVCI200_1080I ||
+            track_info->essence_type == AVCI200_1080P ||
+            track_info->essence_type == AVCI200_720P ||
+            track_info->essence_type == AVCI100_1080I ||
             track_info->essence_type == AVCI100_1080P ||
             track_info->essence_type == AVCI100_720P ||
             track_info->essence_type == AVCI50_1080I ||

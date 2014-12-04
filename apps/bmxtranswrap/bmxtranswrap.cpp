@@ -1984,7 +1984,10 @@ int main(int argc, const char** argv)
                     }
                 }
 
-                if ((input_track_info->essence_type == AVCI100_1080I ||
+                if ((input_track_info->essence_type == AVCI200_1080I ||
+                         input_track_info->essence_type == AVCI200_1080P ||
+                         input_track_info->essence_type == AVCI200_720P ||
+                         input_track_info->essence_type == AVCI100_1080I ||
                          input_track_info->essence_type == AVCI100_1080P ||
                          input_track_info->essence_type == AVCI100_720P ||
                          input_track_info->essence_type == AVCI50_1080I ||
@@ -2519,6 +2522,9 @@ int main(int argc, const char** argv)
                         if (afd)
                             output_track.track->SetAFD(afd);
                         break;
+                    case AVCI200_1080I:
+                    case AVCI200_1080P:
+                    case AVCI200_720P:
                     case AVCI100_1080I:
                     case AVCI100_1080P:
                     case AVCI100_720P:

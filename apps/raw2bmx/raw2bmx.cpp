@@ -221,7 +221,10 @@ static bool open_raw_reader(RawInput *input)
         essence_source = klv_source;
     }
 
-    if (input->essence_type == AVCI100_1080I ||
+    if (input->essence_type == AVCI200_1080I ||
+        input->essence_type == AVCI200_1080P ||
+        input->essence_type == AVCI200_720P ||
+        input->essence_type == AVCI100_1080I ||
         input->essence_type == AVCI100_1080P ||
         input->essence_type == AVCI100_720P ||
         input->essence_type == AVCI50_1080I ||
@@ -490,6 +493,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --d10_40 <name>         Raw D10 40Mbps video input file\n");
     fprintf(stderr, "  --d10_50 <name>         Raw D10 50Mbps video input file\n");
     fprintf(stderr, "  --avci <name>           Raw AVC-Intra video input file. See also --avci-guess option\n");
+    fprintf(stderr, "  --avci200_1080i <name>  Raw AVC-Intra 200 1080i video input file\n");
+    fprintf(stderr, "  --avci200_1080p <name>  Raw AVC-Intra 200 1080p video input file\n");
+    fprintf(stderr, "  --avci200_720p <name>   Raw AVC-Intra 200 720p video input file\n");
     fprintf(stderr, "  --avci100_1080i <name>  Raw AVC-Intra 100 1080i video input file\n");
     fprintf(stderr, "  --avci100_1080p <name>  Raw AVC-Intra 100 1080p video input file\n");
     fprintf(stderr, "  --avci100_720p <name>   Raw AVC-Intra 100 720p video input file\n");
@@ -1735,7 +1741,7 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
-        else if (strcmp(argv[cmdln_index], "--avci100_1080i") == 0)
+        else if ((strcmp(argv[cmdln_index], "--avci100_1080i") == 0) || (strcmp(argv[cmdln_index], "--avci200_1080i") == 0))
         {
             if (cmdln_index + 1 >= argc)
             {
@@ -1743,12 +1749,15 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = AVCI100_1080I;
+            if (strcmp(argv[cmdln_index], "--avci100_1080i") == 0)
+                input.essence_type = AVCI100_1080I;
+            else
+                input.essence_type = AVCI200_1080I;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
         }
-        else if (strcmp(argv[cmdln_index], "--avci100_1080p") == 0)
+        else if ((strcmp(argv[cmdln_index], "--avci100_1080p") == 0) || (strcmp(argv[cmdln_index], "--avci200_1080p") == 0))
         {
             if (cmdln_index + 1 >= argc)
             {
@@ -1756,12 +1765,15 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = AVCI100_1080P;
+            if (strcmp(argv[cmdln_index], "--avci100_1080p") == 0)
+                input.essence_type = AVCI100_1080P;
+            else
+                input.essence_type = AVCI200_1080P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
         }
-        else if (strcmp(argv[cmdln_index], "--avci100_720p") == 0)
+        else if ((strcmp(argv[cmdln_index], "--avci100_720p") == 0) || (strcmp(argv[cmdln_index], "--avci200_720p") == 0))
         {
             if (cmdln_index + 1 >= argc)
             {
@@ -1769,7 +1781,10 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input.essence_type = AVCI100_720P;
+            if (strcmp(argv[cmdln_index], "--avci100_720p") == 0)
+                input.essence_type = AVCI100_720P;
+            else
+                input.essence_type = AVCI200_720P;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -3165,6 +3180,9 @@ int main(int argc, const char** argv)
                     if (input->afd)
                         input->track->SetAFD(input->afd);
                     break;
+                case AVCI200_1080I:
+                case AVCI200_1080P:
+                case AVCI200_720P:
                 case AVCI100_1080I:
                 case AVCI100_1080P:
                 case AVCI100_720P:
@@ -3310,6 +3328,9 @@ int main(int argc, const char** argv)
                 case D10_30:
                 case D10_40:
                 case D10_50:
+                case AVCI200_1080I:
+                case AVCI200_1080P:
+                case AVCI200_720P:
                 case AVCI100_1080I:
                 case AVCI100_1080P:
                 case AVCI100_720P:

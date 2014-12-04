@@ -82,6 +82,18 @@ static const SupportedEssence SUPPORTED_ESSENCE[] =
     {MXF_CMDEF_L(AVCI_50_720_60_P),     AVCI50_720P,     {60000, 1001},  116736,  0x0d4c},
     {MXF_CMDEF_L(AVCI_50_720_60_P),     AVCI50_720P,     {30000, 1001},  116736,  0x0d49},
     {MXF_CMDEF_L(AVCI_50_720_60_P),     AVCI50_720P,     {24000, 1001},  116736,  0x0d4b},
+    {MXF_CMDEF_L(AVCI_200_1080_50_I),   AVCI200_1080I,   {25, 1},        1144320,      0},
+    {MXF_CMDEF_L(AVCI_200_1080_60_I),   AVCI200_1080I,   {30000, 1001},  952832,       0},
+    {MXF_CMDEF_L(AVCI_200_1080_25_P),   AVCI200_1080P,   {50, 1},        1144320,      0},
+    {MXF_CMDEF_L(AVCI_200_1080_25_P),   AVCI200_1080P,   {25, 1},        1144320,      0},
+    {MXF_CMDEF_L(AVCI_200_1080_30_P),   AVCI200_1080P,   {60000, 1001},  952832,       0},
+    {MXF_CMDEF_L(AVCI_200_1080_30_P),   AVCI200_1080P,   {30000, 1001},  952832,       0},
+    {MXF_CMDEF_L(AVCI_200_1080_30_P),   AVCI200_1080P,   {24000, 1001},  952832,       0},
+    {MXF_CMDEF_L(AVCI_200_720_50_P),    AVCI200_720P,    {50, 1},        572416,       0},
+    {MXF_CMDEF_L(AVCI_200_720_50_P),    AVCI200_720P,    {25, 1},        572416,       0},
+    {MXF_CMDEF_L(AVCI_200_720_60_P),    AVCI200_720P,    {60000, 1001},  476672,       0},
+    {MXF_CMDEF_L(AVCI_200_720_60_P),    AVCI200_720P,    {30000, 1001},  476672,       0},
+    {MXF_CMDEF_L(AVCI_200_720_60_P),    AVCI200_720P,    {24000, 1001},  476672,       0},
 };
 
 typedef struct
@@ -121,8 +133,19 @@ static const AVCDescriptorInfo AVC_DESCRIPTOR_INFO[] =
     {AVCI50_720P,     {60000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   53276608,  110, 0x10, 32},
     {AVCI50_720P,     {30000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   26638272,  110, 0x10, 32},
     {AVCI50_720P,     {24000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   21310656,  110, 0x10, 32},
+    {AVCI200_1080I,   {25, 1},        MXF_AVC_INTERLACED_FRAME_PICTURE,   226918400,  122, 0x10, 41},
+    {AVCI200_1080I,   {30000, 1001},  MXF_AVC_INTERLACED_FRAME_PICTURE,   226118784,  122, 0x10, 41},
+    {AVCI200_1080P,   {50, 1},        MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  453836800,  122, 0x10, 50},
+    {AVCI200_1080P,   {25, 1},        MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  226918400,  122, 0x10, 41},
+    {AVCI200_1080P,   {60000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  452237632,  122, 0x10, 50},
+    {AVCI200_1080P,   {30000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  226118784,  122, 0x10, 41},
+    {AVCI200_1080P,   {24000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  180895040,  122, 0x10, 41},
+    {AVCI200_720P,    {50, 1},        MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  226713600,  122, 0x10, 41},
+    {AVCI200_720P,    {25, 1},        MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  113356800,  122, 0x10, 41},
+    {AVCI200_720P,    {60000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  225873280,  122, 0x10, 41},
+    {AVCI200_720P,    {30000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,  112936640,  122, 0x10, 41},
+    {AVCI200_720P,    {24000, 1001},  MXF_AVC_PROGRESSIVE_FRAME_PICTURE,   90349312,  122, 0x10, 41},
 };
-
 
 
 EssenceType AVCIMXFDescriptorHelper::IsSupported(FileDescriptor *file_descriptor, mxfUL alternative_ec_label)
@@ -284,12 +307,15 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
     switch (mEssenceType)
     {
+        case AVCI200_1080I:
+        case AVCI200_1080P:
         case AVCI100_1080I:
         case AVCI100_1080P:
         case AVCI50_1080I:
         case AVCI50_1080P:
             cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_SMPTE274M);
             break;
+        case AVCI200_720P:
         case AVCI100_720P:
         case AVCI50_720P:
             cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_SMPTE296M);
@@ -299,6 +325,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
     }
     switch (mEssenceType)
     {
+        case AVCI200_1080I:
         case AVCI100_1080I:
         case AVCI50_1080I:
             if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
@@ -308,6 +335,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
             }
             cdci_descriptor->setFrameLayout(MXF_SEPARATE_FIELDS);
             break;
+        case AVCI200_1080P:
         case AVCI100_1080P:
         case AVCI100_720P:
         case AVCI50_1080P:
@@ -328,6 +356,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
         SetCodingEquations(ITUR_BT709_CODING_EQ);
     switch (mEssenceType)
     {
+        case AVCI200_1080I:
         case AVCI100_1080I:
         case AVCI50_1080I:
             cdci_descriptor->setStoredWidth(1920);
@@ -338,6 +367,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->appendVideoLineMap(21);
             cdci_descriptor->appendVideoLineMap(584);
             break;
+        case AVCI200_1080P:
         case AVCI100_1080P:
         case AVCI50_1080P:
             cdci_descriptor->setStoredWidth(1920);
@@ -348,6 +378,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->appendVideoLineMap(42);
             cdci_descriptor->appendVideoLineMap(0);
             break;
+        case AVCI200_720P:
         case AVCI100_720P:
         case AVCI50_720P:
             cdci_descriptor->setStoredWidth(1280);
@@ -360,6 +391,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
     }
     switch (mEssenceType)
     {
+        case AVCI200_1080I:
         case AVCI100_1080I:
         case AVCI50_1080I:
             cdci_descriptor->setDisplayWidth(cdci_descriptor->getStoredWidth());
@@ -367,6 +399,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setSampledWidth(cdci_descriptor->getStoredWidth());
             cdci_descriptor->setSampledHeight(540);
             break;
+        case AVCI200_1080P:
         case AVCI100_1080P:
         case AVCI50_1080P:
             cdci_descriptor->setDisplayWidth(cdci_descriptor->getStoredWidth());
@@ -374,6 +407,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setSampledWidth(cdci_descriptor->getStoredWidth());
             cdci_descriptor->setSampledHeight(1080);
             break;
+        case AVCI200_720P:
         case AVCI100_720P:
         case AVCI50_720P:
             cdci_descriptor->setDisplayWidth(cdci_descriptor->getStoredWidth());
@@ -394,6 +428,9 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
     }
     switch (mEssenceType)
     {
+        case AVCI200_1080I:
+        case AVCI200_1080P:
+        case AVCI200_720P:
         case AVCI100_1080I:
         case AVCI100_1080P:
         case AVCI100_720P:

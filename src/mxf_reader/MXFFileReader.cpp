@@ -1869,6 +1869,9 @@ void MXFFileReader::CheckRequireFrameInfo()
         if (mInternalTrackReaders[i]->IsEnabled()) {
             MXFTrackInfo *track_info = mInternalTrackReaders[i]->GetTrackInfo();
             if (track_info->essence_type == D10_AES3_PCM ||
+                track_info->essence_type == AVCI200_1080I ||
+                track_info->essence_type == AVCI200_1080P ||
+                track_info->essence_type == AVCI200_720P ||
                 track_info->essence_type == AVCI100_1080I ||
                 track_info->essence_type == AVCI100_1080P ||
                 track_info->essence_type == AVCI100_720P ||
@@ -1934,7 +1937,10 @@ void MXFFileReader::ExtractFrameInfo()
                         sound_info->d10_aes3_valid_flags = frame->GetBytes()[3];
                 }
                 else if (f == 0 &&
-                            (track_info->essence_type == AVCI100_1080I ||
+                            (track_info->essence_type == AVCI200_1080I ||
+                             track_info->essence_type == AVCI200_1080P ||
+                             track_info->essence_type == AVCI200_720P ||
+                             track_info->essence_type == AVCI100_1080I ||
                              track_info->essence_type == AVCI100_1080P ||
                              track_info->essence_type == AVCI100_720P ||
                              track_info->essence_type == AVCI50_1080I ||

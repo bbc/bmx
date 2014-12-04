@@ -99,6 +99,9 @@ typedef enum
     TYPE_ANC_DATA,
     TYPE_VBI_DATA,
     TYPE_UNC_UHD_3840,
+    TYPE_AVCI200_1080I,
+    TYPE_AVCI200_1080P,
+    TYPE_AVCI200_720P,
     TYPE_END,
 } EssenceType;
 
@@ -242,6 +245,15 @@ static void write_avci_frame(FILE *file, unsigned int frame_size, bool is_first)
     }
 }
 
+static void write_avci200_1080(FILE *file, unsigned int duration)
+{
+    write_avci_frame(file, 19 * 512 + 1134592, true);
+
+    unsigned int i;
+    for (i = 1; i < duration; i++)
+        write_avci_frame(file, 18 * 512 + 1134592, false);
+}
+
 static void write_avci100_1080(FILE *file, unsigned int duration)
 {
     write_avci_frame(file, 19 * 512 + 559104, true);
@@ -249,6 +261,15 @@ static void write_avci100_1080(FILE *file, unsigned int duration)
     unsigned int i;
     for (i = 1; i < duration; i++)
         write_avci_frame(file, 18 * 512 + 559104, false);
+}
+
+static void write_avci200_720(FILE *file, unsigned int duration)
+{
+    write_avci_frame(file, 11 * 512 + 566784, true);
+
+    unsigned int i;
+    for (i = 1; i < duration; i++)
+        write_avci_frame(file, 10 * 512 + 566784, false);
 }
 
 static void write_avci100_720(FILE *file, unsigned int duration)
@@ -555,6 +576,9 @@ static void print_usage(const char *cmd)
     fprintf(stderr, " 43: ANC data\n");
     fprintf(stderr, " 44: VBI data\n");
     fprintf(stderr, " 45: UNC UHD 3840\n");
+    fprintf(stderr, " 46: AVC Intra 200 1080i\n");
+    fprintf(stderr, " 47: AVC Intra 200 1080p\n");
+    fprintf(stderr, " 48: AVC Intra 200 720p\n");
 }
 
 int main(int argc, const char **argv)
@@ -655,6 +679,13 @@ int main(int argc, const char **argv)
             break;
         case TYPE_DV100_720P:
             write_dv100_720p(file, duration);
+            break;
+        case TYPE_AVCI200_1080I:
+        case TYPE_AVCI200_1080P:
+            write_avci200_1080(file, duration);
+            break;
+        case TYPE_AVCI200_720P:
+            write_avci200_720(file, duration);
             break;
         case TYPE_AVCI100_1080I:
         case TYPE_AVCI100_1080P:

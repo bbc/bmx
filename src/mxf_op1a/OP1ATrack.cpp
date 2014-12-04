@@ -75,6 +75,9 @@ static const OP1ASampleRateSupport OP1A_SAMPLE_RATE_SUPPORT[] =
     {D10_30,                   {{25, 1}, {30000, 1001}, {0, 0}}},
     {D10_40,                   {{25, 1}, {30000, 1001}, {0, 0}}},
     {D10_50,                   {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI200_1080I,            {{25, 1}, {30000, 1001}, {0, 0}}},
+    {AVCI200_1080P,            {{24000, 1001}, {25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {AVCI200_720P,             {{24000, 1001}, {25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {AVCI100_1080I,            {{25, 1}, {30000, 1001}, {0, 0}}},
     {AVCI100_1080P,            {{24000, 1001}, {25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {AVCI100_720P,             {{24000, 1001}, {25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
@@ -148,6 +151,9 @@ OP1ATrack* OP1ATrack::Create(OP1AFile *file, uint32_t track_index, uint32_t trac
         case D10_40:
         case D10_50:
             return new OP1AD10Track(file, track_index, track_id, track_type_number, frame_rate, essence_type);
+        case AVCI200_1080I:
+        case AVCI200_1080P:
+        case AVCI200_720P:
         case AVCI100_1080I:
         case AVCI100_1080P:
         case AVCI100_720P:

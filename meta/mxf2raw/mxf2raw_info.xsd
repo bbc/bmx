@@ -694,6 +694,9 @@
       <xs:enumeration value="DV_50"/>
       <xs:enumeration value="DV_100_1080i"/>
       <xs:enumeration value="DV_100_720p"/>
+      <xs:enumeration value="AVCI_200_1080i"/>
+      <xs:enumeration value="AVCI_200_1080p"/>
+      <xs:enumeration value="AVCI_200_720p"/>
       <xs:enumeration value="AVCI_100_1080i"/>
       <xs:enumeration value="AVCI_100_1080p"/>
       <xs:enumeration value="AVCI_100_720p"/>
