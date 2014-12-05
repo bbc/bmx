@@ -51,9 +51,6 @@ using namespace mxfpp;
 
 
 
-static const int HEADER_PARTITION   = 0;
-static const int FOOTER_PARTITION   = 1;
-
 static uint32_t TIMECODE_TRACK_ID       = 901;
 static uint32_t FIRST_VIDEO_TRACK_ID    = 1001;
 static uint32_t FIRST_AUDIO_TRACK_ID    = 2001;
