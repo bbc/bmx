@@ -54,17 +54,17 @@ public:
 
     bool Read(mxfpp::HeaderMetadata *header_metadata);
 
-private:
-    void Reset();
-
-    void GetStaticFrameworks(std::vector<mxfpp::GenericTrack*> &tracks);
-    void GetSegmentation(std::vector<mxfpp::GenericTrack*> &tracks);
-
 public:
     AS11CoreFramework *core;
     UKDPPFramework *ukdpp;
     std::vector<mxfpp::StructuralComponent*> segmentation;
     Rational segmentation_rate;
+
+private:
+    void Reset();
+
+    void GetStaticFrameworks(std::vector<mxfpp::GenericTrack*> &tracks);
+    void GetSegmentation(std::vector<mxfpp::GenericTrack*> &tracks);
 };
 
 

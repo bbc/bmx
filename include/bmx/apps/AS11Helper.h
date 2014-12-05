@@ -38,6 +38,8 @@
 #include <libMXF++/MXF.h>
 
 #include <bmx/as11/AS11WriterHelper.h>
+#include <bmx/as11/AS11Info.h>
+#include <bmx/mxf_reader/MXFFileReader.h>
 
 
 
@@ -99,6 +101,8 @@ public:
     AS11Helper();
     ~AS11Helper();
 
+    void ReadSourceInfo(MXFFileReader *source_file);
+
     bool ParseFrameworkFile(const char *type_str, const char *filename);
     bool ParseSegmentationFile(const char *filename, Rational frame_rate);
     bool SetFrameworkProperty(const char *type_str, const char *name, const char *value);
@@ -118,6 +122,10 @@ private:
     std::vector<FrameworkProperty> mFrameworkProperties;
     std::vector<AS11TCSegment> mSegments;
     bool mFillerCompleteSegments;
+
+    AS11Info *mSourceInfo;
+    Timecode mSourceStartTimecode;
+    std::string mSourceProgrammeTitle;
 
     AS11WriterHelper *mWriterHelper;
     FrameworkHelper *mAS11FrameworkHelper;

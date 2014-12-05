@@ -543,6 +543,7 @@ bool FrameworkHelper::SetProperty(string name, string value)
 AS11Helper::AS11Helper()
 {
     mFillerCompleteSegments = false;
+    mSourceInfo = 0;
     mWriterHelper = 0;
     mAS11FrameworkHelper = 0;
     mUKDPPFrameworkHelper = 0;
@@ -552,9 +553,51 @@ AS11Helper::AS11Helper()
 
 AS11Helper::~AS11Helper()
 {
+    delete mSourceInfo;
     delete mWriterHelper;
     delete mAS11FrameworkHelper;
     delete mUKDPPFrameworkHelper;
+}
+
+void AS11Helper::ReadSourceInfo(MXFFileReader *source_file)
+{
+    int64_t read_start_pos;
+    int64_t read_duration;
+    source_file->GetReadLimits(false, &read_start_pos, &read_duration);
+    if (read_start_pos != source_file->GetReadStartPosition() ||
+        read_duration  != source_file->GetReadDuration())
+    {
+        BMX_EXCEPTION(("Copying AS-11 descriptive metadata is currently only supported for complete file duration transfers"));
+    }
+
+    mSourceInfo = new AS11Info();
+    mSourceInfo->Read(source_file->GetHeaderMetadata());
+
+    mSourceStartTimecode = source_file->GetMaterialTimecode(0);
+
+    if (mSourceInfo->core && mSourceInfo->core->haveItem(&MXF_ITEM_K(AS11CoreFramework, AS11ProgrammeTitle)))
+        mSourceProgrammeTitle = mSourceInfo->core->GetProgrammeTitle();
+
+    int64_t offset = 0;
+    size_t i;
+    for (i = 0; i < mSourceInfo->segmentation.size(); i++) {
+        DMSegment *seg = dynamic_cast<DMSegment*>(mSourceInfo->segmentation[i]);
+        if (seg) {
+            AS11SegmentationFramework *framework = dynamic_cast<AS11SegmentationFramework*>(seg->getDMFramework());
+            BMX_CHECK(framework);
+
+            Timecode seg_start_tc = mSourceStartTimecode;
+            seg_start_tc.AddOffset(offset, mSourceInfo->segmentation_rate);
+
+            AS11TCSegment segment;
+            segment.part_number  = framework->GetPartNumber();
+            segment.part_total   = framework->GetPartTotal();
+            segment.start        = seg_start_tc;
+            segment.duration     = mSourceInfo->segmentation[i]->getDuration();
+            mSegments.push_back(segment);
+        }
+        offset += mSourceInfo->segmentation[i]->getDuration();
+    }
 }
 
 bool AS11Helper::ParseFrameworkFile(const char *type_str, const char *filename)
@@ -716,7 +759,7 @@ bool AS11Helper::HaveProgrammeTitle() const
         }
     }
 
-    return false;
+    return !mSourceProgrammeTitle.empty();
 }
 
 string AS11Helper::GetProgrammeTitle() const
@@ -730,7 +773,7 @@ string AS11Helper::GetProgrammeTitle() const
         }
     }
 
-    return "";
+    return mSourceProgrammeTitle;
 }
 
 void AS11Helper::InsertFrameworks(ClipWriter *clip)
@@ -741,6 +784,21 @@ void AS11Helper::InsertFrameworks(ClipWriter *clip)
     }
 
     mWriterHelper = new AS11WriterHelper(clip);
+
+    if (mSourceInfo) {
+        if (mSourceInfo->core) {
+            AS11CoreFramework::RegisterObjectFactory(clip->GetHeaderMetadata());
+            AS11CoreFramework *core_copy =
+                dynamic_cast<AS11CoreFramework*>(mSourceInfo->core->clone(clip->GetHeaderMetadata()));
+            mAS11FrameworkHelper = new FrameworkHelper(mWriterHelper, core_copy);
+        }
+        if (mSourceInfo->ukdpp) {
+            UKDPPFramework::RegisterObjectFactory(clip->GetHeaderMetadata());
+            UKDPPFramework *ukdpp_copy =
+                dynamic_cast<UKDPPFramework*>(mSourceInfo->ukdpp->clone(clip->GetHeaderMetadata()));
+            mUKDPPFrameworkHelper = new FrameworkHelper(mWriterHelper, ukdpp_copy);
+        }
+    }
 
     size_t i;
     for (i = 0; i < mFrameworkProperties.size(); i++) {

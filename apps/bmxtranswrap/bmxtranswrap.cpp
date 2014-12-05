@@ -477,6 +477,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --dm <fwork> <name> <value>    Set descriptive framework property. <fwork> is 'as11' or 'dpp'\n");
     fprintf(stderr, "    --dm-file <fwork> <name>       Parse and set descriptive framework properties from text file <name>. <fwork> is 'as11' or 'dpp'\n");
     fprintf(stderr, "    --seg <name>                   Parse and set segmentation data from text file <name>\n");
+    fprintf(stderr, "    --pass-dm                      Copy descriptive metadata from the input file. The metadata can be overidden by other options\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02/as11op1a/as11d10/op1a/d10/rdd9:\n");
     fprintf(stderr, "    --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default is input file's value or not set\n");
@@ -603,6 +604,7 @@ int main(int argc, const char** argv)
     map<string, string> user_comments;
     vector<LocatorOption> locators;
     AS11Helper as11_helper;
+    bool pass_dm = false;
     const char *segmentation_filename = 0;
     bool do_print_version = false;
     bool use_group_reader = false;
@@ -1220,6 +1222,10 @@ int main(int argc, const char** argv)
             segmentation_filename = argv[cmdln_index + 1];
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--pass-dm") == 0)
+        {
+            pass_dm = true;
+        }
         else if (strcmp(argv[cmdln_index], "--afd") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -1835,6 +1841,8 @@ int main(int argc, const char** argv)
             file_reader->SetFileFactory(&file_factory, false);
             file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
             file_reader->SetST436ManifestFrameCount(st436_manifest_count);
+            if (pass_dm && clip_sub_type == AS11_CLIP_SUB_TYPE)
+                AS11Info::RegisterExtensions(file_reader->GetDataModel());
             result = file_reader->Open(input_filenames[0]);
             if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                 log_error("Failed to open MXF file '%s': %s\n", input_filenames[0],
@@ -2179,6 +2187,23 @@ int main(int argc, const char** argv)
                 log_error("Invalid value '%s' for option '--locator'\n", locators[i].position_str);
                 throw false;
             }
+        }
+
+
+        // copy across input file descriptive metadata
+
+        if (pass_dm && clip_sub_type == AS11_CLIP_SUB_TYPE) {
+            if (start != 0 || (duration >= 0 && duration < reader->GetDuration())) {
+                log_error("Copying AS-11 descriptive metadata is currently only supported for complete file transwraps\n");
+                throw false;
+            }
+
+            MXFFileReader *file_reader = dynamic_cast<MXFFileReader*>(reader);
+            if (!file_reader) {
+                log_error("Passing through AS-11 descriptive metadata is only supported for a single input file\n");
+                throw false;
+            }
+            as11_helper.ReadSourceInfo(file_reader);
         }
 
 
