@@ -283,7 +283,7 @@ static void write_segmentation_framework(AppInfoWriter *info_writer, DMSegment *
         text_writer->PushItemValueIndent(strlen("part_number "));
 
     info_writer->WriteIntegerItem("part_number", framework->GetPartNumber());
-    info_writer->WriteIntegerItem("part_total", framework->GetPartNumber());
+    info_writer->WriteIntegerItem("part_total", framework->GetPartTotal());
     info_writer->WriteTimecodeItem("som", som);
     info_writer->WriteDurationItem("duration", seg->getDuration(), edit_rate);
 
