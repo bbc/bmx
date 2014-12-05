@@ -336,6 +336,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setFrameLayout(MXF_SEPARATE_FIELDS);
             break;
         case AVCI200_1080P:
+        case AVCI200_720P:
         case AVCI100_1080P:
         case AVCI100_720P:
         case AVCI50_1080P:
