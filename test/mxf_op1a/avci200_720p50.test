@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check.sh 3 48 avci200_720p 50
+
