@@ -598,6 +598,8 @@ void AS11Helper::ReadSourceInfo(MXFFileReader *source_file)
         }
         offset += mSourceInfo->segmentation[i]->getDuration();
     }
+
+    mFillerCompleteSegments = true;
 }
 
 bool AS11Helper::ParseFrameworkFile(const char *type_str, const char *filename)
