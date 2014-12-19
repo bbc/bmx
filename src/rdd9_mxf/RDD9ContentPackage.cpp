@@ -52,6 +52,9 @@ using namespace mxfpp;
 #define MAX_CONTENT_PACKAGES        250
 #define SYSTEM_ITEM_TRACK_INDEX     (uint32_t)(-1)
 
+#define SYS_META_PICTURE_ITEM_FLAG  0x08
+#define SYS_META_SOUND_ITEM_FLAG    0x04
+#define SYS_META_DATA_ITEM_FLAG     0x02
 
 static const mxfKey MXF_EE_K(EmptyPackageMetadataSet) = MXF_SDTI_CP_PACKAGE_METADATA_KEY(0x00);
 
@@ -60,10 +63,9 @@ static const uint8_t LLEN      = 4;
 
 
 
-
 static bool compare_element(const RDD9ContentPackageElement *left, const RDD9ContentPackageElement *right)
 {
-    return left->IsPicture() && !right->IsPicture();
+    return left->GetElementType() < right->GetElementType();
 }
 
 
@@ -72,7 +74,7 @@ RDD9ContentPackageElement::RDD9ContentPackageElement(uint32_t track_index, mxfKe
 {
     mTrackIndex = track_index;
     mElementKey = element_key;
-    mIsPicture = true;
+    mElementType = PICTURE_ELEMENT;
     mSampleSequence.push_back(1);
     mSampleSize = 0;
     mFixedElementSize = 0;
@@ -85,7 +87,7 @@ RDD9ContentPackageElement::RDD9ContentPackageElement(uint32_t track_index, mxfKe
 {
     mTrackIndex = track_index;
     mElementKey = element_key;
-    mIsPicture = false;
+    mElementType = SOUND_ELEMENT;
     mSampleSequence = sample_sequence;
     mSampleSize = sample_size;
     mSoundSequenceOffsetSet = false;
@@ -113,6 +115,31 @@ RDD9ContentPackageElement::RDD9ContentPackageElement(uint32_t track_index, mxfKe
     }
 }
 
+RDD9ContentPackageElement::RDD9ContentPackageElement(uint32_t track_index, mxfKey element_key,
+                                                     uint32_t constant_essence_len, uint32_t max_essence_len)
+{
+    mTrackIndex = track_index;
+    mElementKey = element_key;
+    mElementType = DATA_ELEMENT;
+    mSampleSequence.push_back(1);
+    mSampleSize = 0;
+    mFixedElementSize = 0;
+    mSoundSequenceOffsetSet = false;
+    mSoundSequenceOffset = 0;
+
+    if (constant_essence_len) {
+        mFixedElementSize = GetKAGAlignedSize(mxfKey_extlen + LLEN + constant_essence_len);
+    }
+    else if (max_essence_len) {
+        mFixedElementSize = GetKAGAlignedSize(mxfKey_extlen + LLEN + max_essence_len);
+        if (mFixedElementSize == mxfKey_extlen + LLEN + max_essence_len) {
+            // allow space to include a KLV fill
+            mFixedElementSize = GetKAGAlignedSize(mxfKey_extlen + LLEN + max_essence_len +
+                                                  mxfKey_extlen + LLEN);
+        }
+    }
+}
+
 void RDD9ContentPackageElement::SetSoundSequenceOffset(uint8_t offset)
 {
     mSoundSequenceOffset    = offset;
@@ -132,14 +159,16 @@ bool RDD9ContentPackageElement::CheckValidSampleCount(uint32_t num_samples) cons
 
 uint32_t RDD9ContentPackageElement::GetNumSamples(int64_t position) const
 {
-    if (mIsPicture) {
+    if (mElementType == PICTURE_ELEMENT) {
         return 1;
-    } else {
+    } else if (mElementType == SOUND_ELEMENT) {
         if (mSoundSequenceOffsetSet)
             return mSampleSequence[(size_t)((position + mSoundSequenceOffset) % mSampleSequence.size())];
         else
             return 0; // unknown
     }
+    else
+        return 0; // unknown
 }
 
 uint32_t RDD9ContentPackageElement::GetElementSize(uint32_t data_size) const
@@ -233,7 +262,7 @@ void RDD9ContentPackageElementData::Reset(int64_t new_position)
 
 
 RDD9ContentPackage::RDD9ContentPackage(File *mxf_file, RDD9IndexTable *index_table, bool have_user_timecode,
-                                       Rational frame_rate, vector<RDD9ContentPackageElement*> elements,
+                                       Rational frame_rate, uint8_t sys_meta_item_flags, vector<RDD9ContentPackageElement*> elements,
                                        int64_t position, Timecode start_timecode)
 {
     mMXFFile = mxf_file;
@@ -244,6 +273,8 @@ RDD9ContentPackage::RDD9ContentPackage(File *mxf_file, RDD9IndexTable *index_tab
     mPosition = position;
     mHaveUpdatedIndexTable = false;
     mUserTimecodeSet = false;
+    mSysMetaItemFlags = sys_meta_item_flags;
+
 
     size_t i;
     for (i = 0; i < elements.size(); i++) {
@@ -297,7 +328,7 @@ uint32_t RDD9ContentPackage::GetSoundSampleCount() const
     uint32_t min_sample_count = 0;
     size_t i;
     for (i = 0; i < mElementData.size(); i++) {
-        if (!mElementData[i]->IsPicture() &&
+        if ((mElementData[i]->GetElementType() == RDD9ContentPackageElement::SOUND_ELEMENT) &&
             (min_sample_count == 0 || mElementData[i]->GetNumSamplesWritten() < min_sample_count))
         {
             min_sample_count = mElementData[i]->GetNumSamplesWritten();
@@ -363,18 +394,18 @@ void RDD9ContentPackage::WriteSystemItem()
 
     mMXFFile->writeFixedKL(&MXF_EE_K(SDTI_CP_System_Pack), LLEN, SYSTEM_ITEM_METADATA_PACK_SIZE);
 
-    // system metadata bitmap = 0x5c
+    // system metadata bitmap = 0x50
     // b7 = 0 (FEC not used)
     // b6 = 1 (SMPTE Universal label)
     // b5 = 0 (creation date/time stamp)
     // b4 = 1 (user date/time stamp)
-    // b3 = 1 (picture item)
-    // b2 = 1 (sound item)
-    // b1 = 0 (data item)
+    // b3 = 0/1 (picture item)
+    // b2 = 0/1 (sound item)
+    // b1 = 0/1 (data item)
     // b0 = 0 (control element)
 
     // core fields
-    mMXFFile->writeUInt8(0x5c);                                         // system metadata bitmap
+    mMXFFile->writeUInt8(0x50 | mSysMetaItemFlags);                     // system metadata bitmap
     mMXFFile->writeUInt8(get_system_item_cp_rate(mFrameRate));          // content package rate
     mMXFFile->writeUInt8(0x00);                                         // content package type (default)
     mMXFFile->writeUInt16(0x0000);                                      // channel handle (default)
@@ -424,6 +455,7 @@ RDD9ContentPackageManager::RDD9ContentPackageManager(File *mxf_file, RDD9IndexTa
     mSoundSequenceOffsetSet = false;
     mSoundSequenceOffset = 0;
     mPosition = 0;
+    mSysMetaItemFlags = 0;
 }
 
 RDD9ContentPackageManager::~RDD9ContentPackageManager()
@@ -463,6 +495,7 @@ void RDD9ContentPackageManager::RegisterPictureTrackElement(uint32_t track_index
 {
     mElements.push_back(new RDD9ContentPackageElement(track_index, element_key));
     mElementTrackIndexMap[track_index] = mElements.back();
+    mSysMetaItemFlags |= SYS_META_PICTURE_ITEM_FLAG;
 }
 
 void RDD9ContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,
@@ -470,33 +503,50 @@ void RDD9ContentPackageManager::RegisterSoundTrackElement(uint32_t track_index, 
 {
     mElements.push_back(new RDD9ContentPackageElement(track_index, element_key, sample_sequence, sample_size));
     mElementTrackIndexMap[track_index] = mElements.back();
+    mSysMetaItemFlags |= SYS_META_SOUND_ITEM_FLAG;
+}
+
+void RDD9ContentPackageManager::RegisterDataTrackElement(uint32_t track_index, mxfKey element_key,
+                                                         uint32_t constant_essence_len, uint32_t max_essence_len)
+{
+    mElements.push_back(new RDD9ContentPackageElement(track_index, element_key, constant_essence_len, max_essence_len));
+    mElementTrackIndexMap[track_index] = mElements.back();
+    mSysMetaItemFlags |= SYS_META_DATA_ITEM_FLAG;
 }
 
 void RDD9ContentPackageManager::PrepareWrite()
 {
-    // order elements: picture elements followed by sound elements
+    // order elements: picture - sound - data elements
     stable_sort(mElements.begin(), mElements.end(), compare_element);
 
     // check sound elements have identical sequences
     bool valid_sequences = true;
     size_t i;
+
+    // find the first audio track
     for (i = 0; i < mElements.size(); i++) {
-        if (!mElements[i]->IsPicture())
+        if (mElements[i]->GetElementType() == RDD9ContentPackageElement::SOUND_ELEMENT)
             break;
     }
-    BMX_ASSERT(i < mElements.size());
-    mSoundSequence = mElements[i]->GetSampleSequence();
-    for (i = i + 1; i < mElements.size() && valid_sequences; i++) {
-        if (mSoundSequence.size() != mElements[i]->GetSampleSequence().size()) {
-            valid_sequences = false;
-            break;
-        }
 
-        size_t j;
-        for (j = 0; j < mSoundSequence.size(); j++) {
-            if (mSoundSequence[j] != mElements[i]->GetSampleSequence()[j]) {
+    if (i + 1 < mElements.size()) {
+        mSoundSequence = mElements[i]->GetSampleSequence();
+        for (i = i + 1; i < mElements.size() && valid_sequences; i++) {
+            // finished the audio tracks?
+            if (mElements[i]->GetElementType() != RDD9ContentPackageElement::SOUND_ELEMENT)
+                break;
+
+            if (mSoundSequence.size() != mElements[i]->GetSampleSequence().size()) {
                 valid_sequences = false;
                 break;
+            }
+
+            size_t j;
+            for (j = 0; j < mSoundSequence.size(); j++) {
+                if (mSoundSequence[j] != mElements[i]->GetSampleSequence()[j]) {
+                    valid_sequences = false;
+                    break;
+                }
             }
         }
     }
@@ -595,7 +645,8 @@ size_t RDD9ContentPackageManager::CreateContentPackage()
     if (mFreeContentPackages.empty()) {
         BMX_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
         mContentPackages.push_back(new RDD9ContentPackage(mMXFFile, mIndexTable, mHaveInputUserTimecode, mFrameRate,
-                                                          mElements, mPosition + cp_index, mStartTimecode));
+                                                          mSysMetaItemFlags, mElements, mPosition + cp_index,
+                                                          mStartTimecode));
     } else {
         mContentPackages.push_back(mFreeContentPackages.back());
         mFreeContentPackages.pop_back();

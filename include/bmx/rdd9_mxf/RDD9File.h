@@ -148,8 +148,9 @@ private:
 
     std::vector<RDD9Track*> mTracks;
     std::map<uint32_t, RDD9Track*> mTrackMap;
-    uint8_t mPictureTrackCount;
-    uint8_t mSoundTrackCount;
+    std::map<MXFDataDefEnum, uint8_t> mTrackCounts;
+    bool mHaveANCTrack;
+    bool mHaveVBITrack;
 
     std::set<mxfUL> mEssenceContainerULs;
 

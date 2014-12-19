@@ -273,9 +273,15 @@ void RDD9IndexTable::RegisterSoundTrackElement(uint32_t track_index)
     mIndexElementsMap[track_index] = mIndexElements.back();
 }
 
+void RDD9IndexTable::RegisterDataTrackElement(uint32_t track_index, bool is_cbe)
+{
+    mIndexElements.push_back(new RDD9IndexTableElement(track_index, RDD9IndexTableElement::DATA_ELEMENT, is_cbe, false));
+    mIndexElementsMap[track_index] = mIndexElements.back();
+}
+
 void RDD9IndexTable::PrepareWrite()
 {
-    // order elements: system item, picture elements and sound elements
+    // order elements: system item - picture - sound - data elements
     stable_sort(mIndexElements.begin(), mIndexElements.end(), compare_element);
 
     mIndexEntrySize = 11;

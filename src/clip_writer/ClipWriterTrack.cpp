@@ -907,7 +907,7 @@ bool ClipWriterTrack::IsPicture() const
         case CW_D10_CLIP_TYPE:
             return mD10Track->IsPicture();
         case CW_RDD9_CLIP_TYPE:
-            return mRDD9Track->IsPicture();
+            return mRDD9Track->GetDataDef() == MXF_PICTURE_DDEF;
         case CW_WAVE_CLIP_TYPE:
             return false;
         case CW_UNKNOWN_CLIP_TYPE:

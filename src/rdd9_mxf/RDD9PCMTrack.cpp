@@ -67,7 +67,6 @@ RDD9PCMTrack::RDD9PCMTrack(RDD9File *file, uint32_t track_index, uint32_t track_
     if (!(file->mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR))
         mWaveDescriptorHelper->SetAudioRefLevel(0);
 
-    mIsPicture = false;
     mTrackNumber = MXF_AES3BWF_TRACK_NUM(0x01, MXF_AES3_FRAME_WRAPPED_EE_TYPE, 0x00);
     mEssenceElementKey = AUDIO_ELEMENT_KEY;
 
@@ -136,11 +135,9 @@ vector<uint32_t> RDD9PCMTrack::GetShiftedSampleSequence() const
     return shifted_sample_sequence;
 }
 
-void RDD9PCMTrack::PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count)
+void RDD9PCMTrack::PrepareWrite(uint8_t track_count)
 {
-    (void)picture_track_count;
-
-    CompleteEssenceKeyAndTrackNum(sound_track_count);
+    CompleteEssenceKeyAndTrackNum(track_count);
 
     mCPManager->RegisterSoundTrackElement(mTrackIndex, mEssenceElementKey,
                                           mSampleSequence, mWaveDescriptorHelper->GetSampleSize());

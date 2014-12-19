@@ -69,12 +69,13 @@ public:
 public:
     uint32_t GetTrackIndex() const { return mTrackIndex; }
 
-    bool IsPicture() const { return mIsPicture; }
+    MXFDataDefEnum GetDataDef() const { return mDataDef; }
     mxfUL GetEssenceContainerUL() const;
 
     uint32_t GetSampleSize();
 
     Rational GetEditRate() const { return mEditRate; }
+
     int64_t GetDuration() const;
     int64_t GetContainerDuration() const;
 
@@ -86,7 +87,7 @@ protected:
                            mxfpp::SourcePackage *file_source_package);
 
 protected:
-    virtual void PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count) = 0;
+    virtual void PrepareWrite(uint8_t track_count) = 0;
     virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
     virtual void CompleteWrite() {}
 
@@ -103,7 +104,7 @@ protected:
     uint32_t mTrackId;
     uint32_t mOutputTrackNumber;
     bool mOutputTrackNumberSet;
-    bool mIsPicture;
+    MXFDataDefEnum mDataDef;
     Rational mFrameRate;
     Rational mEditRate;
     uint32_t mTrackNumber;

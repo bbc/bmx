@@ -53,9 +53,19 @@ class RDD9File;
 class RDD9ContentPackageElement
 {
 public:
+  typedef enum
+  {
+    PICTURE_ELEMENT,
+    SOUND_ELEMENT,
+    DATA_ELEMENT,
+  } ElementType;
+
+public:
     RDD9ContentPackageElement(uint32_t track_index, mxfKey element_key);
     RDD9ContentPackageElement(uint32_t track_index, mxfKey element_key,
                               std::vector<uint32_t> sample_sequence, uint32_t sample_size);
+    RDD9ContentPackageElement(uint32_t track_index, mxfKey element_key,
+                              uint32_t constant_essence_len, uint32_t max_essence_len);
 
     void SetSoundSequenceOffset(uint8_t offset);
 
@@ -68,7 +78,7 @@ public:
     void Write(mxfpp::File *mxf_file, unsigned char *data, uint32_t size);
 
     uint32_t GetTrackIndex() const                         { return mTrackIndex; }
-    bool IsPicture() const                                 { return mIsPicture; }
+    ElementType GetElementType() const                     { return mElementType; }
     const std::vector<uint32_t>& GetSampleSequence() const { return mSampleSequence; }
     uint32_t GetSampleSize() const                         { return mSampleSize; }
 
@@ -79,7 +89,7 @@ private:
 private:
     uint32_t mTrackIndex;
     mxfKey mElementKey;
-    bool mIsPicture;
+    ElementType mElementType;
 
     std::vector<uint32_t> mSampleSequence;
     uint32_t mSampleSize;
@@ -98,7 +108,7 @@ public:
 
     uint32_t WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
 
-    bool IsPicture() const { return mElement->IsPicture(); }
+    RDD9ContentPackageElement::ElementType GetElementType() const { return mElement->GetElementType(); }
     bool IsComplete() const;
 
     uint32_t GetElementSize() const;
@@ -122,8 +132,8 @@ class RDD9ContentPackage
 {
 public:
     RDD9ContentPackage(mxfpp::File *mxf_file, RDD9IndexTable *index_table, bool have_user_timecode,
-                       Rational frame_rate, std::vector<RDD9ContentPackageElement*> elements, int64_t position,
-                       Timecode start_timecode);
+                       Rational frame_rate, uint8_t sys_meta_item_flags,
+                       std::vector<RDD9ContentPackageElement*> elements, int64_t position, Timecode start_timecode);
     ~RDD9ContentPackage();
 
     void Reset(int64_t new_position);
@@ -145,6 +155,7 @@ public:
 private:
     mxfpp::File *mMXFFile;
     RDD9IndexTable *mIndexTable;
+    uint8_t mSysMetaItemFlags;
     bool mHaveInputUserTimecode;
     Timecode mStartTimecode;
     Rational mFrameRate;
@@ -170,6 +181,8 @@ public:
     void RegisterPictureTrackElement(uint32_t track_index, mxfKey element_key);
     void RegisterSoundTrackElement(uint32_t track_index, mxfKey element_key,
                                    std::vector<uint32_t> sample_sequence, uint32_t sample_size);
+    void RegisterDataTrackElement(uint32_t track_index, mxfKey element_key,
+                                  uint32_t constant_essence_len, uint32_t max_essence_len);
 
     void PrepareWrite();
 
@@ -196,6 +209,7 @@ private:
 
     bool mHaveInputUserTimecode;
     Timecode mStartTimecode;
+    uint8_t mSysMetaItemFlags;
 
     std::vector<uint32_t> mSoundSequence;
     bool mSoundSequenceOffsetSet;

@@ -80,7 +80,8 @@ public:
     {
         SYSTEM_ITEM,
         PICTURE_ELEMENT,
-        SOUND_ELEMENT
+        SOUND_ELEMENT,
+        DATA_ELEMENT,
     } ElementType;
 
 public:
@@ -148,6 +149,7 @@ public:
     void RegisterSystemItem();
     void RegisterPictureTrackElement(uint32_t track_index);
     void RegisterSoundTrackElement(uint32_t track_index);
+    void RegisterDataTrackElement(uint32_t track_index, bool is_cbe);
 
     void PrepareWrite();
 

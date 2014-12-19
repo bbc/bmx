@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2014, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,11 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_RDD9_PCM_TRACK_H_
-#define BMX_RDD9_PCM_TRACK_H_
+#ifndef BMX_RDD9_DATA_TRACK_H_
+#define BMX_RDD9_DATA_TRACK_H_
 
 #include <bmx/rdd9_mxf/RDD9Track.h>
-#include <bmx/mxf_helper/WaveMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/DataMXFDescriptorHelper.h>
 
 
 
@@ -41,36 +41,27 @@ namespace bmx
 {
 
 
-class RDD9PCMTrack : public RDD9Track
+class RDD9DataTrack : public RDD9Track
 {
 public:
-    RDD9PCMTrack(RDD9File *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                 Rational frame_rate, EssenceType essence_type);
-    virtual ~RDD9PCMTrack();
+    RDD9DataTrack(RDD9File *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+                  mxfRational frame_rate, EssenceType essence_type);
+    virtual ~RDD9DataTrack();
 
-    void SetSamplingRate(Rational sampling_rate);       // default 48000/1
-    void SetQuantizationBits(uint32_t bits);            // default 16
-    void SetChannelCount(uint32_t count);               // default and required 1
-    void SetLocked(bool locked);                        // default not set
-    void SetAudioRefLevel(int8_t level);                // default not set
-    void SetDialNorm(int8_t dial_norm);                 // default not set
-    void SetSequenceOffset(uint8_t offset);             // default not set
-
-public:
-    const std::vector<uint32_t>& GetSampleSequence() const  { return mSampleSequence; }
-    uint8_t GetSequenceOffset() const                       { return mWaveDescriptorHelper->GetSequenceOffset(); }
-    std::vector<uint32_t> GetShiftedSampleSequence() const;
+    void SetConstantDataSize(uint32_t size);
+    void SetMaxDataSize(uint32_t size);
 
 protected:
     virtual void PrepareWrite(uint8_t track_count);
-    virtual void CompleteWrite();
+    virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
+
+protected:
+    DataMXFDescriptorHelper *mDataDescriptorHelper;
 
 private:
-    void SetSampleSequence();
-
-private:
-    WaveMXFDescriptorHelper *mWaveDescriptorHelper;
-    std::vector<uint32_t> mSampleSequence;
+    int64_t mPosition;
+    uint32_t mConstantDataSize;
+    uint32_t mMaxDataSize;
 };
 
 

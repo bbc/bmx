@@ -42,7 +42,7 @@
 
 #include <bmx/rdd9_mxf/RDD9File.h>
 #include <bmx/Version.h>
-#include <bmx/Utils.h>
+#include <bmx/MXFUtils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -56,6 +56,7 @@ using namespace mxfpp;
 static const uint32_t TIMECODE_TRACK_ID         = 1;
 static const uint32_t FIRST_PICTURE_TRACK_ID    = 2;
 static const uint32_t FIRST_SOUND_TRACK_ID      = 4;
+static const uint32_t FIRST_DATA_TRACK_ID       = 101;
 static const uint32_t KAG_SIZE                  = 0x200;
 static const uint32_t INDEX_SID                 = 1;
 static const uint32_t BODY_SID                  = 2;
@@ -65,7 +66,7 @@ static const uint32_t MEMORY_WRITE_CHUNK_SIZE   = 8192;
 
 static bool compare_track(RDD9Track *left, RDD9Track *right)
 {
-    return left->IsPicture() && !right->IsPicture();
+    return left->GetDataDef() < right->GetDataDef();
 }
 
 
@@ -99,8 +100,8 @@ RDD9File::RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate)
     mxf_generate_umid(&mFileSourcePackageUID);
     mOutputStartOffset = 0;
     mOutputEndOffset = 0;
-    mPictureTrackCount = 0;
-    mSoundTrackCount = 0;
+    mHaveANCTrack = false;
+    mHaveVBITrack = false;
     mDataModel = 0;
     mHeaderMetadata = 0;
     mHeaderMetadataEndPos = 0;
@@ -211,23 +212,38 @@ void RDD9File::SetOutputEndOffset(int64_t offset)
 
 RDD9Track* RDD9File::CreateTrack(EssenceType essence_type)
 {
-    uint32_t track_id;
-    uint8_t track_type_number;
-    if (essence_type == WAVE_PCM) {
-        track_id = FIRST_SOUND_TRACK_ID + mSoundTrackCount;
-        track_type_number = mSoundTrackCount;
-        mSoundTrackCount++;
-    } else {
-        if (mPictureTrackCount > 1)
-            BMX_EXCEPTION(("A maximum of 2 MPEG-2 Long GOP picture tracks are supported"));
-        track_id = FIRST_PICTURE_TRACK_ID + mPictureTrackCount;
-        track_type_number = mPictureTrackCount;
-        mPictureTrackCount++;
+    if (essence_type == ANC_DATA) {
+        if (mHaveANCTrack)
+            BMX_EXCEPTION(("Only a single ST 436 ANC track is allowed"));
+        mHaveANCTrack = true;
+    }
+    else if (essence_type == VBI_DATA) {
+        if (mHaveVBITrack)
+            BMX_EXCEPTION(("Only a single ST 436 VBI track is allowed"));
+        mHaveVBITrack = true;
     }
 
-    uint32_t track_index = (uint32_t)mTracks.size();
-    mTracks.push_back(RDD9Track::Create(this, track_index, track_id, track_type_number, mEditRate, essence_type));
-    mTrackMap[track_index] = mTracks.back();
+    MXFDataDefEnum data_def = convert_essence_type_to_data_def(essence_type);
+    uint32_t track_id;
+    uint8_t track_type_number;
+
+    if (data_def == MXF_PICTURE_DDEF) {
+        if (mTrackCounts[MXF_PICTURE_DDEF] > 1)
+            BMX_EXCEPTION(("A maximum of 2 MPEG-2 Long GOP picture tracks are supported"));
+        track_id = FIRST_PICTURE_TRACK_ID;
+    } else if (data_def == MXF_SOUND_DDEF) {
+        track_id = FIRST_SOUND_TRACK_ID;
+    } else {
+        track_id = FIRST_DATA_TRACK_ID;
+    }
+
+    track_id += mTrackCounts[data_def];
+    track_type_number = mTrackCounts[data_def];
+    mTrackCounts[data_def]++;
+
+    mTracks.push_back(RDD9Track::Create(this, (uint32_t)mTracks.size(), track_id, track_type_number, mEditRate,
+                                        essence_type));
+    mTrackMap[mTracks.back()->GetTrackIndex()] = mTracks.back();
 
     return mTracks.back();
 }
@@ -237,40 +253,40 @@ void RDD9File::PrepareHeaderMetadata()
     if (mHeaderMetadata)
         return;
 
-    if (mPictureTrackCount == 0)
+    if (mTrackCounts[MXF_PICTURE_DDEF] == 0)
         BMX_EXCEPTION(("Require a MPEG-2 Long GOP picture track"));
-    if (mSoundTrackCount == 0)
+
+    // check number of audio tracks
+    uint8_t ac = mTrackCounts[MXF_SOUND_DDEF];
+    if (ac == 0)
         BMX_EXCEPTION(("Require at least 1 sound track"));
-    if ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
-        if (mSoundTrackCount != 8 && mSoundTrackCount != 16)
-            log_warn("There are %u audio tracks; ARD ZDF profile requires 8 or 16 audio tracks\n", mSoundTrackCount);
-    } else if (mSoundTrackCount != 2 && mSoundTrackCount != 4 && mSoundTrackCount != 8) {
-        log_warn("There are %u audio tracks; RDD9 requires 2, 4, or 8 audio tracks\n", mSoundTrackCount);
+    if (mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR) {
+        if ((ac != 8) && (ac != 16))
+            log_warn("There are %u audio tracks; ARD ZDF profile requires 8 or 16 audio tracks\n", ac);
+    }
+    else if ((ac != 2) && (ac != 4) && (ac != 8)) {
+        log_warn("There are %u audio tracks; RDD9 requires 2, 4, or 8 audio tracks\n", ac);
     }
 
-    // sort tracks, picture followed by sound
+    // sort tracks, picture - sound - data
     stable_sort(mTracks.begin(), mTracks.end(), compare_track);
 
-    uint32_t last_picture_track_number = 0;
-    uint32_t last_sound_track_number = 0;
+
+    map<MXFDataDefEnum, uint32_t> last_track_number;
     size_t i;
     for (i = 0; i < mTracks.size(); i++) {
-        if (mTracks[i]->IsPicture()) {
-            if (!mTracks[i]->IsOutputTrackNumberSet())
-                mTracks[i]->SetOutputTrackNumber(last_picture_track_number + 1);
-            last_picture_track_number = mTracks[i]->GetOutputTrackNumber();
-        } else {
-            if (!mTracks[i]->IsOutputTrackNumberSet())
-                mTracks[i]->SetOutputTrackNumber(last_sound_track_number + 1);
-            last_sound_track_number = mTracks[i]->GetOutputTrackNumber();
-        }
+        if (!mTracks[i]->IsOutputTrackNumberSet())
+            mTracks[i]->SetOutputTrackNumber(last_track_number[mTracks[i]->GetDataDef()] + 1);
+        last_track_number[mTracks[i]->GetDataDef()] = mTracks[i]->GetOutputTrackNumber();
     }
 
     if ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR))
         mIndexTable->SetExtensions(MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE);
 
+
     for (i = 0; i < mTracks.size(); i++)
-        mTracks[i]->PrepareWrite(mPictureTrackCount, mSoundTrackCount);
+        mTracks[i]->PrepareWrite(mTrackCounts[mTracks[i]->GetDataDef()]);
+
     mCPManager->SetStartTimecode(mStartTimecode);
     mCPManager->PrepareWrite();
     mIndexTable->PrepareWrite();

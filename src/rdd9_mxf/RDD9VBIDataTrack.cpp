@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2013, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,54 +29,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_RDD9_PCM_TRACK_H_
-#define BMX_RDD9_PCM_TRACK_H_
-
-#include <bmx/rdd9_mxf/RDD9Track.h>
-#include <bmx/mxf_helper/WaveMXFDescriptorHelper.h>
-
-
-
-namespace bmx
-{
-
-
-class RDD9PCMTrack : public RDD9Track
-{
-public:
-    RDD9PCMTrack(RDD9File *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                 Rational frame_rate, EssenceType essence_type);
-    virtual ~RDD9PCMTrack();
-
-    void SetSamplingRate(Rational sampling_rate);       // default 48000/1
-    void SetQuantizationBits(uint32_t bits);            // default 16
-    void SetChannelCount(uint32_t count);               // default and required 1
-    void SetLocked(bool locked);                        // default not set
-    void SetAudioRefLevel(int8_t level);                // default not set
-    void SetDialNorm(int8_t dial_norm);                 // default not set
-    void SetSequenceOffset(uint8_t offset);             // default not set
-
-public:
-    const std::vector<uint32_t>& GetSampleSequence() const  { return mSampleSequence; }
-    uint8_t GetSequenceOffset() const                       { return mWaveDescriptorHelper->GetSequenceOffset(); }
-    std::vector<uint32_t> GetShiftedSampleSequence() const;
-
-protected:
-    virtual void PrepareWrite(uint8_t track_count);
-    virtual void CompleteWrite();
-
-private:
-    void SetSampleSequence();
-
-private:
-    WaveMXFDescriptorHelper *mWaveDescriptorHelper;
-    std::vector<uint32_t> mSampleSequence;
-};
-
-
-};
-
-
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
+
+#include <bmx/rdd9_mxf/RDD9VBIDataTrack.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
+
+using namespace std;
+using namespace bmx;
+using namespace mxfpp;
+
+
+
+RDD9VBIDataTrack::RDD9VBIDataTrack(RDD9File *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+                                   mxfRational frame_rate, EssenceType essence_type)
+: RDD9DataTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
+{
+    mTrackNumber = MXF_EE_TRACKNUM(VBIData);
+    mEssenceElementKey = MXF_EE_K(VBIData);
+}
+
+RDD9VBIDataTrack::~RDD9VBIDataTrack()
+{
+}
 

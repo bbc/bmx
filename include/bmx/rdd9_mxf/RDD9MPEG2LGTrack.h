@@ -55,7 +55,7 @@ public:
     void SetAFD(uint8_t afd);                           // default not set
 
 protected:
-    virtual void PrepareWrite(uint8_t picture_track_count, uint8_t sound_track_count);
+    virtual void PrepareWrite(uint8_t track_count);
     virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
     virtual void CompleteWrite();
 

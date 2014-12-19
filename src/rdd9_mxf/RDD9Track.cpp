@@ -39,8 +39,10 @@
 
 #include <bmx/rdd9_mxf/RDD9Track.h>
 #include <bmx/rdd9_mxf/RDD9File.h>
+#include <bmx/rdd9_mxf/RDD9ANCDataTrack.h>
 #include <bmx/rdd9_mxf/RDD9MPEG2LGTrack.h>
 #include <bmx/rdd9_mxf/RDD9PCMTrack.h>
+#include <bmx/rdd9_mxf/RDD9VBIDataTrack.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -72,6 +74,8 @@ static const RDD9SampleRateSupport RDD9_SAMPLE_RATE_SUPPORT[] =
     {MPEG2LG_MP_H14_1080P,     {{24000, 1001}, {24, 1}, {25, 1}, {30000, 1001},                         {0, 0}}},
 
     {WAVE_PCM,                 {{48000, 1}, {0, 0}}},
+    {ANC_DATA,                 {{-1, -1}, {0, 0}}},
+    {VBI_DATA,                 {{-1, -1}, {0, 0}}},
 };
 
 
@@ -81,6 +85,9 @@ bool RDD9Track::IsSupported(EssenceType essence_type, Rational sample_rate)
     size_t i;
     for (i = 0; i < BMX_ARRAY_SIZE(RDD9_SAMPLE_RATE_SUPPORT); i++) {
         if (essence_type == RDD9_SAMPLE_RATE_SUPPORT[i].essence_type) {
+            if (RDD9_SAMPLE_RATE_SUPPORT[i].sample_rate[0].numerator < 0)
+                return true;
+
             size_t j = 0;
             while (RDD9_SAMPLE_RATE_SUPPORT[i].sample_rate[j].numerator) {
                 if (sample_rate == RDD9_SAMPLE_RATE_SUPPORT[i].sample_rate[j])
@@ -111,6 +118,10 @@ RDD9Track* RDD9Track::Create(RDD9File *file, uint32_t track_index, uint32_t trac
             return new RDD9MPEG2LGTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         case WAVE_PCM:
             return new RDD9PCMTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
+        case ANC_DATA:
+            return new RDD9ANCDataTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
+        case VBI_DATA:
+            return new RDD9VBIDataTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         default:
             BMX_ASSERT(false);
     }
@@ -129,7 +140,7 @@ RDD9Track::RDD9Track(RDD9File *file, uint32_t track_index, uint32_t track_id, ui
     mOutputTrackNumber = 0;
     mOutputTrackNumberSet = false;
     mTrackTypeNumber = track_type_number;
-    mIsPicture = true;
+    mDataDef = convert_essence_type_to_data_def(essence_type);
     mFrameRate = frame_rate;
     mEditRate = frame_rate;
     mTrackNumber = 0;
@@ -188,7 +199,8 @@ int64_t RDD9Track::GetContainerDuration() const
 void RDD9Track::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPackage *material_package,
                                   SourcePackage *file_source_package)
 {
-    mxfUL data_def = (mIsPicture ? MXF_DDEF_L(Picture) : MXF_DDEF_L(Sound));
+    mxfUL data_def_ul;
+    BMX_CHECK(mxf_get_ddef_label(mDataDef, &data_def_ul));
 
     int64_t material_track_duration = -1; // unknown - could be updated if not writing in a single pass
     int64_t source_track_duration   = -1; // unknown - could be updated if not writing in a single pass
@@ -198,7 +210,8 @@ void RDD9Track::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     // Preface - ContentStorage - MaterialPackage - Timeline Track
     Track *track = new Track(header_metadata);
     material_package->appendTracks(track);
-    track->setTrackName(get_track_name((mIsPicture ? MXF_PICTURE_DDEF : MXF_SOUND_DDEF), mOutputTrackNumber));
+
+    track->setTrackName(get_track_name(mDataDef, mOutputTrackNumber));
     track->setTrackID(mTrackId);
     // TODO: not sure whether setting TrackNumber in the MaterialPackage is a good idea for this MXF flavour
     //       track->setTrackNumber(mOutputTrackNumber);
@@ -209,13 +222,13 @@ void RDD9Track::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     // Preface - ContentStorage - MaterialPackage - Timeline Track - Sequence
     Sequence *sequence = new Sequence(header_metadata);
     track->setSequence(sequence);
-    sequence->setDataDefinition(data_def);
+    sequence->setDataDefinition(data_def_ul);
     sequence->setDuration(material_track_duration);
 
     // Preface - ContentStorage - MaterialPackage - Timeline Track - Sequence - SourceClip
     SourceClip *source_clip = new SourceClip(header_metadata);
     sequence->appendStructuralComponents(source_clip);
-    source_clip->setDataDefinition(data_def);
+    source_clip->setDataDefinition(data_def_ul);
     source_clip->setDuration(material_track_duration);
     source_clip->setStartPosition(0);
     source_clip->setSourcePackageID(file_source_package->getPackageUID());
@@ -225,7 +238,7 @@ void RDD9Track::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     // Preface - ContentStorage - SourcePackage - Timeline Track
     track = new Track(header_metadata);
     file_source_package->appendTracks(track);
-    track->setTrackName(get_track_name((mIsPicture ? MXF_PICTURE_DDEF : MXF_SOUND_DDEF), mOutputTrackNumber));
+    track->setTrackName(get_track_name(mDataDef, mOutputTrackNumber));
     track->setTrackID(mTrackId);
     track->setTrackNumber(mTrackNumber);
     track->setEditRate(mEditRate);
@@ -234,13 +247,13 @@ void RDD9Track::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     // Preface - ContentStorage - SourcePackage - Timeline Track - Sequence
     sequence = new Sequence(header_metadata);
     track->setSequence(sequence);
-    sequence->setDataDefinition(data_def);
+    sequence->setDataDefinition(data_def_ul);
     sequence->setDuration(source_track_duration);
 
     // Preface - ContentStorage - SourcePackage - Timeline Track - Sequence - SourceClip
     source_clip = new SourceClip(header_metadata);
     sequence->appendStructuralComponents(source_clip);
-    source_clip->setDataDefinition(data_def);
+    source_clip->setDataDefinition(data_def_ul);
     source_clip->setDuration(source_track_duration);
     source_clip->setStartPosition(0);
     source_clip->setSourceTrackID(0);
