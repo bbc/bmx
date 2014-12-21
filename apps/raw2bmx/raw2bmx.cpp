@@ -44,7 +44,6 @@
 
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as02/AS02PictureTrack.h>
-#include <bmx/mxf_op1a/OP1ADataTrack.h>
 #include <bmx/essence_parser/DVEssenceParser.h>
 #include <bmx/essence_parser/MPEG2EssenceParser.h>
 #include <bmx/essence_parser/AVCEssenceParser.h>
@@ -3294,16 +3293,10 @@ int main(int argc, const char** argv)
                         input->track->SetSequenceOffset(sequence_offset);
                     break;
                 case ANC_DATA:
-                    if (clip_type == CW_OP1A_CLIP_TYPE) {
-                        OP1ADataTrack *op1a_track = dynamic_cast<OP1ADataTrack*>(input->track->GetOP1ATrack());
-                        op1a_track->SetConstantDataSize(input->anc_const_size);
-                    }
+                    input->track->SetConstantDataSize(input->anc_const_size);
                     break;
                 case VBI_DATA:
-                    if (clip_type == CW_OP1A_CLIP_TYPE) {
-                        OP1ADataTrack *op1a_track = dynamic_cast<OP1ADataTrack*>(input->track->GetOP1ATrack());
-                        op1a_track->SetConstantDataSize(input->vbi_const_size);
-                    }
+                    input->track->SetConstantDataSize(input->vbi_const_size);
                     break;
                 case AVC_HIGH_10_INTRA_UNCS:
                 case AVC_HIGH_422_INTRA_UNCS:

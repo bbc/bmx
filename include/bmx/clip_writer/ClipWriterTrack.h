@@ -97,6 +97,10 @@ public:
     void SetDialNorm(int8_t dial_norm);             // default not set
     void SetSequenceOffset(uint8_t offset);         // default D10 determined from input or not set
 
+    // Data properties
+    void SetConstantDataSize(uint32_t size);
+    void SetMaxDataSize(uint32_t size);
+
 public:
     void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
 

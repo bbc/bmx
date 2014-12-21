@@ -52,7 +52,6 @@
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as02/AS02PictureTrack.h>
-#include <bmx/mxf_op1a/OP1ADataTrack.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/st436/ST436Element.h>
 #include <bmx/st436/RDD6Metadata.h>
@@ -2708,26 +2707,20 @@ int main(int argc, const char** argv)
                             output_track.track->SetSequenceOffset(input_sound_info->sequence_offset);
                         break;
                     case ANC_DATA:
-                        if (clip_type == CW_OP1A_CLIP_TYPE) {
-                            OP1ADataTrack *op1a_track = dynamic_cast<OP1ADataTrack*>(output_track.track->GetOP1ATrack());
-                            if (anc_const_size) {
-                                op1a_track->SetConstantDataSize(anc_const_size);
-                            } else if (anc_max_size) {
-                                op1a_track->SetMaxDataSize(anc_max_size);
-                            } else if (st2020_max_size) {
-                                op1a_track->SetMaxDataSize(calc_st2020_max_size(
-                                    dynamic_cast<const MXFDataTrackInfo*>(output_track.input_track_info)));
-                            }
+                        if (anc_const_size) {
+                            output_track.track->SetConstantDataSize(anc_const_size);
+                        } else if (anc_max_size) {
+                            output_track.track->SetMaxDataSize(anc_max_size);
+                        } else if (st2020_max_size) {
+                            output_track.track->SetMaxDataSize(calc_st2020_max_size(
+                                dynamic_cast<const MXFDataTrackInfo*>(output_track.input_track_info)));
                         }
                         break;
                     case VBI_DATA:
-                        if (clip_type == CW_OP1A_CLIP_TYPE) {
-                            OP1ADataTrack *op1a_track = dynamic_cast<OP1ADataTrack*>(output_track.track->GetOP1ATrack());
-                            if (vbi_const_size)
-                                op1a_track->SetConstantDataSize(vbi_const_size);
-                            else if (vbi_max_size)
-                                op1a_track->SetMaxDataSize(vbi_max_size);
-                        }
+                        if (vbi_const_size)
+                            output_track.track->SetConstantDataSize(vbi_const_size);
+                        else if (vbi_max_size)
+                            output_track.track->SetMaxDataSize(vbi_max_size);
                         break;
                     case AVC_HIGH_10_INTRA_UNCS:
                     case AVC_HIGH_422_INTRA_UNCS:
@@ -2756,16 +2749,14 @@ int main(int argc, const char** argv)
             output_track.channel_count  = 1;
             output_track.track          = clip->CreateTrack(ANC_DATA);
 
-            BMX_ASSERT(clip_type == CW_OP1A_CLIP_TYPE);
-            OP1ADataTrack *op1a_track = dynamic_cast<OP1ADataTrack*>(output_track.track->GetOP1ATrack());
             if (anc_const_size)
-                op1a_track->SetConstantDataSize(anc_const_size);
+                output_track.track->SetConstantDataSize(anc_const_size);
             else if (anc_max_size)
-                op1a_track->SetMaxDataSize(anc_max_size);
+                output_track.track->SetMaxDataSize(anc_max_size);
             else if (st2020_max_size)
-                op1a_track->SetMaxDataSize(calc_st2020_max_size(false, 1));
+                output_track.track->SetMaxDataSize(calc_st2020_max_size(false, 1));
             else if (rdd6_const_size)
-                op1a_track->SetConstantDataSize(rdd6_const_size);
+                output_track.track->SetConstantDataSize(rdd6_const_size);
 
             output_tracks.push_back(output_track);
         }

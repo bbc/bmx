@@ -44,6 +44,7 @@
 #include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
 #include <bmx/mxf_op1a/OP1AAVCITrack.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
+#include <bmx/mxf_op1a/OP1ADataTrack.h>
 #include <bmx/avid_mxf/AvidPictureTrack.h>
 #include <bmx/avid_mxf/AvidDVTrack.h>
 #include <bmx/avid_mxf/AvidD10Track.h>
@@ -58,6 +59,7 @@
 #include <bmx/d10_mxf/D10PCMTrack.h>
 #include <bmx/rdd9_mxf/RDD9MPEG2LGTrack.h>
 #include <bmx/rdd9_mxf/RDD9PCMTrack.h>
+#include <bmx/rdd9_mxf/RDD9DataTrack.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -858,6 +860,64 @@ void ClipWriterTrack::SetSequenceOffset(uint8_t offset)
                 pcm_track->SetSequenceOffset(offset);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
+void ClipWriterTrack::SetConstantDataSize(uint32_t size)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1ADataTrack *data_track = dynamic_cast<OP1ADataTrack*>(mOP1ATrack);
+            if (data_track)
+                data_track->SetConstantDataSize(size);
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9DataTrack *data_track = dynamic_cast<RDD9DataTrack*>(mRDD9Track);
+            if (data_track)
+                data_track->SetConstantDataSize(size);
+            break;
+        }
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_D10_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
+void ClipWriterTrack::SetMaxDataSize(uint32_t size)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1ADataTrack *data_track = dynamic_cast<OP1ADataTrack*>(mOP1ATrack);
+            if (data_track)
+                data_track->SetMaxDataSize(size);
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9DataTrack *data_track = dynamic_cast<RDD9DataTrack*>(mRDD9Track);
+            if (data_track)
+                data_track->SetMaxDataSize(size);
+            break;
+        }
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_D10_CLIP_TYPE:
         case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
