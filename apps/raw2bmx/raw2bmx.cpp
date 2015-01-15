@@ -3369,7 +3369,7 @@ int main(int argc, const char** argv)
                 case D10_50:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
-                    if (!input->d10_var_frame_size && input->raw_reader->GetFixedSampleSize() == 0)
+                    if (BMX_REGRESSION_TEST && input->raw_reader->GetFixedSampleSize() == 0)
                         input->raw_reader->SetFixedSampleSize(input->track->GetInputSampleSize());
                     break;
                 case MPEG2LG_422P_HL_1080I:
