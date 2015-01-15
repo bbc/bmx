@@ -377,6 +377,7 @@ static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
     fprintf(stderr, "Usage: %s <<options>> [<<input options>> <mxf input>]+\n", cmd);
+    fprintf(stderr, "   Use <mxf input> '-' for standard input\n");
     fprintf(stderr, "Options (* means option is required):\n");
     fprintf(stderr, "  -h | --help             Show usage and exit\n");
     fprintf(stderr, "  -v | --version          Print version info\n");
@@ -1699,21 +1700,26 @@ int main(int argc, const char** argv)
         }
         else
         {
-            if (mxf_http_is_url(argv[cmdln_index])) {
-                if (!mxf_http_is_supported()) {
-                    fprintf(stderr, "HTTP file access is not supported in this build\n");
+            if (strcmp(argv[cmdln_index], "-") == 0) {
+                // standard input
+                input_filenames.push_back("");
+            } else {
+                if (mxf_http_is_url(argv[cmdln_index])) {
+                    if (!mxf_http_is_supported()) {
+                        fprintf(stderr, "HTTP file access is not supported in this build\n");
+                        return 1;
+                    }
+                } else if (!check_file_exists(argv[cmdln_index])) {
+                    if (argv[cmdln_index][0] == '-') {
+                        usage(argv[0]);
+                        fprintf(stderr, "Unknown argument '%s'\n", argv[cmdln_index]);
+                    } else {
+                        fprintf(stderr, "Failed to open input filename '%s'\n", argv[cmdln_index]);
+                    }
                     return 1;
                 }
-            } else if (!check_file_exists(argv[cmdln_index])) {
-                if (argv[cmdln_index][0] == '-') {
-                    usage(argv[0]);
-                    fprintf(stderr, "Unknown argument '%s'\n", argv[cmdln_index]);
-                } else {
-                    fprintf(stderr, "Failed to open input filename '%s'\n", argv[cmdln_index]);
-                }
-                return 1;
+                input_filenames.push_back(argv[cmdln_index]);
             }
-            input_filenames.push_back(argv[cmdln_index]);
         }
     }
 
