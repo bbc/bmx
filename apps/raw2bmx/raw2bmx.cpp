@@ -131,7 +131,7 @@ typedef struct
     uint32_t component_depth;
     uint32_t input_height;
     bool have_avci_header;
-    bool d10_var_frame_size;
+    bool d10_fixed_frame_size;
 
     // sound
     Rational sampling_rate;
@@ -474,8 +474,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          For as11d10/d10 the track number must be > 0 and <= 8 because the AES-3 channel index equals track number - 1\n");
     fprintf(stderr, "  --avci-guess <i/p>      Guess interlaced ('i') or progressive ('p') AVC-Intra when using the --avci option with 1080p25/i50 or 1080p30/i60\n");
     fprintf(stderr, "                          The default guess uses the H.264 frame_mbs_only_flag field\n");
-    fprintf(stderr, "  --var-size              The D-10 frame sizes are variable and therefore each frame size needs to be parsed rather\n");
-    fprintf(stderr, "                              than assume a fixed frame size which equals the first frame's size\n");
+    fprintf(stderr, "  --fixed-size            Set to indicate that the d10 frames have a fixed size and therefore do not need to be parsed after the first frame\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02:\n");
     fprintf(stderr, "    --trk-out-start <offset>   Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
@@ -1564,9 +1563,9 @@ int main(int argc, const char** argv)
             cmdln_index++;
             continue; // skip input reset at the end
         }
-        else if (strcmp(argv[cmdln_index], "--var-size") == 0)
+        else if (strcmp(argv[cmdln_index], "--fixed-size") == 0)
         {
-            input.d10_var_frame_size = true;
+            input.d10_fixed_frame_size = true;
             continue; // skip input reset at the end
         }
         else if (strcmp(argv[cmdln_index], "--trk-out-start") == 0)
@@ -2664,7 +2663,7 @@ int main(int argc, const char** argv)
                     if (input->essence_type_group == MPEG2LG_ESSENCE_GROUP)
                         input->essence_type = D10_50;
                 } else {
-                    if (!input->d10_var_frame_size)
+                    if (input->d10_fixed_frame_size)
                         input->raw_reader->SetFixedSampleSize(input->raw_reader->GetSampleDataSize());
 
                     mpeg2_parser->ParseFrameInfo(input->raw_reader->GetSampleData(),
@@ -3369,8 +3368,11 @@ int main(int argc, const char** argv)
                 case D10_50:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
-                    if (BMX_REGRESSION_TEST && input->raw_reader->GetFixedSampleSize() == 0)
+                    if ((BMX_REGRESSION_TEST || input->d10_fixed_frame_size) &&
+                        input->raw_reader->GetFixedSampleSize() == 0)
+                    {
                         input->raw_reader->SetFixedSampleSize(input->track->GetInputSampleSize());
+                    }
                     break;
                 case MPEG2LG_422P_HL_1080I:
                 case MPEG2LG_422P_HL_1080P:
