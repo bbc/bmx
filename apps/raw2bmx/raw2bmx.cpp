@@ -359,14 +359,14 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --rt <factor>           Wrap at realtime rate x <factor>, where <factor> is a floating point value\n");
     fprintf(stderr, "                          <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
     fprintf(stderr, "  --avcihead <format> <file> <offset>\n");
-    fprintf(stderr, "                          Default AVC-Intra sequence header data (512 bytes) to use when the input file does have it\n");
+    fprintf(stderr, "                          Default AVC-Intra sequence header data (512 bytes) to use when the input file does not have it\n");
     fprintf(stderr, "                          <format> is a comma separated list of one or more of the following integer values:\n");
     size_t i;
     for (i = 0; i < get_num_avci_header_formats(); i++)
         fprintf(stderr, "                              %2"PRIszt": %s\n", i, get_avci_header_format_string(i));
     fprintf(stderr, "                          or set <format> to 'all' for all formats listed above\n");
     fprintf(stderr, "                          The 512 bytes are extracted from <file> starting at <offset> bytes\n");
-    fprintf(stderr, "                              and incrementing 512 bytes for each format in the list\n");
+    fprintf(stderr, "                          and incrementing 512 bytes for each format in the list\n");
     fprintf(stderr, "  --ps-avcihead           Panasonic AVC-Intra sequence header data for Panasonic-compatible files that don't include the header data\n");
     fprintf(stderr, "                          These formats are supported:\n");
     for (i = 0; i < get_num_ps_avci_header_formats(); i++) {
@@ -409,9 +409,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a:\n");
     fprintf(stderr, "    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support\n");
-    fprintf(stderr, "                                separate partitions for header metadata, index tables, essence container data and footer\n");
+    fprintf(stderr, "                            separate partitions for header metadata, index tables, essence container data and footer\n");
     fprintf(stderr, "    --body-part             Create separate body partitions for essence data\n");
-    fprintf(stderr, "                                and don't create separate body partitions for index table segments\n");
+    fprintf(stderr, "                            and don't create separate body partitions for index table segments\n");
     fprintf(stderr, "    --clip-wrap             Use clip wrapping for a single sound track\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/rdd9:\n");
