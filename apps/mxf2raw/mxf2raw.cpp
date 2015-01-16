@@ -1786,6 +1786,11 @@ int main(int argc, const char** argv)
         return 1;
     }
 
+    if (cmdln_index == 1) {
+        // default to outputting info if no options are given
+        do_write_info = true;
+    }
+
     for (; cmdln_index < argc; cmdln_index++) {
         if (strcmp(argv[cmdln_index], "-") == 0) {
             // standard input
