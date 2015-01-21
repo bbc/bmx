@@ -56,6 +56,7 @@
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/wave/WaveReader.h>
+#include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/URI.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
@@ -112,7 +113,8 @@ typedef struct
 
     RawEssenceReader *raw_reader;
     WaveReader *wave_reader;
-    uint32_t wave_track_index;
+    uint32_t wavepcm_track_index;
+    uint32_t channel_count;
 
     uint32_t sample_sequence[32];
     size_t sample_sequence_size;
@@ -174,9 +176,12 @@ static uint32_t read_samples(RawInput *input, uint32_t max_samples_per_read)
         input->sample_sequence_offset = (input->sample_sequence_offset + 1) % input->sample_sequence_size;
 
         if (input->raw_reader) {
-            return (input->raw_reader->ReadSamples(num_frame_samples) == num_frame_samples ? 1 : 0);
+            if (input->essence_type == WAVE_PCM && input->wavepcm_track_index > 0)
+                return (input->raw_reader->GetNumSamples() == num_frame_samples ? 1 : 0);
+            else
+                return (input->raw_reader->ReadSamples(num_frame_samples) == num_frame_samples ? 1 : 0);
         } else {
-            Frame *last_frame = input->wave_reader->GetTrack(input->wave_track_index)->GetFrameBuffer()->GetLastFrame(false);
+            Frame *last_frame = input->wave_reader->GetTrack(input->wavepcm_track_index)->GetFrameBuffer()->GetLastFrame(false);
             if (last_frame)
                 return (last_frame->num_samples == num_frame_samples ? 1 : 0);
             else
@@ -185,9 +190,12 @@ static uint32_t read_samples(RawInput *input, uint32_t max_samples_per_read)
     } else {
         BMX_ASSERT(input->sample_sequence_size == 1 && input->sample_sequence[0] == 1);
         if (input->raw_reader) {
-            return input->raw_reader->ReadSamples(max_samples_per_read);
+            if (input->essence_type == WAVE_PCM && input->wavepcm_track_index > 0)
+                return input->raw_reader->GetNumSamples();
+            else
+                return input->raw_reader->ReadSamples(max_samples_per_read);
         } else {
-            Frame *last_frame = input->wave_reader->GetTrack(input->wave_track_index)->GetFrameBuffer()->GetLastFrame(false);
+            Frame *last_frame = input->wave_reader->GetTrack(input->wavepcm_track_index)->GetFrameBuffer()->GetLastFrame(false);
             if (last_frame)
                 return last_frame->num_samples;
             else
@@ -296,6 +304,7 @@ static void init_input(RawInput *input)
     input->sampling_rate = DEFAULT_SAMPLING_RATE;
     input->component_depth = 8;
     input->audio_quant_bits = 16;
+    input->channel_count = 1;
 }
 
 static void copy_input(const RawInput *from, RawInput *to)
@@ -306,9 +315,10 @@ static void copy_input(const RawInput *from, RawInput *to)
 
 static void clear_input(RawInput *input)
 {
-    delete input->raw_reader;
-    if (input->wave_track_index == 0)
+    if (input->essence_type != WAVE_PCM || input->wavepcm_track_index == 0) {
+        delete input->raw_reader;
         delete input->wave_reader;
+    }
     delete input->filter;
 }
 
@@ -456,8 +466,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default not set\n");
     fprintf(stderr, "  -c <depth>              Component depth for uncompressed/DV100 video. Either 8 or 10. Default parsed or 8\n");
     fprintf(stderr, "  --height                Height of input uncompressed video data. Default is the production aperture height, except for PAL (592) and NTSC (496)\n");
-    fprintf(stderr, "  -s <bps>                Audio sampling rate numerator. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);
-    fprintf(stderr, "  -q <bps>                Audio quantization bits per sample. Either 16 or 24. Default 16\n");
+    fprintf(stderr, "  -s <bps>                Audio sampling rate numerator for raw pcm. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);
+    fprintf(stderr, "  -q <bps>                Audio quantization bits per sample for raw pcm. Either 16 or 24. Default 16\n");
+    fprintf(stderr, "  --audio-chan <count>    Audio channel count for raw pcm. Default 1\n");
     fprintf(stderr, "  --locked <bool>         Indicate whether the number of audio samples is locked to the video. Either true or false. Default not set\n");
     fprintf(stderr, "  --audio-ref <level>     Audio reference level, number of dBm for 0VU. Default not set\n");
     fprintf(stderr, "  --dial-norm <value>     Gain to be applied to normalize perceived loudness of the clip. Default not set\n");
@@ -1374,6 +1385,25 @@ int main(int argc, const char** argv)
                 return 1;
             }
             input.audio_quant_bits = value;
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--audio-chan") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
+                value == 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            input.channel_count = value;
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -2498,22 +2528,40 @@ int main(int argc, const char** argv)
         for (i = 0; i < inputs.size(); i++) {
             RawInput *input = &inputs[i];
 
-            if (input->is_wave) {
-                if (!open_wave_reader(input))
-                    throw false;
-                BMX_ASSERT(input->wave_reader->GetNumTracks() > 0);
+            if (input->essence_type == WAVE_PCM) {
+                if (input->is_wave) {
+                    if (!open_wave_reader(input))
+                        throw false;
+                    BMX_ASSERT(input->wave_reader->GetNumTracks() > 0);
 
-                input->wave_track_index = 0;
-                input->sampling_rate = input->wave_reader->GetSamplingRate();
-                input->audio_quant_bits = input->wave_reader->GetQuantizationBits();
+                    input->wavepcm_track_index = 0;
+                    input->sampling_rate = input->wave_reader->GetSamplingRate();
+                    input->audio_quant_bits = input->wave_reader->GetQuantizationBits();
+                    input->channel_count = input->wave_reader->GetNumTracks();
 
-                if (input->wave_reader->GetNumTracks() > 1) {
+                    if (input->wave_reader->GetNumTracks() > 1) {
+                        vector<RawInput> additional_inputs;
+                        uint32_t j;
+                        for (j = 1; j < input->wave_reader->GetNumTracks(); j++) {
+                            RawInput new_input;
+                            copy_input(input, &new_input);
+                            new_input.wavepcm_track_index = j;
+                            additional_inputs.push_back(new_input);
+                        }
+                        inputs.insert(inputs.begin() + i + 1, additional_inputs.begin(), additional_inputs.end());
+
+                        i += additional_inputs.size();
+                    }
+                } else {
+                    if (!open_raw_reader(input))
+                        throw false;
+
                     vector<RawInput> additional_inputs;
                     uint32_t j;
-                    for (j = 1; j < input->wave_reader->GetNumTracks(); j++) {
+                    for (j = 1; j < input->channel_count; j++) {
                         RawInput new_input;
                         copy_input(input, &new_input);
-                        new_input.wave_track_index = j;
+                        new_input.wavepcm_track_index = j;
                         additional_inputs.push_back(new_input);
                     }
                     inputs.insert(inputs.begin() + i + 1, additional_inputs.begin(), additional_inputs.end());
@@ -3408,8 +3456,8 @@ int main(int argc, const char** argv)
                     memcpy(input->sample_sequence, &shifted_sample_sequence[0],
                            shifted_sample_sequence.size() * sizeof(uint32_t));
                     input->sample_sequence_size = shifted_sample_sequence.size();
-                    if (input->raw_reader)
-                        input->raw_reader->SetFixedSampleSize(input->track->GetSampleSize());
+                    if (input->raw_reader && input->wavepcm_track_index == 0)
+                        input->raw_reader->SetFixedSampleSize(input->track->GetSampleSize() * input->channel_count);
                     break;
                 }
                 case ANC_DATA:
@@ -3474,6 +3522,7 @@ int main(int argc, const char** argv)
         clip->PrepareWrite();
 
         // write samples
+        bmx::ByteArray pcm_buffer;
         int64_t total_read = 0;
         while (duration < 0 || total_read < duration) {
             // break if reached end of partial file regression test
@@ -3503,10 +3552,19 @@ int main(int argc, const char** argv)
                     num_samples = input->raw_reader->GetNumSamples();
                     if (max_samples_per_read > 1 && num_samples > min_num_samples)
                         num_samples = min_num_samples;
-                    write_samples(input, input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize(),
-                                  num_samples);
+                    if (input->essence_type == WAVE_PCM && input->channel_count > 1) {
+                        pcm_buffer.Allocate(input->raw_reader->GetSampleDataSize() / input->channel_count);
+                        deinterleave_audio(input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize(),
+                                           input->audio_quant_bits, input->channel_count, input->wavepcm_track_index,
+                                           pcm_buffer.GetBytes(), pcm_buffer.GetAllocatedSize());
+                        pcm_buffer.SetSize(input->raw_reader->GetSampleDataSize() / input->channel_count);
+                        write_samples(input, pcm_buffer.GetBytes(), pcm_buffer.GetSize(), num_samples);
+                    } else {
+                        write_samples(input, input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize(),
+                                      num_samples);
+                    }
                 } else {
-                    Frame *frame = input->wave_reader->GetTrack(input->wave_track_index)->GetFrameBuffer()->GetLastFrame(true);
+                    Frame *frame = input->wave_reader->GetTrack(input->wavepcm_track_index)->GetFrameBuffer()->GetLastFrame(true);
                     BMX_ASSERT(frame);
                     num_samples = frame->num_samples;
                     if (max_samples_per_read > 1 && num_samples > min_num_samples)

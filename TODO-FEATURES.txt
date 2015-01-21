@@ -36,8 +36,6 @@ tests
 
 17. implement setting track number in the Wave writer
 
-18. add support for multi-channel raw pcm input in raw2bmx
-
 19. add option to disable audio inputs, or more generally, add ability to map
 audio inputs to audio outputs
 
