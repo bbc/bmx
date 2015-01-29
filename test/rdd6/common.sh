@@ -49,7 +49,7 @@ create_test_file()
 
 extract_rdd6_xml()
 {
-    $appsdir/mxf2raw/mxf2raw --rdd6 0 $tmpdir/$1.xml $tmpdir/$1.mxf
+    $appsdir/mxf2raw/mxf2raw --rdd6 0-2 $tmpdir/$1.xml $tmpdir/$1.mxf
 }
 
 check()

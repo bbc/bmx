@@ -11,6 +11,9 @@
       <program_config>5.1</program_config>
       <frame_rate>25</frame_rate>
       <pitch_shift_code>-100</pitch_shift_code>
+      <descr_text>
+        <program>pr</program>
+      </descr_text>
     </dolby_e_complete>
     <dolby_digital_complete_ext_bsi>
       <program_id>0</program_id>
