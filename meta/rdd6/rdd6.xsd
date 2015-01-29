@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xs:schema
-  targetNamespace="http://bbc.co.uk/rd/rdd6/201401"
-  xmlns="http://bbc.co.uk/rd/rdd6/201401"
+  targetNamespace="http://bbc.co.uk/rd/rdd6/201501"
+  xmlns="http://bbc.co.uk/rd/rdd6/201501"
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   elementFormDefault="qualified" attributeFormDefault="unqualified">
 
@@ -364,18 +364,17 @@
 
   <xs:simpleType name="center_mix_level_type">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="0.707"/>
-      <xs:enumeration value="0.595"/>
-      <xs:enumeration value="0.500"/>
-      <xs:enumeration value="0.595"/>
+      <xs:enumeration value="-3.0"/>
+      <xs:enumeration value="-4.5"/>
+      <xs:enumeration value="-6.0"/>
     </xs:restriction>
   </xs:simpleType>
 
   <xs:simpleType name="sur_mix_level_type">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="0.707"/>
-      <xs:enumeration value="0.500"/>
-      <xs:enumeration value="0.000"/>
+      <xs:enumeration value="-3.0"/>
+      <xs:enumeration value="-6.0"/>
+      <xs:enumeration value="-inf"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -395,27 +394,27 @@
 
   <xs:simpleType name="lt_rt_center_mix_type">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="1.414"/>
-      <xs:enumeration value="1.189"/>
-      <xs:enumeration value="1.000"/>
-      <xs:enumeration value="0.841"/>
-      <xs:enumeration value="0.707"/>
-      <xs:enumeration value="0.595"/>
-      <xs:enumeration value="0.500"/>
-      <xs:enumeration value="0.000"/>
+      <xs:enumeration value="3.0"/>
+      <xs:enumeration value="1.5"/>
+      <xs:enumeration value="0.0"/>
+      <xs:enumeration value="-1.5"/>
+      <xs:enumeration value="-3.0"/>
+      <xs:enumeration value="-4.5"/>
+      <xs:enumeration value="-6.0"/>
+      <xs:enumeration value="-inf"/>
     </xs:restriction>
   </xs:simpleType>
 
   <xs:simpleType name="lt_rt_sur_mix_type">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="1.414"/>
-      <xs:enumeration value="1.189"/>
-      <xs:enumeration value="1.000"/>
-      <xs:enumeration value="0.841"/>
-      <xs:enumeration value="0.707"/>
-      <xs:enumeration value="0.595"/>
-      <xs:enumeration value="0.500"/>
-      <xs:enumeration value="0.000"/>
+      <xs:enumeration value="3.0"/>
+      <xs:enumeration value="1.5"/>
+      <xs:enumeration value="0.0"/>
+      <xs:enumeration value="-1.5"/>
+      <xs:enumeration value="-3.0"/>
+      <xs:enumeration value="-4.5"/>
+      <xs:enumeration value="-6.0"/>
+      <xs:enumeration value="-inf"/>
     </xs:restriction>
   </xs:simpleType>
 

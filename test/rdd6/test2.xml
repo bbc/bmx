@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rdd6 xmlns="http://bbc.co.uk/rd/rdd6/201401">
+<rdd6 xmlns="http://bbc.co.uk/rd/rdd6/201501">
   <first_subframe>
     <sync>
       <rev_id>0x00</rev_id>
@@ -17,8 +17,8 @@
       <data_rate>384</data_rate>
       <ac_mode>3/2</ac_mode>
       <bs_mode>main_complete</bs_mode>
-      <center_mix_level>0.707</center_mix_level>
-      <sur_mix_level>0.707</sur_mix_level>
+      <center_mix_level>-3.0</center_mix_level>
+      <sur_mix_level>-3.0</sur_mix_level>
       <sur_encoded>false</sur_encoded>
       <lfe_on>true</lfe_on>
       <dialnorm>23</dialnorm>
@@ -28,10 +28,10 @@
       <copyright>true</copyright>
       <orig_bs>true</orig_bs>
       <downmix_mode>lt_rt</downmix_mode>
-      <lt_rt_center_mix>0.707</lt_rt_center_mix>
-      <lt_rt_sur_mix>0.707</lt_rt_sur_mix>
-      <lo_ro_center_mix>0.707</lo_ro_center_mix>
-      <lo_ro_sur_mix>0.707</lo_ro_sur_mix>
+      <lt_rt_center_mix>-3.0</lt_rt_center_mix>
+      <lt_rt_sur_mix>-3.0</lt_rt_sur_mix>
+      <lo_ro_center_mix>-3.0</lo_ro_center_mix>
+      <lo_ro_sur_mix>-3.0</lo_ro_sur_mix>
       <sur_ex_encoded>false</sur_ex_encoded>
       <ad_conv_type>hdcd</ad_conv_type>
       <hp_filter>true</hp_filter>

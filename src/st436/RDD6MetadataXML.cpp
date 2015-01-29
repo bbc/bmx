@@ -47,7 +47,7 @@ using namespace bmx;
 
 
 
-const char bmx::RDD6_NAMESPACE[] = "http://bbc.co.uk/rd/rdd6/201401";
+const char bmx::RDD6_NAMESPACE[] = "http://bbc.co.uk/rd/rdd6/201501";
 
 
 const XMLEnumInfo bmx::PROGRAM_CONFIG_ENUM[] =
@@ -158,19 +158,19 @@ const XMLEnumInfo bmx::ACMOD_ENUM[] =
 
 const XMLEnumInfo bmx::CMIXLEVEL_ENUM[] =
 {
-    {"0.707",   0},
-    {"0.595",   1},
-    {"0.500",   2},
-    {"0.595",   3}, // reserved; treat as 0.595
+    {"-3.0",   0},
+    {"-4.5",   1},
+    {"-6.0",   2},
+    {"-4.5",   3}, // reserved; treat as -4.5
     {0, 0}
 };
 
 const XMLEnumInfo bmx::SURMIXLEVEL_ENUM[] =
 {
-    {"0.707",   0},
-    {"0.500",   1},
-    {"0.000",   2},
-    {"0.500",   3}, // reserved; treat as 0.500
+    {"-3.0",   0},
+    {"-6.0",   1},
+    {"-inf",   2},
+    {"-6.0",   3}, // reserved; treat as -6.0
     {0, 0}
 };
 
@@ -194,27 +194,27 @@ const XMLEnumInfo bmx::DMIXMOD_ENUM[] =
 
 const XMLEnumInfo bmx::LTRTCMIXLEVEL_ENUM[] =
 {
-    {"1.414",   0},
-    {"1.189",   1},
-    {"1.000",   2},
-    {"0.841",   3},
-    {"0.707",   4},
-    {"0.595",   5},
-    {"0.500",   6},
-    {"0.000",   7},
+    {"3.0",   0},
+    {"1.5",   1},
+    {"0.0",   2},
+    {"-1.5",  3},
+    {"-3.0",  4},
+    {"-4.5",  5},
+    {"-6.0",  6},
+    {"-inf",  7},
     {0, 0}
 };
 
 const XMLEnumInfo bmx::LTRTSURMIXLEVEL_ENUM[] =
 {
-    {"1.414",   0},
-    {"1.189",   1},
-    {"1.000",   2},
-    {"0.841",   3},
-    {"0.707",   4},
-    {"0.595",   5},
-    {"0.500",   6},
-    {"0.000",   7},
+    {"3.0",   0},
+    {"1.5",   1},
+    {"0.0",   2},
+    {"-1.5",  3},
+    {"-3.0",  4},
+    {"-4.5",  5},
+    {"-6.0",  6},
+    {"-inf",  7},
     {0, 0}
 };
 
