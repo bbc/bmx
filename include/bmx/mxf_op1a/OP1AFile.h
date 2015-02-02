@@ -53,6 +53,7 @@
 #define OP1A_NO_BODY_PART_UPDATE_FLAVOUR    0x0020
 #define OP1A_BODY_PARTITIONS_FLAVOUR        0x0040      // separate body partitions; index tables not in separate partition
 #define OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR    0x0080
+#define OP1A_ZERO_MP_TRACK_NUMBER_FLAVOUR   0x0100      // set Material Package Track Number to 0
 
 
 

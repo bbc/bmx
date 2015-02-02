@@ -131,6 +131,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     }
 
     if ((flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+        mFlavour |= OP1A_ZERO_MP_TRACK_NUMBER_FLAVOUR;
         ReserveHeaderMetadataSpace(2 * 1024 * 1024 + 8192);
         SetAddSystemItem(true);
     }
