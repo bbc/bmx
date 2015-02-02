@@ -2224,7 +2224,7 @@ int main(int argc, const char** argv)
         if (clip_type == CW_OP1A_CLIP_TYPE) {
             flavour = OP1A_DEFAULT_FLAVOUR;
             if (ard_zdf_hdf_profile) {
-                flavour |= OP1A_BODY_PARTITIONS_FLAVOUR | OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR;
+                flavour |= OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR;
             } else if (clip_sub_type != AS11_CLIP_SUB_TYPE) {
                 if (min_part)
                     flavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
