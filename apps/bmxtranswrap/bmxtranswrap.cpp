@@ -517,6 +517,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --body-part             Create separate body partitions for essence data\n");
     fprintf(stderr, "                            and don't create separate body partitions for index table segments\n");
     fprintf(stderr, "    --clip-wrap             Use clip wrapping for a single sound track\n");
+    fprintf(stderr, "    --zero-mp-track-num     Always set the Track Number property in the Material Package tracks to 0\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/rdd9:\n");
     fprintf(stderr, "    --ard-zdf-hdf           Use the ARD ZDF HDF profile\n");
@@ -675,6 +676,7 @@ int main(int argc, const char** argv)
     uint16_t rdd6_lines[2] = {DEFAULT_RDD6_LINES[0], DEFAULT_RDD6_LINES[1]};
     uint8_t rdd6_sdid = DEFAULT_RDD6_SDID;
     uint32_t http_min_read = DEFAULT_HTTP_MIN_READ;
+    bool zero_mp_track_num = false;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -1417,6 +1419,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--clip-wrap") == 0)
         {
             clip_wrap = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--zero-mp-track-num") == 0)
+        {
+            zero_mp_track_num = true;
         }
         else if (strcmp(argv[cmdln_index], "--ard-zdf-hdf") == 0)
         {
@@ -2224,6 +2230,8 @@ int main(int argc, const char** argv)
                     flavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
                 else if (body_part)
                     flavour |= OP1A_BODY_PARTITIONS_FLAVOUR;
+                if (zero_mp_track_num)
+                    flavour |= OP1A_ZERO_MP_TRACK_NUMBER_FLAVOUR;
             }
             if (output_file_md5)
                 flavour |= OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR;
