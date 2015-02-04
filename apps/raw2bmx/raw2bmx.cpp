@@ -346,7 +346,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -v | --version          Print version info\n");
     fprintf(stderr, "  -l <file>               Log filename. Default log to stderr/stdout\n");
     fprintf(stderr, " --log-level <level>      Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
-    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, rdd9, wave. Default is as02\n");
+    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, rdd9, wave. Default is op1a\n");
     fprintf(stderr, "* -o <name>               as02: <name> is a bundle name\n");
     fprintf(stderr, "                          as11op1a/as11d10/op1a/d10/rdd9/wave: <name> is a filename\n");
     fprintf(stderr, "                          avid: <name> is a filename prefix\n");
@@ -568,7 +568,7 @@ int main(int argc, const char** argv)
 {
     const char *log_filename = 0;
     LogLevel log_level = INFO_LOG;
-    ClipWriterType clip_type = CW_AS02_CLIP_TYPE;
+    ClipWriterType clip_type = CW_OP1A_CLIP_TYPE;
     ClipSubType clip_sub_type = NO_CLIP_SUB_TYPE;
     bool ard_zdf_hdf_profile = false;
     const char *output_name = "";
