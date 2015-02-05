@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rdd6 xmlns="http://bbc.co.uk/rd/rdd6/201501">
+<rdd6 xmlns="http://bbc.co.uk/rd/rdd6/201502">
   <first_subframe>
     <sync>
       <rev_id>0x00</rev_id>
@@ -24,7 +24,7 @@
       <sur_mix_level>-3.0</sur_mix_level>
       <sur_encoded>false</sur_encoded>
       <lfe_on>true</lfe_on>
-      <dialnorm>23</dialnorm>
+      <dialnorm>-23</dialnorm>
       <lang_code>0x09</lang_code>
       <mix_level>10</mix_level>
       <room_type>small_room</room_type>
@@ -68,7 +68,7 @@
       <ac_mode>3/2</ac_mode>
       <bs_mode>main_complete</bs_mode>
       <lfe_on>true</lfe_on>
-      <dialnorm>23</dialnorm>
+      <dialnorm>-23</dialnorm>
       <compr_pf_2>film_light</compr_pf_2>
       <dyn_range_pf_5>film_standard</dyn_range_pf_5>
       <dyn_range_pf_6>speech</dyn_range_pf_6>

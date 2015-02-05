@@ -542,9 +542,7 @@ bool DolbyDigitalCompleteExtBSIExpatHandler::EndElement(const string &ns, const 
     if (HaveChild("sur_encoded"))
         mPayload->ac3_dsurmod = (parse_xml_bool("sur_encoded", GetChildStr("sur_encoded")) ? 2 : 1);
     mPayload->ac3_lfeon = parse_xml_bool("lfe_on", GetChildStr("lfe_on"));
-    mPayload->ac3_dialnorm = parse_xml_uint8("dialnorm", GetChildStr("dialnorm"));
-    if (mPayload->ac3_dialnorm == 31)
-        mPayload->ac3_dialnorm = 0; // 0 is treated as 31
+    mPayload->ac3_dialnorm = - parse_xml_int8("dialnorm", GetChildStr("dialnorm"));
     if (HaveChild("lang_code")) {
         mPayload->ac3_langcode = 1;
         mPayload->ac3_langcod = parse_xml_hex_uint8("lang_code", GetChildStr("lang_code"));
@@ -631,9 +629,7 @@ bool DolbyDigitalEssentialExtBSIExpatHandler::EndElement(const string &ns, const
     else
         mPayload->ac3_bsmod = parse_xml_enum("bs_mode", BSMOD_2_ENUM, GetChildStr("bs_mode"));
     mPayload->ac3_lfeon = parse_xml_bool("lfe_on", GetChildStr("lfe_on"));
-    mPayload->ac3_dialnorm = parse_xml_uint8("dialnorm", GetChildStr("dialnorm"));
-    if (mPayload->ac3_dialnorm == 31)
-        mPayload->ac3_dialnorm = 0; // 0 is treated as 31
+    mPayload->ac3_dialnorm = - parse_xml_int8("dialnorm", GetChildStr("dialnorm"));
     if (HaveChild("compr_pf_2")) {
         mPayload->ac3_compr2 = parse_xml_enum("compr_pf_2", COMPR_ENUM, GetChildStr("compr_pf_2"));
     } else {
@@ -687,9 +683,7 @@ bool DolbyDigitalCompleteExpatHandler::EndElement(const string &ns, const string
     if (HaveChild("sur_encoded"))
         mPayload->ac3_dsurmod = (parse_xml_bool("sur_encoded", GetChildStr("sur_encoded")) ? 2 : 1);
     mPayload->ac3_lfeon = parse_xml_bool("lfe_on", GetChildStr("lfe_on"));
-    mPayload->ac3_dialnorm = parse_xml_uint8("dialnorm", GetChildStr("dialnorm"));
-    if (mPayload->ac3_dialnorm == 31)
-        mPayload->ac3_dialnorm = 0; // 0 is treated as 31
+    mPayload->ac3_dialnorm = - parse_xml_int8("dialnorm", GetChildStr("dialnorm"));
     if (HaveChild("lang_code")) {
         mPayload->ac3_langcode = 1;
         mPayload->ac3_langcod = parse_xml_hex_uint8("lang_code", GetChildStr("lang_code"));
@@ -764,9 +758,7 @@ bool DolbyDigitalEssentialExpatHandler::EndElement(const string &ns, const strin
     else
         mPayload->ac3_bsmod = parse_xml_enum("bs_mode", BSMOD_2_ENUM, GetChildStr("bs_mode"));
     mPayload->ac3_lfeon = parse_xml_bool("lfe_on", GetChildStr("lfe_on"));
-    mPayload->ac3_dialnorm = parse_xml_uint8("dialnorm", GetChildStr("dialnorm"));
-    if (mPayload->ac3_dialnorm == 31)
-        mPayload->ac3_dialnorm = 0; // 0 is treated as 31
+    mPayload->ac3_dialnorm = - parse_xml_int8("dialnorm", GetChildStr("dialnorm"));
     if (HaveChild("compr_pf_2")) {
         mPayload->ac3_compr2 = parse_xml_enum("compr_pf_2", COMPR_ENUM, GetChildStr("compr_pf_2"));
     } else {

@@ -73,6 +73,7 @@ extern const XMLEnumInfo COMPR_ENUM[];
 
 
 uint8_t parse_xml_uint8(const std::string &context, const std::string &str);
+int8_t parse_xml_int8(const std::string &context, const std::string &str);
 uint16_t parse_xml_uint16(const std::string &context, const std::string &str);
 int16_t parse_xml_int16(const std::string &context, const std::string &str);
 int parse_xml_int(const std::string &context, const std::string &str);
@@ -87,6 +88,7 @@ int parse_xml_enum(const std::string &context, const XMLEnumInfo *info, const st
 size_t parse_xml_bytes(const std::string &context, const std::string &str, unsigned char *bytes, size_t size);
 
 std::string unparse_xml_uint8(uint8_t value);
+std::string unparse_xml_int8(int8_t value);
 std::string unparse_xml_uint16(uint16_t value);
 std::string unparse_xml_int16(int16_t value);
 std::string unparse_xml_int(int value);

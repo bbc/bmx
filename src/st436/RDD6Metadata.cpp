@@ -658,9 +658,9 @@ void RDD6DolbyDigitalCompleteExtBSI::UnparseXML(XMLWriter *writer) const
         writer->WriteElement(RDD6_NAMESPACE, "sur_encoded", unparse_xml_bool(ac3_dsurmod == 2));
     writer->WriteElement(RDD6_NAMESPACE, "lfe_on", unparse_xml_bool(ac3_lfeon));
     if (ac3_dialnorm == 0)
-        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_uint8(31)); // 0 is treated as 31
+        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_int8(-31)); // 0 is treated as 31
     else
-        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_uint8(ac3_dialnorm));
+        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_int8(-(int8_t)ac3_dialnorm));
     if (ac3_langcode)
         writer->WriteElement(RDD6_NAMESPACE, "lang_code", unparse_xml_hex_uint8(ac3_langcod));
     if (ac3_audprodie) {
@@ -863,9 +863,9 @@ void RDD6DolbyDigitalEssentialExtBSI::UnparseXML(XMLWriter *writer) const
     }
     writer->WriteElement(RDD6_NAMESPACE, "lfe_on", unparse_xml_bool(ac3_lfeon));
     if (ac3_dialnorm == 0)
-        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_uint8(31)); // 0 is treated as 31
+        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_int8(-31)); // 0 is treated as 31
     else
-        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_uint8(ac3_dialnorm));
+        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_int8(-(int8_t)ac3_dialnorm));
     if (ac3_compre == 0) {
         writer->WriteElement(RDD6_NAMESPACE, "compr_pf_2",
                              unparse_xml_enum("compr_pf_2", COMPR_ENUM, ac3_compr2));
@@ -1118,9 +1118,9 @@ void RDD6DolbyDigitalComplete::UnparseXML(XMLWriter *writer) const
         writer->WriteElement(RDD6_NAMESPACE, "sur_encoded", unparse_xml_bool(ac3_dsurmod == 2));
     writer->WriteElement(RDD6_NAMESPACE, "lfe_on", unparse_xml_bool(ac3_lfeon));
     if (ac3_dialnorm == 0)
-        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_uint8(31)); // 0 is treated as 31
+        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_int8(-31)); // 0 is treated as 31
     else
-        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_uint8(ac3_dialnorm));
+        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_int8(-(int8_t)ac3_dialnorm));
     if (ac3_langcode)
         writer->WriteElement(RDD6_NAMESPACE, "lang_code", unparse_xml_hex_uint8(ac3_langcod));
     if (ac3_audprodie) {
@@ -1299,9 +1299,9 @@ void RDD6DolbyDigitalEssential::UnparseXML(XMLWriter *writer) const
     }
     writer->WriteElement(RDD6_NAMESPACE, "lfe_on", unparse_xml_bool(ac3_lfeon));
     if (ac3_dialnorm == 0)
-        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_uint8(31)); // 0 is treated as 31
+        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_int8(-31)); // 0 is treated as 31
     else
-        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_uint8(ac3_dialnorm));
+        writer->WriteElement(RDD6_NAMESPACE, "dialnorm", unparse_xml_int8(-(int8_t)ac3_dialnorm));
     if (ac3_compre == 0) {
         writer->WriteElement(RDD6_NAMESPACE, "compr_pf_2",
                              unparse_xml_enum("compr_pf_2", COMPR_ENUM, ac3_compr2));

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rdd6 xmlns="http://bbc.co.uk/rd/rdd6/201501">
+<rdd6 xmlns="http://bbc.co.uk/rd/rdd6/201502">
   <first_subframe>
     <sync>
       <rev_id>0x00</rev_id>
@@ -22,7 +22,7 @@
       <sur_mix_level>-3.0</sur_mix_level>
       <sur_encoded>false</sur_encoded>
       <lfe_on>true</lfe_on>
-      <dialnorm>23</dialnorm>
+      <dialnorm>-23</dialnorm>
       <copyright>true</copyright>
       <orig_bs>true</orig_bs>
       <downmix_mode>lt_rt</downmix_mode>
@@ -60,7 +60,7 @@
       <ac_mode>3/2</ac_mode>
       <bs_mode>main_complete</bs_mode>
       <lfe_on>true</lfe_on>
-      <dialnorm>23</dialnorm>
+      <dialnorm>-23</dialnorm>
       <compr_pf_2>film_standard</compr_pf_2>
       <dyn_range_pf_5>film_standard</dyn_range_pf_5>
       <dyn_range_pf_6>none</dyn_range_pf_6>

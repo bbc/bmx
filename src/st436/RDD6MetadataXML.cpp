@@ -47,7 +47,7 @@ using namespace bmx;
 
 
 
-const char bmx::RDD6_NAMESPACE[] = "http://bbc.co.uk/rd/rdd6/201501";
+const char bmx::RDD6_NAMESPACE[] = "http://bbc.co.uk/rd/rdd6/201502";
 
 
 const XMLEnumInfo bmx::PROGRAM_CONFIG_ENUM[] =
@@ -247,6 +247,15 @@ uint8_t bmx::parse_xml_uint8(const string &context, const string &str)
     return (uint8_t)int_value;
 }
 
+int8_t bmx::parse_xml_int8(const string &context, const string &str)
+{
+    int int_value = parse_xml_int(context, str);
+    if (int_value < INT8_MIN || int_value > INT8_MAX)
+        throw BMXException("Failed to parse int8 value '%s' for '%s'", str.c_str(), context.c_str());
+
+    return (int8_t)int_value;
+}
+
 uint16_t bmx::parse_xml_uint16(const string &context, const string &str)
 {
     int int_value = parse_xml_int(context, str);
@@ -404,6 +413,11 @@ size_t bmx::parse_xml_bytes(const string &context, const string &str, unsigned c
 
 
 string bmx::unparse_xml_uint8(uint8_t value)
+{
+    return unparse_xml_int(value);
+}
+
+string bmx::unparse_xml_int8(int8_t value)
 {
     return unparse_xml_int(value);
 }

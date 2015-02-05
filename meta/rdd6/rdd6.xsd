@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xs:schema
-  targetNamespace="http://bbc.co.uk/rd/rdd6/201501"
-  xmlns="http://bbc.co.uk/rd/rdd6/201501"
+  targetNamespace="http://bbc.co.uk/rd/rdd6/201502"
+  xmlns="http://bbc.co.uk/rd/rdd6/201502"
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   elementFormDefault="qualified" attributeFormDefault="unqualified">
 
@@ -115,7 +115,7 @@
       <xs:element name="sur_mix_level" type="sur_mix_level_type"/>
       <xs:element name="sur_encoded" type="xs:boolean" minOccurs="0"/>
       <xs:element name="lfe_on" type="xs:boolean"/>
-      <xs:element name="dialnorm" type="uint8_type"/>
+      <xs:element name="dialnorm" type="dialnorm_type"/>
       <xs:element name="lang_code" type="hex_uint8_type" minOccurs="0"/>
       <xs:element name="mix_level" type="uint8_type" minOccurs="0"/>
       <xs:element name="room_type" type="room_type_type" minOccurs="0"/>
@@ -181,7 +181,7 @@
       <xs:element name="ac_mode" type="ac_mode_type"/>
       <xs:element name="bs_mode" type="bs_mode_type"/>
       <xs:element name="lfe_on" type="xs:boolean"/>
-      <xs:element name="dialnorm" type="uint8_type"/>
+      <xs:element name="dialnorm" type="dialnorm_type"/>
       <xs:group ref="compr_2_type"/>
       <xs:group ref="dyn_range_5_type"/>
     </xs:sequence>
@@ -230,7 +230,7 @@
       <xs:element name="sur_mix_level" type="sur_mix_level_type"/>
       <xs:element name="sur_encoded" type="xs:boolean" minOccurs="0"/>
       <xs:element name="lfe_on" type="xs:boolean"/>
-      <xs:element name="dialnorm" type="uint8_type"/>
+      <xs:element name="dialnorm" type="dialnorm_type"/>
       <xs:element name="lang_code" type="hex_uint8_type" minOccurs="0"/>
       <xs:element name="mix_level" type="uint8_type" minOccurs="0"/>
       <xs:element name="room_type" type="room_type_type" minOccurs="0"/>
@@ -257,7 +257,7 @@
       <xs:element name="ac_mode" type="ac_mode_type"/>
       <xs:element name="bs_mode" type="bs_mode_type"/>
       <xs:element name="lfe_on" type="xs:boolean"/>
-      <xs:element name="dialnorm" type="uint8_type"/>
+      <xs:element name="dialnorm" type="dialnorm_type"/>
       <xs:group ref="compr_2_type"/>
       <xs:group ref="dyn_range_5_type"/>
     </xs:sequence>
@@ -446,6 +446,13 @@
 
   <xs:simpleType name="dyn_range_pf_type">
     <xs:restriction base="compr_pf_type"/>
+  </xs:simpleType>
+
+  <xs:simpleType name="dialnorm_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="-31"/>
+      <xs:maxInclusive value="-1"/>
+    </xs:restriction>
   </xs:simpleType>
 
   <xs:simpleType name="hex_uint8_type">
