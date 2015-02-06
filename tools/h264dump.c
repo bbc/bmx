@@ -529,14 +529,21 @@ static int rbsp_trailing_bits(ParseContext *context)
        printing a message when this function fails */
 
     int valid;
+    unsigned int zero_bit_count = 0;
 
     f(1); valid = (context->value != 0);
     while (valid && (context->bit_pos % 8) != 0) {
         f(1); valid = (context->value == 0);
+        zero_bit_count++;
     }
 
-    if (!valid)
+    if (valid) {
+        printf("%*c rbsp_stop_one_bit: 1\n", context->indent * 4, ' ');
+        if (zero_bit_count > 0)
+            printf("%*c rbsp_alignment_zero_bit: 0 x %u\n", context->indent * 4, ' ', zero_bit_count);
+    } else {
         printf("Warning: invalid rbsp_trailing_bits\n");
+    }
 
     return 1;
 }
