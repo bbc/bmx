@@ -109,6 +109,7 @@ static uint32_t g_component_sub_type = 0;
 static bool g_qt_brand = true;
 static const char *g_avcc_filename = 0;
 static FILE *g_avcc_file = 0;
+static int mp4_object_desc_level = 0;
 
 
 class MOVException : public std::exception
@@ -160,6 +161,8 @@ protected:
     string mMessage;
 };
 
+
+static uint32_t dump_mp4_object_descriptor(uint32_t length);
 
 
 static bool equals_type(const char *left, const char *right)
@@ -724,6 +727,11 @@ static void dump_uint64(uint64_t value, bool hex)
         printf("0x%016"PRIx64, value);
     else
         printf("%20"PRIu64, value);
+}
+
+static void dump_int64(int64_t value)
+{
+    printf("%20"PRIi64, value);
 }
 
 static void dump_uint32(uint32_t value, bool hex)
@@ -1918,10 +1926,265 @@ static void dump_stbl_vide()
     }
 }
 
+static uint32_t dump_mp4_es_descriptor(uint32_t length)
+{
+    MOV_CHECK(length >= 3);
+
+    indent(4 * mp4_object_desc_level + 2);
+    printf("es_descriptor:\n");
+
+    uint16_t es_id;
+    MOV_CHECK(read_uint16(&es_id));
+    indent(4 * mp4_object_desc_level + 4);
+    printf("es_id: 0x%04x\n", es_id);
+
+    uint8_t flag_bits;
+    MOV_CHECK(read_uint8(&flag_bits));
+    indent(4 * mp4_object_desc_level + 4);
+    printf("stream_dep_flag: %u\n", !!(flag_bits & 0x80));
+    indent(4 * mp4_object_desc_level + 4);
+    printf("url_flag: %u\n", !!(flag_bits & 0x40));
+    indent(4 * mp4_object_desc_level + 4);
+    printf("reserved: %u\n", !!(flag_bits & 0x20));
+    indent(4 * mp4_object_desc_level + 4);
+    printf("stream_priority: 0x%02x\n", flag_bits & 0x1f);
+
+    uint32_t rem_length = length - 3;
+
+    if ((flag_bits & 0x80)) {
+        MOV_CHECK(rem_length >= 2);
+        uint16_t dependson_es_id;
+        MOV_CHECK(read_uint16(&dependson_es_id));
+        indent(4 * mp4_object_desc_level + 4);
+        printf("dependson_es_id: 0x%04x\n", dependson_es_id);
+        rem_length -= 2;
+    }
+
+    if ((flag_bits & 0x40)) {
+        MOV_CHECK(rem_length >= 1);
+        uint8_t url_len;
+        MOV_CHECK(read_uint8(&url_len));
+        rem_length--;
+        MOV_CHECK(rem_length >= url_len);
+        indent(4 * mp4_object_desc_level + 4);
+        printf("url: ");
+        dump_string(url_len, 2);
+        rem_length -= url_len;
+    }
+
+    while (rem_length > 0) {
+        mp4_object_desc_level++;
+        rem_length -= dump_mp4_object_descriptor(rem_length);
+        mp4_object_desc_level--;
+    }
+
+    return length;
+}
+
+static uint32_t dump_mp4_dc_descriptor(uint32_t length)
+{
+    MOV_CHECK(length >= 13);
+
+    indent(4 * mp4_object_desc_level + 2);
+    printf("decoder_config:\n");
+
+    uint8_t obj_profile_indication;
+    MOV_CHECK(read_uint8(&obj_profile_indication));
+    indent(4 * mp4_object_desc_level + 4);
+    printf("obj_profile_indication: 0x%02x\n", obj_profile_indication);
+
+    uint8_t stream_bits;
+    MOV_CHECK(read_uint8(&stream_bits));
+    indent(4 * mp4_object_desc_level + 4);
+    printf("stream_type: 0x%02x\n", stream_bits >> 2);
+    indent(4 * mp4_object_desc_level + 4);
+    printf("up_stream: %u\n", !!(stream_bits & 0x02));
+    indent(4 * mp4_object_desc_level + 4);
+    printf("reserved: %u\n", !!(stream_bits & 0x01));
+
+    uint32_t buffer_size_db;
+    MOV_CHECK(read_uint24(&buffer_size_db));
+    indent(4 * mp4_object_desc_level + 4);
+    printf("buffer_size_db: %u\n", buffer_size_db);
+
+    uint32_t max_bitrate;
+    MOV_CHECK(read_uint32(&max_bitrate));
+    indent(4 * mp4_object_desc_level + 4);
+    printf("max_bitrate: %u\n", max_bitrate);
+
+    uint32_t avg_bitrate;
+    MOV_CHECK(read_uint32(&avg_bitrate));
+    indent(4 * mp4_object_desc_level + 4);
+    printf("avg_bitrate: %u\n", avg_bitrate);
+
+    uint32_t rem_length = length - 13;
+    while (rem_length > 0) {
+        mp4_object_desc_level++;
+        rem_length -= dump_mp4_object_descriptor(rem_length);
+        mp4_object_desc_level--;
+    }
+
+    return length;
+}
+
+static uint32_t dump_mp4_ds_info(uint32_t length)
+{
+    indent(4 * mp4_object_desc_level + 2);
+    printf("decoder_specific_info:\n");
+
+    dump_bytes(length, 4 * mp4_object_desc_level + 4);
+
+    return length;
+}
+
+static uint32_t dump_mp4_slc_descriptor(uint32_t length)
+{
+    MOV_CHECK(length >= 1);
+
+    indent(4 * mp4_object_desc_level + 2);
+    printf("sl_config:\n");
+
+    uint8_t predefined;
+    MOV_CHECK(read_uint8(&predefined));
+    indent(4 * mp4_object_desc_level + 4);
+    printf("predefined: 0x%02x\n", predefined);
+
+    if (length > 1)
+        dump_bytes(length - 1, 4 * mp4_object_desc_level + 6);
+
+    return length;
+}
+
+static uint32_t dump_mp4_object_descriptor(uint32_t parent_length)
+{
+    MOV_CHECK(parent_length >= 2);
+
+    indent(4 * mp4_object_desc_level);
+    printf("descriptor:\n");
+
+    uint32_t head_length = 0;
+
+    uint8_t tag;
+    MOV_CHECK(read_uint8(&tag));
+    indent(4 * mp4_object_desc_level + 2);
+    printf("tag: 0x%02x\n", tag);
+    head_length++;
+
+    uint32_t length = 0;
+    uint8_t byte;
+    do {
+        MOV_CHECK(read_uint8(&byte));
+        head_length++;
+        length <<= 7;
+        length |= byte & 0x7f;
+    } while (byte & 0x80);
+    indent(4 * mp4_object_desc_level + 2);
+    printf("length: %u\n", length);
+
+    MOV_CHECK(parent_length >= head_length + length);
+
+    uint32_t used_length;
+    switch (tag)
+    {
+        case 0x03:
+            used_length = dump_mp4_es_descriptor(length);
+            break;
+        case 0x04:
+            used_length = dump_mp4_dc_descriptor(length);
+            break;
+        case 0x05:
+            used_length = dump_mp4_ds_info(length);
+            break;
+        case 0x06:
+            used_length = dump_mp4_slc_descriptor(length);
+            break;
+        default:
+            dump_bytes(length, 4 * mp4_object_desc_level + 4);
+            used_length = length;
+            break;
+    }
+
+    return head_length + used_length;
+}
+
+static void dump_esds_atom()
+{
+    uint8_t version;
+    uint32_t flags;
+    dump_full_atom_header(&version, &flags);
+
+    if (version != 0) {
+        dump_unknown_version(version);
+        return;
+    }
+
+    while (CURRENT_ATOM.rem_size > 2)
+        dump_mp4_object_descriptor(CURRENT_ATOM.rem_size);
+}
+
 static void dump_stbl_soun()
 {
-    if (CURRENT_ATOM.rem_size > 0)
-        dump_bytes(CURRENT_ATOM.rem_size);
+    static const DumpFuncMap dump_func_map[] =
+    {
+        {{'e','s','d','s'}, dump_esds_atom},
+        {{'b','t','r','t'}, dump_btrt_atom},
+    };
+
+    uint16_t version;
+    MOV_CHECK(read_uint16(&version));
+    indent(2);
+    printf("version: %u\n", version);
+
+    uint16_t revision;
+    MOV_CHECK(read_uint16(&revision));
+    indent(2);
+    printf("revision: 0x%04x\n", revision);
+
+    uint32_t vendor;
+    MOV_CHECK(read_uint32(&vendor));
+    indent(2);
+    printf("vendor: ");
+    dump_uint32_chars(vendor);
+    printf("\n");
+
+    uint16_t channel_count;
+    MOV_CHECK(read_uint16(&channel_count));
+    indent(2);
+    printf("channel_count: %u\n", channel_count);
+
+    uint16_t sample_size;
+    MOV_CHECK(read_uint16(&sample_size));
+    indent(2);
+    printf("sample_size: %u\n", sample_size);
+
+    int16_t compression_id;
+    MOV_CHECK(read_int16(&compression_id));
+    indent(2);
+    printf("compression_id: %d\n", compression_id);
+
+    uint16_t packet_size;
+    MOV_CHECK(read_uint16(&packet_size));
+    indent(2);
+    printf("packet_size: %u\n", packet_size);
+
+    uint32_t sample_rate;
+    MOV_CHECK(read_uint32(&sample_rate));
+    indent(2);
+    printf("sample_rate: ");
+    dump_uint32_fp(sample_rate, 16);
+    printf("\n");
+
+    // extensions
+    while (CURRENT_ATOM.rem_size > 8) {
+        push_atom();
+
+        if (!read_atom_start())
+            break;
+
+        dump_child_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
+
+        pop_atom();
+    }
 }
 
 static void dump_stbl_tmcd()
@@ -2662,7 +2925,7 @@ static void dump_elst_atom()
     uint32_t flags;
     dump_full_atom_header(&version, &flags);
 
-    if (version != 0x00) {
+    if (version != 0x00 && version != 0x01) {
         dump_unknown_version(version);
         return;
     }
@@ -2683,26 +2946,42 @@ static void dump_elst_atom()
         printf("     i");
     else
         printf("       i");
-    printf("    duration       time          rate\n");
+    if (version == 0)
+        printf("    duration       time          rate\n");
+    else
+        printf("              duration                 time          rate\n");
 
 
     uint32_t i = 0;
     for (i = 0; i < count; i++) {
-        int32_t track_duration;
-        MOV_CHECK(read_int32(&track_duration));
-        int32_t media_time;
-        MOV_CHECK(read_int32(&media_time));
-        uint32_t media_rate;
-        MOV_CHECK(read_uint32(&media_rate));
-
         indent(4);
         dump_uint32_index(count, i);
+        if (version == 0) {
+            uint32_t track_duration;
+            MOV_CHECK(read_uint32(&track_duration));
+            int32_t media_time;
+            MOV_CHECK(read_int32(&media_time));
 
-        printf("  ");
-        dump_int32(track_duration);
+            printf("  ");
+            dump_uint32(track_duration, false);
 
-        printf(" ");
-        dump_int32(media_time);
+            printf(" ");
+            dump_int32(media_time);
+        } else {
+            uint64_t track_duration;
+            MOV_CHECK(read_uint64(&track_duration));
+            int64_t media_time;
+            MOV_CHECK(read_int64(&media_time));
+
+            printf("  ");
+            dump_uint64(track_duration, false);
+
+            printf(" ");
+            dump_int64(media_time);
+        }
+
+        uint32_t media_rate;
+        MOV_CHECK(read_uint32(&media_rate));
 
         printf("      ");
         dump_uint32_fp(media_rate, 16);
