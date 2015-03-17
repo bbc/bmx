@@ -102,6 +102,10 @@ typedef enum
     TYPE_AVCI200_1080I,
     TYPE_AVCI200_1080P,
     TYPE_AVCI200_720P,
+    TYPE_VC3_1080I_1244,
+    TYPE_VC3_720P_1258,
+    TYPE_VC3_1080P_1259,
+    TYPE_VC3_1080I_1260,
     TYPE_END,
 } EssenceType;
 
@@ -468,6 +472,9 @@ static void write_vc3(FILE *file, int type, unsigned int duration)
         case TYPE_VC3_1080I_1243:
             frame_size = 917504;
             break;
+        case TYPE_VC3_1080I_1244:
+            frame_size = 606208;
+            break;
         case TYPE_VC3_720P_1250:
             frame_size = 458752;
             break;
@@ -478,8 +485,17 @@ static void write_vc3(FILE *file, int type, unsigned int duration)
             frame_size = 303104;
             break;
         case TYPE_VC3_1080P_1253:
-        default:
             frame_size = 188416;
+            break;
+        case TYPE_VC3_720P_1258:
+            frame_size = 212992;
+            break;
+        case TYPE_VC3_1080P_1259:
+            frame_size = 417792;
+            break;
+        case TYPE_VC3_1080I_1260:
+        default:
+            frame_size = 417792;
             break;
     }
 
@@ -731,10 +747,14 @@ int main(int argc, const char **argv)
         case TYPE_VC3_1080I_1241:
         case TYPE_VC3_1080I_1242:
         case TYPE_VC3_1080I_1243:
+        case TYPE_VC3_1080I_1244:
         case TYPE_VC3_720P_1250:
         case TYPE_VC3_720P_1251:
         case TYPE_VC3_720P_1252:
         case TYPE_VC3_1080P_1253:
+        case TYPE_VC3_720P_1258:
+        case TYPE_VC3_1080P_1259:
+        case TYPE_VC3_1080I_1260:
             write_vc3(file, type, duration);
             break;
         case TYPE_AVID_ALPHA_HD_1080I:

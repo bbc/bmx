@@ -43,8 +43,8 @@ using namespace std;
 using namespace bmx;
 
 
-#define HEADER_PREFIX       0x000000028001LL
-#define HEADER_PREFIX_S     0x000002800100LL
+#define HEADER_PREFIX_HVN0  0x000000028000LL
+#define HEADER_PREFIX_S     0x000002800000LL
 
 
 typedef struct
@@ -65,10 +65,14 @@ static const CompressionParameters COMPRESSION_PARAMETERS[] =
     {1241,  false,  1920,   1080,   10,  917504},
     {1242,  false,  1920,   1080,   8,   606208},
     {1243,  false,  1920,   1080,   8,   917504},
+    {1244,  false,  1920,   1080,   8,   606208},
     {1250,  true,   1280,   720,    10,  458752},
     {1251,  true,   1280,   720,    8,   458752},
     {1252,  true,   1280,   720,    8,   303104},
     {1253,  true,   1920,   1080,   8,   188416},
+    {1258,  true,   1280,   720,    8,   212992},
+    {1259,  true,   1920,   1080,   8,   417792},
+    {1260,  false,  1920,   1080,   8,   417792},
 };
 
 
@@ -123,7 +127,7 @@ uint32_t VC3EssenceParser::ParseFrameStart(const unsigned char *data, uint32_t d
     uint32_t i;
     for (i = 0; i < data_size; i++) {
         state = (state << 8) | data[i];
-        if ((state & 0xffffffffff00LL) == HEADER_PREFIX_S &&
+        if ((state & 0xffffffff0000LL) == HEADER_PREFIX_S &&
             (state & 0x000000000003LL) < 3)    // coding unit is progressive frame or field 1
         {
             return i - 5;
@@ -142,7 +146,8 @@ uint32_t VC3EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
 
     // check header prefix
     uint64_t prefix = get_uint64(data) >> 24;
-    BMX_CHECK((prefix & 0xffffffffffLL) == HEADER_PREFIX);
+    BMX_CHECK( (prefix & 0xffffffff00LL) == HEADER_PREFIX_HVN0 &&
+              ((prefix & 0x00000000ffLL) == 1 || (prefix & 0x00000000ffLL) == 2));
 
     uint32_t compression_id = get_uint32(data + 40);
 
@@ -167,7 +172,8 @@ void VC3EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
 
     // check header prefix
     uint64_t prefix = get_uint64(data) >> 24;
-    BMX_CHECK((prefix & 0xffffffffffLL) == HEADER_PREFIX);
+    BMX_CHECK( (prefix & 0xffffffff00LL) == HEADER_PREFIX_HVN0 &&
+              ((prefix & 0x00000000ffLL) == 1 || (prefix & 0x00000000ffLL) == 2));
 
     // compression id
     mCompressionId = get_uint32(data + 40);
@@ -179,20 +185,18 @@ void VC3EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
     }
     BMX_CHECK(param_index < BMX_ARRAY_SIZE(COMPRESSION_PARAMETERS));
 
-    // coding control A
-    uint32_t ffc_bits = get_bits(data, data_size, 5 * 8 + 6, 2);
-    BMX_CHECK(ffc_bits == 1 || ffc_bits == 2);
-    mIsProgressive = (ffc_bits == 1);
-    BMX_CHECK(mIsProgressive == COMPRESSION_PARAMETERS[param_index].is_progressive);
+    // Note: found that an Avid MC v3.0 file containing 1252 720p50 had FFC=01h and SST=1;
+    //       SST should be 0 for progressive scan. DNxHD_Compliance_Issue_To_Licensees-1.doc
+    //       states that some Avid bitstreams may have SST incorrectly set to 1080i
+    //       Ignore the bitstream information and use the scan type associated with the compression id
+    mIsProgressive = COMPRESSION_PARAMETERS[param_index].is_progressive;
 
     // image geometry
-    mFrameHeight = get_uint16(data + 24);
     // Note: DNxHD_Compliance_Issue_To_Licensees-1.doc states that some Avid bitstreams,
     //       e.g. produced by Avid Media Composer 3.0, may have ALPF incorrectly set to 1080 for
-    //       1080i sources. Hence the mFrameHeight != 1080 check below
-    if (!mIsProgressive && mFrameHeight != 1080)
-        mFrameHeight *= 2;
-    BMX_CHECK(mFrameHeight == COMPRESSION_PARAMETERS[param_index].frame_height);
+    //       1080i sources. Ignore the bitstream information and use the frame height associated
+    //       with the compression id
+    mFrameHeight = COMPRESSION_PARAMETERS[param_index].frame_height;
     mFrameWidth = get_uint16(data + 26);
     BMX_CHECK(mFrameWidth == COMPRESSION_PARAMETERS[param_index].frame_width);
     uint32_t sbd_bits = get_bits(data, data_size, 33 * 8, 3);

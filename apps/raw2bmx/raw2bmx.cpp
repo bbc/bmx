@@ -549,10 +549,14 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --vc3_1080i_1241 <name> Raw VC3/DNxHD 1920x1080i 220/185 Mbps 10bit input file\n");
     fprintf(stderr, "  --vc3_1080i_1242 <name> Raw VC3/DNxHD 1920x1080i 145/120 Mbps input file\n");
     fprintf(stderr, "  --vc3_1080i_1243 <name> Raw VC3/DNxHD 1920x1080i 220/185 Mbps input file\n");
+    fprintf(stderr, "  --vc3_1080i_1244 <name> Raw VC3/DNxHD 1920x1080i 145/120 Mbps input file\n");
     fprintf(stderr, "  --vc3_720p_1250 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps 10bit input file\n");
     fprintf(stderr, "  --vc3_720p_1251 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps input file\n");
     fprintf(stderr, "  --vc3_720p_1252 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps input file\n");
     fprintf(stderr, "  --vc3_1080p_1253 <name> Raw VC3/DNxHD 1920x1080p 45/36 Mbps input file\n");
+    fprintf(stderr, "  --vc3_720p_1258 <name>  Raw VC3/DNxHD 1280x720p 45 Mbps input file\n");
+    fprintf(stderr, "  --vc3_1080p_1259 <name> Raw VC3/DNxHD 1920x1080p 85 Mbps input file\n");
+    fprintf(stderr, "  --vc3_1080i_1260 <name> Raw VC3/DNxHD 1920x1080i 85 Mbps input file\n");
     fprintf(stderr, "  --pcm <name>            Raw PCM audio input file\n");
     fprintf(stderr, "  --wave <name>           Wave PCM audio input file\n");
     fprintf(stderr, "  --anc <name>            Raw ST 436 Ancillary data. Currently requires the --anc-const option\n");
@@ -2312,6 +2316,19 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--vc3_1080i_1244") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = VC3_1080I_1244;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--vc3_720p_1250") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -2360,6 +2377,45 @@ int main(int argc, const char** argv)
                 return 1;
             }
             input.essence_type = VC3_1080P_1253;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc3_720p_1258") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = VC3_720P_1258;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc3_1080p_1259") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = VC3_1080P_1259;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc3_1080i_1260") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = VC3_1080I_1260;
             input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
@@ -2685,6 +2741,9 @@ int main(int argc, const char** argv)
                         case 1243:
                             input->essence_type = VC3_1080I_1243;
                             break;
+                        case 1244:
+                            input->essence_type = VC3_1080I_1244;
+                            break;
                         case 1250:
                             input->essence_type = VC3_720P_1250;
                             break;
@@ -2696,6 +2755,15 @@ int main(int argc, const char** argv)
                             break;
                         case 1253:
                             input->essence_type = VC3_1080P_1253;
+                            break;
+                        case 1258:
+                            input->essence_type = VC3_720P_1258;
+                            break;
+                        case 1259:
+                            input->essence_type = VC3_1080P_1259;
+                            break;
+                        case 1260:
+                            input->essence_type = VC3_1080I_1260;
                             break;
                         default:
                             log_error("Unknown VC3 essence type\n");
@@ -3336,10 +3404,14 @@ int main(int argc, const char** argv)
                 case VC3_1080I_1241:
                 case VC3_1080I_1242:
                 case VC3_1080I_1243:
+                case VC3_1080I_1244:
                 case VC3_720P_1250:
                 case VC3_720P_1251:
                 case VC3_720P_1252:
                 case VC3_1080P_1253:
+                case VC3_720P_1258:
+                case VC3_1080P_1259:
+                case VC3_1080I_1260:
                     if (input->afd)
                         input->track->SetAFD(input->afd);
                     break;
@@ -3397,10 +3469,14 @@ int main(int argc, const char** argv)
                 case VC3_1080I_1241:
                 case VC3_1080I_1242:
                 case VC3_1080I_1243:
+                case VC3_1080I_1244:
                 case VC3_720P_1250:
                 case VC3_720P_1251:
                 case VC3_720P_1252:
                 case VC3_1080P_1253:
+                case VC3_720P_1258:
+                case VC3_1080P_1259:
+                case VC3_1080I_1260:
                 case UNC_SD:
                 case UNC_HD_1080I:
                 case UNC_HD_1080P:

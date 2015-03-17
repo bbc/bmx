@@ -595,10 +595,14 @@ uint32_t EssenceReader::GetConstantEditUnitSize()
         case VC3_1080I_1241:
         case VC3_1080I_1242:
         case VC3_1080I_1243:
+        case VC3_1080I_1244:
         case VC3_720P_1250:
         case VC3_720P_1251:
         case VC3_720P_1252:
         case VC3_1080P_1253:
+        case VC3_720P_1258:
+        case VC3_1080P_1259:
+        case VC3_1080I_1260:
             edit_unit_size = picture_helper->GetEditUnitSize();
             break;
         case WAVE_PCM:

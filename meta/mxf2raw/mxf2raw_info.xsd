@@ -734,10 +734,14 @@
       <xs:enumeration value="VC3_1080i_1241"/>
       <xs:enumeration value="VC3_1080i_1242"/>
       <xs:enumeration value="VC3_1080i_1243"/>
+      <xs:enumeration value="VC3_1080i_1244"/>
       <xs:enumeration value="VC3_720p_1250"/>
       <xs:enumeration value="VC3_720p_1251"/>
       <xs:enumeration value="VC3_720p_1252"/>
       <xs:enumeration value="VC3_1080p_1253"/>
+      <xs:enumeration value="VC3_720p_1258"/>
+      <xs:enumeration value="VC3_1080p_1259"/>
+      <xs:enumeration value="VC3_1080i_1260"/>
       <xs:enumeration value="MJPEG_2_1"/>
       <xs:enumeration value="MJPEG_3_1"/>
       <xs:enumeration value="MJPEG_10_1"/>
