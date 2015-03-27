@@ -1823,7 +1823,7 @@ static void dump_btrt_atom()
     printf("avg_bitrate: %u\n", avg_bitrate);
 }
 
-static void dump_stbl_vide()
+static uint32_t dump_stbl_vide(uint32_t size)
 {
     static const DumpFuncMap dump_func_map[] =
     {
@@ -1834,6 +1834,9 @@ static void dump_stbl_vide()
         {{'a','v','c','C'}, dump_avcc_atom},
         {{'b','t','r','t'}, dump_btrt_atom},
     };
+
+    MOV_CHECK(size <= CURRENT_ATOM.rem_size);
+    uint64_t end_atom_rem_size = CURRENT_ATOM.rem_size - size;
 
     uint16_t version;
     MOV_CHECK(read_uint16(&version));
@@ -1914,7 +1917,7 @@ static void dump_stbl_vide()
     printf("color_table_id: 0x%04x\n", color_table_id);
 
     // extensions
-    while (CURRENT_ATOM.rem_size > 8) {
+    while (CURRENT_ATOM.rem_size > end_atom_rem_size + 8) {
         push_atom();
 
         if (!read_atom_start())
@@ -1924,6 +1927,9 @@ static void dump_stbl_vide()
 
         pop_atom();
     }
+
+    MOV_CHECK(CURRENT_ATOM.rem_size >= end_atom_rem_size);
+    return (uint32_t)(CURRENT_ATOM.rem_size - end_atom_rem_size);
 }
 
 static uint32_t dump_mp4_es_descriptor(uint32_t length)
@@ -2122,13 +2128,16 @@ static void dump_esds_atom()
         dump_mp4_object_descriptor(CURRENT_ATOM.rem_size);
 }
 
-static void dump_stbl_soun()
+static uint32_t dump_stbl_soun(uint32_t size)
 {
     static const DumpFuncMap dump_func_map[] =
     {
         {{'e','s','d','s'}, dump_esds_atom},
         {{'b','t','r','t'}, dump_btrt_atom},
     };
+
+    MOV_CHECK(size <= CURRENT_ATOM.rem_size);
+    uint64_t end_atom_rem_size = CURRENT_ATOM.rem_size - size;
 
     uint16_t version;
     MOV_CHECK(read_uint16(&version));
@@ -2174,25 +2183,55 @@ static void dump_stbl_soun()
     dump_uint32_fp(sample_rate, 16);
     printf("\n");
 
-    // extensions
-    while (CURRENT_ATOM.rem_size > 8) {
-        push_atom();
+    if (version == 1) {
+        uint32_t samples_per_packet;
+        MOV_CHECK(read_uint32(&samples_per_packet));
+        indent(2);
+        printf("samples_per_packet: %u\n", samples_per_packet);
 
-        if (!read_atom_start())
-            break;
+        uint32_t bytes_per_packet;
+        MOV_CHECK(read_uint32(&bytes_per_packet));
+        indent(2);
+        printf("bytes_per_packet: %u\n", bytes_per_packet);
 
-        dump_child_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
+        uint32_t bytes_per_frame;
+        MOV_CHECK(read_uint32(&bytes_per_frame));
+        indent(2);
+        printf("bytes_per_frame: %u\n", bytes_per_frame);
 
-        pop_atom();
+        uint32_t bytes_per_sample;
+        MOV_CHECK(read_uint32(&bytes_per_sample));
+        indent(2);
+        printf("bytes_per_sample: %u\n", bytes_per_sample);
     }
+
+    // extensions
+    if (version == 0 || version == 1) { // size is known for these versions and can be sure what follows will be atoms
+        while (CURRENT_ATOM.rem_size > end_atom_rem_size + 8) {
+            push_atom();
+
+            if (!read_atom_start())
+                break;
+
+            dump_child_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
+
+            pop_atom();
+        }
+    }
+
+    MOV_CHECK(CURRENT_ATOM.rem_size >= end_atom_rem_size);
+    return (uint32_t)(CURRENT_ATOM.rem_size - end_atom_rem_size);
 }
 
-static void dump_stbl_tmcd()
+static uint32_t dump_stbl_tmcd(uint32_t size)
 {
     static const DumpFuncMap dump_func_map[] =
     {
         {{'n','a','m','e'}, dump_international_string_atom},
     };
+
+    MOV_CHECK(size <= CURRENT_ATOM.rem_size);
+    uint64_t end_atom_rem_size = CURRENT_ATOM.rem_size - size;
 
     uint32_t reserved1;
     MOV_CHECK(read_uint32(&reserved1));
@@ -2225,7 +2264,7 @@ static void dump_stbl_tmcd()
     printf("reserved: 0x%02x\n", reserved2);
 
     // extensions
-    while (CURRENT_ATOM.rem_size > 8) {
+    while (CURRENT_ATOM.rem_size > end_atom_rem_size + 8) {
         push_atom();
 
         if (!read_atom_start())
@@ -2235,6 +2274,9 @@ static void dump_stbl_tmcd()
 
         pop_atom();
     }
+
+    MOV_CHECK(CURRENT_ATOM.rem_size >= end_atom_rem_size);
+    return (uint32_t)(CURRENT_ATOM.rem_size - end_atom_rem_size);
 }
 
 static void dump_stsd_atom()
@@ -2283,23 +2325,19 @@ static void dump_stsd_atom()
         indent(2);
         printf("data_ref_index: 0x%04x\n", data_ref_index);
 
-        bool have_dumped = true;
+        uint32_t rem_size = size - 16;
         if (g_component_type == MHLR_COMPONENT_TYPE || (!g_component_type && !g_qt_brand)) {
             if (g_component_sub_type == VIDE_COMPONENT_SUB_TYPE)
-                dump_stbl_vide();
+                rem_size = dump_stbl_vide(rem_size);
             else if (g_component_sub_type == SOUN_COMPONENT_SUB_TYPE)
-                dump_stbl_soun();
+                rem_size = dump_stbl_soun(rem_size);
             else if (g_component_sub_type == TMCD_COMPONENT_SUB_TYPE)
-                dump_stbl_tmcd();
-            else
-                have_dumped = false;
-        } else {
-            have_dumped = false;
+                rem_size = dump_stbl_tmcd(rem_size);
         }
-        if (!have_dumped) {
+        if (rem_size > 0) {
             indent(2);
-            printf("remainder...: %u unparsed bytes\n", size - 16);
-            dump_bytes(size - 16, 4);
+            printf("remainder...: %u unparsed bytes\n", rem_size);
+            dump_bytes(rem_size, 4);
         }
     }
 }
