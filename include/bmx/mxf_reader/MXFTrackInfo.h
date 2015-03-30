@@ -93,8 +93,8 @@ public:
     uint32_t stored_height;
     uint32_t display_width;
     uint32_t display_height;
-    uint32_t display_x_offset;
-    uint32_t display_y_offset;
+    int32_t display_x_offset;
+    int32_t display_y_offset;
     mxfRational aspect_ratio;
     uint8_t frame_layout;
     uint8_t afd;

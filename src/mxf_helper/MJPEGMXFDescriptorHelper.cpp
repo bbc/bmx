@@ -56,7 +56,7 @@ typedef struct
     int32_t video_line_map[2];
     uint32_t stored_width;
     uint32_t stored_height;
-    uint32_t display_y_offset;
+    int32_t display_y_offset;
     uint8_t frame_layout;
 } SupportedEssence;
 

@@ -308,8 +308,8 @@
       <xs:element name="stored_height" type="uint32_type"/>
       <xs:element name="display_width" type="uint32_type"/>
       <xs:element name="display_height" type="uint32_type"/>
-      <xs:element name="display_x_offset" type="uint32_type" minOccurs="0"/>
-      <xs:element name="display_y_offset" type="uint32_type" minOccurs="0"/>
+      <xs:element name="display_x_offset" type="int32_type" minOccurs="0"/>
+      <xs:element name="display_y_offset" type="int32_type" minOccurs="0"/>
       <xs:element name="aspect_ratio" type="rational_type"/>
       <xs:element name="afd" type="uint8_type" minOccurs="0"/>
       <xs:element name="avci_header" type="xs:boolean" minOccurs="0"/>
