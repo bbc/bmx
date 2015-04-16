@@ -346,7 +346,7 @@ static const char* get_checksum_type_str(ChecksumType type)
 
 static void calc_file_checksums(const vector<const char *> &filenames, const vector<ChecksumType> &checksum_types)
 {
-    size_t i, j;
+    size_t i;
     for (i = 0; i < filenames.size(); i++) {
         vector<string> checksum_strs;
         if (filenames[i][0] == 0) {
@@ -370,10 +370,11 @@ static void calc_file_checksums(const vector<const char *> &filenames, const vec
         if (checksum_types.size() == 1) {
             // matches output format produced by md5sum and sha1sum
             if (filenames[i] == 0)
-                printf("%s  -\n", checksum_strs[j].c_str());
+                printf("%s  -\n", checksum_strs[0].c_str());
             else
-                printf("%s  %s\n", checksum_strs[j].c_str(), filenames[i]);
+                printf("%s  %s\n", checksum_strs[0].c_str(), filenames[i]);
         } else {
+            size_t j;
             for (j = 0; j < checksum_types.size(); j++) {
                 if (filenames[i] == 0)
                     printf("%s: %s  -\n", get_checksum_type_str(checksum_types[j]), checksum_strs[j].c_str());
