@@ -900,11 +900,11 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
 
     // create track readers for each material package picture, sound or data track
 
-    MaterialPackage *material_package = preface->findMaterialPackage();
-    BMX_CHECK(material_package);
-    mMaterialPackageUID = material_package->getPackageUID();
-    if (material_package->haveName())
-        mMaterialPackageName = material_package->getName();
+    mMaterialPackage = preface->findMaterialPackage();
+    BMX_CHECK(mMaterialPackage);
+    mMaterialPackageUID = mMaterialPackage->getPackageUID();
+    if (mMaterialPackage->haveName())
+        mMaterialPackageName = mMaterialPackage->getName();
 
     vector<SourcePackage*> file_source_packages = preface->findFileSourcePackages();
     if (file_source_packages.empty()) {
@@ -913,7 +913,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
     }
 
     Track *infile_mp_track = 0;
-    vector<GenericTrack*> mp_tracks = material_package->getTracks();
+    vector<GenericTrack*> mp_tracks = mMaterialPackage->getTracks();
     uint32_t skipped_track_count = 0;
     size_t i;
     for (i = 0; i < mp_tracks.size(); i++) {
@@ -1044,14 +1044,14 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
 
             // change external track's material package info to internal material package info
             MXFTrackInfo *track_info = track_reader->GetTrackInfo();
-            track_info->material_package_uid  = material_package->getPackageUID();
+            track_info->material_package_uid  = mMaterialPackage->getPackageUID();
             track_info->material_track_id     = mp_track_id;
             track_info->material_track_number = mp_track->getTrackNumber();
             track_info->edit_rate             = normalize_rate(mp_track->getEditRate());
             track_info->duration              = mp_source_clip->getDuration();
             track_info->lead_filler_offset    = lead_filler_offset;
         } else {
-            track_reader = CreateInternalTrackReader(partition, material_package, mp_track, mp_source_clip,
+            track_reader = CreateInternalTrackReader(partition, mp_track, mp_source_clip,
                                                      data_def, resolved_package);
             if (!track_reader) {
                 log_warn("Skipping material package track %u\n", mp_track_id);
@@ -1077,7 +1077,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
 
 
     // extract start timecodes and physical source package name
-    GetStartTimecodes(preface, material_package, infile_mp_track);
+    GetStartTimecodes(preface, infile_mp_track);
 
 
     // get the body and index SIDs linked to (singular) internal essence file source package
@@ -1207,7 +1207,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
     }
 }
 
-MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, MaterialPackage *material_package,
+MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
                                                          Track *mp_track, SourceClip *mp_source_clip,
                                                          MXFDataDefEnum data_def, const ResolvedPackage *resolved_package)
 {
@@ -1301,7 +1301,7 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition, M
         track_info.reset(data_track_info);
     }
 
-    track_info->material_package_uid  = material_package->getPackageUID();
+    track_info->material_package_uid  = mMaterialPackage->getPackageUID();
     if (mp_track->haveTrackID())
         track_info->material_track_id = mp_track->getTrackID();
     track_info->material_track_number = mp_track->getTrackNumber();
@@ -1417,7 +1417,7 @@ MXFTrackReader* MXFFileReader::GetExternalTrackReader(SourceClip *mp_source_clip
     return external_track_reader;
 }
 
-void MXFFileReader::GetStartTimecodes(Preface *preface, MaterialPackage *material_package, Track *infile_mp_track)
+void MXFFileReader::GetStartTimecodes(Preface *preface, Track *infile_mp_track)
 {
     Timecode start_timecode;
     GenericPackage *ref_package;
@@ -1427,7 +1427,7 @@ void MXFFileReader::GetStartTimecodes(Preface *preface, MaterialPackage *materia
     // try get start timecodes from the material package, file source package and physical source package
     // also get the physical source package name
 
-    if (GetStartTimecode(material_package, 0, 0, &start_timecode))
+    if (GetStartTimecode(mMaterialPackage, 0, 0, &start_timecode))
         mMaterialStartTimecode = new Timecode(start_timecode);
 
     if (infile_mp_track) {

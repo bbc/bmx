@@ -41,7 +41,7 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
-BMX_LIBVERSION="3:0:0"
+BMX_LIBVERSION="4:0:0"
 AC_SUBST(BMX_LIBVERSION)
 
 

@@ -57,6 +57,7 @@ MXFReader::MXFReader()
     mFileSourceStartTimecode = 0;
     mPhysicalSourceStartTimecode = 0;
     mMaterialPackageUID = g_Null_UMID;
+    mMaterialPackage = 0;
     mFileIndex = new MXFFileIndex();
     mOwnFileIndex = true;
 }

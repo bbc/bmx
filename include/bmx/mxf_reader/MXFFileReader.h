@@ -162,14 +162,13 @@ private:
 private:
     void ProcessMetadata(mxfpp::Partition *partition);
 
-    MXFTrackReader* CreateInternalTrackReader(mxfpp::Partition *partition, mxfpp::MaterialPackage *material_package,
+    MXFTrackReader* CreateInternalTrackReader(mxfpp::Partition *partition,
                                               mxfpp::Track *mp_track, mxfpp::SourceClip *mp_source_clip,
                                               MXFDataDefEnum data_def, const ResolvedPackage *resolved_package);
     MXFTrackReader* GetExternalTrackReader(mxfpp::SourceClip *mp_source_clip,
                                            mxfpp::SourcePackage *file_source_package);
 
-    void GetStartTimecodes(mxfpp::Preface *preface, mxfpp::MaterialPackage *material_package,
-                           mxfpp::Track *infile_mp_track);
+    void GetStartTimecodes(mxfpp::Preface *preface, mxfpp::Track *infile_mp_track);
     bool GetStartTimecode(mxfpp::GenericPackage *package, mxfpp::Track *ref_track, int64_t offset, Timecode *timecode);
     bool GetReferencedPackage(mxfpp::Preface *preface, mxfpp::Track *track, int64_t offset_in, PackageType package_type,
                               mxfpp::GenericPackage **ref_package_out, mxfpp::Track **ref_track_out,

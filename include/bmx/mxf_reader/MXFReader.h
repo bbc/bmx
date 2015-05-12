@@ -115,6 +115,8 @@ public:
     mxfUMID GetMaterialPackageUID() const            { return mMaterialPackageUID; }
     std::string GetPhysicalSourcePackageName() const { return mPhysicalSourcePackageName; }
 
+    mxfpp::MaterialPackage* GetMaterialPackage() const { return mMaterialPackage; }
+
 public:
     virtual size_t GetNumTrackReaders() const = 0;
     virtual MXFTrackReader* GetTrackReader(size_t track_index) const = 0;
@@ -145,6 +147,7 @@ protected:
     std::string mMaterialPackageName;
     mxfUMID mMaterialPackageUID;
     std::string mPhysicalSourcePackageName;
+    mxfpp::MaterialPackage *mMaterialPackage;
 
     MXFFileIndex *mFileIndex;
     bool mOwnFileIndex;

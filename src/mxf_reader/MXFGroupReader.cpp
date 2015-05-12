@@ -228,6 +228,7 @@ bool MXFGroupReader::Finalize()
                 mMaterialPackageName = mReaders[i]->mMaterialPackageName;
                 mMaterialPackageUID = mReaders[i]->mMaterialPackageUID;
                 mPhysicalSourcePackageName = mReaders[i]->mPhysicalSourcePackageName;
+                mMaterialPackage = mReaders[i]->GetMaterialPackage();
             } else {
     #define CHECK_TIMECODE(tc_var) \
                 if ((tc_var != 0) != (mReaders[i]->tc_var != 0) || \
@@ -241,8 +242,10 @@ bool MXFGroupReader::Finalize()
                 CHECK_TIMECODE(mPhysicalSourceStartTimecode)
                 if (mMaterialPackageName != mReaders[i]->mMaterialPackageName)
                     mMaterialPackageName.clear();
-                if (mMaterialPackageUID != mReaders[i]->mMaterialPackageUID)
+                if (mMaterialPackageUID != mReaders[i]->mMaterialPackageUID) {
                     mMaterialPackageUID = g_Null_UMID;
+                    mMaterialPackage = 0;
+                }
                 if (mPhysicalSourcePackageName != mReaders[i]->mPhysicalSourcePackageName)
                     mPhysicalSourcePackageName.clear();
             }

@@ -40,7 +40,7 @@
 
 #define BMX_VERSION_MAJOR    0
 #define BMX_VERSION_MINOR    1
-#define BMX_VERSION_MICRO    2
+#define BMX_VERSION_MICRO    3
 
 #define BMX_MXF_VERSION_RELEASE  2   /* 0 = Unknown version
                                         1 = Released version
