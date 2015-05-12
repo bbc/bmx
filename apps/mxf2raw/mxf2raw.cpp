@@ -2513,7 +2513,7 @@ int main(int argc, const char** argv)
             size_t i;
             for (i = 0; i < file_ids.size(); i++) {
                 info_writer->StartArrayElement("file", i);
-                write_file_info(info_writer, reader->GetFileReader(i), &file_factory);
+                write_file_info(info_writer, reader->GetFileReader(file_ids[i]), &file_factory);
                 info_writer->EndArrayElement();
             }
             info_writer->EndArrayItem();
