@@ -63,3 +63,9 @@ references, create a new reader when the same file is used in multiple resolves
 
 24. Precharge / rollout should not be shown in mxf2raw output when they are
     unknown, e.g. when input is incomplete
+
+25. if aspect ratio and/or video line map are unknown then header metadata should
+    be signalled as incomplete. E.g. VC-2
+
+26. check descriptor properties are consistent when copying across from inputs
+    as well as extracting from essence data. E.g. VC-2

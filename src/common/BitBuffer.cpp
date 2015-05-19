@@ -59,6 +59,22 @@ GetBitBuffer::GetBitBuffer(const unsigned char *data, uint32_t size)
     mBitPos = 0;
 }
 
+uint32_t GetBitBuffer::GetRemSize() const
+{
+    if (mSize > mPos)
+        return mSize - mPos;
+    else
+        return 0;
+}
+
+uint64_t GetBitBuffer::GetRemBitSize() const
+{
+    if (mBitSize > mBitPos)
+        return mBitSize - mBitPos;
+    else
+        return 0;
+}
+
 void GetBitBuffer::GetBytes(uint32_t request_size, const unsigned char **data, uint32_t *size)
 {
     BMX_ASSERT(!(mBitPos & 0x07));
@@ -174,9 +190,15 @@ bool GetBitBuffer::GetBits(uint8_t num_bits, int64_t *value)
     return true;
 }
 
-void GetBitBuffer::SetBitPos(uint64_t pos)
+void GetBitBuffer::SetPos(uint32_t pos)
 {
-    mBitPos = pos;
+    mPos = pos;
+    mBitPos = (uint64_t)pos << 3;
+}
+
+void GetBitBuffer::SetBitPos(uint64_t bit_pos)
+{
+    mBitPos = bit_pos;
     mPos = (uint32_t)(mBitPos >> 3);
 }
 

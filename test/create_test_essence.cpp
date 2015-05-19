@@ -53,61 +53,62 @@
 
 typedef enum
 {
-    TYPE_UNKNOWN = 0,
-    TYPE_16BIT_PCM,
-    TYPE_IEC_DV25,
-    TYPE_DVBASED_DV25,
-    TYPE_DV50,
-    TYPE_DV100_1080I,
-    TYPE_DV100_720P,
-    TYPE_AVCI100_1080I,
-    TYPE_AVCI100_1080P,
-    TYPE_AVCI50_1080I,
-    TYPE_AVCI50_1080P,
-    TYPE_D10_50,
-    TYPE_D10_40,
-    TYPE_D10_30,
-    TYPE_MPEG2LG_422P_HL_1080I,
-    TYPE_MPEG2LG_MP_H14_1080I,
-    TYPE_MPEG2LG_MP_HL_1080I,
-    TYPE_UNC_SD,
-    TYPE_UNC_HD_1080I,
-    TYPE_UNC_HD_1080P,
-    TYPE_UNC_HD_720P,
-    TYPE_MPEG2LG_422P_HL_1080P,
-    TYPE_MPEG2LG_MP_H14_1080P,
-    TYPE_MPEG2LG_MP_HL_1080P,
-    TYPE_MPEG2LG_MP_HL_1080I_1440,
-    TYPE_MPEG2LG_MP_HL_1080P_1440,
-    TYPE_MPEG2LG_422P_HL_720P,
-    TYPE_MPEG2LG_MP_HL_720P,
-    TYPE_DV100_1080P,
-    TYPE_AVCI100_720P,
-    TYPE_AVCI50_720P,
-    TYPE_VC3_1080P_1235,
-    TYPE_VC3_1080P_1237,
-    TYPE_VC3_1080P_1238,
-    TYPE_VC3_1080I_1241,
-    TYPE_VC3_1080I_1242,
-    TYPE_VC3_1080I_1243,
-    TYPE_VC3_720P_1250,
-    TYPE_VC3_720P_1251,
-    TYPE_VC3_720P_1252,
-    TYPE_VC3_1080P_1253,
-    TYPE_AVID_ALPHA_HD_1080I,
-    TYPE_24BIT_PCM,
-    TYPE_ANC_DATA,
-    TYPE_VBI_DATA,
-    TYPE_UNC_UHD_3840,
-    TYPE_AVCI200_1080I,
-    TYPE_AVCI200_1080P,
-    TYPE_AVCI200_720P,
-    TYPE_VC3_1080I_1244,
-    TYPE_VC3_720P_1258,
-    TYPE_VC3_1080P_1259,
-    TYPE_VC3_1080I_1260,
-    TYPE_AS10_MPEG2LG_422P_HL_1080I,
-    TYPE_END,
+    TYPE_UNKNOWN                        = 0,
+    TYPE_16BIT_PCM                      = 1,
+    TYPE_IEC_DV25                       = 2,
+    TYPE_DVBASED_DV25                   = 3,
+    TYPE_DV50                           = 4,
+    TYPE_DV100_1080I                    = 5,
+    TYPE_DV100_720P                     = 6,
+    TYPE_AVCI100_1080I                  = 7,
+    TYPE_AVCI100_1080P                  = 8,
+    TYPE_AVCI50_1080I                   = 9,
+    TYPE_AVCI50_1080P                   = 10,
+    TYPE_D10_50                         = 11,
+    TYPE_D10_40                         = 12,
+    TYPE_D10_30                         = 13,
+    TYPE_MPEG2LG_422P_HL_1080I          = 14,
+    TYPE_MPEG2LG_MP_H14_1080I           = 15,
+    TYPE_MPEG2LG_MP_HL_1080I            = 16,
+    TYPE_UNC_SD                         = 17,
+    TYPE_UNC_HD_1080I                   = 18,
+    TYPE_UNC_HD_1080P                   = 19,
+    TYPE_UNC_HD_720P                    = 20,
+    TYPE_MPEG2LG_422P_HL_1080P          = 21,
+    TYPE_MPEG2LG_MP_H14_1080P           = 22,
+    TYPE_MPEG2LG_MP_HL_1080P            = 23,
+    TYPE_MPEG2LG_MP_HL_1080I_1440       = 24,
+    TYPE_MPEG2LG_MP_HL_1080P_1440       = 25,
+    TYPE_MPEG2LG_422P_HL_720P           = 26,
+    TYPE_MPEG2LG_MP_HL_720P             = 27,
+    TYPE_DV100_1080P                    = 28,
+    TYPE_AVCI100_720P                   = 29,
+    TYPE_AVCI50_720P                    = 30,
+    TYPE_VC3_1080P_1235                 = 31,
+    TYPE_VC3_1080P_1237                 = 32,
+    TYPE_VC3_1080P_1238                 = 33,
+    TYPE_VC3_1080I_1241                 = 34,
+    TYPE_VC3_1080I_1242                 = 35,
+    TYPE_VC3_1080I_1243                 = 36,
+    TYPE_VC3_720P_1250                  = 37,
+    TYPE_VC3_720P_1251                  = 38,
+    TYPE_VC3_720P_1252                  = 39,
+    TYPE_VC3_1080P_1253                 = 40,
+    TYPE_AVID_ALPHA_HD_1080I            = 41,
+    TYPE_24BIT_PCM                      = 42,
+    TYPE_ANC_DATA                       = 43,
+    TYPE_VBI_DATA                       = 44,
+    TYPE_UNC_UHD_3840                   = 45,
+    TYPE_AVCI200_1080I                  = 46,
+    TYPE_AVCI200_1080P                  = 47,
+    TYPE_AVCI200_720P                   = 48,
+    TYPE_VC3_1080I_1244                 = 49,
+    TYPE_VC3_720P_1258                  = 50,
+    TYPE_VC3_1080P_1259                 = 51,
+    TYPE_VC3_1080I_1260                 = 52,
+    TYPE_AS10_MPEG2LG_422P_HL_1080I     = 53,
+    TYPE_VC2                            = 54,
+    TYPE_END                            = 55,
 } EssenceType;
 
 typedef struct
@@ -161,6 +162,12 @@ static const unsigned char AVCI_SLICE_DATA[] =
     0x8e, 0x09, 0x15, 0xcf, 0xe0, 0xe0, 0x00, 0x5c,
     0x17, 0x83, 0x80, 0x04, 0xd5, 0x72, 0xb1, 0xec
 };
+
+static const unsigned char VC2_SEQUENCE_HEADER[] =
+    {0x70, 0x85, 0x58, 0x84, 0x3f};
+
+static const unsigned char VC2_PICTURE[] =
+    {0x00, 0x00, 0x00, 0x00, 0x2d, 0x50, 0x18, 0x08, 0x1b, 0x7f, 0x10};
 
 // don't care data
 static unsigned char DATA[4096];
@@ -677,6 +684,64 @@ static void write_unc(FILE *file, int type, unsigned int duration)
     write_data(file, duration * frame_size);
 }
 
+static void set_vc2_parse_info(unsigned char *data, uint8_t parse_code, uint32_t next_parse_offset,
+                               uint32_t prev_parse_offset)
+{
+    data[0] = 0x42;
+    data[1] = 0x42;
+    data[2] = 0x43;
+    data[3] = 0x44;
+    data[4] = parse_code;
+    data[5] = (uint8_t)(next_parse_offset >> 24);
+    data[6] = (uint8_t)(next_parse_offset >> 16);
+    data[7] = (uint8_t)(next_parse_offset >> 8);
+    data[8] = (uint8_t)(next_parse_offset);
+    data[9] = (uint8_t)(prev_parse_offset >> 24);
+    data[10] = (uint8_t)(prev_parse_offset >> 16);
+    data[11] = (uint8_t)(prev_parse_offset >> 8);
+    data[12] = (uint8_t)(prev_parse_offset);
+}
+
+static void write_vc2(FILE *file, unsigned int duration)
+{
+    uint32_t next, prev;
+    uint32_t size = 0;
+    uint32_t seq_end_offset;
+
+    prev = 0;
+    next = 13 + sizeof(VC2_SEQUENCE_HEADER);
+    set_vc2_parse_info(&DATA[size], 0x00, next, prev);
+    memcpy(&DATA[size + 13], VC2_SEQUENCE_HEADER, sizeof(VC2_SEQUENCE_HEADER));
+    size += next;
+    seq_end_offset = size;
+
+    prev = next;
+    next = 13 + 4;
+    set_vc2_parse_info(&DATA[size], 0x20, next, prev); // auxilliary
+    memset(&DATA[size + 13], 0, 4);
+    size += next;
+
+    prev = next;
+    next = 13 + sizeof(VC2_PICTURE);
+    set_vc2_parse_info(&DATA[size], 0xe8, 0, prev); // next set to 0 to force search for next parse info
+    memcpy(&DATA[size + 13], VC2_PICTURE, sizeof(VC2_PICTURE));
+    size += next;
+
+    prev = next;
+    next = 13 + 4;
+    set_vc2_parse_info(&DATA[size], 0x30, next, prev); // padding
+    memset(&DATA[size + 13], 0, 4);
+    size += next;
+
+    unsigned int i;
+    for (i = 0; i < duration; i++) {
+        if (i == 0)
+            write_buffer(file, DATA, size);
+        else
+            write_buffer(file, &DATA[seq_end_offset], size - seq_end_offset);
+    }
+}
+
 static void write_vc3(FILE *file, int type, unsigned int duration)
 {
     uint32_t frame_size;
@@ -823,6 +888,12 @@ static void print_usage(const char *cmd)
     fprintf(stderr, " 46: AVC Intra 200 1080i\n");
     fprintf(stderr, " 47: AVC Intra 200 1080p\n");
     fprintf(stderr, " 48: AVC Intra 200 720p\n");
+    fprintf(stderr, " 49: VC3/DNxHD 1244 1080i\n");
+    fprintf(stderr, " 50: VC3/DNxHD 1258 720p\n");
+    fprintf(stderr, " 51: VC3/DNxHD 1259 1080p\n");
+    fprintf(stderr, " 52: VC3/DNxHD 1260 1080i\n");
+    fprintf(stderr, " 53: MPEG-2 Long GOP 422P@HL 1080i (AS-10)\n");
+    fprintf(stderr, " 54: VC2\n");
 }
 
 int main(int argc, const char **argv)
@@ -987,6 +1058,9 @@ int main(int argc, const char **argv)
         case TYPE_UNC_HD_720P:
         case TYPE_UNC_UHD_3840:
             write_unc(file, type, duration);
+            break;
+        case TYPE_VC2:
+            write_vc2(file, duration);
             break;
         case TYPE_VC3_1080P_1235:
         case TYPE_VC3_1080P_1237:

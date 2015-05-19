@@ -19,6 +19,7 @@ libmxfhelper_la_SOURCES = \
 	UncRGBAMXFDescriptorHelper.cpp \
 	UniqueIdHelper.cpp \
 	VBIDataMXFDescriptorHelper.cpp \
+	VC2MXFDescriptorHelper.cpp \
 	VC3MXFDescriptorHelper.cpp \
 	WaveMXFDescriptorHelper.cpp
 

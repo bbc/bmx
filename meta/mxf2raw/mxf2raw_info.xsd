@@ -913,6 +913,7 @@
       <xs:enumeration value="MPEG_2_Long_GOP_MP_HL_720p"/>
       <xs:enumeration value="MPEG_2_Long_GOP_MP_H14_1080i"/>
       <xs:enumeration value="MPEG_2_Long_GOP_MP_H14_1080p"/>
+      <xs:enumeration value="VC2"/>
       <xs:enumeration value="VC3_1080p_1235"/>
       <xs:enumeration value="VC3_1080p_1237"/>
       <xs:enumeration value="VC3_1080p_1238"/>

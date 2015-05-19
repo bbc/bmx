@@ -125,6 +125,7 @@ bool parse_transfer_ch(const char *str, UL *label);
 bool parse_coding_equations(const char *str, UL *label);
 bool parse_color_primaries(const char *str, UL *label);
 bool parse_color_siting(const char *str, MXFColorSiting *value);
+bool parse_vc2_mode(const char *mode_str, int *vc2_mode_flags);
 
 std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def);
 

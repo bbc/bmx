@@ -44,6 +44,7 @@
 #include <bmx/essence_parser/MJPEGEssenceParser.h>
 #include <bmx/essence_parser/MPEG2EssenceParser.h>
 #include <bmx/essence_parser/VC3EssenceParser.h>
+#include <bmx/essence_parser/VC2EssenceParser.h>
 #include <bmx/apps/AppTextInfoWriter.h>
 #include <bmx/apps/AppUtils.h>
 #include <bmx/Utils.h>
@@ -66,7 +67,107 @@ typedef enum
     MJPEG_INPUT,
     M2V_INPUT,
     VC3_INPUT,
+    VC2_INPUT,
 } InputType;
+
+static const EnumInfo VC2_LEVEL_ENUM[] =
+{
+    {0,     "Low Delay Profile"},
+    {1,     "Simple Profile"},
+    {2,     "Main Profile"},
+    {3,     "High Quality Profile"},
+    {0, 0}
+};
+
+static const EnumInfo VC2_BASE_FORMAT_ENUM[] =
+{
+    {0,     "Custom Format"},
+    {1,     "QSIF525"},
+    {2,     "QCIF"},
+    {3,     "SIF525"},
+    {4,     "CIF"},
+    {5,     "4SIF525"},
+    {6,     "4CIF"},
+    {7,     "SD 480I-60"},
+    {8,     "SD 576I-50"},
+    {9,     "HD 720P-60"},
+    {10,    "HD 720P-50"},
+    {11,    "HD 1080I-60"},
+    {12,    "HD 1080I-50"},
+    {13,    "HD 1080P-60"},
+    {14,    "HD 1080P-50"},
+    {15,    "DC 2K-24"},
+    {16,    "DC 4K-24"},
+    {17,    "UHDTV 4K-60"},
+    {18,    "UHDTV 4K-50"},
+    {19,    "UHDTV 8K-60"},
+    {20,    "UHDTV 8K-50"},
+    {21,    "HD 1080P-24"},
+    {22,    "SD Pro486"},
+    {0, 0}
+};
+
+static const EnumInfo VC2_COLOR_DIFF_ENUM[] =
+{
+    {0,     "4:4:4"},
+    {1,     "4:2:2"},
+    {2,     "4:2:0"},
+    {0, 0}
+};
+
+static const EnumInfo VC2_SOURCE_SAMPLING_ENUM[] =
+{
+    {0,     "Progressive"},
+    {1,     "Interlaced"},
+    {0, 0}
+};
+
+static const EnumInfo VC2_PICTURE_CODING_MODE_ENUM[] =
+{
+    {0,     "Frames"},
+    {1,     "Fields"},
+    {0, 0}
+};
+
+static const EnumInfo VC2_COLOR_PRIMARIES_ENUM[] =
+{
+    {0,     "HDTV"},
+    {1,     "SDTV 525"},
+    {2,     "SDTV 625"},
+    {3,     "D-Cinema"},
+    {0, 0}
+};
+
+static const EnumInfo VC2_COLOR_MATRIX_ENUM[] =
+{
+    {0,     "HDTV"},
+    {1,     "SDTV"},
+    {2,     "Reversible"},
+    {3,     "RGB"},
+    {0, 0}
+};
+
+static const EnumInfo VC2_TRANSFER_FUNCTION_ENUM[] =
+{
+    {0,     "TV Gamma"},
+    {1,     "Extended Gamut"},
+    {2,     "Linear"},
+    {3,     "D-Cinema Transfer Function"},
+    {0, 0}
+};
+
+static const EnumInfo VC2_WAVELET_FILTER_ENUM[] =
+{
+    {0,     "Deslauriers-Dubuc (9,7)"},
+    {1,     "LeGall (5,3)"},
+    {2,     "Deslauriers-Dubuc (13,7)"},
+    {3,     "Haar with no shift"},
+    {4,     "Haar with single shift per level"},
+    {5,     "Fidelity filter"},
+    {6,     "Daubechies (9,7) integer approximation"},
+    {0, 0}
+};
+
 
 class Buffer
 {
@@ -279,6 +380,80 @@ static void print_m2v_frame_info(AppInfoWriter *info_writer, EssenceParser *pars
     info_writer->EndArrayElement();
 }
 
+static void print_vc2_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
+                                 Buffer *buffer, uint32_t frame_size, int64_t frame_num)
+{
+    (void)parser_data;
+    VC2EssenceParser *vc2_parser = dynamic_cast<VC2EssenceParser*>(parser);
+    vc2_parser->ParseFrameInfo(buffer->data, frame_size);
+
+    info_writer->StartArrayElement("frame", (size_t)frame_num);
+
+    info_writer->WriteIntegerItem("size", frame_size);
+    if (vc2_parser->FrameHasSequenceHeader()) {
+        const VC2EssenceParser::SequenceHeader *sequence_header = vc2_parser->GetSequenceHeader();
+        info_writer->StartSection("sequence_header");
+
+        info_writer->WriteIntegerItem("major_version", sequence_header->major_version);
+        info_writer->WriteIntegerItem("minor_version", sequence_header->minor_version);
+        info_writer->WriteIntegerItem("profile", sequence_header->profile);
+        info_writer->WriteEnumItem("level", VC2_LEVEL_ENUM, sequence_header->level);
+        info_writer->WriteEnumItem("base_video_format", VC2_BASE_FORMAT_ENUM, sequence_header->base_video_format);
+        info_writer->WriteEnumItem("picture_coding_mode", VC2_PICTURE_CODING_MODE_ENUM, sequence_header->picture_coding_mode);
+
+        const VC2EssenceParser::VideoParameters *source_params = &sequence_header->source_params;
+        info_writer->StartSection("source_parameters");
+        info_writer->WriteIntegerItem("frame_width", source_params->frame_width);
+        info_writer->WriteIntegerItem("frame_height", source_params->frame_height);
+        info_writer->WriteEnumItem("color_diff_format", VC2_COLOR_DIFF_ENUM, source_params->color_diff_format_index);
+        info_writer->WriteEnumItem("source_sampling", VC2_SOURCE_SAMPLING_ENUM, source_params->source_sampling);
+        info_writer->WriteBoolItem("top_field_first", source_params->top_field_first);
+        info_writer->WriteRationalItem("frame_rate", vc2_parser->GetFrameRate());
+        Rational pixel_aspect_ratio;
+        pixel_aspect_ratio.numerator   = (int32_t)source_params->pixel_aspect_ratio_numer;
+        pixel_aspect_ratio.denominator = (int32_t)source_params->pixel_aspect_ratio_denom;
+        info_writer->WriteRationalItem("pixel_aspect_ratio", pixel_aspect_ratio);
+        info_writer->WriteIntegerItem("clean_width", source_params->clean_width);
+        info_writer->WriteIntegerItem("clean_height", source_params->clean_height);
+        info_writer->WriteIntegerItem("left_offset", source_params->left_offset);
+        info_writer->WriteIntegerItem("top_offset", source_params->top_offset);
+        info_writer->WriteIntegerItem("luma_offset", source_params->luma_offset);
+        info_writer->WriteIntegerItem("luma_excursion", source_params->luma_excursion);
+        info_writer->WriteIntegerItem("color_diff_offset", source_params->color_diff_offset);
+        info_writer->WriteIntegerItem("color_diff_excursion", source_params->color_diff_excursion);
+        info_writer->WriteEnumItem("color_primaries", VC2_COLOR_PRIMARIES_ENUM, source_params->color_primaries);
+        info_writer->WriteEnumItem("color_matrix", VC2_COLOR_MATRIX_ENUM, source_params->color_matrix);
+        info_writer->WriteEnumItem("transfer_function", VC2_TRANSFER_FUNCTION_ENUM, source_params->transfer_function);
+        info_writer->EndSection();
+
+        const VC2EssenceParser::CodingParameters *coding_params = &sequence_header->coding_params;
+        info_writer->StartSection("coding_parameters");
+        info_writer->WriteIntegerItem("luma_width", coding_params->luma_width);
+        info_writer->WriteIntegerItem("luma_height", coding_params->luma_height);
+        info_writer->WriteIntegerItem("color_diff_width", coding_params->color_diff_width);
+        info_writer->WriteIntegerItem("color_diff_height", coding_params->color_diff_height);
+        info_writer->WriteIntegerItem("luma_depth", coding_params->luma_depth);
+        info_writer->WriteIntegerItem("color_diff_depth", coding_params->color_diff_depth);
+        info_writer->EndSection();
+
+        info_writer->EndSection();
+    }
+    int i;
+    for (i = 0; i < vc2_parser->GetPictureCount(); i++) {
+        const VC2EssenceParser::PictureHeader *picture_header;
+        if (i == 0)
+            picture_header = vc2_parser->GetPictureHeader1();
+        else
+            picture_header = vc2_parser->GetPictureHeader2();
+        info_writer->StartArrayElement("picture", i);
+        info_writer->WriteIntegerItem("picture_number", picture_header->picture_number);
+        info_writer->WriteEnumItem("wavelet", VC2_WAVELET_FILTER_ENUM, picture_header->wavelet_index);
+        info_writer->EndArrayElement();
+    }
+
+    info_writer->EndArrayElement();
+}
+
 static void print_vc3_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
                                  Buffer *buffer, uint32_t frame_size, int64_t frame_num)
 {
@@ -309,6 +484,8 @@ static bool parse_type_str(const char *type_str, InputType *input_type)
         *input_type = MJPEG_INPUT;
     else if (strcmp(type_str, "m2v") == 0)
         *input_type = M2V_INPUT;
+    else if (strcmp(type_str, "vc2") == 0)
+        *input_type = VC2_INPUT;
     else if (strcmp(type_str, "vc3") == 0)
         *input_type = VC3_INPUT;
     else
@@ -321,7 +498,7 @@ static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
     fprintf(stderr, "Usage: %s <<options>> <type> <filename>\n", cmd);
-    fprintf(stderr, "    <type> is 'avc', 'dv', 'mjpeg', 'm2v' or 'vc3'\n");
+    fprintf(stderr, "    <type> is 'avc', 'dv', 'mjpeg', 'm2v', 'vc2' or 'vc3'\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, " -h | --help           Show usage and exit\n");
     fprintf(stderr, " -v | --version        Print version info to stderr\n");
@@ -467,6 +644,12 @@ int main(int argc, const char **argv)
                 print_frame_info = print_m2v_frame_info;
                 if (text_info_writer)
                     text_info_writer->PushItemValueIndent(strlen("display_horiz_size "));
+                break;
+            case VC2_INPUT:
+                parser = new VC2EssenceParser();
+                print_frame_info = print_vc2_frame_info;
+                if (text_info_writer)
+                    text_info_writer->PushItemValueIndent(strlen("color_diff_format_index "));
                 break;
             case VC3_INPUT:
                 parser = new VC3EssenceParser();

@@ -56,6 +56,7 @@
 #include <bmx/essence_parser/AVCIRawEssenceReader.h>
 #include <bmx/essence_parser/MJPEGEssenceParser.h>
 #include <bmx/essence_parser/VC3EssenceParser.h>
+#include <bmx/essence_parser/VC2EssenceParser.h>
 #include <bmx/essence_parser/RawEssenceReader.h>
 #include <bmx/essence_parser/FileEssenceSource.h>
 #include <bmx/essence_parser/KLVEssenceSource.h>
@@ -160,6 +161,7 @@ struct RawInput
     BMX_OPT_PROP_DECL(uint32_t, black_ref_level);
     BMX_OPT_PROP_DECL(uint32_t, white_ref_level);
     BMX_OPT_PROP_DECL(uint32_t, color_range);
+    int vc2_mode_flags;
 
     // sound
     Rational sampling_rate;
@@ -297,6 +299,7 @@ static void init_input(RawInput *input)
     BMX_OPT_PROP_DEFAULT(input->black_ref_level, 0);
     BMX_OPT_PROP_DEFAULT(input->white_ref_level, 0);
     BMX_OPT_PROP_DEFAULT(input->color_range, 0);
+    parse_vc2_mode("1", &input->vc2_mode_flags);
     input->sampling_rate = DEFAULT_SAMPLING_RATE;
     input->component_depth = 8;
     input->bits_per_sample = 16;
@@ -558,6 +561,11 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --avci-guess <i/p>      Guess interlaced ('i') or progressive ('p') AVC-Intra when using the --avci option with 1080p25/i50 or 1080p30/i60\n");
     fprintf(stderr, "                          The default guess uses the H.264 frame_mbs_only_flag field\n");
     fprintf(stderr, "  --fixed-size            Set to indicate that the d10 frames have a fixed size and therefore do not need to be parsed after the first frame\n");
+    fprintf(stderr, "  --vc2-mode <mode>       Set the mode that determines how the VC-2 data is wrapped\n");
+    fprintf(stderr, "                          <mode> is one of the following integer values:\n");
+    fprintf(stderr, "                            0: Passthrough input, but add a sequence header if not present, remove duplicate/redundant sequence headers\n");
+    fprintf(stderr, "                               and fix any incorrect parse info offsets and picture numbers\n");
+    fprintf(stderr, "                            1: (default) Same as 0, but remove auxiliary and padding data units and complete the sequence in each frame\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02:\n");
     fprintf(stderr, "    --trk-out-start <offset>   Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
@@ -626,6 +634,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --mjpeg41m <name>       Raw Avid MJPEG 4:1m video input file\n");
     fprintf(stderr, "  --mjpeg101m <name>      Raw Avid MJPEG 10:1m video input file\n");
     fprintf(stderr, "  --mjpeg151s <name>      Raw Avid MJPEG 15:1s video input file\n");
+    fprintf(stderr, "  --vc2 <name>            Raw VC2 input file\n");
     fprintf(stderr, "  --vc3 <name>            Raw VC3/DNxHD input file\n");
     fprintf(stderr, "  --vc3_1080p_1235 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps 10bit input file\n");
     fprintf(stderr, "  --vc3_1080p_1237 <name> Raw VC3/DNxHD 1920x1080p 145/120/115 Mbps input file\n");
@@ -2086,6 +2095,23 @@ int main(int argc, const char** argv)
             input.d10_fixed_frame_size = true;
             continue; // skip input reset at the end
         }
+        else if (strcmp(argv[cmdln_index], "--vc2-mode") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_vc2_mode(argv[cmdln_index + 1], &input.vc2_mode_flags))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
         else if (strcmp(argv[cmdln_index], "--trk-out-start") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -2872,6 +2898,19 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--vc2") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = VC2;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--vc3") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -3359,6 +3398,19 @@ int main(int argc, const char** argv)
 
                     if (!BMX_OPT_PROP_IS_SET(input->aspect_ratio))
                         BMX_OPT_PROP_SET(input->aspect_ratio, dv_parser->GetAspectRatio());
+                }
+            }
+            else if (input->essence_type == VC2)
+            {
+                VC2EssenceParser *vc2_parser = new VC2EssenceParser();
+                input->raw_reader->SetEssenceParser(vc2_parser);
+
+                input->raw_reader->ReadSamples(1);
+                if (input->raw_reader->GetNumSamples() > 0) {
+                    vc2_parser->ParseFrameInfo(input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
+
+                    if (!frame_rate_set)
+                        frame_rate = vc2_parser->GetFrameRate();
                 }
             }
             else if (input->essence_type_group == VC3_ESSENCE_GROUP)
@@ -4302,6 +4354,12 @@ int main(int argc, const char** argv)
                         clip_track->SetAFD(input->afd);
                     clip_track->SetAspectRatio(input->aspect_ratio);
                     break;
+                case VC2:
+                    clip_track->SetAspectRatio(input->aspect_ratio);
+                    if (BMX_OPT_PROP_IS_SET(input->afd))
+                        clip_track->SetAFD(input->afd);
+                    clip_track->SetVC2ModeFlags(input->vc2_mode_flags);
+                    break;
                 case VC3_1080P_1235:
                 case VC3_1080P_1237:
                 case VC3_1080P_1238:
@@ -4472,6 +4530,12 @@ int main(int argc, const char** argv)
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
                     input->raw_reader->SetEssenceParser(new MPEG2EssenceParser());
+                    input->raw_reader->SetCheckMaxSampleSize(50000000);
+                    break;
+                case VC2:
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    input->raw_reader->SetEssenceParser(new VC2EssenceParser());
                     input->raw_reader->SetCheckMaxSampleSize(50000000);
                     break;
                 case MJPEG_2_1:

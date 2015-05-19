@@ -179,6 +179,7 @@
     <ClInclude Include="..\..\..\include\bmx\essence_parser\MPEG2EssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\RawEssenceReader.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\SoundConversion.h" />
+    <ClInclude Include="..\..\..\include\bmx\essence_parser\VC2EssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\VC3EssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\frame\DataBufferArray.h" />
     <ClInclude Include="..\..\..\include\bmx\frame\Frame.h" />
@@ -202,6 +203,7 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\UncRGBAMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\UniqueIdHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\VBIDataMXFDescriptorHelper.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\VC2MXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\VC3MXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\WaveMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AANCDataTrack.h" />
@@ -219,6 +221,7 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1ATrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AUncTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AVBIDataTrack.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AVC2Track.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AVC3Track.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AXMLTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\EssenceChunkHelper.h" />
@@ -268,6 +271,7 @@
     <ClInclude Include="..\..\..\include\bmx\writer_helper\AVCIWriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\D10WriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\MPEG2LGWriterHelper.h" />
+    <ClInclude Include="..\..\..\include\bmx\writer_helper\VC2WriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\XMLWriterHelper.h" />
   </ItemGroup>
   <ItemGroup>
@@ -360,6 +364,7 @@
     <ClCompile Include="..\..\..\src\essence_parser\MPEG2EssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\RawEssenceReader.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\SoundConversion.cpp" />
+    <ClCompile Include="..\..\..\src\essence_parser\VC2EssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\VC3EssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\frame\DataBufferArray.cpp" />
     <ClCompile Include="..\..\..\src\frame\Frame.cpp" />
@@ -382,6 +387,7 @@
     <ClCompile Include="..\..\..\src\mxf_helper\UncRGBAMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\UniqueIdHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\VBIDataMXFDescriptorHelper.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_helper\VC2MXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\VC3MXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\WaveMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AANCDataTrack.cpp" />
@@ -399,6 +405,7 @@
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1ATrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AUncTrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AVBIDataTrack.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_op1a\OP1AVC2Track.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AVC3Track.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AXMLTrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_reader\EssenceChunkHelper.cpp" />
@@ -446,6 +453,7 @@
     <ClCompile Include="..\..\..\src\writer_helper\AVCIWriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\writer_helper\D10WriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\writer_helper\MPEG2LGWriterHelper.cpp" />
+    <ClCompile Include="..\..\..\src\writer_helper\VC2WriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\writer_helper\XMLWriterHelper.cpp" />
   </ItemGroup>
   <ItemGroup>

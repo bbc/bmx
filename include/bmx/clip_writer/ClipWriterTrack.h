@@ -95,6 +95,7 @@ public:
     void SetUseAVCSubDescriptor(bool enable);                       // default false
     void SetAFD(uint8_t afd);                                       // default not set
     void SetInputHeight(uint32_t height);                           // uncompressed; default 0
+    void SetVC2ModeFlags(int flags);                                // default VC2_PICTURE_ONLY | VC2_COMPLETE_SEQUENCES
 
     // Sound properties
     void SetAES3Mapping(bool enable);               // default BWF mapping

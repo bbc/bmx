@@ -93,7 +93,6 @@ public:
 
     bool NextBits(uint8_t num_bits, uint64_t *next_value);
 
-    void ResetPos(uint32_t pos);
     void SkipRBSPBytes(uint32_t count);
 
 private:

@@ -52,11 +52,11 @@ public:
 
     uint32_t GetSize() const             { return mSize; }
     uint32_t GetPos() const              { return mPos; }
-    uint32_t GetRemSize() const          { return mSize - mPos; }
+    uint32_t GetRemSize() const;
 
     uint64_t GetBitSize() const          { return mBitSize; }
     uint64_t GetBitPos() const           { return mBitPos; }
-    uint64_t GetRemBitSize() const       { return mBitSize - mBitPos; }
+    uint64_t GetRemBitSize() const;
 
 
     void GetBytes(uint32_t request_size, const unsigned char **data, uint32_t *size);
@@ -73,7 +73,8 @@ public:
     bool GetBits(uint8_t num_bits, int32_t *value);
     bool GetBits(uint8_t num_bits, int64_t *value);
 
-    void SetBitPos(uint64_t pos);
+    void SetPos(uint32_t pos);
+    void SetBitPos(uint64_t bit_pos);
 
 protected:
     void GetBits(const unsigned char *data, uint32_t *pos_io, uint64_t *bit_pos_io, uint8_t num_bits, uint64_t *value);

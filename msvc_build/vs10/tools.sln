@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "h264dump", "tools\h264dump\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "movdump", "tools\movdump\movdump.vcxproj", "{CE40AAAA-5112-4893-82CA-6CF5166C9E85}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vc2dump", "tools\vc2dump\vc2dump.vcxproj", "{97060AE3-9DC7-40A2-A75A-457FEC523E1A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{CE40AAAA-5112-4893-82CA-6CF5166C9E85}.Debug|Win32.Build.0 = Debug|Win32
 		{CE40AAAA-5112-4893-82CA-6CF5166C9E85}.Release|Win32.ActiveCfg = Release|Win32
 		{CE40AAAA-5112-4893-82CA-6CF5166C9E85}.Release|Win32.Build.0 = Release|Win32
+		{97060AE3-9DC7-40A2-A75A-457FEC523E1A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{97060AE3-9DC7-40A2-A75A-457FEC523E1A}.Debug|Win32.Build.0 = Debug|Win32
+		{97060AE3-9DC7-40A2-A75A-457FEC523E1A}.Release|Win32.ActiveCfg = Release|Win32
+		{97060AE3-9DC7-40A2-A75A-457FEC523E1A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

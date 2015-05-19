@@ -406,6 +406,11 @@ static void usage(const char *cmd)
     fprintf(stderr, "\n");
     fprintf(stderr, "  -a <n:d>                Override or set the image aspect ratio\n");
     fprintf(stderr, "  --bsar                  Set image aspect ratio in video bitstream. Currently supports D-10 essence types only\n");
+    fprintf(stderr, "  --vc2-mode <mode>       Set the mode that determines how the VC-2 data is wrapped\n");
+    fprintf(stderr, "                          <mode> is one of the following integer values:\n");
+    fprintf(stderr, "                            0: Passthrough input, but add a sequence header if not present, remove duplicate/redundant sequence headers\n");
+    fprintf(stderr, "                               and fix any incorrect parse info offsets and picture numbers\n");
+    fprintf(stderr, "                            1: (default) Same as 0, but remove auxiliary and padding data units and complete the sequence in each frame\n");
     fprintf(stderr, "  --locked <bool>         Override or set flag indicating whether the number of audio samples is locked to the video. Either true or false\n");
     fprintf(stderr, "  --audio-ref <level>     Override or set audio reference level, number of dBm for 0VU\n");
     fprintf(stderr, "  --dial-norm <value>     Override or set gain to be applied to normalize perceived loudness of the clip\n");
@@ -766,12 +771,14 @@ int main(int argc, const char** argv)
     bool use_avc_subdesc = false;
     UL audio_layout_mode_label = g_Null_UL;
     BMX_OPT_PROP_DECL_DEF(uint32_t, head_fill, 0);
+    int vc2_mode_flags;
     int value, num, den;
     unsigned int uvalue;
     int64_t i64value;
     int cmdln_index;
 
     memset(&next_embed_xml, 0, sizeof(next_embed_xml));
+    parse_vc2_mode("1", &vc2_mode_flags);
 
     if (argc == 1) {
         usage(argv[0]);
@@ -1154,6 +1161,22 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--bsar") == 0)
         {
             set_bs_aspect_ratio = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--vc2-mode") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_vc2_mode(argv[cmdln_index + 1], &vc2_mode_flags))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--locked") == 0)
         {
@@ -3393,6 +3416,15 @@ int main(int argc, const char** argv)
                         clip_track->SetAspectRatio(user_aspect_ratio);
                     else
                         clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
+                    break;
+                case VC2:
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    if (BMX_OPT_PROP_IS_SET(user_aspect_ratio))
+                        clip_track->SetAspectRatio(user_aspect_ratio);
+                    else
+                        clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
+                    clip_track->SetVC2ModeFlags(vc2_mode_flags);
                     break;
                 case VC3_1080P_1235:
                 case VC3_1080P_1237:

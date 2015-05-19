@@ -46,6 +46,7 @@
 #include <bmx/mxf_op1a/OP1AAVCTrack.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_op1a/OP1ADataTrack.h>
+#include <bmx/mxf_op1a/OP1AVC2Track.h>
 #include <bmx/mxf_op1a/OP1AXMLTrack.h>
 #include <bmx/avid_mxf/AvidPictureTrack.h>
 #include <bmx/avid_mxf/AvidDVTrack.h>
@@ -626,6 +627,29 @@ void ClipWriterTrack::SetInputHeight(uint32_t height)
                 alpha_track->SetInputHeight(height);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
+void ClipWriterTrack::SetVC2ModeFlags(int flags)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1AVC2Track *vc2_track = dynamic_cast<OP1AVC2Track*>(mOP1ATrack);
+            if (vc2_track)
+                vc2_track->SetModeFlags(flags);
+            break;
+        }
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_D10_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
         case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:

@@ -103,6 +103,8 @@ typedef enum
     MPEG2LG_MP_HL_720P,
     MPEG2LG_MP_H14_1080I,
     MPEG2LG_MP_H14_1080P,
+    // VC-2
+    VC2,
     // VC-3
     VC3_1080P_1235,
     VC3_1080P_1237,

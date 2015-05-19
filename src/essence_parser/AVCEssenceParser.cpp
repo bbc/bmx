@@ -221,12 +221,6 @@ bool AVCGetBitBuffer::NextBits(uint8_t num_bits, uint64_t *next_value)
     return result;
 }
 
-void AVCGetBitBuffer::ResetPos(uint32_t pos)
-{
-    mPos = pos;
-    mBitPos = (uint64_t)pos << 3;
-}
-
 void AVCGetBitBuffer::SkipRBSPBytes(uint32_t count)
 {
     uint32_t rbsp_count = 0;
@@ -1306,7 +1300,7 @@ bool AVCEssenceParser::ParseSEI(const unsigned char *data, uint32_t data_size)
 
             // parse payloads here
 
-            buffer.ResetPos(start_pos);
+            buffer.SetPos(start_pos);
             buffer.SkipRBSPBytes((uint32_t)(payload_size * 8));
         } while (buffer.MoreRBSPData());
 

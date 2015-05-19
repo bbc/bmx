@@ -50,6 +50,7 @@
 
 #include <bmx/apps/AppUtils.h>
 #include <bmx/clip_writer/ClipWriter.h>
+#include <bmx/writer_helper/VC2WriterHelper.h>
 #include "ps_avci_header_data.h"
 #include <bmx/Utils.h>
 #include <bmx/Version.h>
@@ -944,6 +945,22 @@ bool bmx::parse_color_siting(const char *str, MXFColorSiting *value)
     }
 
     return false;
+}
+
+bool bmx::parse_vc2_mode(const char *mode_str, int *vc2_mode_flags)
+{
+    int mode;
+    if (sscanf(mode_str, "%d", &mode) != 1)
+        return false;
+
+    if (mode == 0)
+        *vc2_mode_flags = VC2_PASSTHROUGH;
+    else if (mode == 1)
+        *vc2_mode_flags = VC2_PICTURE_ONLY | VC2_COMPLETE_SEQUENCES;
+    else
+        return false;
+
+    return true;
 }
 
 
