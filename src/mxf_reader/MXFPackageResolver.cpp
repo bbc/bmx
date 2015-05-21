@@ -105,6 +105,13 @@ void DefaultMXFPackageResolver::ExtractPackages(MXFFileReader *file_reader)
 
     size_t i;
     for (i = 0; i < packages.size(); i++) {
+        if (mResolvedPackageTypeMap.count(packages[i]->getPackageUID()) &&
+            mResolvedPackageTypeMap[packages[i]->getPackageUID()] != *packages[i]->getKey())
+        {
+            BMX_EXCEPTION(("Different package types are using the same identifier '%s'",
+                           get_umid_string(packages[i]->getPackageUID()).c_str()));
+        }
+
         ResolvedPackage resolved_package;
         resolved_package.package = packages[i];
         resolved_package.file_reader = file_reader;
@@ -130,6 +137,7 @@ void DefaultMXFPackageResolver::ExtractPackages(MXFFileReader *file_reader)
         }
 
         mResolvedPackages.push_back(resolved_package);
+        mResolvedPackageTypeMap[packages[i]->getPackageUID()] = *packages[i]->getKey();
     }
 }
 

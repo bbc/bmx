@@ -34,6 +34,7 @@
 
 
 #include <vector>
+#include <map>
 
 #include <libMXF++/MXF.h>
 
@@ -103,6 +104,7 @@ protected:
     bool mOwnFilefactory;
     MXFFileReader *mFileReader;
     std::vector<ResolvedPackage> mResolvedPackages;
+    std::map<mxfUMID, mxfKey> mResolvedPackageTypeMap;
     std::vector<MXFFileReader*> mExternalReaders;
 };
 
