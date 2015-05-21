@@ -1551,6 +1551,11 @@ bool MXFFileReader::GetReferencedPackage(Preface *preface, Track *track, int64_t
         }
     }
     if (!type_match) {
+        if (ref_track == track && offset_in == ref_offset) {
+            // avoid infinite recursion on malformed files
+            log_warn("Track %d references itself\n", track->getTrackID());
+            return false;
+        }
         return GetReferencedPackage(preface, ref_track, ref_offset, package_type,
                                     ref_package_out, ref_track_out, ref_offset_out);
     }
