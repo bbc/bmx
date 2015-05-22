@@ -731,7 +731,7 @@ static void dump_uint64(uint64_t value, bool hex)
 
 static void dump_int64(int64_t value)
 {
-    printf("%20"PRIi64, value);
+    printf("%20"PRId64, value);
 }
 
 static void dump_uint32(uint32_t value, bool hex)
