@@ -3874,8 +3874,14 @@ int main(int argc, const char **argv)
 
     // check whether file has 64-bit size
 
+#if defined(_WIN32)
+    struct _stati64 stat_buf;
+    if (_stati64(filename, &stat_buf) != 0)
+#else
     struct stat stat_buf;
-    if (stat(filename, &stat_buf) != 0) {
+    if (stat(filename, &stat_buf) != 0)
+#endif
+    {
         fprintf(stderr, "Failed to stat quicktime file '%s': %s\n", filename, strerror(errno));
         return 1;
     }

@@ -517,13 +517,15 @@ bool bmx::check_file_exists(string filename)
 
 bool bmx::check_is_dir(string name)
 {
+#if defined(_WIN32)
+    struct _stati64 buf;
+    if (_stati64(name.c_str(), &buf) != 0)
+        return false;
+    return ((buf.st_mode & _S_IFMT) == _S_IFDIR);
+#else
     struct stat buf;
     if (stat(name.c_str(), &buf) != 0)
         return false;
-
-#if defined(_MSC_VER)
-    return ((buf.st_mode & _S_IFMT) == _S_IFDIR);
-#else
     return S_ISDIR(buf.st_mode);
 #endif
 }

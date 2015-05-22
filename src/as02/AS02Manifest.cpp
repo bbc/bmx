@@ -251,8 +251,13 @@ void AS02ManifestFile::CompleteInfo(AS02Bundle *bundle, MICType default_mic_type
 
         // get file sizes
         if (mRole != FOLDER_FILE_ROLE) {
+#if defined(_WIN32)
+            struct _stati64 stat_buf;
+            if (_stati64(complete_path.c_str(), &stat_buf) == 0)
+#else
             struct stat stat_buf;
             if (stat(complete_path.c_str(), &stat_buf) == 0)
+#endif
                 mSize = stat_buf.st_size;
             else
                 log_warn("Failed to stat '%s' for size: %s\n", complete_path.c_str(), bmx_strerror(errno).c_str());
