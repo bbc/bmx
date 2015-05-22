@@ -2125,7 +2125,7 @@ static void dump_esds_atom()
     }
 
     while (CURRENT_ATOM.rem_size > 2)
-        dump_mp4_object_descriptor(CURRENT_ATOM.rem_size);
+        dump_mp4_object_descriptor((uint32_t)CURRENT_ATOM.rem_size);
 }
 
 static uint32_t dump_stbl_soun(uint32_t size)
