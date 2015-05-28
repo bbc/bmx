@@ -296,6 +296,11 @@ void WaveWriter::CompleteWrite()
 
 
     int64_t riff_size = mOutput->Size() - 8;
+    int64_t data_size = riff_size - mDataChunkFilePosition;
+
+    // add pad byte if data size is odd
+    if ((data_size & 1))
+        mOutput->PutChar(0);
 
     if (mUseRF64 || riff_size > UINT32_MAX) {
         if (!mUseRF64) {
@@ -316,7 +321,7 @@ void WaveWriter::CompleteWrite()
             mOutput->WriteTag("ds64");
             mOutput->WriteSize(28);
             mOutput->WriteUInt64((uint64_t)riff_size);
-            mOutput->WriteUInt64((uint64_t)(riff_size - mDataChunkFilePosition));
+            mOutput->WriteUInt64((uint64_t)data_size);
             mOutput->WriteUInt64((uint64_t)mSampleCount);
             mOutput->WriteUInt32(0);
         }
@@ -329,7 +334,7 @@ void WaveWriter::CompleteWrite()
     } else {
         if (riff_size != mSetSize) {
             mOutput->Seek(mDataChunkFilePosition + 4, SEEK_SET);
-            mOutput->WriteSize((uint32_t)(riff_size - mDataChunkFilePosition));
+            mOutput->WriteSize((uint32_t)data_size);
         }
 
         if (mSampleCount != mSetSampleCount) {
