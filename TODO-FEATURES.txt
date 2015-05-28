@@ -178,4 +178,4 @@ example
 
 76. Use variadic macros for logging
 
-78. Add ANC/VBI support to AS-02, RDD9 and Avid OP-Atom
+78. Add ANC/VBI support to AS-02 and Avid OP-Atom
