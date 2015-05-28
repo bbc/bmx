@@ -78,6 +78,8 @@ WaveBEXT::WaveBEXT()
     mMaxTruePeakLevel = 0;
     mMaxMomentaryLoudness = 0;
     mMaxShortTermLoudness = 0;
+    mWasUpdated = false;
+    mWrittenSize = 0;
 }
 
 WaveBEXT::~WaveBEXT()
@@ -91,6 +93,8 @@ void WaveBEXT::SetDescription(string description)
     strncpy(mDescription, ascii.c_str(), STRING_SIZE(mDescription));
     if (ascii.size() < STRING_SIZE(mDescription))
         memset(mDescription + ascii.size(), 0, STRING_SIZE(mDescription) - ascii.size());
+
+    mWasUpdated = true;
 }
 
 void WaveBEXT::SetOriginator(string originator)
@@ -100,6 +104,8 @@ void WaveBEXT::SetOriginator(string originator)
     strncpy(mOriginator, ascii.c_str(), STRING_SIZE(mOriginator));
     if (ascii.size() < STRING_SIZE(mOriginator))
         memset(mOriginator + ascii.size(), 0, STRING_SIZE(mOriginator) - ascii.size());
+
+    mWasUpdated = true;
 }
 
 void WaveBEXT::SetOriginatorReference(string reference)
@@ -109,6 +115,8 @@ void WaveBEXT::SetOriginatorReference(string reference)
     strncpy(mOriginatorReference, ascii.c_str(), STRING_SIZE(mOriginatorReference));
     if (ascii.size() < STRING_SIZE(mOriginatorReference))
         memset(mOriginatorReference + ascii.size(), 0, STRING_SIZE(mOriginatorReference) - ascii.size());
+
+    mWasUpdated = true;
 }
 
 void WaveBEXT::SetOriginatorTimestamp(Timestamp timestamp)
@@ -125,11 +133,15 @@ void WaveBEXT::SetOriginatorTimestamp(Timestamp timestamp)
     }
 
     mOriginatorTimestamp = timestamp;
+
+    mWasUpdated = true;
 }
 
 void WaveBEXT::SetTimeReference(uint64_t reference)
 {
     mTimeReference = reference;
+
+    mWasUpdated = true;
 }
 
 void WaveBEXT::SetUMID(UMID umid)
@@ -139,6 +151,8 @@ void WaveBEXT::SetUMID(UMID umid)
 
     if (mVersion < 1)
         mVersion = 1;
+
+    mWasUpdated = true;
 }
 
 void WaveBEXT::SetLoudnessValue(int16_t value)
@@ -147,6 +161,8 @@ void WaveBEXT::SetLoudnessValue(int16_t value)
 
     if (mVersion < 2)
         mVersion = 2;
+
+    mWasUpdated = true;
 }
 
 void WaveBEXT::SetLoudnessRange(int16_t range)
@@ -155,6 +171,8 @@ void WaveBEXT::SetLoudnessRange(int16_t range)
 
     if (mVersion < 2)
         mVersion = 2;
+
+    mWasUpdated = true;
 }
 
 void WaveBEXT::SetMaxTruePeakLevel(int16_t level)
@@ -163,6 +181,8 @@ void WaveBEXT::SetMaxTruePeakLevel(int16_t level)
 
     if (mVersion < 2)
         mVersion = 2;
+
+    mWasUpdated = true;
 }
 
 void WaveBEXT::SetMaxMomentaryLoudness(int16_t loudness)
@@ -171,6 +191,8 @@ void WaveBEXT::SetMaxMomentaryLoudness(int16_t loudness)
 
     if (mVersion < 2)
         mVersion = 2;
+
+    mWasUpdated = true;
 }
 
 void WaveBEXT::SetMaxShortTermLoudness(int16_t loudness)
@@ -179,11 +201,15 @@ void WaveBEXT::SetMaxShortTermLoudness(int16_t loudness)
 
     if (mVersion < 2)
         mVersion = 2;
+
+    mWasUpdated = true;
 }
 
 void WaveBEXT::AppendCodingHistory(string line)
 {
     mCodingHistory.append(ConvertToASCII(line)).append(1, 0x0d).append(1, 0x0a);
+
+    mWasUpdated = true;
 }
 
 void WaveBEXT::AppendCodingHistory(vector<pair<string, string> > line)
@@ -198,21 +224,31 @@ void WaveBEXT::AppendCodingHistory(vector<pair<string, string> > line)
     }
 
     AppendCodingHistory(line_str);
+
+    mWasUpdated = true;
+}
+
+uint32_t WaveBEXT::GetSize()
+{
+    size_t coding_history_size = mCodingHistory.size();
+    if (coding_history_size > 0) {
+        if (602 + (uint64_t)coding_history_size > UINT32_MAX - 2)
+            coding_history_size = UINT32_MAX - 2 - 602;
+        coding_history_size += 1; // null terminator
+    }
+
+    return (uint32_t)(602 + coding_history_size);
 }
 
 void WaveBEXT::Write(WaveIO *output)
 {
-    size_t coding_history_size = mCodingHistory.size();
-    if (coding_history_size > 0) {
-        if (602 + (uint64_t)coding_history_size > UINT32_MAX - 2) {
-            log_warn("Truncating coding history to keep within the 32-bit chunk size limit\n");
-            coding_history_size = UINT32_MAX - 2 - 602;
-        }
-        coding_history_size += 1; // null terminator
-    }
+    uint32_t size = GetSize();
+    uint32_t coding_history_size = size - 602;
+
+    BMX_CHECK_M(mWrittenSize <= 0 || mWrittenSize == size, ("BEXT chunk size has changed"));
 
     output->WriteTag("bext");
-    output->WriteSize((uint32_t)(602 + coding_history_size));
+    output->WriteSize(size);
 
     output->Write((const unsigned char*)mDescription, STRING_SIZE(mDescription));
     output->Write((const unsigned char*)mOriginator, STRING_SIZE(mOriginator));
@@ -246,7 +282,10 @@ void WaveBEXT::Write(WaveIO *output)
     output->WriteZeros(reserved_count);
 
     if (!mCodingHistory.empty())
-        output->Write((const unsigned char*)mCodingHistory.c_str(), (uint32_t)(coding_history_size));
+        output->Write((const unsigned char*)mCodingHistory.c_str(), coding_history_size);
+
+    mWasUpdated = false;
+    mWrittenSize = size;
 }
 
 void WaveBEXT::Read(WaveIO *input, uint32_t size)

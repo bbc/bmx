@@ -56,6 +56,7 @@ WaveWriter::WaveWriter(WaveIO *output, bool take_ownership)
     mOutput = output;
     mOwnOutput = take_ownership;
     mStartTimecodeSet = false;
+    mSetSampleCount = -1;
     mBEXT = new WaveBEXT();
     mSamplingRate = SAMPLING_RATE_48K;
     mSamplingRateSet = false;
@@ -70,6 +71,9 @@ WaveWriter::WaveWriter(WaveIO *output, bool take_ownership)
     mBEXTFilePosition = 0;
     mDataChunkFilePosition = 0;
     mFactChunkFilePosition = 0;
+    mUseRF64 = false;
+    mSetSize = -1;
+    mSetDataSize = -1;
 }
 
 WaveWriter::~WaveWriter()
@@ -90,6 +94,11 @@ void WaveWriter::SetStartTimecode(Timecode start_timecode)
 {
     mStartTimecode = start_timecode;
     mStartTimecodeSet = true;
+}
+
+void WaveWriter::SetSampleCount(int64_t count)
+{
+    mSetSampleCount = count;
 }
 
 WaveTrackWriter* WaveWriter::CreateTrack()
@@ -114,15 +123,38 @@ void WaveWriter::PrepareWrite()
                                                  ROUND_AUTO));
     }
 
+    if (mSetSampleCount >= 0) {
+        mSetDataSize = mSetSampleCount * mBlockAlign;
+        mSetSize = 4 + (8 + 28) + (8 + mBEXT->GetSize()) + (8 + 16) + (8 + 4) + (8 + mSetDataSize);
+        if (mSetSize > UINT32_MAX)
+            mUseRF64 = true;
+    }
 
-    mOutput->WriteTag("RIFF");
-    mOutput->WriteSize(0);
+    if (mUseRF64) {
+        mOutput->WriteTag("RF64");
+        mOutput->WriteSize(-1);
+    } else {
+        mOutput->WriteTag("RIFF");
+        if (mSetSize >= 0)
+            mOutput->WriteSize(mSetSize);
+        else
+            mOutput->WriteSize(0);
+    }
     mOutput->WriteTag("WAVE");
 
     mJunkChunkFilePosition = mOutput->Tell();
-    mOutput->WriteTag("JUNK");
-    mOutput->WriteSize(28);
-    mOutput->WriteZeros(28);
+    if (mUseRF64) {
+        mOutput->WriteTag("ds64");
+        mOutput->WriteSize(28);
+        mOutput->WriteUInt64((uint64_t)mSetSize);
+        mOutput->WriteUInt64((uint64_t)mSetDataSize);
+        mOutput->WriteUInt64((uint64_t)mSetSampleCount);
+        mOutput->WriteUInt32(0);
+    } else {
+        mOutput->WriteTag("JUNK");
+        mOutput->WriteSize(28);
+        mOutput->WriteZeros(28);
+    }
 
     mBEXTFilePosition = mOutput->Tell();
     mBEXT->Write(mOutput);
@@ -139,11 +171,19 @@ void WaveWriter::PrepareWrite()
     mFactChunkFilePosition = mOutput->Tell();
     mOutput->WriteTag("fact");
     mOutput->WriteSize(4);
-    mOutput->WriteUInt32(0); // sample count
+    if (mSetSampleCount >= 0)
+        mOutput->WriteUInt32(mSetSampleCount);
+    else
+        mOutput->WriteUInt32(0);
 
     mDataChunkFilePosition = mOutput->Tell();
     mOutput->WriteTag("data");
-    mOutput->WriteSize(0);
+    if (mUseRF64)
+        mOutput->WriteSize(-1);
+    else if (mSetDataSize >= 0)
+        mOutput->WriteSize(mSetDataSize);
+    else
+        mOutput->WriteSize(0);
 }
 
 void WaveWriter::WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples)
@@ -257,41 +297,55 @@ void WaveWriter::CompleteWrite()
 
     int64_t riff_size = mOutput->Size() - 8;
 
-    if (riff_size <= UINT32_MAX) {
-        mOutput->Seek(mDataChunkFilePosition + 4, SEEK_SET);
-        mOutput->WriteSize((uint32_t)(riff_size - mDataChunkFilePosition));
+    if (mUseRF64 || riff_size > UINT32_MAX) {
+        if (!mUseRF64) {
+            mOutput->Seek(mDataChunkFilePosition + 4, SEEK_SET);
+            mOutput->WriteSize((uint32_t)(-1));
 
-        mOutput->Seek(mFactChunkFilePosition + 8, SEEK_SET);
-        mOutput->WriteUInt32((uint32_t)mSampleCount);
+            mOutput->Seek(mFactChunkFilePosition + 8, SEEK_SET);
+            mOutput->WriteUInt32((uint32_t)(-1));
+        }
 
-        mOutput->Seek(mBEXTFilePosition, SEEK_SET);
-        mBEXT->Write(mOutput);
+        if (mBEXT->WasUpdated()) {
+            mOutput->Seek(mBEXTFilePosition, SEEK_SET);
+            mBEXT->Write(mOutput);
+        }
 
-        mOutput->Seek(4, SEEK_SET);
-        mOutput->WriteSize((uint32_t)riff_size);
+        if (!mUseRF64 || riff_size != mSetSize || mSampleCount != mSetSampleCount) {
+            mOutput->Seek(mJunkChunkFilePosition, SEEK_SET);
+            mOutput->WriteTag("ds64");
+            mOutput->WriteSize(28);
+            mOutput->WriteUInt64((uint64_t)riff_size);
+            mOutput->WriteUInt64((uint64_t)(riff_size - mDataChunkFilePosition));
+            mOutput->WriteUInt64((uint64_t)mSampleCount);
+            mOutput->WriteUInt32(0);
+        }
+
+        if (!mUseRF64) {
+            mOutput->Seek(0, SEEK_SET);
+            mOutput->WriteTag("RF64");
+            mOutput->WriteSize((uint32_t)(-1));
+        }
     } else {
-        // change file to 64-bit RF64
+        if (riff_size != mSetSize) {
+            mOutput->Seek(mDataChunkFilePosition + 4, SEEK_SET);
+            mOutput->WriteSize((uint32_t)(riff_size - mDataChunkFilePosition));
+        }
 
-        mOutput->Seek(mDataChunkFilePosition + 4, SEEK_SET);
-        mOutput->WriteSize((uint32_t)(-1));
+        if (mSampleCount != mSetSampleCount) {
+            mOutput->Seek(mFactChunkFilePosition + 8, SEEK_SET);
+            mOutput->WriteUInt32((uint32_t)mSampleCount);
+        }
 
-        mOutput->Seek(mFactChunkFilePosition + 8, SEEK_SET);
-        mOutput->WriteUInt32((uint32_t)(-1));
+        if (mBEXT->WasUpdated()) {
+            mOutput->Seek(mBEXTFilePosition, SEEK_SET);
+            mBEXT->Write(mOutput);
+        }
 
-        mOutput->Seek(mBEXTFilePosition, SEEK_SET);
-        mBEXT->Write(mOutput);
-
-        mOutput->Seek(mJunkChunkFilePosition, SEEK_SET);
-        mOutput->WriteTag("ds64");
-        mOutput->WriteSize(28);
-        mOutput->WriteUInt64((uint64_t)riff_size);
-        mOutput->WriteUInt64((uint64_t)(riff_size - mDataChunkFilePosition));
-        mOutput->WriteUInt64((uint64_t)mSampleCount);
-        mOutput->WriteUInt32(0);
-
-        mOutput->Seek(0, SEEK_SET);
-        mOutput->WriteTag("RF64");
-        mOutput->WriteSize((uint32_t)(-1));
+        if (riff_size != mSetSize) {
+            mOutput->Seek(4, SEEK_SET);
+            mOutput->WriteSize((uint32_t)riff_size);
+        }
     }
 }
 

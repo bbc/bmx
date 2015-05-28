@@ -57,6 +57,7 @@ public:
     ~WaveWriter();
 
     void SetStartTimecode(Timecode start_timecode);     // sets time_reference in bext
+    void SetSampleCount(int64_t count);                 // metadata and sizes are calculated and set
     WaveBEXT* GetBroadcastAudioExtension() { return mBEXT; }
 
 public:
@@ -83,6 +84,7 @@ private:
     bool mOwnOutput;
     Timecode mStartTimecode;
     bool mStartTimecodeSet;
+    int64_t mSetSampleCount;
     WaveBEXT *mBEXT;
 
     Rational mSamplingRate;
@@ -111,6 +113,10 @@ private:
     int64_t mBEXTFilePosition;
     int64_t mDataChunkFilePosition;
     int64_t mFactChunkFilePosition;
+
+    bool mUseRF64;
+    int64_t mSetSize;
+    int64_t mSetDataSize;
 };
 
 
