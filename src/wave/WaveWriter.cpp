@@ -171,7 +171,9 @@ void WaveWriter::PrepareWrite()
     mFactChunkFilePosition = mOutput->Tell();
     mOutput->WriteTag("fact");
     mOutput->WriteSize(4);
-    if (mSetSampleCount >= 0)
+    if (mUseRF64)
+        mOutput->WriteUInt32((uint32_t)(-1));
+    else if (mSetSampleCount >= 0)
         mOutput->WriteUInt32((uint32_t)mSetSampleCount);
     else
         mOutput->WriteUInt32(0);
