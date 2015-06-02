@@ -136,7 +136,7 @@ void WaveWriter::PrepareWrite()
     } else {
         mOutput->WriteTag("RIFF");
         if (mSetSize >= 0)
-            mOutput->WriteSize(mSetSize);
+            mOutput->WriteSize((uint32_t)mSetSize);
         else
             mOutput->WriteSize(0);
     }
@@ -172,7 +172,7 @@ void WaveWriter::PrepareWrite()
     mOutput->WriteTag("fact");
     mOutput->WriteSize(4);
     if (mSetSampleCount >= 0)
-        mOutput->WriteUInt32(mSetSampleCount);
+        mOutput->WriteUInt32((uint32_t)mSetSampleCount);
     else
         mOutput->WriteUInt32(0);
 
@@ -181,7 +181,7 @@ void WaveWriter::PrepareWrite()
     if (mUseRF64)
         mOutput->WriteSize(-1);
     else if (mSetDataSize >= 0)
-        mOutput->WriteSize(mSetDataSize);
+        mOutput->WriteSize((uint32_t)mSetDataSize);
     else
         mOutput->WriteSize(0);
 }
