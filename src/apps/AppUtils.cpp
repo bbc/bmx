@@ -706,6 +706,32 @@ bool bmx::parse_rdd6_lines(const char *lines_str, uint16_t *lines)
     return true;
 }
 
+bool bmx::parse_track_indexes(const char *tracks_str, set<uint32_t> *track_indexes)
+{
+    unsigned int first_index, last_index;
+    const char *tracks_str_ptr = tracks_str;
+    while (tracks_str_ptr) {
+        size_t result = sscanf(tracks_str_ptr, "%u-%u", &first_index, &last_index);
+        if (result == 2) {
+            if (first_index > last_index)
+                return false;
+            uint32_t index;
+            for (index = first_index; index <= last_index; index++)
+                track_indexes->insert(index);
+        } else if (result == 1) {
+            track_indexes->insert(first_index);
+        } else {
+            return false;
+        }
+
+        tracks_str_ptr = strchr(tracks_str_ptr, ',');
+        if (tracks_str_ptr)
+            tracks_str_ptr++;
+    }
+
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {

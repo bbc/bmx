@@ -385,6 +385,21 @@ static void calc_file_checksums(const vector<const char *> &filenames, const vec
     }
 }
 
+static void disable_tracks(MXFReader *reader, const set<uint32_t> &track_indexes,
+                           bool disable_audio, bool disable_video, bool disable_data)
+{
+    size_t i;
+    for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+        if (track_indexes.count(i) ||
+            (disable_audio && reader->GetTrackReader(i)->GetTrackInfo()->data_def == MXF_SOUND_DDEF) ||
+            (disable_video && reader->GetTrackReader(i)->GetTrackInfo()->data_def == MXF_PICTURE_DDEF) ||
+            (disable_data  && reader->GetTrackReader(i)->GetTrackInfo()->data_def == MXF_DATA_DDEF))
+        {
+            reader->GetTrackReader(i)->SetEnable(false);
+        }
+    }
+}
+
 static string get_d10_sound_flags(uint8_t flags)
 {
     char buf[10];
@@ -1207,7 +1222,7 @@ static bool parse_info_format(const char *format_str, InfoFormat *format)
 static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
-    fprintf(stderr, "Usage: %s <<options>> <filename>+\n", cmd);
+    fprintf(stderr, "Usage: %s <<options>> [<<input options>> <filename>]+\n", cmd);
     fprintf(stderr, "   Use <filename> '-' for standard input\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, " -h | --help           Show usage and exit\n");
@@ -1280,6 +1295,14 @@ static void usage(const char *cmd)
         fprintf(stderr, "                       Set the minimum number of bytes to read when accessing a file over HTTP. The default is %u.\n", DEFAULT_HTTP_MIN_READ);
     }
     fprintf(stderr, "\n");
+    fprintf(stderr, "Input options:\n");
+    fprintf(stderr, " --disable-tracks <tracks> A comma separated list of track indexes and/or ranges to disable when reading essence data.\n");
+    fprintf(stderr, "                           A track is identified by the index reported by mxf2raw\n");
+    fprintf(stderr, "                           A range of track indexes is specified as '<first>-<last>', e.g. 0-3\n");
+    fprintf(stderr, " --disable-audio       Disable audio tracks when reading essence data\n");
+    fprintf(stderr, " --disable-video       Disable video tracks when reading essence data\n");
+    fprintf(stderr, " --disable-data        Disable data tracks when reading essence data\n");
+    fprintf(stderr, "\n");
 }
 
 int main(int argc, const char** argv)
@@ -1313,6 +1336,10 @@ int main(int argc, const char** argv)
     bool do_ess_read = false;
     const char *ess_output_prefix = 0;
     set<MXFDataDefEnum> wrap_klv_mask;
+    map<size_t, set<uint32_t> > disable_track_indexes;
+    map<size_t, bool> disable_audio;
+    map<size_t, bool> disable_video;
+    map<size_t, bool> disable_data;
     bool deinterleave = false;
     int64_t start = 0;
     bool start_set = false;
@@ -1793,25 +1820,56 @@ int main(int argc, const char** argv)
     }
 
     for (; cmdln_index < argc; cmdln_index++) {
-        if (strcmp(argv[cmdln_index], "-") == 0) {
-            // standard input
-            input_filenames.push_back("");
-        } else {
-            if (mxf_http_is_url(argv[cmdln_index])) {
-                if (!mxf_http_is_supported()) {
-                    fprintf(stderr, "HTTP file access is not supported in this build\n");
-                    return 1;
-                }
-            } else if (!check_file_exists(argv[cmdln_index])) {
-                if (argv[cmdln_index][0] == '-') {
-                    usage(argv[0]);
-                    fprintf(stderr, "Unknown argument '%s'\n", argv[cmdln_index]);
-                } else {
-                    fprintf(stderr, "Failed to open input filename '%s'\n", argv[cmdln_index]);
-                }
+        if (strcmp(argv[cmdln_index], "--disable-tracks") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            input_filenames.push_back(argv[cmdln_index]);
+            if (!parse_track_indexes(argv[cmdln_index + 1], &disable_track_indexes[input_filenames.size()]))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--disable-audio") == 0)
+        {
+            disable_audio[input_filenames.size()] = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--disable-video") == 0)
+        {
+            disable_video[input_filenames.size()] = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--disable-data") == 0)
+        {
+            disable_data[input_filenames.size()] = true;
+        }
+        else
+        {
+            if (strcmp(argv[cmdln_index], "-") == 0) {
+                // standard input
+                input_filenames.push_back("");
+            } else {
+                if (mxf_http_is_url(argv[cmdln_index])) {
+                    if (!mxf_http_is_supported()) {
+                        fprintf(stderr, "HTTP file access is not supported in this build\n");
+                        return 1;
+                    }
+                } else if (!check_file_exists(argv[cmdln_index])) {
+                    if (argv[cmdln_index][0] == '-') {
+                        usage(argv[0]);
+                        fprintf(stderr, "Unknown argument '%s'\n", argv[cmdln_index]);
+                    } else {
+                        fprintf(stderr, "Failed to open input filename '%s'\n", argv[cmdln_index]);
+                    }
+                    return 1;
+                }
+                input_filenames.push_back(argv[cmdln_index]);
+            }
         }
     }
 
@@ -1912,6 +1970,8 @@ int main(int argc, const char** argv)
                               MXFFileReader::ResultToString(result).c_str());
                     throw false;
                 }
+                disable_tracks(grp_file_reader, disable_track_indexes[i],
+                               disable_audio[i], disable_video[i], disable_data[i]);
                 group_reader->AddReader(grp_file_reader);
             }
             if (!group_reader->Finalize())
@@ -1933,6 +1993,8 @@ int main(int argc, const char** argv)
                               MXFFileReader::ResultToString(result).c_str());
                     throw false;
                 }
+                disable_tracks(seq_file_reader, disable_track_indexes[i],
+                               disable_audio[i], disable_video[i], disable_data[i]);
                 seq_reader->AddReader(seq_file_reader);
             }
             if (!seq_reader->Finalize(false, keep_input_order))
@@ -1956,6 +2018,8 @@ int main(int argc, const char** argv)
                           MXFFileReader::ResultToString(result).c_str());
                 throw false;
             }
+            disable_tracks(file_reader, disable_track_indexes[0],
+                           disable_audio[0], disable_video[0], disable_data[0]);
 
             reader = file_reader;
         }
@@ -2102,6 +2166,9 @@ int main(int argc, const char** argv)
                 map<MXFDataDefEnum, uint32_t> ddef_count;
                 size_t i;
                 for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+                    if (!reader->GetTrackReader(i)->IsEnabled())
+                        continue;
+
                     const MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
                     const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
                     track_raw_file_map[i] = raw_files.size();

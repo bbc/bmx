@@ -353,32 +353,6 @@ static void disable_tracks(MXFReader *reader, const set<uint32_t> &track_indexes
     }
 }
 
-static bool parse_track_indexes(const char *tracks_str, set<uint32_t> *track_indexes)
-{
-    unsigned int first_index, last_index;
-    const char *tracks_str_ptr = tracks_str;
-    while (tracks_str_ptr) {
-        size_t result = sscanf(tracks_str_ptr, "%u-%u", &first_index, &last_index);
-        if (result == 2) {
-            if (first_index > last_index)
-                return false;
-            uint32_t index;
-            for (index = first_index; index <= last_index; index++)
-                track_indexes->insert(index);
-        } else if (result == 1) {
-            track_indexes->insert(first_index);
-        } else {
-            return false;
-        }
-
-        tracks_str_ptr = strchr(tracks_str_ptr, ',');
-        if (tracks_str_ptr)
-            tracks_str_ptr++;
-    }
-
-    return true;
-}
-
 static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
