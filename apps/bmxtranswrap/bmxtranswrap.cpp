@@ -338,12 +338,18 @@ static void clear_output_track(OutputTrack *output_track)
     delete output_track->filter;
 }
 
-static void disable_tracks(MXFReader *reader, const set<uint32_t> &track_indexes)
+static void disable_tracks(MXFReader *reader, const set<uint32_t> &track_indexes,
+                           bool disable_audio, bool disable_video, bool disable_data)
 {
-    set<uint32_t>::const_iterator iter;
-    for (iter = track_indexes.begin(); iter != track_indexes.end(); iter++) {
-        if (*iter < reader->GetNumTrackReaders())
-            reader->GetTrackReader(*iter)->SetEnable(false);
+    size_t i;
+    for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+        if (track_indexes.count(i) ||
+            (disable_audio && reader->GetTrackReader(i)->GetTrackInfo()->data_def == MXF_SOUND_DDEF) ||
+            (disable_video && reader->GetTrackReader(i)->GetTrackInfo()->data_def == MXF_PICTURE_DDEF) ||
+            (disable_data  && reader->GetTrackReader(i)->GetTrackInfo()->data_def == MXF_DATA_DDEF))
+        {
+            reader->GetTrackReader(i)->SetEnable(false);
+        }
     }
 }
 
@@ -561,6 +567,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --disable-tracks <tracks> A comma separated list of track indexes and/or ranges to disable.\n");
     fprintf(stderr, "                            A track is identified by the index reported by mxf2raw\n");
     fprintf(stderr, "                            A range of track indexes is specified as '<first>-<last>', e.g. 0-3\n");
+    fprintf(stderr, "  --disable-audio           Disable audio tracks\n");
+    fprintf(stderr, "  --disable-video           Disable video tracks\n");
+    fprintf(stderr, "  --disable-data            Disable data tracks\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Notes:\n");
     fprintf(stderr, " - <umid> format is 64 hexadecimal characters and any '.' and '-' characters are ignored\n");
@@ -574,6 +583,9 @@ int main(int argc, const char** argv)
     bool timecode_rate_set = false;
     vector<const char *> input_filenames;
     map<size_t, set<uint32_t> > disable_track_indexes;
+    map<size_t, bool> disable_audio;
+    map<size_t, bool> disable_video;
+    map<size_t, bool> disable_data;
     const char *log_filename = 0;
     LogLevel log_level = INFO_LOG;
     ClipWriterType clip_type = CW_OP1A_CLIP_TYPE;
@@ -1704,6 +1716,18 @@ int main(int argc, const char** argv)
             }
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--disable-audio") == 0)
+        {
+            disable_audio[input_filenames.size()] = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--disable-video") == 0)
+        {
+            disable_video[input_filenames.size()] = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--disable-data") == 0)
+        {
+            disable_data[input_filenames.size()] = true;
+        }
         else
         {
             if (strcmp(argv[cmdln_index], "-") == 0) {
@@ -1817,7 +1841,8 @@ int main(int argc, const char** argv)
                               MXFFileReader::ResultToString(result).c_str());
                     throw false;
                 }
-                disable_tracks(grp_file_reader, disable_track_indexes[i]);
+                disable_tracks(grp_file_reader, disable_track_indexes[i],
+                               disable_audio[i], disable_video[i], disable_data[i]);
                 group_reader->AddReader(grp_file_reader);
             }
             if (!group_reader->Finalize())
@@ -1839,7 +1864,8 @@ int main(int argc, const char** argv)
                               MXFFileReader::ResultToString(result).c_str());
                     throw false;
                 }
-                disable_tracks(seq_file_reader, disable_track_indexes[i]);
+                disable_tracks(seq_file_reader, disable_track_indexes[i],
+                               disable_audio[i], disable_video[i], disable_data[i]);
                 seq_reader->AddReader(seq_file_reader);
             }
             if (!seq_reader->Finalize(false, keep_input_order))
@@ -1860,7 +1886,8 @@ int main(int argc, const char** argv)
                           MXFFileReader::ResultToString(result).c_str());
                 throw false;
             }
-            disable_tracks(file_reader, disable_track_indexes[0]);
+            disable_tracks(file_reader, disable_track_indexes[0],
+                           disable_audio[0], disable_video[0], disable_data[0]);
 
             reader = file_reader;
         }
