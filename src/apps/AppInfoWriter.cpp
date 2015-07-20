@@ -284,7 +284,7 @@ void AppInfoWriter::WriteAUIDItem(const string &name, UL value)
 void AppInfoWriter::WriteIDAUItem(const string &name, UUID value)
 {
     // UL half-swapped, UUID as-is
-    if (!mxf_is_ul((mxfUID*)&value)) {
+    if (mxf_is_swapped_ul((mxfUID*)&value)) {
         UL ul;
         memcpy(&ul.octet0, &value.octet8, 8);
         memcpy(&ul.octet8, &value.octet0, 8);

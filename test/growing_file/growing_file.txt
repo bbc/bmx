@@ -14,12 +14,12 @@ Files: (1)
     frame_wrapped   : true
     Identifications: (1)
       Identification #0:
-        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        generation_uid  : urn:smpte:ul:00000000.00000001.00000000.00000000
         company_name    : RegCo
         product_name    : RegLib
         product_version : 1.0.0.0.0
         version_string  : 0.0.0
-        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        product_uid     : urn:smpte:ul:00000000.00000000.00000000.00000000
         modified_date   : 0-00-00 00:00:00.000
         toolkit_version : 1.0.0.0.0
         platform        : libMXF (Linux)
@@ -113,12 +113,12 @@ Files: (1)
     frame_wrapped   : true
     Identifications: (1)
       Identification #0:
-        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        generation_uid  : urn:smpte:ul:00000000.00000001.00000000.00000000
         company_name    : RegCo
         product_name    : RegLib
         product_version : 1.0.0.0.0
         version_string  : 0.0.0
-        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        product_uid     : urn:smpte:ul:00000000.00000000.00000000.00000000
         modified_date   : 0-00-00 00:00:00.000
         toolkit_version : 1.0.0.0.0
         platform        : libMXF (Linux)
@@ -213,12 +213,12 @@ Files: (1)
     frame_wrapped   : true
     Identifications: (1)
       Identification #0:
-        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        generation_uid  : urn:smpte:ul:00000000.00000001.00000000.00000000
         company_name    : RegCo
         product_name    : RegLib
         product_version : 1.0.0.0.0
         version_string  : 0.0.0
-        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        product_uid     : urn:smpte:ul:00000000.00000000.00000000.00000000
         modified_date   : 0-00-00 00:00:00.000
         toolkit_version : 1.0.0.0.0
         platform        : libMXF (Linux)
@@ -318,12 +318,12 @@ Files: (1)
     frame_wrapped   : true
     Identifications: (1)
       Identification #0:
-        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        generation_uid  : urn:smpte:ul:00000000.00000001.00000000.00000000
         company_name    : RegCo
         product_name    : RegLib
         product_version : 1.0.0.0.0
         version_string  : 0.0.0
-        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        product_uid     : urn:smpte:ul:00000000.00000000.00000000.00000000
         modified_date   : 0-00-00 00:00:00.000
         toolkit_version : 1.0.0.0.0
         platform        : libMXF (Linux)
@@ -422,12 +422,12 @@ Files: (1)
     frame_wrapped   : true
     Identifications: (1)
       Identification #0:
-        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        generation_uid  : urn:smpte:ul:00000000.00000001.00000000.00000000
         company_name    : RegCo
         product_name    : RegLib
         product_version : 1.0.0.0.0
         version_string  : 0.0.0
-        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        product_uid     : urn:smpte:ul:00000000.00000000.00000000.00000000
         modified_date   : 0-00-00 00:00:00.000
         toolkit_version : 1.0.0.0.0
         platform        : libMXF (Linux)
@@ -526,12 +526,12 @@ Files: (1)
     frame_wrapped   : true
     Identifications: (1)
       Identification #0:
-        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        generation_uid  : urn:smpte:ul:00000000.00000001.00000000.00000000
         company_name    : RegCo
         product_name    : RegLib
         product_version : 1.0.0.0.0
         version_string  : 0.0.0
-        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        product_uid     : urn:smpte:ul:00000000.00000000.00000000.00000000
         modified_date   : 0-00-00 00:00:00.000
         toolkit_version : 1.0.0.0.0
         platform        : libMXF (Linux)
@@ -630,12 +630,12 @@ Files: (1)
     frame_wrapped   : true
     Identifications: (1)
       Identification #0:
-        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        generation_uid  : urn:smpte:ul:00000000.00000001.00000000.00000000
         company_name    : RegCo
         product_name    : RegLib
         product_version : 1.0.0.0.0
         version_string  : 0.0.0
-        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        product_uid     : urn:smpte:ul:00000000.00000000.00000000.00000000
         modified_date   : 0-00-00 00:00:00.000
         toolkit_version : 1.0.0.0.0
         platform        : libMXF (Linux)
@@ -736,12 +736,12 @@ Files: (1)
     frame_wrapped   : true
     Identifications: (1)
       Identification #0:
-        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        generation_uid  : urn:smpte:ul:00000000.00000001.00000000.00000000
         company_name    : RegCo
         product_name    : RegLib
         product_version : 1.0.0.0.0
         version_string  : 0.0.0
-        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        product_uid     : urn:smpte:ul:00000000.00000000.00000000.00000000
         modified_date   : 0-00-00 00:00:00.000
         toolkit_version : 1.0.0.0.0
         platform        : libMXF (Linux)
@@ -842,12 +842,12 @@ Files: (1)
     frame_wrapped   : true
     Identifications: (1)
       Identification #0:
-        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        generation_uid  : urn:smpte:ul:00000000.00000001.00000000.00000000
         company_name    : RegCo
         product_name    : RegLib
         product_version : 1.0.0.0.0
         version_string  : 0.0.0
-        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        product_uid     : urn:smpte:ul:00000000.00000000.00000000.00000000
         modified_date   : 0-00-00 00:00:00.000
         toolkit_version : 1.0.0.0.0
         platform        : libMXF (Linux)
@@ -947,12 +947,12 @@ Files: (1)
     frame_wrapped   : true
     Identifications: (1)
       Identification #0:
-        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000001
+        generation_uid  : urn:smpte:ul:00000000.00000001.00000000.00000000
         company_name    : RegCo
         product_name    : RegLib
         product_version : 1.0.0.0.0
         version_string  : 0.0.0
-        product_uid     : urn:uuid:00000000-0000-0000-0000-000000000000
+        product_uid     : urn:smpte:ul:00000000.00000000.00000000.00000000
         modified_date   : 0-00-00 00:00:00.000
         toolkit_version : 1.0.0.0.0
         platform        : libMXF (Linux)
