@@ -2487,7 +2487,9 @@ int main(int argc, const char** argv)
                 reader->Seek(rdd6_frame_min);
             else
                 reader->Seek(last_rdd6_frame + 1);
-            while (!rdd6_failed && !rdd6_done && last_rdd6_frame < rdd6_frame_max && reader->Read(1)) {
+            while (!rdd6_failed && !rdd6_done && last_rdd6_frame < rdd6_frame_max &&
+                   reader->GetPosition() <= rdd6_frame_max && reader->Read(1))
+            {
                 bool have_anc_track = false;
                 uint32_t i;
                 for (i = 0; i < reader->GetNumTrackReaders() && !have_anc_track; i++) {
