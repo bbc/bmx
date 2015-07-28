@@ -2039,6 +2039,21 @@ int main(int argc, const char** argv)
         mxfRational edit_rate = reader->GetEditRate();
 
 
+        // check ANC track is present if RDD-6 extraction requested
+        bool have_anc_track = false;
+        if (rdd6_filename) {
+            size_t i;
+            for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+                if (reader->GetTrackReader(i)->GetTrackInfo()->essence_type == ANC_DATA) {
+                    have_anc_track = true;
+                    break;
+                }
+            }
+            if (!have_anc_track)
+                log_warn("No ANC data track present\n");
+        }
+
+
         // set read limits and checks
         int64_t output_duration;
         int64_t max_precharge = 0;
@@ -2479,7 +2494,7 @@ int main(int argc, const char** argv)
                 fclose(app_crc32_file);
         }
 
-        if (rdd6_filename && !rdd6_failed && last_rdd6_frame != rdd6_frame_max && !rdd6_done) {
+        if (have_anc_track && rdd6_filename && !rdd6_failed && last_rdd6_frame != rdd6_frame_max && !rdd6_done) {
             reader->ClearFrameBuffers(true);
             if (reader->IsComplete())
                 reader->SetReadLimits();
@@ -2490,9 +2505,9 @@ int main(int argc, const char** argv)
             while (!rdd6_failed && !rdd6_done && last_rdd6_frame < rdd6_frame_max &&
                    reader->GetPosition() <= rdd6_frame_max && reader->Read(1))
             {
-                bool have_anc_track = false;
+                bool have_anc_data = false;
                 uint32_t i;
-                for (i = 0; i < reader->GetNumTrackReaders() && !have_anc_track; i++) {
+                for (i = 0; i < reader->GetNumTrackReaders() && !have_anc_data; i++) {
                     while (!rdd6_failed && last_rdd6_frame < rdd6_frame_max) {
                         Frame *frame = reader->GetTrackReader(i)->GetFrameBuffer()->GetLastFrame(true);
                         if (!frame)
@@ -2513,7 +2528,7 @@ int main(int argc, const char** argv)
                             {
                                 rdd6_failed = true;
                             }
-                            have_anc_track = true;
+                            have_anc_data = true;
                         }
 
                         delete frame;
