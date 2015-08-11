@@ -160,6 +160,8 @@ typedef struct
     uint64_t cpb_cnt_minus1;
     uint8_t nal_hrd_parameters_present_flag;
     uint8_t vcl_hrd_parameters_present_flag;
+    uint64_t num_ref_idx_l0_default_active_minus1;
+    uint64_t num_ref_idx_l1_default_active_minus1;
 
     int indent;
 } ParseContext;
@@ -1218,6 +1220,9 @@ static int slice_header(ParseContext *context)
     printf("%*c slice_header:\n", context->indent * 4, ' ');
     context->indent++;
 
+    context->num_ref_idx_l0_active_minus1 = context->num_ref_idx_l0_default_active_minus1;
+    context->num_ref_idx_l1_active_minus1 = context->num_ref_idx_l1_default_active_minus1;
+
     ue(); PRINT_UINT("first_mb_in_slice");
     ue(); print_slice_type(context, context->value);
     context->slice_type = context->value;
@@ -1872,7 +1877,9 @@ static int picture_parameter_set(ParseContext *context)
         context->indent--;
     }
     ue(); PRINT_UINT("num_ref_idx_l0_default_active_minus1");
+    context->num_ref_idx_l0_default_active_minus1 = context->value;
     ue(); PRINT_UINT("num_ref_idx_l1_default_active_minus1");
+    context->num_ref_idx_l1_default_active_minus1 = context->value;
     u(1); PRINT_UINT("weighted_pred_flag");
     context->weighted_pred_flag = (uint8_t)context->value;
     u(2); PRINT_UINT("weighted_bipred_idc");
