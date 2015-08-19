@@ -276,6 +276,12 @@ void DVMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setDisplayHeight(cdci_descriptor->getStoredHeight());
     cdci_descriptor->setSampledWidth(cdci_descriptor->getStoredWidth());
     cdci_descriptor->setSampledHeight(cdci_descriptor->getStoredHeight());
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
+        cdci_descriptor->setSampledXOffset(0);
+        cdci_descriptor->setSampledYOffset(0);
+        cdci_descriptor->setDisplayXOffset(0);
+        cdci_descriptor->setDisplayYOffset(0);
+    }
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
     cdci_descriptor->setHorizontalSubsampling(SUPPORTED_ESSENCE[mEssenceIndex].horiz_subs);
     cdci_descriptor->setVerticalSubsampling(SUPPORTED_ESSENCE[mEssenceIndex].vert_subs);

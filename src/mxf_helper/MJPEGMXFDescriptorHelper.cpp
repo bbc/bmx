@@ -213,6 +213,8 @@ void MJPEGMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setSampledHeight(cdci_descriptor->getStoredHeight());
     cdci_descriptor->setDisplayYOffset(SUPPORTED_ESSENCE[mEssenceIndex].display_y_offset);
     cdci_descriptor->setDisplayXOffset(0);
+    cdci_descriptor->setSampledXOffset(0);
+    cdci_descriptor->setSampledYOffset(0);
     cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0]);
     if (SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1])
         cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1]);

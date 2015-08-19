@@ -419,13 +419,15 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
         default:
             BMX_ASSERT(false);
     }
-    if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+    if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (mFlavour & MXFDESC_AVID_FLAVOUR)) {
         cdci_descriptor->setSampledXOffset(0);
         cdci_descriptor->setSampledYOffset(0);
         cdci_descriptor->setDisplayXOffset(0);
         cdci_descriptor->setDisplayYOffset(0);
-        cdci_descriptor->setImageStartOffset(0);
-        cdci_descriptor->setPaddingBits(0);
+        if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+            cdci_descriptor->setImageStartOffset(0);
+            cdci_descriptor->setPaddingBits(0);
+        }
     }
     switch (mEssenceType)
     {
