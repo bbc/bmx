@@ -1678,18 +1678,12 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
     if (sound_descriptor->haveQuantizationBits())
         sound_track_info->bits_per_sample = sound_descriptor->getQuantizationBits();
 
-    if (sound_descriptor->haveLocked()) {
-        sound_track_info->locked = sound_descriptor->getLocked();
-        sound_track_info->locked_set = true;
-    }
-    if (sound_descriptor->haveAudioRefLevel()) {
-        sound_track_info->audio_ref_level = sound_descriptor->getAudioRefLevel();
-        sound_track_info->audio_ref_level_set = true;
-    }
-    if (sound_descriptor->haveDialNorm()) {
-        sound_track_info->dial_norm = sound_descriptor->getDialNorm();
-        sound_track_info->dial_norm_set = true;
-    }
+    if (sound_descriptor->haveLocked())
+        BMX_OPT_PROP_SET(sound_track_info->locked, sound_descriptor->getLocked());
+    if (sound_descriptor->haveAudioRefLevel())
+        BMX_OPT_PROP_SET(sound_track_info->audio_ref_level, sound_descriptor->getAudioRefLevel());
+    if (sound_descriptor->haveDialNorm())
+        BMX_OPT_PROP_SET(sound_track_info->dial_norm, sound_descriptor->getDialNorm());
 
     WaveAudioDescriptor *wave_descriptor = dynamic_cast<WaveAudioDescriptor*>(file_descriptor);
     if (wave_descriptor) {

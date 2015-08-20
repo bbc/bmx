@@ -125,12 +125,9 @@ public:
     uint32_t channel_count;
     uint8_t d10_aes3_valid_flags;
     uint8_t sequence_offset;
-    bool locked;
-    bool locked_set;
-    int8_t audio_ref_level;
-    bool audio_ref_level_set;
-    int8_t dial_norm;
-    bool dial_norm_set;
+    BMX_OPT_PROP_DECL(bool, locked);
+    BMX_OPT_PROP_DECL(int8_t, audio_ref_level);
+    BMX_OPT_PROP_DECL(int8_t, dial_norm);
 };
 
 

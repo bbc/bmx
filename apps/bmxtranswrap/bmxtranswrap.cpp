@@ -2712,15 +2712,15 @@ int main(int argc, const char** argv)
                         output_track.track->SetChannelCount(1);
                         if (user_locked_set)
                             output_track.track->SetLocked(user_locked);
-                        else if (input_sound_info->locked_set)
+                        else if (BMX_OPT_PROP_IS_SET(input_sound_info->locked))
                             output_track.track->SetLocked(input_sound_info->locked);
                         if (user_audio_ref_level_set)
                             output_track.track->SetAudioRefLevel(user_audio_ref_level);
-                        else if (input_sound_info->audio_ref_level_set)
+                        else if (BMX_OPT_PROP_IS_SET(input_sound_info->audio_ref_level))
                             output_track.track->SetAudioRefLevel(input_sound_info->audio_ref_level);
                         if (user_dial_norm_set)
                             output_track.track->SetDialNorm(user_dial_norm);
-                        else if (input_sound_info->dial_norm_set)
+                        else if (BMX_OPT_PROP_IS_SET(input_sound_info->dial_norm))
                             output_track.track->SetDialNorm(input_sound_info->dial_norm);
                         if (clip_type == CW_D10_CLIP_TYPE || input_sound_info->sequence_offset)
                             output_track.track->SetSequenceOffset(input_sound_info->sequence_offset);

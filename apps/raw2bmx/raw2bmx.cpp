@@ -120,15 +120,13 @@ typedef struct
     size_t sample_sequence_size;
     size_t sample_sequence_offset;
 
-    uint32_t track_number;
-    bool track_number_set;
+    BMX_OPT_PROP_DECL(uint32_t, track_number);
 
     EssenceFilter *filter;
     bool set_bs_aspect_ratio;
 
     // picture
-    Rational aspect_ratio;
-    bool aspect_ratio_set;
+    BMX_OPT_PROP_DECL(Rational, aspect_ratio);
     uint8_t afd;
     uint32_t component_depth;
     uint32_t input_height;
@@ -138,12 +136,9 @@ typedef struct
     // sound
     Rational sampling_rate;
     uint32_t audio_quant_bits;
-    bool locked;
-    bool locked_set;
-    int8_t audio_ref_level;
-    bool audio_ref_level_set;
-    int8_t dial_norm;
-    bool dial_norm_set;
+    BMX_OPT_PROP_DECL(bool, locked);
+    BMX_OPT_PROP_DECL(int8_t, audio_ref_level);
+    BMX_OPT_PROP_DECL(int8_t, dial_norm);
 
     // ANC/VBI
     uint32_t anc_const_size;
@@ -299,8 +294,7 @@ static void write_samples(RawInput *input, unsigned char *data, uint32_t size, u
 static void init_input(RawInput *input)
 {
     memset(input, 0, sizeof(*input));
-    input->aspect_ratio = ASPECT_RATIO_16_9;
-    input->aspect_ratio_set = false;
+    BMX_OPT_PROP_DEFAULT(input->aspect_ratio, ASPECT_RATIO_16_9);
     input->sampling_rate = DEFAULT_SAMPLING_RATE;
     input->component_depth = 8;
     input->audio_quant_bits = 16;
@@ -1293,10 +1287,9 @@ int main(int argc, const char** argv)
                 return 1;
             }
             if (num == 4)
-                input.aspect_ratio = ASPECT_RATIO_4_3;
+                BMX_OPT_PROP_SET(input.aspect_ratio, ASPECT_RATIO_4_3);
             else
-                input.aspect_ratio = ASPECT_RATIO_16_9;
-            input.aspect_ratio_set = true;
+                BMX_OPT_PROP_SET(input.aspect_ratio, ASPECT_RATIO_16_9);
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -1431,7 +1424,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
-            input.locked_set = true;
+            BMX_OPT_PROP_MARK(input.locked, true);
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -1450,8 +1443,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
-            input.audio_ref_level = value;
-            input.audio_ref_level_set = true;
+            BMX_OPT_PROP_SET(input.audio_ref_level, value);
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -1470,8 +1462,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
-            input.dial_norm = value;
-            input.dial_norm_set = true;
+            BMX_OPT_PROP_SET(input.dial_norm, value);
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -1579,8 +1570,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
-            input.track_number = uvalue;
-            input.track_number_set = true;
+            BMX_OPT_PROP_SET(input.track_number, uvalue);
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -2705,8 +2695,8 @@ int main(int argc, const char** argv)
                         }
                     }
 
-                    if (!input->aspect_ratio_set)
-                        input->aspect_ratio = dv_parser->GetAspectRatio();
+                    if (!BMX_OPT_PROP_IS_SET(input->aspect_ratio))
+                        BMX_OPT_PROP_SET(input->aspect_ratio, dv_parser->GetAspectRatio());
                 }
             }
             else if (input->essence_type_group == VC3_ESSENCE_GROUP)
@@ -2812,8 +2802,8 @@ int main(int argc, const char** argv)
                     if (!frame_rate_set)
                         frame_rate = mpeg2_parser->GetFrameRate();
 
-                    if (!input->aspect_ratio_set)
-                        input->aspect_ratio = mpeg2_parser->GetAspectRatio();
+                    if (!BMX_OPT_PROP_IS_SET(input->aspect_ratio))
+                        BMX_OPT_PROP_SET(input->aspect_ratio, mpeg2_parser->GetAspectRatio());
                 }
             }
             else if (input->essence_type_group == MPEG2LG_ESSENCE_GROUP ||
@@ -2939,8 +2929,8 @@ int main(int argc, const char** argv)
                     if (!frame_rate_set)
                         frame_rate = mpeg2_parser->GetFrameRate();
 
-                    if (!input->aspect_ratio_set)
-                        input->aspect_ratio = mpeg2_parser->GetAspectRatio();
+                    if (!BMX_OPT_PROP_IS_SET(input->aspect_ratio))
+                        BMX_OPT_PROP_SET(input->aspect_ratio, mpeg2_parser->GetAspectRatio());
                 }
             }
             else if (input->essence_type_group == AVCI_ESSENCE_GROUP)
@@ -3259,7 +3249,7 @@ int main(int argc, const char** argv)
 
             // initialize track
 
-            if (input->track_number_set)
+            if (BMX_OPT_PROP_IS_SET(input->track_number))
                 input->track->SetOutputTrackNumber(input->track_number);
 
             if (clip_type == CW_AS02_CLIP_TYPE) {
@@ -3418,11 +3408,11 @@ int main(int argc, const char** argv)
                 case WAVE_PCM:
                     input->track->SetSamplingRate(input->sampling_rate);
                     input->track->SetQuantizationBits(input->audio_quant_bits);
-                    if (input->locked_set)
+                    if (BMX_OPT_PROP_IS_SET(input->locked))
                         input->track->SetLocked(input->locked);
-                    if (input->audio_ref_level_set)
+                    if (BMX_OPT_PROP_IS_SET(input->audio_ref_level))
                         input->track->SetAudioRefLevel(input->audio_ref_level);
-                    if (input->dial_norm_set)
+                    if (BMX_OPT_PROP_IS_SET(input->dial_norm))
                         input->track->SetDialNorm(input->dial_norm);
                     // force D10 sequence offset to 0 and default to 0 for other clip types
                     if (clip_type == CW_D10_CLIP_TYPE || sequence_offset_set)

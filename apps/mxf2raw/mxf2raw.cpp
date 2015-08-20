@@ -721,11 +721,11 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
         }
         if (sound_info->sequence_offset != 0)
             info_writer->WriteIntegerItem("sequence_offset", sound_info->sequence_offset);
-        if (sound_info->locked_set)
+        if (BMX_OPT_PROP_IS_SET(sound_info->locked))
             info_writer->WriteBoolItem("locked", sound_info->locked);
-        if (sound_info->audio_ref_level_set)
+        if (BMX_OPT_PROP_IS_SET(sound_info->audio_ref_level))
             info_writer->WriteIntegerItem("audio_ref_level", sound_info->audio_ref_level);
-        if (sound_info->dial_norm_set)
+        if (BMX_OPT_PROP_IS_SET(sound_info->dial_norm))
             info_writer->WriteIntegerItem("dial_norm", sound_info->dial_norm);
         info_writer->EndSection();
     } else if (data_info) {

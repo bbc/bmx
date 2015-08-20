@@ -179,12 +179,9 @@ MXFSoundTrackInfo::MXFSoundTrackInfo()
     block_align = 0;
     channel_count = 0;
     sequence_offset = 0;
-    locked = false;
-    locked_set = false;
-    audio_ref_level = 0;
-    audio_ref_level_set = false;
-    dial_norm = 0;
-    dial_norm_set = false;
+    BMX_OPT_PROP_DEFAULT(locked, false);
+    BMX_OPT_PROP_DEFAULT(audio_ref_level, 0);
+    BMX_OPT_PROP_DEFAULT(dial_norm, 0);
     d10_aes3_valid_flags = 0;
 }
 
@@ -215,12 +212,9 @@ MXFTrackInfo* MXFSoundTrackInfo::Clone() const
     clone->channel_count        = channel_count;
     clone->d10_aes3_valid_flags = d10_aes3_valid_flags;
     clone->sequence_offset      = sequence_offset;
-    clone->locked               = locked;
-    clone->locked_set           = locked_set;
-    clone->audio_ref_level      = audio_ref_level;
-    clone->audio_ref_level_set  = audio_ref_level_set;
-    clone->dial_norm            = dial_norm;
-    clone->dial_norm_set        = dial_norm_set;
+    BMX_OPT_PROP_COPY(clone->locked,          locked);
+    BMX_OPT_PROP_COPY(clone->audio_ref_level, audio_ref_level);
+    BMX_OPT_PROP_COPY(clone->dial_norm,       dial_norm);
 
     return clone;
 }

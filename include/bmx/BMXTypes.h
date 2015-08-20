@@ -36,6 +36,14 @@
 #include <libMXF++/MXFTypes.h>
 
 
+#define BMX_OPT_PROP_DECL(type, name)     type name; bool name##_set
+#define BMX_OPT_PROP_IS_SET(prop)         prop##_set
+#define BMX_OPT_PROP_SET(prop, val)       do { prop = val; prop##_set = true; } while (0)
+#define BMX_OPT_PROP_MARK(prop, isset)    prop##_set = isset
+#define BMX_OPT_PROP_DEFAULT(prop, val)   do { prop = val; prop##_set = false; } while (0)
+#define BMX_OPT_PROP_COPY(to, from)       do { to = from; to##_set = from##_set; } while (0)
+
+
 
 namespace bmx
 {
