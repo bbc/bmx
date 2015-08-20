@@ -1625,9 +1625,9 @@ void MXFFileReader::ProcessPictureDescriptor(FileDescriptor *file_descriptor, MX
         picture_track_info->display_height = picture_track_info->stored_height;
 
     if (picture_descriptor->haveDisplayXOffset())
-        picture_track_info->display_x_offset = picture_descriptor->getDisplayXOffset();
+        BMX_OPT_PROP_SET(picture_track_info->display_x_offset, picture_descriptor->getDisplayXOffset());
     if (picture_descriptor->haveDisplayYOffset())
-        picture_track_info->display_y_offset = frame_height_factor * picture_descriptor->getDisplayYOffset();
+        BMX_OPT_PROP_SET(picture_track_info->display_y_offset, frame_height_factor * picture_descriptor->getDisplayYOffset());
 
     if (picture_descriptor->haveActiveFormatDescriptor()) {
         decode_afd(picture_descriptor->getActiveFormatDescriptor(), mMXFVersion, &picture_track_info->afd,

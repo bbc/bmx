@@ -681,9 +681,9 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
         info_writer->WriteIntegerItem("stored_height", picture_info->stored_height);
         info_writer->WriteIntegerItem("display_width", picture_info->display_width);
         info_writer->WriteIntegerItem("display_height", picture_info->display_height);
-        if (picture_info->display_x_offset != 0)
+        if (BMX_OPT_PROP_IS_SET(picture_info->display_x_offset))
             info_writer->WriteIntegerItem("display_x_offset", picture_info->display_x_offset);
-        if (picture_info->display_y_offset != 0)
+        if (BMX_OPT_PROP_IS_SET(picture_info->display_y_offset))
             info_writer->WriteIntegerItem("display_y_offset", picture_info->display_y_offset);
         info_writer->WriteRationalItem("aspect_ratio", picture_info->aspect_ratio);
         if (picture_info->afd)

@@ -101,8 +101,8 @@ MXFPictureTrackInfo::MXFPictureTrackInfo()
     stored_height = 0;
     display_width = 0;
     display_height = 0;
-    display_x_offset = 0;
-    display_y_offset = 0;
+    BMX_OPT_PROP_DEFAULT(display_x_offset, 0);
+    BMX_OPT_PROP_DEFAULT(display_y_offset, 0);
     aspect_ratio = ZERO_RATIONAL;
     frame_layout = 0xff;
     afd = 0;
@@ -153,8 +153,8 @@ MXFTrackInfo* MXFPictureTrackInfo::Clone() const
     clone->stored_height                 = stored_height;
     clone->display_width                 = display_width;
     clone->display_height                = display_height;
-    clone->display_x_offset              = display_x_offset;
-    clone->display_y_offset              = display_y_offset;
+    BMX_OPT_PROP_COPY(clone->display_x_offset, display_x_offset);
+    BMX_OPT_PROP_COPY(clone->display_y_offset, display_y_offset);
     clone->aspect_ratio                  = aspect_ratio;
     clone->frame_layout                  = frame_layout;
     clone->afd                           = afd;
