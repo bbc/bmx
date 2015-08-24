@@ -184,6 +184,9 @@ typedef struct
     uint64_t slice_type;
     uint64_t num_ref_idx_l0_active_minus1;
     uint64_t num_ref_idx_l1_active_minus1;
+
+    // this is used to check whether the pic_timing parsing used the correct SPS
+    SPS *pic_timing_sps;
 } ParseContext;
 
 
@@ -1288,6 +1291,7 @@ static int slice_header(ParseContext *context)
 {
     uint8_t field_pic_flag = 0;
     uint8_t idr_pic_flag = (context->nal_unit_type == 5 ? 1 : 0);
+    uint64_t redundant_pic_cnt = 0;
 
     printf("%*c slice_header:\n", context->indent * 4, ' ');
     context->indent++;
@@ -1329,6 +1333,7 @@ static int slice_header(ParseContext *context)
     }
     if (context->pps->redundant_pic_cnt_present_flag) {
         ue(); PRINT_UINT("redundant_pic_cnt");
+        redundant_pic_cnt = context->value;
     }
     if (IS_B(context->slice_type)) {
         u(1); PRINT_UINT("direct_spatial_mv_pred_flag");
@@ -1381,6 +1386,15 @@ static int slice_header(ParseContext *context)
                                             (context->sps->pic_height_in_map_units_minus1 + 1);
         uint8_t bit_count = get_bits_required(pic_size_in_map_units / (context->pps->slice_group_change_rate_minus1 + 1) + 1);
         u(bit_count); PRINT_UINT("slice_group_change_cycle");
+    }
+
+    // TODO: see pic_timing
+    if (context->pic_timing_sps && redundant_pic_cnt == 0) {
+      if (context->pic_timing_sps != context->sps) {
+        printf("Warning / TODO: SPS (id=%u) used to parse pic_timing does not equal the primary picture slice's SPS (id=%u)\n",
+               context->pic_timing_sps->seq_parameter_set_id, context->sps->seq_parameter_set_id);
+      }
+      context->pic_timing_sps = 0;
     }
 
     context->indent--;
@@ -1519,7 +1533,10 @@ static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t pay
     context->indent++;
 
     // TODO: see Note 1 in section D.2.2: the SPS is activated by the first slice of primary coded picture and that will
-    // occur after the SEI. So it could be that this is the wrong SPS
+    // occur after the SEI. So it could be that this is the wrong SPS. slice_header uses pic_timing_sps to check the
+    // correct SPS was used
+    context->pic_timing_sps = context->sps;
+
     CHK(context->sps);
 
     if (context->sps->cpb_dpb_delays_present_flag) {
