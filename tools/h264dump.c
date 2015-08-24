@@ -105,6 +105,49 @@ typedef enum
 
 typedef struct
 {
+    uint8_t seq_parameter_set_id;
+    uint8_t profile_idc;
+    uint8_t chroma_format_idc;
+    uint8_t separate_colour_plane_flag;
+    uint64_t chroma_array_type;
+    uint8_t cpb_dpb_delays_present_flag;
+    uint8_t cpb_removal_delay_length_minus1;
+    uint8_t dpb_removal_delay_length_minus1;
+    uint8_t pic_struct_present_flag;
+    uint8_t time_offset_length;
+    uint8_t log2_max_frame_num_minus4;
+    uint8_t frame_mbs_only_flag;
+    uint64_t pic_order_cnt_type;
+    uint8_t log2_max_pic_order_cnt_lsb_minus4;
+    uint8_t delta_pic_order_always_zero_flag;
+    uint64_t pic_width_in_mbs_minus1;
+    uint64_t pic_height_in_map_units_minus1;
+    uint64_t cpb_cnt_minus1;
+    uint8_t nal_hrd_parameters_present_flag;
+    uint8_t vcl_hrd_parameters_present_flag;
+} SPS;
+
+typedef struct
+{
+    uint8_t pic_parameter_set_id;
+    uint8_t seq_parameter_set_id;
+    uint8_t bottom_field_pic_order_in_frame_present_flag;
+    uint8_t redundant_pic_cnt_present_flag;
+    uint8_t weighted_pred_flag;
+    uint8_t weighted_bipred_idc;
+    uint8_t entropy_coding_mode_flag;
+    uint8_t deblocking_filter_control_present_flag;
+    uint64_t num_slice_groups_minus1;
+    uint64_t slice_group_map_type;
+    uint64_t slice_group_change_rate_minus1;
+    uint64_t num_ref_idx_l0_default_active_minus1;
+    uint64_t num_ref_idx_l1_default_active_minus1;
+} PPS;
+
+typedef struct
+{
+    int indent;
+
     FILE *file;
 
     unsigned char *buffer;
@@ -127,43 +170,20 @@ typedef struct
     int64_t svalue;
     uint64_t next_value;
 
-    uint8_t profile_idc;
-    uint8_t chroma_format_idc;
-    uint64_t chroma_array_type;
-    uint8_t cpb_dpb_delays_present_flag;
-    uint8_t cpb_removal_delay_length_minus1;
-    uint8_t dpb_removal_delay_length_minus1;
-    uint8_t pic_struct_present_flag;
-    uint8_t time_offset_length;
-    uint8_t separate_colour_plane_flag;
-    uint8_t log2_max_frame_num_minus4;
-    uint8_t frame_mbs_only_flag;
-    uint8_t nal_unit_type;
-    uint64_t pic_order_cnt_type;
-    uint8_t log2_max_pic_order_cnt_lsb_minus4;
-    uint8_t bottom_field_pic_order_in_frame_present_flag;
-    uint8_t delta_pic_order_always_zero_flag;
-    uint8_t redundant_pic_cnt_present_flag;
-    uint64_t slice_type;
-    uint8_t weighted_pred_flag;
-    uint8_t weighted_bipred_idc;
+    SPS sps_cache[32];
+    PPS pps_cache[256];
+
+    SPS *sps;
+    PPS *pps;
+
+    // NAL
     uint8_t nal_ref_idc;
+    uint8_t nal_unit_type;
+
+    // Slice NAL
+    uint64_t slice_type;
     uint64_t num_ref_idx_l0_active_minus1;
     uint64_t num_ref_idx_l1_active_minus1;
-    uint8_t entropy_coding_mode_flag;
-    uint8_t deblocking_filter_control_present_flag;
-    uint64_t num_slice_groups_minus1;
-    uint64_t slice_group_map_type;
-    uint64_t pic_width_in_mbs_minus1;
-    uint64_t pic_height_in_map_units_minus1;
-    uint64_t slice_group_change_rate_minus1;
-    uint64_t cpb_cnt_minus1;
-    uint8_t nal_hrd_parameters_present_flag;
-    uint8_t vcl_hrd_parameters_present_flag;
-    uint64_t num_ref_idx_l0_default_active_minus1;
-    uint64_t num_ref_idx_l1_default_active_minus1;
-
-    int indent;
 } ParseContext;
 
 
@@ -171,9 +191,8 @@ typedef struct
 static int init_context(ParseContext *context, const char *filename)
 {
     memset(context, 0, sizeof(*context));
-    context->time_offset_length = 24;
-    context->chroma_format_idc = 1;
-    context->chroma_array_type = 1;
+    context->sps_cache[0].seq_parameter_set_id = 255;
+    context->pps_cache[0].pic_parameter_set_id = 255;
 
     context->file = fopen(filename, "rb");
     if (!context->file) {
@@ -199,6 +218,46 @@ static void deinit_context(ParseContext *context)
     free(context->buffer);
 }
 
+static void set_and_init_sps(ParseContext *context, uint8_t seq_parameter_set_id)
+{
+    context->sps = &context->sps_cache[seq_parameter_set_id];
+    memset(context->sps, 0, sizeof(*context->sps));
+    context->sps->seq_parameter_set_id = seq_parameter_set_id;
+    context->sps->time_offset_length = 24;
+    context->sps->chroma_format_idc = 1;
+    context->sps->chroma_array_type = 1;
+}
+
+static void set_and_init_pps(ParseContext *context, uint8_t pic_parameter_set_id)
+{
+    context->pps = &context->pps_cache[pic_parameter_set_id];
+    memset(context->pps, 0, sizeof(*context->pps));
+    context->pps->pic_parameter_set_id = pic_parameter_set_id;
+}
+
+static int set_sps(ParseContext *context, uint8_t seq_parameter_set_id)
+{
+    if (seq_parameter_set_id >= ARRAY_SIZE(context->sps_cache) ||
+        context->sps_cache[seq_parameter_set_id].seq_parameter_set_id != seq_parameter_set_id)
+    {
+        return 0;
+    }
+
+    context->sps = &context->sps_cache[seq_parameter_set_id];
+    return 1;
+}
+
+static int set_pps(ParseContext *context, uint8_t pic_parameter_set_id)
+{
+    if (context->pps_cache[pic_parameter_set_id].pic_parameter_set_id != pic_parameter_set_id)
+        return 0;
+
+    if (!set_sps(context, context->pps_cache[pic_parameter_set_id].seq_parameter_set_id))
+        return 0;
+
+    context->pps = &context->pps_cache[pic_parameter_set_id];
+    return 1;
+}
 
 static int read_next_page(ParseContext *context)
 {
@@ -498,6 +557,12 @@ static int _ii(ParseContext *context, uint8_t num_bits)
 static int _ue(ParseContext *context)
 {
     return exp_golumb(context);
+}
+
+#define ue_m(max)    CHK(_ue_m(context, max))
+static int _ue_m(ParseContext *context, uint64_t max)
+{
+    return exp_golumb(context) && context->value <= max;
 }
 
 #define se()    CHK(_se(context))
@@ -871,12 +936,14 @@ static int hrd_parameters(ParseContext *context)
 {
     uint64_t sched_sel_idx;
 
+    CHK(context->sps);
+
     ue(); PRINT_UINT("cpb_cnt_minus1");
-    context->cpb_cnt_minus1 = context->value;
+    context->sps->cpb_cnt_minus1 = context->value;
     u(4); PRINT_UINT("bit_rate_scale");
     u(4); PRINT_UINT("cpb_size_scale");
     context->indent++;
-    for (sched_sel_idx = 0; sched_sel_idx <= context->cpb_cnt_minus1; sched_sel_idx++) {
+    for (sched_sel_idx = 0; sched_sel_idx <= context->sps->cpb_cnt_minus1; sched_sel_idx++) {
         ue(); PRINT_UINT("bit_rate_value_minus1");
         ue(); PRINT_UINT("cpb_size_value_minus1");
         u(1); PRINT_UINT("cbr_flag");
@@ -884,17 +951,19 @@ static int hrd_parameters(ParseContext *context)
     context->indent--;
     u(5); PRINT_UINT("initial_cpb_removal_delay_length_minus1");
     u(5); PRINT_UINT("cpb_removal_delay_length_minus1");
-    context->cpb_removal_delay_length_minus1 = (uint8_t)context->value;
+    context->sps->cpb_removal_delay_length_minus1 = (uint8_t)context->value;
     u(5); PRINT_UINT("dpb_removal_delay_length_minus1");
-    context->dpb_removal_delay_length_minus1 = (uint8_t)context->value;
+    context->sps->dpb_removal_delay_length_minus1 = (uint8_t)context->value;
     u(5); PRINT_UINT("time_offset_length");
-    context->time_offset_length = (uint8_t)context->value;
+    context->sps->time_offset_length = (uint8_t)context->value;
 
     return 1;
 }
 
 static int vui_parameters(ParseContext *context)
 {
+    CHK(context->sps);
+
     u(1); PRINT_UINT("aspect_ratio_present_flag");
     if (context->value) {
         context->indent++;
@@ -942,25 +1011,26 @@ static int vui_parameters(ParseContext *context)
         context->indent--;
     }
     u(1); PRINT_UINT("nal_hrd_parameters_present_flag");
-    context->nal_hrd_parameters_present_flag = (uint8_t)context->value;
+    context->sps->nal_hrd_parameters_present_flag = (uint8_t)context->value;
     if (context->value) {
         context->indent++;
         CHK(hrd_parameters(context));
         context->indent--;
     }
     u(1); PRINT_UINT("vcl_hrd_parameters_present_flag");
-    context->vcl_hrd_parameters_present_flag = (uint8_t)context->value;
+    context->sps->vcl_hrd_parameters_present_flag = (uint8_t)context->value;
     if (context->value) {
         context->indent++;
         CHK(hrd_parameters(context));
         context->indent--;
     }
-    if (context->nal_hrd_parameters_present_flag || context->vcl_hrd_parameters_present_flag) {
+    if (context->sps->nal_hrd_parameters_present_flag || context->sps->vcl_hrd_parameters_present_flag) {
         u(1); PRINT_UINT("low_delay_hrd_flag");
     }
-    context->cpb_dpb_delays_present_flag = context->nal_hrd_parameters_present_flag || context->vcl_hrd_parameters_present_flag;
+    context->sps->cpb_dpb_delays_present_flag = context->sps->nal_hrd_parameters_present_flag ||
+                                                context->sps->vcl_hrd_parameters_present_flag;
     u(1); PRINT_UINT("pic_struct_present_flag");
-    context->pic_struct_present_flag = (uint8_t)context->value;
+    context->sps->pic_struct_present_flag = (uint8_t)context->value;
     u(1); PRINT_UINT("bitstream_restriction_flag");
     if (context->value) {
         u(1); PRINT_UINT("motion_vectors_over_pic_boundaries_flag");
@@ -1116,8 +1186,10 @@ static int pred_weight_table(ParseContext *context)
     printf("%*c pred_weight_table:\n", context->indent * 4, ' ');
     context->indent++;
 
+    CHK(context->sps);
+
     ue(); PRINT_UINT("luma_log2_weight_denom");
-    if (context->chroma_array_type != 0) {
+    if (context->sps->chroma_array_type != 0) {
         ue(); PRINT_UINT("chroma_log2_weight_denom");
     }
     for (i = 0; i <= context->num_ref_idx_l0_active_minus1; i++) {
@@ -1128,7 +1200,7 @@ static int pred_weight_table(ParseContext *context)
             se(); printf("%*c luma_offset_l0[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
             context->indent--;
         }
-        if (context->chroma_array_type != 0) {
+        if (context->sps->chroma_array_type != 0) {
             u(1); PRINT_UINT("chroma_weight_l0_flag");
             if (context->value) {
                 int j;
@@ -1150,7 +1222,7 @@ static int pred_weight_table(ParseContext *context)
                 se(); printf("%*c luma_offset_l1[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
                 context->indent--;
             }
-            if (context->chroma_array_type != 0) {
+            if (context->sps->chroma_array_type != 0) {
                 u(1); PRINT_UINT("chroma_weight_l1_flag");
                 if (context->value) {
                     int j;
@@ -1220,18 +1292,20 @@ static int slice_header(ParseContext *context)
     printf("%*c slice_header:\n", context->indent * 4, ' ');
     context->indent++;
 
-    context->num_ref_idx_l0_active_minus1 = context->num_ref_idx_l0_default_active_minus1;
-    context->num_ref_idx_l1_active_minus1 = context->num_ref_idx_l1_default_active_minus1;
-
     ue(); PRINT_UINT("first_mb_in_slice");
     ue(); print_slice_type(context, context->value);
     context->slice_type = context->value;
-    ue(); PRINT_UINT("pic_parameter_set_id");
-    if (context->separate_colour_plane_flag == 1) {
+    ue_m(255); PRINT_UINT("pic_parameter_set_id");
+    CHK(set_pps(context, (uint8_t)context->value));
+
+    context->num_ref_idx_l0_active_minus1 = context->pps->num_ref_idx_l0_default_active_minus1;
+    context->num_ref_idx_l1_active_minus1 = context->pps->num_ref_idx_l1_default_active_minus1;
+
+    if (context->sps->separate_colour_plane_flag == 1) {
         u(2); PRINT_UINT("colour_plane_id");
     }
-    u(context->log2_max_frame_num_minus4 + 4); PRINT_UINT("frame_num");
-    if (!context->frame_mbs_only_flag) {
+    u(context->sps->log2_max_frame_num_minus4 + 4); PRINT_UINT("frame_num");
+    if (!context->sps->frame_mbs_only_flag) {
         u(1); PRINT_UINT("field_pic_flag");
         field_pic_flag = (uint8_t)context->value;
         if (context->value) {
@@ -1241,19 +1315,19 @@ static int slice_header(ParseContext *context)
     if (idr_pic_flag) {
         ue(); PRINT_UINT("idr_pic_id");
     }
-    if (context->pic_order_cnt_type == 0) {
-        u(context->log2_max_pic_order_cnt_lsb_minus4 + 4); PRINT_UINT("pic_order_cnt_lsb");
-        if (context->bottom_field_pic_order_in_frame_present_flag && !field_pic_flag) {
+    if (context->sps->pic_order_cnt_type == 0) {
+        u(context->sps->log2_max_pic_order_cnt_lsb_minus4 + 4); PRINT_UINT("pic_order_cnt_lsb");
+        if (context->pps->bottom_field_pic_order_in_frame_present_flag && !field_pic_flag) {
             se(); PRINT_INT("delta_pic_order_cnt_bottom");
         }
     }
-    if (context->pic_order_cnt_type == 1 && !context->delta_pic_order_always_zero_flag) {
+    if (context->sps->pic_order_cnt_type == 1 && !context->sps->delta_pic_order_always_zero_flag) {
         se(); PRINT_INT("delta_pic_order_cnt[0]");
-        if (context->bottom_field_pic_order_in_frame_present_flag && !field_pic_flag) {
+        if (context->pps->bottom_field_pic_order_in_frame_present_flag && !field_pic_flag) {
             se(); PRINT_INT("delta_pic_order_cnt[1]");
         }
     }
-    if (context->redundant_pic_cnt_present_flag) {
+    if (context->pps->redundant_pic_cnt_present_flag) {
         ue(); PRINT_UINT("redundant_pic_cnt");
     }
     if (IS_B(context->slice_type)) {
@@ -1275,15 +1349,15 @@ static int slice_header(ParseContext *context)
     } else {
         CHK(ref_pic_list_modification(context));
     }
-    if ((context->weighted_pred_flag && (IS_P(context->slice_type) || IS_SP(context->slice_type))) ||
-        (context->weighted_bipred_idc == 1 && IS_B(context->slice_type)))
+    if ((context->pps->weighted_pred_flag && (IS_P(context->slice_type) || IS_SP(context->slice_type))) ||
+        (context->pps->weighted_bipred_idc == 1 && IS_B(context->slice_type)))
     {
         CHK(pred_weight_table(context));
     }
     if (context->nal_ref_idc != 0) {
         CHK(dec_ref_pic_marking(context));
     }
-    if (context->entropy_coding_mode_flag && !IS_I(context->slice_type) && !IS_SI(context->slice_type)) {
+    if (context->pps->entropy_coding_mode_flag && !IS_I(context->slice_type) && !IS_SI(context->slice_type)) {
         ue(); PRINT_UINT("cabac_init_idc");
     }
     se(); PRINT_INT("slice_qp_delta");
@@ -1293,19 +1367,19 @@ static int slice_header(ParseContext *context)
         }
         se(); PRINT_INT("slice_qs_delta");
     }
-    if (context->deblocking_filter_control_present_flag) {
+    if (context->pps->deblocking_filter_control_present_flag) {
         ue(); PRINT_UINT("disable_deblocking_filter_idc");
         if (context->value != 1) {
             se(); PRINT_INT("slice_alpha_c0_offset_div2");
             se(); PRINT_INT("slice_beta_offset_div2");
         }
     }
-    if (context->num_slice_groups_minus1 > 0 &&
-        context->slice_group_map_type >= 3 && context->slice_group_map_type <= 5)
+    if (context->pps->num_slice_groups_minus1 > 0 &&
+        context->pps->slice_group_map_type >= 3 && context->pps->slice_group_map_type <= 5)
     {
-        uint64_t pic_size_in_map_units = (context->pic_width_in_mbs_minus1 + 1) *
-                                            (context->pic_height_in_map_units_minus1 + 1);
-        uint8_t bit_count = get_bits_required(pic_size_in_map_units / (context->slice_group_change_rate_minus1 + 1) + 1);
+        uint64_t pic_size_in_map_units = (context->sps->pic_width_in_mbs_minus1 + 1) *
+                                            (context->sps->pic_height_in_map_units_minus1 + 1);
+        uint8_t bit_count = get_bits_required(pic_size_in_map_units / (context->pps->slice_group_change_rate_minus1 + 1) + 1);
         u(bit_count); PRINT_UINT("slice_group_change_cycle");
     }
 
@@ -1360,11 +1434,13 @@ static int slice_data_partition_b_layer(ParseContext *context)
     printf("%*c slice_data_partition_b_layer:\n", context->indent * 4, ' ');
     context->indent++;
 
+    CHK(context->sps && context->pps);
+
     ue(); PRINT_UINT("slice_id");
-    if (context->separate_colour_plane_flag == 1) {
+    if (context->sps->separate_colour_plane_flag == 1) {
         u(2); PRINT_UINT("colour_plane_id");
     }
-    if (context->redundant_pic_cnt_present_flag) {
+    if (context->pps->redundant_pic_cnt_present_flag) {
         ue(); PRINT_UINT("redundant_pic_cnt");
     }
     CHK(slice_data(context));
@@ -1381,11 +1457,13 @@ static int slice_data_partition_c_layer(ParseContext *context)
     printf("%*c slice_data_partition_c_layer:\n", context->indent * 4, ' ');
     context->indent++;
 
+    CHK(context->sps && context->pps);
+
     ue(); PRINT_UINT("slice_id");
-    if (context->separate_colour_plane_flag == 1) {
+    if (context->sps->separate_colour_plane_flag == 1) {
         u(2); PRINT_UINT("colour_plane_id");
     }
-    if (context->redundant_pic_cnt_present_flag) {
+    if (context->pps->redundant_pic_cnt_present_flag) {
         ue(); PRINT_UINT("redundant_pic_cnt");
     }
     CHK(slice_data(context));
@@ -1404,27 +1482,28 @@ static int buffering_period(ParseContext *context, uint64_t payload_type, uint64
     printf("%*c buffering_period (type=%"PRIu64", size=%"PRIu64"):\n", context->indent * 4, ' ', payload_type, payload_size);
     context->indent++;
 
-    ue(); PRINT_UINT("seq_parameter_set_id");
+    ue_m(31); PRINT_UINT("seq_parameter_set_id");
+    CHK(set_sps(context, (uint8_t)context->value));
 
-    if (context->nal_hrd_parameters_present_flag) {
+    if (context->sps->nal_hrd_parameters_present_flag) {
         printf("%*c nal:\n", context->indent * 4, ' ');
         context->indent++;
-        for (sched_sel_idx = 0; sched_sel_idx <= context->cpb_cnt_minus1; sched_sel_idx++) {
-            u(context->cpb_removal_delay_length_minus1 + 1);
+        for (sched_sel_idx = 0; sched_sel_idx <= context->sps->cpb_cnt_minus1; sched_sel_idx++) {
+            u(context->sps->cpb_removal_delay_length_minus1 + 1);
             printf("%*c initial_cpb_removal_delay[%"PRIu64"]        : %"PRId64"\n", context->indent * 4, ' ', sched_sel_idx, context->value);
-            u(context->cpb_removal_delay_length_minus1 + 1);
+            u(context->sps->cpb_removal_delay_length_minus1 + 1);
             printf("%*c initial_cpb_removal_delay_offset[%"PRIu64"] : %"PRId64"\n", context->indent * 4, ' ', sched_sel_idx, context->value);
         }
         context->indent--;
     }
 
-    if (context->vcl_hrd_parameters_present_flag) {
+    if (context->sps->vcl_hrd_parameters_present_flag) {
         printf("%*c vcl:\n", context->indent * 4, ' ');
         context->indent++;
-        for (sched_sel_idx = 0; sched_sel_idx <= context->cpb_cnt_minus1; sched_sel_idx++) {
-            u(context->cpb_removal_delay_length_minus1 + 1);
+        for (sched_sel_idx = 0; sched_sel_idx <= context->sps->cpb_cnt_minus1; sched_sel_idx++) {
+            u(context->sps->cpb_removal_delay_length_minus1 + 1);
             printf("%*c initial_cpb_removal_delay [%"PRIu64"]       : %"PRId64"\n", context->indent * 4, ' ', sched_sel_idx, context->value);
-            u(context->cpb_removal_delay_length_minus1 + 1);
+            u(context->sps->cpb_removal_delay_length_minus1 + 1);
             printf("%*c initial_cpb_removal_delay_offset[%"PRIu64"] : %"PRId64"\n", context->indent * 4, ' ', sched_sel_idx, context->value);
         }
         context->indent--;
@@ -1439,11 +1518,15 @@ static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t pay
     printf("%*c pic_timing (type=%"PRIu64", size=%"PRIu64"):\n", context->indent * 4, ' ', payload_type, payload_size);
     context->indent++;
 
-    if (context->cpb_dpb_delays_present_flag) {
-        u(context->cpb_removal_delay_length_minus1 + 1); PRINT_UINT("cpb_removal_delay");
-        u(context->dpb_removal_delay_length_minus1 + 1); PRINT_UINT("dpb_removal_delay");
+    // TODO: see Note 1 in section D.2.2: the SPS is activated by the first slice of primary coded picture and that will
+    // occur after the SEI. So it could be that this is the wrong SPS
+    CHK(context->sps);
+
+    if (context->sps->cpb_dpb_delays_present_flag) {
+        u(context->sps->cpb_removal_delay_length_minus1 + 1); PRINT_UINT("cpb_removal_delay");
+        u(context->sps->dpb_removal_delay_length_minus1 + 1); PRINT_UINT("dpb_removal_delay");
     }
-    if (context->pic_struct_present_flag) {
+    if (context->sps->pic_struct_present_flag) {
         uint64_t pic_struct;
         uint8_t num_clock_ts = 0;
         uint8_t i;
@@ -1505,8 +1588,8 @@ static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t pay
                         }
                     }
                 }
-                if (context->time_offset_length > 0) {
-                    ii(context->time_offset_length); PRINT_INT("time_offset");
+                if (context->sps->time_offset_length > 0) {
+                    ii(context->sps->time_offset_length); PRINT_INT("time_offset");
                 }
 
                 context->indent--;
@@ -1702,37 +1785,40 @@ static int sei(ParseContext *context)
 static int sequence_parameter_set_data(ParseContext *context)
 {
     uint8_t constraint_flags;
+    uint8_t profile_idc;
 
     printf("%*c sequence_parameter_set:\n", context->indent * 4, ' ');
     context->indent++;
 
-    u(8); context->profile_idc = (uint8_t)context->value;
+    u(8); profile_idc = (uint8_t)context->value;
     u(1); constraint_flags = (uint8_t)context->value;
     u(1); constraint_flags |= (uint8_t)context->value << 1;
     u(1); constraint_flags |= (uint8_t)context->value << 2;
     u(1); constraint_flags |= (uint8_t)context->value << 3;
     u(1); constraint_flags |= (uint8_t)context->value << 4;
     u(1); constraint_flags |= (uint8_t)context->value << 5;
-    print_profile_and_flags(context, context->profile_idc, constraint_flags);
+    print_profile_and_flags(context, profile_idc, constraint_flags);
     u(2); PRINT_UINT("reserved_zero_2bits");
     u(8); print_level(context, (uint8_t)context->value, constraint_flags);
-    ue(); PRINT_UINT("seq_parameter_set_id");
+    ue_m(31); PRINT_UINT("seq_parameter_set_id");
+    set_and_init_sps(context, (uint8_t)context->value);
+    context->sps->profile_idc = profile_idc;
 
-    if (context->profile_idc == 100 || context->profile_idc == 110 ||
-        context->profile_idc == 122 || context->profile_idc == 244 || context->profile_idc ==  44 ||
-        context->profile_idc ==  83 || context->profile_idc ==  86 || context->profile_idc == 118 ||
-        context->profile_idc == 128)
+    if (context->sps->profile_idc == 100 || context->sps->profile_idc == 110 ||
+        context->sps->profile_idc == 122 || context->sps->profile_idc == 244 || context->sps->profile_idc ==  44 ||
+        context->sps->profile_idc ==  83 || context->sps->profile_idc ==  86 || context->sps->profile_idc == 118 ||
+        context->sps->profile_idc == 128)
     {
         ue(); print_chroma_format(context, (uint8_t)context->value);
-        context->chroma_format_idc = (uint8_t)context->value;
-        if (context->chroma_format_idc == 3) {
+        context->sps->chroma_format_idc = (uint8_t)context->value;
+        if (context->sps->chroma_format_idc == 3) {
             u(1); PRINT_UINT("separate_colour_plane_flag");
-            context->separate_colour_plane_flag = (uint8_t)context->value;
+            context->sps->separate_colour_plane_flag = (uint8_t)context->value;
         }
-        if (context->separate_colour_plane_flag == 0)
-            context->chroma_array_type = context->chroma_format_idc;
+        if (context->sps->separate_colour_plane_flag == 0)
+            context->sps->chroma_array_type = context->sps->chroma_format_idc;
         else
-            context->chroma_array_type = 0;
+            context->sps->chroma_array_type = 0;
         ue(); PRINT_UINT("bit_depth_luma_minus8");
         ue(); PRINT_UINT("bit_depth_chroma_minus8");
         u(1); PRINT_UINT("qpprime_y_zero_transform_bypass_flag");
@@ -1741,7 +1827,7 @@ static int sequence_parameter_set_data(ParseContext *context)
             uint8_t i;
 
             context->indent++;
-            for (i = 0; i < ((context->chroma_format_idc != 3) ? 8 : 12); i++) {
+            for (i = 0; i < ((context->sps->chroma_format_idc != 3) ? 8 : 12); i++) {
                 u(1); print_scaling_list_flag_and_index(context, "seq_scaling_list_present_flag",
                                                         (uint8_t)context->value, i);
                 if (context->value) {
@@ -1758,18 +1844,18 @@ static int sequence_parameter_set_data(ParseContext *context)
         }
     }
     ue(); PRINT_UINT("log2_max_frame_num_minus4");
-    context->log2_max_frame_num_minus4 = (uint8_t)context->value;
+    context->sps->log2_max_frame_num_minus4 = (uint8_t)context->value;
     ue(); PRINT_UINT("pic_order_cnt_type");
-    context->pic_order_cnt_type = context->value;
-    if (context->pic_order_cnt_type == 0) {
+    context->sps->pic_order_cnt_type = context->value;
+    if (context->sps->pic_order_cnt_type == 0) {
         ue(); PRINT_UINT("log2_max_pic_order_cnt_lsb_minus4");
-        context->log2_max_pic_order_cnt_lsb_minus4 = (uint8_t)context->value;
-    } else if (context->pic_order_cnt_type == 1) {
+        context->sps->log2_max_pic_order_cnt_lsb_minus4 = (uint8_t)context->value;
+    } else if (context->sps->pic_order_cnt_type == 1) {
         uint64_t num_ref_frames_in_pic_order_cnt_cycle;
         uint64_t i;
 
         u(1); PRINT_UINT("delta_pic_order_always_zero_flag");
-        context->delta_pic_order_always_zero_flag = (uint8_t)context->value;
+        context->sps->delta_pic_order_always_zero_flag = (uint8_t)context->value;
         se(); PRINT_INT("offset_for_non_ref_pic");
         se(); PRINT_INT("offset_for_top_to_bottom_field");
         ue(); PRINT_UINT("num_ref_frames_in_pic_order_cnt_cycle");
@@ -1783,11 +1869,11 @@ static int sequence_parameter_set_data(ParseContext *context)
     ue(); PRINT_UINT("max_num_ref_frames");
     u(1); PRINT_UINT("gaps_in_frame_num_value_allowed_flag");
     ue(); PRINT_UINT("pic_width_in_mbs_minus1");
-    context->pic_width_in_mbs_minus1 = context->value;
+    context->sps->pic_width_in_mbs_minus1 = context->value;
     ue(); PRINT_UINT("pic_height_in_map_units_minus1");
-    context->pic_height_in_map_units_minus1 = context->value;
+    context->sps->pic_height_in_map_units_minus1 = context->value;
     u(1); PRINT_UINT("frame_mbs_only_flag");
-    context->frame_mbs_only_flag = (uint8_t)context->value;
+    context->sps->frame_mbs_only_flag = (uint8_t)context->value;
     if (!context->value) {
         u(1); PRINT_UINT("mb_adaptive_frame_field_flag");
     }
@@ -1825,43 +1911,47 @@ static int picture_parameter_set(ParseContext *context)
     printf("%*c picture_parameter_set:\n", context->indent * 4, ' ');
     context->indent++;
 
-    ue(); PRINT_UINT("pic_parameter_set_id");
-    ue(); PRINT_UINT("seq_parameter_set_id");
+    ue_m(255); PRINT_UINT("pic_parameter_set_id");
+    set_and_init_pps(context, (uint8_t)context->value);
+    ue_m(31); PRINT_UINT("seq_parameter_set_id");
+    context->pps->seq_parameter_set_id = (uint8_t)context->value;
+    CHK(set_sps(context, (uint8_t)context->value));
+
     u(1); PRINT_UINT("entropy_coding_mode_flag");
-    context->entropy_coding_mode_flag = (uint8_t)context->value;
+    context->pps->entropy_coding_mode_flag = (uint8_t)context->value;
     u(1); PRINT_UINT("bottom_field_pic_order_in_frame_present_flag");
-    context->bottom_field_pic_order_in_frame_present_flag = (uint8_t)context->value;
+    context->pps->bottom_field_pic_order_in_frame_present_flag = (uint8_t)context->value;
     ue(); PRINT_UINT("num_slice_groups_minus1");
-    context->num_slice_groups_minus1 = context->value;
+    context->pps->num_slice_groups_minus1 = context->value;
     if (context->value > 0) {
         uint64_t i;
 
         ue(); PRINT_UINT("slice_group_map_type");
-        context->slice_group_map_type = context->value;
+        context->pps->slice_group_map_type = context->value;
 
         context->indent++;
-        if (context->slice_group_map_type == 0)
+        if (context->pps->slice_group_map_type == 0)
         {
-            for (i = 0; i <= context->num_slice_groups_minus1; i++) {
+            for (i = 0; i <= context->pps->num_slice_groups_minus1; i++) {
                 ue(); printf("%*c run_length_minus1[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
             }
         }
-        else if (context->slice_group_map_type == 2)
+        else if (context->pps->slice_group_map_type == 2)
         {
-            for (i = 0; i < context->num_slice_groups_minus1; i++) {
+            for (i = 0; i < context->pps->num_slice_groups_minus1; i++) {
                 ue(); printf("%*c top_left[%"PRIu64"]    : %"PRId64"\n", context->indent * 4, ' ', i, context->value);
                 ue(); printf("%*c bottom_right[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
             }
         }
-        else if (context->slice_group_map_type == 3 ||
-                 context->slice_group_map_type == 4 ||
-                 context->slice_group_map_type == 5)
+        else if (context->pps->slice_group_map_type == 3 ||
+                 context->pps->slice_group_map_type == 4 ||
+                 context->pps->slice_group_map_type == 5)
         {
             u(1); PRINT_UINT("slice_group_change_direction_flag");
             ue(); PRINT_UINT("slice_group_change_rate_minus1");
-            context->slice_group_change_rate_minus1 = context->value;
+            context->pps->slice_group_change_rate_minus1 = context->value;
         }
-        else if (context->slice_group_map_type == 6)
+        else if (context->pps->slice_group_map_type == 6)
         {
             uint64_t pic_size_in_map_units_minus1;
 
@@ -1869,7 +1959,7 @@ static int picture_parameter_set(ParseContext *context)
             pic_size_in_map_units_minus1 = context->value;
             context->indent++;
             for (i = 0; i <= pic_size_in_map_units_minus1; i++) {
-                u(get_bits_required(context->num_slice_groups_minus1 + 1));
+                u(get_bits_required(context->pps->num_slice_groups_minus1 + 1));
                 printf("%*c slice_group_id[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
             }
             context->indent--;
@@ -1877,21 +1967,21 @@ static int picture_parameter_set(ParseContext *context)
         context->indent--;
     }
     ue(); PRINT_UINT("num_ref_idx_l0_default_active_minus1");
-    context->num_ref_idx_l0_default_active_minus1 = context->value;
+    context->pps->num_ref_idx_l0_default_active_minus1 = context->value;
     ue(); PRINT_UINT("num_ref_idx_l1_default_active_minus1");
-    context->num_ref_idx_l1_default_active_minus1 = context->value;
+    context->pps->num_ref_idx_l1_default_active_minus1 = context->value;
     u(1); PRINT_UINT("weighted_pred_flag");
-    context->weighted_pred_flag = (uint8_t)context->value;
+    context->pps->weighted_pred_flag = (uint8_t)context->value;
     u(2); PRINT_UINT("weighted_bipred_idc");
-    context->weighted_bipred_idc = (uint8_t)context->value;
+    context->pps->weighted_bipred_idc = (uint8_t)context->value;
     se(); PRINT_INT("pic_init_qp_minus26");
     se(); PRINT_INT("pic_init_qs_minus26");
     se(); PRINT_INT("chroma_qp_index_offset");
     u(1); PRINT_UINT("deblocking_filter_control_present_flag");
-    context->deblocking_filter_control_present_flag = (uint8_t)context->value;
+    context->pps->deblocking_filter_control_present_flag = (uint8_t)context->value;
     u(1); PRINT_UINT("constrained_intra_pred_flag");
     u(1); PRINT_UINT("redundant_pic_cnt_present_flag");
-    context->redundant_pic_cnt_present_flag = (uint8_t)context->value;
+    context->pps->redundant_pic_cnt_present_flag = (uint8_t)context->value;
     if (more_rbsp_data(context)) {
         uint64_t transform_8x8_mode_flag;
 
@@ -1902,7 +1992,7 @@ static int picture_parameter_set(ParseContext *context)
             uint8_t i;
 
             context->indent++;
-            for (i = 0; i < 6 + (context->chroma_format_idc != 3 ? 2 : 6) * transform_8x8_mode_flag; i++) {
+            for (i = 0; i < 6 + (context->sps->chroma_format_idc != 3 ? 2 : 6) * transform_8x8_mode_flag; i++) {
                 u(1); print_scaling_list_flag_and_index(context, "pic_scaling_present_flag",
                                                         (uint8_t)context->value, i);
                 if (context->value) {
@@ -1945,7 +2035,8 @@ static int sequence_parameter_set_extension(ParseContext *context)
     printf("%*c sequence_parameter_set_extension:\n", context->indent * 4, ' ');
     context->indent++;
 
-    ue(); PRINT_UINT("seq_parameter_set_id");
+    ue_m(31); PRINT_UINT("seq_parameter_set_id");
+    CHK(set_sps(context, (uint8_t)context->value));
     ue(); PRINT_UINT("aux_format_idc");
     if (context->value) {
         ue(); PRINT_UINT("bit_depth_aux_minus8");
@@ -1968,17 +2059,19 @@ static int sequence_parameter_set_svc_extension(ParseContext *context)
     printf("%*c sequence_parameter_set_svc_extension:\n", context->indent * 4, ' ');
     context->indent++;
 
+    CHK(context->sps);
+
     u(1); PRINT_UINT("inter_layer_deblocking_filter_control_present_flag");
     u(2); PRINT_UINT("extended_spatial_scalability_idc");
     extended_spatial_scalability_idc = context->value;
-    if (context->chroma_array_type == 1 || context->chroma_array_type == 2) {
+    if (context->sps->chroma_array_type == 1 || context->sps->chroma_array_type == 2) {
         u(1); PRINT_UINT("chroma_phase_x_plus1_flag");
     }
-    if (context->chroma_array_type == 1) {
+    if (context->sps->chroma_array_type == 1) {
         u(2); PRINT_UINT("chroma_phase_y_plus1");
     }
     if (extended_spatial_scalability_idc == 1) {
-        if (context->chroma_array_type > 0) {
+        if (context->sps->chroma_array_type > 0) {
             u(1); PRINT_UINT("seq_ref_layer_chroma_phase_x_plus1_flag");
             u(2); PRINT_UINT("seq_ref_layer_chroma_phase_y_plus1");
         }
@@ -2171,13 +2264,13 @@ static int subset_sequence_parameter_set(ParseContext *context)
     context->indent++;
 
     CHK(sequence_parameter_set_data(context));
-    if (context->profile_idc == 83 || context->profile_idc == 86) {
+    if (context->sps->profile_idc == 83 || context->sps->profile_idc == 86) {
         CHK(sequence_parameter_set_svc_extension(context));
         u(1); PRINT_UINT("svc_vui_parameter_present_flag");
         if (context->value) {
             CHK(svc_vui_parameters_extension(context));
         }
-    } else if (context->profile_idc == 118 || context->profile_idc == 128) {
+    } else if (context->sps->profile_idc == 118 || context->sps->profile_idc == 128) {
         f(1); PRINT_UINT("bit_equal_to_one");
         CHK(sequence_parameter_set_mvc_extension(context));
         u(1); PRINT_UINT("mvc_vui_parameter_present_flag");
