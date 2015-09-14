@@ -342,7 +342,7 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
     shift_next_nal_data(context);
 
     // search for start of nal unit
-    state = 0xffffff00;
+    state = 0xffffffff;
     while ((state & 0x00ffffff) != 0x000001) {
         if (!read_byte(context, &byte))
             return 0;
@@ -360,7 +360,7 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
     context->nal_padding = 0;
 
     // search for start of next nal unit or zero bytes to give the number of bytes that need to be parsed
-    state = 0xffffff00;
+    state = 0xffffffff;
     while ((state & 0x00ffffff) != 0x000001 && (state & 0x00ffffff) != 0x000000) {
         if (!read_byte(context, &byte))
             break;
