@@ -149,6 +149,7 @@ typedef struct
     int indent;
 
     FILE *file;
+    int end_of_read;
 
     unsigned char *buffer;
     uint32_t buffer_size;
@@ -262,9 +263,12 @@ static int set_pps(ParseContext *context, uint8_t pic_parameter_set_id)
     return 1;
 }
 
-static int read_next_page(ParseContext *context)
+static int read_next_block(ParseContext *context)
 {
     size_t num_read;
+
+    if (context->end_of_read)
+        return 0;
 
     if (context->data_size + READ_BLOCK_SIZE > context->buffer_size) {
         unsigned char *new_buffer;
@@ -286,15 +290,16 @@ static int read_next_page(ParseContext *context)
     }
 
     num_read = fread(&context->buffer[context->data_size], 1, READ_BLOCK_SIZE, context->file);
-    context->data_size += (uint32_t)num_read;
+    context->data_size   += (uint32_t)num_read;
+    context->end_of_read  = (num_read == 0);
 
-    return num_read != 0;
+    return !context->end_of_read;
 }
 
-static int load_byte(ParseContext *context, unsigned char *byte)
+static int read_byte(ParseContext *context, unsigned char *byte)
 {
     if (context->data_pos >= context->data_size) {
-        if (!read_next_page(context))
+        if (!read_next_block(context))
             return 0;
     }
 
@@ -304,31 +309,47 @@ static int load_byte(ParseContext *context, unsigned char *byte)
     return 1;
 }
 
-
-static int parse_byte_stream_nal_unit(ParseContext *context)
+static int peek_byte(ParseContext *context, unsigned char *byte)
 {
-    uint8_t byte;
+    if (!read_byte(context, byte))
+        return 0;
+
+    context->data_pos--;
+
+    return 1;
+}
+
+
+static void shift_next_nal_data(ParseContext *context)
+{
     uint32_t rem_size;
-    uint32_t state;
-    uint8_t nal_unit_type;
-    uint32_t num_nal_unit_parse_bytes;
 
     rem_size = context->data_size - (context->nal_start + context->nal_size);
     if (rem_size > 0)
         memmove(context->buffer, &context->buffer[context->nal_start + context->nal_size], rem_size);
     context->data_start_file_pos += context->data_size - rem_size;
-    context->data_size = rem_size;
-    context->data_pos = 0;
+    context->data_size            = rem_size;
+    context->data_pos             = 0;
+}
 
+static int parse_byte_stream_nal_unit(ParseContext *context)
+{
+    uint8_t byte;
+    uint32_t state;
+    uint8_t nal_unit_type;
+    uint32_t num_nal_unit_parse_bytes;
+
+    shift_next_nal_data(context);
+
+    // search for start of nal unit
     state = 0xffffff00;
     while ((state & 0x00ffffff) != 0x000001) {
-        if (!load_byte(context, &byte))
+        if (!read_byte(context, &byte))
             return 0;
         state = (state << 8) | byte;
     }
     if (state != 0x00000001) {
-        CHK(load_byte(context, &byte));
-        context->data_pos--;
+        CHK(peek_byte(context, &byte));
         nal_unit_type = byte & 0x1f;
         /* TODO: this is incomplete. Need to get the last VCL unit. See section 7.4.1.2.3  and B.1.2 */
         if (context->data_start_file_pos == 0 || nal_unit_type == 7 || nal_unit_type == 8)
@@ -336,59 +357,62 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
     }
     context->nal_start = context->data_pos;
     context->nal_size = 0;
+    context->nal_padding = 0;
 
+    // search for start of next nal unit or zero bytes to give the number of bytes that need to be parsed
     state = 0xffffff00;
     while ((state & 0x00ffffff) != 0x000001 && (state & 0x00ffffff) != 0x000000) {
-        if (!load_byte(context, &byte))
+        if (!read_byte(context, &byte))
             break;
         state = (state << 8) | byte;
     }
-
     num_nal_unit_parse_bytes = context->data_pos - context->nal_start;
     if ((state & 0x00ffffff) == 0x000001 || (state & 0x00ffffff) == 0x000000) {
         num_nal_unit_parse_bytes -= 3;
         if ((state & 0x00ffffff) == 0x000000) {
-            /* add a byte to the NAL unit bytes as a workaround for the missing sequence parameter set
-               stop bit in Avid Transfer Manager AVCI files. The last couple of properties in the SPS are
-               zero and the last byte is wrongly assumed to be padding because of the missing stop bit.
-               This results in not be enough bits being available and parsing fails */
-            if (state != 0x00000001)
-                num_nal_unit_parse_bytes++;
-            while (state != 0x00000001) {
-                if (!load_byte(context, &byte))
-                    break;
-                state = (state << 8) | byte;
-            }
+            context->nal_padding += 3;
+
+            /* add a byte to the NAL unit bytes to be parsed as a workaround for the missing sequence
+               parameter set stop bit in Avid Transfer Manager AVCI files. The last couple of properties
+               in the SPS are zero and the last byte is wrongly assumed to be padding because of the
+               missing stop bit. This results in not be enough bits being available and parsing fails */
+            num_nal_unit_parse_bytes++;
         }
+    }
+
+    // search past the nal padding to the start of the next nal unit
+    if ((state & 0x00ffffff) == 0x000000) {
+        state = 0;
+        while ((state & 0x00ffffff) != 0x000001) {
+            if (!read_byte(context, &byte))
+                break;
+            if (!state && !(byte == 0x00 || byte == 0x01))
+                printf("Warning: zero bytes not followed by start code prefix. Possibly missing emulation_prevention_three_byte\n");
+            state = (state << 8) | byte;
+            context->nal_padding++;
+        }
+        if ((state & 0x00ffffff) == 0x000001)
+            context->nal_padding -= 3;
     }
 
     context->nal_size = context->data_pos - context->nal_start;
     if ((state & 0x00ffffff) == 0x000001) {
         context->nal_size -= 3;
-        if (load_byte(context, &byte)) {
-            context->data_pos--;
+        if (peek_byte(context, &byte)) {
             nal_unit_type = byte & 0x1f;
             /* TODO: this is incomplete. Need to get the last VCL unit. See section 7.4.1.2.3 and B.1.2 */
-            if ((nal_unit_type == 7 || nal_unit_type == 8) || nal_unit_type == 9) {
-                if (state != 0x00000001)
+            if (nal_unit_type == 7 || nal_unit_type == 8 || nal_unit_type == 9) {
+                if (state != 0x00000001) {
                     printf("Warning: missing zero_byte before start_code_prefix_one_3bytes\n");
-                else
-                    context->nal_size -= 1;
+                } else {
+                    context->nal_size--;
+                    context->nal_padding--;
+                }
             }
         }
     }
 
-    context->nal_padding = 0;
-    if (context->nal_size > 0) {
-        const unsigned char *nal_data_start = &context->buffer[context->nal_start];
-        const unsigned char *nal_data = nal_data_start + context->nal_size - 1;
-        while (!(*nal_data) && nal_data != nal_data_start) {
-            context->nal_padding++;
-            nal_data--;
-        }
-    }
-
-    context->bit_pos = context->nal_start * 8;
+    context->bit_pos     = context->nal_start * 8;
     context->end_bit_pos = context->nal_start * 8 + num_nal_unit_parse_bytes * 8;
 
     return 1;
@@ -397,25 +421,19 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
 static int parse_isom_nal_unit(ParseContext *context, unsigned int isom_llen)
 {
     uint8_t byte;
-    uint32_t rem_size;
     uint32_t nal_size = 0;
     unsigned int i;
 
-    rem_size = context->data_size - (context->nal_start + context->nal_size);
-    if (rem_size > 0)
-        memmove(context->buffer, &context->buffer[context->nal_start + context->nal_size], rem_size);
-    context->data_start_file_pos += context->data_size - rem_size;
-    context->data_size            = rem_size;
-    context->data_pos             = 0;
+    shift_next_nal_data(context);
 
     for (i = 0; i < isom_llen; i++) {
-        if (!load_byte(context, &byte))
+        if (!read_byte(context, &byte))
             return 0;
         nal_size = (nal_size << 8) | byte;
     }
 
     while (context->data_size < context->data_pos + nal_size) {
-        if (!read_next_page(context))
+        if (!read_next_block(context))
             return 0;
     }
 
