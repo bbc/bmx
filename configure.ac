@@ -279,13 +279,13 @@ AC_CONFIG_FILES([
 	test/d10_mxf/Makefile
 	test/rdd9_mxf/Makefile
 	test/wave/Makefile
-	test/essence_parser/Makefile
 	test/growing_file/Makefile
 	test/rdd6/Makefile
 	apps/Makefile
 	apps/mxf2raw/Makefile
 	apps/raw2bmx/Makefile
 	apps/bmxtranswrap/Makefile
+	apps/bmxparse/Makefile
 	tools/Makefile
 	msvc_build/Makefile
 	msvc_build/vs10/Makefile

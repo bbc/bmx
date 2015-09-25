@@ -1,2 +1,2 @@
-SUBDIRS = . mxf2raw raw2bmx bmxtranswrap
+SUBDIRS = . mxf2raw raw2bmx bmxtranswrap bmxparse
 

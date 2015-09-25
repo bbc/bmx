@@ -6,6 +6,8 @@ EXTRA_DIST = \
 	bmx/bmx.vcxproj \
 	bmx/bmx.vcxproj.filters \
 	bmx/gen_scm_version.cmd \
+	apps/bmxparse/bmxparse.vcxproj \
+	apps/bmxparse/bmxparse.vcxproj.filters \
 	apps/bmxtranswrap/bmxtranswrap.vcxproj \
 	apps/bmxtranswrap/bmxtranswrap.vcxproj.filters \
 	apps/mxf2raw/mxf2raw.vcxproj \
