@@ -38,6 +38,7 @@
 
 #include <cstring>
 #include <cmath>
+#include <set>
 
 #include <bmx/essence_parser/AVCEssenceParser.h>
 #include <bmx/mxf_helper/AVCIMXFDescriptorHelper.h>
@@ -55,24 +56,38 @@ using namespace bmx;
 
 typedef enum
 {
-    CODED_SLICE_NON_IDR_PICT        = 1,
-    CODED_SLICE_DATA_PART_A         = 2,
-    CODED_SLICE_DATA_PART_B         = 3,
-    CODED_SLICE_DATA_PART_C         = 4,
-    CODED_SLICE_IDR_PICT            = 5,
-    SEI                             = 6,
-    SEQUENCE_PARAMETER_SET          = 7,
-    PICTURE_PARAMETER_SET           = 8,
-    ACCESS_UNIT_DELIMITER           = 9,
-    END_OF_SEQUENCE                 = 10,
-    END_OF_STREAM                   = 11,
-    FILLER                          = 12,
-    SEQUENCE_PARAMETER_SET_EXT      = 13,
-    PREFIX_NAL_UNIT                 = 14,
-    SUBSET_SEQUENCE_PARAMETER_SET   = 15,
-    CODED_SLICE_AUX_NO_PART         = 19,
-    CODED_SLICE_EXT                 = 20,
-} NALUnitType;
+    P_SLICE     = 0,
+    B_SLICE     = 1,
+    I_SLICE     = 2,
+    SP_SLICE    = 3,
+    SI_SLICE    = 4,
+    P_SLICE_2   = 5,
+    B_SLICE_2   = 6,
+    I_SLICE_2   = 7,
+    SP_SLICE_2  = 8,
+    SI_SLICE_2  = 9,
+} SliceType;
+
+#define IS_P(t)     ((t) == P_SLICE  || (t) == P_SLICE_2)
+#define IS_B(t)     ((t) == B_SLICE  || (t) == B_SLICE_2)
+#define IS_I(t)     ((t) == I_SLICE  || (t) == I_SLICE_2)
+#define IS_SP(t)    ((t) == SP_SLICE || (t) == SP_SLICE_2)
+#define IS_SI(t)    ((t) == SI_SLICE || (t) == SI_SLICE_2)
+
+typedef enum
+{
+    BASELINE            = 66,
+    MAIN                = 77,
+    EXTENDED            = 88,
+    HIGH                = 100,
+    HIGH_10             = 110,
+    HIGH_422            = 122,
+    HIGH_444            = 244,
+    CAVLC_444_INTRA     = 44,
+} Profile;
+
+
+static const NALReference NULL_NAL_REFERENCE = {0, 0, 0};
 
 
 
@@ -144,12 +159,32 @@ void AVCGetBitBuffer::GetUE(uint64_t *value)
     }
 }
 
+void AVCGetBitBuffer::GetUE(uint8_t *value, uint8_t max_value)
+{
+  uint64_t temp;
+  GetUE(&temp);
+  if (temp > max_value) {
+      log_error("Exp-Golumb property value %" PRIu64 " exceeds maximum value %u\n", temp, max_value);
+      throw false;
+  }
+
+  *value = (uint8_t)temp;
+}
+
 void AVCGetBitBuffer::GetSE(int64_t *value)
 {
     uint64_t uvalue;
     GetUE(&uvalue);
 
     *value = ((uvalue & 1) ? 1 : -1) * CEIL_DIVISION(uvalue, 2);
+}
+
+void AVCGetBitBuffer::GetSE(int32_t *value)
+{
+    uint64_t uvalue;
+    GetUE(&uvalue);
+
+    *value = (int32_t)(((uvalue & 1) ? 1 : -1) * CEIL_DIVISION(uvalue, 2));
 }
 
 bool AVCGetBitBuffer::MoreRBSPData()
@@ -264,6 +299,75 @@ void AVCGetBitBuffer::GetRBSPBits(uint8_t num_bits, uint64_t *value)
 
 
 
+ParamSetData::ParamSetData()
+{
+    is_constant = true;
+    data = 0;
+    size = 0;
+}
+
+ParamSetData::ParamSetData(const unsigned char *data_, uint32_t size_)
+{
+    is_constant = true;
+    data = 0;
+    size = 0;
+
+    Update(data_, size_);
+}
+
+ParamSetData::~ParamSetData()
+{
+    delete [] data;
+}
+
+void ParamSetData::Update(const unsigned char *data_, uint32_t size_)
+{
+    if (size > 0 && (size != size_ || memcmp(data, data_, size) != 0)) {
+        is_constant = false;
+        delete [] data;
+        data = 0;
+        size = 0;
+    }
+
+    if (size == 0) {
+        data = new unsigned char[size_];
+        memcpy(data, data_, size_);
+        size = size_;
+    }
+}
+
+
+
+POCState::POCState()
+{
+    Reset();
+}
+
+void POCState::Reset()
+{
+    prev_have_mmco_5 = false;
+    prev_bottom_field_flag = false;
+    prev_pic_order_cnt_msb = 0;
+    prev_pic_order_cnt_lsb = 0;
+    prev_top_field_order_cnt = 0;
+    prev_frame_num = 0;
+    prev_frame_num_offset = 0;
+}
+
+
+
+AVCEssenceParser::SPSExtra::SPSExtra()
+{
+    num_ref_frames_in_pic_order_cnt_cycle = 0;
+    offset_for_ref_frame = 0;
+}
+
+AVCEssenceParser::SPSExtra::~SPSExtra()
+{
+    delete [] offset_for_ref_frame;
+}
+
+
 AVCEssenceParser::AVCEssenceParser()
 {
     ResetFrameSize();
@@ -272,6 +376,40 @@ AVCEssenceParser::AVCEssenceParser()
 
 AVCEssenceParser::~AVCEssenceParser()
 {
+    map<uint8_t, SPSExtra*>::const_iterator iter1;
+    for (iter1 = mSPSExtra.begin(); iter1 != mSPSExtra.end(); iter1++)
+        delete iter1->second;
+
+    map<uint8_t, ParamSetData*>::const_iterator iter2;
+    for (iter2 = mSPSData.begin(); iter2 != mSPSData.end(); iter2++)
+        delete iter2->second;
+    for (iter2 = mPPSData.begin(); iter2 != mPPSData.end(); iter2++)
+        delete iter2->second;
+}
+
+void AVCEssenceParser::SetSPS(const unsigned char *data, uint32_t size)
+{
+    BMX_CHECK(size > 1);
+
+    uint8_t nal_unit_type = data[0] & 0x1f;
+    BMX_CHECK(nal_unit_type == SEQUENCE_PARAMETER_SET);
+
+    SPS sps;
+    SPSExtra *sps_extra;
+    BMX_CHECK(ParseSPS(&data[1], size - 1, &sps, &sps_extra));
+    SetSPS(sps.seq_parameter_set_id, &sps, sps_extra);
+}
+
+void AVCEssenceParser::SetPPS(const unsigned char *data, uint32_t size)
+{
+    BMX_CHECK(size > 1);
+
+    uint8_t nal_unit_type = data[0] & 0x1f;
+    BMX_CHECK(nal_unit_type == PICTURE_PARAMETER_SET);
+
+    PPS pps;
+    BMX_CHECK(ParsePPS(&data[1], size - 1, &pps));
+    SetPPS(pps.pic_parameter_set_id, &pps);
 }
 
 uint32_t AVCEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
@@ -302,42 +440,42 @@ uint32_t AVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
     // The access unit ends when the next NAL is a AUD, SPS, PPS, SEI,
     //   has a NAL unit type >= 15 and <= 18 or a different primary coded picture VCL NAL
     // The frame ends at the byte before zero_byte + start_code_prefix_one_3byte of the next
-    //   acess unit's NAL unit
+    //   access unit's NAL unit
 
-    uint32_t frame_size;
-    uint8_t nal_unit_byte;
-    uint8_t nal_unit_type;
-    uint32_t offset;
-    SliceHeader slice_header;
-    const SPS *sps;
-    const PPS *pps;
-    bool unknown_param_sets;
+    if (mOffset == 0)
+        ResetFrameSize();
+
+    bool have_frame_end = false;
+    bool have_issue = false;
+    uint32_t offset = ESSENCE_PARSER_NULL_OFFSET;
     while (mOffset < data_size) {
         offset = NextStartCodePrefix(&data[mOffset], data_size - mOffset);
         if (offset == ESSENCE_PARSER_NULL_OFFSET)
-            return ESSENCE_PARSER_NULL_OFFSET;
+            break;
         offset = mOffset + offset;
         if (offset + 3 >= data_size)
-            return ESSENCE_PARSER_NULL_OFFSET;
+            break;
 
-        nal_unit_byte = data[offset + 3];
-        nal_unit_type = nal_unit_byte & 0x1f;
+        uint8_t nal_unit_byte = data[offset + 3];
+        uint8_t nal_unit_type = nal_unit_byte & 0x1f;
 
         if (nal_unit_type == CODED_SLICE_NON_IDR_PICT ||
             nal_unit_type == CODED_SLICE_DATA_PART_A ||
             nal_unit_type == CODED_SLICE_IDR_PICT)
         {
             if (offset + 4 >= data_size)
-                return ESSENCE_PARSER_NULL_OFFSET;
+                break;
 
+            SliceHeader slice_header;
+            const SPS *sps;
+            const PPS *pps;
+            bool unknown_param_sets;
             if (!ParseSliceHeader(&data[offset + 4], data_size - (offset + 4), nal_unit_byte,
                                   &slice_header, &unknown_param_sets))
             {
-                if (unknown_param_sets) {
-                    ResetFrameSize();
-                    return ESSENCE_PARSER_NULL_FRAME_SIZE;
-                }
-                return ESSENCE_PARSER_NULL_OFFSET;
+                if (unknown_param_sets)
+                    have_issue = true;
+                break;
             }
             GetParameterSets(slice_header.pic_parameter_set_id, &sps, &pps);
 
@@ -360,20 +498,14 @@ uint32_t AVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
                              (slice_header.delta_pic_order_cnt_0 != mPrimPicSliceHeader.delta_pic_order_cnt_0 ||
                               slice_header.delta_pic_order_cnt_1 != mPrimPicSliceHeader.delta_pic_order_cnt_1))))
                 {
-                    if (offset == 0 || data[offset - 1] != 0) {
-                        log_warn("Missing zero_byte before start_code_prefix_one_3byte at access unit start\n");
-                        ResetFrameSize();
-                        return ESSENCE_PARSER_NULL_FRAME_SIZE;
-                    }
-                    frame_size = offset - 1;
-                    ResetFrameSize();
-                    return frame_size;
+                    have_frame_end = true;
+                    break;
                 }
             } else {
                 if (slice_header.redundant_pic_cnt != 0) {
                     log_warn("First VCL NAL unit is not for the primary picture (redundant_pic_cnt != 0)\n");
-                    ResetFrameSize();
-                    return ESSENCE_PARSER_NULL_FRAME_SIZE;
+                    have_issue = true;
+                    break;
                 }
                 mHavePrimPicSliceHeader = true;
                 mPrimPicSliceHeader = slice_header;
@@ -386,55 +518,63 @@ uint32_t AVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
                      nal_unit_type == SEI ||
                      (nal_unit_type >= 15 && nal_unit_type <= 18)))
         {
-            if (offset == 0 || data[offset - 1] != 0) {
-                log_warn("Missing zero_byte before start_code_prefix_one_3byte at access unit start\n");
-                ResetFrameSize();
-                return ESSENCE_PARSER_NULL_FRAME_SIZE;
-            }
-            frame_size = offset - 1;
-            ResetFrameSize();
-            return frame_size;
+            have_frame_end = true;
+            break;
         }
         else if (nal_unit_type == SEQUENCE_PARAMETER_SET)
         {
             if (offset + 4 >= data_size)
-                return ESSENCE_PARSER_NULL_OFFSET;
+                break;
 
             SPS sps;
-            if (!ParseSPS(&data[offset + 4], data_size - (offset + 4), &sps))
-                return ESSENCE_PARSER_NULL_OFFSET;
-            mSPS[sps.seq_parameter_set_id] = sps;
+            SPSExtra *sps_extra;
+            if (!ParseSPS(&data[offset + 4], data_size - (offset + 4), &sps, &sps_extra))
+                break;
+            SetSPS(sps.seq_parameter_set_id, &sps, sps_extra);
         }
         else if (nal_unit_type == PICTURE_PARAMETER_SET)
         {
             if (offset + 4 >= data_size)
-                return ESSENCE_PARSER_NULL_OFFSET;
+                break;
 
             PPS pps;
             if (!ParsePPS(&data[offset + 4], data_size - (offset + 4), &pps))
-                return ESSENCE_PARSER_NULL_OFFSET;
-            mPPS[pps.pic_parameter_set_id] = pps;
+                break;
+            SetPPS(pps.pic_parameter_set_id, &pps);
         }
 
         mOffset = offset + 3;
     }
 
-    return ESSENCE_PARSER_NULL_OFFSET;
+    uint32_t frame_size = ESSENCE_PARSER_NULL_OFFSET;
+    if (have_frame_end) {
+        if (offset == 0 || data[offset - 1] != 0) {
+            log_warn("Missing zero_byte before start_code_prefix_one_3byte at access unit start\n");
+            frame_size = ESSENCE_PARSER_NULL_FRAME_SIZE;
+        } else {
+            frame_size = offset - 1;
+        }
+        mOffset = 0;
+    } else if (have_issue) {
+        frame_size = ESSENCE_PARSER_NULL_FRAME_SIZE;
+        mOffset = 0;
+    }
+
+    return frame_size;
 }
 
 void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
 {
     ResetFrameInfo();
 
-    bool field_pic_flag = false;
-    uint8_t nal_unit_byte;
-    uint8_t nal_unit_type;
-    uint32_t offset = 0;
+    set<uint8_t> frame_sps_ids;
+    set<uint8_t> frame_pps_ids;
+    const unsigned char *sps_data = 0;
+    uint8_t sps_id = 32;
+    const unsigned char *pps_data = 0;
+    uint8_t pps_id = 255;
     uint32_t next_offset = 0;
-    bool have_first_slice = false;
-    SliceHeader slice_header;
-    const SPS *sps = 0;
-    const PPS *pps = 0;
+    uint32_t offset = 0;
     while (mOffset < data_size) {
         next_offset = NextStartCodePrefix(&data[offset], data_size - offset);
         if (next_offset == ESSENCE_PARSER_NULL_OFFSET)
@@ -443,8 +583,17 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
         if (offset + 3 >= data_size)
             break;
 
-        nal_unit_byte = data[offset + 3];
-        nal_unit_type = nal_unit_byte & 0x1f;
+        if (sps_data) {
+            SetSPSData(sps_id, sps_data, CompletePSSize(sps_data, &data[offset - 1]));
+            sps_data = 0;
+        }
+        if (pps_data) {
+            SetPPSData(pps_id, pps_data, CompletePSSize(pps_data, &data[offset - 1]));
+            pps_data = 0;
+        }
+
+        uint8_t nal_unit_byte = data[offset + 3];
+        uint8_t nal_unit_type = nal_unit_byte & 0x1f;
 
         if (nal_unit_type == CODED_SLICE_NON_IDR_PICT ||
             nal_unit_type == CODED_SLICE_DATA_PART_A ||
@@ -453,35 +602,32 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
             if (offset + 4 >= data_size)
                 BMX_EXCEPTION(("Insufficient VCL NAL unit data"));
 
+            const SPS *sps = 0;
+            const PPS *pps = 0;
+            SliceHeader slice_header;
             if (!ParseSliceHeader(&data[offset + 4], data_size - (offset + 4), nal_unit_byte, &slice_header))
                 BMX_EXCEPTION(("Failed to parse VCL slice header"));
-            if (!have_first_slice) {
+            if (!mHavePrimPicSliceHeader) {
                 if (slice_header.redundant_pic_cnt != 0)
                     BMX_EXCEPTION(("Missing primary picture VCL NAL unit (first VCL redundant_pic_cnt != 0)"));
                 if (!GetParameterSets(slice_header.pic_parameter_set_id, &sps, &pps))
                     BMX_EXCEPTION(("Failed to get SPS+PPS for slice"));
-                field_pic_flag = slice_header.field_pic_flag;
-                have_first_slice = true;
+                mActiveSPSId = sps->seq_parameter_set_id;
+                mActivePPSId = pps->pic_parameter_set_id;
+                mPrimPicSliceHeader = slice_header;
+                mHavePrimPicSliceHeader = true;
             }
 
             if (slice_header.redundant_pic_cnt == 0) {
                 MPEGFrameType slice_frame_type = UNKNOWN_FRAME_TYPE;
                 if (slice_header.slice_type > 9)
                     BMX_EXCEPTION(("Unknown slice_type %" PRIu64, slice_header.slice_type));
-                if (slice_header.slice_type == 2 || slice_header.slice_type == 4 ||
-                    slice_header.slice_type == 7 || slice_header.slice_type == 9)
-                {
+                if (IS_I(slice_header.slice_type) || IS_SI(slice_header.slice_type))
                     slice_frame_type = I_FRAME;
-                }
-                else if (slice_header.slice_type == 0 || slice_header.slice_type == 3 ||
-                         slice_header.slice_type == 5 || slice_header.slice_type == 8)
-                {
+                else if (IS_P(slice_header.slice_type) || IS_SP(slice_header.slice_type))
                     slice_frame_type = P_FRAME;
-                }
                 else
-                {
                     slice_frame_type = B_FRAME;
-                }
 
                 if (mFrameType == UNKNOWN_FRAME_TYPE) {
                     mFrameType  = slice_frame_type;
@@ -497,9 +643,13 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
                 if (mFrameType != I_FRAME || !slice_header.idr_pic_flag)
                     mIsIDRFrame = false;
 
-                if (mFrameType == B_FRAME ||      // no more changes to frame type will occur
-                    slice_header.slice_type >= 5) // section 7.4.3 requires all slices to have the same
-                                                  // slice_type (possibly slice_type - 5) when value is 5..9
+                mHaveMMCO5 |= (bool)slice_header.have_mmco_5;
+
+                // stop if have all required info
+                if (mHaveMMCO5 &&
+                    (mFrameType == B_FRAME ||           // no more changes to frame type will occur
+                        slice_header.slice_type >= 5))  // section 7.4.3 requires all slices to have the same
+                                                        // slice_type (possibly slice_type - 5) when value is 5..9
                 {
                     break;
                 }
@@ -514,11 +664,16 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
                 BMX_EXCEPTION(("Insufficient SPS NAL unit data"));
 
             SPS sps;
-            if (!ParseSPS(&data[offset + 4], data_size - (offset + 4), &sps))
+            SPSExtra *sps_extra;
+            if (!ParseSPS(&data[offset + 4], data_size - (offset + 4), &sps, &sps_extra))
                 BMX_EXCEPTION(("Failed to parse SPS"));
-            mSPS[sps.seq_parameter_set_id] = sps;
+            SetSPS(sps.seq_parameter_set_id, &sps, sps_extra);
 
-            mFrameHasSPS = true;
+            // SPS data completed next iteration
+            sps_data = &data[offset + 3];
+            sps_id = sps.seq_parameter_set_id;
+
+            frame_sps_ids.insert(sps.seq_parameter_set_id);
         }
         else if (nal_unit_type == PICTURE_PARAMETER_SET)
         {
@@ -528,16 +683,38 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
             PPS pps;
             if (!ParsePPS(&data[offset + 4], data_size - (offset + 4), &pps))
                 BMX_EXCEPTION(("Failed to parse PPS"));
-            mPPS[pps.pic_parameter_set_id] = pps;
+            SetPPS(pps.pic_parameter_set_id, &pps);
 
-            mFrameHasPPS = true;
+            // PPS data completed next iteration
+            pps_data = &data[offset + 3];
+            pps_id = pps.pic_parameter_set_id;
+
+            frame_pps_ids.insert(pps.pic_parameter_set_id);
         }
 
         offset += 3;
     }
-    if (!sps || !pps)
-        BMX_EXCEPTION(("Failed to parse AVC frame information"));
+    if (!mHavePrimPicSliceHeader)
+        BMX_EXCEPTION(("Missing primary picture slice"));
 
+    if (sps_data || pps_data) {
+        if (next_offset == ESSENCE_PARSER_NULL_OFFSET)
+            offset = data_size;
+        if (sps_data) {
+            SetSPSData(sps_id, sps_data, CompletePSSize(sps_data, &data[offset - 1]));
+            sps_data = 0;
+        }
+        if (pps_data) {
+            SetPPSData(pps_id, pps_data, CompletePSSize(pps_data, &data[offset - 1]));
+            pps_data = 0;
+        }
+    }
+
+    const SPS *sps = &mSPS[mActiveSPSId];
+
+    // TODO: could primary picture slices refer to different SPS/PPS?
+    mFrameHasActiveSPS = (frame_sps_ids.count(mActiveSPSId));
+    mFrameHasActivePPS = (frame_pps_ids.count(mActivePPSId));
 
     mProfile           = sps->profile_idc;
     mProfileConstraint = sps->constraint_flags;
@@ -554,7 +731,7 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
         } else {
             // TODO: implement D.2.2 of H.264 spec. and explanation surrounding Table E-6
             uint64_t delta_tfi_divisor = 2;
-            if (field_pic_flag)
+            if (mPrimPicSliceHeader.field_pic_flag)
                 delta_tfi_divisor = 1;
 
             mFrameRate.numerator   = (int32_t)sps->time_scale;
@@ -598,7 +775,123 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
 
     SetSampleAspectRatio(sps);
 
-    mFrameMBSOnlyFlag = sps->frame_mbs_only_flag;
+    mComponentDepth = sps->bit_depth_luma_minus8 + 8;
+
+    mChromaFormat            = sps->chroma_format_idc;
+    mChromaLocation          = sps->chroma_sample_loc_type_top_field;
+    mVideoFormat             = sps->video_format;
+    mColorPrimaries          = sps->colour_primaries;
+    mTransferCharacteristics = sps->transfer_characteristics;
+    mMatrixCoefficients      = sps->matrix_coefficients;
+
+    mFrameMBSOnlyFlag     = sps->frame_mbs_only_flag;
+    mMBAdaptiveFFEncoding = sps->mb_adaptive_frame_field_flag;
+    mFieldPicture         = mPrimPicSliceHeader.field_pic_flag;
+    mBottomField          = mPrimPicSliceHeader.bottom_field_flag;
+    mFrameNum             = mPrimPicSliceHeader.frame_num;
+}
+
+void AVCEssenceParser::DecodePOC(POCState *poc_state, int32_t *pic_order_cnt)
+{
+    BMX_ASSERT(mSPS.count(mActiveSPSId));
+    const SPS *active_sps = &mSPS[mActiveSPSId];
+
+    int32_t top_field_order_cnt;
+    int32_t bottom_field_order_cnt;
+    if (active_sps->pic_order_cnt_type == 0)
+        DecodePOCType0(poc_state, &top_field_order_cnt, &bottom_field_order_cnt);
+    else if (active_sps->pic_order_cnt_type == 1)
+        DecodePOCType1(poc_state, &top_field_order_cnt, &bottom_field_order_cnt);
+    else if (active_sps->pic_order_cnt_type == 2)
+        DecodePOCType2(poc_state, &top_field_order_cnt, &bottom_field_order_cnt);
+    else
+        BMX_EXCEPTION(("Unknown pic_order_cnt_type %" PRIu64, active_sps->pic_order_cnt_type));
+
+    if (mPrimPicSliceHeader.field_pic_flag) {
+        if (mPrimPicSliceHeader.bottom_field_flag)
+            *pic_order_cnt = bottom_field_order_cnt;
+        else
+            *pic_order_cnt = top_field_order_cnt;
+    } else {
+        *pic_order_cnt = bottom_field_order_cnt;
+        if (*pic_order_cnt > top_field_order_cnt)
+            *pic_order_cnt = top_field_order_cnt;
+    }
+}
+
+void AVCEssenceParser::ParseNALUnits(const unsigned char *data_in, uint32_t size_in, vector<NALReference> *nals)
+{
+    const unsigned char *data = data_in;
+    uint32_t size = size_in;
+
+    // extract NAL units
+    NALReference nal = NULL_NAL_REFERENCE;
+    uint32_t start_code_offset = 0;
+    while ((start_code_offset = NextStartCodePrefix(data, size)) != ESSENCE_PARSER_NULL_OFFSET) {
+        uint32_t nal_offset = start_code_offset + 3;
+        if (nal.data) {
+            nal.size = nal_offset; // note that this NAL may include a zero_byte from the next NAL
+            nals->push_back(nal);
+            nal = NULL_NAL_REFERENCE;
+        }
+        nal.data = &data[nal_offset];
+        nal.type = data[nal_offset] & 0x1f;
+
+        size -= nal_offset;
+        data += nal_offset;
+    }
+    if (nal.data && size > 0) {
+        nal.size = size;
+        nals->push_back(nal);
+        nal = NULL_NAL_REFERENCE;
+    }
+}
+
+bool AVCEssenceParser::IsActiveSPSDataConstant() const
+{
+    return !mSPSData.count(mActiveSPSId) || mSPSData.at(mActiveSPSId)->is_constant;
+}
+
+bool AVCEssenceParser::IsActivePPSDataConstant() const
+{
+    return !mPPSData.count(mActivePPSId) || mPPSData.at(mActivePPSId)->is_constant;
+}
+
+EssenceType AVCEssenceParser::GetEssenceType() const
+{
+    switch (mProfile)
+    {
+        case BASELINE:
+            if ((mProfileConstraint & 0x40))
+                return AVC_CONSTRAINED_BASELINE;
+            else
+                return AVC_BASELINE;
+        case MAIN:
+            return AVC_MAIN;
+        case EXTENDED:
+            return AVC_EXTENDED;
+        case HIGH:
+            return AVC_HIGH;
+        case HIGH_10:
+            if ((mProfileConstraint & 0x10))
+                return AVC_HIGH_10_INTRA;
+            else
+                return AVC_HIGH_10;
+        case HIGH_422:
+            if ((mProfileConstraint & 0x10))
+                return AVC_HIGH_422_INTRA;
+            else
+                return AVC_HIGH_422;
+        case HIGH_444:
+            if ((mProfileConstraint & 0x10))
+                return AVC_HIGH_444_INTRA;
+            else
+                return AVC_HIGH_444;
+        case CAVLC_444_INTRA:
+            return AVC_CAVLC_444_INTRA;
+        default:
+            return UNKNOWN_ESSENCE_TYPE;
+    }
 }
 
 EssenceType AVCEssenceParser::GetAVCIEssenceType(uint32_t data_size, bool is_interlaced, bool is_progressive) const
@@ -608,7 +901,7 @@ EssenceType AVCEssenceParser::GetAVCIEssenceType(uint32_t data_size, bool is_int
 
     EssenceType essence_type = UNKNOWN_ESSENCE_TYPE;
 
-    if (mProfile == 110 && (mProfileConstraint & 0x10)) {
+    if (mProfile == HIGH_10 && (mProfileConstraint & 0x10)) {
         if (mStoredWidth == 1440 && mStoredHeight == 1088) {
             if (mLevel == 42 &&
                 (mFrameRate == FRAME_RATE_5994 ||
@@ -643,7 +936,7 @@ EssenceType AVCEssenceParser::GetAVCIEssenceType(uint32_t data_size, bool is_int
                 essence_type = AVCI50_720P;
             }
         }
-    } else if (mProfile == 122 && (mProfileConstraint & 0x10)) {
+    } else if (mProfile == HIGH_422 && (mProfileConstraint & 0x10)) {
         if (mStoredWidth == 1920 && mStoredHeight == 1088) {
             if (mLevel == 50 &&
                 (mFrameRate == FRAME_RATE_5994 ||
@@ -709,20 +1002,51 @@ EssenceType AVCEssenceParser::GetAVCIEssenceType(uint32_t data_size, bool is_int
 
 uint32_t AVCEssenceParser::NextStartCodePrefix(const unsigned char *data, uint32_t size)
 {
-    uint32_t offset;
-    uint32_t state = 0xffffffff;
-    for (offset = 0; offset < size - 1; offset++) {
-        state <<= 8;
-        state |= data[offset];
-        if ((state & 0x00ffffff) == 0x000001)
-            return offset - 2;
-    }
+    const unsigned char *datap3 = data + 3;
+    const unsigned char *end    = data + size;
 
-    return ESSENCE_PARSER_NULL_OFFSET;
+    // loop logic is based on FFmpeg's avpriv_find_start_code in libavcodec/utils.c
+    while (datap3 < end) {
+        if (datap3[-1] > 1)
+            datap3 += 3;
+        else if (datap3[-2])
+            datap3 += 2;
+        else if (datap3[-3] | (datap3[-1] - 1))
+            datap3++;
+        else
+            break;
+    }
+    if (datap3 < end)
+        return (uint32_t)(datap3 - data) - 3;
+    else
+        return ESSENCE_PARSER_NULL_OFFSET;
 }
 
-bool AVCEssenceParser::ParseSPS(const unsigned char *data, uint32_t data_size, SPS *sps)
+uint32_t AVCEssenceParser::CompletePSSize(const unsigned char *ps_start, const unsigned char *ps_max_end)
 {
+    BMX_ASSERT(ps_max_end > ps_start);
+
+    // find first non-zero byte from end
+    const unsigned char *ps_end = ps_max_end;
+    uint32_t u64_count = (uint32_t)(ps_end - ps_start) / 8;
+    if (!(*ps_end) && u64_count > 1) {
+        const uint64_t *ps_start_u64 = (const uint64_t*)(ps_end + 1 - u64_count * 8);
+        const uint64_t *ps_end_u64   = ps_start_u64 + u64_count - 1;
+        if (!(*ps_end_u64)) {
+            while (ps_end_u64 != ps_start_u64 && !(*ps_end_u64))
+                ps_end_u64--;
+            ps_end = (const unsigned char*)(ps_end_u64 + 1);
+        }
+    }
+    while (!(*ps_end))
+        ps_end--;
+
+    return (uint32_t)(ps_end - ps_start) + 1;
+}
+
+bool AVCEssenceParser::ParseSPS(const unsigned char *data, uint32_t data_size, SPS *sps, SPSExtra **sps_extra_out)
+{
+    SPSExtra *sps_extra = new SPSExtra();
     try
     {
         AVCGetBitBuffer buffer(data, data_size);
@@ -731,28 +1055,32 @@ bool AVCEssenceParser::ParseSPS(const unsigned char *data, uint32_t data_size, S
         uint8_t nal_hrd_parameters_present_flag, vcl_hrd_parameters_present_flag;
 
         memset(sps, 0, sizeof(*sps));
-        sps->chroma_format_idc = 1;
-        sps->chroma_array_type = 1;
+        sps->chroma_format_idc        = 1;
+        sps->chroma_array_type        = 1;
+        sps->video_format             = 5;
+        sps->colour_primaries         = 2;
+        sps->transfer_characteristics = 2;
+        sps->matrix_coefficients      = 2;
 
         buffer.GetU(8, &sps->profile_idc);
         buffer.GetU(8, &sps->constraint_flags); // constraint_set0...set5_flag + reserved_zero_2bits
         buffer.GetU(8, &sps->level_idc);
-        buffer.GetUE(&sps->seq_parameter_set_id);
+        buffer.GetUE(&sps->seq_parameter_set_id, 31);
 
         if (sps->profile_idc == 100 || sps->profile_idc == 110 ||
             sps->profile_idc == 122 || sps->profile_idc == 244 || sps->profile_idc ==  44 ||
             sps->profile_idc ==  83 || sps->profile_idc ==  86 || sps->profile_idc == 118 ||
             sps->profile_idc == 128)
         {
-            buffer.GetUE(&sps->chroma_format_idc);
+            buffer.GetUE(&sps->chroma_format_idc, 3);
             if (sps->chroma_format_idc == 3)
                 buffer.GetU(1, &sps->separate_colour_plane_flag);
             if (sps->separate_colour_plane_flag == 0)
-                sps->chroma_array_type = (uint8_t)sps->chroma_format_idc;
+                sps->chroma_array_type = sps->chroma_format_idc;
             else
                 sps->chroma_array_type = 0;
-            buffer.GetUE(&sps->bit_depth_luma_minus8);
-            buffer.GetUE(&sps->bit_depth_chroma_minus8);
+            buffer.GetUE(&sps->bit_depth_luma_minus8, 6);
+            buffer.GetUE(&sps->bit_depth_chroma_minus8, 6);
             buffer.GetU(1, &temp); // qpprime_y_zero_transform_bypass_flag
             buffer.GetU(1, &temp); // seq_scaling_matrix_present_flag
             if (temp) {
@@ -780,15 +1108,21 @@ bool AVCEssenceParser::ParseSPS(const unsigned char *data, uint32_t data_size, S
         if (sps->pic_order_cnt_type == 0) {
             buffer.GetUE(&sps->log2_max_pic_order_cnt_lsb_minus4);
         } else if (sps->pic_order_cnt_type == 1) {
-            uint64_t num_ref_frames_in_pic_order_cnt_cycle;
             uint64_t i;
 
             buffer.GetU(1, &sps->delta_pic_order_always_zero_flag);
-            buffer.GetSE(&stemp); // offset_for_non_ref_pic
-            buffer.GetSE(&stemp); // offset_for_top_to_bottom_field
-            buffer.GetUE(&num_ref_frames_in_pic_order_cnt_cycle);
-            for (i = 0; i < num_ref_frames_in_pic_order_cnt_cycle; i++)
-                buffer.GetSE(&stemp); // offset_for_ref_frame
+            buffer.GetSE(&sps->offset_for_non_ref_pic);
+            buffer.GetSE(&sps->offset_for_top_to_bottom_field);
+            buffer.GetUE(&sps->num_ref_frames_in_pic_order_cnt_cycle, 255);
+            if (sps->num_ref_frames_in_pic_order_cnt_cycle > 0) {
+                sps_extra->num_ref_frames_in_pic_order_cnt_cycle = sps->num_ref_frames_in_pic_order_cnt_cycle;
+                sps_extra->offset_for_ref_frame = new int32_t[sps->num_ref_frames_in_pic_order_cnt_cycle];
+                sps->expected_delta_per_pic_order_cnt_cycle = 0;
+                for (i = 0; i < sps->num_ref_frames_in_pic_order_cnt_cycle; i++) {
+                    buffer.GetSE(&sps_extra->offset_for_ref_frame[i]);
+                    sps->expected_delta_per_pic_order_cnt_cycle += sps_extra->offset_for_ref_frame[i];
+                }
+            }
         }
         buffer.GetUE(&sps->max_num_ref_frames);
         buffer.GetU(1, &temp);  // gaps_in_frame_num_value_allowed_flag
@@ -818,21 +1152,21 @@ bool AVCEssenceParser::ParseSPS(const unsigned char *data, uint32_t data_size, S
             buffer.GetU(1, &temp); // overscan_info_present_flag
             if (temp)
                 buffer.GetU(1, &temp); // overscan_appropriate_flag
-            buffer.GetU(1, &temp); // video_signal_type_present_flag
-            if (temp) {
-                buffer.GetU(3, &temp); // video_format
-                buffer.GetU(1, &temp); // video_full_range_flag
-                buffer.GetU(1, &temp); // colour_description_present_flag
-                if (temp) {
-                    buffer.GetU(8, &temp); // colour_primaries
-                    buffer.GetU(8, &temp); // transfer_characteristics
-                    buffer.GetU(8, &temp); // matrix_coefficients
+            buffer.GetU(1, &sps->video_signal_type_present_flag);
+            if (sps->video_signal_type_present_flag) {
+                buffer.GetU(3, &sps->video_format);
+                buffer.GetU(1, &sps->video_full_range_flag);
+                buffer.GetU(1, &sps->colour_description_present_flag);
+                if (sps->colour_description_present_flag) {
+                    buffer.GetU(8, &sps->colour_primaries);
+                    buffer.GetU(8, &sps->transfer_characteristics);
+                    buffer.GetU(8, &sps->matrix_coefficients);
                 }
             }
             buffer.GetU(1, &temp); // chroma_loc_info_present_flag
             if (temp) {
-                buffer.GetUE(&temp); // chroma_sample_loc_type_top_field
-                buffer.GetUE(&temp); // chroma_sample_loc_type_bottom_field
+                buffer.GetUE(&sps->chroma_sample_loc_type_top_field, 5);
+                buffer.GetUE(&sps->chroma_sample_loc_type_bottom_field, 5);
             }
             buffer.GetU(1, &sps->timing_info_present_flag);
             if (sps->timing_info_present_flag) {
@@ -852,10 +1186,13 @@ bool AVCEssenceParser::ParseSPS(const unsigned char *data, uint32_t data_size, S
             // ignoring the rest
         }
 
+        *sps_extra_out = sps_extra;
+
         return true;
     }
     catch (...)
     {
+        delete sps_extra;
         return false;
     }
 }
@@ -871,8 +1208,8 @@ bool AVCEssenceParser::ParsePPS(const unsigned char *data, uint32_t data_size, P
 
         memset(pps, 0, sizeof(*pps));
 
-        buffer.GetUE(&pps->pic_parameter_set_id);
-        buffer.GetUE(&pps->seq_parameter_set_id);
+        buffer.GetUE(&pps->pic_parameter_set_id, 255);
+        buffer.GetUE(&pps->seq_parameter_set_id, 31);
         buffer.GetU(1, &temp); // entropy_coding_mode_flag
         buffer.GetU(1, &pps->bottom_field_pic_order_in_frame_present_flag);
         buffer.GetUE(&num_slice_groups_minus1);
@@ -902,10 +1239,10 @@ bool AVCEssenceParser::ParsePPS(const unsigned char *data, uint32_t data_size, P
                 }
             }
         }
-        buffer.GetUE(&temp);    // num_ref_idx_l0_default_active_minus1
-        buffer.GetUE(&temp);    // num_ref_idx_l1_default_active_minus1
-        buffer.GetU(1, &temp);  // weighted_pred_flag
-        buffer.GetU(2, &temp);  // weighted_bipred_idc
+        buffer.GetUE(&pps->num_ref_idx_l0_default_active_minus1);
+        buffer.GetUE(&pps->num_ref_idx_l1_default_active_minus1);
+        buffer.GetU(1, &pps->weighted_pred_flag);
+        buffer.GetU(2, &pps->weighted_bipred_idc);
         buffer.GetSE(&stemp);   // pic_init_qp_minus26
         buffer.GetSE(&stemp);   // pic_init_qs_minus26
         buffer.GetSE(&stemp);   // chroma_qp_index_offset
@@ -975,23 +1312,28 @@ bool AVCEssenceParser::ParseSliceHeader(const unsigned char *data, uint32_t data
     {
         AVCGetBitBuffer buffer(data, data_size);
         uint64_t temp;
+        int64_t stemp;
+        uint64_t i;
         const SPS *sps;
         const PPS *pps;
 
         memset(slice_header, 0, sizeof(*slice_header));
 
-        slice_header->nal_ref_idc = (nal_unit_byte >> 5) & 0x03;
-        slice_header->idr_pic_flag = ((nal_unit_byte & 0x1f) == CODED_SLICE_IDR_PICT ? 1 : 0);
+        slice_header->nal_ref_idc   = (nal_unit_byte >> 5) & 0x03;
+        slice_header->nal_unit_type = nal_unit_byte & 0x1f;
+        slice_header->idr_pic_flag  = ((nal_unit_byte & 0x1f) == CODED_SLICE_IDR_PICT ? 1 : 0);
 
         buffer.GetUE(&temp); // first_mb_in_slice
         buffer.GetUE(&slice_header->slice_type);
-        buffer.GetUE(&slice_header->pic_parameter_set_id);
+        buffer.GetUE(&slice_header->pic_parameter_set_id, 255);
 
         if (!GetParameterSets(slice_header->pic_parameter_set_id, &sps, &pps)) {
             if (unknown_param_sets)
                 *unknown_param_sets = true;
             return false;
         }
+        uint64_t num_ref_idx_l0_active_minus1 = pps->num_ref_idx_l0_default_active_minus1;
+        uint64_t num_ref_idx_l1_active_minus1 = pps->num_ref_idx_l1_default_active_minus1;
 
         if (sps->separate_colour_plane_flag == 1)
             buffer.GetU(2, &temp); // colour_plane_id
@@ -1015,6 +1357,143 @@ bool AVCEssenceParser::ParseSliceHeader(const unsigned char *data, uint32_t data
         }
         if (pps->redundant_pic_cnt_present_flag)
             buffer.GetUE(&slice_header->redundant_pic_cnt);
+        if (IS_B(slice_header->slice_type))
+            buffer.GetU(1, &temp); // direct_spatial_mv_pred_flag
+        if (IS_P(slice_header->slice_type) || IS_SP(slice_header->slice_type) || IS_B(slice_header->slice_type)) {
+            buffer.GetU(1, &temp); // num_ref_idx_active_override_flag
+            if (temp) {
+                buffer.GetUE(&num_ref_idx_l0_active_minus1);
+                if (IS_B(slice_header->slice_type))
+                    buffer.GetUE(&num_ref_idx_l1_active_minus1);
+            }
+        }
+        if (slice_header->nal_unit_type == CODED_SLICE_EXT) {
+            if (!IS_I(slice_header->slice_type) && !IS_SI(slice_header->slice_type)) {
+                buffer.GetU(1, &temp); // ref_pic_list_modification_flag_l0
+                if (temp) {
+                    uint64_t modification_of_pic_nums_idc;
+                    do {
+                        buffer.GetUE(&modification_of_pic_nums_idc);
+                        if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1)
+                            buffer.GetUE(&temp); // abs_diff_pic_num_minus1
+                        else if (modification_of_pic_nums_idc == 2)
+                            buffer.GetUE(&temp); // long_term_pic_num
+                        else if (modification_of_pic_nums_idc == 4 || modification_of_pic_nums_idc == 5)
+                            buffer.GetUE(&temp); // abs_diff_view_idx_minus1
+                    } while (modification_of_pic_nums_idc != 3);
+                }
+            }
+            if (IS_B(slice_header->slice_type)) {
+                buffer.GetU(1, &temp); // ref_pic_list_modification_flag_l1
+                if (temp) {
+                    uint64_t modification_of_pic_nums_idc;
+                    do {
+                        buffer.GetUE(&modification_of_pic_nums_idc);
+                        if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1)
+                            buffer.GetUE(&temp); // abs_diff_pic_num_minus1
+                        else if (modification_of_pic_nums_idc == 2)
+                            buffer.GetUE(&temp); // long_term_pic_num
+                        else if (modification_of_pic_nums_idc == 4 || modification_of_pic_nums_idc == 5)
+                            buffer.GetUE(&temp); // abs_diff_view_idx_minus1
+                    } while (modification_of_pic_nums_idc != 3);
+                }
+            }
+        } else {
+            if (!IS_I(slice_header->slice_type) && !IS_SI(slice_header->slice_type)) {
+                buffer.GetU(1, &temp); // ref_pic_list_modification_flag_l0
+                if (temp) {
+                    uint64_t modification_of_pic_nums_idc;
+                    do {
+                        buffer.GetUE(&modification_of_pic_nums_idc);
+                        if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1)
+                            buffer.GetUE(&temp); // abs_diff_pic_num_minus1
+                        else if (modification_of_pic_nums_idc == 2)
+                            buffer.GetUE(&temp); // long_term_pic_num
+                    } while (modification_of_pic_nums_idc != 3);
+                }
+            }
+            if (IS_B(slice_header->slice_type)) {
+                buffer.GetU(1, &temp); // ref_pic_list_modification_flag_l1
+                if (temp) {
+                    uint64_t modification_of_pic_nums_idc;
+                    do {
+                        buffer.GetUE(&modification_of_pic_nums_idc);
+                        if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1)
+                            buffer.GetUE(&temp); // abs_diff_pic_num_minus1
+                        else if (modification_of_pic_nums_idc == 2)
+                            buffer.GetUE(&temp); // long_term_pic_num
+                    } while (modification_of_pic_nums_idc != 3);
+                }
+            }
+        }
+        if ((pps->weighted_pred_flag && (IS_P(slice_header->slice_type) || IS_SP(slice_header->slice_type))) ||
+            (pps->weighted_bipred_idc == 1 && IS_B(slice_header->slice_type)))
+        {
+            buffer.GetUE(&temp); // luma_log2_weight_denom
+            if (sps->chroma_array_type != 0)
+                buffer.GetUE(&temp); // chroma_log2_weight_denom
+            for (i = 0; i <= num_ref_idx_l0_active_minus1; i++) {
+                buffer.GetU(1, &temp); // luma_weight_l0_flag
+                if (temp) {
+                    buffer.GetSE(&stemp); // luma_weight_l0[i]
+                    buffer.GetSE(&stemp); // luma_offset_l0[i]
+                }
+                if (sps->chroma_array_type != 0) {
+                    buffer.GetU(1, &temp); // chroma_weight_l0_flag
+                    if (temp) {
+                        int j;
+                        for (j = 0; j < 2; j++) {
+                            buffer.GetSE(&stemp); // chroma_weight_l0[i][j]
+                            buffer.GetSE(&stemp); // chroma_offset_l0[i][j]
+                        }
+                    }
+                }
+            }
+            if (IS_B(slice_header->slice_type)) {
+                for (i = 0; i <= num_ref_idx_l1_active_minus1; i++) {
+                    buffer.GetU(1, &temp); // luma_weight_l1_flag
+                    if (temp) {
+                        buffer.GetSE(&stemp); // luma_weight_l1[i]
+                        buffer.GetSE(&stemp); // luma_offset_l1[i]
+                    }
+                    if (sps->chroma_array_type != 0) {
+                        buffer.GetU(1, &temp); // chroma_weight_l1_flag
+                        if (temp) {
+                            int j;
+                            for (j = 0; j < 2; j++) {
+                                buffer.GetSE(&stemp); // chroma_weight_l1[i][j]
+                                buffer.GetSE(&stemp); // chroma_offset_l1[i][j]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (slice_header->nal_ref_idc) {
+            if (slice_header->idr_pic_flag) {
+                buffer.GetU(1, &temp); // no_output_of_prior_pics_flag
+                buffer.GetU(1, &temp); // long_term_reference_flag
+            } else {
+                buffer.GetU(1, &temp); // adaptive_ref_pic_marking_mode_flag
+                if (temp) {
+                    uint64_t memory_management_control_operation;
+                    do {
+                        buffer.GetUE(&memory_management_control_operation);
+                        if (memory_management_control_operation == 1 || memory_management_control_operation == 3)
+                            buffer.GetUE(&temp); // difference_of_pic_nums_minus1
+                        if (memory_management_control_operation == 2)
+                            buffer.GetUE(&temp); // long_term_pic_num
+                        if (memory_management_control_operation == 3 || memory_management_control_operation == 6)
+                            buffer.GetUE(&temp); // long_term_frame_idx
+                        if (memory_management_control_operation == 4)
+                            buffer.GetUE(&temp); // max_long_term_frame_idx_plus1
+
+                        if (memory_management_control_operation == 5)
+                            slice_header->have_mmco_5 = 1;
+                    } while (memory_management_control_operation != 0);
+                }
+            }
+        }
         // ignoring the rest of the slice header
 
         return true;
@@ -1050,16 +1529,199 @@ void AVCEssenceParser::ParseHRDParameters(AVCGetBitBuffer &buffer, SPS *sps)
     buffer.GetU(5, &temp); // time_offset_length
 }
 
-bool AVCEssenceParser::GetParameterSets(uint64_t pic_parameter_set_id, const SPS **sps, const PPS **pps)
+void AVCEssenceParser::DecodePOCType0(POCState *poc_state, int32_t *top_field_order_cnt,
+                                      int32_t *bottom_field_order_cnt)
 {
-    map<uint64_t, PPS>::const_iterator pps_iter = mPPS.find(pic_parameter_set_id);
+    BMX_ASSERT(mSPS.count(mActiveSPSId));
+    const SPS *active_sps = &mSPS[mActiveSPSId];
+
+    int32_t max_pic_order_cnt_lsb = 1 << (active_sps->log2_max_pic_order_cnt_lsb_minus4 + 4);
+    int32_t pic_order_cnt_lsb = (int32_t)mPrimPicSliceHeader.pic_order_cnt_lsb;
+
+    int32_t prev_pic_order_cnt_msb;
+    int32_t prev_pic_order_cnt_lsb;
+    if (mIsIDRFrame) {
+        prev_pic_order_cnt_msb = 0;
+        prev_pic_order_cnt_lsb = 0;
+    } else {
+        if (poc_state->prev_have_mmco_5) {
+            if (poc_state->prev_bottom_field_flag) {
+                prev_pic_order_cnt_msb = 0;
+                prev_pic_order_cnt_lsb = 0;
+            } else {
+                prev_pic_order_cnt_msb = 0;
+                prev_pic_order_cnt_lsb = poc_state->prev_top_field_order_cnt;
+            }
+        } else {
+            prev_pic_order_cnt_msb = poc_state->prev_pic_order_cnt_msb;
+            prev_pic_order_cnt_lsb = poc_state->prev_pic_order_cnt_lsb;
+        }
+    }
+
+    int32_t pic_order_cnt_msb;
+    if (pic_order_cnt_lsb < prev_pic_order_cnt_lsb &&
+        prev_pic_order_cnt_lsb - pic_order_cnt_lsb >= max_pic_order_cnt_lsb / 2)
+    {
+        pic_order_cnt_msb = prev_pic_order_cnt_msb + max_pic_order_cnt_lsb;
+    }
+    else if (pic_order_cnt_lsb > prev_pic_order_cnt_lsb &&
+             pic_order_cnt_lsb - prev_pic_order_cnt_lsb > max_pic_order_cnt_lsb / 2)
+    {
+        pic_order_cnt_msb = prev_pic_order_cnt_msb - max_pic_order_cnt_lsb;
+    }
+    else
+    {
+        pic_order_cnt_msb = prev_pic_order_cnt_msb;
+    }
+
+    if (mPrimPicSliceHeader.field_pic_flag) {
+        if (mPrimPicSliceHeader.bottom_field_flag)
+            *bottom_field_order_cnt = pic_order_cnt_msb + pic_order_cnt_lsb;
+        else
+            *top_field_order_cnt = pic_order_cnt_msb + pic_order_cnt_lsb;
+    } else {
+        *top_field_order_cnt = pic_order_cnt_msb + pic_order_cnt_lsb;
+        *bottom_field_order_cnt = *top_field_order_cnt + (int32_t)mPrimPicSliceHeader.delta_pic_order_cnt_bottom;
+    }
+
+    if (mIsIDRFrame)
+        poc_state->Reset();
+    if (mPrimPicSliceHeader.nal_ref_idc) {
+        poc_state->prev_have_mmco_5         = mHaveMMCO5;
+        poc_state->prev_bottom_field_flag   = mPrimPicSliceHeader.bottom_field_flag;
+        poc_state->prev_pic_order_cnt_msb   = pic_order_cnt_msb;
+        poc_state->prev_pic_order_cnt_lsb   = pic_order_cnt_lsb;
+        poc_state->prev_top_field_order_cnt = *top_field_order_cnt;
+    }
+}
+
+void AVCEssenceParser::DecodePOCType1(POCState *poc_state, int32_t *top_field_order_cnt,
+                                      int32_t *bottom_field_order_cnt)
+{
+    BMX_ASSERT(mSPS.count(mActiveSPSId) && mSPSExtra.count(mActiveSPSId));
+    const SPS *active_sps = &mSPS[mActiveSPSId];
+    const SPSExtra *active_sps_extra = mSPSExtra[mActiveSPSId];
+
+    int64_t frame_num_offset;
+    if (mIsIDRFrame) {
+        if ((int32_t)mPrimPicSliceHeader.frame_num != 0)
+            BMX_EXCEPTION(("frame_num in IDR frame is not zero"));
+        frame_num_offset = 0;
+    } else {
+        int32_t max_frame_num = 1 << (active_sps->log2_max_frame_num_minus4 + 4);
+
+        int32_t prev_frame_num_offset;
+        if (poc_state->prev_have_mmco_5)
+            prev_frame_num_offset = 0;
+        else
+            prev_frame_num_offset = poc_state->prev_frame_num_offset;
+
+        if (poc_state->prev_frame_num > (int32_t)mPrimPicSliceHeader.frame_num)
+            frame_num_offset = prev_frame_num_offset + max_frame_num;
+        else
+            frame_num_offset = prev_frame_num_offset;
+    }
+
+    uint32_t abs_frame_num;
+    if (active_sps->num_ref_frames_in_pic_order_cnt_cycle != 0)
+        abs_frame_num = (uint32_t)(frame_num_offset + (int32_t)mPrimPicSliceHeader.frame_num);
+    else
+        abs_frame_num = 0;
+    if (!mPrimPicSliceHeader.nal_ref_idc && abs_frame_num > 0)
+        abs_frame_num--;
+
+    int32_t pic_order_cnt_cycle_cnt = 0;
+    int32_t frame_num_in_pic_order_cnt_cycle = 0;
+    int32_t expected_pic_order_cnt = 0;
+    if (abs_frame_num > 0) {
+        pic_order_cnt_cycle_cnt = (abs_frame_num - 1) / active_sps->num_ref_frames_in_pic_order_cnt_cycle;
+        frame_num_in_pic_order_cnt_cycle = (abs_frame_num - 1) % active_sps->num_ref_frames_in_pic_order_cnt_cycle;
+        expected_pic_order_cnt = (int32_t)(pic_order_cnt_cycle_cnt * active_sps->expected_delta_per_pic_order_cnt_cycle);
+        int32_t i;
+        for (i = 0; i <= frame_num_in_pic_order_cnt_cycle; i++)
+            expected_pic_order_cnt += active_sps_extra->offset_for_ref_frame[i];
+    }
+    if (!mPrimPicSliceHeader.nal_ref_idc)
+        expected_pic_order_cnt += (int32_t)active_sps->offset_for_non_ref_pic;
+
+    if (mPrimPicSliceHeader.field_pic_flag) {
+        if (mPrimPicSliceHeader.bottom_field_flag) {
+            *bottom_field_order_cnt = (int32_t)(expected_pic_order_cnt + active_sps->offset_for_top_to_bottom_field +
+                                                mPrimPicSliceHeader.delta_pic_order_cnt_0);
+        } else {
+            *top_field_order_cnt = (int32_t)(expected_pic_order_cnt + mPrimPicSliceHeader.delta_pic_order_cnt_0);
+        }
+    } else {
+        *top_field_order_cnt = (int32_t)(expected_pic_order_cnt + mPrimPicSliceHeader.delta_pic_order_cnt_0);
+        *bottom_field_order_cnt = (int32_t)(*top_field_order_cnt + active_sps->offset_for_top_to_bottom_field +
+                                            mPrimPicSliceHeader.delta_pic_order_cnt_1);
+    }
+
+    poc_state->Reset();
+    poc_state->prev_have_mmco_5      = mHaveMMCO5;
+    poc_state->prev_frame_num        = (int32_t)mPrimPicSliceHeader.frame_num;
+    poc_state->prev_frame_num_offset = (int32_t)frame_num_offset;
+}
+
+void AVCEssenceParser::DecodePOCType2(POCState *poc_state, int32_t *top_field_order_cnt,
+                                      int32_t *bottom_field_order_cnt)
+{
+    BMX_ASSERT(mSPS.count(mActiveSPSId));
+    const SPS *active_sps = &mSPS[mActiveSPSId];
+
+    int64_t frame_num_offset;
+    int32_t tmp_pic_order_cnt;
+    if (mIsIDRFrame) {
+        if ((int32_t)mPrimPicSliceHeader.frame_num != 0)
+            BMX_EXCEPTION(("frame_num in IDR frame is not zero"));
+        frame_num_offset = 0;
+        tmp_pic_order_cnt = 0;
+    } else {
+        int32_t max_frame_num = 1 << (active_sps->log2_max_frame_num_minus4 + 4);
+
+        int32_t prev_frame_num_offset;
+        if (poc_state->prev_have_mmco_5)
+            prev_frame_num_offset = 0;
+        else
+            prev_frame_num_offset = poc_state->prev_frame_num_offset;
+
+        if (poc_state->prev_frame_num > (int32_t)mPrimPicSliceHeader.frame_num)
+            frame_num_offset = prev_frame_num_offset + max_frame_num;
+        else
+            frame_num_offset = prev_frame_num_offset;
+
+        if (mPrimPicSliceHeader.nal_ref_idc)
+            tmp_pic_order_cnt = (int32_t)(2 * (frame_num_offset + (int32_t)mPrimPicSliceHeader.frame_num));
+        else
+            tmp_pic_order_cnt = (int32_t)(2 * (frame_num_offset + (int32_t)mPrimPicSliceHeader.frame_num) - 1);
+    }
+
+    if (mPrimPicSliceHeader.field_pic_flag) {
+        if (mPrimPicSliceHeader.bottom_field_flag)
+            *bottom_field_order_cnt = tmp_pic_order_cnt;
+        else
+            *top_field_order_cnt = tmp_pic_order_cnt;
+    } else {
+        *top_field_order_cnt = tmp_pic_order_cnt;
+        *bottom_field_order_cnt = tmp_pic_order_cnt;
+    }
+
+    poc_state->Reset();
+    poc_state->prev_have_mmco_5      = mHaveMMCO5;
+    poc_state->prev_frame_num        = (int32_t)mPrimPicSliceHeader.frame_num;
+    poc_state->prev_frame_num_offset = (int32_t)frame_num_offset;
+}
+
+bool AVCEssenceParser::GetParameterSets(uint8_t pic_parameter_set_id, const SPS **sps, const PPS **pps)
+{
+    map<uint8_t, PPS>::const_iterator pps_iter = mPPS.find(pic_parameter_set_id);
     if (pps_iter == mPPS.end()) {
-        log_warn("Missing PPS with id %" PRIu64 " before VCL NAL unit\n", pic_parameter_set_id);
+        log_warn("Missing PPS with id %u before VCL NAL unit\n", pic_parameter_set_id);
         return false;
     }
-    map<uint64_t, SPS>::const_iterator sps_iter = mSPS.find(pps_iter->second.seq_parameter_set_id);
+    map<uint8_t, SPS>::const_iterator sps_iter = mSPS.find(pps_iter->second.seq_parameter_set_id);
     if (sps_iter == mSPS.end()) {
-        log_warn("Missing SPS with id %" PRIu64 " reference from PPS with id %" PRIu64 "\n",
+        log_warn("Missing SPS with id %u reference from PPS with id %u\n",
                  pps_iter->second.seq_parameter_set_id, pic_parameter_set_id);
         return false;
     }
@@ -1104,6 +1766,35 @@ void AVCEssenceParser::SetSampleAspectRatio(const SPS *sps)
     }
 }
 
+void AVCEssenceParser::SetSPS(uint8_t id, SPS *sps, SPSExtra *sps_extra)
+{
+    mSPS[id] = *sps;
+    if (mSPSExtra.count(id))
+        delete mSPSExtra[id];
+    mSPSExtra[id] = sps_extra;
+}
+
+void AVCEssenceParser::SetPPS(uint8_t id, PPS *pps)
+{
+    mPPS[id] = *pps;
+}
+
+void AVCEssenceParser::SetSPSData(uint8_t id, const unsigned char *data, uint32_t size)
+{
+    if (mSPSData.count(id))
+        mSPSData[id]->Update(data, size);
+    else
+        mSPSData[id] = new ParamSetData(data, size);
+}
+
+void AVCEssenceParser::SetPPSData(uint8_t id, const unsigned char *data, uint32_t size)
+{
+    if (mPPSData.count(id))
+        mPPSData[id]->Update(data, size);
+    else
+        mPPSData[id] = new ParamSetData(data, size);
+}
+
 void AVCEssenceParser::ResetFrameSize()
 {
     mHavePrimPicSliceHeader = false;
@@ -1113,8 +1804,12 @@ void AVCEssenceParser::ResetFrameSize()
 
 void AVCEssenceParser::ResetFrameInfo()
 {
-    mFrameHasSPS = false;
-    mFrameHasPPS = false;
+    mHavePrimPicSliceHeader = false;
+    memset(&mPrimPicSliceHeader, 0, sizeof(mPrimPicSliceHeader));
+    mActiveSPSId = 32;
+    mActivePPSId = 255;
+    mFrameHasActiveSPS = false;
+    mFrameHasActivePPS = false;
     mProfile = 0;
     mProfileConstraint = 0;
     mLevel = 0;
@@ -1129,8 +1824,20 @@ void AVCEssenceParser::ResetFrameInfo()
     mDisplayXOffset = 0;
     mDisplayYOffset = 0;
     mSampleAspectRatio = ZERO_RATIONAL;
+    mComponentDepth = 0;
+    mChromaFormat = 1;
+    mChromaLocation = 0;
+    mVideoFormat = 5;
+    mColorPrimaries = 2;
+    mTransferCharacteristics = 2;
+    mMatrixCoefficients = 2;
     mIsIDRFrame = false;
     mFrameType = UNKNOWN_FRAME_TYPE;
     mFrameMBSOnlyFlag = true;
+    mMBAdaptiveFFEncoding = false;
+    mFieldPicture = false;
+    mBottomField = false;
+    mHaveMMCO5 = false;
+    mFrameNum = 0;
 }
 

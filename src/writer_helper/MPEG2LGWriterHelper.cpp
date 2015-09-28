@@ -166,9 +166,6 @@ void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
 
 
     if (mHaveGOPHeader) {
-        if (!CheckTemporalOffsetsComplete(0))
-            log_warn("Incomplete MPEG-2 temporal offset data in index table\n");
-
         mGOPStartPosition = mPosition;
         memset(mGOPTemporalOffsets, NULL_TEMPORAL_OFFSET, sizeof(mGOPTemporalOffsets));
     }

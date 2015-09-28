@@ -374,9 +374,6 @@
     <ClInclude Include="..\..\..\include\bmx\essence_parser\AVCEssenceParser.h">
       <Filter>Header Files\essence_parser</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\bmx\essence_parser\AVCIEssenceParser.h">
-      <Filter>Header Files\essence_parser</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\essence_parser\AVCIRawEssenceReader.h">
       <Filter>Header Files\essence_parser</Filter>
     </ClInclude>
@@ -431,10 +428,10 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\ANCDataMXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\bmx\mxf_helper\AVCIntraUncsMXFDescriptorHelper.h">
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\AVCIMXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\bmx\mxf_helper\AVCIMXFDescriptorHelper.h">
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\AVCMXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\D10MXFDescriptorHelper.h">
@@ -495,6 +492,9 @@
       <Filter>Header Files\mxf_op1a</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AAVCITrack.h">
+      <Filter>Header Files\mxf_op1a</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AAVCTrack.h">
       <Filter>Header Files\mxf_op1a</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AContentPackage.h">
@@ -667,6 +667,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\wave\WaveWriter.h">
       <Filter>Header Files\wave</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\writer_helper\AVCWriterHelper.h">
+      <Filter>Header Files\writer_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\writer_helper\AVCIWriterHelper.h">
       <Filter>Header Files\writer_helper</Filter>
@@ -919,9 +922,6 @@
     <ClCompile Include="..\..\..\src\essence_parser\AVCEssenceParser.cpp">
       <Filter>Source Files\essence_parser</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\essence_parser\AVCIEssenceParser.cpp">
-      <Filter>Source Files\essence_parser</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\essence_parser\AVCIRawEssenceReader.cpp">
       <Filter>Source Files\essence_parser</Filter>
     </ClCompile>
@@ -967,10 +967,10 @@
     <ClCompile Include="..\..\..\src\mxf_helper\ANCDataMXFDescriptorHelper.cpp">
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\mxf_helper\AVCIntraUncsMXFDescriptorHelper.cpp">
+    <ClCompile Include="..\..\..\src\mxf_helper\AVCIMXFDescriptorHelper.cpp">
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\mxf_helper\AVCIMXFDescriptorHelper.cpp">
+    <ClCompile Include="..\..\..\src\mxf_helper\AVCMXFDescriptorHelper.cpp">
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_helper\D10MXFDescriptorHelper.cpp">
@@ -1028,6 +1028,9 @@
       <Filter>Source Files\mxf_op1a</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AAVCITrack.cpp">
+      <Filter>Source Files\mxf_op1a</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_op1a\OP1AAVCTrack.cpp">
       <Filter>Source Files\mxf_op1a</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AContentPackage.cpp">
@@ -1194,6 +1197,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\wave\WaveWriter.cpp">
       <Filter>Source Files\wave</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\writer_helper\AVCWriterHelper.cpp">
+      <Filter>Source Files\writer_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\writer_helper\AVCIWriterHelper.cpp">
       <Filter>Source Files\writer_helper</Filter>

@@ -166,7 +166,6 @@
     <ClInclude Include="..\..\..\include\bmx\d10_mxf\D10Track.h" />
     <ClInclude Include="..\..\..\include\bmx\d10_mxf\D10XMLTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\AVCEssenceParser.h" />
-    <ClInclude Include="..\..\..\include\bmx\essence_parser\AVCIEssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\AVCIRawEssenceReader.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\DVEssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\EssenceFilter.h" />
@@ -185,8 +184,8 @@
     <ClInclude Include="..\..\..\include\bmx\frame\Frame.h" />
     <ClInclude Include="..\..\..\include\bmx\frame\FrameBuffer.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\ANCDataMXFDescriptorHelper.h" />
-    <ClInclude Include="..\..\..\include\bmx\mxf_helper\AVCIntraUncsMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\AVCIMXFDescriptorHelper.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\AVCMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\D10MXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\DataMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\DVMXFDescriptorHelper.h" />
@@ -207,6 +206,7 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\WaveMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AANCDataTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AAVCITrack.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AAVCTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AContentPackage.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1ADataTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AD10Track.h" />
@@ -264,6 +264,7 @@
     <ClInclude Include="..\..\..\include\bmx\wave\WaveTrackReader.h" />
     <ClInclude Include="..\..\..\include\bmx\wave\WaveTrackWriter.h" />
     <ClInclude Include="..\..\..\include\bmx\wave\WaveWriter.h" />
+    <ClInclude Include="..\..\..\include\bmx\writer_helper\AVCWriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\AVCIWriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\D10WriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\MPEG2LGWriterHelper.h" />
@@ -349,7 +350,6 @@
     <ClCompile Include="..\..\..\src\d10_mxf\D10Track.cpp" />
     <ClCompile Include="..\..\..\src\d10_mxf\D10XMLTrack.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\AVCEssenceParser.cpp" />
-    <ClCompile Include="..\..\..\src\essence_parser\AVCIEssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\AVCIRawEssenceReader.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\DVEssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\EssenceParserUtils.cpp" />
@@ -365,8 +365,8 @@
     <ClCompile Include="..\..\..\src\frame\Frame.cpp" />
     <ClCompile Include="..\..\..\src\frame\FrameBuffer.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\ANCDataMXFDescriptorHelper.cpp" />
-    <ClCompile Include="..\..\..\src\mxf_helper\AVCIntraUncsMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\AVCIMXFDescriptorHelper.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_helper\AVCMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\D10MXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\DataMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\DVMXFDescriptorHelper.cpp" />
@@ -386,6 +386,7 @@
     <ClCompile Include="..\..\..\src\mxf_helper\WaveMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AANCDataTrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AAVCITrack.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_op1a\OP1AAVCTrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AContentPackage.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AD10Track.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1ADataTrack.cpp" />
@@ -441,6 +442,7 @@
     <ClCompile Include="..\..\..\src\wave\WaveTrackReader.cpp" />
     <ClCompile Include="..\..\..\src\wave\WaveTrackWriter.cpp" />
     <ClCompile Include="..\..\..\src\wave\WaveWriter.cpp" />
+    <ClCompile Include="..\..\..\src\writer_helper\AVCWriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\writer_helper\AVCIWriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\writer_helper\D10WriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\writer_helper\MPEG2LGWriterHelper.cpp" />

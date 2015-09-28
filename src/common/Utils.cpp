@@ -1024,16 +1024,16 @@ string bmx::get_uuid_string(UUID uuid)
     return buffer;
 }
 
-bmx::Rational bmx::normalize_rate(Rational rate)
+bmx::Rational bmx::reduce_rational(Rational rational)
 {
-    if (rate.numerator == 0 || rate.denominator == 0)
+    if (rational.numerator == 0 || rational.denominator == 0)
         return ZERO_RATIONAL;
 
-    Rational result = rate;
+    Rational result = rational;
 
-    // can't normalize an invalid negative rate
-    if ((result.numerator < 0) ^ (result.denominator < 0))
-        return rate;
+    int32_t sign = 1;
+    if ((result.numerator < 0) != (result.denominator < 0))
+        sign = -1;
 
     if (result.numerator < 0)
         result.numerator = -result.numerator;
@@ -1041,8 +1041,21 @@ bmx::Rational bmx::normalize_rate(Rational rate)
         result.denominator = -result.denominator;
 
     int32_t d = gcd(result.numerator, result.denominator);
-    result.numerator /= d;
+    result.numerator   /= d;
     result.denominator /= d;
+
+    result.numerator *= sign;
+
+    return result;
+}
+
+bmx::Rational bmx::normalize_rate(Rational rate)
+{
+    Rational result = reduce_rational(rate);
+
+    // can't normalize an invalid negative rate
+    if (result.numerator < 0)
+        return rate;
 
     if (result.numerator == 2997 && result.denominator == 1000)
         return FRAME_RATE_2997;

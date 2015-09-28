@@ -43,6 +43,7 @@
 #include <bmx/mxf_op1a/OP1ADVTrack.h>
 #include <bmx/mxf_op1a/OP1AD10Track.h>
 #include <bmx/mxf_op1a/OP1AAVCITrack.h>
+#include <bmx/mxf_op1a/OP1AAVCTrack.h>
 #include <bmx/mxf_op1a/OP1AUncTrack.h>
 #include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
 #include <bmx/mxf_op1a/OP1AVC3Track.h>
@@ -84,6 +85,18 @@ static const OP1ASampleRateSupport OP1A_SAMPLE_RATE_SUPPORT[] =
     {AVCI50_1080I,             {{25, 1}, {30000, 1001}, {0, 0}}},
     {AVCI50_1080P,             {{24000, 1001}, {25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {AVCI50_720P,              {{24000, 1001}, {25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {AVC_BASELINE,             {{-1, -1}, {0, 0}}},
+    {AVC_CONSTRAINED_BASELINE, {{-1, -1}, {0, 0}}},
+    {AVC_MAIN,                 {{-1, -1}, {0, 0}}},
+    {AVC_EXTENDED,             {{-1, -1}, {0, 0}}},
+    {AVC_HIGH,                 {{-1, -1}, {0, 0}}},
+    {AVC_HIGH_10,              {{-1, -1}, {0, 0}}},
+    {AVC_HIGH_422,             {{-1, -1}, {0, 0}}},
+    {AVC_HIGH_444,             {{-1, -1}, {0, 0}}},
+    {AVC_HIGH_10_INTRA,        {{-1, -1}, {0, 0}}},
+    {AVC_HIGH_422_INTRA,       {{-1, -1}, {0, 0}}},
+    {AVC_HIGH_444_INTRA,       {{-1, -1}, {0, 0}}},
+    {AVC_CAVLC_444_INTRA,      {{-1, -1}, {0, 0}}},
     {UNC_SD,                   {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {UNC_HD_1080I,             {{25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {UNC_HD_1080P,             {{25, 1}, {30000, 1001}, {30, 1}, {50, 1}, {60000, 1001}, {60, 1}, {0, 0}}},
@@ -165,6 +178,19 @@ OP1ATrack* OP1ATrack::Create(OP1AFile *file, uint32_t track_index, uint32_t trac
         case AVCI50_1080P:
         case AVCI50_720P:
             return new OP1AAVCITrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
+        case AVC_BASELINE:
+        case AVC_CONSTRAINED_BASELINE:
+        case AVC_MAIN:
+        case AVC_EXTENDED:
+        case AVC_HIGH:
+        case AVC_HIGH_10:
+        case AVC_HIGH_422:
+        case AVC_HIGH_444:
+        case AVC_HIGH_10_INTRA:
+        case AVC_HIGH_422_INTRA:
+        case AVC_HIGH_444_INTRA:
+        case AVC_CAVLC_444_INTRA:
+            return new OP1AAVCTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         case UNC_SD:
         case UNC_HD_1080I:
         case UNC_HD_1080P:

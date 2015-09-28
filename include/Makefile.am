@@ -31,6 +31,7 @@ nobase_library_include_HEADERS = \
 	bmx/frame/DataBufferArray.h \
 	bmx/frame/Frame.h \
 	bmx/frame/FrameBuffer.h \
+	bmx/writer_helper/AVCWriterHelper.h \
 	bmx/writer_helper/AVCIWriterHelper.h \
 	bmx/writer_helper/D10WriterHelper.h \
 	bmx/writer_helper/MPEG2LGWriterHelper.h \
@@ -68,6 +69,7 @@ nobase_library_include_HEADERS = \
 	bmx/as11/uk_dpp_extensions_data_model.h \
 	bmx/mxf_op1a/OP1AANCDataTrack.h \
 	bmx/mxf_op1a/OP1AAVCITrack.h \
+	bmx/mxf_op1a/OP1AAVCTrack.h \
 	bmx/mxf_op1a/OP1AContentPackage.h \
 	bmx/mxf_op1a/OP1AD10Track.h \
 	bmx/mxf_op1a/OP1ADataTrack.h \
@@ -118,7 +120,6 @@ nobase_library_include_HEADERS = \
 	bmx/clip_writer/ClipWriterTrack.h \
 	bmx/essence_parser/SoundConversion.h \
 	bmx/essence_parser/AVCEssenceParser.h \
-	bmx/essence_parser/AVCIEssenceParser.h \
 	bmx/essence_parser/AVCIRawEssenceReader.h \
 	bmx/essence_parser/DVEssenceParser.h \
 	bmx/essence_parser/EssenceFilter.h \
@@ -132,8 +133,8 @@ nobase_library_include_HEADERS = \
 	bmx/essence_parser/RawEssenceReader.h \
 	bmx/essence_parser/VC3EssenceParser.h \
 	bmx/mxf_helper/ANCDataMXFDescriptorHelper.h \
-	bmx/mxf_helper/AVCIntraUncsMXFDescriptorHelper.h \
 	bmx/mxf_helper/AVCIMXFDescriptorHelper.h \
+	bmx/mxf_helper/AVCMXFDescriptorHelper.h \
 	bmx/mxf_helper/D10MXFDescriptorHelper.h \
 	bmx/mxf_helper/DataMXFDescriptorHelper.h \
 	bmx/mxf_helper/DVMXFDescriptorHelper.h \

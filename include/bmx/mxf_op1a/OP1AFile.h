@@ -190,6 +190,7 @@ private:
 
     bool mFirstWrite;
 
+    bool mWaitForIndexComplete;
     int64_t mPartitionInterval;
     int64_t mPartitionFrameCount;
 

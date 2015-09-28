@@ -53,6 +53,9 @@ using namespace std;
 using namespace bmx;
 using namespace mxfpp;
 
+// some large number that is not expected to be exceeded and avoids memory allocation exceptions
+// maximum buffer requirement is expected to be the coding delay / maximum temporal offset
+#define MAX_BUFFERED_CONTENT_PACKAGES   200
 
 static const char TIMECODE_TRACK_NAME[]         = "TC1";
 static const uint8_t MIN_LLEN                   = 4;
@@ -106,6 +109,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mMaterialPackage = 0;
     mFileSourcePackage = 0;
     mFirstWrite = true;
+    mWaitForIndexComplete = false;
     mPartitionInterval = 0;
     mPartitionFrameCount = 0;
     mKAGSize = ((flavour & OP1A_512_KAG_FLAVOUR) ? 512 : 1);
@@ -387,6 +391,20 @@ void OP1AFile::CompleteWrite()
     BMX_ASSERT(mMXFFile);
 
 
+    // complete metadata for tracks
+
+    size_t i;
+    for (i = 0; i < mTracks.size(); i++)
+        mTracks[i]->CompleteWrite();
+
+
+    // warn if the index table requires updates (e.g. temporal offsets)
+
+    if (mIndexTable->RequireUpdatesAtEnd(mOutputEndOffset))
+        log_warn("Ignoring incomplete index table information\n");
+    mIndexTable->IgnoreRequiredUpdates();
+
+
     // write any remaining content packages (e.g. first AVCI cp if duration equals 1)
 
     WriteContentPackages(true);
@@ -404,13 +422,6 @@ void OP1AFile::CompleteWrite()
                      "does not equal set input duration %" PRId64,
                      mIndexTable->GetDuration(), mInputDuration));
     }
-
-
-    // complete write for tracks
-
-    size_t i;
-    for (i = 0; i < mTracks.size(); i++)
-        mTracks[i]->CompleteWrite();
 
 
     // update metadata sets with duration
@@ -913,18 +924,41 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                 start_ess_partition = true;
             mFirstWrite = false;
         }
+        else if (mWaitForIndexComplete)
+        {
+            if (!mIndexTable->RequireUpdatesAtPos(mCPManager->GetPosition() - 1)) {
+                mWaitForIndexComplete = false;
+                start_ess_partition = true;
+            } else if (end_of_samples) {
+                mWaitForIndexComplete = false;
+            } else {
+                if (mCPManager->HaveContentPackages(MAX_BUFFERED_CONTENT_PACKAGES + 1)) {
+                    BMX_EXCEPTION(("Memory buffered content packages > %d whilst waiting for index updates",
+                                   MAX_BUFFERED_CONTENT_PACKAGES));
+                }
+                break;
+            }
+        }
         else if (mPartitionInterval > 0 &&
                  mPartitionFrameCount >= mPartitionInterval && mIndexTable->CanStartPartition())
         {
             BMX_ASSERT(!mSupportCompleteSinglePass);
 
-            start_ess_partition = true;
             mPartitionFrameCount = 0;
+            if (mIndexTable->RequireUpdatesAtPos(mCPManager->GetPosition() - 1)) {
+                if (!end_of_samples) {
+                    mWaitForIndexComplete = true;
+                    break;
+                }
+            } else {
+                start_ess_partition = true;
+            }
+        }
 
+        if (start_ess_partition) {
             // write VBE index table segments and ensure new essence partition is started
 
-            if (mIndexTable->IsVBE()) {
-                BMX_ASSERT(mIndexTable->HaveSegments());
+            if (mIndexTable->IsVBE() && mIndexTable->HaveSegments()) {
                 BMX_ASSERT(!mSupportCompleteSinglePass);
 
                 mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
@@ -944,13 +978,8 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                 index_partition.write(mMXFFile);
 
                 mIndexTable->WriteSegments(mMXFFile, &index_partition, true);
-
-                mMXFFile->updatePartitions();
-                mMXFFile->closeMemoryFile();
             }
-        }
 
-        if (start_ess_partition) {
             Partition &ess_partition = mMXFFile->createPartition();
             if (mSupportCompleteSinglePass)
                 ess_partition.setKey(&MXF_PP_K(ClosedComplete, Body));

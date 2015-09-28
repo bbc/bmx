@@ -33,6 +33,7 @@
 #define BMX_OP1A_INDEX_TABLE_H_
 
 #include <vector>
+#include <set>
 
 #include <bmx/ByteArray.h>
 
@@ -88,11 +89,16 @@ public:
     OP1AIndexTableElement(uint32_t track_index_, ElementType element_type_, bool is_cbe_, bool apply_temporal_reordering_);
 
     void CacheIndexEntry(int64_t position, int8_t temporal_offset, int8_t key_frame_offset, uint8_t flags,
-                         bool can_start_partition);
+                         bool can_start_partition, bool require_update);
     void UpdateIndexEntry(int64_t position, int8_t temporal_offset);
+    void UpdateIndexEntry(int64_t position, int8_t temporal_offset, int8_t key_frame_offset, uint8_t flags);
     bool TakeIndexEntry(int64_t position, OP1AIndexEntry *entry);
 
     bool CanStartPartition(int64_t position);
+
+    bool RequireUpdatesAtEnd(int64_t end_offset) const;
+    bool RequireUpdatesAtPos(int64_t position) const;
+    void IgnoreRequiredUpdates();
 
 public:
     uint32_t track_index;
@@ -103,6 +109,9 @@ public:
     uint8_t slice_offset;
 
     uint32_t element_size;
+
+    std::set<int64_t> require_updates;
+    int64_t last_add_index_entry_pos;
 
 private:
     std::map<int64_t, OP1AIndexEntry> mIndexEntryCache;
@@ -121,6 +130,7 @@ public:
     bool RequireNewSegment(uint8_t flags);
     void AddIndexEntry(const OP1AIndexEntry *entry, int64_t stream_offset, std::vector<uint32_t> slice_cp_offsets);
     void UpdateIndexEntry(int64_t segment_position, int8_t temporal_offset);
+    void UpdateIndexEntry(int64_t segment_position, int8_t temporal_offset, int8_t key_frame_offset, uint8_t flags);
 
     void AddCBEIndexEntries(uint32_t edit_unit_byte_count, uint32_t num_entries);
 
@@ -168,8 +178,11 @@ public:
 
 public:
     void AddIndexEntry(uint32_t track_index, int64_t position, int8_t temporal_offset,
-                       int8_t key_frame_offset, uint8_t flags, bool can_start_partition);
+                       int8_t key_frame_offset, uint8_t flags,
+                       bool can_start_partition, bool require_update);
     void UpdateIndexEntry(uint32_t track_index, int64_t position, int8_t temporal_offset);
+    void UpdateIndexEntry(uint32_t track_index, int64_t position, int8_t temporal_offset, int8_t key_frame_offset,
+                          uint8_t flags);
 
     bool CanStartPartition();
 
@@ -179,6 +192,13 @@ public:
 public:
     bool HaveSegments();
     void WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition, bool final_write);
+
+    bool RequireUpdatesAtEnd(int64_t end_offset) const;
+    bool RequireUpdatesAtPos(int64_t position) const;
+    void IgnoreRequiredUpdates();
+
+    bool RequireUpdatesAtEnd(uint32_t track_index, int64_t end_offset) const;
+    void IgnoreRequiredUpdates(uint32_t track_index);
 
 private:
     void CreateDeltaEntries(std::vector<uint32_t> &element_sizes);

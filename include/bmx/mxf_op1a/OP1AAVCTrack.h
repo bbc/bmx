@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, British Broadcasting Corporation
+ * Copyright (C) 2015, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,11 +29,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_AVC_INTRA_UNCS_MXF_DESCRIPTOR_HELPER_H_
-#define BMX_AVC_INTRA_UNCS_MXF_DESCRIPTOR_HELPER_H_
+#ifndef BMX_OP1A_AVC_TRACK_H_
+#define BMX_OP1A_AVC_TRACK_H_
 
-
-#include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/AVCMXFDescriptorHelper.h>
+#include <bmx/writer_helper/AVCWriterHelper.h>
+#include <bmx/mxf_op1a/OP1APictureTrack.h>
 
 
 
@@ -41,36 +42,26 @@ namespace bmx
 {
 
 
-class AVCIntraUncsMXFDescriptorHelper : public PictureMXFDescriptorHelper
+class OP1AAVCTrack : public OP1APictureTrack
 {
 public:
-    static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
-    static bool IsSupported(EssenceType essence_type);
+    OP1AAVCTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+                 mxfRational frame_rate, EssenceType essence_type);
+    virtual ~OP1AAVCTrack();
 
-public:
-    AVCIntraUncsMXFDescriptorHelper();
-    virtual ~AVCIntraUncsMXFDescriptorHelper();
-
-public:
-    // initialize from existing descriptor
-    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
-
-public:
-    // configure and create new descriptor
-    virtual void SetEssenceType(EssenceType essence_type);
-
-    virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
-    virtual void UpdateFileDescriptor();
+    void SetHeader(const unsigned char *data, uint32_t size);
+    void SetSPS(const unsigned char *data, uint32_t size);
+    void SetPPS(const unsigned char *data, uint32_t size);
 
 protected:
-    virtual mxfUL ChooseEssenceContainerUL() const;
+    virtual void PrepareWrite(uint8_t track_count);
+    virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
+    virtual void CompleteWrite();
 
 private:
-    void UpdateEssenceIndex();
-
-private:
-    size_t mEssenceIndex;
+    AVCWriterHelper mWriterHelper;
 };
+
 
 
 };
@@ -78,4 +69,3 @@ private:
 
 
 #endif
-

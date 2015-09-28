@@ -33,7 +33,7 @@
 #define BMX_AVCI_WRITER_HELPER_H_
 
 #include <bmx/frame/DataBufferArray.h>
-#include <bmx/essence_parser/AVCIEssenceParser.h>
+#include <bmx/essence_parser/AVCEssenceParser.h>
 #include <bmx/mxf_helper/AVCIMXFDescriptorHelper.h>
 
 
@@ -80,7 +80,7 @@ private:
 
 private:
     AVCIMXFDescriptorHelper *mDescriptorHelper;
-    AVCIEssenceParser mEssenceParser;
+    AVCEssenceParser mEssenceParser;
     AVCIMode mMode;
     unsigned char *mHeader;
     bool mReplaceHeader;

@@ -13,6 +13,7 @@ TESTS = \
 	avci200_1080i.test \
 	avci200_1080p50.test \
 	avci200_720p50.test \
+	avc_high_422_intra.test \
 	d10_30.test \
 	d10_40.test \
 	d10_50.test \
@@ -59,6 +60,7 @@ EXTRA_DIST = \
 	avci50_1080p50.test \
 	avci50_720p25.test \
 	avci50_720p50.test \
+	avc_high_422_intra.test \
 	d10_30.test \
 	d10_40.test \
 	d10_50.test \
@@ -101,6 +103,7 @@ EXTRA_DIST = \
 	avci50_1080p50.md5 \
 	avci50_720p25.md5 \
 	avci50_720p50.md5 \
+	avc_high_422_intra.md5 \
 	d10_30.md5 \
 	d10_40.md5 \
 	d10_50.md5 \
@@ -156,6 +159,7 @@ create-data:
 	${srcdir}/create.sh ${srcdir} 3 10 avci50_1080p 50
 	${srcdir}/create.sh ${srcdir} 3 30 avci50_720p 25
 	${srcdir}/create.sh ${srcdir} 3 30 avci50_720p 50
+	${srcdir}/create.sh ${srcdir} 3 8 avc_high_422_intra
 	${srcdir}/create.sh ${srcdir} 3 11 d10_50
 	${srcdir}/create.sh ${srcdir} 3 12 d10_40
 	${srcdir}/create.sh ${srcdir} 3 13 d10_30
@@ -202,6 +206,7 @@ create-samples:
 	${srcdir}/samples.sh 3 10 avci50_1080p 50
 	${srcdir}/samples.sh 3 30 avci50_720p 25
 	${srcdir}/samples.sh 3 30 avci50_720p 50
+	${srcdir}/samples.sh 3 8 avc_high_422_intra
 	${srcdir}/samples.sh 3 11 d10_50
 	${srcdir}/samples.sh 3 12 d10_40
 	${srcdir}/samples.sh 3 13 d10_30

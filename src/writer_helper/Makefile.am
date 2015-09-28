@@ -1,6 +1,7 @@
 noinst_LTLIBRARIES = libwriterhelper.la
 
 libwriterhelper_la_SOURCES = \
+	AVCWriterHelper.cpp \
 	AVCIWriterHelper.cpp \
 	D10WriterHelper.cpp \
 	MPEG2LGWriterHelper.cpp \

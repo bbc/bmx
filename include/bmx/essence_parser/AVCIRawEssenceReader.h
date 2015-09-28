@@ -34,7 +34,7 @@
 
 
 #include <bmx/essence_parser/RawEssenceReader.h>
-#include <bmx/essence_parser/AVCIEssenceParser.h>
+#include <bmx/essence_parser/AVCEssenceParser.h>
 
 
 
@@ -54,7 +54,7 @@ public:
     virtual void SetEssenceParser(EssenceParser *essence_parser);
 
 private:
-    AVCIEssenceParser *mAVCIParser;
+    AVCEssenceParser *mAVCParser;
     uint32_t mLastSampleSize;
 };
 

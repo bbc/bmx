@@ -3074,6 +3074,21 @@ int main(int argc, const char** argv)
                         }
                     }
                     break;
+                case AVC_BASELINE:
+                case AVC_CONSTRAINED_BASELINE:
+                case AVC_MAIN:
+                case AVC_EXTENDED:
+                case AVC_HIGH:
+                case AVC_HIGH_10:
+                case AVC_HIGH_422:
+                case AVC_HIGH_444:
+                case AVC_HIGH_10_INTRA:
+                case AVC_HIGH_422_INTRA:
+                case AVC_HIGH_444_INTRA:
+                case AVC_CAVLC_444_INTRA:
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    break;
                 case UNC_SD:
                 case UNC_HD_1080I:
                 case UNC_HD_1080P:
@@ -3194,8 +3209,6 @@ int main(int argc, const char** argv)
                     else if (vbi_max_size)
                         clip_track->SetMaxDataSize(vbi_max_size);
                     break;
-                case AVC_HIGH_10_INTRA_UNCS:
-                case AVC_HIGH_422_INTRA_UNCS:
                 case D10_AES3_PCM:
                 case PICTURE_ESSENCE:
                 case SOUND_ESSENCE:

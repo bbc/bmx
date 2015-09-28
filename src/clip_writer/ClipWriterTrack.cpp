@@ -43,6 +43,7 @@
 #include <bmx/mxf_op1a/OP1AD10Track.h>
 #include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
 #include <bmx/mxf_op1a/OP1AAVCITrack.h>
+#include <bmx/mxf_op1a/OP1AAVCTrack.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_op1a/OP1ADataTrack.h>
 #include <bmx/mxf_op1a/OP1AXMLTrack.h>

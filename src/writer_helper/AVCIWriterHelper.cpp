@@ -48,6 +48,13 @@ using namespace bmx;
 // and this header data is overwritten if the first input frame contains header data
 #define SET_HEADER_ENABLED  mSampleCount == 0
 
+// access unit delimiter = zero byte (0x00) + start prefix (0x000001) + type (9) +
+// primary pic type (0 == I slices) + stop_bit
+static const unsigned char AVCI_ACCESS_UNIT_DELIMITER[6] = {0x00, 0x00, 0x00, 0x01, 0x09, 0x10};
+
+// filler = zero byte (0x00) + start prefix (0x000001) + type (12) + stop bit
+static const unsigned char AVCI_FILLER[6] = {0x00, 0x00, 0x00, 0x01, 0x0c, 0x80};
+
 
 
 AVCIWriterHelper::AVCIWriterHelper()
@@ -104,7 +111,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
     BMX_ASSERT(!(mReplaceHeader && !mHeader));
 
     mEssenceParser.ParseFrameInfo(data, size);
-    bool input_has_header = mEssenceParser.HaveSequenceParameterSet();
+    bool input_has_header = mEssenceParser.FrameHasActiveSPS();
 
     uint32_t output_frame_size = 0;
     switch (mMode)

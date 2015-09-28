@@ -65,9 +65,19 @@ typedef enum
     AVCI50_1080I,
     AVCI50_1080P,
     AVCI50_720P,
-    // AVC Intra Unconstrained
-    AVC_HIGH_10_INTRA_UNCS,
-    AVC_HIGH_422_INTRA_UNCS,
+    // AVC Unconstrained
+    AVC_BASELINE,
+    AVC_CONSTRAINED_BASELINE,
+    AVC_MAIN,
+    AVC_EXTENDED,
+    AVC_HIGH,
+    AVC_HIGH_10,
+    AVC_HIGH_422,
+    AVC_HIGH_444,
+    AVC_HIGH_10_INTRA,
+    AVC_HIGH_422_INTRA,
+    AVC_HIGH_444_INTRA,
+    AVC_CAVLC_444_INTRA,
     // Uncompressed video
     UNC_SD,
     UNC_HD_1080I,

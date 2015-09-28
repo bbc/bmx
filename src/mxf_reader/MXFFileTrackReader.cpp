@@ -37,7 +37,7 @@
 
 #include <bmx/mxf_reader/MXFFileTrackReader.h>
 #include <bmx/mxf_reader/MXFFileReader.h>
-#include <bmx/essence_parser/AVCIEssenceParser.h>
+#include <bmx/essence_parser/AVCEssenceParser.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 

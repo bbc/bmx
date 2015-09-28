@@ -115,14 +115,20 @@ OP1AIndexTableElement::OP1AIndexTableElement(uint32_t track_index_, ElementType 
     apply_temporal_reordering = apply_temporal_reordering_;
     slice_offset = 0;
     element_size = 0;
+    last_add_index_entry_pos = -1;
 }
 
 void OP1AIndexTableElement::CacheIndexEntry(int64_t position, int8_t temporal_offset, int8_t key_frame_offset,
-                                            uint8_t flags, bool can_start_partition)
+                                            uint8_t flags, bool can_start_partition, bool require_update)
 {
     BMX_CHECK(mIndexEntryCache.size() <= MAX_CACHE_ENTRIES);
 
     mIndexEntryCache[position] = OP1AIndexEntry(temporal_offset, key_frame_offset, flags, can_start_partition);
+
+    if (require_update)
+        require_updates.insert(position);
+    if (position > last_add_index_entry_pos)
+        last_add_index_entry_pos = position;
 }
 
 void OP1AIndexTableElement::UpdateIndexEntry(int64_t position, int8_t temporal_offset)
@@ -130,6 +136,16 @@ void OP1AIndexTableElement::UpdateIndexEntry(int64_t position, int8_t temporal_o
     BMX_ASSERT(mIndexEntryCache.find(position) != mIndexEntryCache.end());
 
     mIndexEntryCache[position].temporal_offset = temporal_offset;
+}
+
+void OP1AIndexTableElement::UpdateIndexEntry(int64_t position, int8_t temporal_offset, int8_t key_frame_offset,
+                                             uint8_t flags)
+{
+    BMX_ASSERT(mIndexEntryCache.find(position) != mIndexEntryCache.end());
+
+    mIndexEntryCache[position].temporal_offset  = temporal_offset;
+    mIndexEntryCache[position].key_frame_offset = key_frame_offset;
+    mIndexEntryCache[position].flags            = flags;
 }
 
 bool OP1AIndexTableElement::TakeIndexEntry(int64_t position, OP1AIndexEntry *entry)
@@ -152,6 +168,21 @@ bool OP1AIndexTableElement::CanStartPartition(int64_t position)
     BMX_ASSERT(mIndexEntryCache.find(position) != mIndexEntryCache.end());
 
     return (mIndexEntryCache[position].can_start_partition);
+}
+
+bool OP1AIndexTableElement::RequireUpdatesAtEnd(int64_t end_offset) const
+{
+    return !require_updates.empty() && (*require_updates.begin()) <= last_add_index_entry_pos + end_offset;
+}
+
+bool OP1AIndexTableElement::RequireUpdatesAtPos(int64_t position) const
+{
+    return !require_updates.empty() && (*require_updates.begin()) <= position;
+}
+
+void OP1AIndexTableElement::IgnoreRequiredUpdates()
+{
+    require_updates.clear();
 }
 
 
@@ -218,6 +249,16 @@ void OP1AIndexTableSegment::UpdateIndexEntry(int64_t segment_position, int8_t te
     BMX_ASSERT(segment_position * mIndexEntrySize < mEntries.GetSize());
 
     mxf_set_int8(temporal_offset, &mEntries.GetBytes()[segment_position * mIndexEntrySize]);
+}
+
+void OP1AIndexTableSegment::UpdateIndexEntry(int64_t segment_position, int8_t temporal_offset, int8_t key_frame_offset,
+                                             uint8_t flags)
+{
+    BMX_ASSERT(segment_position * mIndexEntrySize < mEntries.GetSize());
+
+    mxf_set_int8(temporal_offset,  &mEntries.GetBytes()[segment_position * mIndexEntrySize]);
+    mxf_set_int8(key_frame_offset, &mEntries.GetBytes()[segment_position * mIndexEntrySize + 1]);
+    mxf_set_int8(flags,            &mEntries.GetBytes()[segment_position * mIndexEntrySize + 2]);
 }
 
 void OP1AIndexTableSegment::AddCBEIndexEntries(uint32_t edit_unit_byte_count, uint32_t num_entries)
@@ -353,17 +394,6 @@ void OP1AIndexTable::PrepareWrite()
     }
 }
 
-void OP1AIndexTable::AddIndexEntry(uint32_t track_index, int64_t position, int8_t temporal_offset,
-                                   int8_t key_frame_offset, uint8_t flags, bool can_start_partition)
-{
-    BMX_ASSERT(!mIsCBE);
-    BMX_ASSERT(position >= mDuration);
-    BMX_ASSERT(mIndexElementsMap.find(track_index) != mIndexElementsMap.end());
-
-    mIndexElementsMap[track_index]->CacheIndexEntry(position, temporal_offset, key_frame_offset, flags,
-                                                    can_start_partition);
-}
-
 void OP1AIndexTable::GetCBEEditUnitSize(uint32_t *first, uint32_t *non_first) const
 {
     BMX_ASSERT(mIsCBE);
@@ -378,6 +408,18 @@ void OP1AIndexTable::GetCBEEditUnitSize(uint32_t *first, uint32_t *non_first) co
         *first = mAVCIFirstIndexSegment->GetSegment()->getEditUnitByteCount();
     else
         *first = *non_first;
+}
+
+void OP1AIndexTable::AddIndexEntry(uint32_t track_index, int64_t position, int8_t temporal_offset,
+                                   int8_t key_frame_offset, uint8_t flags,
+                                   bool can_start_partition, bool require_update)
+{
+    BMX_ASSERT(!mIsCBE);
+    BMX_ASSERT(position >= mDuration);
+    BMX_ASSERT(mIndexElementsMap.find(track_index) != mIndexElementsMap.end());
+
+    mIndexElementsMap[track_index]->CacheIndexEntry(position, temporal_offset, key_frame_offset, flags,
+                                                    can_start_partition, require_update);
 }
 
 void OP1AIndexTable::UpdateIndexEntry(uint32_t track_index, int64_t position, int8_t temporal_offset)
@@ -397,6 +439,31 @@ void OP1AIndexTable::UpdateIndexEntry(uint32_t track_index, int64_t position, in
         }
         mIndexSegments[i]->UpdateIndexEntry(mIndexSegments[i]->GetDuration() - end_offset, temporal_offset);
     }
+
+    mIndexElementsMap[track_index]->require_updates.erase(position);
+}
+
+void OP1AIndexTable::UpdateIndexEntry(uint32_t track_index, int64_t position, int8_t temporal_offset,
+                                      int8_t key_frame_offset, uint8_t flags)
+{
+    BMX_ASSERT(!mIsCBE);
+    BMX_ASSERT(position >= 0);
+    BMX_ASSERT(mIndexElementsMap.find(track_index) != mIndexElementsMap.end());
+
+    if (position >= mDuration) {
+        mIndexElementsMap[track_index]->UpdateIndexEntry(position, temporal_offset, key_frame_offset, flags);
+    } else {
+        int64_t end_offset = mDuration - position;
+        size_t i = mIndexSegments.size() - 1;
+        while (end_offset > mIndexSegments[i]->GetDuration()) {
+            end_offset -= mIndexSegments[i]->GetDuration();
+            i--;
+        }
+        mIndexSegments[i]->UpdateIndexEntry(mIndexSegments[i]->GetDuration() - end_offset, temporal_offset,
+                                            key_frame_offset, flags);
+    }
+
+    mIndexElementsMap[track_index]->require_updates.erase(position);
 }
 
 bool OP1AIndexTable::CanStartPartition()
@@ -469,6 +536,49 @@ void OP1AIndexTable::WriteSegments(File *mxf_file, Partition *partition, bool fi
 
     partition->fillToKag(mxf_file);
     partition->markIndexEnd(mxf_file);
+}
+
+bool OP1AIndexTable::RequireUpdatesAtEnd(int64_t end_offset) const
+{
+    size_t i;
+    for (i = 0; i < mIndexElements.size(); i++) {
+        if (mIndexElements[i]->RequireUpdatesAtEnd(end_offset))
+            return true;
+    }
+
+    return false;
+}
+
+bool OP1AIndexTable::RequireUpdatesAtPos(int64_t position) const
+{
+    size_t i;
+    for (i = 0; i < mIndexElements.size(); i++) {
+        if (mIndexElements[i]->RequireUpdatesAtPos(position))
+            return true;
+    }
+
+    return false;
+}
+
+void OP1AIndexTable::IgnoreRequiredUpdates()
+{
+    size_t i;
+    for (i = 0; i < mIndexElements.size(); i++)
+        mIndexElements[i]->IgnoreRequiredUpdates();
+}
+
+bool OP1AIndexTable::RequireUpdatesAtEnd(uint32_t track_index, int64_t end_offset) const
+{
+    BMX_ASSERT(mIndexElementsMap.find(track_index) != mIndexElementsMap.end());
+
+    return mIndexElementsMap.at(track_index)->RequireUpdatesAtEnd(end_offset);
+}
+
+void OP1AIndexTable::IgnoreRequiredUpdates(uint32_t track_index)
+{
+    BMX_ASSERT(mIndexElementsMap.find(track_index) != mIndexElementsMap.end());
+
+    mIndexElementsMap[track_index]->IgnoreRequiredUpdates();
 }
 
 void OP1AIndexTable::CreateDeltaEntries(vector<uint32_t> &element_sizes)

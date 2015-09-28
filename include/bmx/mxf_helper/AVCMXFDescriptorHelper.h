@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2013, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,51 +29,52 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_AVCI_ESSENCE_PARSER_H_
-#define BMX_AVCI_ESSENCE_PARSER_H_
+#ifndef BMX_AVC_MXF_DESCRIPTOR_HELPER_H_
+#define BMX_AVC_MXF_DESCRIPTOR_HELPER_H_
 
 
-#include <bmx/essence_parser/EssenceParser.h>
+#include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
+#include <bmx/essence_parser/AVCEssenceParser.h>
 
-
-#define AVCI_HEADER_SIZE    512
 
 
 namespace bmx
 {
 
 
-// access unit delimiter = zero byte (0x00) + start prefix (0x000001) + type (9) +
-// primary pic type (0 == I slices) + stop_bit
-static const unsigned char AVCI_ACCESS_UNIT_DELIMITER[6] = {0x00, 0x00, 0x00, 0x01, 0x09, 0x10};
-
-// filler = zero byte (0x00) + start prefix (0x000001) + type (12) + stop bit
-static const unsigned char AVCI_FILLER[6] = {0x00, 0x00, 0x00, 0x01, 0x0c, 0x80};
-
-
-class AVCIEssenceParser : public EssenceParser
+class AVCMXFDescriptorHelper : public PictureMXFDescriptorHelper
 {
 public:
-    AVCIEssenceParser();
-    virtual ~AVCIEssenceParser();
-
-    virtual uint32_t ParseFrameStart(const unsigned char *data, uint32_t data_size);
-    virtual uint32_t ParseFrameSize(const unsigned char *data, uint32_t data_size);
-
-    virtual void ParseFrameInfo(const unsigned char *data, uint32_t data_size);
+    static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
+    static bool IsSupported(EssenceType essence_type);
 
 public:
-    bool HaveAccessUnitDelimiter() const { return mHaveAccessUnitDelimiter; }
-    bool HaveSequenceParameterSet() const { return mHaveSequenceParameterSet; }
+    AVCMXFDescriptorHelper();
+    virtual ~AVCMXFDescriptorHelper();
+
+public:
+    // initialize from existing descriptor
+    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
+
+public:
+    // configure and create new descriptor
+    virtual void SetEssenceType(EssenceType essence_type);
+
+    virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
+    virtual void UpdateFileDescriptor();
+    void UpdateFileDescriptor(AVCEssenceParser *essence_parser);
+
+    mxfpp::AVCSubDescriptor* GetAVCSubDescriptor() const { return mAVCSubDescriptor; }
+
+protected:
+    virtual mxfUL ChooseEssenceContainerUL() const;
 
 private:
-    void Reset();
-
-    bool NextStartPrefix(const unsigned char *data, uint32_t size, uint32_t *offset);
+    void UpdateEssenceIndex();
 
 private:
-    bool mHaveAccessUnitDelimiter;
-    bool mHaveSequenceParameterSet;
+    size_t mEssenceIndex;
+    mxfpp::AVCSubDescriptor *mAVCSubDescriptor;
 };
 
 

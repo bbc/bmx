@@ -1026,8 +1026,8 @@ static int vui_parameters(ParseContext *context)
     u(1); PRINT_UINT("chroma_loc_info_present_flag");
     if (context->value) {
         context->indent++;
-        ue(); PRINT_UINT("chroma_sample_loc_type_top_field");
-        ue(); PRINT_UINT("chroma_sample_loc_type_bottom_field");
+        ue_m(5); PRINT_UINT("chroma_sample_loc_type_top_field");
+        ue_m(5); PRINT_UINT("chroma_sample_loc_type_bottom_field");
         context->indent--;
     }
     u(1); PRINT_UINT("timing_info_present_flag");
@@ -1851,7 +1851,7 @@ static int sequence_parameter_set_data(ParseContext *context)
         context->sps->profile_idc ==  83 || context->sps->profile_idc ==  86 || context->sps->profile_idc == 118 ||
         context->sps->profile_idc == 128)
     {
-        ue(); print_chroma_format(context, (uint8_t)context->value);
+        ue_m(3); print_chroma_format(context, (uint8_t)context->value);
         context->sps->chroma_format_idc = (uint8_t)context->value;
         if (context->sps->chroma_format_idc == 3) {
             u(1); PRINT_UINT("separate_colour_plane_flag");
@@ -1861,8 +1861,8 @@ static int sequence_parameter_set_data(ParseContext *context)
             context->sps->chroma_array_type = context->sps->chroma_format_idc;
         else
             context->sps->chroma_array_type = 0;
-        ue(); PRINT_UINT("bit_depth_luma_minus8");
-        ue(); PRINT_UINT("bit_depth_chroma_minus8");
+        ue_m(6); PRINT_UINT("bit_depth_luma_minus8");
+        ue_m(6); PRINT_UINT("bit_depth_chroma_minus8");
         u(1); PRINT_UINT("qpprime_y_zero_transform_bypass_flag");
         u(1); PRINT_UINT("seq_scaling_matrix_present_flag");
         if (context->value) {
@@ -1893,15 +1893,15 @@ static int sequence_parameter_set_data(ParseContext *context)
         ue(); PRINT_UINT("log2_max_pic_order_cnt_lsb_minus4");
         context->sps->log2_max_pic_order_cnt_lsb_minus4 = (uint8_t)context->value;
     } else if (context->sps->pic_order_cnt_type == 1) {
-        uint64_t num_ref_frames_in_pic_order_cnt_cycle;
-        uint64_t i;
+        uint8_t num_ref_frames_in_pic_order_cnt_cycle;
+        uint8_t i;
 
         u(1); PRINT_UINT("delta_pic_order_always_zero_flag");
         context->sps->delta_pic_order_always_zero_flag = (uint8_t)context->value;
         se(); PRINT_INT("offset_for_non_ref_pic");
         se(); PRINT_INT("offset_for_top_to_bottom_field");
-        ue(); PRINT_UINT("num_ref_frames_in_pic_order_cnt_cycle");
-        num_ref_frames_in_pic_order_cnt_cycle = context->value;
+        ue_m(255); PRINT_UINT("num_ref_frames_in_pic_order_cnt_cycle");
+        num_ref_frames_in_pic_order_cnt_cycle = (uint8_t)context->value;
         context->indent++;
         for (i = 0; i < num_ref_frames_in_pic_order_cnt_cycle; i++) {
             se(); PRINT_INT("offset_for_ref_frame");

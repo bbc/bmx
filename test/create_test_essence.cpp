@@ -126,13 +126,41 @@ typedef struct
 } MPEGInfo;
 
 
-// access unit delimiter NAL + start of sequence parameter set NAL
-static const unsigned char AVCI_FIRST_FRAME_PREFIX_DATA[] =
-    {0x00, 0x00, 0x00, 0x01, 0x09, 0x10, 0x00, 0x00, 0x00, 0x01, 0x67};
+static const unsigned char AVCI_AUD_DATA[] =
+{
+    0x00, 0x00, 0x00, 0x01, 0x09, 0x10
+};
 
-// access unit delimiter NAL + start of SEI messages NAL
-static const unsigned char AVCI_NON_FIRST_FRAME_PREFIX_DATA[] =
-    {0x00, 0x00, 0x00, 0x01, 0x09, 0x10, 0x00, 0x00, 0x00, 0x01, 0x06};
+static const unsigned char AVCI_SPS_DATA[] =
+{
+    0x00, 0x00, 0x00, 0x01, 0x67, 0x7a, 0x10, 0x29,
+    0xb6, 0xd4, 0x20, 0x22, 0x33, 0x19, 0xc6, 0x63,
+    0x23, 0x21, 0x01, 0x11, 0x98, 0xce, 0x33, 0x19,
+    0x18, 0x21, 0x03, 0x3a, 0x46, 0x65, 0x6a, 0x65,
+    0x24, 0xad, 0xe9, 0x12, 0x32, 0x14, 0x1a, 0x26,
+    0x34, 0xad, 0xa4, 0x41, 0x82, 0x23, 0x01, 0x50,
+    0x2b, 0x1a, 0x24, 0x69, 0x48, 0x30, 0x40, 0x2e,
+    0x11, 0x12, 0x08, 0xc6, 0x8c, 0x04, 0x41, 0x28,
+    0x4c, 0x34, 0xf0, 0x1e, 0x01, 0x13, 0xf2, 0xe0,
+    0x3c, 0x60, 0x20, 0x20, 0x28, 0x00, 0x00, 0x03,
+    0x00, 0x08, 0x00, 0x00, 0x03, 0x01, 0x94, 0x20
+};
+
+static const unsigned char AVCI_PPS_DATA[] =
+{
+    0x00, 0x00, 0x00, 0x01, 0x68, 0xce, 0x33, 0x48,
+    0xd0
+};
+
+static const unsigned char AVCI_SLICE_DATA[] =
+{
+    0x00, 0x00, 0x00, 0x01, 0x65, 0x88, 0x80, 0x80,
+    0x02, 0x14, 0xf0, 0xcb, 0x07, 0x00, 0x40, 0x00,
+    0x42, 0x01, 0x20, 0xe0, 0x00, 0x21, 0x02, 0x00,
+    0x02, 0x3e, 0xbc, 0x70, 0x00, 0x38, 0x00, 0x4a,
+    0x8e, 0x09, 0x15, 0xcf, 0xe0, 0xe0, 0x00, 0x5c,
+    0x17, 0x83, 0x80, 0x04, 0xd5, 0x72, 0xb1, 0xec
+};
 
 // don't care data
 static unsigned char DATA[4096];
@@ -218,6 +246,21 @@ static void write_buffer(FILE *file, const unsigned char *buffer, size_t size)
     }
 }
 
+static void write_zeros(FILE *file, size_t size)
+{
+    static const unsigned char zeros[256] = {0};
+
+    size_t whole_count   = size / sizeof(zeros);
+    size_t partial_count = size % sizeof(zeros);
+
+    size_t i;
+    for (i = 0; i < whole_count; i++)
+        write_buffer(file, zeros, sizeof(zeros));
+
+    if (partial_count > 0)
+        write_buffer(file, zeros, partial_count);
+}
+
 static void write_data(FILE *file, int64_t size)
 {
     int64_t i;
@@ -257,69 +300,74 @@ static void write_dv100_720p(FILE *file, unsigned int duration)
     write_data(file, duration * 288000);
 }
 
-static void write_avci_frame(FILE *file, unsigned int frame_size, bool is_first)
+static void write_avci_frame(FILE *file, unsigned int non_vcl_size, unsigned int vcl_size, bool is_first)
 {
     if (is_first) {
-        write_buffer(file, AVCI_FIRST_FRAME_PREFIX_DATA, sizeof(AVCI_FIRST_FRAME_PREFIX_DATA));
-        write_data(file, frame_size - sizeof(AVCI_FIRST_FRAME_PREFIX_DATA));
+        write_buffer(file, AVCI_AUD_DATA, sizeof(AVCI_AUD_DATA));
+        write_buffer(file, AVCI_SPS_DATA, sizeof(AVCI_SPS_DATA));
+        write_zeros(file, 256 - (sizeof(AVCI_AUD_DATA) + sizeof(AVCI_SPS_DATA)));
+        write_buffer(file, AVCI_PPS_DATA, sizeof(AVCI_PPS_DATA));
+        write_zeros(file, non_vcl_size - (256 + sizeof(AVCI_PPS_DATA)));
     } else {
-        write_buffer(file, AVCI_NON_FIRST_FRAME_PREFIX_DATA, sizeof(AVCI_NON_FIRST_FRAME_PREFIX_DATA));
-        write_data(file, frame_size - sizeof(AVCI_NON_FIRST_FRAME_PREFIX_DATA));
+        write_buffer(file, AVCI_AUD_DATA, sizeof(AVCI_AUD_DATA));
+        write_zeros(file, non_vcl_size - sizeof(AVCI_AUD_DATA));
     }
+    write_buffer(file, AVCI_SLICE_DATA, sizeof(AVCI_SLICE_DATA));
+    write_data(file, vcl_size - sizeof(AVCI_SLICE_DATA));
 }
 
 static void write_avci200_1080(FILE *file, unsigned int duration)
 {
-    write_avci_frame(file, 19 * 512 + 1134592, true);
+    write_avci_frame(file, 19 * 512, 1134592, true);
 
     unsigned int i;
     for (i = 1; i < duration; i++)
-        write_avci_frame(file, 18 * 512 + 1134592, false);
+        write_avci_frame(file, 18 * 512, 1134592, false);
 }
 
 static void write_avci100_1080(FILE *file, unsigned int duration)
 {
-    write_avci_frame(file, 19 * 512 + 559104, true);
+    write_avci_frame(file, 19 * 512, 559104, true);
 
     unsigned int i;
     for (i = 1; i < duration; i++)
-        write_avci_frame(file, 18 * 512 + 559104, false);
+        write_avci_frame(file, 18 * 512, 559104, false);
 }
 
 static void write_avci200_720(FILE *file, unsigned int duration)
 {
-    write_avci_frame(file, 11 * 512 + 566784, true);
+    write_avci_frame(file, 11 * 512, 566784, true);
 
     unsigned int i;
     for (i = 1; i < duration; i++)
-        write_avci_frame(file, 10 * 512 + 566784, false);
+        write_avci_frame(file, 10 * 512, 566784, false);
 }
 
 static void write_avci100_720(FILE *file, unsigned int duration)
 {
-    write_avci_frame(file, 11 * 512 + 279040, true);
+    write_avci_frame(file, 11 * 512, 279040, true);
 
     unsigned int i;
     for (i = 1; i < duration; i++)
-        write_avci_frame(file, 10 * 512 + 279040, false);
+        write_avci_frame(file, 10 * 512, 279040, false);
 }
 
 static void write_avci50_1080(FILE *file, unsigned int duration)
 {
-    write_avci_frame(file, 19 * 512 + 271360, true);
+    write_avci_frame(file, 19 * 512, 271360, true);
 
     unsigned int i;
     for (i = 1; i < duration; i++)
-        write_avci_frame(file, 18 * 512 + 271360, false);
+        write_avci_frame(file, 18 * 512, 271360, false);
 }
 
 static void write_avci50_720(FILE *file, unsigned int duration)
 {
-    write_avci_frame(file, 11 * 512 + 135168, true);
+    write_avci_frame(file, 11 * 512, 135168, true);
 
     unsigned int i;
     for (i = 1; i < duration; i++)
-        write_avci_frame(file, 10 * 512 + 135168, false);
+        write_avci_frame(file, 10 * 512, 135168, false);
 }
 
 static void write_d10(FILE *file, int type, unsigned int duration)

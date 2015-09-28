@@ -44,7 +44,7 @@
 
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
-#include <bmx/essence_parser/AVCIEssenceParser.h>
+#include <bmx/essence_parser/AVCEssenceParser.h>
 #include <bmx/st436/ST436Element.h>
 #include <bmx/MXFHTTPFile.h>
 #include <bmx/MXFUtils.h>
@@ -2056,7 +2056,7 @@ void MXFFileReader::ExtractFrameInfo()
             if (mEssenceReader->Read(1) != 1)
                 throw true;
 
-            AVCIEssenceParser avci_parser;
+            AVCEssenceParser avc_parser;
             for (i = 0; i < mInternalTrackReaders.size(); i++) {
                 Frame *frame = mInternalTrackReaders[i]->GetFrameBuffer()->GetLastFrame(true);
                 if (!frame || frame->IsEmpty()) {
@@ -2086,8 +2086,8 @@ void MXFFileReader::ExtractFrameInfo()
                              track_info->essence_type == AVCI50_1080P ||
                              track_info->essence_type == AVCI50_720P))
                 {
-                    avci_parser.ParseFrameInfo(frame->GetBytes(), frame->GetSize());
-                    picture_info->have_avci_header = avci_parser.HaveSequenceParameterSet();
+                    avc_parser.ParseFrameInfo(frame->GetBytes(), frame->GetSize());
+                    picture_info->have_avci_header = avc_parser.FrameHasActiveSPS();
                     if (picture_info->have_avci_header) {
                         dynamic_cast<MXFFileTrackReader*>(mInternalTrackReaders[i])->SetAVCIHeader(
                             frame->GetBytes(), frame->GetSize());

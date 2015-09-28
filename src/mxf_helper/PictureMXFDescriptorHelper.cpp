@@ -38,7 +38,7 @@
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/D10MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/DVMXFDescriptorHelper.h>
-#include <bmx/mxf_helper/AVCIntraUncsMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/AVCMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/AVCIMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/UncCDCIMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/UncRGBAMXFDescriptorHelper.h>
@@ -71,10 +71,10 @@ EssenceType PictureMXFDescriptorHelper::IsSupported(FileDescriptor *file_descrip
     essence_type = DVMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)
         return essence_type;
-    essence_type = AVCIntraUncsMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+    essence_type = AVCIMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)
         return essence_type;
-    essence_type = AVCIMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+    essence_type = AVCMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)
         return essence_type;
     essence_type = UncCDCIMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
@@ -104,10 +104,10 @@ PictureMXFDescriptorHelper* PictureMXFDescriptorHelper::Create(FileDescriptor *f
         helper = new D10MXFDescriptorHelper();
     else if (DVMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
         helper = new DVMXFDescriptorHelper();
-    else if (AVCIntraUncsMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
-        helper = new AVCIntraUncsMXFDescriptorHelper();
     else if (AVCIMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
         helper = new AVCIMXFDescriptorHelper();
+    else if (AVCMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
+        helper = new AVCMXFDescriptorHelper();
     else if (UncCDCIMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
         helper = new UncCDCIMXFDescriptorHelper();
     else if (UncRGBAMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
@@ -130,8 +130,8 @@ bool PictureMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     return D10MXFDescriptorHelper::IsSupported(essence_type) ||
            DVMXFDescriptorHelper::IsSupported(essence_type) ||
-           AVCIntraUncsMXFDescriptorHelper::IsSupported(essence_type) ||
            AVCIMXFDescriptorHelper::IsSupported(essence_type) ||
+           AVCMXFDescriptorHelper::IsSupported(essence_type) ||
            UncCDCIMXFDescriptorHelper::IsSupported(essence_type) ||
            UncRGBAMXFDescriptorHelper::IsSupported(essence_type) ||
            MPEG2LGMXFDescriptorHelper::IsSupported(essence_type) ||
@@ -148,10 +148,10 @@ MXFDescriptorHelper* PictureMXFDescriptorHelper::Create(EssenceType essence_type
         helper = new D10MXFDescriptorHelper();
     else if (DVMXFDescriptorHelper::IsSupported(essence_type))
         helper = new DVMXFDescriptorHelper();
-    else if (AVCIntraUncsMXFDescriptorHelper::IsSupported(essence_type))
-        helper = new AVCIntraUncsMXFDescriptorHelper();
     else if (AVCIMXFDescriptorHelper::IsSupported(essence_type))
         helper = new AVCIMXFDescriptorHelper();
+    else if (AVCMXFDescriptorHelper::IsSupported(essence_type))
+        helper = new AVCMXFDescriptorHelper();
     else if (UncCDCIMXFDescriptorHelper::IsSupported(essence_type))
         helper = new UncCDCIMXFDescriptorHelper();
     else if (UncRGBAMXFDescriptorHelper::IsSupported(essence_type))

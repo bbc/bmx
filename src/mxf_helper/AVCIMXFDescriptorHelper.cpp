@@ -507,9 +507,9 @@ uint32_t AVCIMXFDescriptorHelper::GetSampleWithoutHeaderSize()
 mxfUL AVCIMXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
     if (mFrameWrapped)
-        return MXF_EC_L(AVCIFrameWrapped);
+        return MXF_EC_L(AVCFrameWrapped);
     else
-        return MXF_EC_L(AVCIClipWrapped);
+        return MXF_EC_L(AVCClipWrapped);
 }
 
 void AVCIMXFDescriptorHelper::UpdateEssenceIndex()

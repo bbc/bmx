@@ -3,6 +3,7 @@ noinst_LTLIBRARIES = libmxfop1a.la
 libmxfop1a_la_SOURCES = \
 	OP1AANCDataTrack.cpp \
 	OP1AAVCITrack.cpp \
+	OP1AAVCTrack.cpp \
 	OP1AContentPackage.cpp \
 	OP1AD10Track.cpp \
 	OP1ADataTrack.cpp \

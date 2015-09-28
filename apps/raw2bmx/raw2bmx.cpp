@@ -93,6 +93,7 @@ typedef enum
     MPEG2LG_ESSENCE_GROUP,
     D10_ESSENCE_GROUP,
     AVCI_ESSENCE_GROUP,
+    AVC_ESSENCE_GROUP,
 } EssenceTypeGroup;
 
 
@@ -540,6 +541,19 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --avci50_1080i <name>   Raw AVC-Intra 50 1080i video input file\n");
     fprintf(stderr, "  --avci50_1080p <name>   Raw AVC-Intra 50 1080p video input file\n");
     fprintf(stderr, "  --avci50_720p <name>    Raw AVC-Intra 50 720p video input file\n");
+    fprintf(stderr, "  --avc <name>                 Raw AVC video input file\n");
+    fprintf(stderr, "  --avc_baseline <name>        Raw AVC Baseline profile video input file\n");
+    fprintf(stderr, "  --avc_constr_baseline <name> Raw AVC Constrained Baseline profile video input file\n");
+    fprintf(stderr, "  --avc_main <name>            Raw AVC Main profile video input file\n");
+    fprintf(stderr, "  --avc_extended <name>        Raw AVC Extended profile video input file\n");
+    fprintf(stderr, "  --avc_high <name>            Raw AVC High profile video input file\n");
+    fprintf(stderr, "  --avc_high_10 <name>         Raw AVC High 10 profile video input file\n");
+    fprintf(stderr, "  --avc_high_422 <name>        Raw AVC High 422 profile video input file\n");
+    fprintf(stderr, "  --avc_high_444 <name>        Raw AVC High 444 profile video input file\n");
+    fprintf(stderr, "  --avc_high_10_intra <name>   Raw AVC High 10 Intra profile video input file\n");
+    fprintf(stderr, "  --avc_high_422_intra <name>  Raw AVC High 422 Intra profile video input file\n");
+    fprintf(stderr, "  --avc_high_444_intra <name>  Raw AVC High 444 Intra profile video input file\n");
+    fprintf(stderr, "  --avc_cavlc_444 <name>       Raw AVC CAVLC 444 profile video input file\n");
     fprintf(stderr, "  --unc <name>            Raw uncompressed SD UYVY 422 video input file\n");
     fprintf(stderr, "  --unc_1080i <name>      Raw uncompressed HD 1080i UYVY 422 video input file\n");
     fprintf(stderr, "  --unc_1080p <name>      Raw uncompressed HD 1080p UYVY 422 video input file\n");
@@ -2108,6 +2122,175 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--avc") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type_group = AVC_ESSENCE_GROUP;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avc_baseline") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVC_BASELINE;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avc_constr_baseline") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVC_CONSTRAINED_BASELINE;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avc_main") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVC_MAIN;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avc_extended") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVC_EXTENDED;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avc_high") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVC_HIGH;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avc_high_10") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVC_HIGH_10;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avc_high_422") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVC_HIGH_422;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avc_high_444") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVC_HIGH_444;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avc_high_10_intra") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVC_HIGH_10_INTRA;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avc_high_422_intra") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVC_HIGH_422_INTRA;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avc_high_444_intra") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVC_HIGH_444_INTRA;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--avc_cavlc_444") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = AVC_CAVLC_444_INTRA;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--unc") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -3200,11 +3383,53 @@ int main(int argc, const char** argv)
                     throw false;
                 }
 
+                if (!frame_rate_set && avc_parser->HaveFrameRate())
+                    frame_rate = avc_parser->GetFrameRate();
+
                 // re-open the raw reader to use the special AVCI reader
                 delete input->raw_reader;
                 input->raw_reader = 0;
                 if (!open_raw_reader(input))
                     throw false;
+            }
+            else if (input->essence_type_group == AVC_ESSENCE_GROUP ||
+                     input->essence_type == AVC_BASELINE ||
+                     input->essence_type == AVC_CONSTRAINED_BASELINE ||
+                     input->essence_type == AVC_MAIN ||
+                     input->essence_type == AVC_EXTENDED ||
+                     input->essence_type == AVC_HIGH ||
+                     input->essence_type == AVC_HIGH_10 ||
+                     input->essence_type == AVC_HIGH_422 ||
+                     input->essence_type == AVC_HIGH_444 ||
+                     input->essence_type == AVC_HIGH_10_INTRA ||
+                     input->essence_type == AVC_HIGH_422_INTRA ||
+                     input->essence_type == AVC_HIGH_444_INTRA ||
+                     input->essence_type == AVC_CAVLC_444_INTRA)
+            {
+                AVCEssenceParser *avc_parser = new AVCEssenceParser();
+                input->raw_reader->SetEssenceParser(avc_parser);
+
+                input->raw_reader->ReadSamples(1);
+                if (input->raw_reader->GetNumSamples() == 0) {
+                    if (input->essence_type_group == AVC_ESSENCE_GROUP)
+                        input->essence_type = AVC_HIGH_422;
+                } else {
+                    avc_parser->ParseFrameInfo(input->raw_reader->GetSampleData(),
+                                               input->raw_reader->GetSampleDataSize());
+                    if (input->essence_type_group != AVC_ESSENCE_GROUP &&
+                        avc_parser->GetEssenceType() != input->essence_type)
+                    {
+                        log_warn("Using parsed AVC essence type '%s' which does not match commandline option essence type '%s'\n",
+                                 essence_type_to_string(avc_parser->GetEssenceType()),
+                                 essence_type_to_string(input->essence_type));
+                    }
+                    input->essence_type = avc_parser->GetEssenceType();
+
+                    if (!frame_rate_set)
+                        frame_rate = avc_parser->GetFrameRate();
+
+                    // TODO: other parameters?
+                }
             }
         }
 
@@ -3722,6 +3947,21 @@ int main(int argc, const char** argv)
                         }
                     }
                     break;
+                case AVC_BASELINE:
+                case AVC_CONSTRAINED_BASELINE:
+                case AVC_MAIN:
+                case AVC_EXTENDED:
+                case AVC_HIGH:
+                case AVC_HIGH_10:
+                case AVC_HIGH_422:
+                case AVC_HIGH_444:
+                case AVC_HIGH_10_INTRA:
+                case AVC_HIGH_422_INTRA:
+                case AVC_HIGH_444_INTRA:
+                case AVC_CAVLC_444_INTRA:
+                    if (input->afd)
+                        input->track->SetAFD(input->afd);
+                    break;
                 case UNC_SD:
                 case UNC_HD_1080I:
                 case UNC_HD_1080P:
@@ -3820,13 +4060,7 @@ int main(int argc, const char** argv)
                 case VBI_DATA:
                     clip_track->SetConstantDataSize(input->vbi_const_size);
                     break;
-                case AVC_HIGH_10_INTRA_UNCS:
-                case AVC_HIGH_422_INTRA_UNCS:
-                case D10_AES3_PCM:
-                case PICTURE_ESSENCE:
-                case SOUND_ESSENCE:
-                case DATA_ESSENCE:
-                case UNKNOWN_ESSENCE_TYPE:
+                default:
                     BMX_ASSERT(false);
             }
         }
@@ -3891,6 +4125,23 @@ int main(int argc, const char** argv)
                     if (input->raw_reader->GetFixedSampleSize() == 0)
                         input->raw_reader->SetFixedSampleSize(clip_track->GetInputSampleSize());
                     break;
+                case AVC_BASELINE:
+                case AVC_CONSTRAINED_BASELINE:
+                case AVC_MAIN:
+                case AVC_EXTENDED:
+                case AVC_HIGH:
+                case AVC_HIGH_10:
+                case AVC_HIGH_422:
+                case AVC_HIGH_444:
+                case AVC_HIGH_10_INTRA:
+                case AVC_HIGH_422_INTRA:
+                case AVC_HIGH_444_INTRA:
+                case AVC_CAVLC_444_INTRA:
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    input->raw_reader->SetEssenceParser(new AVCEssenceParser());
+                    input->raw_reader->SetCheckMaxSampleSize(50000000);
+                    break;
                 case D10_30:
                 case D10_40:
                 case D10_50:
@@ -3952,13 +4203,7 @@ int main(int argc, const char** argv)
                     input->sample_sequence_size = 1;
                     input->raw_reader->SetFixedSampleSize(input->vbi_const_size);
                     break;
-                case AVC_HIGH_10_INTRA_UNCS:
-                case AVC_HIGH_422_INTRA_UNCS:
-                case D10_AES3_PCM:
-                case PICTURE_ESSENCE:
-                case SOUND_ESSENCE:
-                case DATA_ESSENCE:
-                case UNKNOWN_ESSENCE_TYPE:
+                default:
                     BMX_ASSERT(false);
             }
         }

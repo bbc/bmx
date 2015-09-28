@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2015, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -33,7 +33,7 @@
 #include "config.h"
 #endif
 
-#include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
+#include <bmx/mxf_op1a/OP1AAVCTrack.h>
 #include <bmx/mxf_op1a/OP1AFile.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -47,19 +47,37 @@ static const mxfKey VIDEO_ELEMENT_KEY = MXF_MPEG_PICT_EE_K(0x01, MXF_MPEG_PICT_F
 
 
 
-OP1AMPEG2LGTrack::OP1AMPEG2LGTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-                                   mxfRational frame_rate, EssenceType essence_type)
+OP1AAVCTrack::OP1AAVCTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+                           mxfRational frame_rate, EssenceType essence_type)
 : OP1APictureTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
 {
     mTrackNumber = MXF_MPEG_PICT_TRACK_NUM(0x01, MXF_MPEG_PICT_FRAME_WRAPPED_EE_TYPE, 0x00);
     mEssenceElementKey = VIDEO_ELEMENT_KEY;
+    mWriterHelper.SetDescriptorHelper(dynamic_cast<AVCMXFDescriptorHelper*>(mDescriptorHelper));
+
+    log_warn("AVC support is work-in-progress\n");
 }
 
-OP1AMPEG2LGTrack::~OP1AMPEG2LGTrack()
+OP1AAVCTrack::~OP1AAVCTrack()
 {
 }
 
-void OP1AMPEG2LGTrack::PrepareWrite(uint8_t track_count)
+void OP1AAVCTrack::SetHeader(const unsigned char *data, uint32_t size)
+{
+    mWriterHelper.SetHeader(data, size);
+}
+
+void OP1AAVCTrack::SetSPS(const unsigned char *data, uint32_t size)
+{
+    mWriterHelper.SetSPS(data, size);
+}
+
+void OP1AAVCTrack::SetPPS(const unsigned char *data, uint32_t size)
+{
+    mWriterHelper.SetPPS(data, size);
+}
+
+void OP1AAVCTrack::PrepareWrite(uint8_t track_count)
 {
     CompleteEssenceKeyAndTrackNum(track_count);
 
@@ -67,7 +85,7 @@ void OP1AMPEG2LGTrack::PrepareWrite(uint8_t track_count)
     mIndexTable->RegisterPictureTrackElement(mTrackIndex, false, true);
 }
 
-void OP1AMPEG2LGTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
+void OP1AAVCTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
     BMX_CHECK(num_samples == 1);
     BMX_CHECK(data && size);
@@ -75,46 +93,41 @@ void OP1AMPEG2LGTrack::WriteSamplesInt(const unsigned char *data, uint32_t size,
     mWriterHelper.ProcessFrame(data, size);
 
 
-    // update previous index entry if temporal offset now known
+    // update previous index entries and get the current index
 
-    if (mWriterHelper.HavePrevTemporalOffset()) {
-        if (mWriterHelper.GetPrevTemporalOffset() <= mWriterHelper.GetFramePosition()) {
-            mIndexTable->UpdateIndexEntry(mTrackIndex,
-                                          mWriterHelper.GetFramePosition() - mWriterHelper.GetPrevTemporalOffset(),
-                                          mWriterHelper.GetPrevTemporalOffset());
-        } else {
-            log_warn("Invalid MPEG temporal reference - failed to set MXF temporal offset in index entry before start\n");
+    bool require_update = true;
+    int64_t position = -1;
+    int8_t temporal_offset;
+    int8_t key_frame_offset;
+    uint8_t flags;
+    MPEGFrameType frame_type;
+    while (mWriterHelper.TakeCompleteIndexEntry(&position, &temporal_offset, &key_frame_offset, &flags, &frame_type)) {
+        if (position == mWriterHelper.GetFramePosition()) {
+            require_update = false;
+            break;
         }
+        mIndexTable->UpdateIndexEntry(mTrackIndex, position, temporal_offset, key_frame_offset, flags);
     }
-    if (mWriterHelper.HaveGOPHeader() && mIndexTable->RequireUpdatesAtEnd(mTrackIndex, 0)) {
-        log_warn("Ignoring incomplete index table information in previous GOP\n");
-        mIndexTable->IgnoreRequiredUpdates(mTrackIndex);
-    }
+    if (require_update)
+        mWriterHelper.GetIncompleteIndexEntry(&position, &temporal_offset, &key_frame_offset, &flags, &frame_type);
 
 
     // write frame and add index entry
 
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
-    mIndexTable->AddIndexEntry(mTrackIndex, mWriterHelper.GetFramePosition(), mWriterHelper.GetTemporalOffset(),
-                               mWriterHelper.GetKeyFrameOffset(), mWriterHelper.GetFlags(),
-                               mWriterHelper.HaveGOPHeader(), !mWriterHelper.HaveTemporalOffset());
+    mIndexTable->AddIndexEntry(mTrackIndex, position, temporal_offset, key_frame_offset, flags,
+                               frame_type == I_FRAME, require_update);
 }
 
-void OP1AMPEG2LGTrack::CompleteWrite()
+void OP1AAVCTrack::CompleteWrite()
 {
-    // update the file descriptor with info extracted from the essence data
-    MPEGVideoDescriptor *mpeg_descriptor = dynamic_cast<MPEGVideoDescriptor*>(mDescriptorHelper->GetFileDescriptor());
-    BMX_ASSERT(mpeg_descriptor);
-    mpeg_descriptor->setSingleSequence(mWriterHelper.GetSingleSequence());
-    mpeg_descriptor->setConstantBFrames(mWriterHelper.GetConstantBFrames());
-    mpeg_descriptor->setLowDelay(mWriterHelper.GetLowDelay());
-    mpeg_descriptor->setClosedGOP(mWriterHelper.GetClosedGOP());
-    mpeg_descriptor->setIdenticalGOP(mWriterHelper.GetIdenticalGOP());
-    if (mWriterHelper.GetMaxGOP() > 0)
-        mpeg_descriptor->setMaxGOP(mWriterHelper.GetMaxGOP());
-    if (mWriterHelper.GetMaxBPictureCount() > 0)
-        mpeg_descriptor->setMaxBPictureCount(mWriterHelper.GetMaxBPictureCount());
-    if (mWriterHelper.GetBitRate() > 0)
-        mpeg_descriptor->setBitRate(mWriterHelper.GetBitRate());
-}
+    mWriterHelper.CompleteProcess();
 
+    int64_t position;
+    int8_t temporal_offset;
+    int8_t key_frame_offset;
+    uint8_t flags;
+    MPEGFrameType frame_type;
+    while (mWriterHelper.TakeCompleteIndexEntry(&position, &temporal_offset, &key_frame_offset, &flags, &frame_type))
+        mIndexTable->UpdateIndexEntry(mTrackIndex, position, temporal_offset, key_frame_offset, flags);
+}

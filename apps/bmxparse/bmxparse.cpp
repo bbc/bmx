@@ -121,16 +121,21 @@ public:
 };
 
 
-typedef void (*print_frame_info_f)(AppInfoWriter *info_writer, EssenceParser *parser, Buffer *buffer,
-                                   uint32_t frame_size, int64_t frame_num);
+typedef void (*print_frame_info_f)(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
+                                   Buffer *buffer, uint32_t frame_size, int64_t frame_num);
 
 
-static void print_avc_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, Buffer *buffer,
-                                 uint32_t frame_size, int64_t frame_num)
+static void print_avc_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
+                                 Buffer *buffer, uint32_t frame_size, int64_t frame_num)
 {
+    POCState *poc_state = static_cast<POCState*>(parser_data);
     AVCEssenceParser *avc_parser = dynamic_cast<AVCEssenceParser*>(parser);
     avc_parser->ParseFrameInfo(buffer->data, frame_size);
 
+    int32_t pic_order_cnt;
+    avc_parser->DecodePOC(poc_state, &pic_order_cnt);
+
+    EssenceType essence_type = avc_parser->GetEssenceType();
     EssenceType avci_essence_type = avc_parser->GetAVCIEssenceType(frame_size, false, false);
 
     info_writer->StartArrayElement("frame", (size_t)frame_num);
@@ -161,15 +166,26 @@ static void print_avc_frame_info(AppInfoWriter *info_writer, EssenceParser *pars
             default:      info_writer->WriteStringItem("frame_type", "Unknown"); break;
         }
     }
+    info_writer->WriteIntegerItem("frame_num", avc_parser->GetFrameNum());
+    info_writer->WriteIntegerItem("pic_order_cnt", pic_order_cnt);
+    info_writer->WriteBoolItem("frame_mbs_only", avc_parser->IsFrameMBSOnly());
+    if (!avc_parser->IsFrameMBSOnly()) {
+        info_writer->WriteBoolItem("mb_adaptive_ff_encoding", avc_parser->IsMBAdaptiveFFEncoding());
+        info_writer->WriteBoolItem("field_picture", avc_parser->IsFieldPicture());
+        if (avc_parser->IsFieldPicture())
+            info_writer->WriteBoolItem("bottom_field", avc_parser->IsBottomField());
+    }
+    info_writer->WriteStringItem("essence_type", essence_type_to_enum_string(essence_type));
     if (avci_essence_type != UNKNOWN_ESSENCE_TYPE)
         info_writer->WriteStringItem("avci_essence_type", essence_type_to_enum_string(avci_essence_type));
 
     info_writer->EndArrayElement();
 }
 
-static void print_dv_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, Buffer *buffer,
-                                uint32_t frame_size, int64_t frame_num)
+static void print_dv_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
+                                Buffer *buffer, uint32_t frame_size, int64_t frame_num)
 {
+    (void)parser_data;
     DVEssenceParser *dv_parser = dynamic_cast<DVEssenceParser*>(parser);
     dv_parser->ParseFrameInfo(buffer->data, frame_size);
 
@@ -197,9 +213,10 @@ static void print_dv_frame_info(AppInfoWriter *info_writer, EssenceParser *parse
     info_writer->EndArrayElement();
 }
 
-static void print_mjpeg_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, Buffer *buffer,
-                                   uint32_t frame_size, int64_t frame_num)
+static void print_mjpeg_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
+                                   Buffer *buffer, uint32_t frame_size, int64_t frame_num)
 {
+    (void)parser_data;
     MJPEGEssenceParser *mjpeg_parser = dynamic_cast<MJPEGEssenceParser*>(parser);
     mjpeg_parser->ParseFrameInfo(buffer->data, frame_size);
 
@@ -210,9 +227,10 @@ static void print_mjpeg_frame_info(AppInfoWriter *info_writer, EssenceParser *pa
     info_writer->EndArrayElement();
 }
 
-static void print_m2v_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, Buffer *buffer,
-                                 uint32_t frame_size, int64_t frame_num)
+static void print_m2v_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
+                                 Buffer *buffer, uint32_t frame_size, int64_t frame_num)
 {
+    (void)parser_data;
     MPEG2EssenceParser *m2v_parser = dynamic_cast<MPEG2EssenceParser*>(parser);
     m2v_parser->ParseFrameAllInfo(buffer->data, frame_size);
 
@@ -261,9 +279,10 @@ static void print_m2v_frame_info(AppInfoWriter *info_writer, EssenceParser *pars
     info_writer->EndArrayElement();
 }
 
-static void print_vc3_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, Buffer *buffer,
-                                 uint32_t frame_size, int64_t frame_num)
+static void print_vc3_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
+                                 Buffer *buffer, uint32_t frame_size, int64_t frame_num)
 {
+    (void)parser_data;
     VC3EssenceParser *vc3_parser = dynamic_cast<VC3EssenceParser*>(parser);
     vc3_parser->ParseFrameInfo(buffer->data, frame_size);
 
@@ -418,15 +437,18 @@ int main(int argc, const char **argv)
         AppTextInfoWriter *text_info_writer = new AppTextInfoWriter(stdout);
         AppInfoWriter *info_writer = text_info_writer;
 
+        POCState poc_state;
         EssenceParser *parser;
+        void *parser_data = 0;
         print_frame_info_f print_frame_info;
         switch (input_type)
         {
             case AVC_INPUT:
                 parser = new AVCEssenceParser();
+                parser_data = &poc_state;
                 print_frame_info = print_avc_frame_info;
                 if (text_info_writer)
-                    text_info_writer->PushItemValueIndent(strlen("sample_aspect_ratio "));
+                    text_info_writer->PushItemValueIndent(strlen("mb_adaptive_ff_encoding "));
                 break;
             case DV_INPUT:
                 parser = new DVEssenceParser();
@@ -481,13 +503,13 @@ int main(int argc, const char **argv)
                 log_error("Invalid frame start\n");
                 throw false;
             } else {
-                print_frame_info(info_writer, parser, &buffer, frame_size, frame_count);
+                print_frame_info(info_writer, parser, parser_data, &buffer, frame_size, frame_count);
                 frame_start = frame_size;
                 frame_count++;
             }
         }
         if (buffer.size > 0) {
-            print_frame_info(info_writer, parser, &buffer, buffer.size, frame_count);
+            print_frame_info(info_writer, parser, parser_data, &buffer, buffer.size, frame_count);
             frame_count++;
         }
 
