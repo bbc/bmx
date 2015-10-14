@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test xmlns="http://bbc.co.uk/rd/bmx/test/utf8" xml:lang="en">
+  <more>stuff</more>
+</test>

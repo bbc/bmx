@@ -40,6 +40,7 @@
 
 #include <bmx/mxf_op1a/OP1ATrack.h>
 #include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
+#include <bmx/mxf_op1a/OP1AXMLTrack.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFChecksumFile.h>
 
@@ -91,6 +92,7 @@ public:
     void SetOutputEndOffset(int64_t offset);
 
     OP1ATrack* CreateTrack(EssenceType essence_type);
+    OP1AXMLTrack* CreateXMLTrack();
 
 public:
     void PrepareHeaderMetadata();
@@ -164,6 +166,7 @@ private:
     std::map<MXFDataDefEnum, uint8_t> mTrackCounts;
     bool mHaveANCTrack;
     bool mHaveVBITrack;
+    std::vector<OP1AXMLTrack*> mXMLTracks;
 
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;
@@ -190,6 +193,8 @@ private:
 
     MXFChecksumFile *mMXFChecksumFile;
     std::string mMD5DigestStr;
+
+    uint32_t mCBEIndexPartitionIndex;
 };
 
 

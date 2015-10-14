@@ -57,11 +57,13 @@ static const uint32_t TIMECODE_TRACK_ID         = 901;
 static const uint32_t FIRST_PICTURE_TRACK_ID    = 1001;
 static const uint32_t FIRST_SOUND_TRACK_ID      = 2001;
 static const uint32_t FIRST_DATA_TRACK_ID       = 3001;
+static const uint32_t FIRST_XML_TRACK_ID        = 9001;
 
 static const char TIMECODE_TRACK_NAME[]         = "TC1";
 
 static const uint32_t INDEX_SID                 = 1;
 static const uint32_t BODY_SID                  = 2;
+static const uint32_t FIRST_STREAM_SID          = 10;
 
 static const uint8_t MIN_LLEN                   = 4;
 
@@ -121,6 +123,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mSupportCompleteSinglePass = false;
     mFooterPartitionOffset = 0;
     mMXFChecksumFile = 0;
+    mCBEIndexPartitionIndex = 0;
 
     mIndexTable = new OP1AIndexTable(INDEX_SID, BODY_SID, frame_rate, (flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR));
     mCPManager = new OP1AContentPackageManager(mMXFFile, mIndexTable, frame_rate, mEssencePartitionKAGSize, MIN_LLEN);
@@ -145,6 +148,8 @@ OP1AFile::~OP1AFile()
     size_t i;
     for (i = 0; i < mTracks.size(); i++)
         delete mTracks[i];
+    for (i = 0; i < mXMLTracks.size(); i++)
+        delete mXMLTracks[i];
 
     delete mMXFFile;
     delete mDataModel;
@@ -283,6 +288,16 @@ OP1ATrack* OP1AFile::CreateTrack(EssenceType essence_type)
     }
 
     return mTracks.back();
+}
+
+OP1AXMLTrack* OP1AFile::CreateXMLTrack()
+{
+    uint32_t track_id    = FIRST_XML_TRACK_ID + mXMLTracks.size();
+    uint32_t track_index = (uint32_t)mTracks.size();
+    uint32_t stream_id   = FIRST_STREAM_SID + mXMLTracks.size();
+
+    mXMLTracks.push_back(new OP1AXMLTrack(this, track_index, track_id, stream_id));
+    return mXMLTracks.back();
 }
 
 void OP1AFile::PrepareHeaderMetadata()
@@ -506,20 +521,11 @@ void OP1AFile::CompleteWrite()
         mHeaderMetadata->write(mMXFFile, &header_partition, &pos_filler_writer);
 
 
-        // re-write the CBE index table segment(s)
+        // re-write the CBE index table segment(s) in the header partition
 
-        if (!mFirstWrite && mIndexTable->IsCBE()) {
-            Partition *index_partition;
-            if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) {
-                index_partition = &mMXFFile->getPartition(0);
-            } else {
-                index_partition = &mMXFFile->getPartition(1);
-                index_partition->setKey(&MXF_PP_K(ClosedComplete, Body));
-                index_partition->setFooterPartition(footer_partition.getThisPartition());
-                index_partition->write(mMXFFile);
-            }
-
-            mIndexTable->WriteSegments(mMXFFile, index_partition, true);
+        if (!mFirstWrite && mIndexTable->IsCBE() && mCBEIndexPartitionIndex == 0) {
+            Partition &index_partition = mMXFFile->getPartition(mCBEIndexPartitionIndex);
+            mIndexTable->WriteSegments(mMXFFile, &index_partition, true);
         }
 
 
@@ -527,6 +533,31 @@ void OP1AFile::CompleteWrite()
 
         mMXFFile->updatePartitions();
         mMXFFile->closeMemoryFile();
+
+
+        // re-write the generic stream partition packs
+
+        vector<Partition*> partitions = mMXFFile->getPartitions();
+        size_t i;
+        for (i = 0; i < partitions.size(); i++) {
+            Partition *partition = partitions[i];
+            if (partition->isGenericStream()) {
+                mMXFFile->updatePartitions(i, i + partitions.size() - 1);
+                break;
+            }
+        }
+
+
+        // re-write the CBE index table segment(s) that are not in the header metadata
+
+        if (!mFirstWrite && mIndexTable->IsCBE() && mCBEIndexPartitionIndex > 0) {
+            Partition &index_partition = mMXFFile->getPartition(mCBEIndexPartitionIndex);
+            mMXFFile->seek(index_partition.getThisPartition(), SEEK_SET);
+            index_partition.setKey(&MXF_PP_K(ClosedComplete, Body));
+            index_partition.setFooterPartition(footer_partition.getThisPartition());
+            index_partition.write(mMXFFile);
+            mIndexTable->WriteSegments(mMXFFile, &index_partition, true);
+        }
 
 
         // update and re-write the body partition packs
@@ -602,7 +633,10 @@ void OP1AFile::CreateHeaderMetadata()
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         preface->appendEssenceContainers(*iter);
-    preface->setDMSchemes(vector<mxfUL>());
+    if (mXMLTracks.empty())
+        preface->setDMSchemes(vector<mxfUL>());
+    else
+        preface->appendDMSchemes(MXF_DM_L(RP2057));
     if ((mFlavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR))
         preface->setIsRIPPresent(true);
 
@@ -709,6 +743,8 @@ void OP1AFile::CreateHeaderMetadata()
     size_t i;
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage, mFileSourcePackage);
+    for (i = 0; i < mXMLTracks.size(); i++)
+        mXMLTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage);
 }
 
 void OP1AFile::CreateFile()
@@ -721,7 +757,7 @@ void OP1AFile::CreateFile()
     mMXFFile->setMinLLen(MIN_LLEN);
 
 
-    // write to memory until essence data writing starts or there is no essence and the file is completed
+    // write to memory until generic stream / essence data writing starts or there is no essence and the file is completed
 
     mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
 
@@ -760,6 +796,27 @@ void OP1AFile::CreateFile()
     KAGFillerWriter reserve_filler_writer(&header_partition, mReserveMinBytes);
     mHeaderMetadata->write(mMXFFile, &header_partition, &reserve_filler_writer);
     mHeaderMetadataEndPos = mMXFFile->tell();  // need this position when we re-write the header metadata
+
+
+    // write generic stream partitions
+
+    size_t i;
+    for (i = 0; i < mXMLTracks.size(); i++) {
+        OP1AXMLTrack *xml_track = mXMLTracks[i];
+        if (xml_track->RequireStreamPartition()) {
+            if (header_partition.getIndexSID() || header_partition.getBodySID())
+                BMX_EXCEPTION(("XML track's Generic Stream partition is incompatible with minimal partitions OP-1A flavour"));
+
+            if (mMXFFile->isMemoryFileOpen())
+                mMXFFile->closeMemoryFile();
+
+            Partition &stream_partition = mMXFFile->createPartition();
+            stream_partition.setKey(&MXF_GS_PP_K(GenericStream));
+            stream_partition.setBodySID(xml_track->GetStreamId());
+            stream_partition.write(mMXFFile);
+            xml_track->WriteStreamXMLData(mMXFFile);
+        }
+    }
 }
 
 void OP1AFile::UpdatePackageMetadata()
@@ -844,7 +901,7 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                 mCPManager->UpdateIndexTable(mCPManager->HaveContentPackages(2) ? 2 : 1);
 
                 if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) {
-                    mIndexTable->WriteSegments(mMXFFile, &mMXFFile->getPartition(0), false);
+                    mCBEIndexPartitionIndex = 0;
                 } else {
                     Partition &index_partition = mMXFFile->createPartition();
                     if (mSupportCompleteSinglePass)
@@ -856,8 +913,9 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                     index_partition.setKagSize(mKAGSize);
                     index_partition.write(mMXFFile);
 
-                    mIndexTable->WriteSegments(mMXFFile, &index_partition, false);
+                    mCBEIndexPartitionIndex = mMXFFile->getPartitions().size() - 1;
                 }
+                mIndexTable->WriteSegments(mMXFFile, &mMXFFile->getPartition(mCBEIndexPartitionIndex), false);
             }
 
             if (!(mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR))

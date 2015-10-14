@@ -13,9 +13,6 @@ to have 0 (available) precharge when there is a PCM track, even though the audio
 track has essence data available before the origin. A distinction should be made
 between amount of precharge and having essence data available for precharge
 
-3. h264dump: must store separate SPS and PPS information sets to support
-multiple identifiers in bitstream
-
 4. h264dump: better determination of whether a 3 or 4 zero byte is required in
 the start prefix
 

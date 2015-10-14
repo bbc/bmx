@@ -38,6 +38,7 @@
 
 #include <bmx/BMXTypes.h>
 #include <bmx/mxf_reader/MXFTrackReader.h>
+#include <bmx/mxf_reader/MXFTextObject.h>
 #include <bmx/mxf_reader/MXFIndexEntryExt.h>
 #include <bmx/mxf_reader/MXFFileIndex.h>
 
@@ -125,6 +126,10 @@ public:
 
     virtual int16_t GetTrackPrecharge(size_t track_index, int64_t clip_position, int16_t clip_precharge) const = 0;
     virtual int16_t GetTrackRollout(size_t track_index, int64_t clip_position, int16_t clip_rollout) const = 0;
+
+public:
+    virtual size_t GetNumTextObjects() const = 0;
+    virtual MXFTextObject* GetTextObject(size_t index) const = 0;
 
 public:
     virtual void SetNextFramePosition(Rational edit_rate, int64_t position) = 0;

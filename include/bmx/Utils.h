@@ -98,10 +98,17 @@ bool check_is_dir(std::string name);
 bool check_is_abs_path(std::string name);
 bool check_ends_with_dir_separator(std::string name);
 
+std::string trim_string(std::string value);
+
+void get_xml_encoding(const unsigned char *data, size_t size, TextEncoding *encoding, ByteOrder *byte_order);
+
 Timestamp generate_timestamp_now();
 
 UUID generate_uuid();
 UMID generate_umid();
+
+UUID create_uuid_from_name(const unsigned char *ns, size_t ns_size, const std::string &name);
+UUID create_uuid_from_name(const std::string &name);
 
 uint16_t get_rounded_tc_base(Rational rate);
 

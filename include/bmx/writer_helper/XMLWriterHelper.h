@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2015, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,9 +29,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_BYTE_ARRAY_H_
-#define BMX_BYTE_ARRAY_H_
+#ifndef BMX_XML_WRITER_HELPER_H_
+#define BMX_XML_WRITER_HELPER_H_
 
+#include <string>
 
 #include <bmx/BMXTypes.h>
 
@@ -40,49 +41,36 @@ namespace bmx
 {
 
 
-class ByteArray
+class XMLWriterHelper
 {
 public:
-    ByteArray();
-    ByteArray(uint32_t size);
-    ByteArray(const ByteArray &from);
-    ~ByteArray();
+    XMLWriterHelper();
+    ~XMLWriterHelper();
 
-    void SetAllocBlockSize(uint32_t block_size);
+    void ExtractInfo(const std::string &filename);
+    void ExtractInfo(const unsigned char *data, uint32_t size);
 
-    unsigned char* GetBytes() const;
-    uint32_t GetSize() const;
-    void TakeBytes();
+public:
+    TextEncoding GetTextEncoding() const    { return mTextEncoding; }
+    ByteOrder GetByteOrder() const          { return mByteOrder; }
+    std::string GetLanguageCode() const     { return mLanguageCode; }
+    std::string GetNamespace() const        { return mNamespace; }
+    int64_t GetSize() const                 { return mSize; }
 
-    void Append(const unsigned char *bytes, uint32_t size);
-    unsigned char* GetBytesAvailable() const;
-    uint32_t GetSizeAvailable() const;
-    void SetSize(uint32_t size);
-    void IncrementSize(uint32_t inc);
-
-    void CopyBytes(const unsigned char *bytes, uint32_t size);
-    void AssignBytes(unsigned char *bytes, uint32_t size);
-
-    void Grow(uint32_t min_size);
-    void Allocate(uint32_t min_size);
-    void Reallocate(uint32_t min_size);
-
-    uint32_t GetAllocatedSize() const;
-
-    void Clear();
+public:
+    void StartElement(const std::string &ns, const std::string &name, const char **atts);
 
 private:
-    unsigned char *mBytes;
-    uint32_t mSize;
-    bool mIsCopy;
-    uint32_t mAllocatedSize;
-    uint32_t mAllocBlockSize;
+    TextEncoding mTextEncoding;
+    ByteOrder mByteOrder;
+    std::string mLanguageCode;
+    std::string mNamespace;
+    int64_t mSize;
+    void *mXMLParser;
 };
 
 
 };
-
 
 
 #endif
-

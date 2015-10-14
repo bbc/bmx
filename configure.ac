@@ -281,6 +281,7 @@ AC_CONFIG_FILES([
 	test/wave/Makefile
 	test/growing_file/Makefile
 	test/rdd6/Makefile
+	test/text_object/Makefile
 	apps/Makefile
 	apps/mxf2raw/Makefile
 	apps/raw2bmx/Makefile

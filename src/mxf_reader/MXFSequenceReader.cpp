@@ -412,6 +412,14 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
         }
 
 
+        // collect together all text objects
+        for (i = 0; i < mReaders.size(); i++) {
+            size_t k;
+            for (k = 0; k < mReaders[i]->GetNumTextObjects(); k++)
+                mTextObjects.push_back(mReaders[i]->GetTextObject(k));
+        }
+
+
         // set default group sequence read limits
         SetReadLimits();
 
@@ -429,6 +437,8 @@ bool MXFSequenceReader::Finalize(bool check_is_complete, bool keep_input_order)
         for (i = 0; i < mTrackReaders.size(); i++)
             delete mTrackReaders[i];
         mTrackReaders.clear();
+
+        mTextObjects.clear();
 
         mSampleSequences.clear();
         mSampleSequenceSizes.clear();
@@ -720,6 +730,12 @@ int16_t MXFSequenceReader::GetTrackRollout(size_t track_index, int64_t clip_posi
     GetSegmentPosition(clip_position, &segment, &segment_index, &segment_position);
 
     return segment->GetTrackRollout(track_index, segment_position, clip_rollout);
+}
+
+MXFTextObject* MXFSequenceReader::GetTextObject(size_t index) const
+{
+    BMX_CHECK(index < mTextObjects.size());
+    return mTextObjects[index];
 }
 
 void MXFSequenceReader::SetNextFramePosition(Rational edit_rate, int64_t position)

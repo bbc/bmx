@@ -60,6 +60,7 @@ public:
     friend class IndexTableHelper;
     friend class EssenceChunkHelper;
     friend class MXFFileTrackReader;
+    friend class MXFTextObject;
     friend class FrameMetadataReader;
     friend class EssenceReaderBuffer;
 
@@ -144,6 +145,10 @@ public:
 
     virtual int16_t GetTrackPrecharge(size_t track_index, int64_t clip_position, int16_t clip_precharge) const;
     virtual int16_t GetTrackRollout(size_t track_index, int64_t clip_position, int16_t clip_rollout) const;
+
+public:
+    virtual size_t GetNumTextObjects() const { return mTextObjects.size(); }
+    virtual MXFTextObject* GetTextObject(size_t index) const;
 
 public:
     virtual void SetNextFramePosition(Rational edit_rate, int64_t position);
@@ -236,6 +241,9 @@ private:
     std::vector<std::vector<uint32_t> > mExternalSampleSequences;
     std::vector<int64_t> mExternalSampleSequenceSizes;
     std::vector<MXFTrackReader*> mExternalTrackReaders;
+
+    std::vector<MXFTextObject*> mTextObjects; // internal and external text objects
+    std::vector<MXFTextObject*> mInternalTextObjects;
 
     EssenceReader *mEssenceReader;
 

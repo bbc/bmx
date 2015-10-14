@@ -251,6 +251,13 @@ bool MXFGroupReader::Finalize()
             }
         }
 
+        // collect together all text objects
+        for (i = 0; i < mReaders.size(); i++) {
+            size_t k;
+            for (k = 0; k < mReaders[i]->GetNumTextObjects(); k++)
+                mTextObjects.push_back(mReaders[i]->GetTextObject(k));
+        }
+
         if (IsComplete()) {
             if (GetMaxPrecharge(0, true) != GetMaxPrecharge(0, false)) {
                 log_warn("Possibly not enough precharge available in group (available=%d, required=%d)\n",
@@ -627,6 +634,12 @@ int16_t MXFGroupReader::GetTrackRollout(size_t track_index, int64_t clip_positio
     (void)clip_position;
 
     return clip_rollout;
+}
+
+MXFTextObject* MXFGroupReader::GetTextObject(size_t index) const
+{
+    BMX_CHECK(index < mTextObjects.size());
+    return mTextObjects[index];
 }
 
 void MXFGroupReader::SetNextFramePosition(Rational edit_rate, int64_t position)

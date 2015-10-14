@@ -31,6 +31,7 @@ nobase_library_include_HEADERS = \
 	bmx/writer_helper/AVCIWriterHelper.h \
 	bmx/writer_helper/D10WriterHelper.h \
 	bmx/writer_helper/MPEG2LGWriterHelper.h \
+	bmx/writer_helper/XMLWriterHelper.h \
 	bmx/as02/AS02AVCITrack.h \
 	bmx/as02/AS02Bundle.h \
 	bmx/as02/AS02Clip.h \
@@ -68,6 +69,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_op1a/OP1AUncTrack.h \
 	bmx/mxf_op1a/OP1AVBIDataTrack.h \
 	bmx/mxf_op1a/OP1AVC3Track.h \
+	bmx/mxf_op1a/OP1AXMLTrack.h \
 	bmx/d10_mxf/D10ContentPackage.h \
 	bmx/d10_mxf/D10File.h \
 	bmx/d10_mxf/D10MPEGTrack.h \
@@ -146,6 +148,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_reader/MXFReader.h \
 	bmx/mxf_reader/MXFSequenceReader.h \
 	bmx/mxf_reader/MXFSequenceTrackReader.h \
+	bmx/mxf_reader/MXFTextObject.h \
 	bmx/mxf_reader/MXFTrackInfo.h \
 	bmx/mxf_reader/MXFTrackReader.h \
 	bmx/st436/RDD6BitBuffer.h \

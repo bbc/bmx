@@ -69,6 +69,21 @@ typedef enum
     COLOR_BLACK
 } Color;
 
+typedef enum
+{
+    UNKNOWN_TEXT_ENCODING,
+    UTF16,
+    UTF8,
+} TextEncoding;
+
+typedef enum
+{
+    UNKNOWN_BYTE_ORDER,
+    BMX_BYTE_ORIENTED,
+    BMX_BIG_ENDIAN,
+    BMX_LITTLE_ENDIAN,
+} ByteOrder;
+
 
 typedef mxfRational         Rational;
 typedef mxfTimestamp        Timestamp;

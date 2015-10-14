@@ -57,13 +57,16 @@
 
 #include <bmx/Utils.h>
 #include <bmx/URI.h>
+#include <bmx/MD5.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
 using namespace std;
 
 
-#define MAX_INT32   2147483647
+#define MAX_INT32               2147483647
+
+#define XML_PROLOG_MAX_SIZE     512
 
 
 typedef struct
@@ -95,6 +98,9 @@ static const ContentPackageRate CONTENT_PACKAGE_RATES[] =
 };
 
 
+static const string BMX_NAMESPACE = "http://bbc.co.uk/rd/bmx";
+
+
 namespace bmx
 {
 extern bool BMX_REGRESSION_TEST;
@@ -108,6 +114,136 @@ static int32_t gcd(int32_t a, int32_t b)
         return a;
     else
         return gcd(b, a % b);
+}
+
+static void get_xml_prolog_encoding(const char *data, size_t size, bmx::TextEncoding *encoding,
+                                    bool *prolog_present, bool *encoding_present)
+{
+#define XML_SPACE(c)    ((c) == 0x20 || (c) == 0x09 || (c) == 0x0d || (c) == 0x0a)
+
+    *prolog_present   = false;
+    *encoding_present = false;
+
+    if (size < 7)
+        return;
+
+    size_t prolog_size_limit = size;
+    if (prolog_size_limit > XML_PROLOG_MAX_SIZE)
+        prolog_size_limit = XML_PROLOG_MAX_SIZE;
+    const char *data_ptr = data;
+    const char *end_data = (const char*)(data + prolog_size_limit);
+
+    // check for '<?xml '
+    if (data_ptr + 6 >= end_data || strncmp(data_ptr, "<?xml ", 6) != 0)
+        return;
+    data_ptr += 6;
+
+    // search for ?>
+    const char *end_prolog_ptr = data_ptr;
+    while (end_prolog_ptr != end_data && *end_prolog_ptr && !(end_prolog_ptr[-1] == '?' && *end_prolog_ptr == '>'))
+        end_prolog_ptr++;
+    if (end_prolog_ptr == end_data ||
+        !(end_prolog_ptr[-1] == '?' && *end_prolog_ptr == '>') ||
+        data_ptr + 8 >= end_prolog_ptr)
+    {
+        return;
+    }
+
+    *prolog_present = true;
+
+    // search for encoding="
+    data_ptr += 8;
+    while (data_ptr != end_prolog_ptr && data_ptr[-1] != 'g' && strncmp(&data_ptr[-8], "encoding", 8) != 0)
+        data_ptr++;
+    while (data_ptr != end_prolog_ptr && XML_SPACE(*data_ptr))
+        data_ptr++;
+    if (data_ptr == end_prolog_ptr || *data_ptr != '=')
+        return;
+    data_ptr++;
+    while (data_ptr != end_prolog_ptr && XML_SPACE(*data_ptr))
+        data_ptr++;
+    if (data_ptr == end_prolog_ptr || !(*data_ptr == '\'' || *data_ptr == '"'))
+        return;
+    char quote_char = *data_ptr;
+    data_ptr++;
+    while (data_ptr != end_prolog_ptr && XML_SPACE(*data_ptr))
+        data_ptr++;
+    if (data_ptr == end_prolog_ptr)
+      return;
+
+    *encoding_present = true;
+    *encoding = bmx::UNKNOWN_TEXT_ENCODING;
+
+    // check for utf-8 and utf-16
+    if (data_ptr == end_prolog_ptr || !(*data_ptr == 'U' || *data_ptr == 'u'))
+        return;
+    data_ptr++;
+    if (data_ptr == end_prolog_ptr || !(*data_ptr == 'T' || *data_ptr == 't'))
+        return;
+    data_ptr++;
+    if (data_ptr == end_prolog_ptr || !(*data_ptr == 'F' || *data_ptr == 'f'))
+        return;
+    data_ptr++;
+    if (data_ptr != end_prolog_ptr && *data_ptr == '-')
+        data_ptr++;
+    if (data_ptr != end_prolog_ptr && *data_ptr == '8') {
+        *encoding = bmx::UTF8;
+    } else if (data_ptr != end_prolog_ptr && *data_ptr == '1') {
+        data_ptr++;
+        if (data_ptr != end_prolog_ptr && *data_ptr == '6')
+            *encoding = bmx::UTF16;
+    }
+    if (*encoding != bmx::UNKNOWN_TEXT_ENCODING) {
+        data_ptr++;
+        while (data_ptr != end_prolog_ptr && XML_SPACE(*data_ptr))
+            data_ptr++;
+        if (data_ptr == end_prolog_ptr || *data_ptr != quote_char)
+            *encoding = bmx::UNKNOWN_TEXT_ENCODING;
+    }
+
+#undef XML_SPACE
+}
+
+static void get_xml_prolog_encoding_16bit_be(const unsigned char *data, size_t size, bmx::TextEncoding *encoding)
+{
+  char utf8_buf[XML_PROLOG_MAX_SIZE];
+  size_t utf8_size = 0;
+
+  // convert to single byte chars
+  size_t i;
+  for (i = 0; i < size && utf8_size < sizeof(utf8_buf); i += 2, utf8_size++) {
+      if (data[i] || data[i + 1] > 0x7f)
+          break;
+      utf8_buf[utf8_size] = (char)data[i + 1];
+  }
+
+  bool prolog_present;
+  bool encoding_present;
+  get_xml_prolog_encoding(utf8_buf, utf8_size, encoding, &prolog_present, &encoding_present);
+
+  if (*encoding != bmx::UTF16)
+      *encoding = bmx::UNKNOWN_TEXT_ENCODING; // ignore contradictory prolog encoding utf-8
+}
+
+static void get_xml_prolog_encoding_16bit_le(const unsigned char *data, size_t size, bmx::TextEncoding *encoding)
+{
+  char utf8_buf[XML_PROLOG_MAX_SIZE];
+  size_t utf8_size = 0;
+
+  // convert to single byte chars
+  size_t i;
+  for (i = 0; i < size && utf8_size < sizeof(utf8_buf); i += 2, utf8_size++) {
+      if (data[i] > 0x7f || data[i + 1])
+          break;
+      utf8_buf[utf8_size] = (char)data[i];
+  }
+
+  bool prolog_present;
+  bool encoding_present;
+  get_xml_prolog_encoding(utf8_buf, utf8_size, encoding, &prolog_present, &encoding_present);
+
+  if (*encoding != bmx::UTF16)
+      *encoding = bmx::UNKNOWN_TEXT_ENCODING; // ignore contradictory prolog encoding utf-8
 }
 
 
@@ -554,6 +690,87 @@ bool bmx::check_ends_with_dir_separator(string name)
 #endif
 }
 
+string bmx::trim_string(string value)
+{
+    size_t start;
+    size_t len;
+
+    // trim spaces from the start
+    start = 0;
+    while (start < value.size() && isspace(value[start]))
+        start++;
+    if (start >= value.size())
+        return "";
+
+    // trim spaces from the end by reducing the length
+    len = value.size() - start;
+    while (len > 0 && isspace(value[start + len - 1]))
+        len--;
+
+    return value.substr(start, len);
+}
+
+void bmx::get_xml_encoding(const unsigned char *data, size_t size, bmx::TextEncoding *encoding, bmx::ByteOrder *byte_order)
+{
+    // see also section F in the XML specification, http://www.w3.org/TR/REC-xml/
+
+    *encoding   = UNKNOWN_TEXT_ENCODING;
+    *byte_order = UNKNOWN_BYTE_ORDER;
+
+    if (size < 4)
+        return;
+
+    if (data[0] == 0x00 && data[1] == 0x00 && data[2] == 0xfe && data[3] == 0xff) {
+        // UCS-4
+        *byte_order = BMX_BIG_ENDIAN;
+    } else if (data[0] == 0xff && data[1] == 0xfe && data[2] == 0x00 && data[3] == 0x00) {
+        // UCS-4
+        *byte_order = BMX_LITTLE_ENDIAN;
+    } else if (data[0] == 0x00 && data[1] == 0x00 && data[2] == 0xff && data[3] == 0xfe) {
+        // UCS-4, unusual octet order
+    } else if (data[0] == 0xfe && data[1] == 0xff && data[2] == 0x00 && data[3] == 0x00) {
+        // UCS-4, unusual octet order
+    } else if (data[0] == 0xfe && data[1] == 0xff && (data[2] != 0x00 || data[3] != 0x00)) {
+        *encoding   = UTF16;
+        *byte_order = BMX_BIG_ENDIAN;
+    } else if (data[0] == 0xff && data[1] == 0xfe && (data[2] != 0x00 || data[3] != 0x00)) {
+        *encoding   = UTF16;
+        *byte_order = BMX_LITTLE_ENDIAN;
+    } else if (data[0] == 0xef && data[1] == 0xbb && data[2] == 0xbf) {
+        *encoding   = UTF8;
+        *byte_order = BMX_BYTE_ORIENTED;
+    } else if (data[0] == 0x00 && data[1] == 0x00 && data[2] == 0x00 && data[3] == 0x3c) {
+        // 32-bit encoding
+        *byte_order = BMX_BIG_ENDIAN;
+    } else if (data[0] == 0x3c && data[1] == 0x00 && data[2] == 0x00 && data[3] == 0x00) {
+        // 32-bit encoding
+        *byte_order = BMX_LITTLE_ENDIAN;
+    } else if (data[0] == 0x00 && data[1] == 0x00 && data[2] == 0x3c && data[3] == 0x00) {
+        // 32-bit encoding, unusual octet order
+    } else if (data[0] == 0x00 && data[1] == 0x3c && data[2] == 0x00 && data[3] == 0x00) {
+        // 32-bit encoding, unusual octet order
+    } else if (data[0] == 0x00 && data[1] == 0x3c && data[2] == 0x00 && data[3] == 0x3f) {
+        *byte_order = BMX_BIG_ENDIAN;
+        get_xml_prolog_encoding_16bit_be(data, size, encoding);
+    } else if (data[0] == 0x3c && data[1] == 0x00 && data[2] == 0x3f && data[3] == 0x00) {
+        *byte_order = BMX_LITTLE_ENDIAN;
+        get_xml_prolog_encoding_16bit_le(data, size, encoding);
+    } else if (data[0] == 0x4c && data[1] == 0x6f && data[2] == 0xa7 && data[3] == 0x94) {
+        // EBCDIC
+        *byte_order = BMX_BYTE_ORIENTED;
+    } else {
+        bool prolog_present;
+        bool encoding_present;
+        get_xml_prolog_encoding((const char*)data, size, encoding, &prolog_present, &encoding_present);
+        if (!encoding_present)
+            *encoding = UTF8;
+        if (*encoding == UTF8 || prolog_present)
+            *byte_order = BMX_BYTE_ORIENTED;
+        if (*encoding != UTF8)
+            *encoding = UNKNOWN_TEXT_ENCODING; // ignore contradictory prolog encoding utf-16
+    }
+}
+
 bmx::Timestamp bmx::generate_timestamp_now()
 {
     Timestamp now;
@@ -634,6 +851,28 @@ bmx::UMID bmx::generate_umid()
     memcpy(&umid.octet16, &material_number, sizeof(material_number));
 
     return umid;
+}
+
+bmx::UUID bmx::create_uuid_from_name(const unsigned char *ns, size_t ns_size, const string &name)
+{
+    unsigned char digest[16];
+    MD5Context ctx;
+    md5_init(&ctx);
+    md5_update(&ctx, ns, (uint32_t)ns_size);
+    md5_update(&ctx, (const unsigned char*)name.c_str(), (uint32_t)name.size());
+    md5_final(digest, &ctx);
+
+    UUID uuid;
+    memcpy(&uuid, digest, 16);
+    uuid.octet6 = (uuid.octet6 & 0x0f) | 0x30;  // version 3 - MD5 hash and namespace
+    uuid.octet8 = (uuid.octet8 & 0x3f) | 0x80;  // variant rfc 4122
+
+    return uuid;
+}
+
+bmx::UUID bmx::create_uuid_from_name(const string &name)
+{
+  return create_uuid_from_name((const unsigned char*)BMX_NAMESPACE.c_str(), BMX_NAMESPACE.size(), name);
 }
 
 uint16_t bmx::get_rounded_tc_base(Rational rate)

@@ -17,6 +17,7 @@ libmxfreader_la_SOURCES = \
 	MXFReader.cpp \
 	MXFSequenceReader.cpp \
 	MXFSequenceTrackReader.cpp \
+	MXFTextObject.cpp \
 	MXFTrackInfo.cpp
 
 libmxfreader_la_CXXFLAGS = $(BMX_CFLAGS)

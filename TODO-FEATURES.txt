@@ -4,9 +4,6 @@ bmx TODO Features
 (list is in no particular order)
 
 
-1. add support for general purpose user and application tags, similar to
-AAF/Avid TaggedValues
-
 4. add support for edit-while-record Avid MXF flavour
 
 7. add essence group detection (e.g. DV, MPEG-2, MJPEG, VC3) to provide more
@@ -21,9 +18,6 @@ Setting output track numbers is currently supported, but not setting track ids.
 11. add general support for setting track id and numbers for physical source
 packages. Particulary useful if need to match the ids from an existing source
 package when supporting Avid source file relinking
-
-12. h264dump: remove need to buffer the complete NAL unit. This will also serve
-to help start implementing a parser in the bmx library
 
 13. implement more complete h264 / AVCI essence parser in bmx library
 

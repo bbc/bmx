@@ -186,6 +186,8 @@ MXFFileReader::~MXFFileReader()
     size_t i;
     for (i = 0; i < mInternalTrackReaders.size(); i++)
         delete mInternalTrackReaders[i];
+    for (i = 0; i < mInternalTextObjects.size(); i++)
+        delete mInternalTextObjects[i];
 
     // mPackageResolver owns external readers
 }
@@ -862,6 +864,12 @@ int16_t MXFFileReader::GetTrackRollout(size_t track_index, int64_t clip_position
     return clip_rollout;
 }
 
+MXFTextObject* MXFFileReader::GetTextObject(size_t index) const
+{
+    BMX_CHECK(index < mTextObjects.size());
+    return mTextObjects[index];
+}
+
 void MXFFileReader::SetNextFramePosition(Rational edit_rate, int64_t position)
 {
     size_t i;
@@ -1204,6 +1212,51 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         int64_t external_origin = CONVERT_EXTERNAL_POS(mExternalReaders[i]->GetOrigin());
         if (external_origin > mOrigin)
             mOrigin = external_origin;
+    }
+
+    // extract text objects from static tracks in material package
+    for (i = 0; i < mp_tracks.size(); i++) {
+        StaticTrack *mp_track = dynamic_cast<StaticTrack*>(mp_tracks[i]);
+        if (!mp_track)
+            continue;
+
+        Sequence *dm_sequence = dynamic_cast<Sequence*>(mp_track->getSequence());
+        if (!dm_sequence)
+            continue;
+        mxfUL data_def_ul = dm_sequence->getDataDefinition();
+        MXFDataDefEnum data_def = mxf_get_ddef_enum(&data_def_ul);
+        if (data_def != MXF_DM_DDEF)
+            continue;
+
+        uint32_t mp_track_id = 0;
+        if (mp_track->haveTrackID())
+            mp_track_id = mp_track->getTrackID();
+        else
+            log_warn("Material package static DM Track does not have a TrackID property\n");
+
+        vector<StructuralComponent*> dm_components = dm_sequence->getStructuralComponents();
+        size_t j;
+        for (j = 0; j < dm_components.size(); j++) {
+            DMSegment *dm_segment = dynamic_cast<DMSegment*>(dm_components[j]);
+            if (!dm_segment)
+                continue;
+            TextBasedDMFramework *text_framework = dynamic_cast<TextBasedDMFramework*>(dm_segment->getDMFrameworkLight());
+            if (!text_framework)
+                continue;
+            TextBasedObject *text_object = dynamic_cast<TextBasedObject*>(text_framework->getTextBasedObject());
+            if (!text_object)
+                continue;
+            mInternalTextObjects.push_back(new MXFTextObject(this, text_object, mMaterialPackageUID,
+                                                             mp_track_id, (uint16_t)j));
+            mTextObjects.push_back(mInternalTextObjects.back());
+        }
+    }
+
+    // add text objects from external readers
+    for (i = 0; i < mExternalReaders.size(); i++) {
+        size_t k;
+        for (k = 0; k < mExternalReaders[i]->GetNumTextObjects(); k++)
+            mTextObjects.push_back(mExternalReaders[i]->GetTextObject(k));
     }
 }
 

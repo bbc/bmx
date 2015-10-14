@@ -473,6 +473,9 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AVC3Track.h">
       <Filter>Header Files\mxf_op1a</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AXMLTrack.h">
+      <Filter>Header Files\mxf_op1a</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\EssenceChunkHelper.h">
       <Filter>Header Files\mxf_reader</Filter>
     </ClInclude>
@@ -519,6 +522,9 @@
       <Filter>Header Files\mxf_reader</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFSequenceTrackReader.h">
+      <Filter>Header Files\mxf_reader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFTextObject.h">
       <Filter>Header Files\mxf_reader</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFTrackInfo.h">
@@ -594,6 +600,9 @@
       <Filter>Header Files\writer_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\writer_helper\MPEG2LGWriterHelper.h">
+      <Filter>Header Files\writer_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\writer_helper\XMLWriterHelper.h">
       <Filter>Header Files\writer_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\st436\RDD6MetadataXML.h">
@@ -940,6 +949,9 @@
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AVC3Track.cpp">
       <Filter>Source Files\mxf_op1a</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_op1a\OP1AXMLTrack.cpp">
+      <Filter>Source Files\mxf_op1a</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_reader\EssenceChunkHelper.cpp">
       <Filter>Source Files\mxf_reader</Filter>
     </ClCompile>
@@ -986,6 +998,9 @@
       <Filter>Source Files\mxf_reader</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_reader\MXFSequenceTrackReader.cpp">
+      <Filter>Source Files\mxf_reader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_reader\MXFTextObject.cpp">
       <Filter>Source Files\mxf_reader</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_reader\MXFTrackInfo.cpp">
@@ -1058,6 +1073,9 @@
       <Filter>Source Files\writer_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\writer_helper\MPEG2LGWriterHelper.cpp">
+      <Filter>Source Files\writer_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\writer_helper\XMLWriterHelper.cpp">
       <Filter>Source Files\writer_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\st436\RDD6MetadataXML.cpp">

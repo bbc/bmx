@@ -732,6 +732,23 @@ bool bmx::parse_track_indexes(const char *tracks_str, set<uint32_t> *track_index
     return true;
 }
 
+bool bmx::parse_mxf_auid(const char *mxf_auid_str, UL *mxf_auid)
+{
+    if (strncmp(mxf_auid_str, "urn:smpte:ul:", 13) == 0)
+        return parse_uuid(&mxf_auid_str[13], (UUID*)mxf_auid);
+
+    // MXF AUID type has UL as-is and UUID half-swapped
+    UUID uuid;
+    const char *uuid_str = mxf_auid_str;
+    if (strncmp(mxf_auid_str, "urn:uuid:", 9) == 0)
+        uuid_str = &mxf_auid_str[9];
+    if (!parse_uuid(uuid_str, &uuid))
+        return false;
+    mxf_swap_uid(mxf_auid, (const mxfUID*)&uuid);
+
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {

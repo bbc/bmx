@@ -143,26 +143,6 @@ static string get_short_name(string name)
         return name;
 }
 
-static string trim_string(string value)
-{
-    size_t start;
-    size_t len;
-
-    // trim spaces from the start
-    start = 0;
-    while (start < value.size() && isspace(value[start]))
-        start++;
-    if (start >= value.size())
-        return "";
-
-    // trim spaces from the end by reducing the length
-    len = value.size() - start;
-    while (len > 0 && isspace(value[start + len - 1]))
-        len--;
-
-    return value.substr(start, len);
-}
-
 static bool parse_fw_bool(string value, bool *bool_value)
 {
     if (value == "true" || value == "1") {

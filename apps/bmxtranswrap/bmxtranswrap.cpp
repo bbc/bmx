@@ -82,6 +82,13 @@ using namespace mxfpp;
 
 typedef struct
 {
+  UL scheme_id;
+  const char *lang;
+  const char *filename;
+} EmbedXMLInfo;
+
+typedef struct
+{
     const MXFTrackInfo *input_track_info;
     FrameBuffer *input_buffer;
     ClipWriterTrack *track;
@@ -492,6 +499,17 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            The timecode fields are ignored, i.e. they are set to 'undefined' values in the RDD-6 metadata stream\n");
     fprintf(stderr, "    --rdd6-lines <lines>    The line numbers for carriage of the RDD-6 ANC data. <lines> is a pair of numbers separated by a ','. Default is '%u,%u'\n", DEFAULT_RDD6_LINES[0], DEFAULT_RDD6_LINES[1]);
     fprintf(stderr, "    --rdd6-sdid <sdid>      The SDID value indicating the first audio channel pair associated with the RDD-6 data. Default is %u\n", DEFAULT_RDD6_SDID);
+    fprintf(stderr, "    --xml-scheme-id <id>    Set the XML payload scheme identifier associated with the following --embed-xml option.\n");
+    fprintf(stderr, "                            The <id> is either a SMPTE UL formatted as a 'urn:smpte:ul:...', a UUID formatted\n");
+    fprintf(stderr, "                            as a 'urn:uuid:...' or a UUID formatted as 32 hexadecimal characters using a '.'\n");
+    fprintf(stderr, "                            or '-' seperator.\n");
+    fprintf(stderr, "                            A default BMX scheme identifier is used if this option is not provided\n");
+    fprintf(stderr, "    --xml-lang <tag>        Set the RFC 5646 language tag associated with the the following --embed-xml option.\n");
+    fprintf(stderr, "                            Defaults to the xml:lang attribute in the root element or empty string if not present\n");
+    fprintf(stderr, "    --embed-xml <filename>  Embed the XML from <filename> using the approach specified in SMPTE RP 2057\n");
+    fprintf(stderr, "                            If the XML size is less than 64KB and uses UTF-8 or UTF-16 encoding (declared in\n");
+    fprintf(stderr, "                            the XML prolog) then the XML data is included in the header metadata. Otherwise\n");
+    fprintf(stderr, "                            a Generic Stream partition is used to hold the XML data.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a:\n");
     fprintf(stderr, "    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support\n");
@@ -668,9 +686,13 @@ int main(int argc, const char** argv)
 #if defined(_WIN32)
     bool use_mmap_file = false;
 #endif
+    vector<EmbedXMLInfo> embed_xml;
+    EmbedXMLInfo next_embed_xml;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
+
+    memset(&next_embed_xml, 0, sizeof(next_embed_xml));
 
     if (argc == 1) {
         usage(argv[0]);
@@ -1403,6 +1425,46 @@ int main(int argc, const char** argv)
             rdd6_sdid = (uint8_t)(uvalue);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--xml-scheme-id") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_mxf_auid(argv[cmdln_index + 1], &next_embed_xml.scheme_id))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--xml-lang") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            next_embed_xml.lang = argv[cmdln_index + 1];
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--embed-xml") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            next_embed_xml.filename = argv[cmdln_index + 1];
+            embed_xml.push_back(next_embed_xml);
+            memset(&next_embed_xml, 0, sizeof(next_embed_xml));
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--min-part") == 0)
         {
             min_part = true;
@@ -1762,6 +1824,22 @@ int main(int argc, const char** argv)
     int cmd_result = 0;
     try
     {
+        // check the XML files exist
+
+        if (clip_type == CW_OP1A_CLIP_TYPE) {
+            size_t i;
+            for (i = 0; i < embed_xml.size(); i++) {
+                const EmbedXMLInfo &info = embed_xml[i];
+                if (!check_file_exists(info.filename)) {
+                    log_error("XML file '%s' does not exist\n", info.filename);
+                    throw false;
+                }
+            }
+        } else if (!embed_xml.empty()) {
+            log_warn("Embedding XML is only supported in OP-1A clip type\n");
+        }
+
+
         // open RDD-6 XML file
 
         RDD6MetadataSequence rdd6_static_sequence;
@@ -2794,6 +2872,22 @@ int main(int argc, const char** argv)
 
         BMX_ASSERT((rdd6_filename  && input_to_output_count + 1 == output_tracks.size()) ||
                    (!rdd6_filename && input_to_output_count     == output_tracks.size()));
+
+
+        // embed XML
+
+        if (clip_type == CW_OP1A_CLIP_TYPE) {
+            OP1AFile *op1a_clip = clip->GetOP1AClip();
+            for (i = 0; i < embed_xml.size(); i++) {
+                const EmbedXMLInfo &info = embed_xml[i];
+                OP1AXMLTrack *xml_track = op1a_clip->CreateXMLTrack();
+                if (info.scheme_id != g_Null_UL)
+                    xml_track->SetSchemeId(info.scheme_id);
+                if (info.lang)
+                  xml_track->SetLanguageCode(info.lang);
+                xml_track->SetSource(info.filename);
+            }
+        }
 
 
         // add AS-11 descriptive metadata

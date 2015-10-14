@@ -987,6 +987,29 @@ static void write_file_info(AppInfoWriter *info_writer, MXFFileReader *file_read
     }
 }
 
+static void write_text_object_info(AppInfoWriter *info_writer, MXFTextObject *text_object)
+{
+    info_writer->WriteAUIDItem("scheme_id", text_object->GetSchemeId());
+    info_writer->WriteStringItem("mime_type", text_object->GetMimeType());
+    info_writer->WriteStringItem("lang_code", text_object->GetLanguageCode());
+    info_writer->WriteStringItem("description", text_object->GetTextDataDescription());
+    switch (text_object->GetEncoding())
+    {
+        case UTF8:
+            info_writer->WriteStringItem("encoding", "UTF8");
+            break;
+        case UTF16:
+            info_writer->WriteStringItem("encoding", "UTF16");
+            break;
+        default:
+            break;
+    }
+    info_writer->WriteBoolItem("generic_stream", text_object->IsInGenericStream());
+    info_writer->WriteUMIDItem("package_uid", text_object->GetPackageUID());
+    info_writer->WriteIntegerItem("track_id", text_object->GetTrackId());
+    info_writer->WriteIntegerItem("component_index", text_object->GetComponentIndex());
+}
+
 static void write_application_info(AppInfoWriter *info_writer)
 {
     info_writer->WriteStringItem("name", APP_NAME);
@@ -1151,6 +1174,18 @@ static string create_raw_filename(string ess_prefix, bool wrap_klv, MXFDataDefEn
     return ess_prefix + buffer;
 }
 
+static string create_text_object_filename(string prefix, bool is_xml, uint32_t index)
+{
+    const char *suffix = ".txt";
+    if (is_xml)
+        suffix = ".xml";
+
+    char buffer[32];
+    bmx_snprintf(buffer, sizeof(buffer), "_%u%s", index, suffix);
+
+    return prefix + buffer;
+}
+
 static bool parse_rdd6_frames(const char *frames_str, int64_t *min, int64_t *max)
 {
     if (sscanf(frames_str, "%" PRId64 "-%" PRId64, min, max) == 2) {
@@ -1297,6 +1332,9 @@ static void usage(const char *cmd)
         fprintf(stderr, "                       Set the minimum number of bytes to read when accessing a file over HTTP. The default is %u.\n", DEFAULT_HTTP_MIN_READ);
     }
     fprintf(stderr, "\n");
+    fprintf(stderr, " --text-out <prefix>   Extract text based objects to files starting with <prefix>\n");
+    fprintf(stderr, "                       and suffix '.xml' if it is XML and otherwise '.txt'\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "Input options:\n");
     fprintf(stderr, " --disable-tracks <tracks> A comma separated list of track indexes and/or ranges to disable when reading essence data.\n");
     fprintf(stderr, "                           A track is identified by the index reported by mxf2raw\n");
@@ -1364,6 +1402,7 @@ int main(int argc, const char** argv)
 #if defined(_WIN32)
     bool use_mmap_file = false;
 #endif
+    const char *text_output_prefix = 0;
     unsigned int uvalue;
     int cmdln_index;
 
@@ -1784,6 +1823,17 @@ int main(int argc, const char** argv)
                 return 1;
             }
             growing_file = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--text-out") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            text_output_prefix = argv[cmdln_index + 1];
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--http-min-read") == 0)
@@ -2573,6 +2623,24 @@ int main(int argc, const char** argv)
             app_output.CompleteEventTimecodes();
         }
 
+        // extract text objects
+        if (text_output_prefix) {
+            size_t i;
+            for (i = 0; i < reader->GetNumTextObjects(); i++) {
+                MXFTextObject *text_object = reader->GetTextObject(i);
+                string text_filename = create_text_object_filename(text_output_prefix, text_object->IsXML(), i);
+                FILE *text_file = fopen(text_filename.c_str(), "wb");
+                if (!text_file) {
+                    log_error("Failed to open text output file '%s': %s\n",
+                              text_filename.c_str(), bmx_strerror(errno).c_str());
+                    throw false;
+                }
+                text_object->Read(text_file);
+                fclose(text_file);
+            }
+        }
+
+
         file_factory.FinalizeInputChecksum();
 
 
@@ -2616,6 +2684,16 @@ int main(int argc, const char** argv)
 
             info_writer->StartSection("clip");
             write_clip_info(info_writer, reader, track_checksums, track_crc32_data);
+            if (reader->GetNumTextObjects() > 0) {
+                info_writer->StartArrayItem("text_objects", reader->GetNumTextObjects());
+                size_t i;
+                for (i = 0; i < reader->GetNumTextObjects(); i++) {
+                    info_writer->StartArrayElement("text_object", i);
+                    write_text_object_info(info_writer, reader->GetTextObject(i));
+                    info_writer->EndArrayElement();
+                }
+                info_writer->EndArrayItem();
+            }
             if (file_reader) {
                 if (do_as11_info)
                     as11_write_info(info_writer, file_reader);

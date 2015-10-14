@@ -15,7 +15,8 @@ libmxfop1a_la_SOURCES = \
 	OP1ATrack.cpp \
 	OP1AUncTrack.cpp \
 	OP1AVBIDataTrack.cpp \
-	OP1AVC3Track.cpp
+	OP1AVC3Track.cpp \
+	OP1AXMLTrack.cpp
 
 libmxfop1a_la_CXXFLAGS = $(BMX_CFLAGS)
 

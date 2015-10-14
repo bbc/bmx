@@ -202,6 +202,7 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AUncTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AVBIDataTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AVC3Track.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AXMLTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\EssenceChunkHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\EssenceReader.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\FrameMetadataReader.h" />
@@ -218,6 +219,7 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFReader.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFSequenceReader.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFSequenceTrackReader.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFTextObject.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFTrackInfo.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFTrackReader.h" />
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9ANCDataTrack.h" />
@@ -243,6 +245,7 @@
     <ClInclude Include="..\..\..\include\bmx\writer_helper\AVCIWriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\D10WriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\MPEG2LGWriterHelper.h" />
+    <ClInclude Include="..\..\..\include\bmx\writer_helper\XMLWriterHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\st436\RDD6MetadataXML.cpp" />
@@ -359,6 +362,7 @@
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AUncTrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AVBIDataTrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AVC3Track.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_op1a\OP1AXMLTrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_reader\EssenceChunkHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_reader\EssenceReader.cpp" />
     <ClCompile Include="..\..\..\src\mxf_reader\FrameMetadataReader.cpp" />
@@ -375,6 +379,7 @@
     <ClCompile Include="..\..\..\src\mxf_reader\MXFReader.cpp" />
     <ClCompile Include="..\..\..\src\mxf_reader\MXFSequenceReader.cpp" />
     <ClCompile Include="..\..\..\src\mxf_reader\MXFSequenceTrackReader.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_reader\MXFTextObject.cpp" />
     <ClCompile Include="..\..\..\src\mxf_reader\MXFTrackInfo.cpp" />
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9ANCDataTrack.cpp" />
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9ContentPackage.cpp" />
@@ -399,6 +404,7 @@
     <ClCompile Include="..\..\..\src\writer_helper\AVCIWriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\writer_helper\D10WriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\writer_helper\MPEG2LGWriterHelper.cpp" />
+    <ClCompile Include="..\..\..\src\writer_helper\XMLWriterHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="gen_scm_version.cmd">

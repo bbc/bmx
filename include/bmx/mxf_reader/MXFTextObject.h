@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2015, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,60 +29,68 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_BYTE_ARRAY_H_
-#define BMX_BYTE_ARRAY_H_
+#ifndef BMX_MXF_TEXT_OBJECT_H_
+#define BMX_MXF_TEXT_OBJECT_H_
 
+#include <stdio.h>
 
 #include <bmx/BMXTypes.h>
 
 
+namespace mxfpp
+{
+    class TextBasedObject;
+};
+
 namespace bmx
 {
 
+class MXFFileReader;
 
-class ByteArray
+class MXFTextObject
 {
 public:
-    ByteArray();
-    ByteArray(uint32_t size);
-    ByteArray(const ByteArray &from);
-    ~ByteArray();
+    MXFTextObject(MXFFileReader *file_reader, mxfpp::TextBasedObject *text_object,
+                  mxfUMID package_uid, uint32_t track_id, uint16_t component_index);
+    ~MXFTextObject();
 
-    void SetAllocBlockSize(uint32_t block_size);
+    void Read(unsigned char **data, size_t *size);
+    void Read(FILE *file);
 
-    unsigned char* GetBytes() const;
-    uint32_t GetSize() const;
-    void TakeBytes();
+    mxfUMID GetPackageUID() const      { return mPackageUID; }
+    uint32_t GetTrackId() const        { return mTrackId; }
+    uint16_t GetComponentIndex() const { return mComponentIndex; }
 
-    void Append(const unsigned char *bytes, uint32_t size);
-    unsigned char* GetBytesAvailable() const;
-    uint32_t GetSizeAvailable() const;
-    void SetSize(uint32_t size);
-    void IncrementSize(uint32_t inc);
+    mxfUL GetSchemeId() const;
+    std::string GetMimeType() const;
+    std::string GetLanguageCode() const;
+    std::string GetTextDataDescription() const;
+    TextEncoding GetEncoding() const;
+    bool IsInGenericStream() const;
 
-    void CopyBytes(const unsigned char *bytes, uint32_t size);
-    void AssignBytes(unsigned char *bytes, uint32_t size);
+    // only valid after Read() and IsInGenericStream() true
+    // it doesn't distinguish between BMX_BIG_ENDIAN or BMX_BYTE_ORIENTED
+    ByteOrder GetGSByteOrder() const { return mGSByteOrder; }
 
-    void Grow(uint32_t min_size);
-    void Allocate(uint32_t min_size);
-    void Reallocate(uint32_t min_size);
-
-    uint32_t GetAllocatedSize() const;
-
-    void Clear();
+    bool IsXML() const { return mIsXML; }
 
 private:
-    unsigned char *mBytes;
-    uint32_t mSize;
-    bool mIsCopy;
-    uint32_t mAllocatedSize;
-    uint32_t mAllocBlockSize;
+    bool CheckIsXML();
+
+    void ReadGenericStream(FILE *text_file_out, unsigned char **data_out, size_t *data_out_size);
+
+private:
+    MXFFileReader *mFileReader;
+    mxfpp::TextBasedObject *mTextObject;
+    mxfUMID mPackageUID;
+    uint32_t mTrackId;
+    uint16_t mComponentIndex;
+    bool mIsXML;
+    ByteOrder mGSByteOrder;
 };
 
 
 };
-
 
 
 #endif
-

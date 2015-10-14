@@ -92,6 +92,10 @@ public:
     virtual int16_t GetTrackRollout(size_t track_index, int64_t clip_position, int16_t clip_rollout) const;
 
 public:
+    virtual size_t GetNumTextObjects() const { return mTextObjects.size(); }
+    virtual MXFTextObject* GetTextObject(size_t index) const;
+
+public:
     virtual void SetNextFramePosition(Rational edit_rate, int64_t position);
     virtual void SetNextFrameTrackPositions();
 
@@ -111,6 +115,8 @@ private:
     std::vector<bmx::MXFGroupReader*> mGroupSegments;
 
     std::vector<bmx::MXFSequenceTrackReader*> mTrackReaders;
+
+    std::vector<MXFTextObject*> mTextObjects;
 
     int64_t mReadStartPosition;
     int64_t mReadDuration;

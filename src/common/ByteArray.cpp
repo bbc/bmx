@@ -98,6 +98,15 @@ uint32_t ByteArray::GetSize() const
     return mSize;
 }
 
+
+void ByteArray::TakeBytes()
+{
+    mBytes = 0;
+    mSize = 0;
+    mIsCopy = false;
+    mAllocatedSize = 0;
+}
+
 void ByteArray::Append(const unsigned char *bytes, uint32_t size)
 {
     BMX_ASSERT(!mIsCopy);

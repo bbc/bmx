@@ -198,6 +198,7 @@
       <xs:element name="max_rollout" type="int16_type" minOccurs="0"/>
       <xs:element name="start_timecodes" type="start_timecodes_type"/>
       <xs:element name="tracks" type="tracks_type"/>
+      <xs:element name="text_objects" type="text_objects_type" minOccurs="0"/>
       <xs:element ref="bbc_archive" minOccurs="0"/>
       <xs:element ref="avid" minOccurs="0"/>
       <xs:element ref="as11" minOccurs="0"/>
@@ -441,6 +442,34 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="text_objects_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="text_object" type="text_object_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="text_object_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="scheme_id" type="label_type"/>
+          <xs:element name="mime_type" type="xs:string"/>
+          <xs:element name="lang_code" type="xs:string"/>
+          <xs:element name="description" type="xs:string"/>
+          <xs:element name="encoding" type="text_encoding_type" minOccurs="0"/>
+          <xs:element name="generic_stream" type="xs:boolean"/>
+          <xs:element name="package_uid" type="umid_type"/>
+          <xs:element name="track_id" type="uint32_type"/>
+          <xs:element name="component_index" type="uint16_type"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
 
   <xs:complexType name="array_type">
     <xs:attribute name="size" type="xs:nonNegativeInteger" use="required"/>
@@ -620,6 +649,13 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
+
+  <xs:simpleType name="text_encoding_type">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="UTF8"/>
+      <xs:enumeration value="UTF16"/>
+    </xs:restriction>
+  </xs:simpleType>
 
 
   <xs:simpleType name="crc32_result_type">

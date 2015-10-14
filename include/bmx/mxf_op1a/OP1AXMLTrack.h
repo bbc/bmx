@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2015, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,60 +29,63 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_BYTE_ARRAY_H_
-#define BMX_BYTE_ARRAY_H_
+#ifndef BMX_OP1A_XML_TRACK_H_
+#define BMX_OP1A_XML_TRACK_H_
 
+#include <libMXF++/MXF.h>
 
-#include <bmx/BMXTypes.h>
+#include <bmx/writer_helper/XMLWriterHelper.h>
 
 
 namespace bmx
 {
 
 
-class ByteArray
+class OP1AFile;
+
+class OP1AXMLTrack
 {
 public:
-    ByteArray();
-    ByteArray(uint32_t size);
-    ByteArray(const ByteArray &from);
-    ~ByteArray();
+    OP1AXMLTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint32_t stream_id);
+    ~OP1AXMLTrack();
 
-    void SetAllocBlockSize(uint32_t block_size);
+    void SetSource(const std::string &filename);
+    void SetSource(const unsigned char *data, uint32_t size, bool copy);
 
-    unsigned char* GetBytes() const;
-    uint32_t GetSize() const;
-    void TakeBytes();
+    void SetSchemeId(UL id);                        // id may be a half-swapped UUID
+    void SetSchemeId(const std::string &name);      // creates a version 3 UUID using the name
+    void SetLanguageCode(const std::string &code);
+    void SetNamespace(const std::string &nmspace);
+    void SetTextEncoding(TextEncoding encoding);
+    void SetByteOrder(ByteOrder byte_order);
 
-    void Append(const unsigned char *bytes, uint32_t size);
-    unsigned char* GetBytesAvailable() const;
-    uint32_t GetSizeAvailable() const;
-    void SetSize(uint32_t size);
-    void IncrementSize(uint32_t inc);
+public:
+    void AddHeaderMetadata(mxfpp::HeaderMetadata *header_metadata, mxfpp::MaterialPackage *material_package);
 
-    void CopyBytes(const unsigned char *bytes, uint32_t size);
-    void AssignBytes(unsigned char *bytes, uint32_t size);
-
-    void Grow(uint32_t min_size);
-    void Allocate(uint32_t min_size);
-    void Reallocate(uint32_t min_size);
-
-    uint32_t GetAllocatedSize() const;
-
-    void Clear();
+    bool RequireStreamPartition() const { return mRequireStreamPartition; }
+    uint32_t GetStreamId() const        { return mStreamId; }
+    void WriteStreamXMLData(mxfpp::File *mxf_file);
 
 private:
-    unsigned char *mBytes;
-    uint32_t mSize;
-    bool mIsCopy;
-    uint32_t mAllocatedSize;
-    uint32_t mAllocBlockSize;
+    OP1AFile *mOP1AFile;
+    uint32_t mTrackIndex;
+    uint32_t mTrackId;
+    uint32_t mStreamId;
+    BMX_OPT_PROP_DECL(UL, mSchemeId);
+    BMX_OPT_PROP_DECL(std::string, mLanguageCode);
+    BMX_OPT_PROP_DECL(std::string, mNamespace);
+    BMX_OPT_PROP_DECL(TextEncoding, mTextEncoding);
+    BMX_OPT_PROP_DECL(ByteOrder, mByteOrder);
+    XMLWriterHelper mXMLWriterHelper;
+    std::string mFilename;
+    const unsigned char *mData;
+    unsigned char *mDataBuffer;
+    int64_t mDataSize;
+    bool mRequireStreamPartition;
 };
 
 
 };
-
 
 
 #endif
-
