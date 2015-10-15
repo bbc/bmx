@@ -61,7 +61,7 @@ public:
     friend class EssenceChunkHelper;
     friend class MXFFileTrackReader;
     friend class FrameMetadataReader;
-    friend class BaseReader;
+    friend class EssenceReaderBuffer;
 
 public:
     typedef enum

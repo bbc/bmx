@@ -64,6 +64,18 @@ ByteArray::ByteArray(uint32_t size)
     Allocate(size);
 }
 
+ByteArray::ByteArray(const ByteArray &from)
+{
+    mBytes          = 0;
+    mSize           = 0;
+    mIsCopy         = false;
+    mAllocatedSize  = 0;
+    mAllocBlockSize = 256;
+
+    if (from.mBytes)
+        CopyBytes(from.mBytes, from.mSize);
+}
+
 ByteArray::~ByteArray()
 {
     if (!mIsCopy)

@@ -57,6 +57,8 @@ public:
 
     const char* GetId() const { return mId; }
 
+    virtual FrameMetadata* Clone() = 0;
+
 protected:
     const char *mId;
 };
@@ -66,6 +68,7 @@ class Frame
 {
 public:
     Frame();
+    Frame(const Frame &from);
     virtual ~Frame();
 
     virtual uint32_t GetSize() const = 0;
@@ -76,6 +79,8 @@ public:
     virtual unsigned char* GetBytesAvailable() const = 0;
     virtual void SetSize(uint32_t size) = 0;
     virtual void IncrementSize(uint32_t inc) = 0;
+
+    virtual Frame* Clone() = 0;
 
 public:
     bool IsEmpty() const    { return num_samples == 0; }
@@ -137,6 +142,8 @@ public:
     virtual unsigned char* GetBytesAvailable() const;
     virtual void SetSize(uint32_t size);
     virtual void IncrementSize(uint32_t inc);
+
+    virtual Frame* Clone();
 
 private:
     ByteArray mData;

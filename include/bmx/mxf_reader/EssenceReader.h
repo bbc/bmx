@@ -34,6 +34,7 @@
 
 
 #include <vector>
+#include <deque>
 
 #include <bmx/frame/Frame.h>
 #include <bmx/mxf_reader/FrameMetadataReader.h>
@@ -49,16 +50,50 @@ namespace bmx
 class MXFFileReader;
 
 
-class EssenceReader
+class EssenceReaderBuffer
 {
 public:
-    friend class BaseReader;
+    EssenceReaderBuffer(MXFFileReader *file_reader);
+    ~EssenceReaderBuffer();
 
+    void SetBufferFrames(bool enable);
+
+    bool PopOrPrepareRead(int64_t position, uint32_t num_samples, uint32_t *actual_read_num_samples);
+
+    Frame* GetFrame(uint32_t track_index);
+    void PushFrames(uint32_t actual_read_num_samples);
+
+    size_t GetBufferSize() const { return mRequestSampleCounts.size(); }
+
+private:
+    Frame* TakeFrame(uint32_t track_index);
+
+    size_t GetFrameBufferOffset(int64_t position);
+
+    void Clear();
+    void ClearBeforeFrames(size_t offset);
+    void ClearAtAndBeforeFrames(size_t offset) { return ClearBeforeFrames(offset + 1); }
+    void ClearFromFrame(size_t offset);
+
+private:
+    MXFFileReader *mFileReader;
+    std::vector<std::deque<Frame*> > mTrackFrames;
+    std::deque<uint32_t> mRequestSampleCounts;
+    std::deque<uint32_t> mReadSampleCounts;
+    int64_t mStartPosition;
+    size_t mCurrentFrame;
+    bool mBufferFrames;
+};
+
+
+class EssenceReader
+{
 public:
     EssenceReader(MXFFileReader *file_reader, bool file_is_complete);
     ~EssenceReader();
 
     void SetReadLimits(int64_t start_position, int64_t duration);
+    void SetBufferFrames(bool enable);
 
     uint32_t Read(uint32_t num_samples);
     void Seek(int64_t position);
@@ -84,7 +119,7 @@ private:
     uint32_t GetConstantEditUnitSize();
 
 private:
-    bool SeekEssence(int64_t base_position, bool for_read);
+    bool SeekEssence(int64_t base_position);
     bool ReadEssenceKL(bool first_element, mxfKey *key, uint8_t *llen, uint64_t *len);
 
 private:
@@ -121,7 +156,7 @@ private:
     uint32_t mImageStartOffset;
     uint32_t mImageEndOffset;
 
-    std::vector<Frame*> mTrackFrames;
+    EssenceReaderBuffer mReadFrameBuffer;
 
     int64_t mBasePosition;
     int64_t mFilePosition;

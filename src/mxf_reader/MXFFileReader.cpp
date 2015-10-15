@@ -1896,6 +1896,8 @@ void MXFFileReader::ExtractFrameInfo()
     int64_t ess_reader_pos = mEssenceReader->GetPosition();
 
     SetTemporaryFrameBuffer(true);
+    if (!mFile->isSeekable())
+      mEssenceReader->SetBufferFrames(true);
     mEssenceReader->Seek(0);
 
     bool have_first = false;
@@ -2001,6 +2003,8 @@ void MXFFileReader::ExtractFrameInfo()
     }
 
     SetTemporaryFrameBuffer(false);
+    if (!mFile->isSeekable())
+      mEssenceReader->SetBufferFrames(false);
     mEssenceReader->Seek(ess_reader_pos);
 }
 

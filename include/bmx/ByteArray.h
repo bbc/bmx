@@ -45,6 +45,7 @@ class ByteArray
 public:
     ByteArray();
     ByteArray(uint32_t size);
+    ByteArray(const ByteArray &from);
     ~ByteArray();
 
     void SetAllocBlockSize(uint32_t block_size);

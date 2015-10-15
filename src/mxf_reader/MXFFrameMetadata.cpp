@@ -92,6 +92,11 @@ Timecode SS1TimecodeArray::GetLTC() const
     return decode_smpte_timecode(mFrameRate, mS12MTimecodes[1].bytes, sizeof(mS12MTimecodes[1].bytes));
 }
 
+FrameMetadata* SS1TimecodeArray::Clone()
+{
+    return new SS1TimecodeArray(*this);
+}
+
 
 
 SS1APPChecksum::SS1APPChecksum(uint32_t crc32)
@@ -102,6 +107,11 @@ SS1APPChecksum::SS1APPChecksum(uint32_t crc32)
 
 SS1APPChecksum::~SS1APPChecksum()
 {
+}
+
+FrameMetadata* SS1APPChecksum::Clone()
+{
+    return new SS1APPChecksum(*this);
 }
 
 
@@ -118,6 +128,10 @@ SDTICPSystemMetadata::~SDTICPSystemMetadata()
 {
 }
 
+FrameMetadata* SDTICPSystemMetadata::Clone()
+{
+    return new SDTICPSystemMetadata(*this);
+}
 
 
 SDTICPPackageMetadata::SDTICPPackageMetadata()
@@ -131,3 +145,7 @@ SDTICPPackageMetadata::~SDTICPPackageMetadata()
 {
 }
 
+FrameMetadata* SDTICPPackageMetadata::Clone()
+{
+    return new SDTICPPackageMetadata(*this);
+}

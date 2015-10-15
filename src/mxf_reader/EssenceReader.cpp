@@ -57,9 +57,183 @@ using namespace bmx;
 using namespace mxfpp;
 
 
+EssenceReaderBuffer::EssenceReaderBuffer(MXFFileReader *file_reader)
+{
+    mFileReader = file_reader;
+    mStartPosition = 0;
+    mCurrentFrame = 0;
+    mBufferFrames = false;
+
+    size_t t;
+    for (t = 0; t < mFileReader->GetNumInternalTrackReaders(); t++)
+        mTrackFrames.push_back(deque<Frame*>());
+}
+
+EssenceReaderBuffer::~EssenceReaderBuffer()
+{
+    Clear();
+}
+
+void EssenceReaderBuffer::SetBufferFrames(bool enable)
+{
+    mBufferFrames = enable;
+}
+
+bool EssenceReaderBuffer::PopOrPrepareRead(int64_t position, uint32_t num_samples, uint32_t *actual_read_num_samples)
+{
+    size_t offset = GetFrameBufferOffset(position);
+    if (offset < GetBufferSize()) {
+        if (mRequestSampleCounts[offset] == num_samples) {
+            if (!mBufferFrames) {
+                ClearBeforeFrames(offset);
+                offset = 0;
+            }
+            mCurrentFrame = offset;
+            *actual_read_num_samples = mReadSampleCounts[mCurrentFrame];
+            return true;
+        }
+        // else the requested sample counts have changed and so we clear buffered frames from this position
+        if (mBufferFrames) {
+            ClearFromFrame(offset);
+        } else {
+            Clear();
+            offset = 0;
+        }
+    } else if (offset > GetBufferSize() || !mBufferFrames) {
+        Clear();
+        offset = 0;
+    }
+    // else mBufferFrames && offset == GetBufferSize()
+
+    size_t t;
+    for (t = 0; t < mFileReader->GetNumInternalTrackReaders(); t++) {
+        Frame *frame = 0;
+        if (mFileReader->GetInternalTrackReader(t)->IsEnabled()) {
+            frame = mFileReader->GetInternalTrackReader(t)->GetFrameBuffer()->CreateFrame();
+            frame->request_num_samples = num_samples;
+        }
+        mTrackFrames[t].insert(mTrackFrames[t].begin() + offset, frame);
+    }
+    mRequestSampleCounts.insert(mRequestSampleCounts.begin() + offset, num_samples);
+    mReadSampleCounts.insert(mReadSampleCounts.begin() + offset, 0); // filled-in when PushFrames is called
+    mCurrentFrame = offset;
+
+    if (mCurrentFrame == 0)
+        mStartPosition = position;
+
+    return false;
+}
+
+Frame* EssenceReaderBuffer::GetFrame(uint32_t track_index)
+{
+    BMX_ASSERT(track_index < mTrackFrames.size() && mCurrentFrame < mTrackFrames[track_index].size());
+
+    return mTrackFrames[track_index][mCurrentFrame];
+}
+
+void EssenceReaderBuffer::PushFrames(uint32_t actual_read_num_samples)
+{
+    size_t t;
+    for (t = 0; t < mFileReader->GetNumInternalTrackReaders(); t++) {
+        Frame *frame;
+        if (mBufferFrames)
+            frame = GetFrame(t)->Clone();
+        else
+            frame = TakeFrame(t);
+        if (frame)
+            mFileReader->GetInternalTrackReader(t)->GetFrameBuffer()->PushFrame(frame);
+    }
+
+    if (mBufferFrames)
+        mReadSampleCounts[mCurrentFrame] = actual_read_num_samples;
+    else
+        ClearAtAndBeforeFrames(mCurrentFrame);
+
+    mCurrentFrame = GetBufferSize(); // i.e. not set
+}
+
+Frame* EssenceReaderBuffer::TakeFrame(uint32_t track_index)
+{
+    BMX_ASSERT(track_index < mTrackFrames.size() && mCurrentFrame < mTrackFrames[track_index].size());
+
+    Frame *frame = mTrackFrames[track_index][mCurrentFrame];
+    mTrackFrames[track_index][mCurrentFrame] = 0;
+
+    return frame;
+}
+
+size_t EssenceReaderBuffer::GetFrameBufferOffset(int64_t position)
+{
+    if (GetBufferSize() > 0 && position >= mStartPosition) {
+        int64_t frame_pos = mStartPosition;
+        size_t f;
+        for (f = 0; f < GetBufferSize(); f++) {
+            if (frame_pos >= position)
+                break;
+            frame_pos += mRequestSampleCounts[f];
+        }
+        if (frame_pos == position)
+            return f;
+    }
+
+    return (size_t)(-1);
+}
+
+void EssenceReaderBuffer::Clear()
+{
+    size_t t;
+    for (t = 0; t < mTrackFrames.size(); t++) {
+        size_t num_frames = mTrackFrames[t].size();
+        size_t f;
+        for (f = 0; f < num_frames; f++)
+            delete mTrackFrames[t][f];
+        mTrackFrames[t].clear();
+    }
+    mRequestSampleCounts.clear();
+    mReadSampleCounts.clear();
+    mCurrentFrame = 0;
+}
+
+void EssenceReaderBuffer::ClearBeforeFrames(size_t offset)
+{
+    size_t f;
+    for (f = 0; f < offset && !mRequestSampleCounts.empty(); f++) {
+        size_t t;
+        for (t = 0; t < mTrackFrames.size(); t++) {
+            delete mTrackFrames[t].front();
+            mTrackFrames[t].pop_front();
+        }
+        mStartPosition += mRequestSampleCounts.front();
+        mRequestSampleCounts.pop_front();
+        mReadSampleCounts.pop_front();
+    }
+}
+
+void EssenceReaderBuffer::ClearFromFrame(size_t offset)
+{
+    if (GetBufferSize() == 0) {
+        return;
+    } else if (offset == 0) {
+        Clear();
+        return;
+    }
+
+    size_t f;
+    for (f = GetBufferSize() - 1; f >= offset; f--) {
+        size_t t;
+        for (t = 0; t < mTrackFrames.size(); t++) {
+            delete mTrackFrames[t].back();
+            mTrackFrames[t].pop_back();
+        }
+        mRequestSampleCounts.pop_back();
+        mReadSampleCounts.pop_back();
+    }
+}
+
+
 
 EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
-: mEssenceChunkHelper(file_reader), mIndexTableHelper(file_reader)
+: mEssenceChunkHelper(file_reader), mIndexTableHelper(file_reader), mReadFrameBuffer(file_reader)
 {
     mFileReader = file_reader;
     mFile = file_reader->mFile;
@@ -186,9 +360,6 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
 
 EssenceReader::~EssenceReader()
 {
-    size_t i;
-    for (i = 0; i < mTrackFrames.size(); i++)
-        delete mTrackFrames[i];
     delete mFrameMetadataReader;
 }
 
@@ -212,25 +383,28 @@ void EssenceReader::SetReadLimits(int64_t start_position, int64_t duration)
     }
 }
 
+void EssenceReader::SetBufferFrames(bool enable)
+{
+    mReadFrameBuffer.SetBufferFrames(enable);
+}
+
 uint32_t EssenceReader::Read(uint32_t num_samples)
 {
-    // init track frames
-    size_t i;
-    for (i = 0; i < mTrackFrames.size(); i++)
-        delete mTrackFrames[i];
-    mTrackFrames.clear();
-    mFrameMetadataReader->Reset();
-    for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
-        if (mFileReader->GetInternalTrackReader(i)->IsEnabled()) {
-            mTrackFrames.push_back(mFileReader->GetInternalTrackReader(i)->GetFrameBuffer()->CreateFrame());
-            mTrackFrames.back()->request_num_samples = num_samples;
-        } else {
-            mTrackFrames.push_back(0);
-        }
-    }
-
     uint32_t actual_read_num_samples = 0;
     int64_t end_position = mPosition + num_samples;
+    mFrameMetadataReader->Reset();
+
+    // get from buffer if available
+    bool have_frame = mReadFrameBuffer.PopOrPrepareRead(mPosition, num_samples, &actual_read_num_samples);
+    if (have_frame) {
+        mReadFrameBuffer.PushFrames(actual_read_num_samples);
+
+        // always be positioned num_samples after previous position
+        if (mPosition != end_position)
+            Seek(end_position);
+
+        return actual_read_num_samples;
+    }
 
     // read samples if within read limits
     if (mReadDuration > 0 &&
@@ -265,9 +439,9 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
             mIndexTableHelper.GetEditUnit(start_position, &temporal_offset, &key_frame_offset,
                                           &flags, &essence_offset);
         }
-        Frame *frame;
+        size_t i;
         for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
-            frame = mTrackFrames[i];
+            Frame *frame = mReadFrameBuffer.GetFrame(i);
             if (frame) {
                 frame->first_sample_offset = first_sample_offset;
                 frame->temporal_offset     = temporal_offset;
@@ -278,14 +452,8 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
                     mFileReader->GetInternalTrackReader(i)->GetTrackInfo()->file_track_number);
             }
         }
-    }
 
-    // push frames
-    for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
-        if (mTrackFrames[i]) {
-            mFileReader->GetInternalTrackReader(i)->GetFrameBuffer()->PushFrame(mTrackFrames[i]);
-            mTrackFrames[i] = 0;
-        }
+        mReadFrameBuffer.PushFrames(actual_read_num_samples);
     }
 
     // always be positioned num_samples after previous position
@@ -298,9 +466,6 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
 void EssenceReader::Seek(int64_t position)
 {
     mPosition = position;
-
-    if (position >= mReadStartPosition && position < mReadStartPosition + mReadDuration)
-        SeekEssence(position, false);
 }
 
 bool EssenceReader::GetIndexEntry(MXFIndexEntryExt *entry, int64_t position)
@@ -333,10 +498,10 @@ bool EssenceReader::IsComplete() const
 uint32_t EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
 {
     // for incomplete clip wrapped files only support seeking to position 0
-    if (!IsComplete() && mPosition == 0 && !SeekEssence(mPosition, true))
+    if (!IsComplete() && mPosition == 0 && !SeekEssence(mPosition))
         return 0;
 
-    Frame *frame = mTrackFrames[0];
+    Frame *frame = mReadFrameBuffer.GetFrame(0);
 
     int64_t current_file_position = mFile->tell();
     uint32_t total_num_samples = 0;
@@ -406,7 +571,7 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
     for (i = 0; i < num_samples; i++) {
         int64_t cp_file_position;
         int64_t size;
-        if (!SeekEssence(mPosition, true))
+        if (!SeekEssence(mPosition))
             return i;
         if (mIndexTableHelper.HaveEditUnitSize(mPosition)) {
             mxfKey dummy_key = g_Null_Key;
@@ -440,7 +605,7 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                     // frame does not yet exist - create it if track is enabled
                     track_reader = mFileReader->GetInternalTrackReaderByNumber(track_number);
                     if (start_position == mPosition && track_reader && track_reader->IsEnabled()) {
-                        frame = mTrackFrames[track_reader->GetTrackIndex()];
+                        frame = mReadFrameBuffer.GetFrame(track_reader->GetTrackIndex());
 
                         BMX_CHECK(cp_num_read <= UINT32_MAX);
 
@@ -463,7 +628,7 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                     // frame exists if track is enabled - get it
                     track_reader = enabled_track_readers[track_number];
                     if (track_reader)
-                        frame = mTrackFrames[track_reader->GetTrackIndex()];
+                        frame = mReadFrameBuffer.GetFrame(track_reader->GetTrackIndex());
                 }
 
                 if (frame) {
@@ -619,7 +784,7 @@ uint32_t EssenceReader::GetConstantEditUnitSize()
     return edit_unit_size;
 }
 
-bool EssenceReader::SeekEssence(int64_t base_position, bool for_read)
+bool EssenceReader::SeekEssence(int64_t base_position)
 {
     try
     {
@@ -641,8 +806,6 @@ bool EssenceReader::SeekEssence(int64_t base_position, bool for_read)
         }
 
         BMX_ASSERT(!mEssenceChunkHelper.IsComplete() || !mIndexTableHelper.IsComplete());
-        if (!for_read)
-            return true;
 
         // position file at start of first or last known content package
         if (mBasePosition < 0) {
