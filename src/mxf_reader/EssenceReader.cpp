@@ -452,9 +452,9 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
                     mFileReader->GetInternalTrackReader(i)->GetTrackInfo()->file_track_number);
             }
         }
-
-        mReadFrameBuffer.PushFrames(actual_read_num_samples);
     }
+
+    mReadFrameBuffer.PushFrames(actual_read_num_samples);
 
     // always be positioned num_samples after previous position
     if (mPosition != end_position)
