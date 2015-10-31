@@ -248,7 +248,7 @@ void APPInfoOutput::CompleteEventTimecodes()
 
         mFileReader->Seek(position);
         if (mFileReader->Read(1) != 1) {
-            log_warn("Failed to read frame at position %"PRId64"\n", position);
+            log_warn("Failed to read frame at position %" PRId64 "\n", position);
             break;
         }
 
@@ -257,7 +257,7 @@ void APPInfoOutput::CompleteEventTimecodes()
             mFileReader->GetTrackReader(i)->GetFrameBuffer()->Clear(true);
 
         if (!frame || frame->IsEmpty()) {
-            log_warn("Failed to read frame from track %"PRIszt" at position %"PRId64"\n",
+            log_warn("Failed to read frame from track %" PRIszt " at position %" PRId64 "\n",
                      enabled_track_index, position);
             break;
         }

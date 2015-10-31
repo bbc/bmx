@@ -385,7 +385,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, co
 
         if (IsComplete()) {
             if (mIndexSID && mEssenceReader && mEssenceReader->GetIndexedDuration() < mDuration) {
-                log_warn("Essence index duration %"PRId64" is less than track duration %"PRId64"\n",
+                log_warn("Essence index duration %" PRId64 " is less than track duration %" PRId64 "\n",
                          mEssenceReader->GetIndexedDuration(), mDuration);
             }
             if (GetMaxPrecharge(0, true) != GetMaxPrecharge(0, false)) {
@@ -1234,7 +1234,7 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
 
     int64_t origin = fsp_track->getOrigin();
     if (origin < 0) {
-        log_error("Negative track origin %"PRId64" in top-level file Source Package not supported\n", origin);
+        log_error("Negative track origin %" PRId64 " in top-level file Source Package not supported\n", origin);
         THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
     }
 
@@ -1247,7 +1247,7 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
     }
 
     if (!mInternalTrackReaders.empty() && origin != mFileOrigin) {
-        log_error("Tracks with different track origins, %"PRId64" != %"PRId64", is not supported\n",
+        log_error("Tracks with different track origins, %" PRId64 " != %" PRId64 ", is not supported\n",
                   origin, mFileOrigin);
         THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
     }

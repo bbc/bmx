@@ -200,7 +200,7 @@ bool SDTICPSystemMetadataReader::ProcessFrameMetadata(const mxfKey *key, uint64_
     mMetadata = new SDTICPSystemMetadata();
 
     BMX_CHECK_M(len >= 2 && len <= 57,
-                ("Unexpected len %"PRIu64" for system metadata pack", len));
+                ("Unexpected len %" PRIu64 " for system metadata pack", len));
     unsigned char bytes[57];
     uint32_t num_read = sizeof(bytes);
     if (num_read > len)

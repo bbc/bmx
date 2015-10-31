@@ -656,7 +656,7 @@ string bmx::get_duration_string(int64_t count, Rational rate)
     min %= 60;
 
     char buffer[64];
-    bmx_snprintf(buffer, sizeof(buffer), "%02"PRId64":%02d:%02d:%02d", hour, (int)min, (int)sec, (int)frame);
+    bmx_snprintf(buffer, sizeof(buffer), "%02" PRId64 ":%02d:%02d:%02d", hour, (int)min, (int)sec, (int)frame);
 
     return buffer;
 }
@@ -676,7 +676,7 @@ string bmx::get_generic_duration_string(int64_t count, Rational rate)
     int64_t sec_frac = 100 * (msec % 1000) / 1000;
 
     char buffer[64];
-    bmx_snprintf(buffer, sizeof(buffer), "%02"PRId64":%02d:%02d.%02d", hour, (int)min, (int)sec, (int)sec_frac);
+    bmx_snprintf(buffer, sizeof(buffer), "%02" PRId64 ":%02d:%02d.%02d", hour, (int)min, (int)sec, (int)sec_frac);
 
     return buffer;
 }
@@ -696,7 +696,7 @@ string bmx::get_generic_duration_string_2(int64_t count, Rational rate)
     min %= 60;
 
     char buffer[64];
-    bmx_snprintf(buffer, sizeof(buffer), "%02"PRId64":%02d:%02d:%02d @%ufps", hour, (int)min, (int)sec, (int)frame, rounded_rate);
+    bmx_snprintf(buffer, sizeof(buffer), "%02" PRId64 ":%02d:%02d:%02d @%ufps", hour, (int)min, (int)sec, (int)frame, rounded_rate);
 
     return buffer;
 }

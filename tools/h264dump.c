@@ -45,8 +45,8 @@
 
 #define CEIL_DIVISION(a, b)     (((a) + (b) - 1) / (b))
 
-#define PRINT_UINT(name)        printf("%*c " name ": %"PRIu64"\n", context->indent * 4, ' ', context->value)
-#define PRINT_INT(name)         printf("%*c " name ": %"PRId64"\n", context->indent * 4, ' ', context->svalue)
+#define PRINT_UINT(name)        printf("%*c " name ": %" PRIu64 "\n", context->indent * 4, ' ', context->value)
+#define PRINT_INT(name)         printf("%*c " name ": %" PRId64 "\n", context->indent * 4, ' ', context->svalue)
 
 #define ARRAY_SIZE(array)       (sizeof(array) / sizeof((array)[0]))
 
@@ -863,10 +863,10 @@ static void print_slice_type(ParseContext *context, uint64_t type)
     };
 
     if (type < ARRAY_SIZE(SLICE_TYPES)) {
-        printf("%*c slice_type: %"PRIu64" (%s)\n", context->indent * 4, ' ', type,
+        printf("%*c slice_type: %" PRIu64 " (%s)\n", context->indent * 4, ' ', type,
                SLICE_TYPES[type]);
     } else {
-        printf("%*c slice_type: %"PRIu64" (unknown)\n", context->indent * 4, ' ', type);
+        printf("%*c slice_type: %" PRIu64 " (unknown)\n", context->indent * 4, ' ', type);
     }
 }
 
@@ -917,7 +917,7 @@ static void print_bytes_line(ParseContext *context, uint64_t index, uint8_t *lin
 {
     size_t i;
 
-    printf("%*c %06"PRIx64" ", context->indent * 4, ' ', index);
+    printf("%*c %06" PRIx64 " ", context->indent * 4, ' ', index);
     for (i = 0; i < num_values; i++)
         printf(" %02x", line[i]);
     for (; i < line_size; i++)
@@ -1217,8 +1217,8 @@ static int pred_weight_table(ParseContext *context)
         u(1); PRINT_UINT("luma_weight_l0_flag");
         if (context->value) {
             context->indent++;
-            se(); printf("%*c luma_weight_l0[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
-            se(); printf("%*c luma_offset_l0[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
+            se(); printf("%*c luma_weight_l0[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
+            se(); printf("%*c luma_offset_l0[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
             context->indent--;
         }
         if (context->sps->chroma_array_type != 0) {
@@ -1227,8 +1227,8 @@ static int pred_weight_table(ParseContext *context)
                 int j;
                 context->indent++;
                 for (j = 0; j < 2; j++) {
-                    se(); printf("%*c chroma_weight_l0[%"PRIu64"][%d]: %"PRId64"\n", context->indent * 4, ' ', i, j, context->value);
-                    se(); printf("%*c chroma_offset_l0[%"PRIu64"][%d]: %"PRId64"\n", context->indent * 4, ' ', i, j, context->value);
+                    se(); printf("%*c chroma_weight_l0[%" PRIu64 "][%d]: %" PRId64 "\n", context->indent * 4, ' ', i, j, context->value);
+                    se(); printf("%*c chroma_offset_l0[%" PRIu64 "][%d]: %" PRId64 "\n", context->indent * 4, ' ', i, j, context->value);
                 }
                 context->indent--;
             }
@@ -1239,8 +1239,8 @@ static int pred_weight_table(ParseContext *context)
             u(1); PRINT_UINT("luma_weight_l1_flag");
             if (context->value) {
                 context->indent++;
-                se(); printf("%*c luma_weight_l1[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
-                se(); printf("%*c luma_offset_l1[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
+                se(); printf("%*c luma_weight_l1[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
+                se(); printf("%*c luma_offset_l1[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
                 context->indent--;
             }
             if (context->sps->chroma_array_type != 0) {
@@ -1249,8 +1249,8 @@ static int pred_weight_table(ParseContext *context)
                     int j;
                     context->indent++;
                     for (j = 0; j < 2; j++) {
-                        se(); printf("%*c chroma_weight_l1[%"PRIu64"][%d]: %"PRId64"\n", context->indent * 4, ' ', i, j, context->value);
-                        se(); printf("%*c chroma_offset_l1[%"PRIu64"][%d]: %"PRId64"\n", context->indent * 4, ' ', i, j, context->value);
+                        se(); printf("%*c chroma_weight_l1[%" PRIu64 "][%d]: %" PRId64 "\n", context->indent * 4, ' ', i, j, context->value);
+                        se(); printf("%*c chroma_offset_l1[%" PRIu64 "][%d]: %" PRId64 "\n", context->indent * 4, ' ', i, j, context->value);
                     }
                     context->indent--;
                 }
@@ -1511,7 +1511,7 @@ static int buffering_period(ParseContext *context, uint64_t payload_type, uint64
 {
     uint64_t sched_sel_idx;
 
-    printf("%*c buffering_period (type=%"PRIu64", size=%"PRIu64"):\n", context->indent * 4, ' ', payload_type, payload_size);
+    printf("%*c buffering_period (type=%" PRIu64 ", size=%" PRIu64 "):\n", context->indent * 4, ' ', payload_type, payload_size);
     context->indent++;
 
     ue_m(31); PRINT_UINT("seq_parameter_set_id");
@@ -1522,9 +1522,9 @@ static int buffering_period(ParseContext *context, uint64_t payload_type, uint64
         context->indent++;
         for (sched_sel_idx = 0; sched_sel_idx <= context->sps->cpb_cnt_minus1; sched_sel_idx++) {
             u(context->sps->cpb_removal_delay_length_minus1 + 1);
-            printf("%*c initial_cpb_removal_delay[%"PRIu64"]        : %"PRId64"\n", context->indent * 4, ' ', sched_sel_idx, context->value);
+            printf("%*c initial_cpb_removal_delay[%" PRIu64 "]        : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
             u(context->sps->cpb_removal_delay_length_minus1 + 1);
-            printf("%*c initial_cpb_removal_delay_offset[%"PRIu64"] : %"PRId64"\n", context->indent * 4, ' ', sched_sel_idx, context->value);
+            printf("%*c initial_cpb_removal_delay_offset[%" PRIu64 "] : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
         }
         context->indent--;
     }
@@ -1534,9 +1534,9 @@ static int buffering_period(ParseContext *context, uint64_t payload_type, uint64
         context->indent++;
         for (sched_sel_idx = 0; sched_sel_idx <= context->sps->cpb_cnt_minus1; sched_sel_idx++) {
             u(context->sps->cpb_removal_delay_length_minus1 + 1);
-            printf("%*c initial_cpb_removal_delay [%"PRIu64"]       : %"PRId64"\n", context->indent * 4, ' ', sched_sel_idx, context->value);
+            printf("%*c initial_cpb_removal_delay [%" PRIu64 "]       : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
             u(context->sps->cpb_removal_delay_length_minus1 + 1);
-            printf("%*c initial_cpb_removal_delay_offset[%"PRIu64"] : %"PRId64"\n", context->indent * 4, ' ', sched_sel_idx, context->value);
+            printf("%*c initial_cpb_removal_delay_offset[%" PRIu64 "] : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
         }
         context->indent--;
     }
@@ -1547,7 +1547,7 @@ static int buffering_period(ParseContext *context, uint64_t payload_type, uint64
 
 static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
 {
-    printf("%*c pic_timing (type=%"PRIu64", size=%"PRIu64"):\n", context->indent * 4, ' ', payload_type, payload_size);
+    printf("%*c pic_timing (type=%" PRIu64 ", size=%" PRIu64 "):\n", context->indent * 4, ' ', payload_type, payload_size);
     context->indent++;
 
     // TODO: see Note 1 in section D.2.2: the SPS is activated by the first slice of primary coded picture and that will
@@ -1708,7 +1708,7 @@ static int user_data_unregistered(ParseContext *context, uint64_t payload_type, 
     static const uint64_t X264_USER_DATA_ID_LOW  = UINT64_C(0x962cd820d923eeef);
     uint64_t uuid_high, uuid_low;
 
-    printf("%*c user_data_unregistered (type=%"PRIu64", size=%"PRIu64"):\n", context->indent * 4, ' ', payload_type, payload_size);
+    printf("%*c user_data_unregistered (type=%" PRIu64 ", size=%" PRIu64 "):\n", context->indent * 4, ' ', payload_type, payload_size);
     context->indent++;
 
     u(64); uuid_high = context->value;
@@ -1730,7 +1730,7 @@ static int user_data_unregistered(ParseContext *context, uint64_t payload_type, 
 
 static int recovery_point(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
 {
-    printf("%*c recovery_point (type=%"PRIu64", size=%"PRIu64"):\n", context->indent * 4, ' ', payload_type, payload_size);
+    printf("%*c recovery_point (type=%" PRIu64 ", size=%" PRIu64 "):\n", context->indent * 4, ' ', payload_type, payload_size);
     context->indent++;
 
     ue(); PRINT_UINT("recovery_frame_count");
@@ -1756,7 +1756,7 @@ static int sei_payload(ParseContext *context, uint64_t payload_type, uint64_t pa
     } else if (payload_type == 6) {
         CHK(recovery_point(context, payload_type, payload_size));
     } else {
-        printf("%*c payload (type=%"PRIu64", size=%"PRIu64")\n", context->indent * 4, ' ', payload_type, payload_size);
+        printf("%*c payload (type=%" PRIu64 ", size=%" PRIu64 ")\n", context->indent * 4, ' ', payload_type, payload_size);
         context->indent++;
         printf("%*c data:\n", context->indent * 4, ' ');
         context->indent++;
@@ -1968,14 +1968,14 @@ static int picture_parameter_set(ParseContext *context)
         if (context->pps->slice_group_map_type == 0)
         {
             for (i = 0; i <= context->pps->num_slice_groups_minus1; i++) {
-                ue(); printf("%*c run_length_minus1[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
+                ue(); printf("%*c run_length_minus1[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
             }
         }
         else if (context->pps->slice_group_map_type == 2)
         {
             for (i = 0; i < context->pps->num_slice_groups_minus1; i++) {
-                ue(); printf("%*c top_left[%"PRIu64"]    : %"PRId64"\n", context->indent * 4, ' ', i, context->value);
-                ue(); printf("%*c bottom_right[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
+                ue(); printf("%*c top_left[%" PRIu64 "]    : %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
+                ue(); printf("%*c bottom_right[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
             }
         }
         else if (context->pps->slice_group_map_type == 3 ||
@@ -1995,7 +1995,7 @@ static int picture_parameter_set(ParseContext *context)
             context->indent++;
             for (i = 0; i <= pic_size_in_map_units_minus1; i++) {
                 u(get_bits_required(context->pps->num_slice_groups_minus1 + 1));
-                printf("%*c slice_group_id[%"PRIu64"]: %"PRId64"\n", context->indent * 4, ' ', i, context->value);
+                printf("%*c slice_group_id[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
             }
             context->indent--;
         }
@@ -2138,7 +2138,7 @@ static int svc_vui_parameters_extension(ParseContext *context)
     ue(); PRINT_UINT("vui_ext_num_entries_minus1");
     vui_ext_num_entries_minus1 = context->value;
     for (i = 0; i <= vui_ext_num_entries_minus1; i++) {
-        printf("%*c entry %"PRIu64":\n", context->indent * 4, ' ', i);
+        printf("%*c entry %" PRIu64 ":\n", context->indent * 4, ' ', i);
         context->indent++;
 
         u(3); PRINT_UINT("vui_ext_dependency_id");
@@ -2250,7 +2250,7 @@ static int mvc_vui_parameters_extension(ParseContext *context)
     ue(); PRINT_UINT("vui_mvc_num_ops_minus1");
     vui_mvc_num_ops_minus1 = context->value;
     for (i = 0; i <= vui_mvc_num_ops_minus1; i++) {
-        printf("%*c entry %"PRIu64":\n", context->indent * 4, ' ', i);
+        printf("%*c entry %" PRIu64 ":\n", context->indent * 4, ' ', i);
         context->indent++;
 
         u(3); PRINT_UINT("vui_mvc_temporal_id");
@@ -2366,7 +2366,7 @@ static int parse_nal_unit(ParseContext *context)
 {
     uint64_t bit_pos;
 
-    printf("NAL: pos=%"PRId64", start=%u, size=%u, padding=%u\n",
+    printf("NAL: pos=%" PRId64 ", start=%u, size=%u, padding=%u\n",
            context->data_start_file_pos, context->nal_start, context->nal_size, context->nal_padding);
 
     context->indent++;

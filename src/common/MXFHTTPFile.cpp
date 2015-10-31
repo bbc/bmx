@@ -106,7 +106,7 @@ static size_t curl_file_size_header_cb(char *buffer, size_t size, size_t nmemb, 
   size_t fidx = get_http_field_value_pos(header_str, "Content-Length");
   if (fidx != string::npos) {
       int64_t content_length;
-      if (sscanf(&header_str.c_str()[fidx], "%"PRId64, &content_length) == 1)
+      if (sscanf(&header_str.c_str()[fidx], "%" PRId64, &content_length) == 1)
           *file_size_out = content_length;
   }
 
@@ -129,9 +129,9 @@ static size_t curl_header_cb(char *buffer, size_t size, size_t nmemb, void *priv
   fidx = get_http_field_value_pos(header_str, "Content-Range");
   if (fidx != string::npos) {
       int64_t first;
-      if (sscanf(&header_str.c_str()[fidx], "%"PRId64, &first) == 1) {
+      if (sscanf(&header_str.c_str()[fidx], "%" PRId64, &first) == 1) {
           if (first != info->range_first) {
-              log_warn("HTTP content range start byte at %"PRId64" does not match requested start byte at %"PRId64"\n",
+              log_warn("HTTP content range start byte at %" PRId64 " does not match requested start byte at %" PRId64 "\n",
                        first, info->range_first);
           }
       }
@@ -218,7 +218,7 @@ static uint32_t http_file_read(MXFFileSysData *sys_data, uint8_t *data, uint32_t
             info.range_last += sys_data->buffer_alloc_size - 1;
 
         char range_buf[64];
-        bmx_snprintf(range_buf, sizeof(range_buf), "%"PRId64"-%"PRId64,
+        bmx_snprintf(range_buf, sizeof(range_buf), "%" PRId64 "-%" PRId64,
                      info.range_first, info.range_last);
 
         curl_easy_reset(sys_data->curl);

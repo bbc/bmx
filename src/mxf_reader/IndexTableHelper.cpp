@@ -135,7 +135,7 @@ void IndexTableHelperSegment::ProcessIndexTableSegment(Rational expected_edit_ra
 
     // samples files produced by Ardendo product 'ardftp' had an invalid index duration -1
     if (getIndexDuration() < 0) {
-        log_warn("Index duration %"PRId64" is invalid. Assuming index duration 0 instead.\n", getIndexDuration());
+        log_warn("Index duration %" PRId64 " is invalid. Assuming index duration 0 instead.\n", getIndexDuration());
         setIndexDuration(0);
     }
 
@@ -375,7 +375,7 @@ void IndexTableHelper::ExtractIndexTable()
                 num_read += mxfKey_extlen + llen;
             }
             if (index_byte_count > 0 && num_read != index_byte_count) {
-                log_warn("Index byte count %"PRIu64" does not equal value in partition pack %"PRIu64"\n",
+                log_warn("Index byte count %" PRIu64 " does not equal value in partition pack %" PRIu64 "\n",
                          num_read, index_byte_count);
             }
         } else {
@@ -457,8 +457,8 @@ void IndexTableHelper::UpdateIndex(int64_t position, int64_t essence_offset, int
         return;
 
     if (HaveConstantEditUnitSize()) {
-        BMX_EXCEPTION(("Index table with constant edit unit size and duration %"PRId64
-                       " does not cover position %"PRId64, mDuration, position));
+        BMX_EXCEPTION(("Index table with constant edit unit size and duration %" PRId64
+                       " does not cover position %" PRId64, mDuration, position));
     }
 
     if (!mSegments.empty() &&
@@ -538,7 +538,7 @@ void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, in
         }
     }
     BMX_CHECK_M(result == 0,
-               ("Failed to find edit unit index information for position 0x%"PRIx64, position));
+               ("Failed to find edit unit index information for position 0x%" PRIx64, position));
 
     if (size) {
         if (mEditUnitSize > 0) {
@@ -549,7 +549,7 @@ void IndexTableHelper::GetEditUnit(int64_t position, int8_t *temporal_offset, in
             *size = mSegments.back()->GetIndexEndOffset() - (*offset);
         } else {
             if (mEssenceDataSize < (*offset)) {
-                BMX_EXCEPTION(("Failed to calc valid last edit unit size because essence data size %"PRId64
+                BMX_EXCEPTION(("Failed to calc valid last edit unit size because essence data size %" PRId64
                                " is too small", mEssenceDataSize));
             }
             *size = mEssenceDataSize - (*offset);

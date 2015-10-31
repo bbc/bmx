@@ -308,7 +308,7 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
                 mIndexTableHelper.SetEditRate(mFileReader->GetEditRate());
                 mIndexTableHelper.SetIsComplete();
             } else if (mFileReader->mIndexSID) {
-                log_warn("Missing index table segments (IndexSID %u) for essence data with size %"PRId64"\n",
+                log_warn("Missing index table segments (IndexSID %u) for essence data with size %" PRId64 "\n",
                          mFileReader->mIndexSID, mEssenceChunkHelper.GetEssenceDataSize());
             }
         }
@@ -343,8 +343,8 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
         int64_t last_unit_offset, last_unit_size;
         mIndexTableHelper.GetEditUnit(mIndexTableHelper.GetDuration() - 1, &last_unit_offset, &last_unit_size);
         if (mEssenceChunkHelper.GetEssenceDataSize() < last_unit_offset + last_unit_size) {
-            BMX_EXCEPTION(("Last edit unit (offset %"PRId64", size %"PRId64") not available in "
-                                "essence container (size %"PRId64")",
+            BMX_EXCEPTION(("Last edit unit (offset %" PRId64 ", size %" PRId64 ") not available in "
+                                "essence container (size %" PRId64 ")",
                           last_unit_offset, last_unit_size, mEssenceChunkHelper.GetEssenceDataSize()));
         }
     }
@@ -649,8 +649,8 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
             cp_num_read += len;
         }
         if (size != 0 && cp_num_read != size) {
-           BMX_EXCEPTION(("Read content package size (0x%"PRIx64") does not match size in index (0x%"PRIx64") "
-                          "at file position 0x%"PRIx64,
+           BMX_EXCEPTION(("Read content package size (0x%" PRIx64 ") does not match size in index (0x%" PRIx64 ") "
+                          "at file position 0x%" PRIx64,
                           cp_num_read, size, mFileReader->mFile->tell()));
         }
 
@@ -1073,7 +1073,7 @@ void EssenceReader::ReadNextPartition(const mxfKey *key, uint8_t llen, uint64_t 
 
     Partition *partition = mFile->getPartitions().back();
     if (partition->getThisPartition() != (uint64_t)partition_pos) {
-        log_warn("Updating (in-memory) partition property ThisPartition %"PRId64" to actual file position %"PRId64"\n",
+        log_warn("Updating (in-memory) partition property ThisPartition %" PRId64 " to actual file position %" PRId64 "\n",
                  partition->getThisPartition(), partition_pos);
         partition->setThisPartition(partition_pos);
     }

@@ -467,7 +467,7 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
             if (slice_header.redundant_pic_cnt == 0) {
                 MPEGFrameType slice_frame_type = UNKNOWN_FRAME_TYPE;
                 if (slice_header.slice_type > 9)
-                    BMX_EXCEPTION(("Unknown slice_type %"PRIu64, slice_header.slice_type));
+                    BMX_EXCEPTION(("Unknown slice_type %" PRIu64, slice_header.slice_type));
                 if (slice_header.slice_type == 2 || slice_header.slice_type == 4 ||
                     slice_header.slice_type == 7 || slice_header.slice_type == 9)
                 {
@@ -549,7 +549,7 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
 
     if (sps->timing_info_present_flag) {
         if (sps->time_scale == 0 || sps->num_units_in_tick == 0) {
-            BMX_EXCEPTION(("Invalid timing info: time_scale=%"PRIu64", num_units_in_tick=%"PRIu64,
+            BMX_EXCEPTION(("Invalid timing info: time_scale=%" PRIu64 ", num_units_in_tick=%" PRIu64,
                            sps->time_scale, sps->num_units_in_tick));
         } else {
             // TODO: implement D.2.2 of H.264 spec. and explanation surrounding Table E-6
@@ -1054,12 +1054,12 @@ bool AVCEssenceParser::GetParameterSets(uint64_t pic_parameter_set_id, const SPS
 {
     map<uint64_t, PPS>::const_iterator pps_iter = mPPS.find(pic_parameter_set_id);
     if (pps_iter == mPPS.end()) {
-        log_warn("Missing PPS with id %"PRIu64" before VCL NAL unit\n", pic_parameter_set_id);
+        log_warn("Missing PPS with id %" PRIu64 " before VCL NAL unit\n", pic_parameter_set_id);
         return false;
     }
     map<uint64_t, SPS>::const_iterator sps_iter = mSPS.find(pps_iter->second.seq_parameter_set_id);
     if (sps_iter == mSPS.end()) {
-        log_warn("Missing SPS with id %"PRIu64" reference from PPS with id %"PRIu64"\n",
+        log_warn("Missing SPS with id %" PRIu64 " reference from PPS with id %" PRIu64 "\n",
                  pps_iter->second.seq_parameter_set_id, pic_parameter_set_id);
         return false;
     }

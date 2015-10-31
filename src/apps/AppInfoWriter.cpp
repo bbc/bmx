@@ -175,9 +175,9 @@ void AppInfoWriter::WriteIntegerItem(const string &name, uint64_t value, bool he
     char buffer[32];
 
     if (hex)
-        bmx_snprintf(buffer, sizeof(buffer), "0x%016"PRIx64, value);
+        bmx_snprintf(buffer, sizeof(buffer), "0x%016" PRIx64, value);
     else
-        bmx_snprintf(buffer, sizeof(buffer), "%"PRIu64, value);
+        bmx_snprintf(buffer, sizeof(buffer), "%" PRIu64, value);
 
     if (mIsAnnotation)
         mAnnotations.push_back(make_pair(name, buffer));
@@ -225,7 +225,7 @@ void AppInfoWriter::WriteIntegerItem(const string &name, int64_t value)
 {
     char buffer[32];
 
-    bmx_snprintf(buffer, sizeof(buffer), "%"PRId64, value);
+    bmx_snprintf(buffer, sizeof(buffer), "%" PRId64, value);
 
     if (mIsAnnotation)
         mAnnotations.push_back(make_pair(name, buffer));

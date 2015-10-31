@@ -208,7 +208,7 @@ static bool open_raw_reader(RawInput *input)
 
     FileEssenceSource *file_source = new FileEssenceSource();
     if (!file_source->Open(input->filename, input->file_start_offset)) {
-        log_error("Failed to open input file '%s' at start offset %"PRId64": %s\n",
+        log_error("Failed to open input file '%s' at start offset %" PRId64 ": %s\n",
                   input->filename, input->file_start_offset, file_source->GetStrError().c_str());
         delete file_source;
         return false;
@@ -367,7 +367,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          <format> is a comma separated list of one or more of the following integer values:\n");
     size_t i;
     for (i = 0; i < get_num_avci_header_formats(); i++)
-        fprintf(stderr, "                              %2"PRIszt": %s\n", i, get_avci_header_format_string(i));
+        fprintf(stderr, "                              %2" PRIszt ": %s\n", i, get_avci_header_format_string(i));
     fprintf(stderr, "                          or set <format> to 'all' for all formats listed above\n");
     fprintf(stderr, "                          The 512 bytes are extracted from <file> starting at <offset> bytes\n");
     fprintf(stderr, "                          and incrementing 512 bytes for each format in the list\n");
@@ -778,7 +778,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &duration) != 1 || duration < 0)
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &duration) != 1 || duration < 0)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -942,7 +942,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &output_start_offset) != 1 ||
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &output_start_offset) != 1 ||
                 output_start_offset < 0)
             {
                 usage(argv[0]);
@@ -959,7 +959,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &output_end_offset) != 1 ||
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &output_end_offset) != 1 ||
                 output_end_offset < 0)
             {
                 usage(argv[0]);
@@ -1217,7 +1217,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &avid_gf_duration) != 1 || avid_gf_duration < 0)
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &avid_gf_duration) != 1 || avid_gf_duration < 0)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -1254,7 +1254,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &regtest_end) != 1 || regtest_end < 0)
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &regtest_end) != 1 || regtest_end < 0)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -1510,7 +1510,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &input.file_start_offset) != 1 ||
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.file_start_offset) != 1 ||
                 input.file_start_offset < 0)
             {
                 usage(argv[0]);
@@ -1528,7 +1528,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &input.ess_max_length) != 1 ||
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.ess_max_length) != 1 ||
                 input.ess_max_length <= 0)
             {
                 usage(argv[0]);
@@ -1606,7 +1606,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &input.output_start_offset) != 1 ||
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.output_start_offset) != 1 ||
                 input.output_start_offset < 0)
             {
                 usage(argv[0]);
@@ -1624,7 +1624,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &input.output_end_offset) != 1 ||
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.output_end_offset) != 1 ||
                 input.output_end_offset < 0)
             {
                 usage(argv[0]);
@@ -3668,7 +3668,7 @@ int main(int argc, const char** argv)
 
             clip->CompleteWrite();
 
-            log_info("Duration: %"PRId64" (%s)\n",
+            log_info("Duration: %" PRId64 " (%s)\n",
                      clip->GetDuration(),
                      get_generic_duration_string_2(clip->GetDuration(), clip->GetFrameRate()).c_str());
 

@@ -203,7 +203,7 @@ static bool parse_uint16(string value, uint16_t *uint16_value)
 
 static bool parse_int64(string value, int64_t *int64_value)
 {
-    if (sscanf(value.c_str(), "%"PRId64"", int64_value) == 1)
+    if (sscanf(value.c_str(), "%" PRId64 "", int64_value) == 1)
         return true;
 
     log_warn("Invalid int64 value '%s'\n", value.c_str());
@@ -213,7 +213,7 @@ static bool parse_int64(string value, int64_t *int64_value)
 static bool parse_duration(string value, Rational frame_rate, int64_t *int64_value)
 {
     if (value.find(":") == string::npos) {
-        if (sscanf(value.c_str(), "%"PRId64"", int64_value) == 1)
+        if (sscanf(value.c_str(), "%" PRId64 "", int64_value) == 1)
             return true;
     } else {
         int hour, min, sec, frame;
@@ -234,7 +234,7 @@ static bool parse_duration(string value, Rational frame_rate, int64_t *int64_val
 static bool parse_position(string value, Timecode start_timecode, Rational frame_rate, int64_t *int64_value)
 {
     if (value.find(":") == string::npos) {
-        if (sscanf(value.c_str(), "%"PRId64"", int64_value) == 1)
+        if (sscanf(value.c_str(), "%" PRId64 "", int64_value) == 1)
             return true;
     } else {
         int hour, min, sec, frame;
@@ -409,10 +409,10 @@ bool FrameworkHelper::SetProperty(string name, string value)
             size_t clip_len = get_utf8_clip_len(value.c_str(), max_unicode_len, &invalid, &truncated);
             if (truncated) {
                 if (invalid) {
-                    log_warn("Truncating string property %s::%s to %"PRIszt" chars because it contains invalid UTF-8 data\n",
+                    log_warn("Truncating string property %s::%s to %" PRIszt " chars because it contains invalid UTF-8 data\n",
                              mFrameworkInfo->name, name.c_str(), clip_len);
                 } else {
-                    log_warn("Truncating string property %s::%s because it's length exceeds %"PRIszt" unicode chars\n",
+                    log_warn("Truncating string property %s::%s because it's length exceeds %" PRIszt " unicode chars\n",
                              mFrameworkInfo->name, name.c_str(), max_unicode_len);
                 }
             }
@@ -869,8 +869,8 @@ void AS11Helper::Complete()
         }
         if (mHaveUKDPPTotalProgrammeDuration) {
             BMX_CHECK_M(dpp_framework->GetTotalProgrammeDuration() >= mWriterHelper->GetTotalSegmentDuration(),
-                        ("UKDPPTotalProgrammeDuration value %"PRId64" is less than duration of parts in this "
-                         "file %"PRId64,
+                        ("UKDPPTotalProgrammeDuration value %" PRId64 " is less than duration of parts in this "
+                         "file %" PRId64,
                          dpp_framework->GetTotalProgrammeDuration(), mWriterHelper->GetTotalSegmentDuration()));
         } else {
             dpp_framework->SetTotalProgrammeDuration(mWriterHelper->GetTotalSegmentDuration());

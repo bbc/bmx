@@ -111,7 +111,7 @@ uint32_t KLVEssenceSource::Read(unsigned char *data, uint32_t size)
                     mValueLen |= len_buffer[i + 1];
                 }
                 if (mValueLen > INT64_MAX) {
-                    log_error("Unsupported KLV length %"PRIu64" in essence source\n", mValueLen);
+                    log_error("Unsupported KLV length %" PRIu64 " in essence source\n", mValueLen);
                     break;
                 }
             }

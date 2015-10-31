@@ -444,7 +444,7 @@ int main(int argc, const char **argv)
         buffer.Fill(file);
         uint32_t frame_start = parser->ParseFrameStart(buffer.data, buffer.size);
         if (frame_start == ESSENCE_PARSER_NULL_OFFSET) {
-            log_error("Failed to find valid frame start within %"PRIszt" bytes\n", buffer.size);
+            log_error("Failed to find valid frame start within %" PRIszt " bytes\n", buffer.size);
             throw false;
         }
 

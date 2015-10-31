@@ -121,7 +121,7 @@ void AS11WriterHelper::InsertPosSegmentation(vector<AS11PosSegment> segments)
     size_t i;
     for (i = 0; i < segments.size(); i++) {
         BMX_CHECK_M(segments[i].start >= next_start,
-                   ("AS11 segment starts (%"PRId64") before end of last segment (%"PRId64")",
+                   ("AS11 segment starts (%" PRId64 ") before end of last segment (%" PRId64 ")",
                     segments[i].start, next_start - 1));
 
         if (segments[i].start > next_start) {
@@ -190,7 +190,7 @@ void AS11WriterHelper::CompleteSegmentation(bool with_filler)
         clip_duration = mClip->GetDuration();
 
     BMX_CHECK_M(mSegmentationSequence->getDuration() <= clip_duration,
-                ("AS-11 segmentation duration (%"PRId64") exceeds package duration (%"PRId64")",
+                ("AS-11 segmentation duration (%" PRId64 ") exceeds package duration (%" PRId64 ")",
                  mSegmentationSequence->getDuration(), clip_duration));
     if (mSegmentationSequence->getDuration() == clip_duration)
         return;

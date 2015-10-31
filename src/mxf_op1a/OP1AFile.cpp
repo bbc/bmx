@@ -382,13 +382,13 @@ void OP1AFile::CompleteWrite()
     // check that the duration is valid
 
     BMX_CHECK_M(mIndexTable->GetDuration() - mOutputStartOffset + mOutputEndOffset >= 0,
-               ("Invalid output start %"PRId64" / end %"PRId64" offsets. Output duration %"PRId64" is negative",
+               ("Invalid output start %" PRId64 " / end %" PRId64 " offsets. Output duration %" PRId64 " is negative",
                 mOutputStartOffset, mOutputEndOffset, mIndexTable->GetDuration() - mOutputStartOffset + mOutputEndOffset));
 
     if (mSupportCompleteSinglePass) {
         BMX_CHECK_M(mIndexTable->GetDuration() == mInputDuration,
-                    ("Single pass write failed because OP-1A container duration %"PRId64" "
-                     "does not equal set input duration %"PRId64,
+                    ("Single pass write failed because OP-1A container duration %" PRId64 " "
+                     "does not equal set input duration %" PRId64,
                      mIndexTable->GetDuration(), mInputDuration));
     }
 
@@ -432,8 +432,8 @@ void OP1AFile::CompleteWrite()
 
     if (mSupportCompleteSinglePass) {
         BMX_CHECK_M(mMXFFile->tell() == (int64_t)mMXFFile->getPartition(0).getFooterPartition(),
-                    ("Single pass write failed because footer partition offset %"PRId64" "
-                     "is not at expected offset %"PRId64,
+                    ("Single pass write failed because footer partition offset %" PRId64 " "
+                     "is not at expected offset %" PRId64,
                      mMXFFile->tell(), mMXFFile->getPartition(0).getFooterPartition()));
     }
 

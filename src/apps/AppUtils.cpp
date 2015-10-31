@@ -370,7 +370,7 @@ bool bmx::parse_partition_interval(const char *partition_interval_str, Rational 
 {
     bool in_seconds = (strchr(partition_interval_str, 's') != 0);
 
-    if (sscanf(partition_interval_str, "%"PRId64, partition_interval) != 1)
+    if (sscanf(partition_interval_str, "%" PRId64, partition_interval) != 1)
         return false;
 
     if (in_seconds)
@@ -417,7 +417,7 @@ bool bmx::parse_avci_header(const char *format_str, const char *filename, const 
         size_t index;
         const char *format_str_ptr = format_str;
         while (format_str_ptr) {
-            if (sscanf(format_str_ptr, "%"PRIszt, &index) != 1 || index > BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO))
+            if (sscanf(format_str_ptr, "%" PRIszt, &index) != 1 || index > BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO))
                 return false;
             input.formats.push_back(AVCI_HEADER_FORMAT_INFO[index].format);
 
@@ -428,7 +428,7 @@ bool bmx::parse_avci_header(const char *format_str, const char *filename, const 
     }
 
     input.filename = filename;
-    if (sscanf(offset_str, "%"PRId64, &input.offset) != 1)
+    if (sscanf(offset_str, "%" PRId64, &input.offset) != 1)
         return false;
 
     avci_header_inputs->push_back(input);
@@ -797,14 +797,14 @@ bool bmx::read_avci_header_data(EssenceType essence_type, Rational sample_rate,
 #else
     if (fseeko(file, offset, SEEK_SET) != 0) {
 #endif
-        log_error("Failed to seek to offset %"PRId64" in AVC-Intra header data input file '%s': %s\n",
+        log_error("Failed to seek to offset %" PRId64 " in AVC-Intra header data input file '%s': %s\n",
                   offset, avci_header_inputs[i].filename, bmx_strerror(errno).c_str());
         fclose(file);
         return false;
     }
 
     if (fread(buffer, 512, 1, file) != 1) {
-        log_error("Failed to read 512 bytes from AVC-Intra header data input file '%s' at offset %"PRId64": %s\n",
+        log_error("Failed to read 512 bytes from AVC-Intra header data input file '%s' at offset %" PRId64 ": %s\n",
                   avci_header_inputs[i].filename, offset,
                   ferror(file) ? "read error" : "end of file");
         fclose(file);

@@ -234,18 +234,18 @@ void EssenceChunkHelper::AppendChunk(size_t partition_id, int64_t file_position,
     if (mEssenceChunks.empty()) {
         if (body_offset > 0) {
             log_warn("Ignoring potential missing essence container data; "
-                     "partition pack's BodyOffset 0x%"PRIx64" > expected offset 0x00\n",
+                     "partition pack's BodyOffset 0x%" PRIx64 " > expected offset 0x00\n",
                      body_offset);
             body_offset = 0;
         }
     } else if (body_offset > (uint64_t)(mEssenceChunks.back().essence_offset + mEssenceChunks.back().size)) {
         log_warn("Ignoring potential missing essence container data; "
-                 "partition pack's BodyOffset 0x%"PRIx64" > expected offset 0x%"PRIx64"\n",
+                 "partition pack's BodyOffset 0x%" PRIx64 " > expected offset 0x%" PRIx64 "\n",
                  body_offset, mEssenceChunks.back().essence_offset + mEssenceChunks.back().size);
         body_offset = mEssenceChunks.back().essence_offset + mEssenceChunks.back().size;
     } else if (body_offset < (uint64_t)(mEssenceChunks.back().essence_offset + mEssenceChunks.back().size)) {
         log_warn("Ignoring potential overlapping essence container data; "
-                 "partition pack's BodyOffset 0x%"PRIx64" < expected offset 0x%"PRIx64"\n",
+                 "partition pack's BodyOffset 0x%" PRIx64 " < expected offset 0x%" PRIx64 "\n",
                  body_offset, mEssenceChunks.back().essence_offset + mEssenceChunks.back().size);
         body_offset = mEssenceChunks.back().essence_offset + mEssenceChunks.back().size;
     }
@@ -328,7 +328,7 @@ void EssenceChunkHelper::GetKeyAndFilePosition(int64_t essence_offset, int64_t s
             have_position = false;
     }
     if (!have_position) {
-        BMX_EXCEPTION(("Failed to find edit unit (off=0x%"PRIx64",size=0x%"PRIx64") in essence container",
+        BMX_EXCEPTION(("Failed to find edit unit (off=0x%" PRIx64 ",size=0x%" PRIx64 ") in essence container",
                        essence_offset, size));
     }
 
@@ -344,7 +344,7 @@ int64_t EssenceChunkHelper::GetFilePosition(int64_t essence_offset)
     if (mEssenceChunks[mLastEssenceChunk].essence_offset > essence_offset ||
         mEssenceChunks[mLastEssenceChunk].essence_offset + mEssenceChunks[mLastEssenceChunk].size < essence_offset)
     {
-        BMX_EXCEPTION(("Failed to find edit unit offset (off=0x%"PRIx64") in essence container", essence_offset));
+        BMX_EXCEPTION(("Failed to find edit unit offset (off=0x%" PRIx64 ") in essence container", essence_offset));
     }
 
     return mEssenceChunks[mLastEssenceChunk].file_position +
@@ -358,7 +358,7 @@ int64_t EssenceChunkHelper::GetEssenceOffset(int64_t file_position)
     if (mEssenceChunks[mLastEssenceChunk].file_position > file_position ||
         mEssenceChunks[mLastEssenceChunk].file_position + mEssenceChunks[mLastEssenceChunk].size < file_position)
     {
-        BMX_EXCEPTION(("Failed to find edit unit file position (pos=0x%"PRIx64") in essence container", file_position));
+        BMX_EXCEPTION(("Failed to find edit unit file position (pos=0x%" PRIx64 ") in essence container", file_position));
     }
 
     return mEssenceChunks[mLastEssenceChunk].essence_offset +

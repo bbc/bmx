@@ -1079,7 +1079,7 @@ static bool update_rdd6_xml(Frame *frame, RDD6MetadataFrame *rdd6_frame, vector<
 
     if (rdd6_lines.size() >= 2) {
         if (rdd6_lines.size() > 2)
-            log_warn("ST-436 ANC data contains %"PRIszt" RDD-6 lines; only using the first 2\n", rdd6_lines.size());
+            log_warn("ST-436 ANC data contains %" PRIszt " RDD-6 lines; only using the first 2\n", rdd6_lines.size());
         parse_rdd6_frame->ParseST2020(rdd6_lines[0]->payload_data, rdd6_lines[0]->payload_size,
                                       rdd6_lines[1]->payload_data, rdd6_lines[1]->payload_size);
     } else {
@@ -1153,9 +1153,9 @@ static string create_raw_filename(string ess_prefix, bool wrap_klv, MXFDataDefEn
 
 static bool parse_rdd6_frames(const char *frames_str, int64_t *min, int64_t *max)
 {
-    if (sscanf(frames_str, "%"PRId64"-%"PRId64, min, max) == 2) {
+    if (sscanf(frames_str, "%" PRId64 "-%" PRId64, min, max) == 2) {
         return *min <= *max;
-    } else if (sscanf(frames_str, "%"PRId64, min) == 1) {
+    } else if (sscanf(frames_str, "%" PRId64, min) == 1) {
         *max = *min;
         return *min >= 0;
     } else {
@@ -1666,7 +1666,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &start) != 1 || start < 0)
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &start) != 1 || start < 0)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -1683,7 +1683,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &duration) != 1 || duration < 0)
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &duration) != 1 || duration < 0)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -2072,7 +2072,7 @@ int main(int argc, const char** argv)
         } else {
             int64_t input_duration = reader->GetDuration();
             if (start > input_duration) {
-                log_error("Start position %"PRId64" is beyond available frames %"PRId64"\n", start, input_duration);
+                log_error("Start position %" PRId64 " is beyond available frames %" PRId64 "\n", start, input_duration);
                 throw false;
             }
             output_duration = input_duration - start;
@@ -2080,7 +2080,7 @@ int main(int argc, const char** argv)
                 if (duration <= output_duration) {
                     output_duration = duration;
                 } else {
-                    log_warn("Output duration %"PRId64" not possible. Set to %"PRId64" instead\n",
+                    log_warn("Output duration %" PRId64 " not possible. Set to %" PRId64 " instead\n",
                              duration, output_duration);
                 }
             }
@@ -2408,7 +2408,7 @@ int main(int argc, const char** argv)
 
                 if (app_crc32_file) {
                     CHECK_FPRINTF(app_crc32_filename,
-                                  fprintf(app_crc32_file, "%"PRId64, total_num_read - num_read));
+                                  fprintf(app_crc32_file, "%" PRId64, total_num_read - num_read));
                     size_t i;
                     for (i = 0; i < crc32_data.size(); i++) {
                         if (crc32_data[i] == UINT64_MAX) {
@@ -2461,16 +2461,16 @@ int main(int argc, const char** argv)
                 } else {
                     for (i = 0; i < track_crc32_data.size(); i++) {
                         if (track_crc32_data[i].error_count > 0) {
-                            log_error("Track %"PRIszt" has %"PRId64" CRC-32 errors\n",
+                            log_error("Track %" PRIszt " has %" PRId64 " CRC-32 errors\n",
                                       i, track_crc32_data[i].error_count);
                             app_crc32_result = CRC32_FAILED;
                             cmd_result = 1;
                         }
                         if (track_crc32_data[i].total_read > track_crc32_data[i].check_count) {
                             if (track_crc32_data[i].check_count == 0) {
-                                log_warn("Track %"PRIszt" does not contain CRC-32 data\n", i);
+                                log_warn("Track %" PRIszt " does not contain CRC-32 data\n", i);
                             } else {
-                                log_warn("Track %"PRIszt" is missing CRC-32 data in %"PRId64" frames\n",
+                                log_warn("Track %" PRIszt " is missing CRC-32 data in %" PRId64 " frames\n",
                                           i, track_crc32_data[i].total_read - track_crc32_data[i].check_count);
                             }
                             app_crc32_result = CRC32_MISSING_DATA;
@@ -2479,7 +2479,7 @@ int main(int argc, const char** argv)
                 }
             }
 
-            log_info("Read %"PRId64" samples (%s)\n",
+            log_info("Read %" PRId64 " samples (%s)\n",
                      total_num_read,
                      get_generic_duration_string_2(total_num_read, edit_rate).c_str());
 

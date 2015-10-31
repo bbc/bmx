@@ -306,13 +306,13 @@ void D10File::CompleteWrite()
 
     if (mInputDuration >= 0) {
         BMX_CHECK_M(mCPManager->GetDuration() == mInputDuration,
-                    ("Single pass write failed because D10 output duration %"PRId64" "
-                     "does not equal set input duration %"PRId64,
+                    ("Single pass write failed because D10 output duration %" PRId64 " "
+                     "does not equal set input duration %" PRId64,
                      mCPManager->GetDuration(), mInputDuration));
 
         BMX_CHECK_M(mMXFFile->tell() == (int64_t)mMXFFile->getPartition(0).getFooterPartition(),
-                    ("Single pass write failed because footer partition offset %"PRId64" "
-                     "is not at expected offset %"PRId64,
+                    ("Single pass write failed because footer partition offset %" PRId64 " "
+                     "is not at expected offset %" PRId64,
                      mMXFFile->tell(), mMXFFile->getPartition(0).getFooterPartition()));
     }
 

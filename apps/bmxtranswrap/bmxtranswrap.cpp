@@ -421,7 +421,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          <format> is a comma separated list of one or more of the following integer values:\n");
     size_t i;
     for (i = 0; i < get_num_avci_header_formats(); i++)
-        fprintf(stderr, "                              %2"PRIszt": %s\n", i, get_avci_header_format_string(i));
+        fprintf(stderr, "                              %2" PRIszt ": %s\n", i, get_avci_header_format_string(i));
     fprintf(stderr, "                          or set <format> to 'all' for all formats listed above\n");
     fprintf(stderr, "                          The 512 bytes are extracted from <file> starting at <offset> bytes\n");
     fprintf(stderr, "                          and incrementing 512 bytes for each format in the list\n");
@@ -828,7 +828,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &start) != 1 || start < 0)
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &start) != 1 || start < 0)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -845,7 +845,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &duration) != 1 || duration < 0)
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &duration) != 1 || duration < 0)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -1620,7 +1620,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%"PRId64, &avid_gf_duration) != 1 || avid_gf_duration < 0)
+            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &avid_gf_duration) != 1 || avid_gf_duration < 0)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -1914,20 +1914,20 @@ int main(int argc, const char** argv)
             {
                 Rational sampling_rate = input_sound_info->sampling_rate;
                 if (!ClipWriterTrack::IsSupported(clip_type, WAVE_PCM, sampling_rate)) {
-                    log_warn("Track %"PRIszt" essence type '%s' @%d/%d sps not supported by clip type '%s'\n",
+                    log_warn("Track %" PRIszt " essence type '%s' @%d/%d sps not supported by clip type '%s'\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              sampling_rate.numerator, sampling_rate.denominator,
                              clip_type_to_string(clip_type, clip_sub_type).c_str());
                     is_enabled = false;
                 } else if (input_sound_info->bits_per_sample == 0 || input_sound_info->bits_per_sample > 32) {
-                    log_warn("Track %"PRIszt" (%s) bits per sample %u not supported\n",
+                    log_warn("Track %" PRIszt " (%s) bits per sample %u not supported\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              input_sound_info->bits_per_sample);
                     is_enabled = false;
                 } else if (input_sound_info->channel_count == 0) {
-                    log_warn("Track %"PRIszt" (%s) has zero channel count\n",
+                    log_warn("Track %" PRIszt " (%s) has zero channel count\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type));
                     is_enabled = false;
@@ -1937,14 +1937,14 @@ int main(int argc, const char** argv)
             {
                 if (input_sound_info->sampling_rate != SAMPLING_RATE_48K)
                 {
-                    log_warn("Track %"PRIszt" essence type D-10 AES-3 audio sampling rate %d/%d not supported\n",
+                    log_warn("Track %" PRIszt " essence type D-10 AES-3 audio sampling rate %d/%d not supported\n",
                              i,
                              input_sound_info->sampling_rate.numerator, input_sound_info->sampling_rate.denominator);
                     is_enabled = false;
                 }
                 else if (input_sound_info->bits_per_sample == 0 || input_sound_info->bits_per_sample > 32)
                 {
-                    log_warn("Track %"PRIszt" essence type D-10 AES-3 audio bits per sample %u not supported\n",
+                    log_warn("Track %" PRIszt " essence type D-10 AES-3 audio bits per sample %u not supported\n",
                              i,
                              input_sound_info->bits_per_sample);
                     is_enabled = false;
@@ -1955,20 +1955,20 @@ int main(int argc, const char** argv)
                      input_track_info->essence_type == SOUND_ESSENCE ||
                      input_track_info->essence_type == DATA_ESSENCE)
             {
-                log_warn("Track %"PRIszt" has unknown essence type\n", i);
+                log_warn("Track %" PRIszt " has unknown essence type\n", i);
                 is_enabled = false;
             }
             else
             {
                 if (input_track_info->edit_rate != frame_rate) {
-                    log_warn("Track %"PRIszt" (essence type '%s') edit rate %d/%d does not equals clip edit rate %d/%d\n",
+                    log_warn("Track %" PRIszt " (essence type '%s') edit rate %d/%d does not equals clip edit rate %d/%d\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              input_track_info->edit_rate.numerator, input_track_info->edit_rate.denominator,
                              frame_rate.numerator, frame_rate.denominator);
                     is_enabled = false;
                 } else if (!ClipWriterTrack::IsSupported(clip_type, input_track_info->essence_type, frame_rate)) {
-                    log_warn("Track %"PRIszt" essence type '%s' @%d/%d fps not supported by clip type '%s'\n",
+                    log_warn("Track %" PRIszt " essence type '%s' @%d/%d fps not supported by clip type '%s'\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              frame_rate.numerator, frame_rate.denominator,
@@ -1976,10 +1976,10 @@ int main(int argc, const char** argv)
                     is_enabled = false;
                 } else if (input_track_info->essence_type == VBI_DATA) {
                     if (!pass_vbi) {
-                        log_warn("Not passing through VBI data track %"PRIszt"\n", i);
+                        log_warn("Not passing through VBI data track %" PRIszt "\n", i);
                         is_enabled = false;
                     } else if (have_vbi_track) {
-                        log_warn("Already have a VBI track; not passing through VBI data track %"PRIszt"\n", i);
+                        log_warn("Already have a VBI track; not passing through VBI data track %" PRIszt "\n", i);
                         is_enabled = false;
                     } else {
                         have_vbi_track = true;
@@ -1989,16 +1989,16 @@ int main(int argc, const char** argv)
                         log_warn("Mixing RDD-6 file input and MXF ANC data input not yet supported\n");
                         is_enabled = false;
                     } else if (pass_anc.empty()) {
-                        log_warn("Not passing through ANC data track %"PRIszt"\n", i);
+                        log_warn("Not passing through ANC data track %" PRIszt "\n", i);
                         is_enabled = false;
                     } else if (have_anc_track) {
-                        log_warn("Already have an ANC track; not passing through ANC data track %"PRIszt"\n", i);
+                        log_warn("Already have an ANC track; not passing through ANC data track %" PRIszt "\n", i);
                         is_enabled = false;
                     } else {
                         if (st436_manifest_count == 0 || filter_anc_manifest(input_data_info, pass_anc)) {
                             have_anc_track = true;
                         } else {
-                            log_warn("No match found in ANC data manifest; not passing through ANC data track %"PRIszt"\n", i);
+                            log_warn("No match found in ANC data manifest; not passing through ANC data track %" PRIszt "\n", i);
                             is_enabled = false;
                         }
                     }
@@ -2021,7 +2021,7 @@ int main(int argc, const char** argv)
                     !have_avci_header_data(input_track_info->essence_type, input_track_info->edit_rate,
                                            avci_header_inputs))
                 {
-                    log_warn("Track %"PRIszt" (essence type '%s') does not have sequence and picture parameter sets\n",
+                    log_warn("Track %" PRIszt " (essence type '%s') does not have sequence and picture parameter sets\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type));
                     is_enabled = false;
@@ -2029,7 +2029,7 @@ int main(int argc, const char** argv)
             }
 
             if (!is_enabled) {
-                log_warn("Ignoring track %"PRIszt" (essence type '%s')\n",
+                log_warn("Ignoring track %" PRIszt " (essence type '%s')\n",
                           i, essence_type_to_string(input_track_info->essence_type));
             }
 
@@ -2061,7 +2061,7 @@ int main(int argc, const char** argv)
                     picture_info->frame_layout != MXF_SEPARATE_FIELDS &&
                     picture_info->frame_layout != MXF_MIXED_FIELDS)
                 {
-                    log_error("Track %"PRIszt" frame layout %u is currently not supported with RDD-6\n",
+                    log_error("Track %" PRIszt " frame layout %u is currently not supported with RDD-6\n",
                               i, picture_info->frame_layout);
                     throw false;
                 }
@@ -2086,7 +2086,7 @@ int main(int argc, const char** argv)
         } else {
             read_start = start;
             if (read_start >= reader->GetDuration()) {
-                log_error("Start position %"PRId64" is >= input duration %"PRId64"\n",
+                log_error("Start position %" PRId64 " is >= input duration %" PRId64 "\n",
                           start, reader->GetDuration());
                 throw false;
             }
@@ -2094,7 +2094,7 @@ int main(int argc, const char** argv)
             if (duration >= 0) {
                 output_duration = duration;
                 if (read_start + output_duration > reader->GetDuration()) {
-                    log_warn("Limiting duration %"PRId64" because it exceeds the available duration %"PRId64"\n",
+                    log_warn("Limiting duration %" PRId64 " because it exceeds the available duration %" PRId64 "\n",
                               duration, reader->GetDuration() - read_start);
                     output_duration = reader->GetDuration() - read_start;
                 }
@@ -2123,7 +2123,7 @@ int main(int argc, const char** argv)
                         log_warn("'%s' clip type does not support rollout\n",
                                  clip_type_to_string(clip_type, clip_sub_type).c_str());
                     }
-                    log_info("Rollout resulted in %"PRId64" frame adjustment of duration\n",
+                    log_info("Rollout resulted in %" PRId64 " frame adjustment of duration\n",
                              output_duration - original_output_duration);
                 }
             }
@@ -3057,14 +3057,14 @@ int main(int argc, const char** argv)
 
         clip->CompleteWrite();
 
-        log_info("Duration: %"PRId64" (%s)\n",
+        log_info("Duration: %" PRId64 " (%s)\n",
                  clip->GetDuration(),
                  get_generic_duration_string_2(clip->GetDuration(), clip->GetFrameRate()).c_str());
 
 
         if (read_duration >= 0 && total_read != read_duration) {
             bmx::log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
-                     "Read less (%"PRId64") samples than expected (%"PRId64")\n", total_read, read_duration);
+                     "Read less (%" PRId64 ") samples than expected (%" PRId64 ")\n", total_read, read_duration);
             if (reader->IsComplete())
                 cmd_result = 1;
         }

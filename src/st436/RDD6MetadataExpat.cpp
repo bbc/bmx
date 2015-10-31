@@ -389,7 +389,7 @@ bool DescriptionTextExpatHandler::EndElement(const string &ns, const string &nam
         return false;
     } else {
         if (mNextProgram != mProgramCount) {
-            throw BMXException("Count of 'program' elements, %"PRIszt" does not equal expected value %"PRIszt,
+            throw BMXException("Count of 'program' elements, %" PRIszt " does not equal expected value %" PRIszt,
                                mNextProgram, mProgramCount);
         }
         return true;
@@ -811,7 +811,7 @@ bool RawDataSegmentExpatHandler::EndElement(const string &ns, const string &name
                                              mDataSegment->payload_buffer.GetBytesAvailable(),
                                              mDataSegment->payload_buffer.GetSizeAvailable());
         if (parsed_size > 256)
-            throw BMXException("Data segment size %"PRIszt" exceeds maximum size 256", parsed_size);
+            throw BMXException("Data segment size %" PRIszt " exceeds maximum size 256", parsed_size);
 
         mDataSegment->size = (uint16_t)parsed_size;
         mDataSegment->payload_buffer.SetSize(mDataSegment->size);

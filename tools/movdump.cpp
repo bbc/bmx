@@ -511,13 +511,13 @@ static void indent(int extra_amount = 0)
 static void dump_uint64_index(uint64_t count, uint64_t index)
 {
     if (count < 0xffff)
-        printf("%04"PRIx64, index);
+        printf("%04" PRIx64, index);
     else if (count < 0xffffff)
-        printf("%06"PRIx64, index);
+        printf("%06" PRIx64, index);
     else if (count < 0xffffffff)
-        printf("%08"PRIx64, index);
+        printf("%08" PRIx64, index);
     else
-        printf("%016"PRIx64, index);
+        printf("%016" PRIx64, index);
 }
 
 static void dump_uint32_index(uint32_t count, uint32_t index)
@@ -706,14 +706,14 @@ static void dump_uint32_tag(uint32_t value)
 static void dump_file_size(uint64_t value)
 {
     if (g_file_size_64bit)
-        printf("%20"PRIu64" (0x%016"PRIx64")", value, value);
+        printf("%20" PRIu64 " (0x%016" PRIx64 ")", value, value);
     else
         printf("%10u (0x%08x)", (uint32_t)value, (uint32_t)value);
 }
 
 static void dump_uint64_size(uint64_t value)
 {
-    printf("%20"PRIu64" (0x%016"PRIx64")", value, value);
+    printf("%20" PRIu64 " (0x%016" PRIx64 ")", value, value);
 }
 
 static void dump_uint32_size(uint32_t value)
@@ -724,14 +724,14 @@ static void dump_uint32_size(uint32_t value)
 static void dump_uint64(uint64_t value, bool hex)
 {
     if (hex)
-        printf("0x%016"PRIx64, value);
+        printf("0x%016" PRIx64, value);
     else
-        printf("%20"PRIu64, value);
+        printf("%20" PRIu64, value);
 }
 
 static void dump_int64(int64_t value)
 {
-    printf("%20"PRId64, value);
+    printf("%20" PRId64, value);
 }
 
 static void dump_uint32(uint32_t value, bool hex)
@@ -823,9 +823,9 @@ static void dump_timestamp(uint64_t value)
     struct tm *utc;
     utc = gmtime(&unix_secs);
     if (utc == 0) {
-        printf("%"PRIu64" seconds since 1904-01-01", value);
+        printf("%" PRIu64 " seconds since 1904-01-01", value);
     } else {
-        printf("%04d-%02d-%02dT%02d:%02d:%02dZ (%"PRIu64" sec since 1904-01-01)",
+        printf("%04d-%02d-%02dT%02d:%02d:%02dZ (%" PRIu64 " sec since 1904-01-01)",
                utc->tm_year + 1900, utc->tm_mon + 1, utc->tm_mday,
                utc->tm_hour, utc->tm_min, utc->tm_sec,
                value);
@@ -905,7 +905,7 @@ static void dump_child_atom(const DumpFuncMap *dump_func_map, size_t dump_func_m
             dump_func_map[i].dump();
             if (CURRENT_ATOM.rem_size > 0) {
                 indent();
-                printf("remainder...: %"PRIu64" unparsed bytes\n", CURRENT_ATOM.rem_size);
+                printf("remainder...: %" PRIu64 " unparsed bytes\n", CURRENT_ATOM.rem_size);
                 dump_bytes(CURRENT_ATOM.rem_size, 2);
             }
             break;
@@ -949,7 +949,7 @@ static void dump_full_atom_header(uint8_t *version, uint32_t *flags, bool newlin
 static void dump_unknown_version(uint8_t version)
 {
     indent();
-    printf("remainder...: unknown version %u, %"PRIu64" unparsed bytes\n", version, CURRENT_ATOM.rem_size);
+    printf("remainder...: unknown version %u, %" PRIu64 " unparsed bytes\n", version, CURRENT_ATOM.rem_size);
     dump_bytes(CURRENT_ATOM.rem_size, 2);
 }
 
@@ -994,7 +994,7 @@ static void dump_mdat_atom()
 
     if (CURRENT_ATOM.rem_size > 0) {
         indent();
-        printf("...skipped %"PRIu64" bytes\n", CURRENT_ATOM.rem_size);
+        printf("...skipped %" PRIu64 " bytes\n", CURRENT_ATOM.rem_size);
         skip_bytes(CURRENT_ATOM.rem_size);
     }
 }
@@ -1005,7 +1005,7 @@ static void dump_free_atom()
 
     if (CURRENT_ATOM.rem_size > 0) {
         indent();
-        printf("...skipped %"PRIu64" bytes\n", CURRENT_ATOM.rem_size);
+        printf("...skipped %" PRIu64 " bytes\n", CURRENT_ATOM.rem_size);
         skip_bytes(CURRENT_ATOM.rem_size);
     }
 }
@@ -1016,7 +1016,7 @@ static void dump_skip_atom()
 
     if (CURRENT_ATOM.rem_size > 0) {
         indent();
-        printf("...skipped %"PRIu64" bytes\n", CURRENT_ATOM.rem_size);
+        printf("...skipped %" PRIu64 " bytes\n", CURRENT_ATOM.rem_size);
         skip_bytes(CURRENT_ATOM.rem_size);
     }
 }
@@ -1039,12 +1039,12 @@ static void dump_dref_child_atom()
 
     if (equals_type(CURRENT_ATOM.type, "url ")) {
         indent();
-        printf("data: (%"PRIu64" bytes) url: ", CURRENT_ATOM.rem_size);
+        printf("data: (%" PRIu64 " bytes) url: ", CURRENT_ATOM.rem_size);
         dump_string(CURRENT_ATOM.rem_size);
         return;
     } else {
         indent();
-        printf("data: (%"PRIu64" bytes)\n", CURRENT_ATOM.rem_size);
+        printf("data: (%" PRIu64 " bytes)\n", CURRENT_ATOM.rem_size);
         dump_bytes(CURRENT_ATOM.rem_size, 2);
         return;
     }
@@ -2622,7 +2622,7 @@ static void dump_mdhd_atom()
         int64_t duration;
         MOV_CHECK(read_int64(&duration));
         indent();
-        printf("duration: %"PRId64" (%f sec)\n", duration, get_duration_sec(duration, timescale));
+        printf("duration: %" PRId64 " (%f sec)\n", duration, get_duration_sec(duration, timescale));
     }
 
     uint16_t language;
@@ -2754,7 +2754,7 @@ static void dump_ilst_data_atom()
             if (CURRENT_ATOM.rem_size == 8) {
                 int64_t value;
                 MOV_CHECK(read_int64(&value));
-                printf("value (int64): %"PRId64"\n", value);
+                printf("value (int64): %" PRId64 "\n", value);
             } else if (CURRENT_ATOM.rem_size == 4) {
                 int32_t value;
                 MOV_CHECK(read_int32(&value));
@@ -2779,7 +2779,7 @@ static void dump_ilst_data_atom()
             if (CURRENT_ATOM.rem_size == 8) {
                 uint64_t value;
                 MOV_CHECK(read_uint64(&value));
-                printf("value (uint64): %"PRIu64"\n", value);
+                printf("value (uint64): %" PRIu64 "\n", value);
             } else if (CURRENT_ATOM.rem_size == 4) {
                 uint32_t value;
                 MOV_CHECK(read_uint32(&value));
@@ -3111,7 +3111,7 @@ static void dump_tkhd_atom()
         int64_t duration;
         MOV_CHECK(read_int64(&duration));
         indent();
-        printf("duration: %"PRId64" (%f sec)\n", duration, get_duration_sec(duration, g_movie_timescale));
+        printf("duration: %" PRId64 " (%f sec)\n", duration, get_duration_sec(duration, g_movie_timescale));
     }
 
     unsigned char reserved_bytes[8];
@@ -3171,7 +3171,7 @@ static void dump_udta_name_atom()
     dump_atom_header();
 
     indent();
-    printf("value: (len=%"PRId64") ", CURRENT_ATOM.rem_size);
+    printf("value: (len=%" PRId64 ") ", CURRENT_ATOM.rem_size);
     dump_string(CURRENT_ATOM.rem_size, 2);
 }
 
@@ -3268,7 +3268,7 @@ static void dump_mvhd_atom()
         int64_t duration;
         MOV_CHECK(read_int64(&duration));
         indent();
-        printf("duration: %"PRId64" (%f sec)\n", duration, get_duration_sec(duration, g_movie_timescale));
+        printf("duration: %" PRId64 " (%f sec)\n", duration, get_duration_sec(duration, g_movie_timescale));
     }
 
     uint32_t preferred_rate;
@@ -3456,12 +3456,12 @@ static void dump_sidx_atom()
         uint64_t earliest_pres_time;
         MOV_CHECK(read_uint64(&earliest_pres_time));
         indent();
-        printf("earliest_presentation_time: %"PRIu64"\n", earliest_pres_time);
+        printf("earliest_presentation_time: %" PRIu64 "\n", earliest_pres_time);
 
         uint64_t first_offset;
         MOV_CHECK(read_uint64(&first_offset));
         indent();
-        printf("first_offset: %"PRIu64"\n", first_offset);
+        printf("first_offset: %" PRIu64 "\n", first_offset);
     }
 
     uint16_t reserved_uint16;
@@ -3552,7 +3552,7 @@ static void dump_tfhd_atom()
         uint64_t base_data_offset;
         MOV_CHECK(read_uint64(&base_data_offset));
         indent();
-        printf("base_data_offset: %"PRIu64"\n", base_data_offset);
+        printf("base_data_offset: %" PRIu64 "\n", base_data_offset);
     }
     if (flags & 0x000002) {
         uint32_t sample_description_index;

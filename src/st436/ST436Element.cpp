@@ -97,7 +97,7 @@ void ST436Line::Parse(const unsigned char *data, uint64_t *size_inout)
     uint64_t size = *size_inout;
 
     if (size < LINE_HEADER_SIZE)
-        BMX_EXCEPTION(("ST 436 line size %"PRIu64" is insufficient to contain the header %u", size, LINE_HEADER_SIZE));
+        BMX_EXCEPTION(("ST 436 line size %" PRIu64 " is insufficient to contain the header %u", size, LINE_HEADER_SIZE));
 
     uint32_t array_len, array_item_len;
     mxf_get_uint16(data,           &line_number);
@@ -110,7 +110,7 @@ void ST436Line::Parse(const unsigned char *data, uint64_t *size_inout)
         if (array_item_len != 1)
             BMX_EXCEPTION(("Invalid ST 436 line payload byte array item length %u\n", array_item_len));
         if (array_len > size - LINE_HEADER_SIZE) {
-            BMX_EXCEPTION(("ST 436 line payload byte array size %u exceeds available size %"PRIu64"\n",
+            BMX_EXCEPTION(("ST 436 line payload byte array size %u exceeds available size %" PRIu64 "\n",
                            array_len, size - LINE_HEADER_SIZE));
         }
         payload_data = &data[LINE_HEADER_SIZE];
@@ -137,7 +137,7 @@ ST436Element::~ST436Element()
 void ST436Element::Construct(ByteArray *data)
 {
     if (lines.size() > UINT16_MAX)
-        BMX_EXCEPTION(("Number of ST 436 lines %"PRIszt" exceeds maximum %u", lines.size(), UINT16_MAX));
+        BMX_EXCEPTION(("Number of ST 436 lines %" PRIszt " exceeds maximum %u", lines.size(), UINT16_MAX));
 
     data->Grow(2);
     mxf_set_uint16((uint16_t)lines.size(), data->GetBytesAvailable());
@@ -156,7 +156,7 @@ void ST436Element::Parse(const unsigned char *data, uint64_t size)
         return;
 
     if (size < 2)
-        BMX_EXCEPTION(("ST 436 element data size %"PRIu64" is too small", size));
+        BMX_EXCEPTION(("ST 436 element data size %" PRIu64 " is too small", size));
 
     uint16_t num_lines = 0;
     mxf_get_uint16(data, &num_lines);

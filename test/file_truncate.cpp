@@ -73,7 +73,7 @@ int main(int argc, const char **argv)
         return 1;
     }
 
-    if (sscanf(argv[1], "%"PRId64, &length) != 1 || length < 0) {
+    if (sscanf(argv[1], "%" PRId64, &length) != 1 || length < 0) {
         print_usage(argv[0]);
         fprintf(stderr, "Invalid <length> %s\n", argv[1]);
         return 1;

@@ -355,10 +355,10 @@ void WaveReader::ReadChunks(bool is_rf64, uint32_t riff_size)
     int64_t data_sample_count = (int64_t)(mBlockAlign > 0 ? actual_data_size / mBlockAlign : 0);
     if (have_fact) {
         if (mSampleCount > data_sample_count) {
-            log_warn("Missing %"PRId64" samples in Wave data chunk\n", mSampleCount - data_sample_count);
+            log_warn("Missing %" PRId64 " samples in Wave data chunk\n", mSampleCount - data_sample_count);
             mSampleCount = data_sample_count;
         } else if (mSampleCount < data_sample_count) {
-            log_warn("Wave data chunk size %"PRIu64" is larger than expected %"PRIu64"\n",
+            log_warn("Wave data chunk size %" PRIu64 " is larger than expected %" PRIu64 "\n",
                      actual_data_size, mSampleCount * mBlockAlign);
         }
     } else {

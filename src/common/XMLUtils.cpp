@@ -59,7 +59,7 @@ string bmx::get_xml_bool_str(bool value)
 string bmx::get_xml_uint64_str(uint64_t value)
 {
     char buf[32];
-    bmx_snprintf(buf, sizeof(buf), "%"PRIu64"", value);
+    bmx_snprintf(buf, sizeof(buf), "%" PRIu64 "", value);
 
     return buf;
 }
