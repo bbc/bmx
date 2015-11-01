@@ -1284,6 +1284,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
 #if defined(_WIN32)
     fprintf(stderr, " --no-seq-scan         Do not set the sequential scan hint for optimizing file caching\n");
+    fprintf(stderr, " --mmap-file           Use memory-mapped file I/O for the MXF files\n");
+    fprintf(stderr, "                       Note: this may reduce file I/O performance and was found to be slower over network drives\n");
 #endif
     fprintf(stderr, " --gf                  Support growing files. Retry reading a frame when it fails\n");
     fprintf(stderr, " --gf-retries <max>    Set the maximum times to retry reading a frame. The default is %u.\n", DEFAULT_GF_RETRIES);
@@ -1359,6 +1361,9 @@ int main(int argc, const char** argv)
     float gf_rate_after_fail = DEFAULT_GF_RATE_AFTER_FAIL;
     uint32_t http_min_read = DEFAULT_HTTP_MIN_READ;
     ChecksumType checkum_type;
+#if defined(_WIN32)
+    bool use_mmap_file = false;
+#endif
     unsigned int uvalue;
     int cmdln_index;
 
@@ -1721,6 +1726,10 @@ int main(int argc, const char** argv)
         {
             file_flags &= ~MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
         }
+        else if (strcmp(argv[cmdln_index], "--mmap-file") == 0)
+        {
+            use_mmap_file = true;
+        }
 #endif
         else if (strcmp(argv[cmdln_index], "--gf") == 0)
         {
@@ -1954,6 +1963,9 @@ int main(int argc, const char** argv)
             file_factory.SetInputChecksumTypes(file_checksum_types);
         file_factory.SetInputFlags(file_flags);
         file_factory.SetHTTPMinReadSize(http_min_read);
+#if defined(_WIN32)
+        file_factory.SetUseMMapFile(use_mmap_file);
+#endif
 
         if (use_group_reader && input_filenames.size() > 1) {
             MXFGroupReader *group_reader = new MXFGroupReader();

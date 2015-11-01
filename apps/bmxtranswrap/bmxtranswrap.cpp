@@ -415,6 +415,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          Value must be a multiple of the system page size, %u\n", mxf_get_system_page_size());
 #if defined(_WIN32)
     fprintf(stderr, "  --seq-scan              Set the sequential scan hint for optimizing file caching whilst reading\n");
+    fprintf(stderr, "  --mmap-file             Use memory-mapped file I/O for the MXF files\n");
+    fprintf(stderr, "                          Note: this may reduce file I/O performance and was found to be slower over network drives\n");
 #endif
     fprintf(stderr, "  --avcihead <format> <file> <offset>\n");
     fprintf(stderr, "                          Default AVC-Intra sequence header data (512 bytes) to use when the input file does not have it\n");
@@ -663,6 +665,9 @@ int main(int argc, const char** argv)
     uint8_t rdd6_sdid = DEFAULT_RDD6_SDID;
     uint32_t http_min_read = DEFAULT_HTTP_MIN_READ;
     bool zero_mp_track_num = false;
+#if defined(_WIN32)
+    bool use_mmap_file = false;
+#endif
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -992,6 +997,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--seq-scan") == 0)
         {
             input_file_flags |= MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
+        }
+        else if (strcmp(argv[cmdln_index], "--mmap-file") == 0)
+        {
+            use_mmap_file = true;
         }
 #endif
         else if (strcmp(argv[cmdln_index], "--avcihead") == 0)
@@ -1799,6 +1808,9 @@ int main(int argc, const char** argv)
         if (rw_interleave)
             file_factory.SetRWInterleave(rw_interleave_size);
         file_factory.SetHTTPMinReadSize(http_min_read);
+#if defined(_WIN32)
+        file_factory.SetUseMMapFile(use_mmap_file);
+#endif
 
         if (use_group_reader && input_filenames.size() > 1) {
             MXFGroupReader *group_reader = new MXFGroupReader();

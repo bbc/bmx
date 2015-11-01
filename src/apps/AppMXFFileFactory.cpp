@@ -54,6 +54,9 @@ AppMXFFileFactory::AppMXFFileFactory()
     mInputFlags = 0;
     mRWInterleaver = 0;
     mHTTPMinReadSize = 64 * 1024;
+#if defined(_WIN32)
+    mUseMMapFile = false;
+#endif
 }
 
 AppMXFFileFactory::~AppMXFFileFactory()
@@ -95,6 +98,13 @@ void AppMXFFileFactory::SetHTTPMinReadSize(uint32_t size)
     mHTTPMinReadSize = size;
 }
 
+#if defined(_WIN32)
+void AppMXFFileFactory::SetUseMMapFile(bool enable)
+{
+    mUseMMapFile = enable;
+}
+#endif
+
 File* AppMXFFileFactory::OpenNew(string filename)
 {
     MXFFile *mxf_file = 0;
@@ -105,7 +115,10 @@ File* AppMXFFileFactory::OpenNew(string filename)
     try
     {
 #if defined(_WIN32)
-        BMX_CHECK(mxf_win32_file_open_new(filename.c_str(), 0, &mxf_file));
+        if (mUseMMapFile)
+            BMX_CHECK(mxf_win32_mmap_open_new(filename.c_str(), 0, &mxf_file));
+        else
+            BMX_CHECK(mxf_win32_file_open_new(filename.c_str(), 0, &mxf_file));
 #else
         BMX_CHECK(mxf_disk_file_open_new(filename.c_str(), &mxf_file));
 #endif
@@ -141,7 +154,10 @@ File* AppMXFFileFactory::OpenRead(string filename)
                 uri_str = filename;
             } else {
 #if defined(_WIN32)
-                BMX_CHECK(mxf_win32_file_open_read(filename.c_str(), mInputFlags, &mxf_file));
+                if (mUseMMapFile)
+                    BMX_CHECK(mxf_win32_mmap_open_read(filename.c_str(), mInputFlags, &mxf_file));
+                else
+                    BMX_CHECK(mxf_win32_file_open_read(filename.c_str(), mInputFlags, &mxf_file));
 #else
                 BMX_CHECK(mxf_disk_file_open_read(filename.c_str(), &mxf_file));
 #endif
@@ -200,7 +216,10 @@ File* AppMXFFileFactory::OpenModify(string filename)
     try
     {
 #if defined(_WIN32)
-        BMX_CHECK(mxf_win32_file_open_modify(filename.c_str(), 0, &mxf_file));
+        if (mUseMMapFile)
+            BMX_CHECK(mxf_win32_mmap_open_modify(filename.c_str(), 0, &mxf_file));
+        else
+            BMX_CHECK(mxf_win32_file_open_modify(filename.c_str(), 0, &mxf_file));
 #else
         BMX_CHECK(mxf_disk_file_open_modify(filename.c_str(), &mxf_file));
 #endif
