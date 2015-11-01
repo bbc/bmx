@@ -140,6 +140,12 @@
     <ClInclude Include="..\..\..\include\bmx\MD5.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\MXFChecksumFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\MXFHTTPFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\MXFUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -341,7 +347,7 @@
     <ClInclude Include="..\..\..\include\bmx\essence_parser\KLVEssenceSource.h">
       <Filter>Header Files\essence_parser</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\essence_parser\EssenceParserUtils.h">
+    <ClInclude Include="..\..\..\src\essence_parser\EssenceParserUtils.h">
       <Filter>Header Files\essence_parser</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\essence_parser\MJPEGEssenceParser.h">
@@ -521,7 +527,13 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFTrackReader.h">
       <Filter>Header Files\mxf_reader</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9ANCDataTrack.h">
+      <Filter>Header Files\rdd9_mxf</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9ContentPackage.h">
+      <Filter>Header Files\rdd9_mxf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9DataTrack.h">
       <Filter>Header Files\rdd9_mxf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9File.h">
@@ -537,6 +549,9 @@
       <Filter>Header Files\rdd9_mxf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9Track.h">
+      <Filter>Header Files\rdd9_mxf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9VBIDataTrack.h">
       <Filter>Header Files\rdd9_mxf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\st436\RDD6BitBuffer.h">
@@ -737,6 +752,12 @@
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\common\MD5.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\MXFChecksumFile.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\MXFHTTPFile.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\common\MXFUtils.cpp">
@@ -970,7 +991,13 @@
     <ClCompile Include="..\..\..\src\mxf_reader\MXFTrackInfo.cpp">
       <Filter>Source Files\mxf_reader</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9ANCDataTrack.cpp">
+      <Filter>Source Files\rdd9_mxf</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9ContentPackage.cpp">
+      <Filter>Source Files\rdd9_mxf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9DataTrack.cpp">
       <Filter>Source Files\rdd9_mxf</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9File.cpp">
@@ -986,6 +1013,9 @@
       <Filter>Source Files\rdd9_mxf</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9Track.cpp">
+      <Filter>Source Files\rdd9_mxf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9VBIDataTrack.cpp">
       <Filter>Source Files\rdd9_mxf</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\st436\RDD6BitBuffer.cpp">
