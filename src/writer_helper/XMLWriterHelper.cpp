@@ -118,7 +118,8 @@ void XMLWriterHelper::ExtractInfo(const string &filename)
     }
     catch (...)
     {
-        fclose(file);
+        if (file)
+            fclose(file);
         throw;
     }
 }

@@ -105,7 +105,8 @@ void OP1AXMLTrack::SetSource(const string &filename)
         }
         catch (...)
         {
-            fclose(file);
+            if (file)
+                fclose(file);
             throw;
         }
     } else {
@@ -287,7 +288,8 @@ void OP1AXMLTrack::WriteStreamXMLData(File *mxf_file)
         }
         catch (...)
         {
-            fclose(file);
+            if (file)
+                fclose(file);
             throw;
         }
     }
