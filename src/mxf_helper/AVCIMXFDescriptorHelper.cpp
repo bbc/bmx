@@ -426,6 +426,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
         cdci_descriptor->setDisplayYOffset(0);
         if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
             cdci_descriptor->setImageStartOffset(0);
+            cdci_descriptor->setImageEndOffset(0);
             cdci_descriptor->setPaddingBits(0);
         }
     }
