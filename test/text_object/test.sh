@@ -29,6 +29,7 @@ create_test_file()
         --embed-xml $base/utf8.xml \
         --embed-xml $base/other.xml \
         --embed-xml $base/other.xml \
+        --embed-xml $base/utf8_noprolog.xml \
         --avci100_1080i $tmpdir/video.h264 \
         -q 24 --pcm $tmpdir/audio.pcm \
         -q 24 --pcm $tmpdir/audio.pcm \
@@ -59,7 +60,8 @@ check()
         diff $tmpdir/textobject_2.xml $base/utf16le.xml &&
         diff $tmpdir/textobject_3.xml $base/utf8.xml &&
         diff $tmpdir/textobject_4.xml $base/other.xml &&
-        diff $tmpdir/textobject_5.xml $base/other.xml
+        diff $tmpdir/textobject_5.xml $base/other.xml &&
+        diff $tmpdir/textobject_6.xml $base/utf8_noprolog.xml
 }
 
 create_data()
