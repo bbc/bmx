@@ -7,7 +7,8 @@ EXTRA_DIST = \
 	utf16be.xml \
 	other.xml \
 	test.md5 \
-	info.xml
+	info.xml \
+	utf8_noprolog.xml
 
 .PHONY: create-data
 create-data:
