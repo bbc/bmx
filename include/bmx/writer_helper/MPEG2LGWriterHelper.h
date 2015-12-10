@@ -76,7 +76,6 @@ public:
 
     bool HaveGOPHeader() const              { return mHaveGOPHeader; }
     bool GetSingleSequence() const          { return mSingleSequence; }
-    int16_t GetBPictureCount() const        { return mBPictureCount; }
     bool GetConstantBFrames() const         { return mConstantBFrames; }
     bool GetLowDelay() const                { return mLowDelay; }
     bool GetClosedGOP() const               { return mClosedGOP; }

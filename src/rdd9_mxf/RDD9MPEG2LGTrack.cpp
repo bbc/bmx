@@ -143,8 +143,8 @@ void RDD9MPEG2LGTrack::CompleteWrite()
     mpeg_descriptor->setIdenticalGOP(mWriterHelper.GetIdenticalGOP());
     if (mWriterHelper.GetMaxGOP() > 0)
         mpeg_descriptor->setMaxGOP(mWriterHelper.GetMaxGOP());
-    if (mWriterHelper.GetBPictureCount() > 0)
-        mpeg_descriptor->setBPictureCount(mWriterHelper.GetBPictureCount());
+    if (mWriterHelper.GetMaxBPictureCount() > 0)
+        mpeg_descriptor->setMaxBPictureCount(mWriterHelper.GetMaxBPictureCount());
     if (mWriterHelper.GetBitRate() > 0)
         mpeg_descriptor->setBitRate(mWriterHelper.GetBitRate());
 }

@@ -370,7 +370,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     if (mpeg_descriptor) {
         mpeg_descriptor->setSingleSequence(true);
         mpeg_descriptor->setCodedContentType(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_FULL_FRAME ? 1 : 2);
-        mpeg_descriptor->setBPictureCount(2);
+        mpeg_descriptor->setMaxBPictureCount(2);
         switch (mEssenceType)
         {
             case MPEG2LG_422P_HL_1080I:
