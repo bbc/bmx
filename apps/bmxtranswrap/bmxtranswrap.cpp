@@ -1943,7 +1943,7 @@ int main(int argc, const char** argv)
             file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
             file_reader->SetST436ManifestFrameCount(st436_manifest_count);
             if (pass_dm && clip_sub_type == AS11_CLIP_SUB_TYPE)
-                AS11Info::RegisterExtensions(file_reader->GetDataModel());
+                AS11Info::RegisterExtensions(file_reader->GetHeaderMetadata());
             result = file_reader->Open(input_filenames[0]);
             if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                 log_error("Failed to open MXF file '%s': %s\n", input_filenames[0],

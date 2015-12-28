@@ -50,10 +50,10 @@ using namespace mxfpp;
 
 
 
-void AS11Info::RegisterExtensions(DataModel *data_model)
+void AS11Info::RegisterExtensions(HeaderMetadata *header_metadata)
 {
-    AS11DMS::RegisterExtensions(data_model);
-    UKDPPDMS::RegisterExtensions(data_model);
+    AS11DMS::RegisterExtensions(header_metadata);
+    UKDPPDMS::RegisterExtensions(header_metadata);
 }
 
 AS11Info::AS11Info()
@@ -75,10 +75,6 @@ bool AS11Info::Read(HeaderMetadata *header_metadata)
         return false;
     }
     vector<GenericTrack*> tracks = mp->getTracks();
-
-    AS11CoreFramework::RegisterObjectFactory(header_metadata);
-    UKDPPFramework::RegisterObjectFactory(header_metadata);
-    AS11SegmentationFramework::RegisterObjectFactory(header_metadata);
 
     GetStaticFrameworks(tracks);
     GetSegmentation(tracks);

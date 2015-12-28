@@ -44,7 +44,7 @@ namespace bmx
 class MXFAPPInfo
 {
 public:
-    static void RegisterExtensions(mxfpp::DataModel *data_model);
+    static void RegisterExtensions(mxfpp::HeaderMetadata *header_metadata);
     static bool IsAPP(mxfpp::HeaderMetadata *header_metadata);
 
 public:

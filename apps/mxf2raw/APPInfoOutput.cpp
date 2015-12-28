@@ -132,7 +132,7 @@ APPInfoOutput::~APPInfoOutput()
 void APPInfoOutput::RegisterExtensions(MXFFileReader *file_reader)
 {
     mFileReader = file_reader;
-    MXFAPPInfo::RegisterExtensions(file_reader->GetDataModel());
+    MXFAPPInfo::RegisterExtensions(file_reader->GetHeaderMetadata());
 }
 
 bool APPInfoOutput::CheckIssues()

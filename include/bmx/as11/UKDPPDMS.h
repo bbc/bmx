@@ -63,7 +63,7 @@ namespace bmx
 class UKDPPDMS
 {
 public:
-    static void RegisterExtensions(mxfpp::DataModel *data_model);
+    static void RegisterExtensions(mxfpp::HeaderMetadata *header_metadata);
 };
 
 

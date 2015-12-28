@@ -47,9 +47,9 @@ using namespace mxfpp;
 
 
 
-void MXFAPPInfo::RegisterExtensions(DataModel *data_model)
+void MXFAPPInfo::RegisterExtensions(HeaderMetadata *header_metadata)
 {
-    BMX_CHECK(mxf_app_load_extensions(data_model->getCDataModel()));
+    BMX_CHECK(mxf_app_load_extensions(header_metadata->getDataModel()->getCDataModel()));
 }
 
 bool MXFAPPInfo::IsAPP(HeaderMetadata *header_metadata)

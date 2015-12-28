@@ -70,8 +70,8 @@ AS11WriterHelper::AS11WriterHelper(ClipWriter *clip)
     if (!clip->GetHeaderMetadata())
         clip->PrepareHeaderMetadata();
 
-    AS11DMS::RegisterExtensions(clip->GetDataModel());
-    UKDPPDMS::RegisterExtensions(clip->GetDataModel());
+    AS11DMS::RegisterExtensions(clip->GetHeaderMetadata());
+    UKDPPDMS::RegisterExtensions(clip->GetHeaderMetadata());
 }
 
 AS11WriterHelper::~AS11WriterHelper()

@@ -36,6 +36,7 @@
 #include <libMXF++/MXF.h>
 
 #include <bmx/as11/UKDPPDMS.h>
+#include <bmx/as11/UKDPPFramework.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -45,9 +46,11 @@ using namespace mxfpp;
 
 
 
-void UKDPPDMS::RegisterExtensions(DataModel *data_model)
+void UKDPPDMS::RegisterExtensions(HeaderMetadata *header_metadata)
 {
     // register UK DPP framework set and items in data model
+
+    DataModel *data_model = header_metadata->getDataModel();
 
 #define MXF_LABEL(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15) \
     {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15}
@@ -61,5 +64,8 @@ void UKDPPDMS::RegisterExtensions(DataModel *data_model)
 #include <bmx/as11/uk_dpp_extensions_data_model.h>
 
     data_model->finalise();
+
+
+    UKDPPFramework::RegisterObjectFactory(header_metadata);
 }
 

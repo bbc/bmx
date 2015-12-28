@@ -36,6 +36,8 @@
 #include <libMXF++/MXF.h>
 
 #include <bmx/as11/AS11DMS.h>
+#include <bmx/as11/AS11CoreFramework.h>
+#include <bmx/as11/AS11SegmentationFramework.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -45,9 +47,11 @@ using namespace mxfpp;
 
 
 
-void AS11DMS::RegisterExtensions(DataModel *data_model)
+void AS11DMS::RegisterExtensions(HeaderMetadata *header_metadata)
 {
     // register AS-11 framework set and items in data model
+
+    DataModel *data_model = header_metadata->getDataModel();
 
 #define MXF_LABEL(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15) \
     {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15}
@@ -61,5 +65,9 @@ void AS11DMS::RegisterExtensions(DataModel *data_model)
 #include <bmx/as11/as11_extensions_data_model.h>
 
     data_model->finalise();
+
+
+    AS11CoreFramework::RegisterObjectFactory(header_metadata);
+    AS11SegmentationFramework::RegisterObjectFactory(header_metadata);
 }
 

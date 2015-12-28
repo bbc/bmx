@@ -79,8 +79,9 @@ static Color convert_rgb_color(const RGBColor *color)
 
 
 
-void AvidInfo::RegisterExtensions(DataModel *data_model)
+void AvidInfo::RegisterExtensions(HeaderMetadata *header_metadata)
 {
+    DataModel *data_model = header_metadata->getDataModel();
     BMX_CHECK(mxf_avid_load_extensions(data_model->getCDataModel()));
     data_model->finalise();
 }

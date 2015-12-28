@@ -295,7 +295,7 @@ static void write_segmentation_framework(AppInfoWriter *info_writer, DMSegment *
 
 void bmx::as11_register_extensions(MXFFileReader *file_reader)
 {
-    AS11Info::RegisterExtensions(file_reader->GetDataModel());
+    AS11Info::RegisterExtensions(file_reader->GetHeaderMetadata());
 }
 
 void bmx::as11_write_info(AppInfoWriter *info_writer, MXFFileReader *file_reader)

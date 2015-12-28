@@ -46,7 +46,7 @@ namespace bmx
 class AS11Info
 {
 public:
-    static void RegisterExtensions(mxfpp::DataModel *data_model);
+    static void RegisterExtensions(mxfpp::HeaderMetadata *header_metadata);
 
 public:
     AS11Info();

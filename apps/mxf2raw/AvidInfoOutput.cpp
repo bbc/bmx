@@ -85,7 +85,7 @@ static void print_avid_tagged_values(AppInfoWriter *info_writer, const vector<Av
 
 void bmx::avid_register_extensions(MXFFileReader *file_reader)
 {
-    AvidInfo::RegisterExtensions(file_reader->GetDataModel());
+    AvidInfo::RegisterExtensions(file_reader->GetHeaderMetadata());
 }
 
 void bmx::avid_write_info(AppInfoWriter *info_writer, MXFFileReader *file_reader)
