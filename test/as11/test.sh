@@ -32,23 +32,38 @@ create_test_file()
         >/dev/null
 }
 
+create_read_result()
+{
+    $appsdir/mxf2raw/mxf2raw \
+        --regtest \
+        --info \
+        --info-format xml \
+        --info-file $1 \
+        --as11 \
+        $2
+}
+
 
 check()
 {
     create_test_file $1 $2 $tmpdir/test.mxf &&
         $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
-        diff $tmpdir/test.md5 $base/$2.md5
+        diff $tmpdir/test.md5 $base/$2.md5 &&
+        create_read_result $tmpdir/test.xml $tmpdir/test.mxf &&
+        diff $tmpdir/test.xml $base/$2.xml
 }
 
 create_data()
 {
     create_test_file $1 $2 $tmpdir/test.mxf &&
-        $md5tool < $tmpdir/test.mxf > $base/$2.md5
+        $md5tool < $tmpdir/test.mxf > $base/$2.md5 &&
+        create_read_result $base/$2.xml $tmpdir/test.mxf
 }
 
 create_sample()
 {
-    create_test_file $1 $2 $sampledir/as11_$2.mxf
+    create_test_file $1 $2 $sampledir/as11_$2.mxf &&
+        create_read_result $sampledir/as11_$2.xml $sampledir/as11_$2.mxf
 }
 
 

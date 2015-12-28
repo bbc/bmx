@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bmx xmlns="http://bbc.co.uk/rd/bmx/201312" created="1970-01-01T00:00:00.000Z" version="0.1">
+  <application>
+    <name>mxf2raw</name>
+    <lib_name>RegLib</lib_name>
+    <lib_version>0.0.0</lib_version>
+    <build_timestamp>1970-01-01T00:00:00.000Z</build_timestamp>
+    <scm_version>regtest-head</scm_version>
+  </application>
+  <files size="1">
+    <file index="0">
+      <file_uri>regtest_file_uri</file_uri>
+      <mxf_version>1.3</mxf_version>
+      <op_label external_essence="false" non_stream="false" multi_track="true" label="urn:smpte:ul:060e2b34.04010101.0d010201.01010900">OP1A</op_label>
+      <frame_wrapped>true</frame_wrapped>
+      <identifications size="1">
+        <identification index="0">
+          <generation_uid>urn:uuid:00000000-0000-0000-0000-000000000001</generation_uid>
+          <company_name>RegCo</company_name>
+          <product_name>RegLib</product_name>
+          <product_version>1.0.0.0.0</product_version>
+          <version_string>0.0.0</version_string>
+          <product_uid>urn:uuid:00000000-0000-0000-0000-000000000000</product_uid>
+          <modified_date>1000-01-01T00:00:00</modified_date>
+          <toolkit_version>1.0.0.0.0</toolkit_version>
+          <platform>libMXF (Linux)</platform>
+        </identification>
+      </identifications>
+      <material_packages size="1">
+        <material_package index="0">
+          <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+          <name>Holby City Series 5, Episode 10: Depths of Devotion</name>
+          <creation_date>1000-01-01T00:00:00</creation_date>
+          <modified_date>1000-01-01T00:00:00</modified_date>
+        </material_package>
+      </material_packages>
+      <file_source_packages size="1">
+        <file_source_package index="0">
+          <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+          <creation_date>1000-01-01T00:00:00</creation_date>
+          <modified_date>1000-01-01T00:00:00</modified_date>
+        </file_source_package>
+      </file_source_packages>
+    </file>
+  </files>
+  <clip>
+    <edit_rate>25/1</edit_rate>
+    <duration count="24">00:00:00:24</duration>
+    <start_timecodes>
+      <material>09:58:00:00</material>
+      <file_source>09:58:00:00</file_source>
+    </start_timecodes>
+    <tracks size="5">
+      <track index="0">
+        <essence_kind>Picture</essence_kind>
+        <essence_type>D10_50</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010102.0d010301.0201017f</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="24">00:00:00:24</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>1001</track_id>
+              <track_number>1</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>1001</track_id>
+              <track_number>0x05010100</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <picture_descriptor>
+          <coding_label>urn:smpte:ul:060e2b34.04010101.04010202.01020101</coding_label>
+          <signal_standard value="1">ITU_601</signal_standard>
+          <frame_layout value="1">Separate_Fields</frame_layout>
+          <stored_width>720</stored_width>
+          <stored_height>608</stored_height>
+          <display_width>720</display_width>
+          <display_height>576</display_height>
+          <display_x_offset>0</display_x_offset>
+          <display_y_offset>32</display_y_offset>
+          <aspect_ratio>16/9</aspect_ratio>
+          <afd>10</afd>
+          <cdci_descriptor>
+            <component_depth>8</component_depth>
+            <horiz_subsamp>2</horiz_subsamp>
+            <vert_subsamp>1</vert_subsamp>
+            <color_siting value="4">Rec_601</color_siting>
+          </cdci_descriptor>
+        </picture_descriptor>
+      </track>
+      <track index="1">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060100</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="24">00:00:00:24</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>2001</track_id>
+              <track_number>1</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>2001</track_id>
+              <track_number>0x16040100</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+        </sound_descriptor>
+      </track>
+      <track index="2">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060100</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="24">00:00:00:24</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>2002</track_id>
+              <track_number>2</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>2002</track_id>
+              <track_number>0x16040101</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+        </sound_descriptor>
+      </track>
+      <track index="3">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060100</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="24">00:00:00:24</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>2003</track_id>
+              <track_number>3</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>2003</track_id>
+              <track_number>0x16040102</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+        </sound_descriptor>
+      </track>
+      <track index="4">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060100</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="24">00:00:00:24</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>2004</track_id>
+              <track_number>4</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>2004</track_id>
+              <track_number>0x16040103</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+        </sound_descriptor>
+      </track>
+    </tracks>
+    <as11>
+      <core>
+        <shim_name>UK DPP HD</shim_name>
+        <shim_version>1.1</shim_version>
+        <series_title>Holby City Series 5</series_title>
+        <programme_title>Holby City Series 5, Episode 10: Depths of Devotion</programme_title>
+        <episode_title_number>Depths of Devotion</episode_title_number>
+        <audio_track_layout value="3">EBU_R_48_2a</audio_track_layout>
+        <primary_audio_language>eng</primary_audio_language>
+        <closed_captions_present>false</closed_captions_present>
+      </core>
+      <uk_dpp>
+        <production_number>LDXA123B/71</production_number>
+        <synopsis>Doctors, nurses, patients etc.</synopsis>
+        <originator>Maverick Productions</originator>
+        <copyright_year>2011</copyright_year>
+        <distributor>Rick Distributors</distributor>
+        <picture_ratio>16/9</picture_ratio>
+        <three_d>false</three_d>
+        <product_placement>true</product_placement>
+        <pse_pass value="1">No</pse_pass>
+        <pse_manufacturer>Harding</pse_manufacturer>
+        <pse_version>1.0 alpha</pse_version>
+        <secondary_audio_language>zxx</secondary_audio_language>
+        <tertiary_audio_language>zxx</tertiary_audio_language>
+        <audio_loudness_standard value="0">None</audio_loudness_standard>
+        <line_up_start>09:58:00:00</line_up_start>
+        <ident_clock_start>09:58:00:10</ident_clock_start>
+        <total_number_of_parts>2</total_number_of_parts>
+        <total_programme_duration count="8">00:00:00:08</total_programme_duration>
+        <audio_description_present>false</audio_description_present>
+        <open_captions_present>false</open_captions_present>
+        <signing_present value="1">No</signing_present>
+        <completion_date>2011-08-01</completion_date>
+        <contact_email>eric@maverick.co.uk</contact_email>
+        <contact_telephone_number>02074079302</contact_telephone_number>
+      </uk_dpp>
+      <segmentation size="2">
+        <segment index="0">
+          <part_number>1</part_number>
+          <part_total>2</part_total>
+          <som>09:58:00:12</som>
+          <duration count="5">00:00:00:05</duration>
+        </segment>
+        <segment index="1">
+          <part_number>2</part_number>
+          <part_total>2</part_total>
+          <som>09:58:00:19</som>
+          <duration count="3">00:00:00:03</duration>
+        </segment>
+      </segmentation>
+    </as11>
+  </clip>
+</bmx>
