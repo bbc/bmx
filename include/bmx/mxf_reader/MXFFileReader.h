@@ -96,9 +96,10 @@ public:
     OpenResult Open(mxfpp::File *file, std::string filename);
     OpenResult Open(mxfpp::File *file, const URI &abs_uri, const URI &rel_uri, const std::string &filename);
 
-    mxfpp::DataModel* GetDataModel() const         { return mDataModel; }
-    MXFPackageResolver* GetPackageResolver() const { return mPackageResolver; }
-    MXFFileFactory* GetFileFactory() const         { return mFileFactory; }
+    mxfpp::DataModel* GetDataModel() const            { return mDataModel; }
+    mxfpp::HeaderMetadata* GetHeaderMetadata() const  { return mHeaderMetadata; }
+    MXFPackageResolver* GetPackageResolver() const    { return mPackageResolver; }
+    MXFFileFactory* GetFileFactory() const            { return mFileFactory; }
 
 public:
     virtual MXFFileReader* GetFileReader(size_t file_id);
@@ -125,12 +126,11 @@ public:
     virtual bool HaveFixedLeadFillerOffset() const;
     virtual int64_t GetFixedLeadFillerOffset() const;
 
-    mxfpp::HeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }
-    uint16_t GetMXFVersion() const                   { return mMXFVersion; }
-    mxfUL GetOPLabel() const                         { return mOPLabel; }
-    bool HaveInternalEssence() const                 { return !mInternalTrackReaders.empty(); }
-    bool IsClipWrapped()                             { return mWrappingType == MXF_CLIP_WRAPPED; }
-    bool IsFrameWrapped()                            { return mWrappingType == MXF_FRAME_WRAPPED; }
+    uint16_t GetMXFVersion() const    { return mMXFVersion; }
+    mxfUL GetOPLabel() const          { return mOPLabel; }
+    bool HaveInternalEssence() const  { return !mInternalTrackReaders.empty(); }
+    bool IsClipWrapped()              { return mWrappingType == MXF_CLIP_WRAPPED; }
+    bool IsFrameWrapped()             { return mWrappingType == MXF_FRAME_WRAPPED; }
 
     size_t GetFileId() const        { return mFileId; }
     std::string GetFilename() const { return GetFileIndex()->GetFilename(mFileId); }

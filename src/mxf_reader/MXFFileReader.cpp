@@ -164,6 +164,7 @@ MXFFileReader::MXFFileReader()
     mST436ManifestCount = 2;
 
     mDataModel = new DataModel();
+    mHeaderMetadata = new AvidHeaderMetadata(mDataModel);
 
     mPackageResolver = new DefaultMXFPackageResolver();
     mOwnPackageResolver = true;
@@ -368,7 +369,6 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, co
         mFile->readNextNonFillerKL(&key, &llen, &len);
         BMX_CHECK(mxf_is_header_metadata(&key));
 
-        mHeaderMetadata = new AvidHeaderMetadata(mDataModel);
         mHeaderMetadata->read(mFile, metadata_partition, &key, llen, len);
 
         ProcessMetadata(metadata_partition);
