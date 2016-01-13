@@ -54,7 +54,7 @@ AppMXFFileFactory::AppMXFFileFactory()
     mInputFlags = 0;
     mRWInterleaver = 0;
     mHTTPMinReadSize = 64 * 1024;
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
     mUseMMapFile = false;
 #endif
 }
@@ -98,7 +98,7 @@ void AppMXFFileFactory::SetHTTPMinReadSize(uint32_t size)
     mHTTPMinReadSize = size;
 }
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
 void AppMXFFileFactory::SetUseMMapFile(bool enable)
 {
     mUseMMapFile = enable;
@@ -114,7 +114,7 @@ File* AppMXFFileFactory::OpenNew(string filename)
 
     try
     {
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
         if (mUseMMapFile)
             BMX_CHECK(mxf_win32_mmap_open_new(filename.c_str(), 0, &mxf_file));
         else
@@ -153,7 +153,7 @@ File* AppMXFFileFactory::OpenRead(string filename)
                 mxf_file = mxf_http_file_open_read(filename, mHTTPMinReadSize);
                 uri_str = filename;
             } else {
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
                 if (mUseMMapFile)
                     BMX_CHECK(mxf_win32_mmap_open_read(filename.c_str(), mInputFlags, &mxf_file));
                 else
@@ -215,7 +215,7 @@ File* AppMXFFileFactory::OpenModify(string filename)
 
     try
     {
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
         if (mUseMMapFile)
             BMX_CHECK(mxf_win32_mmap_open_modify(filename.c_str(), 0, &mxf_file));
         else

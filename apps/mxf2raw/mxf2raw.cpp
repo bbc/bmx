@@ -1507,7 +1507,7 @@ static void usage(const char *cmd)
     fprintf(stderr, " --noro                Don't include roll-out frames\n");
     fprintf(stderr, " --rt <factor>         Read at realtime rate x <factor>, where <factor> is a floating point value\n");
     fprintf(stderr, "                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
     fprintf(stderr, " --no-seq-scan         Do not set the sequential scan hint for optimizing file caching\n");
     fprintf(stderr, " --mmap-file           Use memory-mapped file I/O for the MXF files\n");
     fprintf(stderr, "                       Note: this may reduce file I/O performance and was found to be slower over network drives\n");
@@ -1577,7 +1577,7 @@ int main(int argc, const char** argv)
     int64_t duration = -1;
     bool no_precharge = false;
     bool no_rollout = false;
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
     int file_flags = MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
 #else
     int file_flags = 0;
@@ -1590,7 +1590,7 @@ int main(int argc, const char** argv)
     float gf_rate_after_fail = DEFAULT_GF_RATE_AFTER_FAIL;
     uint32_t http_min_read = DEFAULT_HTTP_MIN_READ;
     ChecksumType checkum_type;
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
     bool use_mmap_file = false;
 #endif
     const char *text_output_prefix = 0;
@@ -1963,7 +1963,7 @@ int main(int argc, const char** argv)
             realtime = true;
             cmdln_index++;
         }
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
         else if (strcmp(argv[cmdln_index], "--no-seq-scan") == 0)
         {
             file_flags &= ~MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
@@ -2216,7 +2216,7 @@ int main(int argc, const char** argv)
             file_factory.SetInputChecksumTypes(file_checksum_types);
         file_factory.SetInputFlags(file_flags);
         file_factory.SetHTTPMinReadSize(http_min_read);
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
         file_factory.SetUseMMapFile(use_mmap_file);
 #endif
 

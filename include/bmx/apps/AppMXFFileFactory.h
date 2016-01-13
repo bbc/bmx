@@ -42,7 +42,7 @@
 
 #include <mxf/mxf_rw_intl_file.h>
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
 #include <mxf/mxf_win32_file.h>
 #include <mxf/mxf_win32_mmap.h>
 #endif
@@ -64,7 +64,7 @@ public:
     void SetInputFlags(int flags);
     void SetRWInterleave(uint32_t rw_interleave_size);
     void SetHTTPMinReadSize(uint32_t size);
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
     void SetUseMMapFile(bool enable);
 #endif
 
@@ -103,7 +103,7 @@ private:
     std::vector<InputChecksumFile> mInputChecksumFiles;
     MXFRWInterleaver *mRWInterleaver;
     uint32_t mHTTPMinReadSize;
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
     bool mUseMMapFile;
 #endif
 };

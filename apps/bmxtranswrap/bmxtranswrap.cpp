@@ -369,7 +369,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --rw-intl               Interleave input reads with output writes\n");
     fprintf(stderr, "  --rw-intl-size          The interleave size. Default is %u\n", DEFAULT_RW_INTL_SIZE);
     fprintf(stderr, "                          Value must be a multiple of the system page size, %u\n", mxf_get_system_page_size());
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
     fprintf(stderr, "  --seq-scan              Set the sequential scan hint for optimizing file caching whilst reading\n");
     fprintf(stderr, "  --mmap-file             Use memory-mapped file I/O for the MXF files\n");
     fprintf(stderr, "                          Note: this may reduce file I/O performance and was found to be slower over network drives\n");
@@ -707,7 +707,7 @@ int main(int argc, const char** argv)
     uint8_t rdd6_sdid = DEFAULT_RDD6_SDID;
     uint32_t http_min_read = DEFAULT_HTTP_MIN_READ;
     bool mp_track_num = false;
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
     bool use_mmap_file = false;
 #endif
     vector<EmbedXMLInfo> embed_xml;
@@ -1046,7 +1046,7 @@ int main(int argc, const char** argv)
             rw_interleave_size = uvalue;
             cmdln_index++;
         }
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
         else if (strcmp(argv[cmdln_index], "--seq-scan") == 0)
         {
             input_file_flags |= MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
@@ -2069,7 +2069,7 @@ int main(int argc, const char** argv)
         if (rw_interleave)
             file_factory.SetRWInterleave(rw_interleave_size);
         file_factory.SetHTTPMinReadSize(http_min_read);
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(__MINGW32__)
         file_factory.SetUseMMapFile(use_mmap_file);
 #endif
 
