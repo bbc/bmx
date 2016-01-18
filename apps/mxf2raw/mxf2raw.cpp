@@ -2421,7 +2421,7 @@ int main(int argc, const char** argv)
                                 uint32_t c;
                                 for (c = 0; c < sound_info->channel_count; c++) {
                                     if (sound_info->essence_type == D10_AES3_PCM) {
-                                        convert_aes3_to_pcm(frame->GetBytes(), frame->GetSize(),
+                                        convert_aes3_to_pcm(frame->GetBytes(), frame->GetSize(), false,
                                                             sound_info->bits_per_sample, c,
                                                             sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
                                         sound_buffer.SetSize(sound_info->block_align / sound_info->channel_count *

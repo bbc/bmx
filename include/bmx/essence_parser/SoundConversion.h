@@ -44,11 +44,11 @@ namespace bmx
 uint8_t get_aes3_channel_valid_flags(const unsigned char *aes3_data, uint32_t aes3_data_size);
 uint16_t get_aes3_sample_count(const unsigned char *aes3_data, uint32_t aes3_data_size);
 
-uint32_t convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size,
+uint32_t convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size, bool ignore_valid_flags,
                              uint32_t bits_per_sample, uint8_t channel_num,
                              unsigned char *pcm_data, uint32_t pcm_data_size);
 
-uint32_t convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size,
+uint32_t convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size, bool ignore_valid_flags,
                                 uint32_t bits_per_sample, uint8_t channel_count,
                                 unsigned char *pcm_data, uint32_t pcm_data_size);
 

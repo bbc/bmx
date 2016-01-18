@@ -53,12 +53,12 @@ uint16_t bmx::get_aes3_sample_count(const unsigned char *aes3_data, uint32_t aes
     return ((uint16_t)aes3_data[2] << 8) | aes3_data[1];
 }
 
-uint32_t bmx::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size,
+uint32_t bmx::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size, bool ignore_valid_flags,
                                  uint32_t bits_per_sample, uint8_t channel_num,
                                  unsigned char *pcm_data, uint32_t pcm_data_size)
 {
     uint16_t sample_count   = get_aes3_sample_count(aes3_data, aes3_data_size);
-    uint8_t valid_flags     = get_aes3_channel_valid_flags(aes3_data, aes3_data_size);
+    uint8_t valid_flags     = (ignore_valid_flags ? 0xff : get_aes3_channel_valid_flags(aes3_data, aes3_data_size));
     uint32_t block_align    = (bits_per_sample + 7) / 8;
 
     BMX_CHECK(sample_count <= (aes3_data_size - 4) / (8 * 4)); // 4 bytes per sample, 8 channels
@@ -102,12 +102,12 @@ uint32_t bmx::convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_
     return 4 + sample_count * 4 * 8;
 }
 
-uint32_t bmx::convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size,
+uint32_t bmx::convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size, bool ignore_valid_flags,
                                     uint32_t bits_per_sample, uint8_t channel_count,
                                     unsigned char *pcm_data, uint32_t pcm_data_size)
 {
     uint16_t sample_count       = get_aes3_sample_count(aes3_data, aes3_data_size);
-    uint8_t valid_flags         = get_aes3_channel_valid_flags(aes3_data, aes3_data_size);
+    uint8_t valid_flags         = (ignore_valid_flags ? 0xff : get_aes3_channel_valid_flags(aes3_data, aes3_data_size));
     uint32_t bytes_per_sample   = (bits_per_sample + 7) / 8;
 
     BMX_CHECK(sample_count <= (aes3_data_size - 4) / (8 * 4)); // 4 bytes per sample, 8 channels

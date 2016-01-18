@@ -550,6 +550,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --avid-gf               Use the Avid growing file flavour\n");
     fprintf(stderr, "    --avid-gf-dur <dur>     Set the duration which should be shown whilst the file is growing\n");
     fprintf(stderr, "                            The default value is the output duration\n");
+    fprintf(stderr, "    --ignore-d10-aes3-flags   Ignore D10 AES3 audio validity flags and assume they are all valid\n");
+    fprintf(stderr, "                              This workarounds an issue with Avid transfer manager which sets channel flags 4 to 8 to invalid\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/avid:\n");
     fprintf(stderr, "    --force-no-avci-head    Strip AVCI header (512 bytes, sequence and picture parameter sets) if present\n");
@@ -688,6 +690,7 @@ int main(int argc, const char** argv)
 #endif
     vector<EmbedXMLInfo> embed_xml;
     EmbedXMLInfo next_embed_xml;
+    bool ignore_d10_aes3_flags = false;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -1699,6 +1702,10 @@ int main(int argc, const char** argv)
             }
             avid_gf = true;
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--ignore-d10-aes3-flags") == 0)
+        {
+            ignore_d10_aes3_flags = true;
         }
         else if (strcmp(argv[cmdln_index], "--force-no-avci-head") == 0)
         {
@@ -3059,7 +3066,7 @@ int main(int argc, const char** argv)
                 {
                     sound_buffer.Allocate(frame->GetSize()); // more than enough
                     if (output_track.input_track_info->essence_type == D10_AES3_PCM) {
-                        convert_aes3_to_pcm(frame->GetBytes(), frame->GetSize(),
+                        convert_aes3_to_pcm(frame->GetBytes(), frame->GetSize(), ignore_d10_aes3_flags,
                                             output_track.bits_per_sample, output_track.channel_index,
                                             sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
                         num_samples = get_aes3_sample_count(frame->GetBytes(), frame->GetSize());
