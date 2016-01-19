@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <MXFDictionary>
 
+  <MXFTypes>
+    <Multiple>
+      <UUIDArray base="UUID" type="Array"/>
+    </Multiple>
+  </MXFTypes>
+
   <Preface>
     <IsRIPPresent type="Boolean" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 04 04 05 03 00 00 00 00"/>
   </Preface>
@@ -45,5 +51,33 @@
   <UTF16TextBasedSet base="TextBasedObject" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 04 01 04 02 03 00">
     <UTF16TextData type="RAW" use="required" globalKey="06 0e 2b 34 01 01 01 0d 03 01 02 20 03 02 00 00"/>
   </UTF16TextBasedSet>
+
+  <MCALabelSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 6a 00">
+    <MCAChannelID             type="UInt32"      use="optional" globalKey="06 0e 2b 34 01 01 01 0e 01 03 04 0a 00 00 00 00"/>
+    <MCALabelDictionaryID     type="Label"       use="required" globalKey="06 0e 2b 34 01 01 01 0e 01 03 07 01 01 00 00 00"/>
+    <MCATagSymbol             type="UTF16String" use="required" globalKey="06 0e 2b 34 01 01 01 0e 01 03 07 01 02 00 00 00"/>
+    <MCATagName               type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 01 03 07 01 03 00 00 00"/>
+    <MCALinkID                type="UUID"        use="required" globalKey="06 0e 2b 34 01 01 01 0e 01 03 07 01 05 00 00 00"/>
+    <MCAPartitionKind         type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 01 04 01 05 00 00 00 00"/>
+    <MCAPartitionNumber       type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 01 04 01 06 00 00 00 00"/>
+    <MCATitle                 type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 01 05 10 00 00 00 00 00"/>
+    <MCATitleVersion          type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 01 05 11 00 00 00 00 00"/>
+    <MCATitleSubVersion       type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 01 05 12 00 00 00 00 00"/>
+    <MCAEpisode               type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 01 05 13 00 00 00 00 00"/>
+    <RFC5646SpokenLanguage    type="ISO7String"  use="optional" globalKey="06 0e 2b 34 01 01 01 0d 03 01 01 02 03 15 00 00"/>
+    <MCAAudioContentKind      type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 03 02 01 02 20 00 00 00"/>
+    <MCAAudioElementKind      type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 03 02 01 02 21 00 00 00"/>
+  </MCALabelSubDescriptor>
+
+  <AudioChannelLabelSubDescriptor base="MCALabelSubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 6b 00">
+    <SoundfieldGroupLinkID type="UUID" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 01 03 07 01 06 00 00 00"/>
+  </AudioChannelLabelSubDescriptor>
+
+  <SoundfieldGroupLabelSubDescriptor base="MCALabelSubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 6c 00">
+    <GroupOfSoundfieldGroupsLinkID type="UUIDArray" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 01 03 07 01 04 00 00 00"/>
+  </SoundfieldGroupLabelSubDescriptor>
+
+  <GroupOfSoundfieldGroupsLabelSubDescriptor base="MCALabelSubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 6d 00">
+  </GroupOfSoundfieldGroupsLabelSubDescriptor>
 
 </MXFDictionary>
