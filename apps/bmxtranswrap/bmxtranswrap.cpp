@@ -44,6 +44,8 @@
 #include <vector>
 #include <map>
 
+#include "InputTrack.h"
+#include "OutputTrack.h"
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_reader/MXFGroupReader.h>
 #include <bmx/mxf_reader/MXFSequenceReader.h>
@@ -82,25 +84,10 @@ using namespace mxfpp;
 
 typedef struct
 {
-  UL scheme_id;
-  const char *lang;
-  const char *filename;
+    UL scheme_id;
+    const char *lang;
+    const char *filename;
 } EmbedXMLInfo;
-
-typedef struct
-{
-    const MXFTrackInfo *input_track_info;
-    FrameBuffer *input_buffer;
-    ClipWriterTrack *track;
-    EssenceType essence_type;
-    MXFDataDefEnum data_def;
-    uint32_t channel_count;
-    uint32_t channel_index;
-    uint32_t bits_per_sample;
-    uint16_t block_align;
-    int64_t rem_precharge;
-    EssenceFilter *filter;
-} OutputTrack;
 
 typedef struct
 {
@@ -272,53 +259,12 @@ static uint32_t read_samples(MXFReader *reader, const vector<uint32_t> &sample_s
     return num_read;
 }
 
-static void write_samples(OutputTrack *output_track, unsigned char *data, uint32_t size, uint32_t num_samples)
-{
-    if (output_track->filter) {
-        if (output_track->filter->SupportsInPlaceFilter()) {
-            output_track->filter->Filter(data, size);
-            output_track->track->WriteSamples(data, size, num_samples);
-        } else {
-            unsigned char *f_data = 0;
-            try
-            {
-                uint32_t f_size;
-                output_track->filter->Filter(data, size, &f_data, &f_size);
-                output_track->track->WriteSamples(f_data, f_size, num_samples);
-                delete [] f_data;
-            }
-            catch (...)
-            {
-                delete [] f_data;
-                throw;
-            }
-        }
-    } else {
-        output_track->track->WriteSamples(data, size, num_samples);
-    }
-}
-
-static void write_padding_samples(Frame *frame, OutputTrack *output_track, bmx::ByteArray *buffer)
-{
-    const MXFSoundTrackInfo *sound_info = (const MXFSoundTrackInfo *)output_track->input_track_info;
-
-    BMX_ASSERT(sound_info->essence_type == WAVE_PCM);
-    BMX_ASSERT(sound_info->edit_rate == sound_info->sampling_rate);
-    BMX_ASSERT(frame->request_num_samples > 0);
-
-    uint32_t size = frame->request_num_samples * output_track->block_align;
-    buffer->Allocate(size);
-    memset(buffer->GetBytes(), 0, size);
-
-    write_samples(output_track, buffer->GetBytes(), size, frame->request_num_samples);
-}
-
-static void write_anc_samples(Frame *frame, OutputTrack *output_track, set<ANCDataType> &filter, bmx::ByteArray &anc_buffer)
+static void write_anc_samples(OutputTrack *output_track, Frame *frame, set<ANCDataType> &filter, bmx::ByteArray &anc_buffer)
 {
     BMX_CHECK(frame->num_samples == 1);
 
     if (filter.empty() || (filter.size() == 1 && (*filter.begin()) == ALL_ANC_DATA)) {
-        write_samples(output_track, (unsigned char*)frame->GetBytes(), frame->GetSize(), frame->num_samples);
+        output_track->WriteSamples(0, (unsigned char*)frame->GetBytes(), frame->GetSize(), frame->num_samples);
         return;
     }
 
@@ -337,12 +283,7 @@ static void write_anc_samples(Frame *frame, OutputTrack *output_track, set<ANCDa
     anc_buffer.SetSize(0);
     output_element.Construct(&anc_buffer);
 
-    write_samples(output_track, anc_buffer.GetBytes(), anc_buffer.GetSize(), 1);
-}
-
-static void clear_output_track(OutputTrack *output_track)
-{
-    delete output_track->filter;
+    output_track->WriteSamples(0, anc_buffer.GetBytes(), anc_buffer.GetSize(), 1);
 }
 
 static void disable_tracks(MXFReader *reader, const set<uint32_t> &track_indexes,
@@ -2527,18 +2468,69 @@ int main(int argc, const char** argv)
         }
 
 
-        // create output tracks and initialize
+        // create / map input and output tracks
 
-        vector<OutputTrack> output_tracks;
-        size_t input_to_output_count = 0;
-
-        unsigned char avci_header_data[AVCI_HEADER_SIZE];
-        map<MXFDataDefEnum, uint32_t> track_count;
+        vector<OutputTrack*> output_tracks;
+        vector<InputTrack*> input_tracks;
+        map<MXFDataDefEnum, uint32_t> phys_src_track_indexes;
         for (i = 0; i < reader->GetNumTrackReaders(); i++) {
             MXFTrackReader *input_track_reader = reader->GetTrackReader(i);
             if (!input_track_reader->IsEnabled())
                 continue;
 
+            const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
+            const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
+
+            InputTrack *input_track = new InputTrack(input_track_reader);
+            input_tracks.push_back(input_track);
+
+            // map each input channel to a single-channel output track
+
+            uint32_t input_channel_count = 1;
+            if (input_sound_info)
+                input_channel_count = input_sound_info->channel_count;
+            BMX_CHECK(input_channel_count > 0);
+
+            uint32_t c;
+            for (c = 0; c < input_channel_count; c++) {
+                EssenceType output_essence_type;
+                if (input_track_info->essence_type == D10_AES3_PCM)
+                    output_essence_type = WAVE_PCM;
+                else
+                    output_essence_type = input_track_info->essence_type;
+
+                OutputTrack *output_track;
+                if (clip_type == CW_AVID_CLIP_TYPE) {
+                    string track_name = create_mxf_track_filename(output_name,
+                                                                  phys_src_track_indexes[input_track_info->data_def] + 1,
+                                                                  input_track_info->data_def);
+                    output_track = new OutputTrack(clip->CreateTrack(output_essence_type, track_name.c_str()));
+                    output_track->SetPhysSrcTrackIndex(phys_src_track_indexes[input_track_info->data_def]);
+
+                    // each channel is mapped to a separate physical source package track
+                    phys_src_track_indexes[input_track_info->data_def]++;
+                } else {
+                    output_track = new OutputTrack(clip->CreateTrack(output_essence_type));
+                }
+
+                output_track->AddInput(input_track, c, 0);
+                input_track->AddOutput(output_track, 0, c);
+
+                output_tracks.push_back(output_track);
+            }
+        }
+
+
+        // initialise output tracks
+
+        unsigned char avci_header_data[AVCI_HEADER_SIZE];
+        for (i = 0; i < output_tracks.size(); i++) {
+            OutputTrack *output_track = output_tracks[i];
+
+            ClipWriterTrack *clip_track = output_track->GetClipTrack();
+            EssenceType output_essence_type = clip_track->GetEssenceType();
+
+            const MXFTrackReader *input_track_reader = output_track->GetFirstInputTrackReader();
             const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
             const MXFPictureTrackInfo *input_picture_info = dynamic_cast<const MXFPictureTrackInfo*>(input_track_info);
             const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
@@ -2547,338 +2539,282 @@ int main(int argc, const char** argv)
             if (!afd && input_picture_info)
                 afd = input_picture_info->afd;
 
+            // TODO: track number setting and check AES-3 channel validity
 
-            // create track(s)
+            if (clip_type == CW_AS02_CLIP_TYPE) {
+                AS02Track *as02_track = clip_track->GetAS02Track();
+                as02_track->SetMICType(mic_type);
+                as02_track->SetMICScope(ess_component_mic_scope);
 
-            uint32_t output_track_count = 1;
-            if (input_sound_info)
-                output_track_count = input_sound_info->channel_count;
-            BMX_CHECK(output_track_count > 0);
+                if (partition_interval_set) {
+                    AS02PictureTrack *as02_pict_track = dynamic_cast<AS02PictureTrack*>(as02_track);
+                    if (as02_pict_track)
+                        as02_pict_track->SetPartitionInterval(partition_interval);
+                }
+            } else if (clip_type == CW_AVID_CLIP_TYPE) {
+                AvidTrack *avid_track = clip_track->GetAvidTrack();
 
-            uint32_t c;
-            for (c = 0; c < output_track_count; c++) {
-                OutputTrack output_track;
-                memset(&output_track, 0, sizeof(output_track));
-
-                output_track.input_track_info    = input_track_info;
-                output_track.input_buffer        = input_track_reader->GetFrameBuffer();
-                output_track.data_def            = input_track_info->data_def;
-                output_track.channel_count       = output_track_count;
-                output_track.channel_index       = c;
-                if (input_track_info->essence_type == D10_AES3_PCM)
-                    output_track.essence_type    = WAVE_PCM;
+                if (avid_track->SupportOutputStartOffset())
+                    avid_track->SetOutputStartOffset(- precharge);
                 else
-                    output_track.essence_type    = input_track_info->essence_type;
-                if (input_sound_info) {
-                    output_track.bits_per_sample = input_sound_info->bits_per_sample;
-                    output_track.block_align     = (input_sound_info->bits_per_sample + 7) / 8;
-                } else {
-                    output_track.bits_per_sample = 0;
-                    output_track.block_align     = 0;
-                }
-                output_track.rem_precharge       = 0;
+                    output_track->SetSkipPrecharge(- precharge); // skip precharge frames
 
-                if (clip_type == CW_AVID_CLIP_TYPE) {
-                    string track_name = create_mxf_track_filename(output_name,
-                                                                  track_count[input_track_info->data_def] + 1,
-                                                                  input_track_info->data_def);
-                    output_track.track = clip->CreateTrack(output_track.essence_type, track_name.c_str());
-                } else {
-                    output_track.track = clip->CreateTrack(output_track.essence_type);
-                }
-
-
-                // initialize track
-
-                // TODO: track number setting and check AES-3 channel validity
-
-                if (clip_type == CW_AS02_CLIP_TYPE) {
-                    AS02Track *as02_track = output_track.track->GetAS02Track();
-                    as02_track->SetMICType(mic_type);
-                    as02_track->SetMICScope(ess_component_mic_scope);
-
-                    if (partition_interval_set) {
-                        AS02PictureTrack *as02_pict_track = dynamic_cast<AS02PictureTrack*>(as02_track);
-                        if (as02_pict_track)
-                            as02_pict_track->SetPartitionInterval(partition_interval);
+                if (physical_package) {
+                    if (input_track_info->data_def == MXF_PICTURE_DDEF) {
+                        avid_track->SetSourceRef(physical_package_picture_refs[output_track->GetPhysSrcTrackIndex()].first,
+                                                 physical_package_picture_refs[output_track->GetPhysSrcTrackIndex()].second);
+                    } else if (input_track_info->data_def == MXF_SOUND_DDEF) {
+                        avid_track->SetSourceRef(physical_package_sound_refs[output_track->GetPhysSrcTrackIndex()].first,
+                                                 physical_package_sound_refs[output_track->GetPhysSrcTrackIndex()].second);
                     }
-                } else if (clip_type == CW_AVID_CLIP_TYPE) {
-                    AvidTrack *avid_track = output_track.track->GetAvidTrack();
+                }
+            }
 
-                    if (avid_track->SupportOutputStartOffset())
-                        avid_track->SetOutputStartOffset(- precharge);
+            switch (output_essence_type)
+            {
+                case IEC_DV25:
+                case DVBASED_DV25:
+                case DV50:
+                    if (user_aspect_ratio_set)
+                        clip_track->SetAspectRatio(user_aspect_ratio);
                     else
-                        output_track.rem_precharge = - precharge; // skip precharge frames
-
-                    if (physical_package) {
-                        if (input_track_info->data_def == MXF_PICTURE_DDEF) {
-                            avid_track->SetSourceRef(physical_package_picture_refs[track_count[input_track_info->data_def]].first,
-                                                     physical_package_picture_refs[track_count[input_track_info->data_def]].second);
-                        } else if (input_track_info->data_def == MXF_SOUND_DDEF) {
-                            avid_track->SetSourceRef(physical_package_sound_refs[track_count[input_track_info->data_def]].first,
-                                                     physical_package_sound_refs[track_count[input_track_info->data_def]].second);
-                        }
+                        clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    break;
+                case DV100_1080I:
+                case DV100_720P:
+                    if (user_aspect_ratio_set)
+                        clip_track->SetAspectRatio(user_aspect_ratio);
+                    else
+                        clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    clip_track->SetComponentDepth(input_picture_info->component_depth);
+                    break;
+                case D10_30:
+                case D10_40:
+                case D10_50:
+                    if (user_aspect_ratio_set) {
+                        clip_track->SetAspectRatio(user_aspect_ratio);
+                        if (set_bs_aspect_ratio)
+                            output_track->SetFilter(new MPEG2AspectRatioFilter(user_aspect_ratio));
+                    } else {
+                        clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
+                        if (set_bs_aspect_ratio)
+                            output_track->SetFilter(new MPEG2AspectRatioFilter(input_picture_info->aspect_ratio));
                     }
-                }
-
-                switch (output_track.essence_type)
-                {
-                    case IEC_DV25:
-                    case DVBASED_DV25:
-                    case DV50:
-                        if (user_aspect_ratio_set)
-                            output_track.track->SetAspectRatio(user_aspect_ratio);
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    break;
+                case AVCI200_1080I:
+                case AVCI200_1080P:
+                case AVCI200_720P:
+                case AVCI100_1080I:
+                case AVCI100_1080P:
+                case AVCI100_720P:
+                case AVCI50_1080I:
+                case AVCI50_1080P:
+                case AVCI50_720P:
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    if (force_no_avci_head) {
+                        clip_track->SetAVCIMode(AVCI_NO_FRAME_HEADER_MODE);
+                    } else {
+                        if (allow_no_avci_head)
+                            clip_track->SetAVCIMode(AVCI_NO_OR_ALL_FRAME_HEADER_MODE);
                         else
-                            output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
-                        if (afd)
-                            output_track.track->SetAFD(afd);
-                        break;
-                    case DV100_1080I:
-                    case DV100_720P:
-                        if (user_aspect_ratio_set)
-                            output_track.track->SetAspectRatio(user_aspect_ratio);
-                        else
-                            output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
-                        if (afd)
-                            output_track.track->SetAFD(afd);
-                        output_track.track->SetComponentDepth(input_picture_info->component_depth);
-                        break;
-                    case D10_30:
-                    case D10_40:
-                    case D10_50:
-                        if (user_aspect_ratio_set) {
-                            output_track.track->SetAspectRatio(user_aspect_ratio);
-                            if (set_bs_aspect_ratio)
-                                output_track.filter = new MPEG2AspectRatioFilter(user_aspect_ratio);
-                        } else {
-                            output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
-                            if (set_bs_aspect_ratio)
-                                output_track.filter = new MPEG2AspectRatioFilter(input_picture_info->aspect_ratio);
-                        }
-                        if (afd)
-                            output_track.track->SetAFD(afd);
-                        break;
-                    case AVCI200_1080I:
-                    case AVCI200_1080P:
-                    case AVCI200_720P:
-                    case AVCI100_1080I:
-                    case AVCI100_1080P:
-                    case AVCI100_720P:
-                    case AVCI50_1080I:
-                    case AVCI50_1080P:
-                    case AVCI50_720P:
-                        if (afd)
-                            output_track.track->SetAFD(afd);
-                        if (force_no_avci_head) {
-                            output_track.track->SetAVCIMode(AVCI_NO_FRAME_HEADER_MODE);
-                        } else {
-                            if (allow_no_avci_head)
-                                output_track.track->SetAVCIMode(AVCI_NO_OR_ALL_FRAME_HEADER_MODE);
-                            else
-                                output_track.track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
+                            clip_track->SetAVCIMode(AVCI_ALL_FRAME_HEADER_MODE);
 
-                            if (replace_avid_avcihead)
+                        if (replace_avid_avcihead)
+                        {
+                            if (!get_ps_avci_header_data(input_track_info->essence_type,
+                                                         input_picture_info->edit_rate,
+                                                         avci_header_data, sizeof(avci_header_data)))
                             {
-                                if (!get_ps_avci_header_data(input_track_info->essence_type,
-                                                             input_picture_info->edit_rate,
-                                                             avci_header_data, sizeof(avci_header_data)))
-                                {
-                                    log_error("No replacement Panasonic AVCI header data available for input %s\n",
-                                              essence_type_to_string(input_track_info->essence_type));
-                                    throw false;
-                                }
-                                if (input_track_reader->HaveAVCIHeader()) {
-                                    bool missing_stop_bit;
-                                    bool other_differences;
-                                    check_avid_avci_stop_bit(input_track_reader->GetAVCIHeader(), avci_header_data,
-                                                             AVCI_HEADER_SIZE, &missing_stop_bit, &other_differences);
-                                    if (other_differences) {
-                                        log_warn("Difference between input and Panasonic AVCI header is not just a "
-                                                 "missing stop bit\n");
-                                        log_warn("AVCI header replacement may result in invalid or broken bitstream\n");
-                                    } else if (missing_stop_bit) {
-                                        log_info("Found missing stop bit in input AVCI header\n");
-                                    } else {
-                                        log_info("No missing stop bit found in input AVCI header\n");
-                                    }
-                                }
-                                output_track.track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
-                                output_track.track->SetReplaceAVCIHeader(true);
-                            }
-                            else if (input_track_reader->HaveAVCIHeader())
-                            {
-                                output_track.track->SetAVCIHeader(input_track_reader->GetAVCIHeader(), AVCI_HEADER_SIZE);
-                            }
-                            else if (ps_avcihead && get_ps_avci_header_data(input_track_info->essence_type,
-                                                                            input_picture_info->edit_rate,
-                                                                            avci_header_data, sizeof(avci_header_data)))
-                            {
-                                output_track.track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
-                            }
-                            else if (read_avci_header_data(input_track_info->essence_type,
-                                                           input_picture_info->edit_rate, avci_header_inputs,
-                                                           avci_header_data, sizeof(avci_header_data)))
-                            {
-                                output_track.track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
-                            }
-                            else if (!allow_no_avci_head)
-                            {
-                                log_error("Failed to read AVC-Intra header data from input file for %s\n",
+                                log_error("No replacement Panasonic AVCI header data available for input %s\n",
                                           essence_type_to_string(input_track_info->essence_type));
                                 throw false;
                             }
+                            if (input_track_reader->HaveAVCIHeader()) {
+                                bool missing_stop_bit;
+                                bool other_differences;
+                                check_avid_avci_stop_bit(input_track_reader->GetAVCIHeader(), avci_header_data,
+                                                         AVCI_HEADER_SIZE, &missing_stop_bit, &other_differences);
+                                if (other_differences) {
+                                    log_warn("Difference between input and Panasonic AVCI header is not just a "
+                                             "missing stop bit\n");
+                                    log_warn("AVCI header replacement may result in invalid or broken bitstream\n");
+                                } else if (missing_stop_bit) {
+                                    log_info("Found missing stop bit in input AVCI header\n");
+                                } else {
+                                    log_info("No missing stop bit found in input AVCI header\n");
+                                }
+                            }
+                            clip_track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
+                            clip_track->SetReplaceAVCIHeader(true);
                         }
-                        break;
-                    case UNC_SD:
-                    case UNC_HD_1080I:
-                    case UNC_HD_1080P:
-                    case UNC_HD_720P:
-                    case UNC_UHD_3840:
-                    case AVID_10BIT_UNC_SD:
-                    case AVID_10BIT_UNC_HD_1080I:
-                    case AVID_10BIT_UNC_HD_1080P:
-                    case AVID_10BIT_UNC_HD_720P:
-                        if (user_aspect_ratio_set)
-                            output_track.track->SetAspectRatio(user_aspect_ratio);
-                        else
-                            output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
-                        if (afd)
-                            output_track.track->SetAFD(afd);
-                        output_track.track->SetComponentDepth(input_picture_info->component_depth);
-                        output_track.track->SetInputHeight(input_picture_info->stored_height);
-                        break;
-                    case AVID_ALPHA_SD:
-                    case AVID_ALPHA_HD_1080I:
-                    case AVID_ALPHA_HD_1080P:
-                    case AVID_ALPHA_HD_720P:
-                        if (user_aspect_ratio_set)
-                            output_track.track->SetAspectRatio(user_aspect_ratio);
-                        else
-                            output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
-                        if (afd)
-                            output_track.track->SetAFD(afd);
-                        output_track.track->SetInputHeight(input_picture_info->stored_height);
-                        break;
-                    case MPEG2LG_422P_HL_1080I:
-                    case MPEG2LG_422P_HL_1080P:
-                    case MPEG2LG_422P_HL_720P:
-                    case MPEG2LG_MP_HL_1920_1080I:
-                    case MPEG2LG_MP_HL_1920_1080P:
-                    case MPEG2LG_MP_HL_1440_1080I:
-                    case MPEG2LG_MP_HL_1440_1080P:
-                    case MPEG2LG_MP_HL_720P:
-                    case MPEG2LG_MP_H14_1080I:
-                    case MPEG2LG_MP_H14_1080P:
-                        if (afd)
-                            output_track.track->SetAFD(afd);
-                        break;
-                    case MJPEG_2_1:
-                    case MJPEG_3_1:
-                    case MJPEG_10_1:
-                    case MJPEG_20_1:
-                    case MJPEG_4_1M:
-                    case MJPEG_10_1M:
-                    case MJPEG_15_1S:
-                        if (afd)
-                            output_track.track->SetAFD(afd);
-                        if (user_aspect_ratio_set)
-                            output_track.track->SetAspectRatio(user_aspect_ratio);
-                        else
-                            output_track.track->SetAspectRatio(input_picture_info->aspect_ratio);
-                        break;
-                    case VC3_1080P_1235:
-                    case VC3_1080P_1237:
-                    case VC3_1080P_1238:
-                    case VC3_1080I_1241:
-                    case VC3_1080I_1242:
-                    case VC3_1080I_1243:
-                    case VC3_1080I_1244:
-                    case VC3_720P_1250:
-                    case VC3_720P_1251:
-                    case VC3_720P_1252:
-                    case VC3_1080P_1253:
-                    case VC3_720P_1258:
-                    case VC3_1080P_1259:
-                    case VC3_1080I_1260:
-                        if (afd)
-                            output_track.track->SetAFD(afd);
-                        break;
-                    case WAVE_PCM:
-                        output_track.track->SetSamplingRate(input_sound_info->sampling_rate);
-                        output_track.track->SetQuantizationBits(input_sound_info->bits_per_sample);
-                        output_track.track->SetChannelCount(1);
-                        if (user_locked_set)
-                            output_track.track->SetLocked(user_locked);
-                        else if (BMX_OPT_PROP_IS_SET(input_sound_info->locked))
-                            output_track.track->SetLocked(input_sound_info->locked);
-                        if (user_audio_ref_level_set)
-                            output_track.track->SetAudioRefLevel(user_audio_ref_level);
-                        else if (BMX_OPT_PROP_IS_SET(input_sound_info->audio_ref_level))
-                            output_track.track->SetAudioRefLevel(input_sound_info->audio_ref_level);
-                        if (user_dial_norm_set)
-                            output_track.track->SetDialNorm(user_dial_norm);
-                        else if (BMX_OPT_PROP_IS_SET(input_sound_info->dial_norm))
-                            output_track.track->SetDialNorm(input_sound_info->dial_norm);
-                        if (clip_type == CW_D10_CLIP_TYPE || input_sound_info->sequence_offset)
-                            output_track.track->SetSequenceOffset(input_sound_info->sequence_offset);
-                        break;
-                    case ANC_DATA:
-                        if (anc_const_size) {
-                            output_track.track->SetConstantDataSize(anc_const_size);
-                        } else if (anc_max_size) {
-                            output_track.track->SetMaxDataSize(anc_max_size);
-                        } else if (st2020_max_size) {
-                            output_track.track->SetMaxDataSize(calc_st2020_max_size(
-                                dynamic_cast<const MXFDataTrackInfo*>(output_track.input_track_info)));
+                        else if (input_track_reader->HaveAVCIHeader())
+                        {
+                            clip_track->SetAVCIHeader(input_track_reader->GetAVCIHeader(), AVCI_HEADER_SIZE);
                         }
-                        break;
-                    case VBI_DATA:
-                        if (vbi_const_size)
-                            output_track.track->SetConstantDataSize(vbi_const_size);
-                        else if (vbi_max_size)
-                            output_track.track->SetMaxDataSize(vbi_max_size);
-                        break;
-                    case AVC_HIGH_10_INTRA_UNCS:
-                    case AVC_HIGH_422_INTRA_UNCS:
-                    case D10_AES3_PCM:
-                    case PICTURE_ESSENCE:
-                    case SOUND_ESSENCE:
-                    case DATA_ESSENCE:
-                    case UNKNOWN_ESSENCE_TYPE:
-                        BMX_ASSERT(false);
-                }
-
-                output_tracks.push_back(output_track);
-                input_to_output_count++;
-
-                track_count[input_track_info->data_def]++;
+                        else if (ps_avcihead && get_ps_avci_header_data(input_track_info->essence_type,
+                                                                        input_picture_info->edit_rate,
+                                                                        avci_header_data, sizeof(avci_header_data)))
+                        {
+                            clip_track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
+                        }
+                        else if (read_avci_header_data(input_track_info->essence_type,
+                                                       input_picture_info->edit_rate, avci_header_inputs,
+                                                       avci_header_data, sizeof(avci_header_data)))
+                        {
+                            clip_track->SetAVCIHeader(avci_header_data, sizeof(avci_header_data));
+                        }
+                        else if (!allow_no_avci_head)
+                        {
+                            log_error("Failed to read AVC-Intra header data from input file for %s\n",
+                                      essence_type_to_string(input_track_info->essence_type));
+                            throw false;
+                        }
+                    }
+                    break;
+                case UNC_SD:
+                case UNC_HD_1080I:
+                case UNC_HD_1080P:
+                case UNC_HD_720P:
+                case UNC_UHD_3840:
+                case AVID_10BIT_UNC_SD:
+                case AVID_10BIT_UNC_HD_1080I:
+                case AVID_10BIT_UNC_HD_1080P:
+                case AVID_10BIT_UNC_HD_720P:
+                    if (user_aspect_ratio_set)
+                        clip_track->SetAspectRatio(user_aspect_ratio);
+                    else
+                        clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    clip_track->SetComponentDepth(input_picture_info->component_depth);
+                    clip_track->SetInputHeight(input_picture_info->stored_height);
+                    break;
+                case AVID_ALPHA_SD:
+                case AVID_ALPHA_HD_1080I:
+                case AVID_ALPHA_HD_1080P:
+                case AVID_ALPHA_HD_720P:
+                    if (user_aspect_ratio_set)
+                        clip_track->SetAspectRatio(user_aspect_ratio);
+                    else
+                        clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    clip_track->SetInputHeight(input_picture_info->stored_height);
+                    break;
+                case MPEG2LG_422P_HL_1080I:
+                case MPEG2LG_422P_HL_1080P:
+                case MPEG2LG_422P_HL_720P:
+                case MPEG2LG_MP_HL_1920_1080I:
+                case MPEG2LG_MP_HL_1920_1080P:
+                case MPEG2LG_MP_HL_1440_1080I:
+                case MPEG2LG_MP_HL_1440_1080P:
+                case MPEG2LG_MP_HL_720P:
+                case MPEG2LG_MP_H14_1080I:
+                case MPEG2LG_MP_H14_1080P:
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    break;
+                case MJPEG_2_1:
+                case MJPEG_3_1:
+                case MJPEG_10_1:
+                case MJPEG_20_1:
+                case MJPEG_4_1M:
+                case MJPEG_10_1M:
+                case MJPEG_15_1S:
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    if (user_aspect_ratio_set)
+                        clip_track->SetAspectRatio(user_aspect_ratio);
+                    else
+                        clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
+                    break;
+                case VC3_1080P_1235:
+                case VC3_1080P_1237:
+                case VC3_1080P_1238:
+                case VC3_1080I_1241:
+                case VC3_1080I_1242:
+                case VC3_1080I_1243:
+                case VC3_1080I_1244:
+                case VC3_720P_1250:
+                case VC3_720P_1251:
+                case VC3_720P_1252:
+                case VC3_1080P_1253:
+                case VC3_720P_1258:
+                case VC3_1080P_1259:
+                case VC3_1080I_1260:
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    break;
+                case WAVE_PCM:
+                    clip_track->SetSamplingRate(input_sound_info->sampling_rate);
+                    clip_track->SetQuantizationBits(input_sound_info->bits_per_sample);
+                    clip_track->SetChannelCount(output_track->GetChannelCount());
+                    if (user_locked_set)
+                        clip_track->SetLocked(user_locked);
+                    else if (BMX_OPT_PROP_IS_SET(input_sound_info->locked))
+                        clip_track->SetLocked(input_sound_info->locked);
+                    if (user_audio_ref_level_set)
+                        clip_track->SetAudioRefLevel(user_audio_ref_level);
+                    else if (BMX_OPT_PROP_IS_SET(input_sound_info->audio_ref_level))
+                        clip_track->SetAudioRefLevel(input_sound_info->audio_ref_level);
+                    if (user_dial_norm_set)
+                        clip_track->SetDialNorm(user_dial_norm);
+                    else if (BMX_OPT_PROP_IS_SET(input_sound_info->dial_norm))
+                        clip_track->SetDialNorm(input_sound_info->dial_norm);
+                    if (clip_type == CW_D10_CLIP_TYPE || input_sound_info->sequence_offset)
+                        clip_track->SetSequenceOffset(input_sound_info->sequence_offset);
+                    break;
+                case ANC_DATA:
+                    if (anc_const_size) {
+                        clip_track->SetConstantDataSize(anc_const_size);
+                    } else if (anc_max_size) {
+                        clip_track->SetMaxDataSize(anc_max_size);
+                    } else if (st2020_max_size) {
+                        clip_track->SetMaxDataSize(calc_st2020_max_size(
+                            dynamic_cast<const MXFDataTrackInfo*>(input_track_info)));
+                    }
+                    break;
+                case VBI_DATA:
+                    if (vbi_const_size)
+                        clip_track->SetConstantDataSize(vbi_const_size);
+                    else if (vbi_max_size)
+                        clip_track->SetMaxDataSize(vbi_max_size);
+                    break;
+                case AVC_HIGH_10_INTRA_UNCS:
+                case AVC_HIGH_422_INTRA_UNCS:
+                case D10_AES3_PCM:
+                case PICTURE_ESSENCE:
+                case SOUND_ESSENCE:
+                case DATA_ESSENCE:
+                case UNKNOWN_ESSENCE_TYPE:
+                    BMX_ASSERT(false);
             }
         }
 
-        // add RDD-6 ANC data track
+        // add RDD-6 ANC data track for input RDD-6 XML file
 
         if (rdd6_filename) {
-            OutputTrack output_track;
-            memset(&output_track, 0, sizeof(output_track));
-            output_track.essence_type   = ANC_DATA;
-            output_track.data_def       = MXF_DATA_DDEF;
-            output_track.channel_count  = 1;
-            output_track.track          = clip->CreateTrack(ANC_DATA);
+            OutputTrack *output_track = new OutputTrack(clip->CreateTrack(ANC_DATA));
+            ClipWriterTrack *clip_track = output_track->GetClipTrack();
 
             if (anc_const_size)
-                output_track.track->SetConstantDataSize(anc_const_size);
+                clip_track->SetConstantDataSize(anc_const_size);
             else if (anc_max_size)
-                output_track.track->SetMaxDataSize(anc_max_size);
+                clip_track->SetMaxDataSize(anc_max_size);
             else if (st2020_max_size)
-                output_track.track->SetMaxDataSize(calc_st2020_max_size(false, 1));
+                clip_track->SetMaxDataSize(calc_st2020_max_size(false, 1));
             else if (rdd6_const_size)
-                output_track.track->SetConstantDataSize(rdd6_const_size);
+                clip_track->SetConstantDataSize(rdd6_const_size);
 
             output_tracks.push_back(output_track);
         }
-
-        BMX_ASSERT((rdd6_filename  && input_to_output_count + 1 == output_tracks.size()) ||
-                   (!rdd6_filename && input_to_output_count     == output_tracks.size()));
 
 
         // embed XML
@@ -2921,13 +2857,13 @@ int main(int argc, const char** argv)
         // doesn't require a sample sequence
 
         BMX_ASSERT(!output_tracks.empty());
-        BMX_CHECK(!is_sound_frame_rate || output_tracks[0].essence_type == WAVE_PCM);
+        BMX_CHECK(!is_sound_frame_rate || output_tracks[0]->GetClipTrack()->GetEssenceType() == WAVE_PCM);
         vector<uint32_t> sample_sequence;
         uint32_t sample_sequence_offset = 0;
         uint32_t max_samples_per_read = 1;
         if (is_sound_frame_rate) {
             // read sample sequence required for output frame rate
-            sample_sequence = output_tracks[0].track->GetShiftedSampleSequence();
+            sample_sequence = output_tracks[0]->GetClipTrack()->GetShiftedSampleSequence();
             if (sample_sequence.size() == 1 && sample_sequence[0] == 1)
                 max_samples_per_read = 1920; // improve efficiency and read multiple samples
         } else {
@@ -2987,18 +2923,18 @@ int main(int argc, const char** argv)
 
             // check whether sufficient frame data is available
             // if the frame is empty then check zero PCM sample padding is possible
-            for (i = 0; i < input_to_output_count; i++) {
-                OutputTrack &output_track = output_tracks[i];
-                Frame *frame = output_track.input_buffer->GetLastFrame(false);
+            for (i = 0; i < input_tracks.size(); i++) {
+                InputTrack *input_track = input_tracks[i];
+                Frame *frame = input_track->GetFrameBuffer()->GetLastFrame(false);
                 BMX_ASSERT(frame);
                 if (!frame->IsComplete()) {
                     if (!frame->IsEmpty()) {
                         log_warn("Partially complete frames not yet supported\n");
                         break;
                     }
-                    if (output_track.input_track_info->essence_type != WAVE_PCM ||
-                        output_track.input_track_info->edit_rate !=
-                            ((MXFSoundTrackInfo*)output_track.input_track_info)->sampling_rate)
+                    const MXFTrackInfo *input_track_info = input_track->GetTrackInfo();
+                    if (input_track_info->essence_type != WAVE_PCM ||
+                        input_track_info->edit_rate != ((MXFSoundTrackInfo*)input_track_info)->sampling_rate)
                     {
                         log_warn("Failed to provide padding data for empty frame\n");
                         break;
@@ -3006,7 +2942,7 @@ int main(int argc, const char** argv)
                 }
                 BMX_ASSERT(frame->IsEmpty() || frame->IsComplete());
             }
-            if (i < input_to_output_count)
+            if (i < input_tracks.size())
                 break;
 
             if (clip_type == CW_AS02_CLIP_TYPE && (precharge || rollout)) {
@@ -3022,16 +2958,10 @@ int main(int argc, const char** argv)
                 prev_container_duration = container_duration;
             }
 
-            bool take_frame;
-            for (i = 0; i < input_to_output_count; i++) {
-                OutputTrack &output_track = output_tracks[i];
+            for (i = 0; i < input_tracks.size(); i++) {
+                InputTrack *input_track = input_tracks[i];
 
-                if (output_track.channel_index + 1 >= output_track.channel_count)
-                    take_frame = true;
-                else
-                    take_frame = false;
-
-                Frame *frame = output_track.input_buffer->GetLastFrame(take_frame);
+                Frame *frame = input_track->GetFrameBuffer()->GetLastFrame(true);
                 BMX_ASSERT(frame);
 
                 if (clip_type == CW_AVID_CLIP_TYPE && convert_ess_marks) {
@@ -3052,58 +2982,82 @@ int main(int argc, const char** argv)
                     }
                 }
 
-                uint32_t num_samples;
-                if (output_track.rem_precharge > 0)
-                {
-                    output_track.rem_precharge -= num_read;
-                }
-                else if (!frame->IsComplete())
-                {
-                    write_padding_samples(frame, &output_track, &sound_buffer);
-                }
-                else if (output_track.channel_count > 1 ||
-                         output_track.input_track_info->essence_type == D10_AES3_PCM)
-                {
-                    sound_buffer.Allocate(frame->GetSize()); // more than enough
-                    if (output_track.input_track_info->essence_type == D10_AES3_PCM) {
-                        convert_aes3_to_pcm(frame->GetBytes(), frame->GetSize(), ignore_d10_aes3_flags,
-                                            output_track.bits_per_sample, output_track.channel_index,
-                                            sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
-                        num_samples = get_aes3_sample_count(frame->GetBytes(), frame->GetSize());
-                    } else {
-                        deinterleave_audio(frame->GetBytes(), frame->GetSize(),
-                                           output_track.bits_per_sample,
-                                           output_track.channel_count, output_track.channel_index,
-                                           sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
-                        num_samples = frame->GetSize() / (output_track.channel_count * output_track.block_align);
+                size_t k;
+                for (k = 0; k < input_track->GetOutputTrackCount(); k++) {
+                    OutputTrack *output_track = input_track->GetOutputTrack(k);
+                    uint32_t output_channel_index = input_track->GetOutputChannelIndex(k);
+                    uint32_t input_channel_index = input_track->GetInputChannelIndex(k);
+
+                    const MXFTrackInfo *input_track_info = input_track->GetTrackInfo();
+                    const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
+
+                    uint32_t bits_per_sample = 0;
+                    uint16_t channel_block_align = 0;
+                    if (input_sound_info) {
+                        bits_per_sample     = input_sound_info->bits_per_sample;
+                        channel_block_align = (bits_per_sample + 7) / 8;
                     }
-                    write_samples(&output_track,
-                                  sound_buffer.GetBytes(),
-                                  num_samples * output_track.block_align,
-                                  num_samples);
-                }
-                else if (output_track.input_track_info->essence_type == ANC_DATA)
-                {
-                    write_anc_samples(frame, &output_track, pass_anc, anc_buffer);
-                }
-                else
-                {
-                    if (output_track.data_def == MXF_SOUND_DDEF)
-                        num_samples = frame->GetSize() / output_track.block_align;
+
+                    uint32_t num_samples;
+                    if (output_track->HaveSkipPrecharge())
+                    {
+                        output_track->SkipPrecharge(num_read);
+                    }
+                    else if (!frame->IsComplete())
+                    {
+                        BMX_ASSERT(input_track_info->essence_type == WAVE_PCM);
+                        BMX_ASSERT(input_sound_info->edit_rate == input_sound_info->sampling_rate);
+                        output_track->WritePaddingSamples(output_channel_index, frame->request_num_samples);
+                    }
+                    else if ((input_sound_info && input_sound_info->channel_count > 1) ||
+                             input_track_info->essence_type == D10_AES3_PCM)
+                    {
+                        sound_buffer.Allocate(frame->GetSize()); // more than enough
+                        if (input_track_info->essence_type == D10_AES3_PCM) {
+                            convert_aes3_to_pcm(frame->GetBytes(), frame->GetSize(), ignore_d10_aes3_flags,
+                                                bits_per_sample, input_channel_index,
+                                                sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
+                            num_samples = get_aes3_sample_count(frame->GetBytes(), frame->GetSize());
+                        } else {
+                            deinterleave_audio(frame->GetBytes(), frame->GetSize(),
+                                               bits_per_sample,
+                                               input_sound_info->channel_count, input_channel_index,
+                                               sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
+                            num_samples = frame->GetSize() / channel_block_align;
+                        }
+
+                        output_track->WriteSamples(output_channel_index,
+                                                   sound_buffer.GetBytes(),
+                                                   num_samples * channel_block_align,
+                                                   num_samples);
+                    }
+                    else if (input_track_info->essence_type == ANC_DATA)
+                    {
+                        write_anc_samples(output_track, frame, pass_anc, anc_buffer);
+                    }
                     else
-                        num_samples = frame->num_samples;
-                    write_samples(&output_track, (unsigned char*)frame->GetBytes(), frame->GetSize(), num_samples);
+                    {
+                        if (input_sound_info)
+                            num_samples = frame->GetSize() / channel_block_align;
+                        else
+                            num_samples = frame->num_samples;
+                        output_track->WriteSamples(output_channel_index,
+                                                   (unsigned char*)frame->GetBytes(),
+                                                   frame->GetSize(),
+                                                   num_samples);
+                    }
                 }
 
-                if (take_frame)
-                    delete frame;
+                delete frame;
             }
 
             if (rdd6_filename) {
+                BMX_ASSERT(!output_tracks.back()->HaveInputTrack()); // expecting last track to be RDD-6 from an XML file
+
                 rdd6_frame.UpdateStaticFrame(&rdd6_static_sequence);
 
                 construct_anc_rdd6(&rdd6_frame, &rdd6_first_buffer, &rdd6_second_buffer, rdd6_sdid, rdd6_lines, &anc_buffer);
-                output_tracks.back().track->WriteSamples(anc_buffer.GetBytes(), anc_buffer.GetSize(), 1);
+                output_tracks.back()->WriteSamples(0, anc_buffer.GetBytes(), anc_buffer.GetSize(), 1);
 
                 rdd6_static_sequence.UpdateForNextStaticFrame();
             }
@@ -3139,9 +3093,9 @@ int main(int argc, const char** argv)
         // set precharge and rollout for non-interleaved clip types
 
         if (clip_type == CW_AS02_CLIP_TYPE && (precharge || rollout)) {
-            for (i = 0; i < input_to_output_count; i++) {
-                OutputTrack &output_track = output_tracks[i];
-                AS02Track *as02_track = output_track.track->GetAS02Track();
+            for (i = 0; i < output_tracks.size(); i++) {
+                OutputTrack *output_track = output_tracks[i];
+                AS02Track *as02_track = output_track->GetClipTrack()->GetAS02Track();
                 int64_t container_duration = as02_track->GetContainerDuration();
 
                 if (duration_at_precharge_end >= 0)
@@ -3218,7 +3172,9 @@ int main(int argc, const char** argv)
         delete reader;
         delete clip;
         for (i = 0; i < output_tracks.size(); i++)
-            clear_output_track(&output_tracks[i]);
+            delete output_tracks[i];
+        for (i = 0; i < input_tracks.size(); i++)
+            delete input_tracks[i];
     }
     catch (const MXFException &ex)
     {

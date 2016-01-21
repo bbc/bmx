@@ -179,3 +179,20 @@ void bmx::deinterleave_audio(const unsigned char *input_data, uint32_t input_dat
     }
 }
 
+void bmx::interleave_audio(const unsigned char *input_data, uint32_t input_data_size,
+                           uint32_t bits_per_sample, uint16_t channel_count, uint16_t channel_num,
+                           unsigned char *output_data, uint32_t output_data_size)
+{
+    uint32_t input_block_align = (bits_per_sample + 7) / 8;
+    uint32_t output_block_align = channel_count * input_block_align;
+    uint32_t channel_offset = channel_num * input_block_align;
+    uint32_t sample_count = input_data_size / input_block_align;
+    uint32_t i, j;
+
+    BMX_CHECK(output_data_size >= sample_count * output_block_align);
+
+    for (i = 0; i < sample_count; i++) {
+        for (j = 0; j < input_block_align; j++)
+            output_data[i * output_block_align + channel_offset + j] = input_data[i * input_block_align + j];
+    }
+}

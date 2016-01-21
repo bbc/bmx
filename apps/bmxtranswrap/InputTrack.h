@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2016, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,41 +29,54 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_AUDIO_CONVERSION_H_
-#define BMX_AUDIO_CONVERSION_H_
 
+#ifndef BMX_INPUT_TRACK_H_
+#define BMX_INPUT_TRACK_H_
 
-#include <bmx/BMXTypes.h>
+#include <vector>
 
+#include <bmx/mxf_reader/MXFTrackReader.h>
 
 
 namespace bmx
 {
 
 
-uint8_t get_aes3_channel_valid_flags(const unsigned char *aes3_data, uint32_t aes3_data_size);
-uint16_t get_aes3_sample_count(const unsigned char *aes3_data, uint32_t aes3_data_size);
+class OutputTrack;
 
-uint32_t convert_aes3_to_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size, bool ignore_valid_flags,
-                             uint32_t bits_per_sample, uint8_t channel_num,
-                             unsigned char *pcm_data, uint32_t pcm_data_size);
+class InputTrack
+{
+public:
+    InputTrack(MXFTrackReader *track_reader);
+    ~InputTrack();
 
-uint32_t convert_aes3_to_mc_pcm(const unsigned char *aes3_data, uint32_t aes3_data_size, bool ignore_valid_flags,
-                                uint32_t bits_per_sample, uint8_t channel_count,
-                                unsigned char *pcm_data, uint32_t pcm_data_size);
+    void AddOutput(OutputTrack *output_track, uint32_t output_channel_index, uint32_t input_channel_index);
 
-void deinterleave_audio(const unsigned char *input_data, uint32_t input_data_size,
-                        uint32_t bits_per_sample, uint16_t channel_count, uint16_t channel_num,
-                        unsigned char *output_data, uint32_t output_data_size);
+public:
+    MXFTrackReader* GetTrackReader() { return mTrackReader; }
+    const MXFTrackInfo* GetTrackInfo();
+    FrameBuffer* GetFrameBuffer();
 
-void interleave_audio(const unsigned char *input_data, uint32_t input_data_size,
-                      uint32_t bits_per_sample, uint16_t channel_count, uint16_t channel_num,
-                      unsigned char *output_data, uint32_t output_data_size);
+    size_t GetOutputTrackCount();
+    OutputTrack* GetOutputTrack(size_t track_index);
+    uint32_t GetOutputChannelIndex(size_t track_index);
+    uint32_t GetInputChannelIndex(size_t track_index);
 
+private:
+    typedef struct
+    {
+        OutputTrack *output_track;
+        uint32_t output_channel_index;
+        uint32_t input_channel_index;
+    } OutputMap;
+
+private:
+    MXFTrackReader *mTrackReader;
+    std::vector<OutputMap> mOutputMaps;
+};
 
 
 };
-
 
 
 #endif
