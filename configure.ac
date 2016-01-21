@@ -273,6 +273,7 @@ AC_CONFIG_FILES([
 	test/ard_zdf_hdf/Makefile
 	test/as02/Makefile
 	test/as11/Makefile
+	test/bmxtranswrap/Makefile
 	test/mxf_op1a/Makefile
 	test/avid_mxf/Makefile
 	test/mxf_reader/Makefile
