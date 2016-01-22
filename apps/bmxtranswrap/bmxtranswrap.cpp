@@ -46,6 +46,7 @@
 
 #include "InputTrack.h"
 #include "OutputTrack.h"
+#include "TrackMapper.h"
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_reader/MXFGroupReader.h>
 #include <bmx/mxf_reader/MXFSequenceReader.h>
@@ -500,6 +501,13 @@ static void usage(const char *cmd)
     fprintf(stderr, "  wave:\n");
     fprintf(stderr, "    --orig <name>           Set originator in the Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
     fprintf(stderr, "\n");
+    fprintf(stderr, "  as02/op1a/as11op1a:\n");
+    fprintf(stderr, "    --track-map <expr>      Map input audio channels to output tracks. See below for details of the <expr> format\n");
+    fprintf(stderr, "    --dump-track-map        Dump the output audio track map to stderr.\n");
+    fprintf(stderr, "                            The dumps consists of a list output tracks, where each output track channel\n");
+    fprintf(stderr, "                            is shown as '<output track channel> <- <input channel>\n");
+    fprintf(stderr, "    --dump-track-map-exit   Same as --dump-track-map, but exit immediately afterwards\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "Input options:\n");
     fprintf(stderr, "  --disable-tracks <tracks> A comma separated list of track indexes and/or ranges to disable.\n");
     fprintf(stderr, "                            A track is identified by the index reported by mxf2raw\n");
@@ -512,6 +520,35 @@ static void usage(const char *cmd)
     fprintf(stderr, " - <umid> format is 64 hexadecimal characters and any '.' and '-' characters are ignored\n");
     fprintf(stderr, " - <uuid> format is 32 hexadecimal characters and any '.' and '-' characters are ignored\n");
     fprintf(stderr, " - <tstamp> format is YYYY-MM-DDThh:mm:ss:qm where qm is in units of 1/250th second\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, " The track mapping <expr> format is one of the following:\n");
+    fprintf(stderr, "     'mono'     : each input audio channel is mapped to a single-channel output track\n");
+    fprintf(stderr, "     'stereo'   : input audio channels are paired to stereo-channel output tracks\n");
+    fprintf(stderr, "                  A silence channel is added to the last output track if the channel count is odd\n");
+    fprintf(stderr, "     'singlemca': all input audio channels are mapped to a single multi-channel output track\n");
+    fprintf(stderr, "     <pattern>  : a pattern defining how input channels map to output track channels - see below\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, " The track mapping <pattern> specifies how input audio channels are mapped to output track channels\n");
+    fprintf(stderr, " A <pattern> consists of a list of <group>s separated by a ';'.\n");
+    fprintf(stderr, " A <group> starts with an optional 'm', followed by a list of <element> separated by a ','.\n");
+    fprintf(stderr, "   An 'm' indicates that each channel in the <group> is mapped to separate single-channel output track.\n");
+    fprintf(stderr, "   If an 'm' is not present then the channels are mapped to a single output track.\n");
+    fprintf(stderr, " A <element> is either a <channel>, <range>, <silence> or <remainder>.\n");
+    fprintf(stderr, " A <channel> is an input channel number starting from 0.\n");
+    fprintf(stderr, "   The input channel number is the number derived from the input track order reported by mxf2raw for the\n");
+    fprintf(stderr, "   input files in the same order and including any --disable input options. Each channel in a track\n");
+    fprintf(stderr, "   contributes 1 to the overall channel number.\n");
+    fprintf(stderr, " A <range> is 2 <channel>s separated by a '-' and includes all channels starting with the first number\n");
+    fprintf(stderr, "   and ending with the last number.\n");
+    fprintf(stderr, " A <silence> is 's' followed by a <count> and results in <count> silence channels added to the output track.\n");
+    fprintf(stderr, " A <remainder> is 'x', and results in all remaining channels being added to the output track.\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Here are some <pattern> examples:\n");
+    fprintf(stderr, "    'mx'     : equivalent to 'mono'\n");
+    fprintf(stderr, "    '0,1;x'  : the first 2 channels mapped to a stereo output track and all remaining channels mapped\n");
+    fprintf(stderr, "               to a single multi-channel track\n");
+    fprintf(stderr, "    '2-7;0,1': 6 channel output track followed by a 2 channel output track\n");
+    fprintf(stderr, "    '0,1,s2' : 2 input channels plus 2 silence channels mapped to a single output track\n");
 }
 
 int main(int argc, const char** argv)
@@ -632,6 +669,9 @@ int main(int argc, const char** argv)
     vector<EmbedXMLInfo> embed_xml;
     EmbedXMLInfo next_embed_xml;
     bool ignore_d10_aes3_flags = false;
+    TrackMapper track_mapper;
+    bool dump_track_map = false;
+    bool dump_track_map_exit = false;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -1663,6 +1703,31 @@ int main(int argc, const char** argv)
             originator = argv[cmdln_index + 1];
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--track-map") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!track_mapper.ParseMapDef(argv[cmdln_index + 1]))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--dump-track-map") == 0)
+        {
+            dump_track_map = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--dump-track-map-exit") == 0)
+        {
+            dump_track_map = true;
+            dump_track_map_exit = true;
+        }
         else if (strcmp(argv[cmdln_index], "--regtest") == 0)
         {
             BMX_REGRESSION_TEST = true;
@@ -2468,11 +2533,18 @@ int main(int argc, const char** argv)
         }
 
 
-        // create / map input and output tracks
+        // map input to output tracks
 
-        vector<OutputTrack*> output_tracks;
-        vector<InputTrack*> input_tracks;
-        map<MXFDataDefEnum, uint32_t> phys_src_track_indexes;
+        // TODO: a non-mono audio mapping requires changes to the Avid physical source package track layout and
+        // also depends on support in Avid products
+        if (clip_type == CW_AVID_CLIP_TYPE && track_mapper.GetMapType() != TrackMapper::MONO_AUDIO_MAP) {
+            log_error("Avid clip type only supports 'mono' audio track mapping\n");
+            throw false;
+        }
+
+        // map WAVE PCM tracks
+        vector<TrackMapper::InputTrack> unused_input_tracks;
+        vector<TrackMapper::InputTrack> mapper_input_tracks;
         for (i = 0; i < reader->GetNumTrackReaders(); i++) {
             MXFTrackReader *input_track_reader = reader->GetTrackReader(i);
             if (!input_track_reader->IsEnabled())
@@ -2481,43 +2553,117 @@ int main(int argc, const char** argv)
             const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
             const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
 
-            InputTrack *input_track = new InputTrack(input_track_reader);
-            input_tracks.push_back(input_track);
-
-            // map each input channel to a single-channel output track
-
-            uint32_t input_channel_count = 1;
-            if (input_sound_info)
-                input_channel_count = input_sound_info->channel_count;
-            BMX_CHECK(input_channel_count > 0);
-
-            uint32_t c;
-            for (c = 0; c < input_channel_count; c++) {
-                EssenceType output_essence_type;
-                if (input_track_info->essence_type == D10_AES3_PCM)
-                    output_essence_type = WAVE_PCM;
-                else
-                    output_essence_type = input_track_info->essence_type;
-
-                OutputTrack *output_track;
-                if (clip_type == CW_AVID_CLIP_TYPE) {
-                    string track_name = create_mxf_track_filename(output_name,
-                                                                  phys_src_track_indexes[input_track_info->data_def] + 1,
-                                                                  input_track_info->data_def);
-                    output_track = new OutputTrack(clip->CreateTrack(output_essence_type, track_name.c_str()));
-                    output_track->SetPhysSrcTrackIndex(phys_src_track_indexes[input_track_info->data_def]);
-
-                    // each channel is mapped to a separate physical source package track
-                    phys_src_track_indexes[input_track_info->data_def]++;
-                } else {
-                    output_track = new OutputTrack(clip->CreateTrack(output_essence_type));
-                }
-
-                output_track->AddInput(input_track, c, 0);
-                input_track->AddOutput(output_track, 0, c);
-
-                output_tracks.push_back(output_track);
+            TrackMapper::InputTrack mapper_input_track;
+            if (input_track_info->essence_type == WAVE_PCM ||
+                input_track_info->essence_type == D10_AES3_PCM)
+            {
+                mapper_input_track.external_index  = (uint32_t)i;
+                mapper_input_track.essence_type    = WAVE_PCM; // D10_AES3_PCM gets converted to WAVE_PCM
+                mapper_input_track.data_def        = input_track_info->data_def;
+                mapper_input_track.bits_per_sample = input_sound_info->bits_per_sample;
+                mapper_input_track.channel_count   = input_sound_info->channel_count;
+                mapper_input_tracks.push_back(mapper_input_track);
             }
+        }
+        vector<TrackMapper::OutputTrackMap> output_track_maps =
+            track_mapper.MapTracks(mapper_input_tracks, &unused_input_tracks);
+
+        if (dump_track_map) {
+            track_mapper.DumpOutputTrackMap(stderr, mapper_input_tracks, output_track_maps);
+            if (dump_track_map_exit)
+                throw true;
+        }
+
+        for (i = 0; i < unused_input_tracks.size(); i++) {
+            MXFTrackReader *input_track_reader = reader->GetTrackReader(unused_input_tracks[i].external_index);
+            const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
+            log_info("Track %" PRIszt " is not mapped (essence type '%s')\n",
+                      unused_input_tracks[i].external_index, essence_type_to_string(input_track_info->essence_type));
+            input_track_reader->SetEnable(false);
+        }
+
+        // insert non-WAVE PCM tracks to output mapping
+        uint32_t input_track_index = (uint32_t)mapper_input_tracks.size();
+        for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+            MXFTrackReader *input_track_reader = reader->GetTrackReader(i);
+            if (!input_track_reader->IsEnabled())
+                continue;
+
+            const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
+            if (input_track_info->essence_type != WAVE_PCM &&
+                input_track_info->essence_type != D10_AES3_PCM)
+            {
+                TrackMapper::OutputTrackMap track_map;
+                track_map.essence_type = input_track_info->essence_type;
+                track_map.data_def     = input_track_info->data_def;
+
+                TrackMapper::TrackChannelMap channel_map;
+                channel_map.have_input           = true;
+                channel_map.input_external_index = (uint32_t)i;
+                channel_map.input_index          = input_track_index;
+                channel_map.input_channel_index  = 0;
+                channel_map.output_channel_index = 0;
+                track_map.channel_maps.push_back(channel_map);
+
+                output_track_maps.push_back(track_map);
+                input_track_index++;
+            }
+        }
+        if (output_track_maps.empty()) {
+            log_error("No output tracks are mapped\n");
+            throw false;
+        }
+        if (!reader->IsEnabled()) {
+            log_error("No input tracks mapped to output\n");
+            throw false;
+        }
+
+        // create the output tracks
+        map<uint32_t, InputTrack*> created_input_tracks;
+        vector<OutputTrack*> output_tracks;
+        vector<InputTrack*> input_tracks;
+        map<MXFDataDefEnum, uint32_t> phys_src_track_indexes;
+        for (i = 0; i < output_track_maps.size(); i++) {
+            const TrackMapper::OutputTrackMap &output_track_map = output_track_maps[i];
+
+            OutputTrack *output_track;
+            if (clip_type == CW_AVID_CLIP_TYPE) {
+                // each channel is mapped to a separate physical source package track
+                MXFDataDefEnum data_def = (MXFDataDefEnum)output_track_map.data_def;
+                string track_name = create_mxf_track_filename(output_name,
+                                                              phys_src_track_indexes[data_def] + 1,
+                                                              data_def);
+                output_track = new OutputTrack(clip->CreateTrack(output_track_map.essence_type, track_name.c_str()));
+                output_track->SetPhysSrcTrackIndex(phys_src_track_indexes[data_def]);
+
+                phys_src_track_indexes[data_def]++;
+            } else {
+                output_track = new OutputTrack(clip->CreateTrack(output_track_map.essence_type));
+            }
+
+            size_t k;
+            for (k = 0; k < output_track_map.channel_maps.size(); k++) {
+                const TrackMapper::TrackChannelMap &channel_map = output_track_map.channel_maps[k];
+
+                if (channel_map.have_input) {
+                    MXFTrackReader *input_track_reader = reader->GetTrackReader(channel_map.input_external_index);
+                    InputTrack *input_track;
+                    if (created_input_tracks.count(channel_map.input_external_index)) {
+                        input_track = created_input_tracks[channel_map.input_external_index];
+                    } else {
+                        input_track = new InputTrack(input_track_reader);
+                        input_tracks.push_back(input_track);
+                        created_input_tracks[channel_map.input_external_index] = input_track;
+                    }
+
+                    output_track->AddInput(input_track, channel_map.input_channel_index, channel_map.output_channel_index);
+                    input_track->AddOutput(output_track, channel_map.output_channel_index, channel_map.input_channel_index);
+                } else {
+                    output_track->AddSilenceChannel(channel_map.output_channel_index);
+                }
+            }
+
+            output_tracks.push_back(output_track);
         }
 
 
@@ -3189,7 +3335,7 @@ int main(int argc, const char** argv)
     catch (const bool &ex)
     {
         (void)ex;
-        cmd_result = 1;
+        cmd_result = (ex ? 0 : 1);
     }
     catch (...)
     {

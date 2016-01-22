@@ -5,6 +5,8 @@ bmxtranswrap_SOURCES = \
 	InputTrack.h \
 	OutputTrack.cpp \
 	OutputTrack.h \
+	TrackMapper.cpp \
+	TrackMapper.h \
 	bmxtranswrap.cpp
 
 bmxtranswrap_CXXFLAGS = $(BMX_CFLAGS)

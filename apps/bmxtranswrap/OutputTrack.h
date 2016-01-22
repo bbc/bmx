@@ -54,6 +54,7 @@ public:
     ~OutputTrack();
 
     void AddInput(InputTrack *input_track, uint32_t input_channel_index, uint32_t output_channel_index);
+    void AddSilenceChannel(uint32_t output_channel_index);
     void SetPhysSrcTrackIndex(uint32_t index);
     void SetSkipPrecharge(int64_t precharge);
     void SetFilter(EssenceFilter *filter);

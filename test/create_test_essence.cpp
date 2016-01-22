@@ -124,11 +124,15 @@ static unsigned char DATA[4096];
 
 
 
-static void init_data()
+static void init_data(int init_val)
 {
-    size_t i;
-    for (i = 0; i < sizeof(DATA); i++)
-        DATA[i] = (unsigned char)i;
+    if (init_val >= 0) {
+      memset(DATA, init_val, sizeof(DATA));
+    } else {
+      size_t i;
+      for (i = 0; i < sizeof(DATA); i++)
+          DATA[i] = (unsigned char)i;
+    }
 }
 
 static void set_mpeg_bit(unsigned char *data, uint32_t bit_offset, unsigned char bit)
@@ -602,6 +606,7 @@ int main(int argc, const char **argv)
     const char *filename;
     unsigned int duration = 25;
     int type = TYPE_UNKNOWN;
+    int init_val = -1;
     int cmdln_index;
 
     for (cmdln_index = 1; cmdln_index < argc; cmdln_index++) {
@@ -628,6 +633,21 @@ int main(int argc, const char **argv)
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &type) != 1 ||
                 type <= TYPE_UNKNOWN || type >= TYPE_END)
+            {
+                print_usage(argv[0]);
+                fprintf(stderr, "Invalid argument '%s' for '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "-s") == 0)
+        {
+            if (cmdln_index + 1 >= argc) {
+                print_usage(argv[0]);
+                fprintf(stderr, "Missing argument for '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%d", &init_val) != 1)
             {
                 print_usage(argv[0]);
                 fprintf(stderr, "Invalid argument '%s' for '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -669,7 +689,7 @@ int main(int argc, const char **argv)
     filename = argv[cmdln_index];
 
 
-    init_data();
+    init_data(init_val);
 
     FILE *file = fopen(filename, "wb");
     if (!file) {

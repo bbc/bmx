@@ -87,6 +87,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\apps\bmxtranswrap\bmxtranswrap.cpp" />
+    <ClCompile Include="..\..\..\..\apps\bmxtranswrap\InputTrack.cpp" />
+    <ClCompile Include="..\..\..\..\apps\bmxtranswrap\OutputTrack.cpp" />
+    <ClCompile Include="..\..\..\..\apps\bmxtranswrap\TrackMapper.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\apps\bmxtranswrap\InputTrack.h" />
+    <ClInclude Include="..\..\..\..\apps\bmxtranswrap\OutputTrack.h" />
+    <ClInclude Include="..\..\..\..\apps\bmxtranswrap\TrackMapper.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\bmx\bmx.vcxproj">

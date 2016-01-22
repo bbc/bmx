@@ -710,6 +710,25 @@ string bmx::trim_string(string value)
     return value.substr(start, len);
 }
 
+vector<string> bmx::split_string(string value, char separator)
+{
+    vector<string> result;
+    size_t start = 0;
+    size_t end = 0;
+    while (end < value.size()) {
+        if (value[end] == separator) {
+            result.push_back(value.substr(start, end - start)); // could be an empty string
+            start = end + 1;
+            end = start;
+        }
+        end++;
+    }
+    if (end != start)
+        result.push_back(value.substr(start, end - start));
+
+    return result;
+}
+
 void bmx::get_xml_encoding(const unsigned char *data, size_t size, bmx::TextEncoding *encoding, bmx::ByteOrder *byte_order)
 {
     // see also section F in the XML specification, http://www.w3.org/TR/REC-xml/

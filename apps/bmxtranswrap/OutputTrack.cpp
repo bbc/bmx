@@ -79,6 +79,13 @@ void OutputTrack::AddInput(InputTrack *input_track, uint32_t input_channel_index
     BMX_ASSERT(mChannelCount == 1 || input_track->GetTrackInfo()->data_def == MXF_SOUND_DDEF);
 }
 
+void OutputTrack::AddSilenceChannel(uint32_t output_channel_index)
+{
+    BMX_ASSERT(mInputMaps.count(output_channel_index) == 0);
+    if (output_channel_index + 1 > mChannelCount)
+        mChannelCount = output_channel_index + 1;
+}
+
 void OutputTrack::SetPhysSrcTrackIndex(uint32_t index)
 {
     mPhysSrcTrackIndex = index;
@@ -129,7 +136,7 @@ void OutputTrack::WriteSamples(uint32_t output_channel_index,
         if (mAvailableChannelCount == 0) {
             mSampleBuffer.Allocate(frame_size);
             mSampleBuffer.SetSize(frame_size);
-            memset(mSampleBuffer.GetBytes(), 0, mSampleBuffer.GetSize()); // means padding writes requires memset
+            memset(mSampleBuffer.GetBytes(), 0, mSampleBuffer.GetSize()); // means silence channels already set
         }
         if (input_data) {
             uint32_t bits_per_sample = mClipWriterTrack->GetSampleSize() / mChannelCount * 8;
@@ -145,7 +152,7 @@ void OutputTrack::WriteSamples(uint32_t output_channel_index,
     input_map.have_sample_data = true;
 
     mAvailableChannelCount++;
-    if (mAvailableChannelCount < mChannelCount)
+    if (mAvailableChannelCount < mInputMaps.size())
         return;
 
 

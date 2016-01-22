@@ -99,6 +99,7 @@ bool check_is_abs_path(std::string name);
 bool check_ends_with_dir_separator(std::string name);
 
 std::string trim_string(std::string value);
+std::vector<std::string> split_string(std::string value, char separator);
 
 void get_xml_encoding(const unsigned char *data, size_t size, TextEncoding *encoding, ByteOrder *byte_order);
 
