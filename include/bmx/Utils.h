@@ -121,6 +121,7 @@ Rational convert_int_to_rational(int32_t value);
 
 std::string get_timecode_string(Timecode timecode);
 std::string get_umid_string(UMID umid);
+std::string get_uuid_string(UUID uuid);
 
 Rational normalize_rate(Rational rate);
 

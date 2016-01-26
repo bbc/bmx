@@ -43,6 +43,7 @@
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
 #include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
 #include <bmx/Version.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -112,6 +113,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mHaveVBITrack = false;
     mDataModel = 0;
     mHeaderMetadata = 0;
+    mHavePreparedHeaderMetadata = false;
     mHeaderMetadataEndPos = 0;
     mMaterialPackage = 0;
     mFileSourcePackage = 0;
@@ -124,6 +126,9 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mFooterPartitionOffset = 0;
     mMXFChecksumFile = 0;
     mCBEIndexPartitionIndex = 0;
+
+    mDataModel = new DataModel();
+    mHeaderMetadata = new HeaderMetadata(mDataModel);
 
     mIndexTable = new OP1AIndexTable(INDEX_SID, BODY_SID, frame_rate, (flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR));
     mCPManager = new OP1AContentPackageManager(mMXFFile, mIndexTable, frame_rate, mEssencePartitionKAGSize, MIN_LLEN);
@@ -302,7 +307,7 @@ OP1AXMLTrack* OP1AFile::CreateXMLTrack()
 
 void OP1AFile::PrepareHeaderMetadata()
 {
-    if (mHeaderMetadata)
+    if (mHavePreparedHeaderMetadata)
         return;
 
     BMX_CHECK(!mTracks.empty());
@@ -354,13 +359,15 @@ void OP1AFile::PrepareHeaderMetadata()
     }
 
     CreateHeaderMetadata();
+
+    mHavePreparedHeaderMetadata = true;
 }
 
 void OP1AFile::PrepareWrite()
 {
     mReserveMinBytes += 256; // account for extra bytes when updating header metadata
 
-    if (!mHeaderMetadata)
+    if (!mHavePreparedHeaderMetadata)
         PrepareHeaderMetadata();
 
     CreateFile();
@@ -603,7 +610,7 @@ OP1ATrack* OP1AFile::GetTrack(uint32_t track_index)
 
 void OP1AFile::CreateHeaderMetadata()
 {
-    BMX_ASSERT(!mHeaderMetadata);
+    BMX_ASSERT(!mHavePreparedHeaderMetadata);
 
     int64_t material_track_duration = -1; // unknown - could be updated if not writing in a single pass
     int64_t source_track_duration = -1; // unknown - could be updated if not writing in a single pass
@@ -616,11 +623,6 @@ void OP1AFile::CreateHeaderMetadata()
         source_track_duration = mInputDuration + mOutputEndOffset;
         source_track_origin = mOutputStartOffset;
     }
-
-    // create the header metadata
-    mDataModel = new DataModel();
-    mHeaderMetadata = new HeaderMetadata(mDataModel);
-
 
     // Preface
     Preface *preface = new Preface(mHeaderMetadata);
@@ -745,11 +747,14 @@ void OP1AFile::CreateHeaderMetadata()
         mTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage, mFileSourcePackage);
     for (i = 0; i < mXMLTracks.size(); i++)
         mXMLTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage);
+
+    // Check all the referenced MCA labels are present
+    CheckMCALabels();
 }
 
 void OP1AFile::CreateFile()
 {
-    BMX_ASSERT(mHeaderMetadata);
+    BMX_ASSERT(mHavePreparedHeaderMetadata);
 
 
     // set minimum llen
@@ -1013,3 +1018,76 @@ void OP1AFile::SetPartitionsFooterOffset()
         mMXFFile->getPartitions()[i]->setFooterPartition(mFooterPartitionOffset);
 }
 
+void OP1AFile::CheckMCALabels()
+{
+    map<UUID, pair<bool, bool> > soundfield_group_ids;
+    map<UUID, pair<bool, bool> > group_of_sf_group_ids;
+    size_t t;
+    for (t = 0; t < mTracks.size(); t++) {
+        OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mTracks[t]);
+        if (!pcm_track)
+            continue;
+
+        const vector<MCALabelSubDescriptor*> &track_mca_labels = pcm_track->GetMCALabels();
+        size_t m;
+        for (m = 0; m < track_mca_labels.size(); m++) {
+            const MCALabelSubDescriptor *desc = track_mca_labels[m];
+
+            const AudioChannelLabelSubDescriptor *c_desc             = dynamic_cast<const AudioChannelLabelSubDescriptor*>(desc);
+            const SoundfieldGroupLabelSubDescriptor *g_desc          = dynamic_cast<const SoundfieldGroupLabelSubDescriptor*>(desc);
+            const GroupOfSoundfieldGroupsLabelSubDescriptor *gg_desc = dynamic_cast<const GroupOfSoundfieldGroupsLabelSubDescriptor*>(desc);
+            if (c_desc) {
+                if (c_desc->haveSoundfieldGroupLinkID()) {
+                    UUID id = c_desc->getSoundfieldGroupLinkID();
+                    if (soundfield_group_ids.count(id))
+                        soundfield_group_ids[id].second = true;
+                    else
+                        soundfield_group_ids[id] = make_pair(false, true);
+                }
+            } else if (g_desc) {
+                UUID id = g_desc->getMCALinkID();
+                if (soundfield_group_ids.count(id))
+                    soundfield_group_ids[id].first = true;
+                else
+                    soundfield_group_ids[id] = make_pair(true, false);
+                if (g_desc->haveGroupOfSoundfieldGroupsLinkID()) {
+                    vector<UUID> ids = g_desc->getGroupOfSoundfieldGroupsLinkID();
+                    size_t l;
+                    for (l = 0; l < ids.size(); l++) {
+                        const UUID &gg_id = ids[l];
+                        if (group_of_sf_group_ids.count(gg_id))
+                            group_of_sf_group_ids[gg_id].second = true;
+                        else
+                            group_of_sf_group_ids[gg_id] = make_pair(false, true);
+                    }
+                }
+            } else if (gg_desc) {
+                UUID id = gg_desc->getMCALinkID();
+                if (group_of_sf_group_ids.count(id))
+                    group_of_sf_group_ids[id].first = true;
+                else
+                    group_of_sf_group_ids[id] = make_pair(true, false);
+            }
+        }
+    }
+
+    map<UUID, pair<bool, bool> >::const_iterator iter;
+    for (iter = soundfield_group_ids.begin(); iter != soundfield_group_ids.end(); iter++) {
+        BMX_CHECK_M(iter->second.first,
+                    ("Soundfield group descriptor with id '%s' is missing",
+                     get_uuid_string(iter->first).c_str()));
+        if (iter->second.first && !iter->second.second) {
+            log_warn("Soundfield group descriptor with id '%s' is not referenced\n",
+                     get_uuid_string(iter->first).c_str());
+        }
+    }
+    for (iter = group_of_sf_group_ids.begin(); iter != group_of_sf_group_ids.end(); iter++) {
+        BMX_CHECK_M(iter->second.first,
+                    ("Group of soundfield group descriptor with id '%s' is missing",
+                     get_uuid_string(iter->first).c_str()));
+        if (iter->second.first && !iter->second.second) {
+            log_warn("Group of soundfield group descriptor with id '%s' is not referenced\n",
+                     get_uuid_string(iter->first).c_str());
+        }
+    }
+}

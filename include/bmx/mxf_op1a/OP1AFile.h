@@ -102,8 +102,9 @@ public:
     void CompleteWrite();
 
 public:
+    bool HavePreparedHeaderMetadata() const          { return mHavePreparedHeaderMetadata; }
     mxfpp::HeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }
-    mxfpp::DataModel* GetDataModel() const { return mDataModel; }
+    mxfpp::DataModel* GetDataModel() const           { return mDataModel; }
 
     bool IsFrameWrapped() const { return mFrameWrapped; }
 
@@ -136,6 +137,8 @@ private:
     void WriteContentPackages(bool end_of_samples);
 
     void SetPartitionsFooterOffset();
+
+    void CheckMCALabels();
 
 private:
     int mFlavour;
@@ -170,6 +173,7 @@ private:
 
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;
+    bool mHavePreparedHeaderMetadata;
     int64_t mHeaderMetadataEndPos;
 
     std::set<mxfUL> mEssenceContainerULs;

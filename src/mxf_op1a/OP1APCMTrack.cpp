@@ -157,12 +157,76 @@ void OP1APCMTrack::SetSequenceOffset(uint8_t offset)
     SetSampleSequence();
 }
 
+AudioChannelLabelSubDescriptor* OP1APCMTrack::AddAudioChannelLabel(AudioChannelLabelSubDescriptor *copy_from)
+{
+    AudioChannelLabelSubDescriptor *desc;
+    if (copy_from)
+        desc = dynamic_cast<AudioChannelLabelSubDescriptor*>(copy_from->clone(mOP1AFile->GetHeaderMetadata()));
+    else
+        desc = new AudioChannelLabelSubDescriptor(mOP1AFile->GetHeaderMetadata());
+    desc->setMCALinkID(generate_uuid());
+    mMCALabels.push_back(desc);
+
+    return desc;
+}
+
+SoundfieldGroupLabelSubDescriptor* OP1APCMTrack::AddSoundfieldGroupLabel(SoundfieldGroupLabelSubDescriptor *copy_from)
+{
+    SoundfieldGroupLabelSubDescriptor *desc;
+    if (copy_from) {
+        desc = dynamic_cast<SoundfieldGroupLabelSubDescriptor*>(copy_from->clone(mOP1AFile->GetHeaderMetadata()));
+    } else {
+        desc = new SoundfieldGroupLabelSubDescriptor(mOP1AFile->GetHeaderMetadata());
+        desc->setMCALinkID(generate_uuid());
+    }
+    mMCALabels.push_back(desc);
+
+    return desc;
+}
+
+GroupOfSoundfieldGroupsLabelSubDescriptor* OP1APCMTrack::AddGroupOfSoundfieldGroupLabel(
+        GroupOfSoundfieldGroupsLabelSubDescriptor *copy_from)
+{
+    GroupOfSoundfieldGroupsLabelSubDescriptor *desc;
+    if (copy_from) {
+        desc = dynamic_cast<GroupOfSoundfieldGroupsLabelSubDescriptor*>(copy_from->clone(mOP1AFile->GetHeaderMetadata()));
+    } else {
+        desc = new GroupOfSoundfieldGroupsLabelSubDescriptor(mOP1AFile->GetHeaderMetadata());
+        desc->setMCALinkID(generate_uuid());
+    }
+    mMCALabels.push_back(desc);
+
+    return desc;
+}
+
 vector<uint32_t> OP1APCMTrack::GetShiftedSampleSequence() const
 {
     vector<uint32_t> shifted_sample_sequence = mSampleSequence;
     offset_sample_sequence(shifted_sample_sequence, mWaveDescriptorHelper->GetSequenceOffset());
 
     return shifted_sample_sequence;
+}
+
+void OP1APCMTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPackage *material_package,
+                                     SourcePackage *file_source_package)
+{
+    size_t i;
+    for (i = 0; i < mMCALabels.size(); i++) {
+        MCALabelSubDescriptor *desc = mMCALabels[i];
+        BMX_CHECK(desc->validate(true));
+
+        const AudioChannelLabelSubDescriptor *c_desc  = dynamic_cast<const AudioChannelLabelSubDescriptor*>(desc);
+        if (c_desc) {
+            BMX_CHECK(c_desc->haveMCAChannelID());
+            BMX_CHECK(c_desc->getMCAChannelID() > 0);
+            BMX_CHECK(c_desc->getMCAChannelID() <= mWaveDescriptorHelper->GetChannelCount());
+        }
+    }
+
+    OP1ATrack::AddHeaderMetadata(header_metadata, material_package, file_source_package);
+
+    for (i = 0; i < mMCALabels.size(); i++)
+        mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(mMCALabels[i]);
 }
 
 void OP1APCMTrack::PrepareWrite(uint8_t track_count)
@@ -184,4 +248,3 @@ void OP1APCMTrack::SetSampleSequence()
     mSampleSequence.clear();
     BMX_CHECK(get_sample_sequence(mFrameRate, mWaveDescriptorHelper->GetSamplingRate(), &mSampleSequence));
 }
-

@@ -85,8 +85,8 @@ protected:
     OP1ATrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
               mxfRational frame_rate, EssenceType essence_type);
 
-    void AddHeaderMetadata(mxfpp::HeaderMetadata *header_metadata, mxfpp::MaterialPackage *material_package,
-                           mxfpp::SourcePackage *file_source_package);
+    virtual void AddHeaderMetadata(mxfpp::HeaderMetadata *header_metadata, mxfpp::MaterialPackage *material_package,
+                                   mxfpp::SourcePackage *file_source_package);
 
 protected:
     virtual void PrepareWrite(uint8_t track_count) = 0;

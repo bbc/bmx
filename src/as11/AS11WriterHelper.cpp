@@ -67,8 +67,7 @@ AS11WriterHelper::AS11WriterHelper(ClipWriter *clip)
     mClip = clip;
     mSegmentationSequence = 0;
 
-    if (!clip->GetHeaderMetadata())
-        clip->PrepareHeaderMetadata();
+    clip->PrepareHeaderMetadata(); // will skip if header metadata already prepared
 
     AS11DMS::RegisterExtensions(clip->GetHeaderMetadata());
     UKDPPDMS::RegisterExtensions(clip->GetHeaderMetadata());

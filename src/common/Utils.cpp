@@ -997,6 +997,20 @@ string bmx::get_umid_string(UMID umid)
     return buffer;
 }
 
+string bmx::get_uuid_string(UUID uuid)
+{
+    char buffer[64];
+
+    bmx_snprintf(buffer, sizeof(buffer),
+                 "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+                 uuid.octet0,  uuid.octet1,  uuid.octet2,  uuid.octet3,
+                 uuid.octet4,  uuid.octet5,  uuid.octet6,  uuid.octet7,
+                 uuid.octet8,  uuid.octet9,  uuid.octet10, uuid.octet11,
+                 uuid.octet12, uuid.octet13, uuid.octet14, uuid.octet15);
+
+    return buffer;
+}
+
 bmx::Rational bmx::normalize_rate(Rational rate)
 {
     if (rate.numerator == 0 || rate.denominator == 0)
