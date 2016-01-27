@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <MXFDictionary>
 
-  <MXFTypes>
-    <Multiple>
-      <UUIDArray base="UUID" type="Array"/>
-    </Multiple>
-  </MXFTypes>
-
   <Preface>
     <IsRIPPresent type="Boolean" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 04 04 05 03 00 00 00 00"/>
   </Preface>
@@ -74,7 +68,9 @@
   </AudioChannelLabelSubDescriptor>
 
   <SoundfieldGroupLabelSubDescriptor base="MCALabelSubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 6c 00">
-    <GroupOfSoundfieldGroupsLinkID type="UUIDArray" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 01 03 07 01 04 00 00 00"/>
+    <GroupOfSoundfieldGroupsLinkID type="subVector" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 01 03 07 01 04 00 00 00">
+      <GroupOfSoundfieldGroupLinkID use="required" type="UUID" minLength="16" maxLength="16"/>
+    </GroupOfSoundfieldGroupsLinkID>
   </SoundfieldGroupLabelSubDescriptor>
 
   <GroupOfSoundfieldGroupsLabelSubDescriptor base="MCALabelSubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 6d 00">
