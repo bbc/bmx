@@ -106,6 +106,7 @@
     <ClInclude Include="..\..\..\include\bmx\apps\AppUtils.h" />
     <ClInclude Include="..\..\..\include\bmx\apps\AppXMLInfoWriter.h" />
     <ClInclude Include="..\..\..\include\bmx\apps\AS11Helper.h" />
+    <ClInclude Include="..\..\..\include\bmx\apps\MCALabelHelper.h" />
     <ClInclude Include="..\..\..\src\apps\ps_avci_header_data.h" />
     <ClInclude Include="..\..\..\include\bmx\as02\AS02AVCITrack.h" />
     <ClInclude Include="..\..\..\include\bmx\as02\AS02Bundle.h" />
@@ -124,6 +125,7 @@
     <ClInclude Include="..\..\..\include\bmx\as11\AS11CoreFramework.h" />
     <ClInclude Include="..\..\..\include\bmx\as11\AS11DMS.h" />
     <ClInclude Include="..\..\..\include\bmx\as11\AS11Info.h" />
+    <ClInclude Include="..\..\..\include\bmx\as11\AS11Labels.h" />
     <ClInclude Include="..\..\..\include\bmx\as11\AS11SegmentationFramework.h" />
     <ClInclude Include="..\..\..\include\bmx\as11\AS11WriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\as11\uk_dpp_extensions_data_model.h" />
@@ -255,6 +257,7 @@
     <ClCompile Include="..\..\..\src\apps\AppUtils.cpp" />
     <ClCompile Include="..\..\..\src\apps\AppXMLInfoWriter.cpp" />
     <ClCompile Include="..\..\..\src\apps\AS11Helper.cpp" />
+    <ClCompile Include="..\..\..\src\apps\MCALabelHelper.cpp" />
     <ClCompile Include="..\..\..\src\as02\AS02AVCITrack.cpp" />
     <ClCompile Include="..\..\..\src\as02\AS02Bundle.cpp" />
     <ClCompile Include="..\..\..\src\as02\AS02Clip.cpp" />
@@ -271,6 +274,7 @@
     <ClCompile Include="..\..\..\src\as11\AS11CoreFramework.cpp" />
     <ClCompile Include="..\..\..\src\as11\AS11DMS.cpp" />
     <ClCompile Include="..\..\..\src\as11\AS11Info.cpp" />
+    <ClCompile Include="..\..\..\src\as11\AS11Labels.cpp" />
     <ClCompile Include="..\..\..\src\as11\AS11SegmentationFramework.cpp" />
     <ClCompile Include="..\..\..\src\as11\AS11WriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\as11\UKDPPDMS.cpp" />

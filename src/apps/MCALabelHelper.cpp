@@ -1,0 +1,413 @@
+/*
+ * Copyright (C) 2016, British Broadcasting Corporation
+ * All Rights Reserved.
+ *
+ * Author: Philip de Nier
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *     * Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the British Broadcasting Corporation nor the names
+ *       of its contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <bmx/apps/MCALabelHelper.h>
+
+#include <string.h>
+#include <stdio.h>
+
+#include <fstream>
+
+#include <bmx/clip_writer/ClipWriter.h>
+#include <bmx/mxf_op1a/OP1APCMTrack.h>
+#include <bmx/Utils.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
+
+using namespace std;
+using namespace mxfpp;
+using namespace bmx;
+
+
+MCALabelHelper::LabelLine::LabelLine()
+{
+    Reset();
+}
+
+void MCALabelHelper::LabelLine::Reset()
+{
+    label = 0;
+    id.clear();
+    channel_index = (uint32_t)(-1);
+    language.clear();
+}
+
+
+void MCALabelHelper::SoundfieldGroup::Reset()
+{
+    label_line.Reset();
+    channel_label_lines.clear();
+}
+
+
+void MCALabelHelper::GroupOfSoundFieldGroups::Reset()
+{
+    label_lines.clear();
+    group.Reset();
+}
+
+
+
+MCALabelHelper::MCALabelHelper()
+{
+}
+
+MCALabelHelper::~MCALabelHelper()
+{
+    ClearTrackLabels();
+}
+
+bool MCALabelHelper::IndexLabels(const MCALabelEntry *entries, size_t num_entries)
+{
+    size_t i;
+    for (i = 0; i < num_entries; i++) {
+        const MCALabelEntry &entry = entries[i];
+        if (mEntries.count(entry.tag_symbol)) {
+            log_error("Duplicate audio label entry tag symbol '%s'\n", entry.tag_symbol);
+            return false;
+        }
+        mEntries[entry.tag_symbol] = &entry;
+    }
+
+    return true;
+}
+
+bool MCALabelHelper::ParseTrackLabels(const string &filename)
+{
+    ClearTrackLabels();
+
+    int line_number = 0;
+    try
+    {
+        ifstream input(filename.c_str());
+        if (!input.is_open())
+            throw BMXException("Failed to open track labels file '%s'", filename.c_str());
+
+        vector<string> track_lines;
+        string line;
+        while (std::getline(input, line)) {
+            line = trim_string(line);
+            if (line.empty()) {
+                if (!track_lines.empty()) {
+                    ParseTrackLines(track_lines);
+                    track_lines.clear();
+                }
+            } else {
+                track_lines.push_back(line);
+            }
+            line_number++;
+        }
+        if (!track_lines.empty())
+            ParseTrackLines(track_lines);
+
+        return true;
+    }
+    catch (const BMXException &ex)
+    {
+        log_error("%s\n", ex.what());
+        log_error("Failed to parse track labels, in label group ending at line %d\n", line_number);
+        return false;
+    }
+    catch (...)
+    {
+        log_error("Failed to parse track labels, in label group ending at line %d\n", line_number);
+        return false;
+    }
+}
+
+void MCALabelHelper::InsertTrackLabels(ClipWriter *clip)
+{
+    OP1AFile *op1a_file = clip->GetOP1AClip();
+    BMX_CHECK(op1a_file);
+
+    vector<OP1APCMTrack*> pcm_tracks;
+    size_t i;
+    for (i = 0; i < op1a_file->GetNumTracks(); i++) {
+        OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(op1a_file->GetTrack(i));
+        if (pcm_track)
+            pcm_tracks.push_back(pcm_track);
+    }
+
+    map<string, SoundfieldGroupLabelSubDescriptor*> package_sg_desc_byid;
+    map<string, GroupOfSoundfieldGroupsLabelSubDescriptor*> package_gosg_desc_byid;
+
+    for (i = 0; i < mTrackLabels.size(); i++) {
+        TrackLabels *track_labels = mTrackLabels[i];
+        if (track_labels->gos_groups.empty())
+            continue;
+
+        if (track_labels->track_index >= pcm_tracks.size())
+            BMX_EXCEPTION(("PCM (only) output track index %u does not exist", track_labels->track_index));
+        OP1APCMTrack *pcm_track = pcm_tracks[track_labels->track_index];
+
+        map<string, SoundfieldGroupLabelSubDescriptor*> track_sg_desc_byid;
+        map<string, GroupOfSoundfieldGroupsLabelSubDescriptor*> track_gosg_desc_byid;
+
+        size_t g;
+        for (g = 0; g < track_labels->gos_groups.size(); g++) {
+            GroupOfSoundFieldGroups &gosg = track_labels->gos_groups[g];
+
+            set<UUID> gosg_link_ids;
+            size_t l;
+            for (l = 0; l < gosg.label_lines.size(); l++) {
+                LabelLine &gosg_label_line = gosg.label_lines[l];
+
+                GroupOfSoundfieldGroupsLabelSubDescriptor *gosg_desc;
+                if (!gosg_label_line.id.empty() && package_gosg_desc_byid.count(gosg_label_line.id)) {
+                    gosg_desc = package_gosg_desc_byid[gosg_label_line.id];
+                    if (gosg_desc->getMCALabelDictionaryID() != gosg_label_line.label->dict_id) {
+                        BMX_EXCEPTION(("Different group of soundfield group labels are using the same label id '%s'",
+                                       gosg_label_line.id.c_str()));
+                    }
+                    if (!gosg_label_line.language.empty() && // allow non-first occurrence to not repeat language
+                        (!gosg_desc->haveRFC5646SpokenLanguage() ||
+                            gosg_label_line.language != gosg_desc->getRFC5646SpokenLanguage()))
+                    {
+                        BMX_EXCEPTION(("Group of soundfield group labels with id '%s' are using different languages",
+                                       gosg_label_line.id.c_str()));
+                    }
+
+                    if (!track_gosg_desc_byid.count(gosg_label_line.id)) {
+                        gosg_desc = pcm_track->AddGroupOfSoundfieldGroupLabel(gosg_desc);
+                        track_gosg_desc_byid[gosg_label_line.id] = gosg_desc;
+                    }
+                } else {
+                    gosg_desc = pcm_track->AddGroupOfSoundfieldGroupLabel();
+                    gosg_desc->setMCALabelDictionaryID(gosg_label_line.label->dict_id);
+                    gosg_desc->setMCATagSymbol(gosg_label_line.label->tag_symbol);
+                    if (gosg_label_line.label->tag_name && gosg_label_line.label->tag_name[0])
+                        gosg_desc->setMCATagName(gosg_label_line.label->tag_name);
+                    if (!gosg_label_line.language.empty())
+                        gosg_desc->setRFC5646SpokenLanguage(gosg_label_line.language);
+
+                    if (!gosg_label_line.id.empty()) {
+                        package_gosg_desc_byid[gosg_label_line.id] = gosg_desc;
+                        track_gosg_desc_byid[gosg_label_line.id] = gosg_desc;
+                    }
+                }
+
+                gosg_link_ids.insert(gosg_desc->getMCALinkID());
+            }
+
+            SoundfieldGroupLabelSubDescriptor *sg_desc = 0;
+            if (gosg.group.label_line.label) {
+                LabelLine &sg_label_line = gosg.group.label_line;
+
+                if (!sg_label_line.id.empty() && package_sg_desc_byid.count(sg_label_line.id)) {
+                    sg_desc = package_sg_desc_byid[sg_label_line.id];
+                    if (sg_desc->getMCALabelDictionaryID() != sg_label_line.label->dict_id) {
+                        BMX_EXCEPTION(("Different soundfield group labels are using the same label id '%s'",
+                                       sg_label_line.id.c_str()));
+                    }
+                    if (!sg_label_line.language.empty() &&  // allow non-first occurrence to not repeat language
+                        (!sg_desc->haveRFC5646SpokenLanguage() ||
+                            sg_label_line.language != sg_desc->getRFC5646SpokenLanguage()))
+                    {
+                        BMX_EXCEPTION(("Soundfield group labels with id '%s' are using different languages",
+                                       sg_label_line.id.c_str()));
+                    }
+                    vector<UUID> first_link_ids = sg_desc->getGroupOfSoundfieldGroupsLinkID();
+                    if (first_link_ids.size() != gosg_link_ids.size()) {
+                        BMX_EXCEPTION(("Different link id counts for same soundfield group labels with id '%s'",
+                                       sg_label_line.id.c_str()));
+                    }
+                    size_t y;
+                    for (y = 0; y < first_link_ids.size(); y++) {
+                        if (!gosg_link_ids.count(first_link_ids[y])) {
+                            BMX_EXCEPTION(("Different link ids for same soundfield group labels with id '%s'",
+                                           sg_label_line.id.c_str()));
+                        }
+                    }
+
+                    if (!track_sg_desc_byid.count(sg_label_line.id)) {
+                        sg_desc = pcm_track->AddSoundfieldGroupLabel(sg_desc);
+                        track_sg_desc_byid[sg_label_line.id] = sg_desc;
+                    }
+                } else {
+                    sg_desc = pcm_track->AddSoundfieldGroupLabel();
+                    sg_desc->setMCALabelDictionaryID(sg_label_line.label->dict_id);
+                    sg_desc->setMCATagSymbol(sg_label_line.label->tag_symbol);
+                    if (sg_label_line.label->tag_name && sg_label_line.label->tag_name[0])
+                        sg_desc->setMCATagName(sg_label_line.label->tag_name);
+                    if (!sg_label_line.language.empty())
+                        sg_desc->setRFC5646SpokenLanguage(sg_label_line.language);
+
+                    set<UUID>::const_iterator iter;
+                    for (iter = gosg_link_ids.begin(); iter != gosg_link_ids.end(); iter++)
+                        sg_desc->appendGroupOfSoundfieldGroupsLinkID(*iter);
+
+                    if (!sg_label_line.id.empty()) {
+                        package_sg_desc_byid[sg_label_line.id] = sg_desc;
+                        track_sg_desc_byid[sg_label_line.id] = sg_desc;
+                    }
+                }
+            }
+
+            size_t c;
+            for (c = 0; c < gosg.group.channel_label_lines.size(); c++) {
+                LabelLine &c_label_line = gosg.group.channel_label_lines[c];
+
+                if (c_label_line.channel_index >= pcm_track->GetChannelCount()) {
+                    BMX_EXCEPTION(("Channel label channel index %u >= track channel count %u",
+                                   c_label_line.channel_index, pcm_track->GetChannelCount()));
+                }
+
+                AudioChannelLabelSubDescriptor *a_desc = pcm_track->AddAudioChannelLabel();
+                a_desc->setMCAChannelID(c_label_line.channel_index + 1); // +1 because MCAChannelID starts from 1
+                a_desc->setMCALabelDictionaryID(c_label_line.label->dict_id);
+                a_desc->setMCATagSymbol(c_label_line.label->tag_symbol);
+                if (c_label_line.label->tag_name && c_label_line.label->tag_name[0])
+                    a_desc->setMCATagName(c_label_line.label->tag_name);
+                if (!c_label_line.language.empty())
+                    a_desc->setRFC5646SpokenLanguage(c_label_line.language);
+
+                if (sg_desc)
+                    a_desc->setSoundfieldGroupLinkID(sg_desc->getMCALinkID());
+            }
+        }
+    }
+}
+
+void MCALabelHelper::ParseTrackLines(const vector<string> &lines)
+{
+    TrackLabels *track_labels = 0;
+    try
+    {
+        BMX_ASSERT(!lines.empty());
+
+        unsigned int track_index;
+        if (sscanf(lines[0].c_str(), "%u", &track_index) != 1)
+            throw BMXException("Failed to parse audio track index from '%s'", lines[0].c_str());
+        if (mTrackLabelsByTrackIndex.count(track_index))
+            throw BMXException("Duplicate audio track index %u", track_index);
+
+        track_labels = new TrackLabels();
+        track_labels->track_index = track_index;
+
+        GroupOfSoundFieldGroups gosg;
+        size_t i;
+        for (i = 1; i < lines.size(); i++) {
+            LabelLine label_line = ParseLabelLine(lines[i]);
+
+            if (label_line.label->type == AUDIO_CHANNEL_LABEL) {
+                if (!gosg.label_lines.empty() || gosg.group.label_line.label) {
+                    track_labels->gos_groups.push_back(gosg);
+                    gosg.Reset();
+                }
+                gosg.group.channel_label_lines.push_back(label_line);
+            } else if (label_line.label->type == SOUNDFIELD_GROUP_LABEL) {
+                if (gosg.group.channel_label_lines.empty())
+                    throw BMXException("No channels in soundfield group");
+                if (gosg.group.label_line.label)
+                    throw BMXException("Multiple soundfield group labels");
+                gosg.group.label_line = label_line;
+            } else { // GROUP_OF_SOUNDFIELD_GROUP_LABEL
+                if (!gosg.group.label_line.label)
+                    throw BMXException("No soundfield group label before group of soundfield groups label");
+                gosg.label_lines.push_back(label_line);
+            }
+        }
+        if (!gosg.label_lines.empty() || gosg.group.label_line.label || !gosg.group.channel_label_lines.empty()) {
+            track_labels->gos_groups.push_back(gosg);
+            gosg.Reset();
+        }
+
+        mTrackLabels.push_back(track_labels);
+        mTrackLabelsByTrackIndex[track_index] = track_labels;
+    }
+    catch (...)
+    {
+        delete track_labels;
+        throw;
+    }
+}
+
+MCALabelHelper::LabelLine MCALabelHelper::ParseLabelLine(const string &line)
+{
+    LabelLine label_line;
+
+    vector<string> elements = split_string(line, ',', false);
+    BMX_ASSERT(!elements.empty());
+
+    string label_str = trim_string(elements[0]);
+    label_line.label = Find(label_str);
+    if (!label_line.label)
+        throw BMXException("Unknown audio label '%s'", label_str.c_str());
+
+    size_t i;
+    for (i = 1; i < elements.size(); i++) {
+        vector<string> nv_pair = split_string(elements[i], '=', false);
+        if (nv_pair.size() != 2)
+            throw BMXException("Invalid audio label <name>=<value> attribute string '%s'", elements[i].c_str());
+        string name  = trim_string(nv_pair[0]);
+        string value = trim_string(nv_pair[1]);
+        if (name.empty() || value.empty())
+            throw BMXException("Invalid audio label attribute '%s'", elements[i].c_str());
+        if (name == "id") {
+            label_line.id = value;
+        } else if (name == "chan") {
+            unsigned int channel_index;
+            if (sscanf(value.c_str(), "%u", &channel_index) != 1)
+                throw BMXException("Failed to parse channel index from line '%s'", elements[i].c_str());
+            label_line.channel_index = channel_index;
+        } else if (name == "lang") {
+            label_line.language = value;
+        } else {
+            log_warn("Ignoring unknown audio label attribute '%s'\n", elements[i].c_str());
+        }
+    }
+
+    if (label_line.label->type == AUDIO_CHANNEL_LABEL && label_line.channel_index == (uint32_t)(-1))
+        throw BMXException("Missing 'chan' audio channel label attribute");
+
+    return label_line;
+}
+
+const MCALabelEntry* MCALabelHelper::Find(const string &id_str)
+{
+    if (mEntries.count(id_str))
+        return mEntries[id_str];
+    else
+        return 0;
+}
+
+void MCALabelHelper::ClearTrackLabels()
+{
+    size_t i;
+    for (i = 0; i < mTrackLabels.size(); i++)
+        delete mTrackLabels[i];
+    mTrackLabels.clear();
+    mTrackLabelsByTrackIndex.clear();
+}

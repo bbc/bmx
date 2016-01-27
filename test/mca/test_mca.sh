@@ -6,7 +6,7 @@ md5tool=../file_md5
 
 testdir=..
 appsdir=../../apps
-tmpdir=/tmp/bmxtranswraptestmca_temp$$
+tmpdir=/tmp/mca_temp$$
 sampledir=/tmp/
 
 

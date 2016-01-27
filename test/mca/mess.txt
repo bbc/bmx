@@ -1,0 +1,25 @@
+0
+chL, chan=0
+chR, chan=1
+sgST, id=g1, lang=en
+ggAPg, id=1
+
+1
+chL, chan=0, lang=fr
+chR, chan=1
+sgST
+ggMPg, id=2, lang=de
+chL, chan=2
+chR, chan=3
+sgST, lang=en
+ggMPg, id=2
+chL, chan=0
+chR, chan=4
+sgST, id=g1, lang=en
+ggAPg, id=1
+chL, chan=3
+chR, chan=4
+sgST, id=g2, lang=en
+chL, chan=0
+chR, chan=1
+

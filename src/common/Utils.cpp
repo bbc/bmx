@@ -710,14 +710,15 @@ string bmx::trim_string(string value)
     return value.substr(start, len);
 }
 
-vector<string> bmx::split_string(string value, char separator)
+vector<string> bmx::split_string(string value, char separator, bool allow_empty)
 {
     vector<string> result;
     size_t start = 0;
     size_t end = 0;
     while (end < value.size()) {
         if (value[end] == separator) {
-            result.push_back(value.substr(start, end - start)); // could be an empty string
+            if (allow_empty || end != start)
+                result.push_back(value.substr(start, end - start));
             start = end + 1;
             end = start;
         }
@@ -836,23 +837,35 @@ bmx::UUID bmx::generate_uuid()
 {
     UUID bmx_uuid;
 
+    if (BMX_REGRESSION_TEST) {
+        static uint32_t count = 65537; // not 1 to avoid clashing with libMXF generated regtest UUID
+
+        memset(&bmx_uuid, 0, sizeof(bmx_uuid));
+        bmx_uuid.octet12 = (uint8_t)((count >> 24) & 0xff);
+        bmx_uuid.octet13 = (uint8_t)((count >> 16) & 0xff);
+        bmx_uuid.octet14 = (uint8_t)((count >> 8)  & 0xff);
+        bmx_uuid.octet15 = (uint8_t)( count        & 0xff);
+
+        count++;
+    } else {
 #if defined(_WIN32)
-    GUID guid;
-    CoCreateGuid(&guid);
-    bmx_uuid.octet0 = (uint8_t)((guid.Data1 >> 24) & 0xff);
-    bmx_uuid.octet1 = (uint8_t)((guid.Data1 >> 16) & 0xff);
-    bmx_uuid.octet2 = (uint8_t)((guid.Data1 >>  8) & 0xff);
-    bmx_uuid.octet3 = (uint8_t)((guid.Data1      ) & 0xff);
-    bmx_uuid.octet4 = (uint8_t)((guid.Data2 >>  8) & 0xff);
-    bmx_uuid.octet5 = (uint8_t)((guid.Data2      ) & 0xff);
-    bmx_uuid.octet6 = (uint8_t)((guid.Data3 >>  8) & 0xff);
-    bmx_uuid.octet7 = (uint8_t)((guid.Data3      ) & 0xff);
-    memcpy(&bmx_uuid.octet8, guid.Data4, 8);
+        GUID guid;
+        CoCreateGuid(&guid);
+        bmx_uuid.octet0 = (uint8_t)((guid.Data1 >> 24) & 0xff);
+        bmx_uuid.octet1 = (uint8_t)((guid.Data1 >> 16) & 0xff);
+        bmx_uuid.octet2 = (uint8_t)((guid.Data1 >>  8) & 0xff);
+        bmx_uuid.octet3 = (uint8_t)((guid.Data1      ) & 0xff);
+        bmx_uuid.octet4 = (uint8_t)((guid.Data2 >>  8) & 0xff);
+        bmx_uuid.octet5 = (uint8_t)((guid.Data2      ) & 0xff);
+        bmx_uuid.octet6 = (uint8_t)((guid.Data3 >>  8) & 0xff);
+        bmx_uuid.octet7 = (uint8_t)((guid.Data3      ) & 0xff);
+        memcpy(&bmx_uuid.octet8, guid.Data4, 8);
 #else
-    uuid_t uuid;
-    uuid_generate(uuid);
-    memcpy(&bmx_uuid, &uuid, sizeof(bmx_uuid));
+        uuid_t uuid;
+        uuid_generate(uuid);
+        memcpy(&bmx_uuid, &uuid, sizeof(bmx_uuid));
 #endif
+    }
 
     return bmx_uuid;
 }

@@ -63,6 +63,8 @@
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/Version.h>
+#include <bmx/as11/AS11Labels.h>
+#include <bmx/apps/MCALabelHelper.h>
 #include <bmx/apps/AppMXFFileFactory.h>
 #include <bmx/apps/AppUtils.h>
 #include <bmx/apps/AS11Helper.h>
@@ -508,6 +510,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            is shown as '<output track channel> <- <input channel>\n");
     fprintf(stderr, "    --dump-track-map-exit   Same as --dump-track-map, but exit immediately afterwards\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "  op1a/as11op1a:\n");
+    fprintf(stderr, "    --track-mca-labels <scheme> <file>   Insert audio labels defined in <file> using the symbol <scheme>\n");
+    fprintf(stderr, "                                         The available <scheme>s are: 'as11'\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "Input options:\n");
     fprintf(stderr, "  --disable-tracks <tracks> A comma separated list of track indexes and/or ranges to disable.\n");
     fprintf(stderr, "                            A track is identified by the index reported by mxf2raw\n");
@@ -672,6 +678,7 @@ int main(int argc, const char** argv)
     TrackMapper track_mapper;
     bool dump_track_map = false;
     bool dump_track_map_exit = false;
+    vector<pair<string, string> > track_mca_labels;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -1727,6 +1734,23 @@ int main(int argc, const char** argv)
         {
             dump_track_map = true;
             dump_track_map_exit = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--track-mca-labels") == 0)
+        {
+            if (cmdln_index + 3 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (strcmp(argv[cmdln_index + 1], "as11") != 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "MCA labels scheme '%s' is not supported\n", argv[cmdln_index + 1]);
+                return 1;
+            }
+            track_mca_labels.push_back(make_pair(argv[cmdln_index + 1], argv[cmdln_index + 2]));
+            cmdln_index += 2;
         }
         else if (strcmp(argv[cmdln_index], "--regtest") == 0)
         {
@@ -2988,6 +3012,24 @@ int main(int argc, const char** argv)
                 (clip_type == CW_D10_CLIP_TYPE  && (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR)))
             {
                 as11_helper.Complete();
+            }
+        }
+
+
+        // insert MCA labels
+
+        if (!track_mca_labels.empty()) {
+            MCALabelHelper label_helper;
+            index_as11_mca_labels(&label_helper);
+
+            size_t i;
+            for (i = 0; i < track_mca_labels.size(); i++) {
+                BMX_ASSERT(track_mca_labels[i].first == "as11");
+                if (!label_helper.ParseTrackLabels(track_mca_labels[i].second)) {
+                    log_error("Failed to parse audio labels file '%s'\n", track_mca_labels[i].second.c_str());
+                    throw false;
+                }
+                label_helper.InsertTrackLabels(clip);
             }
         }
 

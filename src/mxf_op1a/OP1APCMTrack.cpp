@@ -207,6 +207,11 @@ vector<uint32_t> OP1APCMTrack::GetShiftedSampleSequence() const
     return shifted_sample_sequence;
 }
 
+uint32_t OP1APCMTrack::GetChannelCount() const
+{
+    return mWaveDescriptorHelper->GetChannelCount();
+}
+
 void OP1APCMTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPackage *material_package,
                                      SourcePackage *file_source_package)
 {
@@ -225,8 +230,10 @@ void OP1APCMTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPa
 
     OP1ATrack::AddHeaderMetadata(header_metadata, material_package, file_source_package);
 
-    for (i = 0; i < mMCALabels.size(); i++)
+    for (i = 0; i < mMCALabels.size(); i++) {
+        header_metadata->moveToEnd(mMCALabels[i]); // so that they appear after the descriptor in the file
         mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(mMCALabels[i]);
+    }
 }
 
 void OP1APCMTrack::PrepareWrite(uint8_t track_count)

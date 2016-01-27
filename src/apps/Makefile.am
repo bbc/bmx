@@ -7,6 +7,7 @@ libapps_la_SOURCES = \
 	AppUtils.cpp \
 	AppXMLInfoWriter.cpp \
 	AS11Helper.cpp \
+	MCALabelHelper.cpp \
 	ps_avci_header_data.h
 
 libapps_la_CXXFLAGS = $(BMX_CFLAGS)

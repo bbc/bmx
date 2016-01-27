@@ -157,14 +157,14 @@ TrackMapper::ParsedGroup* TrackMapper::ParsedGroup::Parse(ParsedDefinition *def,
         if (group_str[0] == 'x') {
             group->elements.push_back(ParsedRemainderRange::Parse(def, group_str));
         } else {
-            vector<string> items = split_string(group_str, ',');
+            vector<string> items = split_string(group_str, ',', false);
             size_t i;
             for (i = 0; i < items.size(); i++) {
                 string item_str = trim_string(items[i]);
                 if (item_str.empty())
                     continue;
 
-                vector<string> range = split_string(item_str, '-');
+                vector<string> range = split_string(item_str, '-', true);
                 BMX_CHECK(range.size() <= 2);
                 if (range.size() == 1) {
                     string input_str = trim_string(range[0]);
@@ -211,7 +211,7 @@ TrackMapper::ParsedDefinition* TrackMapper::ParsedDefinition::Parse(const string
     {
         def = new ParsedDefinition();
 
-        vector<string> groups = split_string(def_str, ';');
+        vector<string> groups = split_string(def_str, ';', false);
         size_t g;
         for (g = 0; g < groups.size(); g++) {
             string group_str = trim_string(groups[g]);
