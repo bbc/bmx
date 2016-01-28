@@ -217,6 +217,7 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFFrameMetadata.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFGroupReader.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFIndexEntryExt.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFMCALabelIndex.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFPackageResolver.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFReader.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFSequenceReader.h" />
@@ -379,6 +380,7 @@
     <ClCompile Include="..\..\..\src\mxf_reader\MXFFrameMetadata.cpp" />
     <ClCompile Include="..\..\..\src\mxf_reader\MXFGroupReader.cpp" />
     <ClCompile Include="..\..\..\src\mxf_reader\MXFIndexEntryExt.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_reader\MXFMCALabelIndex.cpp" />
     <ClCompile Include="..\..\..\src\mxf_reader\MXFPackageResolver.cpp" />
     <ClCompile Include="..\..\..\src\mxf_reader\MXFReader.cpp" />
     <ClCompile Include="..\..\..\src\mxf_reader\MXFSequenceReader.cpp" />

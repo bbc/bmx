@@ -39,6 +39,11 @@
 #include <bmx/EssenceType.h>
 
 
+namespace mxfpp
+{
+    class AudioChannelLabelSubDescriptor;
+};
+
 
 namespace bmx
 {
@@ -128,6 +133,7 @@ public:
     BMX_OPT_PROP_DECL(bool, locked);
     BMX_OPT_PROP_DECL(int8_t, audio_ref_level);
     BMX_OPT_PROP_DECL(int8_t, dial_norm);
+    std::vector<mxfpp::AudioChannelLabelSubDescriptor*> mca_labels;
 };
 
 

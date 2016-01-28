@@ -518,6 +518,9 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFIndexEntryExt.h">
       <Filter>Header Files\mxf_reader</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFMCALabelIndex.h">
+      <Filter>Header Files\mxf_reader</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_reader\MXFPackageResolver.h">
       <Filter>Header Files\mxf_reader</Filter>
     </ClInclude>
@@ -998,6 +1001,9 @@
       <Filter>Source Files\mxf_reader</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_reader\MXFIndexEntryExt.cpp">
+      <Filter>Source Files\mxf_reader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_reader\MXFMCALabelIndex.cpp">
       <Filter>Source Files\mxf_reader</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_reader\MXFPackageResolver.cpp">

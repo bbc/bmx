@@ -36,6 +36,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 #include <libMXF++/MXF.h>
 
@@ -91,6 +92,7 @@ public:
     virtual void SetEmptyFrames(bool enable);
     void SetST436ManifestFrameCount(uint32_t count);     // default: 2 frames used to extract manifest
     virtual void SetFileIndex(MXFFileIndex *file_index, bool take_ownership);
+    virtual void SetMCALabelIndex(MXFMCALabelIndex *label_index, bool take_ownership);
 
     OpenResult Open(std::string filename);
     OpenResult Open(mxfpp::File *file, std::string filename);
@@ -184,6 +186,11 @@ private:
     void ProcessSoundDescriptor(mxfpp::FileDescriptor *file_descriptor, MXFSoundTrackInfo *sound_track_info);
     void ProcessDataDescriptor(mxfpp::FileDescriptor *file_descriptor, MXFDataTrackInfo *data_track_info);
 
+    void IndexMCALabels(mxfpp::GenericDescriptor *descriptor);
+    void ProcessMCALabels(mxfpp::FileDescriptor *file_desc, MXFSoundTrackInfo *sound_track_info);
+
+    mxfpp::FileDescriptor* GetFileDescriptor(mxfpp::GenericDescriptor *descriptor, uint32_t fsp_track_id);
+
     size_t GetNumInternalTrackReaders() const { return mInternalTrackReaders.size(); }
     MXFTrackReader* GetInternalTrackReader(size_t index) const;
     MXFTrackReader* GetInternalTrackReaderByNumber(uint32_t track_number) const;
@@ -249,6 +256,8 @@ private:
 
     uint32_t mRequireFrameInfoCount;
     uint32_t mST436ManifestCount;
+
+    std::set<mxfpp::SourcePackage*> mMCALabelIndexedPackages;
 };
 
 

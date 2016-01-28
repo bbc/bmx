@@ -133,6 +133,7 @@ void MXFGroupReader::SetFileIndex(MXFFileIndex *file_index, bool take_ownership)
 void MXFGroupReader::AddReader(MXFReader *reader)
 {
     reader->SetFileIndex(mFileIndex, false);
+    reader->SetMCALabelIndex(mMCALabelIndex, false);
     mReaders.push_back(reader);
 }
 

@@ -121,6 +121,7 @@ void MXFSequenceReader::AddReader(MXFReader *reader)
         BMX_EXCEPTION(("MXF sequence reader currently only supports complete files with known duration"));
 
     reader->SetFileIndex(mFileIndex, false);
+    reader->SetMCALabelIndex(mMCALabelIndex, false);
     mReaders.push_back(reader);
 }
 

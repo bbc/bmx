@@ -60,6 +60,8 @@ MXFReader::MXFReader()
     mMaterialPackage = 0;
     mFileIndex = new MXFFileIndex();
     mOwnFileIndex = true;
+    mMCALabelIndex = new MXFMCALabelIndex();
+    mOwnMCALabelIndex = true;
 }
 
 MXFReader::~MXFReader()
@@ -69,6 +71,8 @@ MXFReader::~MXFReader()
     delete mPhysicalSourceStartTimecode;
     if (mOwnFileIndex)
         delete mFileIndex;
+    if (mOwnMCALabelIndex)
+        delete mMCALabelIndex;
 }
 
 void MXFReader::SetFileIndex(MXFFileIndex *file_index, bool take_ownership)
@@ -82,6 +86,19 @@ void MXFReader::SetFileIndex(MXFFileIndex *file_index, bool take_ownership)
         delete mFileIndex;
     mFileIndex = file_index;
     mOwnFileIndex = take_ownership;
+}
+
+void MXFReader::SetMCALabelIndex(MXFMCALabelIndex *label_index, bool take_ownership)
+{
+    if (label_index == mMCALabelIndex)
+        return;
+
+    label_index->RegisterLabels(mMCALabelIndex);
+
+    if (mOwnMCALabelIndex)
+        delete mMCALabelIndex;
+    mMCALabelIndex = label_index;
+    mOwnMCALabelIndex = take_ownership;
 }
 
 void MXFReader::ClearFrameBuffers(bool del_frames)

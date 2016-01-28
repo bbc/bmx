@@ -238,6 +238,15 @@ void MXFFileReader::SetFileIndex(MXFFileIndex *file_index, bool take_ownership)
         mExternalReaders[i]->SetFileIndex(file_index, false);
 }
 
+void MXFFileReader::SetMCALabelIndex(MXFMCALabelIndex *label_index, bool take_ownership)
+{
+    MXFReader::SetMCALabelIndex(label_index, take_ownership);
+
+    size_t i;
+    for (i = 0; i < mExternalReaders.size(); i++)
+        mExternalReaders[i]->SetMCALabelIndex(label_index, false);
+}
+
 MXFFileReader::OpenResult MXFFileReader::Open(string filename)
 {
     File *file = 0;
@@ -1058,6 +1067,19 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
             track_info->edit_rate             = normalize_rate(mp_track->getEditRate());
             track_info->duration              = mp_source_clip->getDuration();
             track_info->lead_filler_offset    = lead_filler_offset;
+
+            // override external MCA labels if labels are also present in this files descriptor
+            MXFSoundTrackInfo *sound_track_info = dynamic_cast<MXFSoundTrackInfo*>(track_info);
+            if (sound_track_info && file_source_package->haveDescriptor()) {
+                FileDescriptor *file_desc = GetFileDescriptor(file_source_package->getDescriptor(), fsp_track_id);
+                if (file_desc) {
+                    if (!mMCALabelIndexedPackages.count(file_source_package)) {
+                        IndexMCALabels(file_source_package->getDescriptor());
+                        mMCALabelIndexedPackages.insert(file_source_package);
+                    }
+                    ProcessMCALabels(file_desc, sound_track_info);
+                }
+            }
         } else {
             track_reader = CreateInternalTrackReader(partition, mp_track, mp_source_clip,
                                                      data_def, resolved_package);
@@ -1307,32 +1329,20 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
     mFileOrigin = origin;
 
 
-    // get the file descriptor
+    // index MCA labels in the package
 
-    GenericDescriptor *descriptor = file_source_package->getDescriptor();
-    FileDescriptor *file_desc     = dynamic_cast<FileDescriptor*>(descriptor);
-    MultipleDescriptor *mult_desc = dynamic_cast<MultipleDescriptor*>(descriptor);
-    if (mult_desc) {
-        file_desc = 0; // need to find it in the child descriptors
+    if (!mMCALabelIndexedPackages.count(file_source_package)) {
+        IndexMCALabels(file_source_package->getDescriptor());
+        mMCALabelIndexedPackages.insert(file_source_package);
+    }
 
-        BMX_CHECK(fsp_track->haveTrackID());
-        uint32_t fsp_track_id = fsp_track->getTrackID();
 
-        vector<GenericDescriptor*> child_descs = mult_desc->getSubDescriptorUIDs();
-        size_t i;
-        for (i = 0; i < child_descs.size(); i++) {
-            FileDescriptor *child_file_desc = dynamic_cast<FileDescriptor*>(child_descs[i]);
-            if (!child_file_desc || !child_file_desc->haveLinkedTrackID())
-                continue;
-            if (child_file_desc->getLinkedTrackID() == fsp_track_id) {
-                file_desc = child_file_desc;
-                break;
-            }
-        }
-        if (!file_desc) {
-            log_warn("Failed to find file descriptor for source package track %u\n", fsp_track_id);
-            return 0;
-        }
+    // get the file descriptor associated with the track
+
+    FileDescriptor *file_desc = GetFileDescriptor(file_source_package->getDescriptor(), fsp_track->getTrackID());
+    if (!file_desc) {
+        log_warn("Failed to find file descriptor for source package track %u\n", fsp_track->getTrackID());
+        return 0;
     }
 
 
@@ -1752,11 +1762,84 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
             sound_track_info->block_align = (sound_track_info->bits_per_sample + 7) / 8;
         }
     }
+
+    ProcessMCALabels(file_descriptor, sound_track_info);
 }
 
 void MXFFileReader::ProcessDataDescriptor(FileDescriptor *file_descriptor, MXFDataTrackInfo *data_track_info)
 {
     ProcessDescriptor(file_descriptor, data_track_info);
+}
+
+void MXFFileReader::IndexMCALabels(GenericDescriptor *descriptor)
+{
+    if (descriptor->haveSubDescriptors()) {
+        vector<SubDescriptor*> sub_descs = descriptor->getSubDescriptors();
+        size_t i;
+        for (i = 0; i < sub_descs.size(); i++) {
+            MCALabelSubDescriptor *label = dynamic_cast<MCALabelSubDescriptor*>(sub_descs[i]);
+            if (label)
+                mMCALabelIndex->RegisterLabel(label);
+        }
+    }
+
+    MultipleDescriptor *mult_desc = dynamic_cast<MultipleDescriptor*>(descriptor);
+    if (mult_desc) {
+        vector<GenericDescriptor*> child_descs = mult_desc->getSubDescriptorUIDs();
+        size_t i;
+        for (i = 0; i < child_descs.size(); i++)
+            IndexMCALabels(child_descs[i]);
+    }
+}
+
+void MXFFileReader::ProcessMCALabels(FileDescriptor *file_desc, MXFSoundTrackInfo *sound_track_info)
+{
+    vector<AudioChannelLabelSubDescriptor*> mca_labels;
+    if (file_desc->haveSubDescriptors()) {
+        vector<SubDescriptor*> sub_descs = file_desc->getSubDescriptors();
+        size_t i;
+        for (i = 0; i < sub_descs.size(); i++) {
+            AudioChannelLabelSubDescriptor *c_label = dynamic_cast<AudioChannelLabelSubDescriptor*>(sub_descs[i]);
+            if (c_label) {
+                if (!c_label->haveMCAChannelID())
+                    BMX_EXCEPTION(("MCA channel label is missing the channel id property"));
+                if (c_label->getMCAChannelID() == 0)
+                    BMX_EXCEPTION(("MCA channel label channel id value 0 is invalid; channel id starts counting from 1"));
+                if (c_label->getMCAChannelID() > sound_track_info->channel_count) {
+                    BMX_EXCEPTION(("MCA channel label channel id %u exceeds channel count %u",
+                                   c_label->getMCAChannelID(), sound_track_info->channel_count));
+                }
+                mMCALabelIndex->CheckReferences(c_label);
+                mca_labels.push_back(c_label);
+            }
+        }
+    }
+
+    if (!mca_labels.empty())
+        sound_track_info->mca_labels = mca_labels;
+}
+
+FileDescriptor* MXFFileReader::GetFileDescriptor(GenericDescriptor *descriptor, uint32_t fsp_track_id)
+{
+    FileDescriptor *file_desc     = dynamic_cast<FileDescriptor*>(descriptor);
+    MultipleDescriptor *mult_desc = dynamic_cast<MultipleDescriptor*>(descriptor);
+    if (mult_desc) {
+        file_desc = 0; // need to find it in the child descriptors
+
+        vector<GenericDescriptor*> child_descs = mult_desc->getSubDescriptorUIDs();
+        size_t i;
+        for (i = 0; i < child_descs.size(); i++) {
+            FileDescriptor *child_file_desc = dynamic_cast<FileDescriptor*>(child_descs[i]);
+            if (!child_file_desc || !child_file_desc->haveLinkedTrackID())
+                continue;
+            if (child_file_desc->getLinkedTrackID() == fsp_track_id) {
+                file_desc = child_file_desc;
+                break;
+            }
+        }
+    }
+
+    return file_desc;
 }
 
 MXFTrackReader* MXFFileReader::GetInternalTrackReader(size_t index) const

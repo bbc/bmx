@@ -41,6 +41,7 @@
 #include <bmx/mxf_reader/MXFTextObject.h>
 #include <bmx/mxf_reader/MXFIndexEntryExt.h>
 #include <bmx/mxf_reader/MXFFileIndex.h>
+#include <bmx/mxf_reader/MXFMCALabelIndex.h>
 
 
 
@@ -64,6 +65,9 @@ public:
 
     virtual void SetFileIndex(MXFFileIndex *file_index, bool take_ownership);
     const MXFFileIndex* GetFileIndex() const { return mFileIndex; }
+
+    virtual void SetMCALabelIndex(MXFMCALabelIndex *label_index, bool take_ownership);
+    const MXFMCALabelIndex* GetMCALabelIndex() const { return mMCALabelIndex; }
 
 public:
     virtual MXFFileReader* GetFileReader(size_t file_id) = 0;
@@ -156,6 +160,9 @@ protected:
 
     MXFFileIndex *mFileIndex;
     bool mOwnFileIndex;
+
+    MXFMCALabelIndex *mMCALabelIndex;
+    bool mOwnMCALabelIndex;
 
 private:
     Timecode CreateTimecode(const Timecode *start_timecode, int64_t position) const;

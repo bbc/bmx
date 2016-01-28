@@ -13,6 +13,7 @@ libmxfreader_la_SOURCES = \
 	MXFFrameMetadata.cpp \
 	MXFGroupReader.cpp \
 	MXFIndexEntryExt.cpp \
+	MXFMCALabelIndex.cpp \
 	MXFPackageResolver.cpp \
 	MXFReader.cpp \
 	MXFSequenceReader.cpp \

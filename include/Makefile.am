@@ -49,6 +49,7 @@ nobase_library_include_HEADERS = \
 	bmx/as11/AS11DMS.h \
 	bmx/as11/AS11CoreFramework.h \
 	bmx/as11/AS11Info.h \
+	bmx/as11/AS11Labels.h \
 	bmx/as11/AS11SegmentationFramework.h \
 	bmx/as11/AS11WriterHelper.h \
 	bmx/as11/UKDPPDMS.h \
@@ -145,6 +146,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_reader/MXFFrameMetadata.h \
 	bmx/mxf_reader/MXFGroupReader.h \
 	bmx/mxf_reader/MXFIndexEntryExt.h \
+	bmx/mxf_reader/MXFMCALabelIndex.h \
 	bmx/mxf_reader/MXFPackageResolver.h \
 	bmx/mxf_reader/MXFReader.h \
 	bmx/mxf_reader/MXFSequenceReader.h \

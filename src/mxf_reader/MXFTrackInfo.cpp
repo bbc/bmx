@@ -216,6 +216,10 @@ MXFTrackInfo* MXFSoundTrackInfo::Clone() const
     BMX_OPT_PROP_COPY(clone->audio_ref_level, audio_ref_level);
     BMX_OPT_PROP_COPY(clone->dial_norm,       dial_norm);
 
+    size_t i;
+    for (i = 0; i < mca_labels.size(); i++)
+      clone->mca_labels.push_back(mca_labels[i]);
+
     return clone;
 }
 
