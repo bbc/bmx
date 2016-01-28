@@ -628,8 +628,175 @@ static void write_crc32_check_data(AppInfoWriter *info_writer, const CRC32Data *
     info_writer->WriteIntegerItem("total_read", crc32_data->total_read);
 }
 
+static void write_mca_label_info(AppInfoWriter *info_writer, MCALabelSubDescriptor *label)
+{
+    info_writer->WriteIDAUItem("link_id", label->getMCALinkID());
+    info_writer->WriteAUIDItem("dict_id", label->getMCALabelDictionaryID());
+    info_writer->WriteStringItem("tag_symbol", label->getMCATagSymbol());
+    if (label->haveMCATagName())
+        info_writer->WriteStringItem("tag_name", label->getMCATagName());
+    if (label->haveRFC5646SpokenLanguage())
+        info_writer->WriteStringItem("language", label->getRFC5646SpokenLanguage());
+}
+
+static void write_track_mca_label_info(AppInfoWriter *info_writer, MXFReader *reader,
+                                       const MXFSoundTrackInfo *sound_info, bool mca_detail)
+{
+    const MXFMCALabelIndex *mca_label_index = reader->GetMCALabelIndex();
+    map<uint32_t, vector<AudioChannelLabelSubDescriptor*> > c_labels;
+    map<UUID, SoundfieldGroupLabelSubDescriptor*> sg_labels;
+    map<UUID, GroupOfSoundfieldGroupsLabelSubDescriptor*> gosg_labels;
+    size_t i;
+    for (i = 0; i < sound_info->mca_labels.size(); i++) {
+        AudioChannelLabelSubDescriptor *c_label = sound_info->mca_labels[i];
+        BMX_CHECK(c_label->haveMCAChannelID());
+        c_labels[c_label->getMCAChannelID()].push_back(c_label);
+
+        if (c_label->haveSoundfieldGroupLinkID()) {
+            UUID link_id = c_label->getSoundfieldGroupLinkID();
+            MCALabelSubDescriptor *label = mca_label_index->FindLabel(link_id);
+            SoundfieldGroupLabelSubDescriptor *sg_label = dynamic_cast<SoundfieldGroupLabelSubDescriptor*>(label);
+            BMX_CHECK(sg_label);
+            sg_labels[link_id] = sg_label;
+
+            if (sg_label->haveGroupOfSoundfieldGroupsLinkID()) {
+                vector<UUID> link_ids = sg_label->getGroupOfSoundfieldGroupsLinkID();
+                size_t k;
+                for (k = 0; k < link_ids.size(); k++) {
+                    UUID &link_id = link_ids[k];
+                    MCALabelSubDescriptor *label = mca_label_index->FindLabel(link_id);
+                    GroupOfSoundfieldGroupsLabelSubDescriptor *gosg_label = dynamic_cast<GroupOfSoundfieldGroupsLabelSubDescriptor*>(label);
+                    BMX_CHECK(gosg_label);
+                    gosg_labels[link_id] = gosg_label;
+                }
+            }
+        }
+    }
+
+    string c_summary;
+    uint32_t c;
+    for (c = 0; c < sound_info->channel_count; c++) {
+        uint32_t channel_id = c + 1;
+        if (c > 0)
+            c_summary.append("; ");
+        if (c_labels.count(channel_id)) {
+            vector<AudioChannelLabelSubDescriptor*> &labels = c_labels[channel_id];
+            size_t l;
+            for (l = 0; l < labels.size(); l++) {
+                AudioChannelLabelSubDescriptor *c_label = labels[l];
+                if (l > 0)
+                    c_summary.append(",");
+                c_summary.append(c_label->getMCATagSymbol());
+            }
+        } else {
+            c_summary.append("_");
+        }
+    }
+    info_writer->WriteStringItem("channel_summary", c_summary);
+
+    if (!sg_labels.empty()) {
+        string sg_summary;
+        map<UUID, SoundfieldGroupLabelSubDescriptor*>::iterator sg_iter;
+        for (sg_iter = sg_labels.begin(); sg_iter != sg_labels.end(); sg_iter++) {
+            SoundfieldGroupLabelSubDescriptor *sg_label = sg_iter->second;
+            if (sg_iter != sg_labels.begin())
+                sg_summary.append("; ");
+            sg_summary.append(sg_label->getMCATagSymbol());
+        }
+        info_writer->WriteStringItem("sg_summary", sg_summary);
+    }
+
+    if (!gosg_labels.empty()) {
+        string gosg_summary;
+        map<UUID, GroupOfSoundfieldGroupsLabelSubDescriptor*>::iterator gosg_iter;
+        for (gosg_iter = gosg_labels.begin(); gosg_iter != gosg_labels.end(); gosg_iter++) {
+            GroupOfSoundfieldGroupsLabelSubDescriptor *gosg_label = gosg_iter->second;
+            if (gosg_iter != gosg_labels.begin())
+                gosg_summary.append("; ");
+            gosg_summary.append(gosg_label->getMCATagSymbol());
+        }
+        info_writer->WriteStringItem("gosg_summary", gosg_summary);
+    }
+
+
+    if (mca_detail) {
+        info_writer->StartArrayItem("channels", sound_info->channel_count);
+        uint32_t c;
+        for (c = 0; c < sound_info->channel_count; c++) {
+            uint32_t channel_id = c + 1;
+            info_writer->StartArrayElement("channel", c);
+            info_writer->WriteIntegerItem("index", c);
+            info_writer->WriteIntegerItem("id", channel_id);
+            if (c_labels.count(channel_id)) {
+                vector<AudioChannelLabelSubDescriptor*> &labels = c_labels[channel_id];
+                info_writer->StartArrayItem("labels", labels.size());
+                size_t l;
+                for (l = 0; l < labels.size(); l++) {
+                    AudioChannelLabelSubDescriptor *c_label = labels[l];
+                    info_writer->StartArrayElement("channel_label", l);
+                    write_mca_label_info(info_writer, c_label);
+                    if (c_label->haveSoundfieldGroupLinkID()) {
+                        UUID link_id = c_label->getSoundfieldGroupLinkID();
+                        SoundfieldGroupLabelSubDescriptor *sg_label = sg_labels.at(link_id);
+                        info_writer->StartAnnotations();
+                        info_writer->WriteStringItem("tag_symbol", sg_label->getMCATagSymbol());
+                        info_writer->EndAnnotations();
+                        info_writer->WriteIDAUItem("sg_link_id", link_id);
+                    }
+                    info_writer->EndArrayElement();
+                }
+                info_writer->EndArrayItem();
+            }
+            info_writer->EndArrayElement();
+        }
+        info_writer->EndArrayItem();
+
+        if (!sg_labels.empty()) {
+            info_writer->StartArrayItem("soundfield_groups", sg_labels.size());
+            size_t index;
+            map<UUID, SoundfieldGroupLabelSubDescriptor*>::iterator iter;
+            for (iter = sg_labels.begin(), index = 0; iter != sg_labels.end(); iter++, index++) {
+                SoundfieldGroupLabelSubDescriptor *sg_label = iter->second;
+                info_writer->StartArrayElement("soundfield_group", index);
+                write_mca_label_info(info_writer, sg_label);
+                if (sg_label->haveGroupOfSoundfieldGroupsLinkID()) {
+                    vector<UUID> gosg_link_ids = sg_label->getGroupOfSoundfieldGroupsLinkID();
+                    info_writer->StartArrayItem("gosg_link_ids", gosg_link_ids.size());
+                    size_t l;
+                    for (l = 0; l < gosg_link_ids.size(); l++) {
+                        UUID &link_id = gosg_link_ids[l];
+                        GroupOfSoundfieldGroupsLabelSubDescriptor *gosg_label = gosg_labels.at(link_id);
+                        info_writer->StartArrayElement("gosg_link_id", l);
+                        info_writer->StartAnnotations();
+                        info_writer->WriteStringItem("tag_symbol", gosg_label->getMCATagSymbol());
+                        info_writer->EndAnnotations();
+                        info_writer->WriteIDAUItem("link_id", link_id);
+                        info_writer->EndArrayElement();
+                    }
+                    info_writer->EndArrayItem();
+                }
+                info_writer->EndArrayElement();
+            }
+            info_writer->EndArrayItem();
+        }
+
+        if (!gosg_labels.empty()) {
+            info_writer->StartArrayItem("group_of_soundfield_groups", gosg_labels.size());
+            size_t index;
+            map<UUID, GroupOfSoundfieldGroupsLabelSubDescriptor*>::iterator iter;
+            for (iter = gosg_labels.begin(), index = 0; iter != gosg_labels.end(); iter++, index++) {
+                GroupOfSoundfieldGroupsLabelSubDescriptor *gosg_label = iter->second;
+                info_writer->StartArrayElement("group_of_soundfield_group", index);
+                write_mca_label_info(info_writer, gosg_label);
+                info_writer->EndArrayElement();
+            }
+            info_writer->EndArrayItem();
+        }
+    }
+}
+
 static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFTrackReader *track_reader,
-                             const vector<Checksum> *checksums, const CRC32Data *crc32_data)
+                             const vector<Checksum> *checksums, const CRC32Data *crc32_data, bool mca_detail)
 {
     const MXFTrackInfo *track_info = track_reader->GetTrackInfo();
     const MXFPictureTrackInfo *picture_info = dynamic_cast<const MXFPictureTrackInfo*>(track_info);
@@ -727,6 +894,11 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
             info_writer->WriteIntegerItem("audio_ref_level", sound_info->audio_ref_level);
         if (BMX_OPT_PROP_IS_SET(sound_info->dial_norm))
             info_writer->WriteIntegerItem("dial_norm", sound_info->dial_norm);
+        if (!sound_info->mca_labels.empty()) {
+            info_writer->StartSection("mca_labels");
+            write_track_mca_label_info(info_writer, reader, sound_info, mca_detail);
+            info_writer->EndSection();
+        }
         info_writer->EndSection();
     } else if (data_info) {
         info_writer->StartSection("data_descriptor");
@@ -786,7 +958,8 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
 
 static void write_clip_info(AppInfoWriter *info_writer, MXFReader *reader,
                             const vector<vector<Checksum> > &track_checksums,
-                            const vector<CRC32Data> &track_crc32_data)
+                            const vector<CRC32Data> &track_crc32_data,
+                            bool mca_detail)
 {
     Rational edit_rate = reader->GetEditRate();
     bool have_track_checksums = (track_checksums.size() == reader->GetNumTrackReaders());
@@ -839,7 +1012,8 @@ static void write_clip_info(AppInfoWriter *info_writer, MXFReader *reader,
             info_writer->StartArrayElement("track", i);
             write_track_info(info_writer, reader, reader->GetTrackReader(i),
                              (have_track_checksums ? &track_checksums[i] : 0),
-                             (have_track_crc32_data ? &track_crc32_data[i] : 0));
+                             (have_track_crc32_data ? &track_crc32_data[i] : 0),
+                             mca_detail);
             info_writer->EndArrayElement();
         }
         info_writer->EndArrayItem();
@@ -1302,6 +1476,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                       <frames> can either be a single frame or a range using '-' as a separator\n");
     fprintf(stderr, "                       RDD-6 metadata is extracted from the first frame and program description text is accumulated using the other frames\n");
     fprintf(stderr, "                       Not all frames will be required if a complete program text has been extracted\n");
+    fprintf(stderr, " --mca-detail          Show detailed MCA channel label information\n");
     fprintf(stderr, "\n");
     fprintf(stderr, " -p | --ess-out <prefix>\n");
     fprintf(stderr, "                       Extract essence to files starting with <prefix> and suffix '.raw'\n");
@@ -1403,6 +1578,7 @@ int main(int argc, const char** argv)
     bool use_mmap_file = false;
 #endif
     const char *text_output_prefix = 0;
+    bool mca_detail = false;
     unsigned int uvalue;
     int cmdln_index;
 
@@ -1664,6 +1840,10 @@ int main(int argc, const char** argv)
             }
             rdd6_filename = argv[cmdln_index + 2];
             cmdln_index += 2;
+        }
+        else if (strcmp(argv[cmdln_index], "--mca-detail") == 0)
+        {
+            mca_detail = true;
         }
         else if (strcmp(argv[cmdln_index], "-p") == 0 ||
                  strcmp(argv[cmdln_index], "--ess-out") == 0)
@@ -2683,7 +2863,7 @@ int main(int argc, const char** argv)
             info_writer->EndArrayItem();
 
             info_writer->StartSection("clip");
-            write_clip_info(info_writer, reader, track_checksums, track_crc32_data);
+            write_clip_info(info_writer, reader, track_checksums, track_crc32_data, mca_detail);
             if (reader->GetNumTextObjects() > 0) {
                 info_writer->StartArrayItem("text_objects", reader->GetNumTextObjects());
                 size_t i;

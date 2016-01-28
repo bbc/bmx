@@ -338,7 +338,143 @@
       <xs:element name="locked" type="xs:boolean" minOccurs="0"/>
       <xs:element name="audio_ref_level" type="int8_type" minOccurs="0"/>
       <xs:element name="dial_norm" type="int8_type" minOccurs="0"/>
+      <xs:element name="mca_labels" type="mca_labels_type" minOccurs="0"/>
     </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="mca_labels_type">
+    <xs:sequence>
+      <xs:element name="channel_summary" type="xs:string" minOccurs="0"/>
+      <xs:element name="sg_summary" type="xs:string" minOccurs="0"/>
+      <xs:element name="gosg_summary" type="xs:string" minOccurs="0"/>
+      <xs:element name="channels" type="mca_channels_type" minOccurs="0"/>
+      <xs:element name="soundfield_groups" type="mca_sg_type" minOccurs="0"/>
+      <xs:element name="group_of_soundfield_groups" type="mca_gosg_type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="mca_channels_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="channel" type="mca_channel_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mca_channel_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="index" type="uint32_type"/>
+          <xs:element name="id" type="uint32_type"/>
+          <xs:element name="labels" type="mca_channel_labels_type" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mca_channel_labels_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="channel_label" type="mca_channel_label_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mca_channel_label_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="link_id" type="label_type"/>
+          <xs:element name="dict_id" type="label_type"/>
+          <xs:element name="tag_symbol" type="xs:string"/>
+          <xs:element name="tag_name" type="xs:string" minOccurs="0"/>
+          <xs:element name="language" type="xs:string" minOccurs="0"/>
+          <xs:element name="sg_link_id" type="mca_link_id_type" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mca_sg_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="soundfield_group" type="mca_sg_label_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mca_sg_label_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="link_id" type="label_type"/>
+          <xs:element name="dict_id" type="label_type"/>
+          <xs:element name="tag_symbol" type="xs:string"/>
+          <xs:element name="tag_name" type="xs:string" minOccurs="0"/>
+          <xs:element name="language" type="xs:string" minOccurs="0"/>
+          <xs:element name="gosg_link_ids" type="mca_gosg_link_ids_type" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mca_gosg_link_ids_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="gosg_link_id" type="mca_gosg_link_id_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mca_gosg_link_id_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="link_id" type="mca_link_id_type"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mca_gosg_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="group_of_soundfield_group" type="mca_gosg_label_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mca_gosg_label_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="link_id" type="label_type"/>
+          <xs:element name="dict_id" type="label_type"/>
+          <xs:element name="tag_symbol" type="xs:string"/>
+          <xs:element name="tag_name" type="xs:string" minOccurs="0"/>
+          <xs:element name="language" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mca_link_id_type">
+    <xs:simpleContent>
+       <xs:extension base="label_type">
+         <xs:attribute name="tag_symbol" type="xs:string" use="optional"/>
+       </xs:extension>
+    </xs:simpleContent>
   </xs:complexType>
 
   <xs:complexType name="data_descriptor_type">
