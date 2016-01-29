@@ -6,12 +6,19 @@
   <xs:element name="as11">
     <xs:complexType>
       <xs:sequence>
+        <xs:element name="spec_identifiers" type="spec_identifiers_type" minOccurs="0"/>
         <xs:element name="core" type="core_type" minOccurs="0"/>
         <xs:element name="uk_dpp" type="uk_dpp_type" minOccurs="0"/>
         <xs:element name="segmentation" type="segmentation_type" minOccurs="0"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
+
+  <xs:complexType name="spec_identifiers_type">
+    <xs:sequence>
+      <xs:element name="spec_identifier" type="label_type" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
 
   <xs:complexType name="core_type">
     <xs:sequence>

@@ -406,6 +406,11 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --dm <fwork> <name> <value>    Set descriptive framework property. <fwork> is 'as11' or 'dpp'\n");
     fprintf(stderr, "    --dm-file <fwork> <name>       Parse and set descriptive framework properties from text file <name>. <fwork> is 'as11' or 'dpp'\n");
     fprintf(stderr, "    --seg <name>                   Parse and set segmentation data from text file <name>\n");
+    fprintf(stderr, "    --spec-id <id>                 Set the AS-11 specification identifier labels associated with <id>\n");
+    fprintf(stderr, "                                   The <id> is one of the following:\n");
+    fprintf(stderr, "                                       as11-x2 : AMWA AS-11 X2 specification\n");
+    fprintf(stderr, "                                       as11-x3 : AMWA AS-11 X3 specification\n");
+    fprintf(stderr, "                                       as11-x4 : AMWA AS-11 X4 specification\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/op1a/rdd9:\n");
     fprintf(stderr, "    --out-start <offset>    Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
@@ -961,6 +966,22 @@ int main(int argc, const char** argv)
                 return 1;
             }
             segmentation_filename = argv[cmdln_index + 1];
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--spec-id") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!as11_helper.ParseSpecificationId(argv[cmdln_index + 1]))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--out-start") == 0)
@@ -3669,7 +3690,7 @@ int main(int argc, const char** argv)
         // add AS-11 descriptive metadata
 
         if (clip_sub_type == AS11_CLIP_SUB_TYPE)
-            as11_helper.InsertFrameworks(clip);
+            as11_helper.AddMetadata(clip);
 
 
         // read more than 1 sample to improve efficiency if the input is sound only and the output

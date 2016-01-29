@@ -102,6 +102,13 @@
     </MXFTypes>
 
 
+    <Preface>
+        <SpecificationIdentifiers type="subVector" use="optional" globalKey="06 0e 2b 34 01 01 01 01 0d 01 08 01 01 01 00 00">
+            <SpecificationIdentifier use="required" type="Label" minLength="16" maxLength="16"/>
+        </SpecificationIdentifiers>
+    </Preface>
+
+
     <AS11CoreFramework base="DM_Framework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 07 01 0b 01 01 00">
         <SeriesTitle                type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 01"/>
         <ProgrammeTitle             type="UTF16String"          use="required"  globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0b 01 01 02"/>

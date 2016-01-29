@@ -411,6 +411,11 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --dm-file <fwork> <name>       Parse and set descriptive framework properties from text file <name>. <fwork> is 'as11' or 'dpp'\n");
     fprintf(stderr, "    --seg <name>                   Parse and set segmentation data from text file <name>\n");
     fprintf(stderr, "    --pass-dm                      Copy descriptive metadata from the input file. The metadata can be overidden by other options\n");
+    fprintf(stderr, "    --spec-id <id>                 Set the AS-11 specification identifier labels associated with <id>\n");
+    fprintf(stderr, "                                   The <id> is one of the following:\n");
+    fprintf(stderr, "                                       as11-x2 : AMWA AS-11 X2 specification\n");
+    fprintf(stderr, "                                       as11-x3 : AMWA AS-11 X3 specification\n");
+    fprintf(stderr, "                                       as11-x4 : AMWA AS-11 X4 specification\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02/as11op1a/as11d10/op1a/d10/rdd9:\n");
     fprintf(stderr, "    --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default is input file's value or not set\n");
@@ -1238,6 +1243,22 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--pass-dm") == 0)
         {
             pass_dm = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--spec-id") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!as11_helper.ParseSpecificationId(argv[cmdln_index + 1]))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--afd") == 0)
         {
@@ -3018,7 +3039,7 @@ int main(int argc, const char** argv)
         // add AS-11 descriptive metadata
 
         if (clip_sub_type == AS11_CLIP_SUB_TYPE) {
-            as11_helper.InsertFrameworks(clip);
+            as11_helper.AddMetadata(clip);
 
             if ((clip_type == CW_OP1A_CLIP_TYPE && (flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)) ||
                 (clip_type == CW_D10_CLIP_TYPE  && (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR)))

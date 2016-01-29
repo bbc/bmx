@@ -34,6 +34,7 @@
 
 
 #include <bmx/clip_writer/ClipWriter.h>
+#include <bmx/as11/AS11Labels.h>
 #include <bmx/as11/AS11CoreFramework.h>
 #include <bmx/as11/UKDPPFramework.h>
 #include <bmx/apps/MCALabelHelper.h>
@@ -70,8 +71,7 @@ public:
     AS11WriterHelper(ClipWriter *clip);
     ~AS11WriterHelper();
 
-    void RegisterAS11Extensions();
-    void RegisterUKDPPExtensions();
+    void SetSpecificationId(AS11SpecificationId spec_id);
 
     void InsertAS11CoreFramework(AS11CoreFramework *framework);
     void InsertUKDPPFramework(UKDPPFramework *framework);

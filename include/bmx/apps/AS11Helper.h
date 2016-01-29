@@ -110,11 +110,13 @@ public:
     bool ParseSegmentationFile(const char *filename, Rational frame_rate);
     bool SetFrameworkProperty(const char *type_str, const char *name, const char *value);
 
+    bool ParseSpecificationId(const std::string &spec_id_str);
+
     bool HaveProgrammeTitle() const;
     std::string GetProgrammeTitle() const;
 
 public:
-    void InsertFrameworks(ClipWriter *clip);
+    void AddMetadata(ClipWriter *clip);
     void Complete();
 
 private:
@@ -135,6 +137,8 @@ private:
     FrameworkHelper *mUKDPPFrameworkHelper;
     bool mHaveUKDPPTotalNumberOfParts;
     bool mHaveUKDPPTotalProgrammeDuration;
+
+    AS11SpecificationId mAS11SpecId;
 };
 
 

@@ -534,6 +534,7 @@ AS11Helper::AS11Helper()
     mUKDPPFrameworkHelper = 0;
     mHaveUKDPPTotalNumberOfParts = false;
     mHaveUKDPPTotalProgrammeDuration = false;
+    mAS11SpecId = UNKNOWN_AS11_SPEC;
 }
 
 AS11Helper::~AS11Helper()
@@ -735,6 +736,20 @@ bool AS11Helper::SetFrameworkProperty(const char *type_str, const char *name, co
     return true;
 }
 
+bool AS11Helper::ParseSpecificationId(const string &spec_id_str)
+{
+    if (spec_id_str == "as11-x2")
+        mAS11SpecId = AS11_X2_SPEC;
+    else if (spec_id_str == "as11-x3")
+        mAS11SpecId = AS11_X3_SPEC;
+    else if (spec_id_str == "as11-x4")
+        mAS11SpecId = AS11_X4_SPEC;
+    else
+        return false;
+
+    return true;
+}
+
 bool AS11Helper::HaveProgrammeTitle() const
 {
     size_t i;
@@ -763,7 +778,7 @@ string AS11Helper::GetProgrammeTitle() const
     return mSourceProgrammeTitle;
 }
 
-void AS11Helper::InsertFrameworks(ClipWriter *clip)
+void AS11Helper::AddMetadata(ClipWriter *clip)
 {
     if (clip->GetType() != CW_OP1A_CLIP_TYPE && clip->GetType() != CW_D10_CLIP_TYPE) {
         BMX_EXCEPTION(("AS-11 is not supported in clip type '%s'",
@@ -771,6 +786,8 @@ void AS11Helper::InsertFrameworks(ClipWriter *clip)
     }
 
     mWriterHelper = new AS11WriterHelper(clip);
+
+    mWriterHelper->SetSpecificationId(mAS11SpecId);
 
     if (mSourceInfo) {
         if (mSourceInfo->core) {

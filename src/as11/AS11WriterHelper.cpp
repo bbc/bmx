@@ -38,6 +38,7 @@
 #include <bmx/as11/AS11WriterHelper.h>
 #include <bmx/as11/AS11SegmentationFramework.h>
 #include <bmx/as11/AS11DMS.h>
+#include <bmx/as11/AS11Info.h>
 #include <bmx/as11/UKDPPDMS.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
@@ -109,12 +110,36 @@ AS11WriterHelper::AS11WriterHelper(ClipWriter *clip)
 
     clip->PrepareHeaderMetadata(); // will skip if header metadata already prepared
 
-    AS11DMS::RegisterExtensions(clip->GetHeaderMetadata());
-    UKDPPDMS::RegisterExtensions(clip->GetHeaderMetadata());
+    AS11Info::RegisterExtensions(clip->GetHeaderMetadata());
 }
 
 AS11WriterHelper::~AS11WriterHelper()
 {
+}
+
+void AS11WriterHelper::SetSpecificationId(AS11SpecificationId spec_id)
+{
+    HeaderMetadata *header_metadata = mClip->GetHeaderMetadata();
+    BMX_ASSERT(header_metadata);
+
+    Preface *preface = header_metadata->getPreface();
+    switch (spec_id)
+    {
+        case AS11_X2_SPEC:
+            preface->appendULArrayItem(&MXF_ITEM_K(Preface, SpecificationIdentifiers), AS11_BLOCKS_FF_0_WIP);
+            preface->appendULArrayItem(&MXF_ITEM_K(Preface, SpecificationIdentifiers), AS11_BLOCKS_FF_2_WIP);
+            break;
+        case AS11_X3_SPEC:
+            preface->appendULArrayItem(&MXF_ITEM_K(Preface, SpecificationIdentifiers), AS11_BLOCKS_FF_0_WIP);
+            preface->appendULArrayItem(&MXF_ITEM_K(Preface, SpecificationIdentifiers), AS11_BLOCKS_FF_5_WIP);
+            break;
+        case AS11_X4_SPEC:
+            preface->appendULArrayItem(&MXF_ITEM_K(Preface, SpecificationIdentifiers), AS11_BLOCKS_FF_0_WIP);
+            preface->appendULArrayItem(&MXF_ITEM_K(Preface, SpecificationIdentifiers), AS11_BLOCKS_FF_6_WIP);
+            break;
+        case UNKNOWN_AS11_SPEC:
+            break;
+    }
 }
 
 void AS11WriterHelper::InsertAS11CoreFramework(AS11CoreFramework *framework)

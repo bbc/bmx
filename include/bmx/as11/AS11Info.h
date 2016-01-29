@@ -59,6 +59,7 @@ public:
     UKDPPFramework *ukdpp;
     std::vector<mxfpp::StructuralComponent*> segmentation;
     Rational segmentation_rate;
+    std::vector<UL> spec_identifiers;
 
 private:
     void Reset();

@@ -322,6 +322,14 @@ void bmx::as11_write_info(AppInfoWriter *info_writer, MXFFileReader *file_reader
 
     info_writer->StartSection("as11");
 
+    if (!info.spec_identifiers.empty()) {
+        info_writer->StartSection("spec_identifiers");
+        size_t i;
+        for (i = 0; i < info.spec_identifiers.size(); i++)
+            info_writer->WriteAUIDItem("spec_identifier", info.spec_identifiers[i]);
+        info_writer->EndSection();
+    }
+
     mxfVersionType shim_version = VERSION_TYPE_VAL(1, 0);
     if (info.core) {
         if (info.core->haveItem(&MXF_ITEM_K(AS11CoreFramework, AS11ShimVersion)))
