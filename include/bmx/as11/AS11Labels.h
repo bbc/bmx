@@ -33,14 +33,14 @@
 #define AS11_LABELS_H_
 
 
-#include <bmx/apps/MCALabelHelper.h>
+#include <bmx/BMXTypes.h>
 
 
 namespace bmx
 {
 
-
-bool index_as11_mca_labels(MCALabelHelper *labels_helper);
+static const UL AS11_DM_XML_Document =
+  {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x0d, 0x01, 0x08, 0x01, 0x04, 0x01, 0x00, 0x00};
 
 
 };

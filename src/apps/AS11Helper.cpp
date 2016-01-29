@@ -520,6 +520,11 @@ bool FrameworkHelper::SetProperty(string name, string value)
 
 
 
+bool AS11Helper::IndexAS11MCALabels(MCALabelHelper *labels_helper)
+{
+    return AS11WriterHelper::IndexAS11MCALabels(labels_helper);
+}
+
 AS11Helper::AS11Helper()
 {
     mFillerCompleteSegments = false;

@@ -98,6 +98,9 @@ private:
 class AS11Helper
 {
 public:
+    static bool IndexAS11MCALabels(MCALabelHelper *labels_helper);
+
+public:
     AS11Helper();
     ~AS11Helper();
 

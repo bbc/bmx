@@ -444,9 +444,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --rdd6-lines <lines>    The line numbers for carriage of the RDD-6 ANC data. <lines> is a pair of numbers separated by a ','. Default is '%u,%u'\n", DEFAULT_RDD6_LINES[0], DEFAULT_RDD6_LINES[1]);
     fprintf(stderr, "    --rdd6-sdid <sdid>      The SDID value indicating the first audio channel pair associated with the RDD-6 data. Default is %u\n", DEFAULT_RDD6_SDID);
     fprintf(stderr, "    --xml-scheme-id <id>    Set the XML payload scheme identifier associated with the following --embed-xml option.\n");
-    fprintf(stderr, "                            The <id> is either a SMPTE UL formatted as a 'urn:smpte:ul:...', a UUID formatted\n");
-    fprintf(stderr, "                            as a 'urn:uuid:...' or a UUID formatted as 32 hexadecimal characters using a '.'\n");
-    fprintf(stderr, "                            or '-' seperator.\n");
+    fprintf(stderr, "                            The <id> is one of the following:\n");
+    fprintf(stderr, "                                * a SMPTE UL, formatted as a 'urn:smpte:ul:...',\n");
+    fprintf(stderr, "                                * a UUID, formatted as a 'urn:uuid:...'or as 32 hexadecimal characters using a '.' or '-' seperator,\n");
+    fprintf(stderr, "                                * 'as11', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.04010000\n");
     fprintf(stderr, "                            A default BMX scheme identifier is used if this option is not provided\n");
     fprintf(stderr, "    --xml-lang <tag>        Set the RFC 5646 language tag associated with the the following --embed-xml option.\n");
     fprintf(stderr, "                            Defaults to the xml:lang attribute in the root element or empty string if not present\n");
@@ -1426,7 +1427,11 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (!parse_mxf_auid(argv[cmdln_index + 1], &next_embed_xml.scheme_id))
+            if (strcmp(argv[cmdln_index + 1], "as11") == 0)
+            {
+                next_embed_xml.scheme_id = AS11_DM_XML_Document;
+            }
+            else if (!parse_mxf_auid(argv[cmdln_index + 1], &next_embed_xml.scheme_id))
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -3027,7 +3032,7 @@ int main(int argc, const char** argv)
 
         if (!track_mca_labels.empty()) {
             MCALabelHelper label_helper;
-            index_as11_mca_labels(&label_helper);
+            AS11Helper::IndexAS11MCALabels(&label_helper);
 
             size_t i;
             for (i = 0; i < track_mca_labels.size(); i++) {

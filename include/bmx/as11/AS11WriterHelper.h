@@ -36,6 +36,7 @@
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as11/AS11CoreFramework.h>
 #include <bmx/as11/UKDPPFramework.h>
+#include <bmx/apps/MCALabelHelper.h>
 
 
 
@@ -62,6 +63,9 @@ typedef struct
 
 class AS11WriterHelper
 {
+public:
+    static bool IndexAS11MCALabels(MCALabelHelper *labels_helper);
+
 public:
     AS11WriterHelper(ClipWriter *clip);
     ~AS11WriterHelper();
