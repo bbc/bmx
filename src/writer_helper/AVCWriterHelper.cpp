@@ -511,11 +511,11 @@ uint8_t AVCWriterHelper::GetSPSFlag() const
     if (mSPSConstant)
         flag |= 1 << 7;
     if (mSPSFirstAUOnly)
-        flag |= 1 << 6;
+        flag |= 1 << 4;
     else if (mSPSEveryAU)
-        flag |= 2 << 6;
+        flag |= 2 << 4;
     else if (mSPSGOPStart)
-        flag |= 3 << 6;
+        flag |= 3 << 4;
 
     return flag;
 }
@@ -526,11 +526,11 @@ uint8_t AVCWriterHelper::GetPPSFlag() const
     if (mPPSConstant)
         flag |= 1 << 7;
     if (mPPSFirstAUOnly)
-        flag |= 1 << 6;
+        flag |= 1 << 4;
     else if (mPPSEveryAU)
-        flag |= 2 << 6;
+        flag |= 2 << 4;
     else if (mPPSGOPStart)
-        flag |= 3 << 6;
+        flag |= 3 << 4;
 
     return flag;
 }
