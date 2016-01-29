@@ -211,6 +211,7 @@ AVCIMXFDescriptorHelper::AVCIMXFDescriptorHelper()
     mEssenceType = SUPPORTED_ESSENCE[0].essence_type;
     mIncludeHeader = false;
     mIncludeHeaderSet = false;
+    mUseAVCSubDescriptor = false;
     mAVCSubDescriptor = 0;
 }
 
@@ -272,13 +273,28 @@ void AVCIMXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
     UpdateEssenceIndex();
 }
 
+void AVCIMXFDescriptorHelper::SetIncludeHeader(bool include_header)
+{
+    BMX_ASSERT(!mFileDescriptor);
+
+    mIncludeHeader = include_header;
+    mIncludeHeaderSet = true;
+}
+
+void AVCIMXFDescriptorHelper::SetUseAVCSubDescriptor(bool enable)
+{
+    BMX_ASSERT(!mFileDescriptor);
+
+    mUseAVCSubDescriptor = enable;
+}
+
 FileDescriptor* AVCIMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata)
 {
     UpdateEssenceIndex();
 
-    if ((mFlavour & MXFDESC_AVID_FLAVOUR) || (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+    if (mUseAVCSubDescriptor || (mFlavour & MXFDESC_AVID_FLAVOUR) || (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
         mFileDescriptor = new CDCIEssenceDescriptor(header_metadata);
-        if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+        if (mUseAVCSubDescriptor || (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
             mAVCSubDescriptor = new AVCSubDescriptor(header_metadata);
             mFileDescriptor->appendSubDescriptors(mAVCSubDescriptor);
         }
@@ -302,7 +318,8 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(cdci_descriptor);
     MPEGVideoDescriptor *mpeg_descriptor = dynamic_cast<MPEGVideoDescriptor*>(mFileDescriptor);
-    BMX_ASSERT((mFlavour & MXFDESC_AVID_FLAVOUR) || (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) || mpeg_descriptor);
+    BMX_ASSERT(mUseAVCSubDescriptor || (mFlavour & MXFDESC_AVID_FLAVOUR) || (mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR) ||
+               mpeg_descriptor);
 
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
     switch (mEssenceType)
@@ -468,9 +485,11 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
         mAVCSubDescriptor->setAVCProfileConstraint(avc_info->profile_constraint);
         mAVCSubDescriptor->setAVCLevel(avc_info->level);
 
-        BMX_ASSERT((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR));
-        mAVCSubDescriptor->setAVCSequenceParameterSetFlag(0xa0);    // constant and present in every access unit
-        mAVCSubDescriptor->setAVCPictureParameterSetFlag(0xa0);     // constant and present in every access unit
+        // SPS and PPS flags are (also) set in the writer helper
+        if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+           mAVCSubDescriptor->setAVCSequenceParameterSetFlag(0xa0);    // constant and present in every access unit
+           mAVCSubDescriptor->setAVCPictureParameterSetFlag(0xa0);     // constant and present in every access unit
+        }
     }
 }
 
@@ -482,12 +501,6 @@ uint32_t AVCIMXFDescriptorHelper::GetSampleSize()
 uint32_t AVCIMXFDescriptorHelper::GetSampleWithoutHeaderSize()
 {
     return SUPPORTED_ESSENCE[mEssenceIndex].frame_size - 512;
-}
-
-void AVCIMXFDescriptorHelper::SetIncludeHeader(bool include_header)
-{
-    mIncludeHeader = include_header;
-    mIncludeHeaderSet = true;
 }
 
 mxfUL AVCIMXFDescriptorHelper::ChooseEssenceContainerUL() const

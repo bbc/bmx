@@ -84,6 +84,7 @@ public:
     void SetAVCIMode(AVCIMode mode);                                // default depends on track type
     void SetAVCIHeader(const unsigned char *data, uint32_t size);
     void SetReplaceAVCIHeader(bool enable);                         // default false; requires SetAVCIHeader if true
+    void SetUseAVCSubDescriptor(bool enable);                       // default false
     void SetAFD(uint8_t afd);                                       // default not set
     void SetInputHeight(uint32_t height);                           // uncompressed; default 0
 

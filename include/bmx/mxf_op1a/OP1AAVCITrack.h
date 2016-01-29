@@ -62,6 +62,7 @@ public:
     void SetMode(OP1AAVCIMode mode);                            // default OP1A_AVCI_ALL_FRAME_HEADER_MODE
     void SetHeader(const unsigned char *data, uint32_t size);
     void SetReplaceHeader(bool enable);                         // default false; requires SetHeader if true
+    void SetUseAVCSubDescriptor(bool enable);
 
 public:
     uint32_t GetSampleWithoutHeaderSize();
@@ -69,6 +70,7 @@ public:
 protected:
     virtual void PrepareWrite(uint8_t track_count);
     virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
+    virtual void CompleteWrite();
 
 private:
     AVCIMXFDescriptorHelper *mAVCIDescriptorHelper;

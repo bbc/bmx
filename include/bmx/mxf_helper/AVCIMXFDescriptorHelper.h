@@ -62,9 +62,12 @@ public:
     virtual void SetEssenceType(EssenceType essence_type);
     virtual void SetSampleRate(mxfRational sample_rate);
     void SetIncludeHeader(bool include_header);
+    void SetUseAVCSubDescriptor(bool enable);
 
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
     virtual void UpdateFileDescriptor();
+
+    mxfpp::AVCSubDescriptor* GetAVCSubDescriptor() const { return mAVCSubDescriptor; }
 
 public:
     virtual uint32_t GetSampleSize();
@@ -80,6 +83,7 @@ private:
     size_t mEssenceIndex;
     bool mIncludeHeader;
     bool mIncludeHeaderSet;
+    bool mUseAVCSubDescriptor;
     mxfpp::AVCSubDescriptor *mAVCSubDescriptor;
 };
 

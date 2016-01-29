@@ -54,6 +54,7 @@ AS02AVCITrack::AS02AVCITrack(AS02Clip *clip, uint32_t track_index, EssenceType e
 {
     mAVCIDescriptorHelper = dynamic_cast<AVCIMXFDescriptorHelper*>(mDescriptorHelper);
     BMX_ASSERT(mAVCIDescriptorHelper);
+    mWriterHelper.SetDescriptorHelper(mAVCIDescriptorHelper);
 
     mWriterHelper.SetMode(AVCI_ALL_FRAME_HEADER_MODE);
     mFirstFrameHeaderOnly = false;
@@ -96,6 +97,11 @@ void AS02AVCITrack::SetHeader(const unsigned char *data, uint32_t size)
 uint32_t AS02AVCITrack::GetSampleWithoutHeaderSize()
 {
     return mAVCIDescriptorHelper->GetSampleWithoutHeaderSize();
+}
+
+void AS02AVCITrack::SetUseAVCSubDescriptor(bool enable)
+{
+    mAVCIDescriptorHelper->SetUseAVCSubDescriptor(enable);
 }
 
 void AS02AVCITrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
@@ -197,3 +203,9 @@ void AS02AVCITrack::WriteCBEIndexTable(Partition *partition)
     partition->markIndexEnd(mMXFFile);
 }
 
+void AS02AVCITrack::PostSampleWriting(mxfpp::Partition *partition)
+{
+    AS02PictureTrack::PostSampleWriting(partition);
+
+    mWriterHelper.CompleteProcess();
+}

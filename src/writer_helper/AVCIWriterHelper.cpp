@@ -40,6 +40,7 @@
 #include <bmx/Logging.h>
 
 using namespace std;
+using namespace mxfpp;
 using namespace bmx;
 
 
@@ -51,12 +52,17 @@ using namespace bmx;
 
 AVCIWriterHelper::AVCIWriterHelper()
 {
+    mDescriptorHelper = 0;
     mMode = AVCI_PASS_MODE;
     mHeader = 0;
     mReplaceHeader = false;
     mSampleCount = 0;
     mFirstFrameHeader = false;
     mSecondFrameHeader = false;
+    mSPSFirstAUOnly = false;
+    mSPSEveryAU = false;
+    mPPSFirstAUOnly = false;
+    mPPSEveryAU = false;
 
     BMX_ASSERT(sizeof(AVCI_FILLER) == sizeof(AVCI_ACCESS_UNIT_DELIMITER));
 }
@@ -64,6 +70,11 @@ AVCIWriterHelper::AVCIWriterHelper()
 AVCIWriterHelper::~AVCIWriterHelper()
 {
     delete [] mHeader;
+}
+
+void AVCIWriterHelper::SetDescriptorHelper(AVCIMXFDescriptorHelper *descriptor_helper)
+{
+    mDescriptorHelper = descriptor_helper;
 }
 
 void AVCIWriterHelper::SetMode(AVCIMode mode)
@@ -93,7 +104,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
     BMX_ASSERT(!(mReplaceHeader && !mHeader));
 
     mEssenceParser.ParseFrameInfo(data, size);
-    bool have_header = mEssenceParser.HaveSequenceParameterSet();
+    bool input_has_header = mEssenceParser.HaveSequenceParameterSet();
 
     uint32_t output_frame_size = 0;
     switch (mMode)
@@ -102,13 +113,13 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             output_frame_size = PassFrame(data, size, array_size);
             break;
         case AVCI_NO_FRAME_HEADER_MODE:
-            if (have_header)
+            if (input_has_header)
                 output_frame_size = StripFrameHeader(data, size, array_size);
             else
                 output_frame_size = PassFrame(data, size, array_size);
             break;
         case AVCI_NO_OR_ALL_FRAME_HEADER_MODE:
-            if (have_header) {
+            if (input_has_header) {
                 if (SET_HEADER_ENABLED) {
                     mFirstFrameHeader = true;
                     if (!mReplaceHeader)
@@ -127,7 +138,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             }
             break;
         case AVCI_FIRST_FRAME_HEADER_MODE:
-            if (have_header) {
+            if (input_has_header) {
                 if (SET_HEADER_ENABLED) {
                     output_frame_size = PassFrame(data, size, array_size);
                     if (!mReplaceHeader)
@@ -147,7 +158,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             }
             break;
         case AVCI_FIRST_OR_ALL_FRAME_HEADER_MODE:
-            if (have_header) {
+            if (input_has_header) {
                 if (SET_HEADER_ENABLED) {
                     output_frame_size = PassFrame(data, size, array_size);
                     if (!mReplaceHeader)
@@ -178,7 +189,7 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             }
             break;
         case AVCI_ALL_FRAME_HEADER_MODE:
-            if (have_header) {
+            if (input_has_header) {
                 if (SET_HEADER_ENABLED && !mReplaceHeader)
                     SetHeader(data, AVCI_HEADER_SIZE);
                 output_frame_size = PassFrame(data, size, array_size);
@@ -191,10 +202,48 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             break;
     }
 
+    bool output_has_header;
+    if (output_frame_size < size)
+      output_has_header = false;
+    else if (output_frame_size > size)
+      output_has_header = true;
+    else
+      output_has_header = input_has_header;
+
+    if (mSampleCount == 0) {
+        if (output_has_header) {
+            mSPSFirstAUOnly = true;
+            mSPSEveryAU     = true;
+            mPPSFirstAUOnly = true;
+            mPPSEveryAU     = true;
+        }
+    } else {
+        if (output_has_header) {
+            mSPSFirstAUOnly = false;
+            mPPSFirstAUOnly = false;
+        } else {
+            mSPSEveryAU = false;
+            mPPSEveryAU = false;
+        }
+    }
+
+
     mSampleCount++;
 
     *data_array = mDataArray;
     return output_frame_size;
+}
+
+void AVCIWriterHelper::CompleteProcess()
+{
+    BMX_ASSERT(mDescriptorHelper);
+
+    AVCSubDescriptor *avc_sub_desc = dynamic_cast<AVCIMXFDescriptorHelper*>(mDescriptorHelper)->GetAVCSubDescriptor();
+    if (!avc_sub_desc)
+        return;
+
+    avc_sub_desc->setAVCSequenceParameterSetFlag(GetSPSFlag());
+    avc_sub_desc->setAVCPictureParameterSetFlag(GetPPSFlag());
 }
 
 uint32_t AVCIWriterHelper::PassFrame(const unsigned char *data, uint32_t size, uint32_t *array_size)
@@ -296,4 +345,28 @@ uint32_t AVCIWriterHelper::PrependFrameHeader(const unsigned char *data, uint32_
     }
 
     return size + AVCI_HEADER_SIZE;
+}
+
+uint8_t AVCIWriterHelper::GetSPSFlag() const
+{
+    uint8_t flag = 0;
+    flag |= 1 << 7; // SPS constant
+    if (mSPSFirstAUOnly)
+        flag |= 1 << 4;
+    else if (mSPSEveryAU)
+        flag |= 2 << 4;
+
+    return flag;
+}
+
+uint8_t AVCIWriterHelper::GetPPSFlag() const
+{
+    uint8_t flag = 0;
+    flag |= 1 << 7; // PPS constant
+    if (mPPSFirstAUOnly)
+        flag |= 1 << 4;
+    else if (mPPSEveryAU)
+        flag |= 2 << 4;
+
+    return flag;
 }

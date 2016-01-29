@@ -34,6 +34,7 @@
 
 #include <bmx/frame/DataBufferArray.h>
 #include <bmx/essence_parser/AVCIEssenceParser.h>
+#include <bmx/mxf_helper/AVCIMXFDescriptorHelper.h>
 
 
 
@@ -58,6 +59,8 @@ public:
     AVCIWriterHelper();
     ~AVCIWriterHelper();
 
+    void SetDescriptorHelper(AVCIMXFDescriptorHelper *descriptor_helper);
+
     void SetMode(AVCIMode mode);
     void SetHeader(const unsigned char *data, uint32_t size);
     void SetReplaceHeader(bool enable);
@@ -65,13 +68,18 @@ public:
 public:
     uint32_t ProcessFrame(const unsigned char *data, uint32_t size,
                           const CDataBuffer **data_array, uint32_t *array_size);
+    void CompleteProcess();
 
 private:
     uint32_t PassFrame(const unsigned char *data, uint32_t size, uint32_t *array_size);
     uint32_t StripFrameHeader(const unsigned char *data, uint32_t size, uint32_t *array_size);
     uint32_t PrependFrameHeader(const unsigned char *data, uint32_t size, uint32_t *array_size);
 
+    uint8_t GetSPSFlag() const;
+    uint8_t GetPPSFlag() const;
+
 private:
+    AVCIMXFDescriptorHelper *mDescriptorHelper;
     AVCIEssenceParser mEssenceParser;
     AVCIMode mMode;
     unsigned char *mHeader;
@@ -80,6 +88,10 @@ private:
     int64_t mSampleCount;
     bool mFirstFrameHeader;
     bool mSecondFrameHeader;
+    bool mSPSFirstAUOnly;
+    bool mSPSEveryAU;
+    bool mPPSFirstAUOnly;
+    bool mPPSEveryAU;
 };
 
 

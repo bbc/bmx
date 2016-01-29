@@ -183,7 +183,7 @@ void AS02MPEG2LGTrack::WriteVBEIndexTable(Partition *partition)
 
 void AS02MPEG2LGTrack::PostSampleWriting(mxfpp::Partition *partition)
 {
-    (void)partition;
+    AS02PictureTrack::PostSampleWriting(partition);
 
     if (!mWriterHelper.CheckTemporalOffsetsComplete(mOutputEndOffset))
         log_warn("Incomplete MPEG-2 temporal offset data in index table\n");

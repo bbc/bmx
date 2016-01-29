@@ -59,6 +59,7 @@ public:
 
     void SetMode(AS02AVCIMode mode);                            // default AS02_AVCI_ALL_FRAME_HEADER_MODE
     void SetHeader(const unsigned char *data, uint32_t size);
+    void SetUseAVCSubDescriptor(bool enable);
 
 public:
     uint32_t GetSampleWithoutHeaderSize();
@@ -68,6 +69,7 @@ public:
 protected:
     virtual bool HaveCBEIndexTable() { return true; }
     virtual void WriteCBEIndexTable(mxfpp::Partition *partition);
+    virtual void PostSampleWriting(mxfpp::Partition *partition);
 
 private:
     AVCIMXFDescriptorHelper *mAVCIDescriptorHelper;

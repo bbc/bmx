@@ -509,6 +509,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            The dumps consists of a list output tracks, where each output track channel\n");
     fprintf(stderr, "                            is shown as '<output track channel> <- <input channel>\n");
     fprintf(stderr, "    --dump-track-map-exit   Same as --dump-track-map, but exit immediately afterwards\n");
+    fprintf(stderr, "    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/as11op1a:\n");
     fprintf(stderr, "    --track-mca-labels <scheme> <file>   Insert audio labels defined in <file> using the symbol <scheme>\n");
@@ -679,6 +680,7 @@ int main(int argc, const char** argv)
     bool dump_track_map = false;
     bool dump_track_map_exit = false;
     vector<pair<string, string> > track_mca_labels;
+    bool use_avc_subdesc = false;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -1735,6 +1737,10 @@ int main(int argc, const char** argv)
             dump_track_map = true;
             dump_track_map_exit = true;
         }
+        else if (strcmp(argv[cmdln_index], "--use-avc-subdesc") == 0)
+        {
+            use_avc_subdesc = true;
+        }
         else if (strcmp(argv[cmdln_index], "--track-mca-labels") == 0)
         {
             if (cmdln_index + 3 >= argc)
@@ -2788,6 +2794,7 @@ int main(int argc, const char** argv)
                 case AVCI50_720P:
                     if (afd)
                         clip_track->SetAFD(afd);
+                    clip_track->SetUseAVCSubDescriptor(use_avc_subdesc);
                     if (force_no_avci_head) {
                         clip_track->SetAVCIMode(AVCI_NO_FRAME_HEADER_MODE);
                     } else {

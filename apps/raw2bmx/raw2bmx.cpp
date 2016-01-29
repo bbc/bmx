@@ -474,6 +474,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  wave:\n");
     fprintf(stderr, "    --orig <name>           Set originator in the output Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
     fprintf(stderr, "\n");
+    fprintf(stderr, "  as02/op1a/as11op1a:\n");
+    fprintf(stderr, "    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Input Options (must precede the input to which it applies):\n");
     fprintf(stderr, "  -a <n:d>                Image aspect ratio. Either 4:3 or 16:9. Default parsed or 16:9\n");
@@ -654,6 +657,7 @@ int main(int argc, const char** argv)
     bool zero_mp_track_num = false;
     vector<EmbedXMLInfo> embed_xml;
     EmbedXMLInfo next_embed_xml;
+    bool use_avc_subdesc = false;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -1303,6 +1307,10 @@ int main(int argc, const char** argv)
             }
             originator = argv[cmdln_index + 1];
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--use-avc-subdesc") == 0)
+        {
+            use_avc_subdesc = true;
         }
         else if (strcmp(argv[cmdln_index], "--regtest") == 0)
         {
@@ -3389,6 +3397,7 @@ int main(int argc, const char** argv)
                 case AVCI50_720P:
                     if (input->afd)
                         input->track->SetAFD(input->afd);
+                    input->track->SetUseAVCSubDescriptor(use_avc_subdesc);
                     if (force_no_avci_head) {
                         input->track->SetAVCIMode(AVCI_NO_FRAME_HEADER_MODE);
                     } else {

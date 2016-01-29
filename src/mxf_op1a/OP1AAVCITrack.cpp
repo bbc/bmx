@@ -54,6 +54,7 @@ OP1AAVCITrack::OP1AAVCITrack(OP1AFile *file, uint32_t track_index, uint32_t trac
 {
     mAVCIDescriptorHelper = dynamic_cast<AVCIMXFDescriptorHelper*>(mDescriptorHelper);
     BMX_ASSERT(mAVCIDescriptorHelper);
+    mWriterHelper.SetDescriptorHelper(mAVCIDescriptorHelper);
 
     mTrackNumber = MXF_MPEG_PICT_TRACK_NUM(0x01, MXF_MPEG_PICT_FRAME_WRAPPED_EE_TYPE, 0x00);
     mEssenceElementKey = VIDEO_ELEMENT_KEY;
@@ -100,6 +101,11 @@ void OP1AAVCITrack::SetReplaceHeader(bool enable)
     mWriterHelper.SetReplaceHeader(enable);
 }
 
+void OP1AAVCITrack::SetUseAVCSubDescriptor(bool enable)
+{
+    mAVCIDescriptorHelper->SetUseAVCSubDescriptor(enable);
+}
+
 uint32_t OP1AAVCITrack::GetSampleWithoutHeaderSize()
 {
     return mAVCIDescriptorHelper->GetSampleWithoutHeaderSize();
@@ -136,3 +142,9 @@ void OP1AAVCITrack::WriteSamplesInt(const unsigned char *data, uint32_t size, ui
     }
 }
 
+void OP1AAVCITrack::CompleteWrite()
+{
+    mWriterHelper.CompleteProcess();
+
+    OP1APictureTrack::CompleteWrite();
+}
