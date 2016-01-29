@@ -476,6 +476,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
         // TODO: should be extracting and checking this information from the bitstream
         mAVCSubDescriptor->setAVCDecodingDelay(0);
         mAVCSubDescriptor->setAVCCodedContentKind(avc_info->coded_content_kind);
+        mAVCSubDescriptor->setAVCClosedGOPIndicator(true);
         mAVCSubDescriptor->setAVCIdenticalGOPIndicator(true);
         mAVCSubDescriptor->setAVCMaximumGOPSize(1);
         mAVCSubDescriptor->setAVCMaximumBPictureCount(0);
