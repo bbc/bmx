@@ -959,10 +959,10 @@ int main(int argc, const char** argv)
         }
         else if (strcmp(argv[cmdln_index], "--seg") == 0)
         {
-            if (cmdln_index + 2 >= argc)
+            if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             segmentation_filename = argv[cmdln_index + 1];
