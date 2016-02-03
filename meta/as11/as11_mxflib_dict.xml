@@ -8,6 +8,19 @@
         <UKDPPSchemeLabel            detail="UK DPP DM Scheme"             ul="06 0e 2b 34 04 01 01 01 0d 0c 01 01 01 00 00 00"/> 
     </MXFLabels>
 
+    <MXFLabels>
+        <BlocksFF0WIP   detail="Blocks File Format 0 (WIP)" ul="06 0e 2b 34 04 01 01 01 0d 01 08 01 03 01 00 00"/>
+        <BlocksFF2WIP   detail="Blocks File Format 2 (WIP)" ul="06 0e 2b 34 04 01 01 01 0d 01 08 01 03 03 00 00"/>
+        <BlocksFF5WIP   detail="Blocks File Format 5 (WIP)" ul="06 0e 2b 34 04 01 01 01 0d 01 08 01 03 06 00 00"/>
+        <BlocksFF6WIP   detail="Blocks File Format 6 (WIP)" ul="06 0e 2b 34 04 01 01 01 0d 01 08 01 03 07 00 00"/>
+    </MXFLabels>
+
+    <MXFLabels>
+        <CstrdMCALabelingFwork                    detail="Audio Layout Mode 0" ul="06 0e 2b 34 04 01 01 01 0d 01 08 01 02 01 00 00"/>
+        <CstrdMCALabelingFworkWithDefaultLayoutA  detail="Audio Layout Mode 1" ul="06 0e 2b 34 04 01 01 01 0d 01 08 01 02 02 00 00"/>
+        <DefaultLayoutAWithoutMCALabeling         detail="Audio Layout Mode 2" ul="06 0e 2b 34 04 01 01 01 0d 01 08 01 02 03 00 00"/>
+    </MXFLabels>
+
     <MXFTypes>
         <Enumeration>
             <CaptionsType         type="UInt8">
