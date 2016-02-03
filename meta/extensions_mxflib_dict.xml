@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <MXFDictionary>
 
+  <MXFLabels>
+    <RP2057TextMetadata detail="RP 2057 - Text-Based Metadata Carriage in MXF" ul="06 0e 2b 34 04 01 01 01 0d 01 04 01 04 01 01 00"/>
+  </MXFLabels>
+
   <Preface>
     <IsRIPPresent type="Boolean" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 04 04 05 03 00 00 00 00"/>
   </Preface>
