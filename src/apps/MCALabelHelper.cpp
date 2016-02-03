@@ -108,13 +108,15 @@ bool MCALabelHelper::ParseTrackLabels(const string &filename)
 {
     ClearTrackLabels();
 
+    ifstream input(filename.c_str());
+    if (!input.is_open()) {
+        log_error("Failed to open track labels file\n");
+        return false;
+    }
+
     int line_number = 0;
     try
     {
-        ifstream input(filename.c_str());
-        if (!input.is_open())
-            throw BMXException("Failed to open track labels file '%s'", filename.c_str());
-
         vector<string> track_lines;
         string line;
         while (std::getline(input, line)) {
