@@ -762,7 +762,9 @@ bool AS11Helper::SetFrameworkProperty(const char *type_str, const char *name, co
 
 bool AS11Helper::ParseSpecificationId(const string &spec_id_str)
 {
-    if (spec_id_str == "as11-x2")
+    if (spec_id_str == "as11-x1")
+        mAS11SpecId = AS11_X1_SPEC;
+    else if (spec_id_str == "as11-x2")
         mAS11SpecId = AS11_X2_SPEC;
     else if (spec_id_str == "as11-x3")
         mAS11SpecId = AS11_X3_SPEC;

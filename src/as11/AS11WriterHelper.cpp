@@ -125,6 +125,10 @@ void AS11WriterHelper::SetSpecificationId(AS11SpecificationId spec_id)
     Preface *preface = header_metadata->getPreface();
     switch (spec_id)
     {
+        case AS11_X1_SPEC:
+            preface->appendULArrayItem(&MXF_ITEM_K(Preface, SpecificationIdentifiers), AS11_BLOCKS_FF_0_WIP);
+            preface->appendULArrayItem(&MXF_ITEM_K(Preface, SpecificationIdentifiers), AS11_BLOCKS_FF_1_WIP);
+            break;
         case AS11_X2_SPEC:
             preface->appendULArrayItem(&MXF_ITEM_K(Preface, SpecificationIdentifiers), AS11_BLOCKS_FF_0_WIP);
             preface->appendULArrayItem(&MXF_ITEM_K(Preface, SpecificationIdentifiers), AS11_BLOCKS_FF_2_WIP);

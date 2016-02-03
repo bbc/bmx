@@ -413,6 +413,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --pass-dm                      Copy descriptive metadata from the input file. The metadata can be overidden by other options\n");
     fprintf(stderr, "    --spec-id <id>                 Set the AS-11 specification identifier labels associated with <id>\n");
     fprintf(stderr, "                                   The <id> is one of the following:\n");
+    fprintf(stderr, "                                       as11-x1 : AMWA AS-11 X1 specification\n");
     fprintf(stderr, "                                       as11-x2 : AMWA AS-11 X2 specification\n");
     fprintf(stderr, "                                       as11-x3 : AMWA AS-11 X3 specification\n");
     fprintf(stderr, "                                       as11-x4 : AMWA AS-11 X4 specification\n");
