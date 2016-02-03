@@ -1753,6 +1753,8 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
         sound_track_info->block_align = wave_descriptor->getBlockAlign();
         if (wave_descriptor->haveSequenceOffset())
             sound_track_info->sequence_offset = wave_descriptor->getSequenceOffset();
+        if (wave_descriptor->haveChannelAssignment())
+            sound_track_info->channel_assignment = wave_descriptor->getChannelAssignment();
     } else {
         if (sound_track_info->channel_count > 0) {
             sound_track_info->block_align = sound_track_info->channel_count *

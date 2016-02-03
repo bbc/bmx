@@ -483,6 +483,12 @@ static void usage(const char *cmd)
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02/op1a/as11op1a:\n");
     fprintf(stderr, "    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");
+    fprintf(stderr, "    --audio-layout <label>  Set the Wave essence descriptor channel assignment label which identifies the audio layout mode in operation\n");
+    fprintf(stderr, "                            The <label> is one of the following:\n");
+    fprintf(stderr, "                                * a SMPTE UL, formatted as a 'urn:smpte:ul:...',\n");
+    fprintf(stderr, "                                * 'as11-mode-0', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02010000,\n");
+    fprintf(stderr, "                                * 'as11-mode-1', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02020000,\n");
+    fprintf(stderr, "                                * 'as11-mode-2', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02030000\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Input Options (must precede the input to which it applies):\n");
@@ -665,6 +671,7 @@ int main(int argc, const char** argv)
     vector<EmbedXMLInfo> embed_xml;
     EmbedXMLInfo next_embed_xml;
     bool use_avc_subdesc = false;
+    UL audio_layout_mode_label = g_Null_UL;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -1338,6 +1345,23 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--use-avc-subdesc") == 0)
         {
             use_avc_subdesc = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--audio-layout") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!AS11Helper::ParseAudioLayoutMode(argv[cmdln_index + 1], &audio_layout_mode_label) &&
+                !parse_mxf_auid(argv[cmdln_index + 1], &audio_layout_mode_label))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--regtest") == 0)
         {
@@ -3530,6 +3554,8 @@ int main(int argc, const char** argv)
                     // force D10 sequence offset to 0 and default to 0 for other clip types
                     if (clip_type == CW_D10_CLIP_TYPE || sequence_offset_set)
                         input->track->SetSequenceOffset(sequence_offset);
+                    if (audio_layout_mode_label != g_Null_UL)
+                        input->track->SetChannelAssignment(audio_layout_mode_label);
                     break;
                 case ANC_DATA:
                     input->track->SetConstantDataSize(input->anc_const_size);

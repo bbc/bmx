@@ -516,6 +516,12 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            is shown as '<output track channel> <- <input channel>\n");
     fprintf(stderr, "    --dump-track-map-exit   Same as --dump-track-map, but exit immediately afterwards\n");
     fprintf(stderr, "    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");
+    fprintf(stderr, "    --audio-layout <label>  Set the Wave essence descriptor channel assignment label which identifies the audio layout mode in operation\n");
+    fprintf(stderr, "                            The <label> is one of the following:\n");
+    fprintf(stderr, "                                * a SMPTE UL, formatted as a 'urn:smpte:ul:...',\n");
+    fprintf(stderr, "                                * 'as11-mode-0', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02010000,\n");
+    fprintf(stderr, "                                * 'as11-mode-1', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02020000,\n");
+    fprintf(stderr, "                                * 'as11-mode-2', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02030000\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/as11op1a:\n");
     fprintf(stderr, "    --track-mca-labels <scheme> <file>   Insert audio labels defined in <file> using the symbol <scheme>\n");
@@ -687,6 +693,7 @@ int main(int argc, const char** argv)
     bool dump_track_map_exit = false;
     vector<pair<string, string> > track_mca_labels;
     bool use_avc_subdesc = false;
+    UL audio_layout_mode_label = g_Null_UL;
     int value, num, den;
     unsigned int uvalue;
     int cmdln_index;
@@ -1766,6 +1773,23 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--use-avc-subdesc") == 0)
         {
             use_avc_subdesc = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--audio-layout") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!AS11Helper::ParseAudioLayoutMode(argv[cmdln_index + 1], &audio_layout_mode_label) &&
+                !parse_mxf_auid(argv[cmdln_index + 1], &audio_layout_mode_label))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--track-mca-labels") == 0)
         {
@@ -2973,6 +2997,8 @@ int main(int argc, const char** argv)
                         clip_track->SetDialNorm(input_sound_info->dial_norm);
                     if (clip_type == CW_D10_CLIP_TYPE || input_sound_info->sequence_offset)
                         clip_track->SetSequenceOffset(input_sound_info->sequence_offset);
+                    if (audio_layout_mode_label != g_Null_UL)
+                        clip_track->SetChannelAssignment(audio_layout_mode_label);
                     break;
                 case ANC_DATA:
                     if (anc_const_size) {

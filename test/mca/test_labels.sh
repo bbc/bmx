@@ -44,6 +44,7 @@ create_file()
         -o $3 \
         --track-map $1 \
         --track-mca-labels as11 $2 \
+        --audio-layout as11-mode-0 \
         $tmpdir/input.mxf \
         >/dev/null
 }

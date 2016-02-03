@@ -525,6 +525,20 @@ bool AS11Helper::IndexAS11MCALabels(MCALabelHelper *labels_helper)
     return AS11WriterHelper::IndexAS11MCALabels(labels_helper);
 }
 
+bool AS11Helper::ParseAudioLayoutMode(const string &audio_mode_str, UL *label)
+{
+    if (audio_mode_str == "as11-mode-0")
+        *label = CONSTRAINED_MCA_LABEL_FRAMEWORK;
+    else if (audio_mode_str == "as11-mode-1")
+        *label = CONSTRAINED_MCA_LABEL_WITH_DEFAULT_LAYOUT_A;
+    else if (audio_mode_str == "as11-mode-2")
+        *label = DEFAULT_LAYOUT_A_WITHOUT_MCA_LABEL;
+    else
+        return false;
+
+    return true;
+}
+
 AS11Helper::AS11Helper()
 {
     mFillerCompleteSegments = false;

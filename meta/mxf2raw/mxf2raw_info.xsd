@@ -338,6 +338,7 @@
       <xs:element name="locked" type="xs:boolean" minOccurs="0"/>
       <xs:element name="audio_ref_level" type="int8_type" minOccurs="0"/>
       <xs:element name="dial_norm" type="int8_type" minOccurs="0"/>
+      <xs:element name="channel_assignment" type="label_type" minOccurs="0"/>
       <xs:element name="mca_labels" type="mca_labels_type" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>

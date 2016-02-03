@@ -894,6 +894,8 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
             info_writer->WriteIntegerItem("audio_ref_level", sound_info->audio_ref_level);
         if (BMX_OPT_PROP_IS_SET(sound_info->dial_norm))
             info_writer->WriteIntegerItem("dial_norm", sound_info->dial_norm);
+        if (sound_info->channel_assignment != g_Null_UL)
+            info_writer->WriteAUIDItem("channel_assignment", sound_info->channel_assignment);
         if (!sound_info->mca_labels.empty()) {
             info_writer->StartSection("mca_labels");
             write_track_mca_label_info(info_writer, reader, sound_info, mca_detail);

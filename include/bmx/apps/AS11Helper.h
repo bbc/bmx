@@ -100,6 +100,8 @@ class AS11Helper
 public:
     static bool IndexAS11MCALabels(MCALabelHelper *labels_helper);
 
+    static bool ParseAudioLayoutMode(const std::string &audio_mode_str, UL *label);
+
 public:
     AS11Helper();
     ~AS11Helper();
