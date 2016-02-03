@@ -742,7 +742,7 @@ void AvidTrack::SetPhysicalSourceStartTimecode()
                                                     rounded_clip_tc_base,
                                                     mClip->mStartTimecode.GetRoundedTCBase(),
                                                     ROUND_AUTO);
-    int64_t start_position = clip_tc_start_offset - phys_tc_start_offset;
+    int64_t start_position = clip_tc_start_offset - mOutputStartOffset - phys_tc_start_offset;
     if (start_position < 0) {
         // physical source's start timecode was > start timecode
         log_warn("Not setting start timecode in file source package because start position was negative\n");
