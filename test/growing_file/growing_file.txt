@@ -91,10 +91,10 @@ Clip
             track_number    : 0x16010100
             file_uri        : regtest_file_uri
       SoundDescriptor:
-        sampling_rate   : 48000/1
-        bits_per_sample : 16
-        block_align     : 2
-        channel_count   : 1
+        sampling_rate        : 48000/1
+        bits_per_sample      : 16
+        block_align          : 2
+        channel_count        : 1
 LogMessages: (1)
   info    : Read 24 samples (00:00:00:24 @25fps)
 5941464
@@ -190,10 +190,10 @@ Clip
             track_number    : 0x16010100
             file_uri        : regtest_file_uri
       SoundDescriptor:
-        sampling_rate   : 48000/1
-        bits_per_sample : 16
-        block_align     : 2
-        channel_count   : 1
+        sampling_rate        : 48000/1
+        bits_per_sample      : 16
+        block_align          : 2
+        channel_count        : 1
 LogMessages: (2)
   warning : File is missing both a RIP and a footer partition offset 
   info    : Read 24 samples (00:00:00:24 @25fps)
@@ -290,10 +290,10 @@ Clip
             track_number    : 0x16010100
             file_uri        : regtest_file_uri
       SoundDescriptor:
-        sampling_rate   : 48000/1
-        bits_per_sample : 16
-        block_align     : 2
-        channel_count   : 1
+        sampling_rate        : 48000/1
+        bits_per_sample      : 16
+        block_align          : 2
+        channel_count        : 1
 LogMessages: (7)
   warning : Input file is incomplete
   error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
@@ -395,10 +395,10 @@ Clip
             track_number    : 0x16010100
             file_uri        : regtest_file_uri
       SoundDescriptor:
-        sampling_rate   : 48000/1
-        bits_per_sample : 16
-        block_align     : 2
-        channel_count   : 1
+        sampling_rate        : 48000/1
+        bits_per_sample      : 16
+        block_align          : 2
+        channel_count        : 1
 LogMessages: (6)
   warning : Input file is incomplete
   error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
@@ -499,10 +499,10 @@ Clip
             track_number    : 0x16010100
             file_uri        : regtest_file_uri
       SoundDescriptor:
-        sampling_rate   : 48000/1
-        bits_per_sample : 16
-        block_align     : 2
-        channel_count   : 1
+        sampling_rate        : 48000/1
+        bits_per_sample      : 16
+        block_align          : 2
+        channel_count        : 1
 LogMessages: (6)
   warning : Input file is incomplete
   error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
@@ -603,10 +603,10 @@ Clip
             track_number    : 0x16010100
             file_uri        : regtest_file_uri
       SoundDescriptor:
-        sampling_rate   : 48000/1
-        bits_per_sample : 16
-        block_align     : 2
-        channel_count   : 1
+        sampling_rate        : 48000/1
+        bits_per_sample      : 16
+        block_align          : 2
+        channel_count        : 1
 LogMessages: (6)
   warning : Input file is incomplete
   error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
@@ -707,10 +707,10 @@ Clip
             track_number    : 0x16010100
             file_uri        : regtest_file_uri
       SoundDescriptor:
-        sampling_rate   : 48000/1
-        bits_per_sample : 16
-        block_align     : 2
-        channel_count   : 1
+        sampling_rate        : 48000/1
+        bits_per_sample      : 16
+        block_align          : 2
+        channel_count        : 1
 LogMessages: (7)
   warning : Input file is incomplete
   error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
@@ -813,10 +813,10 @@ Clip
             track_number    : 0x16010100
             file_uri        : regtest_file_uri
       SoundDescriptor:
-        sampling_rate   : 48000/1
-        bits_per_sample : 16
-        block_align     : 2
-        channel_count   : 1
+        sampling_rate        : 48000/1
+        bits_per_sample      : 16
+        block_align          : 2
+        channel_count        : 1
 LogMessages: (8)
   warning : Input file is incomplete
   error   : 'mxf_file_read(mxfFile, buffer, 2) == 2' failed, 
@@ -919,10 +919,10 @@ Clip
             track_number    : 0x16010100
             file_uri        : regtest_file_uri
       SoundDescriptor:
-        sampling_rate   : 48000/1
-        bits_per_sample : 16
-        block_align     : 2
-        channel_count   : 1
+        sampling_rate        : 48000/1
+        bits_per_sample      : 16
+        block_align          : 2
+        channel_count        : 1
 LogMessages: (7)
   warning : Input file is incomplete
   error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
@@ -1024,10 +1024,10 @@ Clip
             track_number    : 0x16010100
             file_uri        : regtest_file_uri
       SoundDescriptor:
-        sampling_rate   : 48000/1
-        bits_per_sample : 16
-        block_align     : 2
-        channel_count   : 1
+        sampling_rate        : 48000/1
+        bits_per_sample      : 16
+        block_align          : 2
+        channel_count        : 1
 LogMessages: (7)
   warning : Input file is incomplete
   error   : 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 

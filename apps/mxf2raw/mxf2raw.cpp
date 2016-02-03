@@ -877,6 +877,10 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
         }
         info_writer->EndSection();
     } else if (sound_info) {
+        AppTextInfoWriter *text_writer = dynamic_cast<AppTextInfoWriter*>(info_writer);
+        if (text_writer)
+            text_writer->PushItemValueIndent(strlen("d10_aes3_valid_flags "));
+
         info_writer->StartSection("sound_descriptor");
         info_writer->WriteRationalItem("sampling_rate", sound_info->sampling_rate);
         info_writer->WriteIntegerItem("bits_per_sample", sound_info->bits_per_sample);
@@ -902,6 +906,9 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
             info_writer->EndSection();
         }
         info_writer->EndSection();
+
+        if (text_writer)
+            text_writer->PopItemValueIndent();
     } else if (data_info) {
         info_writer->StartSection("data_descriptor");
         if (!data_info->vbi_manifest.empty()) {
