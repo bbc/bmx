@@ -2411,9 +2411,9 @@ int main(int argc, const char** argv)
                     flavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
                 else if (body_part)
                     flavour |= OP1A_BODY_PARTITIONS_FLAVOUR;
-                if (zero_mp_track_num)
-                    flavour |= OP1A_ZERO_MP_TRACK_NUMBER_FLAVOUR;
             }
+            if (zero_mp_track_num)
+                flavour |= OP1A_ZERO_MP_TRACK_NUMBER_FLAVOUR;
             if (output_file_md5)
                 flavour |= OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
