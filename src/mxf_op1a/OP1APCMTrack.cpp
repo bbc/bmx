@@ -157,6 +157,11 @@ void OP1APCMTrack::SetSequenceOffset(uint8_t offset)
     SetSampleSequence();
 }
 
+void OP1APCMTrack::SetChannelAssignment(UL label)
+{
+    mWaveDescriptorHelper->SetChannelAssignment(label);
+}
+
 AudioChannelLabelSubDescriptor* OP1APCMTrack::AddAudioChannelLabel(AudioChannelLabelSubDescriptor *copy_from)
 {
     AudioChannelLabelSubDescriptor *desc;

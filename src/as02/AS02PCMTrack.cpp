@@ -121,6 +121,11 @@ void AS02PCMTrack::SetSequenceOffset(uint8_t offset)
     SetSampleSequence();
 }
 
+void AS02PCMTrack::SetChannelAssignment(UL label)
+{
+    mWaveDescriptorHelper->SetChannelAssignment(label);
+}
+
 vector<uint32_t> AS02PCMTrack::GetShiftedSampleSequence() const
 {
     vector<uint32_t> shifted_sample_sequence = mSampleSequence;

@@ -56,6 +56,7 @@ public:
     void SetAudioRefLevel(int8_t level);                // default not set
     void SetDialNorm(int8_t dial_norm);                 // default not set
     void SetSequenceOffset(uint8_t offset);             // default not set
+    void SetChannelAssignment(UL label);                // default not set
 
     mxfpp::AudioChannelLabelSubDescriptor* AddAudioChannelLabel(
         mxfpp::AudioChannelLabelSubDescriptor *copy_from = 0);

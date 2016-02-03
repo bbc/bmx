@@ -92,6 +92,7 @@ WaveMXFDescriptorHelper::WaveMXFDescriptorHelper()
     mEssenceType = WAVE_PCM;
     mSequenceOffset = 0;
     mUseAES3AudioDescriptor = false;
+    mChannelAssignment = g_Null_UL;
 }
 
 WaveMXFDescriptorHelper::~WaveMXFDescriptorHelper()
@@ -138,6 +139,11 @@ void WaveMXFDescriptorHelper::SetUseAES3AudioDescriptor(bool enable)
     mUseAES3AudioDescriptor = enable;
 }
 
+void WaveMXFDescriptorHelper::SetChannelAssignment(mxfUL label)
+{
+    mChannelAssignment = label;
+}
+
 FileDescriptor* WaveMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata)
 {
     if ((mFlavour & MXFDESC_RDD9_FLAVOUR) ||
@@ -164,6 +170,8 @@ void WaveMXFDescriptorHelper::UpdateFileDescriptor()
     uint32_t sample_size = GetSampleSize();
     if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR))
         wav_descriptor->setSoundEssenceCompression(MXF_CMDEF_L(UNDEFINED_SOUND));
+    if (mChannelAssignment != g_Null_UL)
+        wav_descriptor->setChannelAssignment(mChannelAssignment);
     wav_descriptor->setBlockAlign(sample_size);
     wav_descriptor->setAvgBps(sample_size * mSamplingRate.numerator / mSamplingRate.denominator);
     if (mSequenceOffset > 0)

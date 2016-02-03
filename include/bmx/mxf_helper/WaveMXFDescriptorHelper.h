@@ -59,6 +59,7 @@ public:
     // configure and create new descriptor
     void SetSequenceOffset(uint8_t offset);         // default not set (0)
     void SetUseAES3AudioDescriptor(bool enable);    // default Wave audio descriptor
+    void SetChannelAssignment(mxfUL label);         // default not set
 
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
     virtual void UpdateFileDescriptor();
@@ -74,6 +75,7 @@ public:
 private:
     uint8_t mSequenceOffset;
     bool mUseAES3AudioDescriptor;
+    mxfUL mChannelAssignment;
 };
 
 
