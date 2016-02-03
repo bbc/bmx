@@ -172,6 +172,9 @@ AudioChannelLabelSubDescriptor* OP1APCMTrack::AddAudioChannelLabel(AudioChannelL
     desc->setMCALinkID(generate_uuid());
     mMCALabels.push_back(desc);
 
+    if (mOP1AFile->HavePreparedHeaderMetadata())
+      mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(mMCALabels.back());
+
     return desc;
 }
 
@@ -185,6 +188,9 @@ SoundfieldGroupLabelSubDescriptor* OP1APCMTrack::AddSoundfieldGroupLabel(Soundfi
         desc->setMCALinkID(generate_uuid());
     }
     mMCALabels.push_back(desc);
+
+    if (mOP1AFile->HavePreparedHeaderMetadata())
+      mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(mMCALabels.back());
 
     return desc;
 }
@@ -200,6 +206,9 @@ GroupOfSoundfieldGroupsLabelSubDescriptor* OP1APCMTrack::AddGroupOfSoundfieldGro
         desc->setMCALinkID(generate_uuid());
     }
     mMCALabels.push_back(desc);
+
+    if (mOP1AFile->HavePreparedHeaderMetadata())
+      mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(mMCALabels.back());
 
     return desc;
 }
