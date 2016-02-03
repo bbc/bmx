@@ -1072,11 +1072,8 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (strcmp(argv[cmdln_index + 1], "as11") == 0)
-            {
-                next_embed_xml.scheme_id = AS11_DM_XML_Document;
-            }
-            else if (!parse_mxf_auid(argv[cmdln_index + 1], &next_embed_xml.scheme_id))
+            if (!AS11Helper::ParseXMLSchemeId(argv[cmdln_index + 1], &next_embed_xml.scheme_id) &&
+                !parse_mxf_auid(argv[cmdln_index + 1], &next_embed_xml.scheme_id))
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);

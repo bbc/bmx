@@ -525,6 +525,16 @@ bool AS11Helper::IndexAS11MCALabels(MCALabelHelper *labels_helper)
     return AS11WriterHelper::IndexAS11MCALabels(labels_helper);
 }
 
+bool AS11Helper::ParseXMLSchemeId(const string &scheme_id_str, UL *label)
+{
+    if (scheme_id_str == "as11")
+        *label = AS11_DM_XML_Document;
+    else
+        return false;
+
+    return true;
+}
+
 bool AS11Helper::ParseAudioLayoutMode(const string &audio_mode_str, UL *label)
 {
     if (audio_mode_str == "as11-mode-0")
