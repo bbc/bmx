@@ -1835,6 +1835,7 @@ int main(int argc, const char** argv)
                 return 1;
             }
             st436_manifest_count = (uint32_t)(uvalue);
+            do_write_info = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--rdd6") == 0)
@@ -1857,6 +1858,7 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--mca-detail") == 0)
         {
             mca_detail = true;
+            do_write_info = true;
         }
         else if (strcmp(argv[cmdln_index], "-p") == 0 ||
                  strcmp(argv[cmdln_index], "--ess-out") == 0)
