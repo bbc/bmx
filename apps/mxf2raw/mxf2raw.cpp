@@ -981,6 +981,10 @@ static void write_clip_info(AppInfoWriter *info_writer, MXFReader *reader,
         max_rollout = reader->GetMaxRollout(reader->GetDuration() - 1, false);
     }
 
+    string clip_name = reader->GetMaterialPackageName();
+    if (!clip_name.empty())
+      info_writer->WriteStringItem("name", clip_name);
+
     info_writer->WriteRationalItem("edit_rate", edit_rate);
     info_writer->WriteDurationItem("duration", reader->GetDuration(), edit_rate);
     if (max_precharge != 0)

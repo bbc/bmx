@@ -192,6 +192,7 @@
 
   <xs:complexType name="clip_type">
     <xs:sequence>
+      <xs:element name="name" type="xs:string" minOccurs="0"/>
       <xs:element name="edit_rate" type="rational_type"/>
       <xs:element name="duration" type="duration_type"/>
       <xs:element name="max_precharge" type="int16_type" minOccurs="0"/>
