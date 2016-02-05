@@ -3268,7 +3268,7 @@ int main(int argc, const char** argv)
                                                bits_per_sample,
                                                input_sound_info->channel_count, input_channel_index,
                                                sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
-                            num_samples = frame->GetSize() / channel_block_align;
+                            num_samples = frame->GetSize() / (input_sound_info->channel_count * channel_block_align);
                         }
 
                         output_track->WriteSamples(output_channel_index,
