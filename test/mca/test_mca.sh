@@ -45,25 +45,34 @@ create_file()
         --track-map $1 \
         $tmpdir/input.mxf \
         >/dev/null
+
+    $appsdir/mxf2raw/mxf2raw \
+        --regtest \
+        --info \
+        --info-format xml \
+        --info-file $3 \
+        --mca-detail \
+        $2
 }
 
 
 check()
 {
-    create_file $1 $tmpdir/test.mxf &&
+    create_file $1 $tmpdir/test.mxf $tmpdir/test.xml &&
         $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
-        diff $tmpdir/test.md5 $base/mca_$2.md5
+        diff $tmpdir/test.md5 $base/mca_$2.md5 &&
+        diff $tmpdir/test.xml $base/mca_$2.xml
 }
 
 create_data()
 {
-    create_file $1 $tmpdir/test.mxf &&
+    create_file $1 $tmpdir/test.mxf $base/mca_$2.xml &&
         $md5tool < $tmpdir/test.mxf > $base/mca_$2.md5
 }
 
 create_sample()
 {
-    create_file $1 $sampledir/bmxtranswrap_mca_$2.mxf
+    create_file $1 $sampledir/mca_$2.mxf $sampledir/mca_$2.xml
 }
 
 

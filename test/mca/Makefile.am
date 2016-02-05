@@ -14,6 +14,18 @@ EXTRA_DIST = \
 	mcalabels_stereo.md5 \
 	mcalabels_stereop51.md5 \
 	mcalabels_mess.md5 \
+	mca_mono.xml \
+	mca_stereo.xml \
+	mca_singlemca.xml \
+	mca_monorem.xml \
+	mca_stereoprem.xml \
+	mca_stereops2p4.xml \
+	mca_stereopstereopmonorem.xml \
+	mca_reorder_mono.xml \
+	mca_reorder_stereo.xml \
+	mcalabels_stereo.xml \
+	mcalabels_stereop51.xml \
+	mcalabels_mess.xml \
 	stereo.txt \
 	stereop51.txt \
 	mess.txt \

@@ -47,25 +47,34 @@ create_file()
         --audio-layout as11-mode-0 \
         $tmpdir/input.mxf \
         >/dev/null
+
+    $appsdir/mxf2raw/mxf2raw \
+        --regtest \
+        --info \
+        --info-format xml \
+        --info-file $4 \
+        --mca-detail \
+        $3
 }
 
 
 check()
 {
-    create_file $1 $2 $tmpdir/test.mxf &&
+    create_file $1 $2 $tmpdir/test.mxf $tmpdir/test.xml &&
         $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
-        diff $tmpdir/test.md5 $base/mcalabels_$3.md5
+        diff $tmpdir/test.md5 $base/mcalabels_$3.md5 &&
+        diff $tmpdir/test.xml $base/mcalabels_$3.xml
 }
 
 create_data()
 {
-    create_file $1 $2 $tmpdir/test.mxf &&
+    create_file $1 $2 $tmpdir/test.mxf $base/mcalabels_$3.xml &&
         $md5tool < $tmpdir/test.mxf > $base/mcalabels_$3.md5
 }
 
 create_sample()
 {
-    create_file $1 $2 $sampledir/mcalabels_$3.mxf
+    create_file $1 $2 $sampledir/mca_labels_$3.mxf $sampledir/mca_labels_$3.xml
 }
 
 
