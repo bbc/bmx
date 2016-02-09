@@ -3063,6 +3063,11 @@ int main(int argc, const char** argv)
         }
 
 
+        // prepare the clip's header metadata
+
+        clip->PrepareHeaderMetadata();
+
+
         // add AS-11 descriptive metadata
 
         if (clip_sub_type == AS11_CLIP_SUB_TYPE) {

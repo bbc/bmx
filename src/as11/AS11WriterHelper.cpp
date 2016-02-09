@@ -108,8 +108,6 @@ AS11WriterHelper::AS11WriterHelper(ClipWriter *clip)
     mClip = clip;
     mSegmentationSequence = 0;
 
-    clip->PrepareHeaderMetadata(); // will skip if header metadata already prepared
-
     AS11Info::RegisterExtensions(clip->GetHeaderMetadata());
 }
 
