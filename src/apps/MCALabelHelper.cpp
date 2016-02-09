@@ -67,15 +67,9 @@ void MCALabelHelper::LabelLine::Reset()
 
 void MCALabelHelper::SoundfieldGroup::Reset()
 {
-    label_line.Reset();
-    channel_label_lines.clear();
-}
-
-
-void MCALabelHelper::GroupOfSoundFieldGroups::Reset()
-{
-    label_lines.clear();
-    group.Reset();
+    sg_label_line.Reset();
+    c_label_lines.clear();
+    gosg_label_lines.clear();
 }
 
 
@@ -167,7 +161,7 @@ void MCALabelHelper::InsertTrackLabels(ClipWriter *clip)
 
     for (i = 0; i < mTrackLabels.size(); i++) {
         TrackLabels *track_labels = mTrackLabels[i];
-        if (track_labels->gos_groups.empty())
+        if (track_labels->soundfield_groups.empty())
             continue;
 
         if (track_labels->track_index >= pcm_tracks.size())
@@ -178,13 +172,13 @@ void MCALabelHelper::InsertTrackLabels(ClipWriter *clip)
         map<string, GroupOfSoundfieldGroupsLabelSubDescriptor*> track_gosg_desc_byid;
 
         size_t g;
-        for (g = 0; g < track_labels->gos_groups.size(); g++) {
-            GroupOfSoundFieldGroups &gosg = track_labels->gos_groups[g];
+        for (g = 0; g < track_labels->soundfield_groups.size(); g++) {
+            SoundfieldGroup &sg = track_labels->soundfield_groups[g];
 
             set<UUID> gosg_link_ids;
             size_t l;
-            for (l = 0; l < gosg.label_lines.size(); l++) {
-                LabelLine &gosg_label_line = gosg.label_lines[l];
+            for (l = 0; l < sg.gosg_label_lines.size(); l++) {
+                LabelLine &gosg_label_line = sg.gosg_label_lines[l];
 
                 GroupOfSoundfieldGroupsLabelSubDescriptor *gosg_desc;
                 if (!gosg_label_line.id.empty() && package_gosg_desc_byid.count(gosg_label_line.id)) {
@@ -224,8 +218,8 @@ void MCALabelHelper::InsertTrackLabels(ClipWriter *clip)
             }
 
             SoundfieldGroupLabelSubDescriptor *sg_desc = 0;
-            if (gosg.group.label_line.label) {
-                LabelLine &sg_label_line = gosg.group.label_line;
+            if (sg.sg_label_line.label) {
+                LabelLine &sg_label_line = sg.sg_label_line;
 
                 if (!sg_label_line.id.empty() && package_sg_desc_byid.count(sg_label_line.id)) {
                     sg_desc = package_sg_desc_byid[sg_label_line.id];
@@ -278,8 +272,8 @@ void MCALabelHelper::InsertTrackLabels(ClipWriter *clip)
             }
 
             size_t c;
-            for (c = 0; c < gosg.group.channel_label_lines.size(); c++) {
-                LabelLine &c_label_line = gosg.group.channel_label_lines[c];
+            for (c = 0; c < sg.c_label_lines.size(); c++) {
+                LabelLine &c_label_line = sg.c_label_lines[c];
 
                 if (c_label_line.channel_index >= pcm_track->GetChannelCount()) {
                     BMX_EXCEPTION(("Channel label channel index %u >= track channel count %u",
@@ -318,32 +312,32 @@ void MCALabelHelper::ParseTrackLines(const vector<string> &lines)
         track_labels = new TrackLabels();
         track_labels->track_index = track_index;
 
-        GroupOfSoundFieldGroups gosg;
+        SoundfieldGroup sg;
         size_t i;
         for (i = 1; i < lines.size(); i++) {
             LabelLine label_line = ParseLabelLine(lines[i]);
 
             if (label_line.label->type == AUDIO_CHANNEL_LABEL) {
-                if (!gosg.label_lines.empty() || gosg.group.label_line.label) {
-                    track_labels->gos_groups.push_back(gosg);
-                    gosg.Reset();
+                if (!sg.gosg_label_lines.empty() || sg.sg_label_line.label) {
+                    track_labels->soundfield_groups.push_back(sg);
+                    sg.Reset();
                 }
-                gosg.group.channel_label_lines.push_back(label_line);
+                sg.c_label_lines.push_back(label_line);
             } else if (label_line.label->type == SOUNDFIELD_GROUP_LABEL) {
-                if (gosg.group.channel_label_lines.empty())
+                if (sg.c_label_lines.empty())
                     throw BMXException("No channels in soundfield group");
-                if (gosg.group.label_line.label)
+                if (sg.sg_label_line.label)
                     throw BMXException("Multiple soundfield group labels");
-                gosg.group.label_line = label_line;
+                sg.sg_label_line = label_line;
             } else { // GROUP_OF_SOUNDFIELD_GROUP_LABEL
-                if (!gosg.group.label_line.label)
+                if (!sg.sg_label_line.label)
                     throw BMXException("No soundfield group label before group of soundfield groups label");
-                gosg.label_lines.push_back(label_line);
+                sg.gosg_label_lines.push_back(label_line);
             }
         }
-        if (!gosg.label_lines.empty() || gosg.group.label_line.label || !gosg.group.channel_label_lines.empty()) {
-            track_labels->gos_groups.push_back(gosg);
-            gosg.Reset();
+        if (!sg.gosg_label_lines.empty() || sg.sg_label_line.label || !sg.c_label_lines.empty()) {
+            track_labels->soundfield_groups.push_back(sg);
+            sg.Reset();
         }
 
         mTrackLabels.push_back(track_labels);

@@ -93,24 +93,16 @@ private:
     public:
         void Reset();
 
-        LabelLine label_line;
-        std::vector<LabelLine> channel_label_lines;
-    };
-
-    class GroupOfSoundFieldGroups
-    {
-    public:
-        void Reset();
-
-        std::vector<LabelLine> label_lines;
-        SoundfieldGroup group;
+        LabelLine sg_label_line; // can be 'null', indicating that the channels are not assigned to a soundfield group
+        std::vector<LabelLine> c_label_lines;
+        std::vector<LabelLine> gosg_label_lines;
     };
 
     class TrackLabels
     {
     public:
         uint32_t track_index;
-        std::vector<GroupOfSoundFieldGroups> gos_groups;
+        std::vector<SoundfieldGroup> soundfield_groups;
     };
 
 private:
