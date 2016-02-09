@@ -254,23 +254,13 @@ static bool open_raw_reader(RawInput *input)
     return true;
 }
 
-static bool open_wave_reader(RawInput *input)
+static void open_wave_reader(RawInput *input)
 {
     BMX_ASSERT(!input->wave_reader);
 
-    WaveFileIO *wave_file = WaveFileIO::OpenRead(input->filename);
-    if (!wave_file) {
-        log_error("Failed to open wave file '%s'\n", input->filename);
-        return false;
-    }
-
-    input->wave_reader = WaveReader::Open(wave_file, true);
-    if (!input->wave_reader) {
-        log_error("Failed to parse wave file '%s'\n", input->filename);
-        return false;
-    }
-
-    return true;
+    input->wave_reader = WaveReader::Open(WaveFileIO::OpenRead(input->filename), true);
+    if (!input->wave_reader)
+        BMX_EXCEPTION(("Failed to parse wave file '%s'", input->filename));
 }
 
 static void write_samples(RawInput *input, unsigned char *data, uint32_t size, uint32_t num_samples)
@@ -2716,8 +2706,7 @@ int main(int argc, const char** argv)
 
             if (input->essence_type == WAVE_PCM) {
                 if (input->is_wave) {
-                    if (!open_wave_reader(input))
-                        throw false;
+                    open_wave_reader(input);
                     BMX_ASSERT(input->wave_reader->GetNumTracks() > 0);
 
                     input->wavepcm_track_index = 0;
