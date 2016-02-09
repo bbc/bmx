@@ -747,14 +747,15 @@ void OP1AFile::CreateHeaderMetadata()
         mTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage, mFileSourcePackage);
     for (i = 0; i < mXMLTracks.size(); i++)
         mXMLTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage);
-
-    // Check all the referenced MCA labels are present
-    CheckMCALabels();
 }
 
 void OP1AFile::CreateFile()
 {
     BMX_ASSERT(mHavePreparedHeaderMetadata);
+
+    // Check all the referenced MCA labels are present
+
+    CheckMCALabels();
 
 
     // set minimum llen
