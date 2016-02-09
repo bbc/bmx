@@ -864,14 +864,14 @@ static void dump_color(uint16_t red, uint16_t green, uint16_t blue)
 
 static void dump_fragment_sample_flags(uint32_t flags)
 {
-    printf("reserved=0x%x, ",                    (flags >> 28) &   0x0f);
-    printf("is_leading=0x%x, ",                  (flags >> 26) &   0x03);
-    printf("sample_depends_on=0x%x, ",           (flags >> 24) &   0x03);
-    printf("sample_is_depended_on=0x%x, ",       (flags >> 22) &   0x03);
-    printf("sample_has_redundancy=0x%x, ",       (flags >> 20) &   0x03);
-    printf("sample_padding_value=0x%x, ",        (flags >> 17) &   0x07);
-    printf("sample_is_non_sync_sample=0x%x, ",   (flags >> 16) &   0x01);
-    printf("sample_degradation_priority=0x%04x",  flags        & 0xffff);
+    printf("res=0x%x, ",       (flags >> 28) &   0x0f);
+    printf("lead=0x%x, ",      (flags >> 26) &   0x03);
+    printf("deps_on=0x%x, ",   (flags >> 24) &   0x03);
+    printf("depd_on=0x%x, ",   (flags >> 22) &   0x03);
+    printf("red=0x%x, ",       (flags >> 20) &   0x03);
+    printf("pad=0x%x, ",       (flags >> 17) &   0x07);
+    printf("nsync=0x%x, ",     (flags >> 16) &   0x01);
+    printf("priority=0x%04x",   flags        & 0xffff);
 }
 
 static void dump_atom_header()
