@@ -52,7 +52,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 1001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 1001
@@ -84,7 +84,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 2001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 2001
@@ -151,7 +151,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 1001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 1001
@@ -183,7 +183,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 2001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 2001
@@ -251,7 +251,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 1001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 1001
@@ -283,7 +283,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 2001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 2001
@@ -356,7 +356,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 1001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 1001
@@ -388,7 +388,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 2001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 2001
@@ -460,7 +460,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 1001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 1001
@@ -492,7 +492,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 2001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 2001
@@ -564,7 +564,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 1001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 1001
@@ -596,7 +596,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 2001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 2001
@@ -668,7 +668,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 1001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 1001
@@ -700,7 +700,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 2001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 2001
@@ -774,7 +774,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 1001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 1001
@@ -806,7 +806,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 2001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 2001
@@ -880,7 +880,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 1001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 1001
@@ -912,7 +912,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 2001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 2001
@@ -985,7 +985,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 1001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 1001
@@ -1017,7 +1017,7 @@ Clip
           Material:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
             track_id        : 2001
-            track_number    : 1
+            track_number    : 0
           FileSource:
             package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
             track_id        : 2001

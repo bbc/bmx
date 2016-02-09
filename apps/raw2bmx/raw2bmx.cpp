@@ -431,7 +431,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --body-part             Create separate body partitions for essence data\n");
     fprintf(stderr, "                            and don't create separate body partitions for index table segments\n");
     fprintf(stderr, "    --clip-wrap             Use clip wrapping for a single sound track\n");
-    fprintf(stderr, "    --zero-mp-track-num     Always set the Track Number property in the Material Package tracks to 0\n");
+    fprintf(stderr, "    --mp-track-num          Use the material package track number property to define a track order. By default the track number is set to 0\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/op1a:\n");
     fprintf(stderr, "    --xml-scheme-id <id>    Set the XML payload scheme identifier associated with the following --embed-xml option.\n");
@@ -668,7 +668,7 @@ int main(int argc, const char** argv)
     int64_t regtest_end = -1;
     bool have_anc = false;
     bool have_vbi = false;
-    bool zero_mp_track_num = false;
+    bool mp_track_num = false;
     vector<EmbedXMLInfo> embed_xml;
     EmbedXMLInfo next_embed_xml;
     bool use_avc_subdesc = false;
@@ -1061,9 +1061,9 @@ int main(int argc, const char** argv)
         {
             body_part = true;
         }
-        else if (strcmp(argv[cmdln_index], "--zero-mp-track-num") == 0)
+        else if (strcmp(argv[cmdln_index], "--mp-track-num") == 0)
         {
-            zero_mp_track_num = true;
+            mp_track_num = true;
         }
         else if (strcmp(argv[cmdln_index], "--xml-scheme-id") == 0)
         {
@@ -3176,14 +3176,17 @@ int main(int argc, const char** argv)
             flavour = OP1A_DEFAULT_FLAVOUR;
             if (ard_zdf_hdf_profile) {
                 flavour |= OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR;
-            } else if (clip_sub_type != AS11_CLIP_SUB_TYPE) {
+            } else if (clip_sub_type == AS11_CLIP_SUB_TYPE) {
+                if (as11_helper.HaveAS11CoreFramework()) // AS11 Core Framework has the Audio Track Layout property
+                    flavour |= OP1A_MP_TRACK_NUMBER_FLAVOUR;
+            } else {
+                if (mp_track_num)
+                    flavour |= OP1A_MP_TRACK_NUMBER_FLAVOUR;
                 if (min_part)
                     flavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
                 else if (body_part)
                     flavour |= OP1A_BODY_PARTITIONS_FLAVOUR;
             }
-            if (zero_mp_track_num)
-                flavour |= OP1A_ZERO_MP_TRACK_NUMBER_FLAVOUR;
             if (file_md5)
                 flavour |= OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)

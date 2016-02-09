@@ -118,6 +118,8 @@ public:
     bool HaveProgrammeTitle() const;
     std::string GetProgrammeTitle() const;
 
+    bool HaveAS11CoreFramework() const;
+
 public:
     void AddMetadata(ClipWriter *clip);
     void Complete();

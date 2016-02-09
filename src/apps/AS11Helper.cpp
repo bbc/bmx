@@ -804,6 +804,20 @@ string AS11Helper::GetProgrammeTitle() const
     return mSourceProgrammeTitle;
 }
 
+bool AS11Helper::HaveAS11CoreFramework() const
+{
+    if ((mSourceInfo && mSourceInfo->core) || mAS11FrameworkHelper)
+        return true;
+
+    size_t i;
+    for (i = 0; i < mFrameworkProperties.size(); i++) {
+        if (mFrameworkProperties[i].type == AS11_CORE_FRAMEWORK_TYPE)
+            return true;
+    }
+
+    return false;
+}
+
 void AS11Helper::AddMetadata(ClipWriter *clip)
 {
     if (clip->GetType() != CW_OP1A_CLIP_TYPE && clip->GetType() != CW_D10_CLIP_TYPE) {

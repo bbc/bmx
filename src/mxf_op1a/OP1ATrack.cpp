@@ -330,10 +330,10 @@ void OP1ATrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPacka
     material_package->appendTracks(track);
     track->setTrackName(get_track_name(mDataDef, mOutputTrackNumber));
     track->setTrackID(mTrackId);
-    if ((mOP1AFile->GetFlavour() & OP1A_ZERO_MP_TRACK_NUMBER_FLAVOUR))
-        track->setTrackNumber(0);
-    else
+    if ((mOP1AFile->GetFlavour() & OP1A_MP_TRACK_NUMBER_FLAVOUR))
         track->setTrackNumber(mOutputTrackNumber);
+    else
+        track->setTrackNumber(0);
     track->setEditRate(mEditRate);
     track->setOrigin(0);
 

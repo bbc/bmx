@@ -61,7 +61,7 @@
             <material>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
               <track_id>1001</track_id>
-              <track_number>1</track_number>
+              <track_number>0</track_number>
             </material>
             <file_source>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
@@ -100,7 +100,7 @@
             <material>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
               <track_id>2001</track_id>
-              <track_number>1</track_number>
+              <track_number>0</track_number>
             </material>
             <file_source>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
@@ -129,7 +129,7 @@
             <material>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
               <track_id>2002</track_id>
-              <track_number>2</track_number>
+              <track_number>0</track_number>
             </material>
             <file_source>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
@@ -158,7 +158,7 @@
             <material>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
               <track_id>2003</track_id>
-              <track_number>3</track_number>
+              <track_number>0</track_number>
             </material>
             <file_source>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
@@ -187,7 +187,7 @@
             <material>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
               <track_id>2004</track_id>
-              <track_number>4</track_number>
+              <track_number>0</track_number>
             </material>
             <file_source>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
@@ -216,7 +216,7 @@
             <material>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
               <track_id>2005</track_id>
-              <track_number>5</track_number>
+              <track_number>0</track_number>
             </material>
             <file_source>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
@@ -245,7 +245,7 @@
             <material>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
               <track_id>2006</track_id>
-              <track_number>6</track_number>
+              <track_number>0</track_number>
             </material>
             <file_source>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
@@ -274,7 +274,7 @@
             <material>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
               <track_id>2007</track_id>
-              <track_number>7</track_number>
+              <track_number>0</track_number>
             </material>
             <file_source>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
@@ -303,7 +303,7 @@
             <material>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
               <track_id>2008</track_id>
-              <track_number>8</track_number>
+              <track_number>0</track_number>
             </material>
             <file_source>
               <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
