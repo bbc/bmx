@@ -221,6 +221,12 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
                 case 1:
                     SetColorSiting(MXF_COLOR_SITING_QUINCUNX);
                     break;
+                case 2:
+                    SetColorSiting(MXF_COLOR_SITING_COSITING);
+                    break;
+                case 3:
+                    SetColorSiting(MXF_COLOR_SITING_HORIZ_MIDPOINT);
+                    break;
                 default:
                     break;
             }
