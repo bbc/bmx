@@ -265,6 +265,7 @@ AC_CONFIG_FILES([
 	src/avid_mxf/Makefile
 	src/d10_mxf/Makefile
 	src/as11/Makefile
+	src/as10/Makefile
 	src/rdd9_mxf/Makefile
 	src/wave/Makefile
 	src/clip_writer/Makefile

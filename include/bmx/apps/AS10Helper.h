@@ -29,47 +29,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_VERSION_H_
-#define BMX_VERSION_H_
+#ifndef AS10_HELPER_H_
+#define AS10_HELPER_H_
 
-
-#include <string>
-
-#include <bmx/BMXTypes.h>
-
-
-#define BMX_VERSION_MAJOR    0
-#define BMX_VERSION_MINOR    1
-#define BMX_VERSION_MICRO    4
-
-#define BMX_MXF_VERSION_RELEASE  5   /* 0 = Unknown version
-                                        1 = Released version
-                                        2 = Development version
-                                        3 = Released version with patches
-                                        4 = Pre-release beta version
-                                        5 = Private version not intended for general release */
-
-#define BMX_VERSION          (BMX_VERSION_MAJOR << 16 | BMX_VERSION_MINOR << 8 | BMX_VERSION_MICRO)
-
-#define BMX_LIBRARY_NAME     "bmx"
+#include <bmx/apps/FWHelper.h>
+#include <bmx/as10/AS10Info.h>
+#include <bmx/mxf_reader/MXFFileReader.h>
 
 
 
 namespace bmx
 {
 
+class AS10Helper
+{
+public:
+    AS10Helper();
+    ~AS10Helper();
 
-std::string get_bmx_library_name();
-std::string get_bmx_version_string();
-std::string get_bmx_scm_version_string();
-std::string get_bmx_build_string();
-Timestamp get_bmx_build_timestamp();
+    void ReadSourceInfo(MXFFileReader *source_file);
 
-std::string get_bmx_company_name();
-UUID get_bmx_product_uid();
-mxfProductVersion get_bmx_mxf_product_version();
-std::string get_bmx_mxf_version_string();
+    bool ParseFrameworkFile(const char *type_str, const char *filename);
+	bool SetFrameworkProperty(const char *type_str, const char *name, const char *value);
 
+    bool HaveMainTitle() const;
+    std::string GetMainTitle() const;
+	const char* GetShimName() const;
+
+public:
+    void AddMetadata(ClipWriter *clip);
+    void Complete();
+
+private:
+    bool ParseFrameworkType(const char *type_str, FrameworkType *type) const;
+    void SetFrameworkProperty(FrameworkType type, std::string name, std::string value);
+	
+private:
+    std::vector<FrameworkProperty> mFrameworkProperties;
+
+    AS10Info *mSourceInfo;
+    Timecode mSourceStartTimecode;
+    std::string mSourceMainTitle;
+
+    AS10WriterHelper *mWriterHelper;
+    FrameworkHelper *mAS10FrameworkHelper;
+};
 
 };
 

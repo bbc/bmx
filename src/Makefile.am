@@ -1,5 +1,5 @@
 SUBDIRS = common frame essence_parser writer_helper mxf_helper st436 \
-	mxf_reader as02 mxf_op1a d10_mxf as11 avid_mxf rdd9_mxf \
+	mxf_reader as02 mxf_op1a d10_mxf as11 as10 avid_mxf rdd9_mxf \
 	wave clip_writer apps
 
 
@@ -23,6 +23,7 @@ libbmx_@BMX_MAJORMINOR@_la_LIBADD = \
 	avid_mxf/libavidmxf.la \
 	d10_mxf/libd10mxf.la \
 	as11/libas11.la \
+	as10/libas10.la \
 	rdd9_mxf/librdd9mxf.la \
 	wave/libwave.la \
 	clip_writer/libclipwriter.la \

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2012, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,46 +29,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_VERSION_H_
-#define BMX_VERSION_H_
+#ifndef BMX_AS10_INFO_H_
+#define BMX_AS10_INFO_H_
 
-
-#include <string>
 
 #include <bmx/BMXTypes.h>
-
-
-#define BMX_VERSION_MAJOR    0
-#define BMX_VERSION_MINOR    1
-#define BMX_VERSION_MICRO    4
-
-#define BMX_MXF_VERSION_RELEASE  5   /* 0 = Unknown version
-                                        1 = Released version
-                                        2 = Development version
-                                        3 = Released version with patches
-                                        4 = Pre-release beta version
-                                        5 = Private version not intended for general release */
-
-#define BMX_VERSION          (BMX_VERSION_MAJOR << 16 | BMX_VERSION_MINOR << 8 | BMX_VERSION_MICRO)
-
-#define BMX_LIBRARY_NAME     "bmx"
-
+#include <bmx/as10/AS10CoreFramework.h>
 
 
 namespace bmx
 {
 
 
-std::string get_bmx_library_name();
-std::string get_bmx_version_string();
-std::string get_bmx_scm_version_string();
-std::string get_bmx_build_string();
-Timestamp get_bmx_build_timestamp();
+class AS10Info
+{
+public:
+    static void RegisterExtensions(mxfpp::HeaderMetadata *header_metadata);
 
-std::string get_bmx_company_name();
-UUID get_bmx_product_uid();
-mxfProductVersion get_bmx_mxf_product_version();
-std::string get_bmx_mxf_version_string();
+public:
+    AS10Info();
+    ~AS10Info();
+
+    bool Read(mxfpp::HeaderMetadata *header_metadata);
+
+public:
+    AS10CoreFramework *core;
+
+private:
+    void Reset();
+    void GetStaticFrameworks(std::vector<mxfpp::GenericTrack*> &tracks);
+};
 
 
 };

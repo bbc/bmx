@@ -77,6 +77,17 @@ void RDD9MPEG2LGTrack::SetAFD(uint8_t afd)
     mPictureDescriptorHelper->SetAFD(afd);
 }
 
+void RDD9MPEG2LGTrack::SetMpegDescriptorsChecks(const char *shimname, const char *fname, int maxSameWarnMessages, bool printDefaults, bool looseChecks)
+{
+	if (shimname != NULL)
+		mWriterHelper.shim(shimname);
+
+	if (fname != NULL)
+		mWriterHelper.ParseDescriptorRefValues(fname); 
+	
+	mWriterHelper.DoAllHeadersChecks(true, maxSameWarnMessages, printDefaults, looseChecks);
+}
+
 void RDD9MPEG2LGTrack::PrepareWrite(uint8_t track_count)
 {
     CompleteEssenceKeyAndTrackNum(track_count);
@@ -132,6 +143,8 @@ void RDD9MPEG2LGTrack::CompleteWrite()
                 log_warn("Maximum GOP size %u exceeds maximum 15 specified for 1080 in SMPTE RDD9\n", max_gop_size);
             break;
     }
+
+	mWriterHelper.ReportCheckedHeaders();
 
     // update the file descriptor with info extracted from the essence data
     MPEGVideoDescriptor *mpeg_descriptor = dynamic_cast<MPEGVideoDescriptor*>(mDescriptorHelper->GetFileDescriptor());

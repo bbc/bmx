@@ -29,47 +29,71 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_VERSION_H_
-#define BMX_VERSION_H_
-
+#ifndef FW_HELPER_H_
+#define FW_HELPER_H_
 
 #include <string>
+#include <vector>
 
-#include <bmx/BMXTypes.h>
+#include <libMXF++/MXF.h>
 
-
-#define BMX_VERSION_MAJOR    0
-#define BMX_VERSION_MINOR    1
-#define BMX_VERSION_MICRO    4
-
-#define BMX_MXF_VERSION_RELEASE  5   /* 0 = Unknown version
-                                        1 = Released version
-                                        2 = Development version
-                                        3 = Released version with patches
-                                        4 = Pre-release beta version
-                                        5 = Private version not intended for general release */
-
-#define BMX_VERSION          (BMX_VERSION_MAJOR << 16 | BMX_VERSION_MINOR << 8 | BMX_VERSION_MICRO)
-
-#define BMX_LIBRARY_NAME     "bmx"
-
+#include <bmx/as11/AS11WriterHelper.h>
+#include <bmx/as10/AS10WriterHelper.h>
 
 
 namespace bmx
 {
 
 
-std::string get_bmx_library_name();
-std::string get_bmx_version_string();
-std::string get_bmx_scm_version_string();
-std::string get_bmx_build_string();
-Timestamp get_bmx_build_timestamp();
+typedef enum
+{
+    AS11_CORE_FRAMEWORK_TYPE,
+    DPP_FRAMEWORK_TYPE,
+    AS10_CORE_FRAMEWORK_TYPE
+} FrameworkType;
 
-std::string get_bmx_company_name();
-UUID get_bmx_product_uid();
-mxfProductVersion get_bmx_mxf_product_version();
-std::string get_bmx_mxf_version_string();
 
+typedef struct
+{
+    const char *name;
+    mxfKey item_key;
+} PropertyInfo;
+
+typedef struct
+{
+    const char *name;
+    mxfKey set_key;
+    const PropertyInfo *property_info;
+} FrameworkInfo;
+
+typedef struct
+{
+    FrameworkType type;
+    std::string name;
+    std::string value;
+} FrameworkProperty;
+
+
+
+class FrameworkHelper
+{
+public:
+	FrameworkHelper(AS10WriterHelper *writer_helper, mxfpp::DMFramework *framework);
+	FrameworkHelper(AS11WriterHelper *writer_helper, mxfpp::DMFramework *framework);
+    
+    ~FrameworkHelper();
+
+    bool SetProperty(std::string name, std::string value);
+
+    mxfpp::DMFramework* GetFramework() const { return mFramework; }
+
+private:
+    mxfpp::DMFramework *mFramework;
+    Timecode mStartTimecode;
+    Rational mFrameRate;
+    mxfpp::SetDef *mSetDef;
+    const FrameworkInfo *mFrameworkInfo;
+};
 
 };
 

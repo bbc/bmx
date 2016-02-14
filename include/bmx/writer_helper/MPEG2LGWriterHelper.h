@@ -33,14 +33,60 @@
 #define BMX_MPEG2LG_WRITER_HELPER_H_
 
 #include <vector>
+#include <cstring>
+#include <map>
 
+#include <bmx/EssenceType.h>
 #include <bmx/essence_parser/MPEG2EssenceParser.h>
-
-
 
 namespace bmx
 {
 
+//N.B nlogged = 1 used for very first check to ignore any user assignements
+typedef struct
+{   const char *name;
+	uint32_t   defaultvalue;
+	uint32_t   value;
+	bool       issetbyuser;
+	uint32_t   nlogged;
+} DescriptorValue;
+
+typedef struct
+{   const char *name;
+	Rational   defaultvalue;
+	Rational   value;
+	bool       issetbyuser;
+	uint32_t   nlogged;
+} DescriptorRationalValue;
+
+typedef struct
+{   const char* shimName;
+	DescriptorValue  mSingleSequence;
+	DescriptorRationalValue mAspectRatio;
+	DescriptorRationalValue mSampleRate;
+	DescriptorValue  mBitRate;
+	DescriptorValue  mBitRateDelta;
+	DescriptorValue  mConstBitRate;
+	DescriptorValue  mIsProgressive; //0 int, 1 - prgr, 2 - *any*
+	DescriptorValue  mUniqShimHVSize;
+	DescriptorValue  mHorizontalSize;
+	DescriptorValue  mVerticalSize;
+	DescriptorValue  mChromaFormat;
+	DescriptorValue  mColorPrimaries;
+	DescriptorValue  mTFF;
+	DescriptorValue  mLowDelay;
+	DescriptorValue  mClosedGOP;
+	DescriptorValue  mIdenticalGOP;
+	DescriptorValue  mMaxGOP;
+	DescriptorValue  mBPictureCount;
+	DescriptorValue  mConstantBFrames;
+} MpegDefaults;
+
+typedef struct {
+	std::string name;
+	int modified;
+	std::string value;
+} descriptor;
 
 class MPEG2LGWriterHelper
 {
@@ -55,13 +101,15 @@ public:
     MPEG2LGWriterHelper();
     ~MPEG2LGWriterHelper();
 
-    void SetFlavour(Flavour flavour);
+	void SetFlavour(Flavour flavour) { mFlavour = flavour; } 
+	void ParseDescriptorRefValues(const char *filename);
+	void shim(const char *shimname);
 
 public:
     void ProcessFrame(const unsigned char *data, uint32_t size);
-
     bool CheckTemporalOffsetsComplete(int64_t end_offset);
-
+	void DoAllHeadersChecks(bool set_it_on, uint32_t maxLoggedViolations, bool verbose, bool looseChecks);
+	void ReportCheckedHeaders();
 public:
     int64_t GetFramePosition() const        { return mPosition - 1; }
 
@@ -121,6 +169,28 @@ private:
     bool mUnlimitedGOPSize;
     uint16_t mMaxBPictureCount;
     uint32_t mBitRate;
+
+	EssenceType mEssenceType;
+	bool mSequenceHeaderChk;
+	bool mSequenceExtentionChk;
+	bool mDisplayExtentionChk;
+	bool mPicCodingExtentionChk;
+
+	bool mPrintParsingReport;
+
+	MpegDefaults mHDRefaults;
+	std::map<std::string, DescriptorValue*> mDfaultsMap;
+
+	uint32_t mMaxLoggedViolations;
+
+	bool mAllHeadersChecks;
+	bool mLooseChecks; 
+	const char *mKnownShims; 
+	std::vector<descriptor> mMXFDescriptors;
+	void AllHeadersChecks();
+	void AssignMapVals();
+	void log_warn_descr_value(const DescriptorValue *dv);
+	void modify_descriptors(std::vector<descriptor> &mxf_descriptors, const char *name, const int &modified, const char *value);
 };
 
 

@@ -67,6 +67,7 @@
 #include <bmx/apps/AppTextInfoWriter.h>
 #include <bmx/apps/AppXMLInfoWriter.h>
 #include "AS11InfoOutput.h"
+#include "AS10InfoOutput.h"
 #include "APPInfoOutput.h"
 #include "AvidInfoOutput.h"
 #include <bmx/BMXException.h>
@@ -431,7 +432,7 @@ static const char* get_did_type1_string(uint8_t did)
         {0xa0, "[ST 299-2] Audio data in HANC space (3G) - Group 8 Control pkt"},
         {0xa1, "[ST 299-2] Audio data in HANC space (3G) - Group 7 Control pkt"},
         {0xa2, "[ST 299-2] Audio data in HANC space (3G) - Group 6 Control pkt"},
-        {0xa3, "[ST 299-2] Audio data in HANC space (3G) - Group 5 Control pkt"},
+        {0xa3, "[ST 299-2] Audio data in HANC space (3G) - Group 5 Control pkt)"},
         {0xa4, "[ST 299-2] Audio data in HANC space (3G) - Group 8"},
         {0xa5, "[ST 299-2] Audio data in HANC space (3G) - Group 7"},
         {0xa6, "[ST 299-2] Audio data in HANC space (3G) - Group 6"},
@@ -1475,6 +1476,7 @@ static void usage(const char *cmd)
     fprintf(stderr, " --file-chksum <type>  Calculate checksum of the input file(s)\n");
     fprintf(stderr, "                       <type> is one of the following: 'crc32', 'md5', 'sha1'\n");
     fprintf(stderr, " --as11                Extract AS-11 and UK DPP metadata\n");
+	fprintf(stderr, " --as10                Extract AS-10 metadata\n");
     fprintf(stderr, " --app                 Extract APP metadata\n");
     fprintf(stderr, " --app-events <mask>   Extract APP events metadata\n");
     fprintf(stderr, "                       <mask> is a sequence of event types (e.g. dtv) identified using the following characters:\n");
@@ -1550,6 +1552,7 @@ int main(int argc, const char** argv)
     set<ChecksumType> track_checksum_types;
     set<ChecksumType> file_checksum_types;
     bool do_as11_info = false;
+	bool do_as10_info = false;
     bool do_app_info = false;
     int app_events_mask = 0;
     bool extract_app_events_tc = true;
@@ -1764,6 +1767,11 @@ int main(int argc, const char** argv)
             do_as11_info = true;
             do_write_info = true;
         }
+		else if (strcmp(argv[cmdln_index], "--as10") == 0)
+		{
+			do_as10_info = true;
+			do_write_info = true;
+		}
         else if (strcmp(argv[cmdln_index], "--app") == 0)
         {
             do_app_info = true;
@@ -2266,6 +2274,8 @@ int main(int argc, const char** argv)
             file_reader->SetST436ManifestFrameCount(st436_manifest_count);
             if (do_as11_info)
                 as11_register_extensions(file_reader);
+			if (do_as10_info)
+				as10_register_extensions(file_reader);
             if (do_app_info || check_app_issues)
                 app_output.RegisterExtensions(file_reader);
             // avid extensions are already registered by the MXFReader
@@ -2892,6 +2902,8 @@ int main(int argc, const char** argv)
             if (file_reader) {
                 if (do_as11_info)
                     as11_write_info(info_writer, file_reader);
+				if (do_as10_info)
+					as10_write_info(info_writer, file_reader);
                 if (do_avid_info)
                     avid_write_info(info_writer, file_reader);
                 if (do_app_info)
@@ -2899,6 +2911,8 @@ int main(int argc, const char** argv)
             } else {
                 if (do_as11_info)
                     log_warn("AS-11 info only supported for a single input file\n");
+				if (do_as10_info)
+					log_warn("AS-10 info only supported for a single input file\n");
                 if (do_avid_info)
                     log_warn("Avid info only supported for a single input file\n");
                 if (do_app_info)

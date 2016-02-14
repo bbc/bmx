@@ -29,50 +29,43 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_VERSION_H_
-#define BMX_VERSION_H_
+#ifndef BMX_AS10_DMS_H_
+#define BMX_AS10_DMS_H_
 
 
-#include <string>
-
-#include <bmx/BMXTypes.h>
+#include <libMXF++/DataModel.h>
 
 
-#define BMX_VERSION_MAJOR    0
-#define BMX_VERSION_MINOR    1
-#define BMX_VERSION_MICRO    4
 
-#define BMX_MXF_VERSION_RELEASE  5   /* 0 = Unknown version
-                                        1 = Released version
-                                        2 = Development version
-                                        3 = Released version with patches
-                                        4 = Pre-release beta version
-                                        5 = Private version not intended for general release */
+// declare the AS-10 data model extensions
 
-#define BMX_VERSION          (BMX_VERSION_MAJOR << 16 | BMX_VERSION_MINOR << 8 | BMX_VERSION_MICRO)
+#define MXF_LABEL(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15) \
+    {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15}
 
-#define BMX_LIBRARY_NAME     "bmx"
+#define MXF_SET_DEFINITION(parentName, name, label) \
+    static const mxfUL MXF_SET_K(name) = label;
 
+#define MXF_ITEM_DEFINITION(setName, name, label, localTag, typeId, isRequired) \
+    static const mxfUL MXF_ITEM_K(setName, name) = label;
 
+#include <bmx/as10/as10_extensions_data_model.h>
+
+static const mxfUL MXF_DM_L(AS10CoreDescriptiveScheme) =
+    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x0d, 0x01, 0x07, 0x01, 0x0a, 0x01, 0x00, 0x00};
 
 namespace bmx
 {
 
 
-std::string get_bmx_library_name();
-std::string get_bmx_version_string();
-std::string get_bmx_scm_version_string();
-std::string get_bmx_build_string();
-Timestamp get_bmx_build_timestamp();
+class AS10DMS
+{
+public:
+    static void RegisterExtensions(mxfpp::HeaderMetadata *header_metadata);
+};
 
-std::string get_bmx_company_name();
-UUID get_bmx_product_uid();
-mxfProductVersion get_bmx_mxf_product_version();
-std::string get_bmx_mxf_version_string();
 
 
 };
-
 
 
 #endif

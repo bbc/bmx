@@ -43,6 +43,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 #include "InputTrack.h"
 #include "OutputTrack.h"
@@ -68,7 +69,10 @@
 #include <bmx/apps/AppMXFFileFactory.h>
 #include <bmx/apps/AppUtils.h>
 #include <bmx/apps/AS11Helper.h>
+#include <bmx/apps/AS10Helper.h>
 #include <bmx/BMXException.h>
+#include <bmx/BMXTypes.h>
+#include <bmx/BMXShimNames.h>
 #include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
@@ -315,9 +319,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -p                      Print progress percentage to stdout\n");
     fprintf(stderr, "  -l <file>               Log filename. Default log to stderr/stdout\n");
     fprintf(stderr, " --log-level <level>      Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
-    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, rdd9, wave. Default is op1a\n");
+    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, rdd9, as10, wave. Default is op1a\n");
     fprintf(stderr, "* -o <name>               as02: <name> is a bundle name\n");
-    fprintf(stderr, "                          as11op1a/as11d10/op1a/d10/rdd9/wave: <name> is a filename\n");
+    fprintf(stderr, "                          as11op1a/as11d10/op1a/d10/rdd9/as10,wave: <name> is a filename\n");
     fprintf(stderr, "                          avid: <name> is a filename prefix\n");
     fprintf(stderr, "  --prod-info <cname>\n");
     fprintf(stderr, "              <pname>\n");
@@ -403,7 +407,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --shim-id <id>          Set ShimID element value in shim.xml file to <id>. Default is '%s'\n", DEFAULT_SHIM_ID);
     fprintf(stderr, "    --shim-annot <str>      Set AnnotationText element value in shim.xml file to <str>. Default is '%s'\n", DEFAULT_SHIM_ANNOTATION);
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as02/as11op1a/op1a/rdd9:\n");
+    fprintf(stderr, "  as02/as11op1a/op1a/rdd9/as10:\n");
     fprintf(stderr, "    --part <interval>       Video essence partition interval in frames in input edit rate units, or seconds with 's' suffix. Default single partition\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/as11d10:\n");
@@ -418,10 +422,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "                                       as11-x3 : AMWA AS-11 X3 specification\n");
     fprintf(stderr, "                                       as11-x4 : AMWA AS-11 X4 specification\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as02/as11op1a/as11d10/op1a/d10/rdd9:\n");
+    fprintf(stderr, "  as02/as11op1a/as11d10/op1a/d10/rdd9/as10:\n");
     fprintf(stderr, "    --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default is input file's value or not set\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/as11d10/op1a/d10/rdd9:\n");
+    fprintf(stderr, "  as11op1a/as11d10/op1a/d10/rdd9/as10:\n");
     fprintf(stderr, "    --single-pass           Write file in a single pass\n");
     fprintf(stderr, "                            Header and body partitions will be incomplete for as11op1a/op1a if the number if essence container bytes per edit unit is variable\n");
     fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the output file. This requires writing in a single pass (--single-pass is assumed)\n");
@@ -472,6 +476,18 @@ static void usage(const char *cmd)
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/rdd9:\n");
     fprintf(stderr, "    --ard-zdf-hdf           Use the ARD ZDF HDF profile\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "  as10:\n");
+    fprintf(stderr, "    --shim-name <name>      Shim name for AS10 (used for setting 'ShimName' metadata and setting video/sound parameters' checks)\n");
+    fprintf(stderr, "    list of known shims:    %s\n", D_KNOWN_AS10_SHIMS);
+    fprintf(stderr, "    --dm-file as10 <name>   Parse and set descriptive framework properties from text file <name>\n");
+    fprintf(stderr, "                            N.B. 'ShimName' is the only mandatary property of AS10 metadata set\n");
+    fprintf(stderr, "    --dm as10 <name> <value>    Set descriptive framework property\n");
+    fprintf(stderr, "    --pass-dm               Copy descriptive metadata from the input file. The metadata can be overidden by other options\n");
+    fprintf(stderr, "    --mpeg-checks <name>    Activate frame level AS10 compliancy checks. Expeted descriptors' values are given in file <name>\n");
+    fprintf(stderr, "    --loose-checks          Don't stop processing on detected compliancy violations\n");
+    fprintf(stderr, "    --print-checks          Print default values of mpeg descriptors and report on descriptors either found in mpeg headers or copieed from mxf headers\n");
+    fprintf(stderr, "    --max-same-warnings <value> Max same violations warnings logged, default 3\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11d10/d10:\n");
     fprintf(stderr, "    --d10-mute <flags>      Indicate using a string of 8 '0' or '1' which sound channels should be muted. The lsb is the rightmost digit\n");
@@ -585,6 +601,7 @@ int main(int argc, const char** argv)
     ClipWriterType clip_type = CW_OP1A_CLIP_TYPE;
     ClipSubType clip_sub_type = NO_CLIP_SUB_TYPE;
     bool ard_zdf_hdf_profile = false;
+    bool as10_high_hd_2014_profile = false;
     const char *output_name = "";
     Timecode start_timecode;
     const char *start_timecode_str = 0;
@@ -611,6 +628,12 @@ int main(int argc, const char** argv)
     map<string, string> user_comments;
     vector<LocatorOption> locators;
     AS11Helper as11_helper;
+    AS10Helper as10_helper;
+    const char *mpeg_descr_defaults_name = 0;
+    bool mpeg_descr_frame_checks = false;
+    bool mpeg_descr_loose_checks = false;
+    int maxMpegCheckSameWarnMessages = 3;
+    bool printMpegChecks = false;
     bool pass_dm = false;
     const char *segmentation_filename = 0;
     bool do_print_version = false;
@@ -1159,6 +1182,41 @@ int main(int argc, const char** argv)
         {
             ess_component_mic_scope = ENTIRE_FILE_MIC_SCOPE;
         }
+        else if (strcmp(argv[cmdln_index], "--mpeg-checks") == 0)
+        {
+            mpeg_descr_frame_checks = true;
+            if (cmdln_index + 1 < argc)
+            {
+                mpeg_descr_defaults_name = argv[cmdln_index + 1];
+                if (*mpeg_descr_defaults_name == '-')
+                    mpeg_descr_defaults_name = NULL;
+                else
+                    cmdln_index++;
+            }
+        }
+        else if (strcmp(argv[cmdln_index], "--loose-checks") == 0)
+        {
+            mpeg_descr_loose_checks = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--print-checks") == 0)
+        {
+            printMpegChecks = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--max-same-warnings") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%d", &maxMpegCheckSameWarnMessages) != 1 || maxMpegCheckSameWarnMessages < 0)
+            {
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                maxMpegCheckSameWarnMessages = 3;
+            }
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--shim-name") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -1168,6 +1226,17 @@ int main(int argc, const char** argv)
                 return 1;
             }
             shim_name = argv[cmdln_index + 1];
+            if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+            {
+                std::string shimName = shim_name;
+                std::transform(shimName.begin(), shimName.end(), shimName.begin(), ::toupper);
+                if (!as10_helper.SetFrameworkProperty("as10", "ShimName", shimName.c_str()))
+                {
+                    usage(argv[0]);
+                    fprintf(stderr, "Failed to set as10 framework ShimName property '%s'\n", shim_name);
+                    return 1;
+                }
+            }
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--shim-id") == 0)
@@ -1211,11 +1280,29 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
+            if (clip_sub_type == AS10_CLIP_SUB_TYPE && (strcmp(argv[cmdln_index + 1], "as10") == 0))
+            {
+                if (!as10_helper.SetFrameworkProperty(argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3]))
+                {
+                    usage(argv[0]);
+                    fprintf(stderr, "Failed to set as10 framework property '%s' to '%s'\n", argv[cmdln_index + 2], argv[cmdln_index + 3]);
+                    return 1;
+                }
+            }
+            else if(clip_sub_type == AS11_CLIP_SUB_TYPE)
+            {
             if (!as11_helper.SetFrameworkProperty(argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3]))
             {
                 usage(argv[0]);
                 fprintf(stderr, "Failed to set '%s' framework property '%s' to '%s'\n",
                         argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3]);
+                return 1;
+            }
+            }
+            else
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Wrong argument: -dm can be used only with as10/as11 clips\n");
                 return 1;
             }
             cmdln_index += 3;
@@ -1228,7 +1315,16 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (!as11_helper.ParseFrameworkFile(argv[cmdln_index + 1], argv[cmdln_index + 2]))
+            value = -1;
+            if (strcmp(argv[cmdln_index + 1], "as10") == 0 )
+            {
+                value = (int)as10_helper.ParseFrameworkFile(argv[cmdln_index + 1], argv[cmdln_index + 2]);
+            }
+            else
+            {
+                value = (int)as11_helper.ParseFrameworkFile(argv[cmdln_index + 1], argv[cmdln_index + 2]);
+            }
+            if(value == 0)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Failed to parse '%s' framework file '%s'\n",
@@ -1911,6 +2007,21 @@ int main(int argc, const char** argv)
     if (do_print_version)
         log_info("%s\n", get_app_version_info(APP_NAME).c_str());
 
+    if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+    {
+        shim_name = as10_helper.GetShimName();
+        if (shim_name == NULL)
+        {
+            fprintf(stderr, "set required 'ShimName' property for as10 output");
+            return 1;
+        }
+        as10_high_hd_2014_profile =
+#if defined(_WIN32)
+            (!_strcmpi(shim_name, D_AS10_HIGH_HD_2014));
+#else
+            (!strcasecmp(shim_name, D_AS10_HIGH_HD_2014));
+#endif
+    }
 
     int cmd_result = 0;
     try
@@ -1926,10 +2037,10 @@ int main(int argc, const char** argv)
                     throw false;
                 }
             }
-        } else if (!embed_xml.empty()) {
+        }
+        else if (!embed_xml.empty()) {
             log_warn("Embedding XML is only supported in OP-1A clip type\n");
         }
-
 
         // open RDD-6 XML file
 
@@ -1963,7 +2074,6 @@ int main(int argc, const char** argv)
             construct_anc_rdd6(&rdd6_frame, &rdd6_first_buffer, &rdd6_second_buffer, rdd6_sdid, rdd6_lines, &anc_buffer);
             rdd6_const_size = anc_buffer.GetSize();
         }
-
 
         // open an MXFReader using the input filenames
 
@@ -2004,7 +2114,8 @@ int main(int argc, const char** argv)
                 throw false;
 
             reader = group_reader;
-        } else if (input_filenames.size() > 1) {
+        }
+        else if (input_filenames.size() > 1) {
             MXFSequenceReader *seq_reader = new MXFSequenceReader();
             MXFFileReader::OpenResult result;
             size_t i;
@@ -2027,14 +2138,27 @@ int main(int argc, const char** argv)
                 throw false;
 
             reader = seq_reader;
-        } else {
+        }
+        else {
             MXFFileReader::OpenResult result;
             file_reader = new MXFFileReader();
             file_reader->SetFileFactory(&file_factory, false);
             file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
             file_reader->SetST436ManifestFrameCount(st436_manifest_count);
-            if (pass_dm && clip_sub_type == AS11_CLIP_SUB_TYPE)
+            if (pass_dm)
+            {
+                switch (clip_sub_type)
+                {
+                case AS11_CLIP_SUB_TYPE:
                 AS11Info::RegisterExtensions(file_reader->GetHeaderMetadata());
+                    break;
+                case AS10_CLIP_SUB_TYPE:
+                    AS10Info::RegisterExtensions(file_reader->GetHeaderMetadata());
+                    break;
+                default:
+                    throw false;
+                }
+            }
             result = file_reader->Open(input_filenames[0]);
             if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                 log_error("Failed to open MXF file '%s': %s\n", input_filenames[0],
@@ -2059,7 +2183,6 @@ int main(int argc, const char** argv)
 
         Rational frame_rate = reader->GetEditRate();
 
-
         // check whether the frame rate is a sound sampling rate
         // a frame rate that is a sound sampling rate will result in the timecode rate being used as
         // the clip frame rate and the timecode rate defaulting to 25fps if not set by the user
@@ -2076,10 +2199,11 @@ int main(int argc, const char** argv)
             }
         }
 
-
         // check support for tracks and disable unsupported track types
 
         bool have_vbi_track = false, have_anc_track = false;
+        uint8_t nWAVChannels = 0;
+
         for (i = 0; i < reader->GetNumTrackReaders(); i++) {
             MXFTrackReader *track_reader = reader->GetTrackReader(i);
             if (!track_reader->IsEnabled())
@@ -2091,9 +2215,26 @@ int main(int argc, const char** argv)
             const MXFDataTrackInfo *input_data_info = dynamic_cast<const MXFDataTrackInfo*>(input_track_info);
 
             bool is_enabled = true;
+
             if (input_track_info->essence_type == WAVE_PCM)
             {
                 Rational sampling_rate = input_sound_info->sampling_rate;
+
+                if (clip_sub_type == AS10_CLIP_SUB_TYPE) {
+                    uint32_t bps = as10_high_hd_2014_profile ? 24 : 16;
+                    int32_t  sr = 48000;
+
+                    if (sr != sampling_rate.numerator || bps != input_sound_info->bits_per_sample)
+                    {
+                        log_warn("Track %" PRIszt " essence type '%s', sampling rate @%d/%d, bits per sample %d, is not supported by clip type '%s', shim '%s'\n",
+                            i,
+                            essence_type_to_string(input_track_info->essence_type),
+                            sampling_rate.numerator, sampling_rate.denominator, input_sound_info->bits_per_sample,
+                            clip_type_to_string(clip_type, clip_sub_type).c_str(), shim_name);
+                        if (!mpeg_descr_loose_checks)
+                            is_enabled = false;
+                    }
+                }
                 if (!ClipWriterTrack::IsSupported(clip_type, WAVE_PCM, sampling_rate)) {
                     log_warn("Track %" PRIszt " essence type '%s' @%d/%d sps not supported by clip type '%s'\n",
                              i,
@@ -2101,18 +2242,21 @@ int main(int argc, const char** argv)
                              sampling_rate.numerator, sampling_rate.denominator,
                              clip_type_to_string(clip_type, clip_sub_type).c_str());
                     is_enabled = false;
-                } else if (input_sound_info->bits_per_sample == 0 || input_sound_info->bits_per_sample > 32) {
+                }
+                else if (input_sound_info->bits_per_sample == 0 || input_sound_info->bits_per_sample > 32) {
                     log_warn("Track %" PRIszt " (%s) bits per sample %u not supported\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              input_sound_info->bits_per_sample);
                     is_enabled = false;
-                } else if (input_sound_info->channel_count == 0) {
+                }
+                else if (input_sound_info->channel_count == 0) {
                     log_warn("Track %" PRIszt " (%s) has zero channel count\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type));
                     is_enabled = false;
                 }
+                nWAVChannels += (uint8_t)is_enabled;
             }
             else if (input_track_info->essence_type == D10_AES3_PCM)
             {
@@ -2148,37 +2292,46 @@ int main(int argc, const char** argv)
                              input_track_info->edit_rate.numerator, input_track_info->edit_rate.denominator,
                              frame_rate.numerator, frame_rate.denominator);
                     is_enabled = false;
-                } else if (!ClipWriterTrack::IsSupported(clip_type, input_track_info->essence_type, frame_rate)) {
+                }
+                else if (!ClipWriterTrack::IsSupported(clip_type, input_track_info->essence_type, frame_rate)) {
                     log_warn("Track %" PRIszt " essence type '%s' @%d/%d fps not supported by clip type '%s'\n",
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              frame_rate.numerator, frame_rate.denominator,
                              clip_type_to_string(clip_type, clip_sub_type).c_str());
                     is_enabled = false;
-                } else if (input_track_info->essence_type == VBI_DATA) {
+                }
+                else if (input_track_info->essence_type == VBI_DATA) {
                     if (!pass_vbi) {
                         log_warn("Not passing through VBI data track %" PRIszt "\n", i);
                         is_enabled = false;
-                    } else if (have_vbi_track) {
+                    }
+                    else if (have_vbi_track) {
                         log_warn("Already have a VBI track; not passing through VBI data track %" PRIszt "\n", i);
                         is_enabled = false;
-                    } else {
+                    }
+                    else {
                         have_vbi_track = true;
                     }
-                } else if (input_track_info->essence_type == ANC_DATA) {
+                }
+                else if (input_track_info->essence_type == ANC_DATA) {
                     if (rdd6_filename) {
                         log_warn("Mixing RDD-6 file input and MXF ANC data input not yet supported\n");
                         is_enabled = false;
-                    } else if (pass_anc.empty()) {
+                    }
+                    else if (pass_anc.empty()) {
                         log_warn("Not passing through ANC data track %" PRIszt "\n", i);
                         is_enabled = false;
-                    } else if (have_anc_track) {
+                    }
+                    else if (have_anc_track) {
                         log_warn("Already have an ANC track; not passing through ANC data track %" PRIszt "\n", i);
                         is_enabled = false;
-                    } else {
+                    }
+                    else {
                         if (st436_manifest_count == 0 || filter_anc_manifest(input_data_info, pass_anc)) {
                             have_anc_track = true;
-                        } else {
+                        }
+                        else {
                             log_warn("No match found in ANC data manifest; not passing through ANC data track %" PRIszt "\n", i);
                             is_enabled = false;
                         }
@@ -2222,6 +2375,37 @@ int main(int argc, const char** argv)
             throw false;
         }
 
+        if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+        {
+            if (shim_name)
+            {
+                uint8_t nRequiredPCMChannels = 8;
+                if ((!strcmp(shim_name, D_AS10_JVC_HD_35_VBR)) || (!strcmp(shim_name, D_AS10_JVC_HD_25_CBR)))
+                    nRequiredPCMChannels = 2;
+                else if (!strcmp(shim_name, D_AS10_CNN_HD_2012))
+                    nRequiredPCMChannels = 4;
+
+                if (nWAVChannels != nRequiredPCMChannels)
+                {
+                    log_error("%d PCM channels are required for clip type '%s', shim '%s', found %d channels\n",
+                        nRequiredPCMChannels, clip_type_to_string(clip_type, clip_sub_type).c_str(), shim_name, nWAVChannels);
+                    if(!mpeg_descr_loose_checks)
+                        BMX_EXCEPTION(("as10 shim spec violation in source file"));
+                }
+            }
+            else
+            {   switch (nWAVChannels)
+                {
+                  case 2:
+                  case 4:
+                  case 8: break;
+                  default :
+                      log_error("%d PCM channels are forbidden by AS10 norm...\n",nWAVChannels);
+                      if (!mpeg_descr_loose_checks)
+                          BMX_EXCEPTION(("as10 shim spec violation in source file"));
+                }
+            }
+        }
 
         // check RDD-6 support
 
@@ -2248,7 +2432,6 @@ int main(int argc, const char** argv)
                 }
             }
         }
-
 
         // set read limits
 
@@ -2317,7 +2500,6 @@ int main(int argc, const char** argv)
             }
         }
 
-
         // get input start timecode
 
         if (!start_timecode_str) {
@@ -2339,7 +2521,6 @@ int main(int argc, const char** argv)
                     start_timecode.AddOffset(reader->GetFixedLeadFillerOffset(), frame_rate);
             }
         }
-
 
         // complete commandline parsing
 
@@ -2382,23 +2563,24 @@ int main(int argc, const char** argv)
             }
         }
 
-
         // copy across input file descriptive metadata
 
-        if (pass_dm && clip_sub_type == AS11_CLIP_SUB_TYPE) {
+        if (pass_dm && ( clip_sub_type == AS11_CLIP_SUB_TYPE ||
+                         clip_sub_type == AS10_CLIP_SUB_TYPE )) {
             if (start != 0 || (duration >= 0 && duration < reader->GetDuration())) {
-                log_error("Copying AS-11 descriptive metadata is currently only supported for complete file transwraps\n");
+                log_error("Copying AS-10/AS-11 descriptive metadata is currently only supported for complete file transwraps\n");
                 throw false;
             }
 
             MXFFileReader *file_reader = dynamic_cast<MXFFileReader*>(reader);
             if (!file_reader) {
-                log_error("Passing through AS-11 descriptive metadata is only supported for a single input file\n");
+                log_error("Passing through AS-10/AS-11 descriptive metadata is only supported for a single input file\n");
                 throw false;
             }
+            if (clip_sub_type == AS11_CLIP_SUB_TYPE)
             as11_helper.ReadSourceInfo(file_reader);
+            else as10_helper.ReadSourceInfo(file_reader);
         }
-
 
         // create output clip and initialize
 
@@ -2429,7 +2611,11 @@ int main(int argc, const char** argv)
             else if (single_pass)
                 flavour |= D10_SINGLE_PASS_WRITE_FLAVOUR;
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
-            if (ard_zdf_hdf_profile)
+            if (clip_sub_type == AS10_CLIP_SUB_TYPE) {
+                flavour = RDD9_AS10_FLAVOUR;
+                if (!strcmp(shim_name, D_AS10_HIGH_HD_2014))
+                  flavour |= RDD9_AS10_HHD2014_FLAVOUR;
+            } else if (ard_zdf_hdf_profile)
                 flavour = RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR;
             if (output_file_md5)
                 flavour |= RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR;
@@ -2475,8 +2661,20 @@ int main(int argc, const char** argv)
             clip->SetStartTimecode(start_timecode);
         if (clip_name)
             clip->SetClipName(clip_name);
-        else if (clip_sub_type == AS11_CLIP_SUB_TYPE && as11_helper.HaveProgrammeTitle())
+        else
+        {   switch (clip_sub_type)
+            {
+            case AS11_CLIP_SUB_TYPE:
+                if (as11_helper.HaveProgrammeTitle())
             clip->SetClipName(as11_helper.GetProgrammeTitle());
+                break;
+            case AS10_CLIP_SUB_TYPE:
+                if (as10_helper.HaveMainTitle())
+                    clip->SetClipName(as10_helper.GetMainTitle());
+            case NO_CLIP_SUB_TYPE:
+                break;
+            }
+        }
         clip->SetProductInfo(company_name, product_name, product_version, version_string, product_uid);
 
         if (clip_type == CW_AS02_CLIP_TYPE) {
@@ -2601,6 +2799,9 @@ int main(int argc, const char** argv)
                 d10_clip->ReserveHeaderMetadataSpace(16384); // min is 8192
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
             RDD9File *rdd9_clip = clip->GetRDD9Clip();
+
+            if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+                rdd9_clip->ReserveHeaderMetadataSpace(16384); // min is 8192
 
             if (partition_interval_set)
                 rdd9_clip->SetPartitionInterval(partition_interval);
@@ -2948,6 +3149,15 @@ int main(int argc, const char** argv)
                 case MPEG2LG_MP_H14_1080P:
                     if (afd)
                         clip_track->SetAFD(afd);
+                    if (mpeg_descr_frame_checks && (flavour & RDD9_AS10_FLAVOUR))
+                    {
+                        RDD9MPEG2LGTrack *rdd9_mpeglgtrack = dynamic_cast<RDD9MPEG2LGTrack*>(clip_track->GetRDD9Track());
+                        if (rdd9_mpeglgtrack) {
+                            rdd9_mpeglgtrack->SetMpegDescriptorsChecks(shim_name, mpeg_descr_defaults_name,
+                                                                       maxMpegCheckSameWarnMessages, printMpegChecks,
+                                                                       mpeg_descr_loose_checks);
+                        }
+                    }
                     break;
                 case MJPEG_2_1:
                 case MJPEG_3_1:
@@ -3068,7 +3278,7 @@ int main(int argc, const char** argv)
         clip->PrepareHeaderMetadata();
 
 
-        // add AS-11 descriptive metadata
+        // add AS-10/11 descriptive metadata
 
         if (clip_sub_type == AS11_CLIP_SUB_TYPE) {
             as11_helper.AddMetadata(clip);
@@ -3078,6 +3288,8 @@ int main(int argc, const char** argv)
             {
                 as11_helper.Complete();
             }
+        } else if (clip_sub_type == AS10_CLIP_SUB_TYPE) {
+            as10_helper.AddMetadata(clip);
         }
 
 
@@ -3364,7 +3576,6 @@ int main(int argc, const char** argv)
 
 
         // complete AS-11 descriptive metadata
-
         if (clip_sub_type == AS11_CLIP_SUB_TYPE &&
                 ((clip_type == CW_OP1A_CLIP_TYPE && !(flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)) ||
                  (clip_type == CW_D10_CLIP_TYPE  && !(flavour & D10_SINGLE_PASS_WRITE_FLAVOUR))))
@@ -3372,7 +3583,8 @@ int main(int argc, const char** argv)
             as11_helper.Complete();
         }
 
-
+        if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+            as10_helper.Complete();
         // complete writing
 
         clip->CompleteWrite();

@@ -51,24 +51,48 @@ public:
     virtual uint32_t ParseFrameSize(const unsigned char *data, uint32_t data_size);
 
     virtual void ParseFrameInfo(const unsigned char *data, uint32_t data_size);
+	virtual int  ParseFrameAllInfo(const unsigned char *data, uint32_t data_size);
 
 public:
     bool HaveSequenceHeader() const             { return mHaveSequenceHeader; }
+	bool HaveSequenceExtention() const		    { return mHaveSequenceExtention; }
+	bool HaveDisplayExtention() const           { return mHaveDisplayExtention; }
+	bool HavePicCodingExtention() const         { return mHavePicCodingExtention; }
+	bool HaveColorDescription() const           { return mHaveColorDescription; }
+	
     uint32_t GetHorizontalSize() const          { return mHorizontalSize; }
     uint32_t GetVerticalSize() const            { return mVerticalSize; }
+
     bool HaveKnownAspectRatio() const           { return mHaveKnownAspectRatio; }
+	bool HaveKnownFramRate() const              { return mHaveKnownFramRate; }
     Rational GetAspectRatio() const             { return mAspectRatio; }
+	Rational GetSampleRate() const              { return mSampleRate; }
     Rational GetFrameRate() const               { return mFrameRate; }
     uint32_t GetBitRate() const                 { return mBitRate; } // in 400bps units
-    bool IsLowDelay() const                     { return mLowDelay; }
-    uint8_t GetProfileAndLevel() const          { return mProfileAndLevel; }
-    bool IsProgressive() const                  { return mIsProgressive; }
 
+    bool IsLowDelay() const                     { return mLowDelay; }
+
+    uint8_t GetProfileAndLevel() const          { return mProfileAndLevel; }
+
+	uint32_t GetCromaFormat() const				{ return mChromaFormat;  }
+	uint32_t GetDHorizontalSize() const         { return mDHorizontalSize; }
+	uint32_t GetDVerticalSize() const           { return mDVerticalSize; }
+
+	uint32_t GetVideoFormat() const			    { return mVideoFormat; }
+	uint32_t GetColorPrimaries() const          { return mColorPrimaries; }
+	uint32_t GetTransferCharacteristics() const { return mTransferCharacteristics; }
+	uint32_t GetMatrixCoeffs() const			{ return mMatrixCoeffs; }
+
+	uint32_t GetTFF() const                     { return mIsTFF; }
+
+    bool IsProgressive() const                  { return mIsProgressive; }
     bool HaveGOPHeader() const                  { return mHaveGOPHeader; }
     bool IsClosedGOP() const                    { return mClosedGOP; }
 
     MPEGFrameType GetFrameType() const          { return mFrameType; }
     uint32_t GetTemporalReference() const       { return mTemporalReference; }
+	uint32_t GetVBVDelay() const                { return mVBVDelay; }
+
 
 private:
     void Reset();
@@ -76,26 +100,51 @@ private:
 private:
     uint32_t mOffset;
     uint32_t mState;
+
     bool mSequenceHeader;
     bool mGroupHeader;
     bool mPictureStart;
 
     uint32_t mHorizontalSize;
     uint32_t mVerticalSize;
+
     bool mHaveKnownAspectRatio;
+	bool     mHaveKnownFramRate;
+
     Rational mAspectRatio;
     Rational mFrameRate;
+	Rational mSampleRate;
     uint32_t mBitRate;
-    bool mLowDelay;
-    uint8_t mProfileAndLevel;
-    bool mIsProgressive;
 
+    bool mLowDelay;
+
+    uint8_t mProfileAndLevel;
+	uint32_t  mChromaFormat;
+
+	uint32_t mVideoFormat; //
+	uint32_t mDHorizontalSize; //
+	uint32_t mDVerticalSize; //
+	uint32_t mColorPrimaries; // 
+	uint32_t mTransferCharacteristics; //
+	uint32_t mMatrixCoeffs;
+
+	uint32_t mPicStructure;
+	uint32_t mIsTFF; //
+	uint32_t mProgressiveFrame; //
+
+    bool mIsProgressive;	
     bool mClosedGOP;
 
     bool mHaveSequenceHeader;
+	bool mHaveSequenceExtention;
+	bool mHaveDisplayExtention;
+	bool mHavePicCodingExtention;
+	bool mHaveColorDescription;
     bool mHaveGOPHeader;
+
     MPEGFrameType mFrameType;
     uint32_t mTemporalReference;
+	uint32_t mVBVDelay;
 };
 
 

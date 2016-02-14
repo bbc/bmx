@@ -29,29 +29,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_VERSION_H_
-#define BMX_VERSION_H_
+#ifndef AS10_INFO_OUTPUT_H_
+#define AS10_INFO_OUTPUT_H_
 
 
-#include <string>
-
-#include <bmx/BMXTypes.h>
-
-
-#define BMX_VERSION_MAJOR    0
-#define BMX_VERSION_MINOR    1
-#define BMX_VERSION_MICRO    4
-
-#define BMX_MXF_VERSION_RELEASE  5   /* 0 = Unknown version
-                                        1 = Released version
-                                        2 = Development version
-                                        3 = Released version with patches
-                                        4 = Pre-release beta version
-                                        5 = Private version not intended for general release */
-
-#define BMX_VERSION          (BMX_VERSION_MAJOR << 16 | BMX_VERSION_MINOR << 8 | BMX_VERSION_MICRO)
-
-#define BMX_LIBRARY_NAME     "bmx"
+#include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/apps/AppInfoWriter.h>
 
 
 
@@ -59,16 +42,9 @@ namespace bmx
 {
 
 
-std::string get_bmx_library_name();
-std::string get_bmx_version_string();
-std::string get_bmx_scm_version_string();
-std::string get_bmx_build_string();
-Timestamp get_bmx_build_timestamp();
+void as10_register_extensions(MXFFileReader *file_reader);
+void as10_write_info(AppInfoWriter *info_writer, MXFFileReader *file_reader);
 
-std::string get_bmx_company_name();
-UUID get_bmx_product_uid();
-mxfProductVersion get_bmx_mxf_product_version();
-std::string get_bmx_mxf_version_string();
 
 
 };

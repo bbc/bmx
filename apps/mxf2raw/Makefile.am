@@ -3,6 +3,8 @@ bin_PROGRAMS = mxf2raw
 mxf2raw_SOURCES = \
 	APPInfoOutput.cpp \
 	APPInfoOutput.h \
+	AS10InfoOutput.cpp \
+	AS10InfoOutput.h \
 	AS11InfoOutput.cpp \
 	AS11InfoOutput.h \
 	AvidInfoOutput.cpp \

@@ -53,6 +53,7 @@ public:
     void SetAspectRatio(Rational aspect_ratio);         // default 16/9
     void SetPartitionInterval(int64_t frame_count);     // default 0 (single partition)
     void SetAFD(uint8_t afd);                           // default not set
+	void SetMpegDescriptorsChecks(const char *shimname, const char *fname, int maxSameWarnMessages, bool printDefaults, bool looseChecks);
 
 protected:
     virtual void PrepareWrite(uint8_t track_count);

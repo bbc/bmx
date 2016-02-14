@@ -32,12 +32,7 @@
 #ifndef AS11_HELPER_H_
 #define AS11_HELPER_H_
 
-#include <string>
-#include <vector>
-
-#include <libMXF++/MXF.h>
-
-#include <bmx/as11/AS11WriterHelper.h>
+#include <bmx/apps/FWHelper.h>
 #include <bmx/as11/AS11Info.h>
 #include <bmx/mxf_reader/MXFFileReader.h>
 
@@ -45,55 +40,6 @@
 
 namespace bmx
 {
-
-
-typedef enum
-{
-    AS11_CORE_FRAMEWORK_TYPE,
-    DPP_FRAMEWORK_TYPE,
-} FrameworkType;
-
-
-typedef struct
-{
-    const char *name;
-    mxfKey item_key;
-} PropertyInfo;
-
-typedef struct
-{
-    const char *name;
-    mxfKey set_key;
-    const PropertyInfo *property_info;
-} FrameworkInfo;
-
-typedef struct
-{
-    FrameworkType type;
-    std::string name;
-    std::string value;
-} FrameworkProperty;
-
-
-
-class FrameworkHelper
-{
-public:
-    FrameworkHelper(AS11WriterHelper *writer_helper, mxfpp::DMFramework *framework);
-    ~FrameworkHelper();
-
-    bool SetProperty(std::string name, std::string value);
-
-    mxfpp::DMFramework* GetFramework() const { return mFramework; }
-
-private:
-    mxfpp::DMFramework *mFramework;
-    Timecode mStartTimecode;
-    Rational mFrameRate;
-    mxfpp::SetDef *mSetDef;
-    const FrameworkInfo *mFrameworkInfo;
-};
-
 
 class AS11Helper
 {

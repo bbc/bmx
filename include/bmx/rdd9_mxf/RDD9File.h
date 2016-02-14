@@ -36,20 +36,12 @@
 #include <map>
 #include <vector>
 
+#include <bmx/rdd9_mxf/RDD9Flavours.h>
 #include <bmx/rdd9_mxf/RDD9Track.h>
 #include <bmx/rdd9_mxf/RDD9MPEG2LGTrack.h>
 #include <bmx/rdd9_mxf/RDD9PCMTrack.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFChecksumFile.h>
-
-
-#define RDD9_SMPTE_377_2004_FLAVOUR          0x0001
-#define RDD9_SINGLE_PASS_WRITE_FLAVOUR       0x0002
-#define RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR   0x0006
-#define RDD9_NO_BODY_PART_UPDATE_FLAVOUR     0x0008
-#define RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR     0x0010
-
-
 
 namespace bmx
 {
@@ -74,7 +66,9 @@ public:
     void SetCreationDate(mxfTimestamp creation_date);                   // default generated ('now')
     void SetGenerationUID(mxfUUID generation_uid);                      // default generated
     void SetMaterialPackageUID(mxfUMID package_uid);                    // default generated
+	void SetMaterialPackageUID10Byte(uint8_t materialTypeByte);         // as10 case
     void SetFileSourcePackageUID(mxfUMID package_uid);                  // default generated
+	void SetFileSourcePackageUID10Byte(uint8_t materialTypeByte);       // as10 case  
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);                // default 8192
     void SetPartitionInterval(int64_t frame_count);                     // default 10sec
 

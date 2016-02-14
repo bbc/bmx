@@ -29,51 +29,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_VERSION_H_
-#define BMX_VERSION_H_
-
-
-#include <string>
-
-#include <bmx/BMXTypes.h>
-
-
-#define BMX_VERSION_MAJOR    0
-#define BMX_VERSION_MINOR    1
-#define BMX_VERSION_MICRO    4
-
-#define BMX_MXF_VERSION_RELEASE  5   /* 0 = Unknown version
-                                        1 = Released version
-                                        2 = Development version
-                                        3 = Released version with patches
-                                        4 = Pre-release beta version
-                                        5 = Private version not intended for general release */
-
-#define BMX_VERSION          (BMX_VERSION_MAJOR << 16 | BMX_VERSION_MINOR << 8 | BMX_VERSION_MICRO)
-
-#define BMX_LIBRARY_NAME     "bmx"
-
-
-
-namespace bmx
-{
-
-
-std::string get_bmx_library_name();
-std::string get_bmx_version_string();
-std::string get_bmx_scm_version_string();
-std::string get_bmx_build_string();
-Timestamp get_bmx_build_timestamp();
-
-std::string get_bmx_company_name();
-UUID get_bmx_product_uid();
-mxfProductVersion get_bmx_mxf_product_version();
-std::string get_bmx_mxf_version_string();
-
-
-};
-
-
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
+
+#include <libMXF++/MXF.h>
+
+#include <bmx/as10/AS10DMS.h>
+#include <bmx/as10/AS10CoreFramework.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
+
+using namespace std;
+using namespace bmx;
+using namespace mxfpp;
+
+
+
+void AS10DMS::RegisterExtensions(HeaderMetadata *header_metadata)
+{
+    // register AS-10 framework set and items in data model
+
+DataModel *data_model = header_metadata->getDataModel();
+
+#define MXF_LABEL(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15) \
+    {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15}
+
+#define MXF_SET_DEFINITION(parent_name, name, label) \
+    data_model->registerSetDef(#name, &MXF_SET_K(parent_name), &MXF_SET_K(name));
+
+#define MXF_ITEM_DEFINITION(set_name, name, label, tag, type_id, is_required) \
+    data_model->registerItemDef(#name, &MXF_SET_K(set_name), &MXF_ITEM_K(set_name, name), tag, type_id, is_required);
+
+#include <bmx/as10/as10_extensions_data_model.h>
+    data_model->finalise();
+
+AS10CoreFramework::RegisterObjectFactory(header_metadata);
+
+}
 

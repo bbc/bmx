@@ -41,6 +41,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as02/AS02PictureTrack.h>
@@ -64,7 +65,9 @@
 #include <bmx/apps/AppUtils.h>
 #include <bmx/as11/AS11Labels.h>
 #include <bmx/apps/AS11Helper.h>
+#include <bmx/apps/AS10Helper.h>
 #include <bmx/BMXException.h>
+#include <bmx/BMXShimNames.h>
 #include <bmx/Logging.h>
 
 #include <mxf/mxf_avid.h>
@@ -338,9 +341,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -v | --version          Print version info\n");
     fprintf(stderr, "  -l <file>               Log filename. Default log to stderr/stdout\n");
     fprintf(stderr, " --log-level <level>      Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
-    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, rdd9, wave. Default is op1a\n");
-    fprintf(stderr, "* -o <name>               as02: <name> is a bundle name\n");
-    fprintf(stderr, "                          as11op1a/as11d10/op1a/d10/rdd9/wave: <name> is a filename\n");
+    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, rdd9, as10, wave. Default is op1a\n");
+    fprintf(stderr, "  -o <name>               as02: <name> is a bundle name\n");
+    fprintf(stderr, "                          as11op1a/as11d10/op1a/d10/rdd9/as10/wave: <name> is a filename\n");
     fprintf(stderr, "                          avid: <name> is a filename prefix\n");
     fprintf(stderr, "  --prod-info <cname>\n");
     fprintf(stderr, "              <pname>\n");
@@ -389,7 +392,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --shim-id <id>          Set ShimID element value in shim.xml file to <id>. Default is '%s'\n", DEFAULT_SHIM_ID);
     fprintf(stderr, "    --shim-annot <str>      Set AnnotationText element value in shim.xml file to <str>. Default is '%s'\n", DEFAULT_SHIM_ANNOTATION);
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as02/as11op1a/op1a/rdd9:\n");
+    fprintf(stderr, "  as02/as11op1a/op1a/rdd9/as10:\n");
     fprintf(stderr, "    --part <interval>       Video essence partition interval in frames, or seconds with 's' suffix. Default single partition\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/as11d10:\n");
@@ -403,14 +406,14 @@ static void usage(const char *cmd)
     fprintf(stderr, "                                       as11-x3 : AMWA AS-11 X3 specification\n");
     fprintf(stderr, "                                       as11-x4 : AMWA AS-11 X4 specification\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/op1a/rdd9:\n");
+    fprintf(stderr, "  as11op1a/op1a/rdd9/as10:\n");
     fprintf(stderr, "    --out-start <offset>    Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
     fprintf(stderr, "    --out-end <offset>      Offset (positive value) from last frame to last output frame, eg. rollout in MPEG-2 Long GOP\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/as11d10/op1a/d10/rdd9:\n");
+    fprintf(stderr, "  as11op1a/as11d10/op1a/d10/rdd9/as10:\n");
     fprintf(stderr, "    --seq-off <value>       Sound sample sequence offset. Default 0 for as11d10/d10 and not set (0) for as11op1a/op1a\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/op1a/rdd9:\n");
+    fprintf(stderr, "  as11op1a/op1a/rdd9/as10:\n");
     fprintf(stderr, "    --single-pass           Write file in a single pass\n");
     fprintf(stderr, "                            The header and body partitions will be incomplete\n");
     fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is assumed)\n");
@@ -444,6 +447,19 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --d10-mute <flags>      Indicate using a string of 8 '0' or '1' which sound channels should be muted. The lsb is the rightmost digit\n");
     fprintf(stderr, "    --d10-invalid <flags>   Indicate using a string of 8 '0' or '1' which sound channels should be flagged invalid. The lsb is the rightmost digit\n");
     fprintf(stderr, "\n");
+	fprintf(stderr, "  as10:\n");
+	fprintf(stderr, "    --shim-name <name>      Shim name for AS10 (used for setting 'ShimName' metadata and setting video/sound parameters' checks)\n");
+	fprintf(stderr, "    list of known shims:    %s\n", D_KNOWN_AS10_SHIMS);
+	fprintf(stderr, "    --dm-file as10 <name>   Parse and set descriptive framework properties from text file <name>\n");
+	fprintf(stderr, "                            N.B. 'ShimName' is the only mandatary property of AS10 metadata set\n");
+	fprintf(stderr, "    --dm as10 <name> <value>    Set descriptive framework property\n");
+	fprintf(stderr, "    --pass-dm               Copy descriptive metadata from the input file. The metadata can be overidden by other options\n");
+	fprintf(stderr, "    --mpeg-checks <fname>   Input AS10 compliancy check, if defined, file fname sets descriptors values\n");
+	fprintf(stderr, "    --print-checks          Print default values of mpeg descriptors and report on descriptors either found in mpeg headers or copieed from mxf headers\n");
+	fprintf(stderr, "    --max-same-warnings <value> Max same violations warnings logged, default 3\n");
+	fprintf(stderr, "    --loose-checks          Don't stop processing on detected compliancy violations\n");
+	fprintf(stderr, "    NB: AS10 takes only mpeg-2 long gop video inputs\n");
+	fprintf(stderr, "\n");
     fprintf(stderr, "  avid:\n");
     fprintf(stderr, "    --project <name>        Set the Avid project name\n");
     fprintf(stderr, "    --tape <name>           Source tape name\n");
@@ -596,6 +612,14 @@ int main(int argc, const char** argv)
     ClipWriterType clip_type = CW_OP1A_CLIP_TYPE;
     ClipSubType clip_sub_type = NO_CLIP_SUB_TYPE;
     bool ard_zdf_hdf_profile = false;
+	bool as10_high_hd_2014_profile = false;
+	bool mpeg_is_lgop = false;
+	bool mpeg_is_high_hd_2014 = false;
+	const char *mpeg_descr_defaults_name = 0;
+	bool mpeg_descr_frame_checks = true;
+	int maxMpegCheckSameWarnMessages = 3;
+	bool printMpegChecks = false;
+	bool mpeg_descr_loose_checks = true;
     const char *output_name = "";
     vector<RawInput> inputs;
     RawInput input;
@@ -621,6 +645,7 @@ int main(int argc, const char** argv)
     map<string, string> user_comments;
     vector<LocatorOption> locators;
     AS11Helper as11_helper;
+	AS10Helper as10_helper;
     const char *segmentation_filename = 0;
     bool sequence_offset_set = false;
     uint8_t sequence_offset = 0;
@@ -877,6 +902,41 @@ int main(int argc, const char** argv)
         {
             ess_component_mic_scope = ENTIRE_FILE_MIC_SCOPE;
         }
+		else if (strcmp(argv[cmdln_index], "--mpeg-checks") == 0)
+		{
+			mpeg_descr_frame_checks = true;
+			if (cmdln_index + 1 < argc)
+			{
+				mpeg_descr_defaults_name = argv[cmdln_index + 1];
+				if (*mpeg_descr_defaults_name == '-')
+					mpeg_descr_defaults_name = NULL;
+				else
+					cmdln_index++;
+			}
+		}
+		else if (strcmp(argv[cmdln_index], "--loose-checks") == 0)
+		{
+			mpeg_descr_loose_checks = true;
+		}
+		else if (strcmp(argv[cmdln_index], "--print-checks") == 0)
+		{
+			printMpegChecks = true;
+		}
+		else if (strcmp(argv[cmdln_index], "--max-same-warnings") == 0)
+		{
+			if (cmdln_index + 1 >= argc)
+			{
+				usage(argv[0]);
+				fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+				return 1;
+			}
+			if (sscanf(argv[cmdln_index + 1], "%d", &maxMpegCheckSameWarnMessages) != 1 || maxMpegCheckSameWarnMessages < 0)
+			{
+				fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+				maxMpegCheckSameWarnMessages = 3;
+			}
+			cmdln_index++;
+		}
         else if (strcmp(argv[cmdln_index], "--shim-name") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -886,6 +946,17 @@ int main(int argc, const char** argv)
                 return 1;
             }
             shim_name = argv[cmdln_index + 1];
+			if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+			{
+				std::string shimName = shim_name;
+				std::transform(shimName.begin(), shimName.end(), shimName.begin(), ::toupper);
+				if (!as10_helper.SetFrameworkProperty("as10", "ShimName", shimName.c_str()))
+				{
+					usage(argv[0]);
+					fprintf(stderr, "Failed to set as10 framework ShimName property '%s'\n", shim_name);
+					return 1;
+				}
+			}
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--shim-id") == 0)
@@ -929,6 +1000,18 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
+			if (strcmp(argv[cmdln_index + 1], "as10") == 0)
+			{
+				if (!as10_helper.SetFrameworkProperty(argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3]))
+				{
+					usage(argv[0]);
+					fprintf(stderr, "Failed to set '%s' framework property '%s' to '%s'\n",
+						argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3]);
+					return 1;
+				}
+			}
+			else
+			{
             if (!as11_helper.SetFrameworkProperty(argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3]))
             {
                 usage(argv[0]);
@@ -936,6 +1019,7 @@ int main(int argc, const char** argv)
                         argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3]);
                 return 1;
             }
+			}
             cmdln_index += 3;
         }
         else if (strcmp(argv[cmdln_index], "--dm-file") == 0)
@@ -946,7 +1030,16 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (!as11_helper.ParseFrameworkFile(argv[cmdln_index + 1], argv[cmdln_index + 2]))
+			value = -1;
+			if (strcmp(argv[cmdln_index + 1], "as10") == 0)
+			{
+				value = (int)as10_helper.ParseFrameworkFile(argv[cmdln_index + 1], argv[cmdln_index + 2]);
+			}
+			else
+			{
+				value = (int)as11_helper.ParseFrameworkFile(argv[cmdln_index + 1], argv[cmdln_index + 2]);
+			}
+			if (value == 0)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Failed to parse '%s' framework file '%s'\n",
@@ -2625,6 +2718,22 @@ int main(int argc, const char** argv)
         return 1;
     }
 
+	if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+	{
+		shim_name = as10_helper.GetShimName();
+		if (shim_name == NULL)
+		{
+			fprintf(stderr, "set required 'ShimName' property for as10 output");
+			return 1;
+		}
+		as10_high_hd_2014_profile =
+#if defined(_WIN32)
+			(!_strcmpi(shim_name, D_AS10_HIGH_HD_2014));
+#else 
+			(!strcasecmp(shim_name, D_AS10_HIGH_HD_2014));
+#endif		 
+	}
+
     if (clip_type != CW_AVID_CLIP_TYPE)
         allow_no_avci_head = false;
     if (clip_type != CW_AVID_CLIP_TYPE && clip_type != CW_OP1A_CLIP_TYPE)
@@ -2941,6 +3050,7 @@ int main(int argc, const char** argv)
                      input->essence_type == MPEG2LG_MP_H14_1080I ||
                      input->essence_type == MPEG2LG_MP_H14_1080P)
             {
+				mpeg_is_lgop = true;
                 MPEG2EssenceParser *mpeg2_parser = new MPEG2EssenceParser();
                 input->raw_reader->SetEssenceParser(mpeg2_parser);
 
@@ -2948,7 +3058,10 @@ int main(int argc, const char** argv)
                 if (input->raw_reader->GetNumSamples() == 0) {
                     // default to 422P@HL 1080i if no essence samples
                     if (input->essence_type_group == MPEG2LG_ESSENCE_GROUP)
+					{
                         input->essence_type = MPEG2LG_422P_HL_1080I;
+						mpeg_is_high_hd_2014 = true;
+					}
                 } else {
                     mpeg2_parser->ParseFrameInfo(input->raw_reader->GetSampleData(),
                                                  input->raw_reader->GetSampleDataSize());
@@ -2987,6 +3100,7 @@ int main(int argc, const char** argv)
                                         log_error("Unexpected MPEG-2 Long GOP profile and level %u\n",
                                                   mpeg2_parser->GetProfileAndLevel());
                                         throw false;
+										mpeg_is_high_hd_2014 = false;
                                 }
                             } else if (mpeg2_parser->GetHorizontalSize() == 1280) {
                                 switch (mpeg2_parser->GetProfileAndLevel())
@@ -3001,6 +3115,7 @@ int main(int argc, const char** argv)
                                         log_error("Unexpected MPEG-2 Long GOP profile and level %u\n",
                                                   mpeg2_parser->GetProfileAndLevel());
                                         throw false;
+									mpeg_is_high_hd_2014 = false;
                                 }
                             } else {
                                 log_error("Unexpected MPEG-2 Long GOP horizontal size %u; expected 1920 or 1440 or 1280\n",
@@ -3040,6 +3155,7 @@ int main(int argc, const char** argv)
                                         log_error("Unknown MPEG-2 Long GOP profile and level %u\n",
                                                   mpeg2_parser->GetProfileAndLevel());
                                         throw false;
+									mpeg_is_high_hd_2014 = false;
                                 }
                             } else {
                                 log_error("Unexpected MPEG-2 Long GOP horizontal size %u; expected 1920 or 1440\n",
@@ -3047,10 +3163,29 @@ int main(int argc, const char** argv)
                                 throw false;
                             }
                         }
+                        
+						if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+						{
+							Rational aspect_ratio = mpeg2_parser->GetAspectRatio();
+							if ((input->essence_type == MPEG2LG_422P_HL_1080I ||
+								input->essence_type == MPEG2LG_422P_HL_1080P) &&
+								(aspect_ratio == ASPECT_RATIO_16_9) &&
+								(abs((long)(50000000 - (mpeg2_parser->GetBitRate() * 400))) < 2000000))
+							{
+								mpeg_is_high_hd_2014 = true;
+							}
+							else
+							{
+								log_error("as10_high_hd shim spec violation, found essence '%s', aspect ratio %u/%u, bitrate %u\n",
+									essence_type_to_string(input->essence_type), aspect_ratio.numerator, aspect_ratio.denominator, (mpeg2_parser->GetBitRate() * 400)); 
+							}
+						}
+
                     }
 
                     if (!frame_rate_set)
                         frame_rate = mpeg2_parser->GetFrameRate();
+
 
                     if (!BMX_OPT_PROP_IS_SET(input->aspect_ratio))
                         BMX_OPT_PROP_SET(input->aspect_ratio, mpeg2_parser->GetAspectRatio());
@@ -3084,7 +3219,6 @@ int main(int argc, const char** argv)
                     throw false;
             }
         }
-
 
         // complete commandline parsing
 
@@ -3140,8 +3274,8 @@ int main(int argc, const char** argv)
 
         for (i = 0; i < inputs.size(); i++) {
             RawInput *input = &inputs[i];
-            if (input->essence_type == WAVE_PCM) {
-                if (!ClipWriterTrack::IsSupported(clip_type, input->essence_type, input->sampling_rate)) {
+            if (input->essence_type == WAVE_PCM) 
+			{  if (!ClipWriterTrack::IsSupported(clip_type, input->essence_type, input->sampling_rate)) {
                     log_error("PCM sampling rate %d/%d not supported\n",
                               input->sampling_rate.numerator, input->sampling_rate.denominator);
                     throw false;
@@ -3186,6 +3320,10 @@ int main(int argc, const char** argv)
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
             if (ard_zdf_hdf_profile)
                 flavour = RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR;
+			if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+				flavour = RDD9_AS10_FLAVOUR;
+			if(as10_high_hd_2014_profile)
+				flavour |= RDD9_AS10_HHD2014_FLAVOUR;
             if (file_md5)
                 flavour |= RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
@@ -3234,6 +3372,8 @@ int main(int argc, const char** argv)
             clip->SetClipName(clip_name);
         else if (clip_sub_type == AS11_CLIP_SUB_TYPE && as11_helper.HaveProgrammeTitle())
             clip->SetClipName(as11_helper.GetProgrammeTitle());
+		if (clip_sub_type == AS10_CLIP_SUB_TYPE && as10_helper.HaveMainTitle())
+			clip->SetClipName(as10_helper.GetMainTitle());
         clip->SetProductInfo(company_name, product_name, product_version, version_string, product_uid);
 
         if (clip_type == CW_AS02_CLIP_TYPE) {
@@ -3340,6 +3480,11 @@ int main(int argc, const char** argv)
                 rdd9_clip->SetPartitionInterval(partition_interval);
             rdd9_clip->SetOutputStartOffset(output_start_offset);
             rdd9_clip->SetOutputEndOffset(- output_end_offset);
+
+			if (mp_uid_set)
+				rdd9_clip->SetMaterialPackageUID(mp_uid);
+			if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+				rdd9_clip->ReserveHeaderMetadataSpace(16384); // min is 8192
         } else if (clip_type == CW_WAVE_CLIP_TYPE) {
             WaveWriter *wave_clip = clip->GetWaveClip();
 
@@ -3352,6 +3497,7 @@ int main(int argc, const char** argv)
 
         unsigned char avci_header_data[AVCI_HEADER_SIZE];
         map<MXFDataDefEnum, uint32_t> track_count;
+		uint8_t nWAVChannels = 0;
         for (i = 0; i < inputs.size(); i++) {
             RawInput *input = &inputs[i];
 
@@ -3361,7 +3507,6 @@ int main(int argc, const char** argv)
                 throw false;
 
             MXFDataDefEnum data_def = (input->essence_type == WAVE_PCM ? MXF_SOUND_DDEF : MXF_PICTURE_DDEF);
-
 
             // create track
 
@@ -3390,14 +3535,16 @@ int main(int argc, const char** argv)
                     if (as02_pict_track)
                         as02_pict_track->SetPartitionInterval(partition_interval);
                 }
-            } else if (clip_type == CW_AVID_CLIP_TYPE) {
+			}
+			else if (clip_type == CW_AVID_CLIP_TYPE) {
                 AvidTrack *avid_track = input->track->GetAvidTrack();
 
                 if (physical_package) {
                     if (data_def == MXF_PICTURE_DDEF) {
                         avid_track->SetSourceRef(physical_package_picture_refs[track_count[data_def]].first,
                                                  physical_package_picture_refs[track_count[data_def]].second);
-                    } else if (data_def == MXF_SOUND_DDEF) {
+					}
+					else if (data_def == MXF_SOUND_DDEF) {
                         avid_track->SetSourceRef(physical_package_sound_refs[track_count[data_def]].first,
                                                  physical_package_sound_refs[track_count[data_def]].second);
                     }
@@ -3503,6 +3650,12 @@ int main(int argc, const char** argv)
                 case MPEG2LG_MP_H14_1080P:
                     if (input->afd)
                         input->track->SetAFD(input->afd);
+					if (mpeg_descr_frame_checks && (flavour & RDD9_AS10_FLAVOUR))
+					{
+						RDD9MPEG2LGTrack *rdd9_mpeglgtrack = dynamic_cast<RDD9MPEG2LGTrack*>(input->track->GetRDD9Track());
+						if (rdd9_mpeglgtrack != NULL)
+							rdd9_mpeglgtrack->SetMpegDescriptorsChecks(shim_name, mpeg_descr_defaults_name, maxMpegCheckSameWarnMessages, printMpegChecks, mpeg_descr_loose_checks);
+					}
                     break;
                 case MJPEG_2_1:
                 case MJPEG_3_1:
@@ -3546,6 +3699,21 @@ int main(int argc, const char** argv)
                         input->track->SetSequenceOffset(sequence_offset);
                     if (audio_layout_mode_label != g_Null_UL)
                         input->track->SetChannelAssignment(audio_layout_mode_label);
+
+					if (clip_sub_type == AS10_CLIP_SUB_TYPE) 
+					{
+						Rational sampling_rate = input->sampling_rate;
+						uint32_t bps = as10_high_hd_2014_profile ? 24 : 16;
+						uint32_t sr = 48000;
+
+						if (sr != sampling_rate.numerator || bps != input->audio_quant_bits)
+						{
+							log_warn("Track %" PRIszt " essence type '%s', sampling rate @%d/%d, bits per sample %d, is not supported by clip type '%s', shim '%s'\n",
+								i, "WAVE_PCM", sampling_rate.numerator, sampling_rate.denominator, input->audio_quant_bits,
+								clip_type_to_string(clip_type, clip_sub_type).c_str(), shim_name);						
+						}
+						else nWAVChannels++;
+					}				
                     break;
                 case ANC_DATA:
                     input->track->SetConstantDataSize(input->anc_const_size);
@@ -3562,7 +3730,6 @@ int main(int argc, const char** argv)
                 case UNKNOWN_ESSENCE_TYPE:
                     BMX_ASSERT(false);
             }
-
 
             // initialize raw input
 
@@ -3627,14 +3794,15 @@ int main(int argc, const char** argv)
                     break;
                 case MPEG2LG_422P_HL_1080I:
                 case MPEG2LG_422P_HL_1080P:
+					 mpeg_is_high_hd_2014 = true;
+				case MPEG2LG_MP_H14_1080I:
+				case MPEG2LG_MP_H14_1080P:					 
                 case MPEG2LG_422P_HL_720P:
                 case MPEG2LG_MP_HL_1920_1080I:
                 case MPEG2LG_MP_HL_1920_1080P:
                 case MPEG2LG_MP_HL_1440_1080I:
                 case MPEG2LG_MP_HL_1440_1080P:
                 case MPEG2LG_MP_HL_720P:
-                case MPEG2LG_MP_H14_1080I:
-                case MPEG2LG_MP_H14_1080P:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
                     input->raw_reader->SetEssenceParser(new MPEG2EssenceParser());
@@ -3686,6 +3854,56 @@ int main(int argc, const char** argv)
             track_count[data_def]++;
         }
 
+		if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+		{
+			bool fatalError = false;
+
+			if (shim_name)
+			{
+				uint8_t nRequiredPCMChannels = 8;
+				if ((!strcmp(shim_name, D_AS10_JVC_HD_35_VBR)) || (!strcmp(shim_name, D_AS10_JVC_HD_25_CBR)))
+					nRequiredPCMChannels = 2;
+				else if (!strcmp(shim_name, D_AS10_CNN_HD_2012))
+					nRequiredPCMChannels = 4;
+
+				if (nWAVChannels != nRequiredPCMChannels)
+				{
+					log_warn("%d PCM channels are required for clip type '%s', shim '%s', found %d channels\n",
+						nRequiredPCMChannels, clip_type_to_string(clip_type, clip_sub_type).c_str(), shim_name, nWAVChannels);
+					fatalError = true;
+				}
+			}
+			else
+			{
+				switch (nWAVChannels)
+				{
+				case 2:
+				case 4:
+				case 8: break;
+				default:
+					log_warn("%d PCM channels are forbidden by AS10 norm...\n", nWAVChannels);
+					fatalError = true;
+				}
+			}
+
+			if (mpeg_descr_frame_checks)
+			{
+				if (!mpeg_is_lgop)
+				{
+					log_warn("AS10 norm requires mpeg2 lgop video\n");
+					fatalError = true;
+				}
+
+				if (as10_high_hd_2014_profile && (!mpeg_is_high_hd_2014))
+				{
+					log_warn("shim '%s' requires 422p@HL 1920x1080 video\n", D_AS10_HIGH_HD_2014);
+					fatalError = true;
+				}
+			}
+
+			if (fatalError && !mpeg_descr_loose_checks)
+			 { BMX_EXCEPTION(("as10 shim spec violation in source file")); }
+		}
 
         // embed XML
 
@@ -3712,6 +3930,8 @@ int main(int argc, const char** argv)
 
         if (clip_sub_type == AS11_CLIP_SUB_TYPE)
             as11_helper.AddMetadata(clip);
+        else if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+			as10_helper.AddMetadata(clip);
 
 
         // read more than 1 sample to improve efficiency if the input is sound only and the output
@@ -3808,11 +4028,13 @@ int main(int argc, const char** argv)
 
         if (regtest_end < 0) { // only complete if not regression testing partial files
 
-            // complete AS-11 descriptive metadata
+            // complete AS-10/11 descriptive metadata
 
             if (clip_sub_type == AS11_CLIP_SUB_TYPE)
                 as11_helper.Complete();
 
+			if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+				as10_helper.Complete();
 
             // complete writing
 

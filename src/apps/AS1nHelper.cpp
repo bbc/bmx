@@ -38,10 +38,13 @@
 #include <cstdio>
 #include <cstring>
 #include <cerrno>
+#include <algorithm>
 
 #include <bmx/apps/AS11Helper.h>
+#include <bmx/apps/AS10Helper.h>
 #include <bmx/as11/AS11DMS.h>
 #include <bmx/as11/UKDPPDMS.h>
+#include <bmx/as10/AS10DMS.h>
 #include <bmx/apps/AppUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -73,6 +76,23 @@ static const PropertyInfo AS11_SEGMENTATION_PROPERTY_INFO[] =
 {
     {"PartNumber",                  MXF_ITEM_K(AS11SegmentationFramework,   AS11PartNumber)},
     {"PartTotal",                   MXF_ITEM_K(AS11SegmentationFramework,   AS11PartTotal)},
+
+    {0, g_Null_Key},
+};
+
+static const PropertyInfo AS10_CORE_PROPERTY_INFO[] =
+{
+    {"ShimName",                    MXF_ITEM_K(AS10CoreFramework, AS10ShimName)},
+    {"Type",                        MXF_ITEM_K(AS10CoreFramework, AS10Type)},
+    {"MainTitle",                   MXF_ITEM_K(AS10CoreFramework, AS10MainTitle)},
+    {"SubTitle",                    MXF_ITEM_K(AS10CoreFramework, AS10SubTitle)},
+    {"TitleDescription",            MXF_ITEM_K(AS10CoreFramework, AS10TitleDescription)},
+    {"OrganizationName",            MXF_ITEM_K(AS10CoreFramework, AS10OrganizationName)},
+    {"PersonName",                  MXF_ITEM_K(AS10CoreFramework, AS10PersonName)},
+    {"LocationDescription",         MXF_ITEM_K(AS10CoreFramework, AS10LocationDescription)},
+    {"CommonSpanningID",            MXF_ITEM_K(AS10CoreFramework, AS10CommonSpanningID)},
+    {"SpanningNumber",              MXF_ITEM_K(AS10CoreFramework, AS10SpanningNumber)},
+    {"CumulativeDuration",          MXF_ITEM_K(AS10CoreFramework, AS10CumulativeDuration)},
 
     {0, g_Null_Key},
 };
@@ -122,7 +142,7 @@ static const PropertyInfo UK_DPP_PROPERTY_INFO[] =
     {0, g_Null_Key},
 };
 
-static const FrameworkInfo FRAMEWORK_INFO[] =
+static const FrameworkInfo AS11_FRAMEWORK_INFO[] =
 {
     {"AS11CoreFramework",           MXF_SET_K(AS11CoreFramework),           AS11_CORE_PROPERTY_INFO},
     {"AS11SegmentationFramework",   MXF_SET_K(AS11SegmentationFramework),   AS11_SEGMENTATION_PROPERTY_INFO},
@@ -131,6 +151,12 @@ static const FrameworkInfo FRAMEWORK_INFO[] =
     {0, g_Null_Key, 0},
 };
 
+static const FrameworkInfo AS10_FRAMEWORK_INFO[] =
+{
+    {"AS10CoreFramework",           MXF_SET_K(AS10CoreFramework),           AS10_CORE_PROPERTY_INFO},
+
+    {0, g_Null_Key, 0},
+};
 
 
 static string get_short_name(string name)
@@ -139,6 +165,8 @@ static string get_short_name(string name)
         return name.substr(strlen("AS11"));
     else if (name.compare(0, strlen("UKDPP"), "UKDPP") == 0)
         return name.substr(strlen("UKDPP"));
+    else if (name.compare(0, strlen("AS10"), "AS10") == 0)
+        return name.substr(strlen("AS10"));
     else
         return name;
 }
@@ -230,7 +258,7 @@ static bool parse_position(string value, Timecode start_timecode, Rational frame
     return false;
 }
 
-static bool parse_as11_timestamp(string value, mxfTimestamp *timestamp_value)
+static bool parse_as1n_timestamp(string value, mxfTimestamp *timestamp_value)
 {
     int year;
     unsigned int month, day, hour, min, sec;
@@ -270,6 +298,79 @@ static bool parse_rational(string value, mxfRational *rational_value)
     log_warn("Invalid rational value '%s'\n", value.c_str());
     return false;
 }
+
+static bool parse_umid(string value, mxfUMID *umid_value)
+{
+    if (value.length() == 95)
+    {
+        string v = value;
+        std::transform(v.begin(), v.end(), v.begin(), ::tolower);
+        const char *str = v.c_str();
+        char s[3];
+        s[2] = '\0';
+        bool badFormat = false;
+        for (int i = 0; i < 32; i++)
+        {
+            unsigned int oct = 0;
+            s[0] = *(str++); s[1] = *(str++);
+            if (s[0] == 'u' && s[1] == 't') //UT = undefined, st330
+                s[0] = s[1] = '0';
+            if (sscanf(s, "%2x", &oct) == 1)
+            {
+                switch (i)
+                {
+                case 0: umid_value->octet0 = oct; break;
+                case 1: umid_value->octet1 = oct; break;
+                case 2: umid_value->octet2 = oct; break;
+                case 3: umid_value->octet3 = oct; break;
+                case 4: umid_value->octet4 = oct; break;
+                case 5: umid_value->octet5 = oct; break;
+                case 6: umid_value->octet6 = oct; break;
+                case 7: umid_value->octet7 = oct; break;
+                case 8: umid_value->octet8 = oct; break;
+                case 9: umid_value->octet9 = oct; break;
+                case 10: umid_value->octet10 = oct; break;
+                case 11: umid_value->octet11 = oct; break;
+                case 12: umid_value->octet12 = oct; break;
+                case 13: umid_value->octet13 = oct; break;
+                case 14: umid_value->octet14 = oct; break;
+                case 15: umid_value->octet15 = oct; break;
+                case 16: umid_value->octet16 = oct; break;
+                case 17: umid_value->octet17 = oct; break;
+                case 18: umid_value->octet18 = oct; break;
+                case 19: umid_value->octet19 = oct; break;
+                case 20: umid_value->octet20 = oct; break;
+                case 21: umid_value->octet21 = oct; break;
+                case 22: umid_value->octet22 = oct; break;
+                case 23: umid_value->octet23 = oct; break;
+                case 24: umid_value->octet24 = oct; break;
+                case 25: umid_value->octet25 = oct; break;
+                case 26: umid_value->octet26 = oct; break;
+                case 27: umid_value->octet27 = oct; break;
+                case 28: umid_value->octet28 = oct; break;
+                case 29: umid_value->octet29 = oct; break;
+                case 30: umid_value->octet30 = oct; break;
+                case 31: umid_value->octet31 = oct; break;
+                }
+                if (i<31 && *str++ != '.')
+                {  // check if it's dot separated format
+                    badFormat = true; break;
+                }
+            }
+            else
+            {
+                badFormat = true; break;
+            }
+        }
+
+        if (!badFormat)
+            return true;
+    }
+
+    log_warn("Invalid UMID value '%s', 32 dot separated hex pairs (e.g.: 01.a1...0c.32) are expected\n", value.c_str());
+    return false;
+}
+
 
 static bool parse_version_type(string value, mxfVersionType *vt_value)
 {
@@ -344,7 +445,25 @@ FrameworkHelper::FrameworkHelper(AS11WriterHelper *writer_helper, DMFramework *f
     mFrameRate = writer_helper->GetClip()->GetFrameRate();
     BMX_ASSERT(writer_helper->GetClip()->GetDataModel()->findSetDef(framework->getKey(), &mSetDef));
 
-    const FrameworkInfo *framework_info = FRAMEWORK_INFO;
+    const FrameworkInfo *framework_info = AS11_FRAMEWORK_INFO;
+    while (framework_info->name) {
+        if (framework_info->set_key == *framework->getKey()) {
+            mFrameworkInfo = framework_info;
+            break;
+        }
+        framework_info++;
+    }
+    BMX_ASSERT(framework_info->name);
+}
+
+FrameworkHelper::FrameworkHelper(AS10WriterHelper *writer_helper, DMFramework *framework)
+{
+    mFramework = framework;
+    mStartTimecode = writer_helper->GetClip()->GetStartTimecode();
+    mFrameRate = writer_helper->GetClip()->GetFrameRate();
+    BMX_ASSERT(writer_helper->GetClip()->GetDataModel()->findSetDef(framework->getKey(), &mSetDef));
+
+    const FrameworkInfo *framework_info = AS10_FRAMEWORK_INFO;
     while (framework_info->name) {
         if (framework_info->set_key == *framework->getKey()) {
             mFrameworkInfo = framework_info;
@@ -477,7 +596,7 @@ bool FrameworkHelper::SetProperty(string name, string value)
         case MXF_TIMESTAMP_TYPE:
         {
             mxfTimestamp timestamp_value = {0, 0, 0, 0, 0, 0, 0};
-            if (!parse_as11_timestamp(value, &timestamp_value)) {
+            if (!parse_as1n_timestamp(value, &timestamp_value)) {
                 log_warn("Invalid framework property value %s::%s '%s'\n",  mFrameworkInfo->name, name.c_str(),
                          value.c_str());
                 return false;
@@ -510,6 +629,20 @@ bool FrameworkHelper::SetProperty(string name, string value)
             mFramework->setVersionTypeItem(&c_item_def->key, vt_value);
             break;
         }
+        case MXF_UMID_TYPE:
+        {
+            mxfUMID *vt_value = new mxfUMID;
+            std::memset(vt_value, 0, sizeof(mxfUMID));
+            if (!parse_umid(value, vt_value)) {
+                log_warn("Invalid framework property value %s::%s '%s'\n", mFrameworkInfo->name, name.c_str(),
+                    value.c_str());
+                return false;
+            }
+
+            mFramework->setUMIDItem(&c_item_def->key, *vt_value);
+            break;
+        }
+
         default:
             BMX_ASSERT(false);
             return false;
@@ -944,3 +1077,212 @@ void AS11Helper::SetFrameworkProperty(FrameworkType type, std::string name, std:
     mFrameworkProperties.push_back(framework_property);
 }
 
+
+// as10 part
+
+AS10Helper::AS10Helper()
+{
+    mSourceInfo = 0;
+    mWriterHelper = 0;
+    mAS10FrameworkHelper = 0;
+}
+
+AS10Helper::~AS10Helper()
+{
+    delete mSourceInfo;
+    delete mWriterHelper;
+    delete mAS10FrameworkHelper;
+}
+
+void AS10Helper::ReadSourceInfo(MXFFileReader *source_file)
+{
+    int64_t read_start_pos;
+    int64_t read_duration;
+    source_file->GetReadLimits(false, &read_start_pos, &read_duration);
+    if (read_start_pos != source_file->GetReadStartPosition() ||
+        read_duration  != source_file->GetReadDuration())
+    {
+        BMX_EXCEPTION(("Copying AS-10 descriptive metadata is currently only supported for complete file duration transfers"));
+    }
+
+    mSourceInfo = new AS10Info();
+    mSourceInfo->Read(source_file->GetHeaderMetadata());
+
+    mSourceStartTimecode = source_file->GetMaterialTimecode(0);
+
+    if (mSourceInfo->core && mSourceInfo->core->haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10MainTitle)))
+        mSourceMainTitle = mSourceInfo->core->GetMainTitle();
+}
+
+bool AS10Helper::ParseFrameworkFile(const char *type_str, const char *filename)
+{
+    FrameworkType type;
+    if (!ParseFrameworkType(type_str, &type))
+        return false;
+
+    FILE *file = fopen(filename, "rb");
+    if (!file) {
+        fprintf(stderr, "Failed to open file '%s': %s\n", filename, bmx_strerror(errno).c_str());
+        return false;
+    }
+
+    int line_num = 0;
+    int c = '1';
+    while (c != EOF) {
+        // move file pointer past the newline characters
+        while ((c = fgetc(file)) != EOF && (c == '\r' || c == '\n')) {
+            if (c == '\n')
+                line_num++;
+        }
+
+        string name, value;
+        bool parse_name = true;
+        while (c != EOF && (c != '\r' && c != '\n')) {
+            if (c == ':' && parse_name) {
+                parse_name = false;
+            } else {
+                if (parse_name)
+                    name += c;
+                else
+                    value += c;
+            }
+
+            c = fgetc(file);
+        }
+        if (!name.empty()) {
+            if (parse_name) {
+                fprintf(stderr, "Failed to parse line %d\n", line_num);
+                fclose(file);
+                return false;
+            }
+
+            SetFrameworkProperty(type, trim_string(name), trim_string(value));
+        }
+
+        if (c == '\n')
+            line_num++;
+    }
+
+    fclose(file);
+
+    return true;
+}
+
+bool AS10Helper::ParseFrameworkType(const char *type_str, FrameworkType *type) const
+{
+    if (strcmp(type_str, "as10") == 0) {
+        *type = AS10_CORE_FRAMEWORK_TYPE;
+        return true;
+    }
+
+    log_warn("Unknown framework type '%s'\n", type_str);
+    return false;
+}
+
+bool AS10Helper::SetFrameworkProperty(const char *type_str, const char *name, const char *value)
+{
+    FrameworkType type;
+    if (!ParseFrameworkType(type_str, &type))
+        return false;
+
+    SetFrameworkProperty(type, name, value);
+    return true;
+}
+
+void AS10Helper::SetFrameworkProperty(FrameworkType type, std::string name, std::string value)
+{
+    FrameworkProperty framework_property;
+    framework_property.type = type;
+    framework_property.name = name;
+    framework_property.value = value;
+
+    mFrameworkProperties.push_back(framework_property);
+}
+
+bool AS10Helper::HaveMainTitle() const
+{
+    size_t i;
+    
+    for (i = 0; i < mFrameworkProperties.size(); i++) {
+        if (mFrameworkProperties[i].type == AS10_CORE_FRAMEWORK_TYPE &&
+            get_short_name(mFrameworkProperties[i].name) == "MainTitle")
+        {
+            return true;
+        }
+    }
+
+    return !mSourceMainTitle.empty();
+}
+
+string AS10Helper::GetMainTitle() const
+{
+    size_t i;
+
+    for (i = 0; i < mFrameworkProperties.size(); i++) {
+        if (mFrameworkProperties[i].type == AS10_CORE_FRAMEWORK_TYPE &&
+            get_short_name(mFrameworkProperties[i].name) == "MainTitle")
+        {
+            return mFrameworkProperties[i].value;
+        }
+    }
+    return mSourceMainTitle;
+}
+
+const char*  AS10Helper::GetShimName() const
+{
+    size_t i;
+
+    for (i = 0; i < mFrameworkProperties.size(); i++) {
+        if (mFrameworkProperties[i].type == AS10_CORE_FRAMEWORK_TYPE &&
+            get_short_name(mFrameworkProperties[i].name) == "ShimName")
+        {
+            return mFrameworkProperties[i].value.c_str();
+        }
+    }
+    return NULL;
+}
+
+void AS10Helper::AddMetadata(ClipWriter *clip)
+{
+    if (clip->GetType() != CW_RDD9_CLIP_TYPE) {
+        BMX_EXCEPTION(("AS-10 is not supported in clip type '%s'",
+                       clip_type_to_string(clip->GetType(), NO_CLIP_SUB_TYPE).c_str()));
+    }
+
+    mWriterHelper = new AS10WriterHelper(clip);
+
+    if (mSourceInfo) {
+        if (mSourceInfo->core) {
+            AS10CoreFramework::RegisterObjectFactory(clip->GetHeaderMetadata());
+            AS10CoreFramework *core_copy =
+                dynamic_cast<AS10CoreFramework*>(mSourceInfo->core->clone(clip->GetHeaderMetadata()));
+            mAS10FrameworkHelper = new FrameworkHelper(mWriterHelper, core_copy);
+        }
+    }
+
+    size_t i;
+    for (i = 0; i < mFrameworkProperties.size(); i++) {
+        if (mFrameworkProperties[i].type == AS10_CORE_FRAMEWORK_TYPE) {
+            if (!mAS10FrameworkHelper) {
+                mAS10FrameworkHelper = new FrameworkHelper(mWriterHelper,
+                                                new AS10CoreFramework(mWriterHelper->GetClip()->GetHeaderMetadata()));
+            }
+            BMX_CHECK_M(mAS10FrameworkHelper->SetProperty(mFrameworkProperties[i].name, mFrameworkProperties[i].value),
+                        ("Failed to set AS10CoreFramework property '%s' to '%s'",
+                         mFrameworkProperties[i].name.c_str(), mFrameworkProperties[i].value.c_str()));
+            log_info("set AS10CoreFramework property '%s' to '%s'\n", mFrameworkProperties[i].name.c_str(), mFrameworkProperties[i].value.c_str());
+        }
+    }
+
+
+    if (mAS10FrameworkHelper) {
+        mWriterHelper->InsertAS10CoreFramework(dynamic_cast<AS10CoreFramework*>(mAS10FrameworkHelper->GetFramework()));
+        BMX_CHECK_M(mAS10FrameworkHelper->GetFramework()->validate(true), ("AS10 Framework validation failed"));
+    }
+
+}
+
+void AS10Helper::Complete()
+{
+    BMX_ASSERT(mWriterHelper);
+}

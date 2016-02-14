@@ -87,12 +87,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\apps\mxf2raw\APPInfoOutput.cpp" />
+    <ClCompile Include="..\..\..\..\apps\mxf2raw\AS10InfoOutput.cpp" />
     <ClCompile Include="..\..\..\..\apps\mxf2raw\AS11InfoOutput.cpp" />
     <ClCompile Include="..\..\..\..\apps\mxf2raw\AvidInfoOutput.cpp" />
     <ClCompile Include="..\..\..\..\apps\mxf2raw\mxf2raw.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\apps\mxf2raw\APPInfoOutput.h" />
+    <ClInclude Include="..\..\..\..\apps\mxf2raw\AS10InfoOutput.h" />
     <ClInclude Include="..\..\..\..\apps\mxf2raw\AS11InfoOutput.h" />
     <ClInclude Include="..\..\..\..\apps\mxf2raw\AvidInfoOutput.h" />
   </ItemGroup>

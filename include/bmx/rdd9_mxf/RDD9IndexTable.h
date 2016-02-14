@@ -169,7 +169,7 @@ public:
 public:
     bool HaveSegments();
     bool HaveWrittenSegments();
-    void WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition);
+    void WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition, int flavour);
 
 private:
     void CreateDeltaEntries(const std::vector<uint32_t> &element_sizes);
@@ -177,7 +177,7 @@ private:
 
     void UpdateVBEIndex(const std::vector<uint32_t> &element_sizes);
 
-    void WriteVBESegments(mxfpp::File *mxf_file, std::vector<RDD9IndexTableSegment*> &segments);
+	void WriteVBESegments(mxfpp::File *mxf_file, std::vector<RDD9IndexTableSegment*> &segments, mxfpp::Partition *partition);
 
 private:
     uint32_t mIndexSID;

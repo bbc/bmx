@@ -113,6 +113,9 @@
     <ClInclude Include="..\..\..\include\bmx\BMXException.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\BMXShimNames.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\BMXTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -182,7 +185,13 @@
     <ClInclude Include="..\..\..\include\bmx\apps\AppXMLInfoWriter.h">
       <Filter>Header Files\apps</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\apps\AS10Helper.h">
+      <Filter>Header Files\apps</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\apps\AS11Helper.h">
+      <Filter>Header Files\apps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\apps\FWHelper.h">
       <Filter>Header Files\apps</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\apps\MCALabelHelper.h">
@@ -229,6 +238,21 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\as02\AS02Version.h">
       <Filter>Header Files\as02</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\as11\as10_extensions_data_model.h">
+      <Filter>Header Files\as11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\as11\AS10CoreFramework.h">
+      <Filter>Header Files\as11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\as11\AS10DMS.h">
+      <Filter>Header Files\as11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\as11\AS10Info.h">
+      <Filter>Header Files\as11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\as11\AS10WriterHelper.h">
+      <Filter>Header Files\as11</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\as11\as11_extensions_data_model.h">
       <Filter>Header Files\as11</Filter>

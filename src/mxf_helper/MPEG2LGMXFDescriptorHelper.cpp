@@ -228,6 +228,8 @@ FileDescriptor* MPEG2LGMXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMe
 
 void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
 {
+	bool fatalError = false; 
+
     PictureMXFDescriptorHelper::UpdateFileDescriptor();
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
@@ -236,19 +238,29 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     BMX_ASSERT((mFlavour & MXFDESC_AVID_FLAVOUR) || mpeg_descriptor);
 
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
+
     SetCodingEquations(ITUR_BT709_CODING_EQ);
+
     if (!(mFlavour & MXFDESC_AVID_FLAVOUR)) {
         if (mEssenceType == MPEG2LG_422P_HL_720P ||
             mEssenceType == MPEG2LG_MP_HL_720P)
         {
             cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_SMPTE296M);
+
+			if (mFlavour & MXFDESC_RDD9_AS10_HHD2014_FLAVOUR)
+			{
+				fatalError = true;
+				log_error("as10 high hd shim requires SMPTE-274M, found SMPTE-296M, 720p\n");
+			}
         }
         else
         {
             cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_SMPTE274M);
         }
     }
+
     cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
+
     if (mEssenceType == MPEG2LG_422P_HL_1080I ||
         mEssenceType == MPEG2LG_422P_HL_1080P ||
         mEssenceType == MPEG2LG_422P_HL_720P)
@@ -263,7 +275,14 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     {
         // 4:2:0
         SetColorSiting(MXF_COLOR_SITING_VERT_MIDPOINT);
+
+		if (mFlavour & MXFDESC_RDD9_AS10_HHD2014_FLAVOUR)
+		{
+			fatalError = true;
+			log_error("as10 high hd shim requires 4:2:2 HL coding, found 4:2:0\n");
+		}
     }
+
     switch (mEssenceType)
     {
         case MPEG2LG_422P_HL_1080I:
@@ -298,6 +317,11 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setDisplayHeight(720);
             cdci_descriptor->appendVideoLineMap(26);
             cdci_descriptor->appendVideoLineMap(0);
+			if (mFlavour & MXFDESC_RDD9_AS10_HHD2014_FLAVOUR)
+			{
+				fatalError = true;
+				log_error("as10 high hd shim requires 1920x1080, found 720p\n");
+			}
             break;
         case MPEG2LG_MP_HL_1440_1080I:
         case MPEG2LG_MP_H14_1080I:
@@ -309,6 +333,11 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setDisplayHeight(540);
             cdci_descriptor->appendVideoLineMap(21);
             cdci_descriptor->appendVideoLineMap(584);
+			if (mFlavour & MXFDESC_RDD9_AS10_HHD2014_FLAVOUR)
+			{
+				fatalError = true;
+				log_error("as10 high hd shim requires 1920x1080, found 1440x1080i\n");
+			}
             break;
         case MPEG2LG_MP_HL_1440_1080P:
         case MPEG2LG_MP_H14_1080P:
@@ -320,14 +349,22 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setDisplayHeight(1080);
             cdci_descriptor->appendVideoLineMap(42);
             cdci_descriptor->appendVideoLineMap(0);
+			if (mFlavour & MXFDESC_RDD9_AS10_HHD2014_FLAVOUR)
+			{
+				fatalError = true;
+				log_error("as10 high hd shim requires 1920x1080, found 1440x1080p\n");
+			}
             break;
         default:
             BMX_ASSERT(false);
             break;
     }
+
     if (!(mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
+
     cdci_descriptor->setComponentDepth(8);
+
     if (mEssenceType == MPEG2LG_422P_HL_1080I ||
         mEssenceType == MPEG2LG_422P_HL_1080P ||
         mEssenceType == MPEG2LG_422P_HL_720P)
@@ -342,16 +379,19 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
         cdci_descriptor->setHorizontalSubsampling(2);
         cdci_descriptor->setVerticalSubsampling(2);
     }
+
     cdci_descriptor->setBlackRefLevel(16);
     cdci_descriptor->setWhiteReflevel(235);
     cdci_descriptor->setColorRange(225);
 
     if ((mFlavour & MXFDESC_RDD9_FLAVOUR)) {
-        if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_SEPARATE_FIELDS) {
+        if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_SEPARATE_FIELDS) 
+		{
             cdci_descriptor->setStoredF2Offset(0);
             cdci_descriptor->setDisplayF2Offset(0);
             cdci_descriptor->setFieldDominance(1);
         }
+
         cdci_descriptor->setSampledXOffset(0);
         cdci_descriptor->setSampledYOffset(0);
         cdci_descriptor->setDisplayXOffset(0);
@@ -359,6 +399,20 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
         cdci_descriptor->setImageStartOffset(0);
         cdci_descriptor->setImageEndOffset(0);
         cdci_descriptor->setPaddingBits(0);
+
+        if (mFlavour & MXFDESC_RDD9_AS10_FLAVOUR)
+		{
+		    cdci_descriptor->setImageAlignmentOffset(0); //st-377 default=1
+			cdci_descriptor->setReversedByteOrder(false);
+
+			if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout != MXF_SEPARATE_FIELDS)
+			{
+				cdci_descriptor->setStoredF2Offset(0);
+				cdci_descriptor->setDisplayF2Offset(0);
+                //akl 2 2ble check
+				cdci_descriptor->setFieldDominance(0);
+			}
+		}
     } else if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
         cdci_descriptor->setSampledXOffset(0);
         cdci_descriptor->setSampledYOffset(0);
@@ -416,6 +470,9 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             }
         }
     }
+
+	if (fatalError)
+		BMX_EXCEPTION(("shim spec violation(s) in mxf descriptior(s), incorrect essence"));
 }
 
 mxfUL MPEG2LGMXFDescriptorHelper::ChooseEssenceContainerUL() const

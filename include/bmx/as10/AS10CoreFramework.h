@@ -29,29 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_VERSION_H_
-#define BMX_VERSION_H_
+#ifndef BMX_AS10_CORE_FRAMEWORK_H_
+#define BMX_AS10_CORE_FRAMEWORK_H_
 
 
-#include <string>
-
-#include <bmx/BMXTypes.h>
-
-
-#define BMX_VERSION_MAJOR    0
-#define BMX_VERSION_MINOR    1
-#define BMX_VERSION_MICRO    4
-
-#define BMX_MXF_VERSION_RELEASE  5   /* 0 = Unknown version
-                                        1 = Released version
-                                        2 = Development version
-                                        3 = Released version with patches
-                                        4 = Pre-release beta version
-                                        5 = Private version not intended for general release */
-
-#define BMX_VERSION          (BMX_VERSION_MAJOR << 16 | BMX_VERSION_MINOR << 8 | BMX_VERSION_MICRO)
-
-#define BMX_LIBRARY_NAME     "bmx"
+#include <libMXF++/metadata/DMFramework.h>
 
 
 
@@ -59,20 +41,53 @@ namespace bmx
 {
 
 
-std::string get_bmx_library_name();
-std::string get_bmx_version_string();
-std::string get_bmx_scm_version_string();
-std::string get_bmx_build_string();
-Timestamp get_bmx_build_timestamp();
+class AS10CoreFramework : public mxfpp::DMFramework
+{
+public:
+    static void RegisterObjectFactory(mxfpp::HeaderMetadata *header_metadata);
 
-std::string get_bmx_company_name();
-UUID get_bmx_product_uid();
-mxfProductVersion get_bmx_mxf_product_version();
-std::string get_bmx_mxf_version_string();
+public:
+    static const mxfKey set_key;
+
+public:
+    friend class mxfpp::MetadataSetFactory<AS10CoreFramework>;
+
+public:
+    AS10CoreFramework(mxfpp::HeaderMetadata *header_metadata);
+    virtual ~AS10CoreFramework();
+
+	bool HaveProperty(char *name);
+	std::string GetShimName();
+	std::string GetType();
+    std::string GetMainTitle();
+	std::string GetSubTitle();
+	std::string GetTitleDescription();
+	std::string GetPersonName();
+	std::string GetOrganizationName();
+	std::string GetLocationDescription();
+	mxfUMID  GetCommonSpanningID(); 
+	uint16_t GetSpanningNumber();
+	int64_t GetCumulativeDuration();
+
+    void SetShimName(std::string value);
+    void SetType(std::string value);
+    void SetMainTitle(std::string value);
+    void SetSubTitle(std::string value);
+	void SetTitleDescription(std::string value);
+	void SetOrganizationName(std::string value);
+	void SetPersonName(std::string value);
+	void SetLocationDescription(std::string value); 
+	void SetCommonSpanningID(mxfUMID value);
+	void SetSpanningNumber(uint16_t value);
+	void SetCumulativeDuration(int64_t value);
+
+protected:
+    AS10CoreFramework(mxfpp::HeaderMetadata *header_metadata, ::MXFMetadataSet *c_metadata_set);
+};
+
 
 
 };
-
 
 
 #endif

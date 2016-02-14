@@ -54,6 +54,7 @@ typedef enum
 {
     NO_CLIP_SUB_TYPE,
     AS11_CLIP_SUB_TYPE,
+	AS10_CLIP_SUB_TYPE
 } ClipSubType;
 
 typedef enum

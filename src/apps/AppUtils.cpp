@@ -185,6 +185,9 @@ string bmx::clip_type_to_string(ClipWriterType clip_type, ClipSubType sub_clip_t
         case AS11_CLIP_SUB_TYPE:
             sub_type_str = "AS-11 ";
             break;
+		case AS10_CLIP_SUB_TYPE:
+			sub_type_str = "AS-10 ";
+			break;
         case NO_CLIP_SUB_TYPE:
             break;
     }
@@ -587,6 +590,9 @@ bool bmx::parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type, 
     } else if (strcmp(clip_type_str, "rdd9") == 0) {
         *clip_type     = CW_RDD9_CLIP_TYPE;
         *clip_sub_type = NO_CLIP_SUB_TYPE;
+	} else if (strcmp(clip_type_str, "as10") == 0) {
+		*clip_type = CW_RDD9_CLIP_TYPE;
+		*clip_sub_type = AS10_CLIP_SUB_TYPE;
     } else if (strcmp(clip_type_str, "wave") == 0) {
         *clip_type     = CW_WAVE_CLIP_TYPE;
         *clip_sub_type = NO_CLIP_SUB_TYPE;
