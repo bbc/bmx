@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2016, British Broadcasting Corporation
  * All Rights Reserved.
- *
- * Author: Philip de Nier
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -78,7 +76,7 @@ bool AS10Info::Read(HeaderMetadata *header_metadata)
 
     GetStaticFrameworks(tracks);
 
-    return core != 0 ;
+    return core != 0;
 }
 
 void AS10Info::Reset()
@@ -125,5 +123,4 @@ void AS10Info::GetStaticFrameworks(vector<GenericTrack*> &tracks)
         }
     }
 }
-
 

@@ -51,100 +51,99 @@ public:
     virtual uint32_t ParseFrameSize(const unsigned char *data, uint32_t data_size);
 
     virtual void ParseFrameInfo(const unsigned char *data, uint32_t data_size);
-	virtual int  ParseFrameAllInfo(const unsigned char *data, uint32_t data_size);
+    virtual void ParseFrameAllInfo(const unsigned char *data, uint32_t data_size);
 
 public:
+    // bitstream properties
     bool HaveSequenceHeader() const             { return mHaveSequenceHeader; }
-	bool HaveSequenceExtention() const		    { return mHaveSequenceExtention; }
-	bool HaveDisplayExtention() const           { return mHaveDisplayExtention; }
-	bool HavePicCodingExtention() const         { return mHavePicCodingExtention; }
-	bool HaveColorDescription() const           { return mHaveColorDescription; }
-	
+    bool HaveExtension() const                  { return mHaveSequenceExtension ||
+                                                         mHaveDisplayExtension ||
+                                                         mHavePicCodingExtension; }
+    bool HaveSequenceExtension() const          { return mHaveSequenceExtension; }
+    bool HaveDisplayExtension() const           { return mHaveDisplayExtension; }
+    bool HavePicCodingExtension() const         { return mHavePicCodingExtension; }
+    bool HaveColorDescription() const           { return mHaveColorDescription; }
+    bool HaveGOPHeader() const                  { return mHaveGOPHeader; }
+
+    // sequence properties
     uint32_t GetHorizontalSize() const          { return mHorizontalSize; }
     uint32_t GetVerticalSize() const            { return mVerticalSize; }
-
     bool HaveKnownAspectRatio() const           { return mHaveKnownAspectRatio; }
-	bool HaveKnownFramRate() const              { return mHaveKnownFramRate; }
     Rational GetAspectRatio() const             { return mAspectRatio; }
-	Rational GetSampleRate() const              { return mSampleRate; }
+    bool HaveKnownFrameRate() const             { return mHaveKnownFrameRate; }
     Rational GetFrameRate() const               { return mFrameRate; }
     uint32_t GetBitRate() const                 { return mBitRate; } // in 400bps units
-
     bool IsLowDelay() const                     { return mLowDelay; }
-
     uint8_t GetProfileAndLevel() const          { return mProfileAndLevel; }
-
-	uint32_t GetCromaFormat() const				{ return mChromaFormat;  }
-	uint32_t GetDHorizontalSize() const         { return mDHorizontalSize; }
-	uint32_t GetDVerticalSize() const           { return mDVerticalSize; }
-
-	uint32_t GetVideoFormat() const			    { return mVideoFormat; }
-	uint32_t GetColorPrimaries() const          { return mColorPrimaries; }
-	uint32_t GetTransferCharacteristics() const { return mTransferCharacteristics; }
-	uint32_t GetMatrixCoeffs() const			{ return mMatrixCoeffs; }
-
-	uint32_t GetTFF() const                     { return mIsTFF; }
-
     bool IsProgressive() const                  { return mIsProgressive; }
-    bool HaveGOPHeader() const                  { return mHaveGOPHeader; }
+    uint32_t GetChromaFormat() const            { return mChromaFormat;  }
+
+    // sequence display properties
+    uint8_t GetVideoFormat() const              { return mVideoFormat; }
+    uint8_t GetColorPrimaries() const           { return mColorPrimaries; }
+    uint8_t GetTransferCharacteristics() const  { return mTransferCharacteristics; }
+    uint8_t GetMatrixCoeffs() const             { return mMatrixCoeffs; }
+    uint32_t GetDHorizontalSize() const         { return mDHorizontalSize; }
+    uint32_t GetDVerticalSize() const           { return mDVerticalSize; }
+
+    // gop properties
     bool IsClosedGOP() const                    { return mClosedGOP; }
 
+    // picture properties
     MPEGFrameType GetFrameType() const          { return mFrameType; }
     uint32_t GetTemporalReference() const       { return mTemporalReference; }
-	uint32_t GetVBVDelay() const                { return mVBVDelay; }
-
-
-private:
-    void Reset();
+    uint32_t GetVBVDelay() const                { return mVBVDelay; }
+    bool IsTFF() const                          { return mIsTFF; }
 
 private:
+    void ResetFrameSize();
+    void ResetFrameInfo();
+
+private:
+    // parse frame
     uint32_t mOffset;
     uint32_t mState;
-
     bool mSequenceHeader;
     bool mGroupHeader;
     bool mPictureStart;
 
-    uint32_t mHorizontalSize;
-    uint32_t mVerticalSize;
-
-    bool mHaveKnownAspectRatio;
-	bool     mHaveKnownFramRate;
-
-    Rational mAspectRatio;
-    Rational mFrameRate;
-	Rational mSampleRate;
-    uint32_t mBitRate;
-
-    bool mLowDelay;
-
-    uint8_t mProfileAndLevel;
-	uint32_t  mChromaFormat;
-
-	uint32_t mVideoFormat; //
-	uint32_t mDHorizontalSize; //
-	uint32_t mDVerticalSize; //
-	uint32_t mColorPrimaries; // 
-	uint32_t mTransferCharacteristics; //
-	uint32_t mMatrixCoeffs;
-
-	uint32_t mPicStructure;
-	uint32_t mIsTFF; //
-	uint32_t mProgressiveFrame; //
-
-    bool mIsProgressive;	
-    bool mClosedGOP;
-
+    // bitstream
     bool mHaveSequenceHeader;
-	bool mHaveSequenceExtention;
-	bool mHaveDisplayExtention;
-	bool mHavePicCodingExtention;
-	bool mHaveColorDescription;
+    bool mHaveSequenceExtension;
+    bool mHaveDisplayExtension;
+    bool mHavePicCodingExtension;
+    bool mHaveColorDescription;
     bool mHaveGOPHeader;
 
+    // sequence properties
+    uint32_t mHorizontalSize;
+    uint32_t mVerticalSize;
+    bool mHaveKnownAspectRatio;
+    Rational mAspectRatio;
+    bool mHaveKnownFrameRate;
+    Rational mFrameRate;
+    uint32_t mBitRate;
+    bool mLowDelay;
+    uint8_t mProfileAndLevel;
+    bool mIsProgressive;
+    uint32_t mChromaFormat;
+
+    // sequence display properties
+    uint8_t mVideoFormat;
+    uint8_t mColorPrimaries;
+    uint8_t mTransferCharacteristics;
+    uint8_t mMatrixCoeffs;
+    uint32_t mDHorizontalSize;
+    uint32_t mDVerticalSize;
+
+    // gop properties
+    bool mClosedGOP;
+
+    // picture properties
     MPEGFrameType mFrameType;
     uint32_t mTemporalReference;
-	uint32_t mVBVDelay;
+    uint32_t mVBVDelay;
+    bool mIsTFF;
 };
 
 

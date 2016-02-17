@@ -6,7 +6,9 @@ libapps_la_SOURCES = \
 	AppTextInfoWriter.cpp \
 	AppUtils.cpp \
 	AppXMLInfoWriter.cpp \
-	AS1nHelper.cpp \
+	AS10Helper.cpp \
+	AS11Helper.cpp \
+	FrameworkHelper.cpp \
 	MCALabelHelper.cpp \
 	ps_avci_header_data.h
 

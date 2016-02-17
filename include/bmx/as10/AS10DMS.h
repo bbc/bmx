@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2016, British Broadcasting Corporation
  * All Rights Reserved.
- *
- * Author: Philip de Nier
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -53,6 +51,8 @@
 static const mxfUL MXF_DM_L(AS10CoreDescriptiveScheme) =
     {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x0d, 0x01, 0x07, 0x01, 0x0a, 0x01, 0x00, 0x00};
 
+
+
 namespace bmx
 {
 
@@ -69,4 +69,3 @@ public:
 
 
 #endif
-

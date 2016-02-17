@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2013, British Broadcasting Corporation
+ * Copyright (C) 2016, British Broadcasting Corporation
  * All Rights Reserved.
- *
- * Author: Philip de Nier
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,6 +35,7 @@
 
 #include <bmx/as10/AS10WriterHelper.h>
 #include <bmx/as10/AS10DMS.h>
+#include <bmx/as10/AS10Info.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -47,17 +46,14 @@ using namespace bmx;
 using namespace mxfpp;
 
 
-static const uint32_t AS10_CORE_TRACK_ID          = 5001;
+static const uint32_t AS10_CORE_TRACK_ID = 6001;
 
 
 AS10WriterHelper::AS10WriterHelper(ClipWriter *clip)
 {
     mClip = clip;
 
-    if (!clip->GetHeaderMetadata())
-        clip->PrepareHeaderMetadata();
-
-    AS10DMS::RegisterExtensions(clip->GetHeaderMetadata());
+    AS10Info::RegisterExtensions(clip->GetHeaderMetadata());
 }
 
 AS10WriterHelper::~AS10WriterHelper()

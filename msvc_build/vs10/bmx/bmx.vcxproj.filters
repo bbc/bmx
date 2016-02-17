@@ -11,6 +11,9 @@
     <Filter Include="Header Files\as02">
       <UniqueIdentifier>{aa5c5125-e367-4d76-9d41-413ac02b5b76}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\as10">
+      <UniqueIdentifier>{a843377f-6417-440a-8358-0c31b7e3058f}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Header Files\as11">
       <UniqueIdentifier>{d6dcee9b-29fa-4718-9d3f-d614b7d63519}</UniqueIdentifier>
     </Filter>
@@ -59,6 +62,9 @@
     </Filter>
     <Filter Include="Source Files\as02">
       <UniqueIdentifier>{d1026fda-1ba5-48cf-b4e5-cc5fe0e41792}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\as10">
+      <UniqueIdentifier>{12242c8d-1a64-4ce6-81e9-a3313f622f2c}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\as11">
       <UniqueIdentifier>{80cb27ca-4132-41b2-8b1d-21d1a0aee8b1}</UniqueIdentifier>
@@ -191,7 +197,7 @@
     <ClInclude Include="..\..\..\include\bmx\apps\AS11Helper.h">
       <Filter>Header Files\apps</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\bmx\apps\FWHelper.h">
+    <ClInclude Include="..\..\..\include\bmx\apps\FrameworkHelper.h">
       <Filter>Header Files\apps</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\apps\MCALabelHelper.h">
@@ -239,20 +245,32 @@
     <ClInclude Include="..\..\..\include\bmx\as02\AS02Version.h">
       <Filter>Header Files\as02</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\bmx\as11\as10_extensions_data_model.h">
-      <Filter>Header Files\as11</Filter>
+    <ClInclude Include="..\..\..\src\as10\as10_shims.h">
+      <Filter>Header Files\as10</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\bmx\as11\AS10CoreFramework.h">
-      <Filter>Header Files\as11</Filter>
+    <ClInclude Include="..\..\..\include\bmx\as10\as10_extensions_data_model.h">
+      <Filter>Header Files\as10</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\bmx\as11\AS10DMS.h">
-      <Filter>Header Files\as11</Filter>
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10CoreFramework.h">
+      <Filter>Header Files\as10</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\bmx\as11\AS10Info.h">
-      <Filter>Header Files\as11</Filter>
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10DMS.h">
+      <Filter>Header Files\as10</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\bmx\as11\AS10WriterHelper.h">
-      <Filter>Header Files\as11</Filter>
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10Info.h">
+      <Filter>Header Files\as10</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10MPEG2Validator.h">
+      <Filter>Header Files\as10</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10ShimNames.h">
+      <Filter>Header Files\as10</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10RDD9Validator.h">
+      <Filter>Header Files\as10</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10WriterHelper.h">
+      <Filter>Header Files\as10</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\as11\as11_extensions_data_model.h">
       <Filter>Header Files\as11</Filter>
@@ -425,10 +443,16 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\DVMXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\EssenceValidator.h">
+      <Filter>Header Files\mxf_helper</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MJPEGMXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MPEG2LGMXFDescriptorHelper.h">
+      <Filter>Header Files\mxf_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\MPEG2Validator.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MXFDescriptorHelper.h">
@@ -578,6 +602,9 @@
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9File.h">
       <Filter>Header Files\rdd9_mxf</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9Flavours.h">
+      <Filter>Header Files\rdd9_mxf</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9IndexTable.h">
       <Filter>Header Files\rdd9_mxf</Filter>
     </ClInclude>
@@ -588,6 +615,9 @@
       <Filter>Header Files\rdd9_mxf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9Track.h">
+      <Filter>Header Files\rdd9_mxf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9Validator.h">
       <Filter>Header Files\rdd9_mxf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9VBIDataTrack.h">
@@ -658,7 +688,13 @@
     <ClCompile Include="..\..\..\src\apps\AppXMLInfoWriter.cpp">
       <Filter>Source Files\apps</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\apps\AS10Helper.cpp">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\apps\AS11Helper.cpp">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\apps\FrameworkHelper.cpp">
       <Filter>Source Files\apps</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\apps\MCALabelHelper.cpp">
@@ -702,6 +738,27 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\as02\AS02Version.cpp">
       <Filter>Source Files\as02</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\as10\AS10CoreFramework.cpp">
+      <Filter>Source Files\as10</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\as10\AS10DMS.cpp">
+      <Filter>Source Files\as10</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\as10\AS10Info.cpp">
+      <Filter>Source Files\as10</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\as10\AS10MPEG2Validator.cpp">
+      <Filter>Source Files\as10</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\as10\AS10ShimNames.cpp">
+      <Filter>Source Files\as10</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\as10\AS10RDD9Validator.cpp">
+      <Filter>Source Files\as10</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\as10\AS10WriterHelper.cpp">
+      <Filter>Source Files\as10</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\as11\AS11CoreFramework.cpp">
       <Filter>Source Files\as11</Filter>
@@ -916,6 +973,9 @@
     <ClCompile Include="..\..\..\src\mxf_helper\MPEG2LGMXFDescriptorHelper.cpp">
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_helper\MPEG2Validator.cpp">
+      <Filter>Source Files\mxf_helper</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_helper\MXFDescriptorHelper.cpp">
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
@@ -1070,6 +1130,9 @@
       <Filter>Source Files\rdd9_mxf</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9Track.cpp">
+      <Filter>Source Files\rdd9_mxf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9Validator.cpp">
       <Filter>Source Files\rdd9_mxf</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9VBIDataTrack.cpp">

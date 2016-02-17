@@ -82,7 +82,6 @@
     <ClInclude Include="bmx_scm_version.h" />
     <ClInclude Include="..\..\..\include\bmx\BitBuffer.h" />
     <ClInclude Include="..\..\..\include\bmx\BMXException.h" />
-    <ClInclude Include="..\..\..\include\bmx\BMXShimNames.h" />
     <ClInclude Include="..\..\..\include\bmx\BMXTypes.h" />
     <ClInclude Include="..\..\..\include\bmx\ByteArray.h" />
     <ClInclude Include="..\..\..\include\bmx\Checksum.h" />
@@ -108,7 +107,7 @@
     <ClInclude Include="..\..\..\include\bmx\apps\AppXMLInfoWriter.h" />
     <ClInclude Include="..\..\..\include\bmx\apps\AS10Helper.h" />
     <ClInclude Include="..\..\..\include\bmx\apps\AS11Helper.h" />
-    <ClInclude Include="..\..\..\include\bmx\apps\FWHelper.h" />
+    <ClInclude Include="..\..\..\include\bmx\apps\FrameworkHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\apps\MCALabelHelper.h" />
     <ClInclude Include="..\..\..\src\apps\ps_avci_header_data.h" />
     <ClInclude Include="..\..\..\include\bmx\as02\AS02AVCITrack.h" />
@@ -124,11 +123,15 @@
     <ClInclude Include="..\..\..\include\bmx\as02\AS02Track.h" />
     <ClInclude Include="..\..\..\include\bmx\as02\AS02UncTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\as02\AS02Version.h" />
-    <ClInclude Include="..\..\..\include\bmx\as11\as10_extensions_data_model.h" />
-    <ClInclude Include="..\..\..\include\bmx\as11\AS10CoreFramework.h" />
-    <ClInclude Include="..\..\..\include\bmx\as11\AS10DMS.h" />
-    <ClInclude Include="..\..\..\include\bmx\as11\AS10Info.h" />
-    <ClInclude Include="..\..\..\include\bmx\as11\AS10WriterHelper.h" />
+    <ClInclude Include="..\..\..\src\as10\as10_shims.h" />
+    <ClInclude Include="..\..\..\include\bmx\as10\as10_extensions_data_model.h" />
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10CoreFramework.h" />
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10DMS.h" />
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10Info.h" />
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10MPEG2Validator.h" />
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10ShimNames.h" />
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10RDD9Validator.h" />
+    <ClInclude Include="..\..\..\include\bmx\as10\AS10WriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\as11\as11_extensions_data_model.h" />
     <ClInclude Include="..\..\..\include\bmx\as11\AS11CoreFramework.h" />
     <ClInclude Include="..\..\..\include\bmx\as11\AS11DMS.h" />
@@ -186,8 +189,10 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\D10MXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\DataMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\DVMXFDescriptorHelper.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\EssenceValidator.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MJPEGMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MPEG2LGMXFDescriptorHelper.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\MPEG2Validator.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MXFFileFactory.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\PictureMXFDescriptorHelper.h" />
@@ -242,6 +247,7 @@
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9MPEG2LGTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9PCMTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9Track.h" />
+    <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9Validator.h" />
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9VBIDataTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\st436\RDD6BitBuffer.h" />
     <ClInclude Include="..\..\..\include\bmx\st436\RDD6Metadata.h" />
@@ -256,7 +262,6 @@
     <ClInclude Include="..\..\..\include\bmx\wave\WaveWriter.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\AVCIWriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\D10WriterHelper.h" />
-    <ClInclude Include="..\..\..\include\bmx\writer_helper\MPEG2LGWriterAS10Shims.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\MPEG2LGWriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\XMLWriterHelper.h" />
   </ItemGroup>
@@ -267,7 +272,9 @@
     <ClCompile Include="..\..\..\src\apps\AppTextInfoWriter.cpp" />
     <ClCompile Include="..\..\..\src\apps\AppUtils.cpp" />
     <ClCompile Include="..\..\..\src\apps\AppXMLInfoWriter.cpp" />
-    <ClCompile Include="..\..\..\src\apps\AS1nHelper.cpp" />
+    <ClCompile Include="..\..\..\src\apps\AS10Helper.cpp" />
+    <ClCompile Include="..\..\..\src\apps\AS11Helper.cpp" />
+    <ClCompile Include="..\..\..\src\apps\FrameworkHelper.cpp" />
     <ClCompile Include="..\..\..\src\apps\MCALabelHelper.cpp" />
     <ClCompile Include="..\..\..\src\as02\AS02AVCITrack.cpp" />
     <ClCompile Include="..\..\..\src\as02\AS02Bundle.cpp" />
@@ -282,10 +289,13 @@
     <ClCompile Include="..\..\..\src\as02\AS02Track.cpp" />
     <ClCompile Include="..\..\..\src\as02\AS02UncTrack.cpp" />
     <ClCompile Include="..\..\..\src\as02\AS02Version.cpp" />
-    <ClCompile Include="..\..\..\src\as11\AS10CoreFramework.cpp" />
-    <ClCompile Include="..\..\..\src\as11\AS10DMS.cpp" />
-    <ClCompile Include="..\..\..\src\as11\AS10Info.cpp" />
-    <ClCompile Include="..\..\..\src\as11\AS10WriterHelper.cpp" />
+    <ClCompile Include="..\..\..\src\as10\AS10CoreFramework.cpp" />
+    <ClCompile Include="..\..\..\src\as10\AS10DMS.cpp" />
+    <ClCompile Include="..\..\..\src\as10\AS10Info.cpp" />
+    <ClCompile Include="..\..\..\src\as10\AS10MPEG2Validator.cpp" />
+    <ClCompile Include="..\..\..\src\as10\AS10ShimNames.cpp" />
+    <ClCompile Include="..\..\..\src\as10\AS10RDD9Validator.cpp" />
+    <ClCompile Include="..\..\..\src\as10\AS10WriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\as11\AS11CoreFramework.cpp" />
     <ClCompile Include="..\..\..\src\as11\AS11DMS.cpp" />
     <ClCompile Include="..\..\..\src\as11\AS11Info.cpp" />
@@ -357,6 +367,7 @@
     <ClCompile Include="..\..\..\src\mxf_helper\DVMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\MJPEGMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\MPEG2LGMXFDescriptorHelper.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_helper\MPEG2Validator.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\MXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\MXFFileFactory.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\PictureMXFDescriptorHelper.cpp" />
@@ -409,6 +420,7 @@
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9MPEG2LGTrack.cpp" />
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9PCMTrack.cpp" />
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9Track.cpp" />
+    <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9Validator.cpp" />
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9VBIDataTrack.cpp" />
     <ClCompile Include="..\..\..\src\st436\RDD6BitBuffer.cpp" />
     <ClCompile Include="..\..\..\src\st436\RDD6Metadata.cpp" />

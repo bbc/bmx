@@ -45,8 +45,10 @@ using namespace bmx;
 
 #define PICTURE_START_CODE      0x00000100
 #define SEQUENCE_HEADER_CODE    0x000001b3
-#define SEQUENCE_EXT_CODE       0x000001b5
+#define EXTENSION_START_CODE    0x000001b5
 #define GROUP_HEADER_CODE       0x000001b8
+#define MIN_SLICE_START_CODE    0x00000101
+#define MAX_SLICE_START_CODE    0x000001af
 
 
 typedef struct
@@ -57,8 +59,8 @@ typedef struct
 
 static const AspectRatioMap ASPECT_RATIO_MAP[] =
 {
-    {0x02,  {4,  3}},
-    {0x03,  {16, 9}},
+    {0x02,  {  4,   3}},
+    {0x03,  { 16,   9}},
     {0x04,  {221, 100}},
 };
 
@@ -85,25 +87,29 @@ static const FrameRateMap FRAME_RATE_MAP[] =
 
 MPEG2EssenceParser::MPEG2EssenceParser()
 {
-    Reset();
+    ResetFrameSize();
+    ResetFrameInfo();
 
-	mOffset = 0;
-	mState = mVBVDelay = 0xffffffff;
+    mHorizontalSize = 0;
+    mVerticalSize = 0;
+    mHaveKnownAspectRatio = false;
+    mAspectRatio = ZERO_RATIONAL;
+    mHaveKnownFrameRate = false;
+    mFrameRate = ZERO_RATIONAL;
+    mBitRate = 0;
+    mLowDelay = false;
+    mProfileAndLevel = 0;
+    mIsProgressive = false;
+    mChromaFormat = 0;
 
-	mHorizontalSize = mVerticalSize = mBitRate = 
-	mVideoFormat = mDHorizontalSize = mDVerticalSize = 
-    mChromaFormat = mColorPrimaries = mTransferCharacteristics = mMatrixCoeffs = mTemporalReference =
-	mIsTFF = mPicStructure = mProgressiveFrame = 0;
+    mVideoFormat = 0;
+    mColorPrimaries = 0;
+    mTransferCharacteristics = 0;
+    mMatrixCoeffs = 0;
+    mDHorizontalSize = 0;
+    mDVerticalSize = 0;
 
-	mHaveKnownAspectRatio = mHaveKnownFramRate = mIsProgressive = mLowDelay = mClosedGOP =
-    mHaveSequenceHeader = mHaveSequenceExtention = mHaveDisplayExtention = mHavePicCodingExtention = mHaveColorDescription =
-	mHaveGOPHeader = false;
-
-	mAspectRatio = mFrameRate = ZERO_RATIONAL;
-
-	mProfileAndLevel = 0 ;
-
-	mFrameType = UNKNOWN_FRAME_TYPE;
+    mClosedGOP = false;
 }
 
 MPEG2EssenceParser::~MPEG2EssenceParser()
@@ -150,7 +156,7 @@ uint32_t MPEG2EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t 
                 (mState == PICTURE_START_CODE && mPictureStart))
             {
                 uint32_t frame_size = mOffset - 3;
-                Reset();
+                ResetFrameSize();
                 return frame_size;
             }
 
@@ -161,7 +167,7 @@ uint32_t MPEG2EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t 
         else if (mOffset == 3)
         {
             // not a valid frame start
-            Reset();
+            ResetFrameSize();
             return ESSENCE_PARSER_NULL_FRAME_SIZE;
         }
 
@@ -175,10 +181,7 @@ void MPEG2EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data
 {
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
-    mHaveSequenceHeader = false;
-    mHaveGOPHeader = false;
-    mFrameType = UNKNOWN_FRAME_TYPE;
-    mTemporalReference = 0;
+    ResetFrameInfo();
 
     size_t i;
     uint32_t state = 0xffffffff;
@@ -204,18 +207,19 @@ void MPEG2EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data
 
             uint8_t frame_rate_code = get_bits(data, data_size, (offset - 3) * 8 + 60, 4);
             mFrameRate = ZERO_RATIONAL;
-			mHaveKnownFramRate = false;
+            mHaveKnownFrameRate = false;
             for (i = 0; i < BMX_ARRAY_SIZE(FRAME_RATE_MAP); i++) {
                 if (frame_rate_code == FRAME_RATE_MAP[i].code) {
                     mFrameRate = FRAME_RATE_MAP[i].frame_rate;
-					mHaveKnownFramRate = true;
+                    mHaveKnownFrameRate = true;
                     break;
                 }
             }
 
             mBitRate = get_bits(data, data_size, (offset - 3) * 8 + 64, 18);
-        } else if (state == SEQUENCE_EXT_CODE) {
-            if (get_bits(data, data_size, (offset - 3) * 8 + 32, 4) == 0x01) { // sequence extension id
+        } else if (state == EXTENSION_START_CODE) {
+            uint8_t ext_id = get_bits(data, data_size, (offset - 3) * 8 + 32, 4);
+            if (ext_id == 0x01) { // sequence extension id
                 mHorizontalSize |= get_bits(data, data_size, (offset - 3) * 8 + 47, 2) << 12;
                 mVerticalSize |= get_bits(data, data_size, (offset - 3) * 8 + 49, 2) << 12;
                 mBitRate |= get_bits(data, data_size, (offset - 3) * 8 + 51, 12) << 18;
@@ -228,6 +232,14 @@ void MPEG2EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data
 
                 mProfileAndLevel = get_bits(data, data_size, (offset - 3) * 8 + 36, 8);
                 mIsProgressive = (get_bits(data, data_size, (offset - 3) * 8 + 44, 1) == 1);
+                mChromaFormat = get_bits(data, data_size, (offset - 3) * 8 + 45, 2);
+                switch (mChromaFormat)
+                {
+                    case 2 : mChromaFormat = 422; break;
+                    case 1 : mChromaFormat = 420; break;
+                    case 3 : mChromaFormat = 444; break;
+                    default: mChromaFormat = 0;   break;
+                }
             }
         } else if (state == GROUP_HEADER_CODE) {
             mHaveGOPHeader = true;
@@ -249,6 +261,7 @@ void MPEG2EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data
                     mFrameType = UNKNOWN_FRAME_TYPE;
                     break;
             }
+            mVBVDelay = get_bits(data, data_size, (offset - 3) * 8 + 45, 16);
 
             break;
         }
@@ -257,157 +270,159 @@ void MPEG2EssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data
     }
 }
 
-int MPEG2EssenceParser::ParseFrameAllInfo(const unsigned char *data, uint32_t data_size)
+void MPEG2EssenceParser::ParseFrameAllInfo(const unsigned char *data, uint32_t data_size)
 {
-	BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
+    BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
-	mHaveSequenceHeader = mHaveSequenceExtention = mHaveDisplayExtention = mHavePicCodingExtention = mHaveGOPHeader = false;
-	mFrameType = UNKNOWN_FRAME_TYPE;
-	mTemporalReference = 0;
+    ResetFrameInfo();
 
-	int extType = 0; 
+    size_t i;
+    uint32_t state = 0xffffffff;
+    uint32_t offset = 0;
 
-	size_t i;
-	uint32_t state = 0xffffffff;
-	uint32_t offset = 0;
-	uint32_t seqExt = 0;
+    while (offset < data_size) {
+        state = (state << 8) | data[offset];
+        if (state == SEQUENCE_HEADER_CODE) {
+            mHaveSequenceHeader = true;
 
-	while (offset < data_size) {
-		state = (state << 8) | data[offset];
-		if (state == SEQUENCE_HEADER_CODE) {
-			mHaveSequenceHeader = true;
-			extType = 1;
-			mHorizontalSize = get_bits(data, data_size, (offset - 3) * 8 + 32, 12);
-			mVerticalSize = get_bits(data, data_size, (offset - 3) * 8 + 44, 12);
+            mHorizontalSize = get_bits(data, data_size, (offset - 3) * 8 + 32, 12);
+            mVerticalSize = get_bits(data, data_size, (offset - 3) * 8 + 44, 12);
 
-			// note that MPEG-2 aspect ratio isn't quite the same as MXF's aspect ratio
-			uint8_t aspect_ratio_info = get_bits(data, data_size, (offset - 3) * 8 + 56, 4);
-			mHaveKnownAspectRatio = false;
-			mAspectRatio = ZERO_RATIONAL;
-			for (i = 0; i < BMX_ARRAY_SIZE(ASPECT_RATIO_MAP); i++) {
-				if (aspect_ratio_info == ASPECT_RATIO_MAP[i].info) {
-					mHaveKnownAspectRatio = true;
-					mAspectRatio = ASPECT_RATIO_MAP[i].aspect_ratio;
-					break;
-				}
-			}
+            // note that MPEG-2 aspect ratio isn't quite the same as MXF's aspect ratio
+            uint8_t aspect_ratio_info = get_bits(data, data_size, (offset - 3) * 8 + 56, 4);
+            mHaveKnownAspectRatio = false;
+            mAspectRatio = ZERO_RATIONAL;
+            for (i = 0; i < BMX_ARRAY_SIZE(ASPECT_RATIO_MAP); i++) {
+                if (aspect_ratio_info == ASPECT_RATIO_MAP[i].info) {
+                    mHaveKnownAspectRatio = true;
+                    mAspectRatio = ASPECT_RATIO_MAP[i].aspect_ratio;
+                    break;
+                }
+            }
 
-			uint8_t frame_rate_code = get_bits(data, data_size, (offset - 3) * 8 + 60, 4);
-			mFrameRate = ZERO_RATIONAL;
-			mHaveKnownFramRate = false;
-			for (i = 0; i < BMX_ARRAY_SIZE(FRAME_RATE_MAP); i++) {
-				if (frame_rate_code == FRAME_RATE_MAP[i].code) {
-					mFrameRate = FRAME_RATE_MAP[i].frame_rate;
-					mHaveKnownFramRate = true;
-					break;
-				}
-			}
+            uint8_t frame_rate_code = get_bits(data, data_size, (offset - 3) * 8 + 60, 4);
+            mFrameRate = ZERO_RATIONAL;
+            mHaveKnownFrameRate = false;
+            for (i = 0; i < BMX_ARRAY_SIZE(FRAME_RATE_MAP); i++) {
+                if (frame_rate_code == FRAME_RATE_MAP[i].code) {
+                    mFrameRate = FRAME_RATE_MAP[i].frame_rate;
+                    mHaveKnownFrameRate = true;
+                    break;
+                }
+            }
 
-			mBitRate = get_bits(data, data_size, (offset - 3) * 8 + 64, 18);
-		}
-		else if (state == SEQUENCE_EXT_CODE) {
-			seqExt = get_bits(data, data_size, (offset - 3) * 8 + 32, 4);
-			if (seqExt == 0x01) { // sequence extension id
-				mHaveSequenceExtention = true;
-				extType = 2;
+            mBitRate = get_bits(data, data_size, (offset - 3) * 8 + 64, 18);
+        }
+        else if (state == EXTENSION_START_CODE) {
+            uint8_t ext_id = get_bits(data, data_size, (offset - 3) * 8 + 32, 4);
+            if (ext_id == 0x01) { // sequence extension id
+                mHaveSequenceExtension = true;
 
-				mHorizontalSize |= get_bits(data, data_size, (offset - 3) * 8 + 47, 2) << 12;
-				mVerticalSize |= get_bits(data, data_size, (offset - 3) * 8 + 49, 2) << 12;
-				mBitRate |= get_bits(data, data_size, (offset - 3) * 8 + 51, 12) << 18;
-				mLowDelay = get_bits(data, data_size, (offset - 3) * 8 + 72, 1);
+                mHorizontalSize |= get_bits(data, data_size, (offset - 3) * 8 + 47, 2) << 12;
+                mVerticalSize |= get_bits(data, data_size, (offset - 3) * 8 + 49, 2) << 12;
+                mBitRate |= get_bits(data, data_size, (offset - 3) * 8 + 51, 12) << 18;
+                mLowDelay = get_bits(data, data_size, (offset - 3) * 8 + 72, 1);
 
-				if (mFrameRate.numerator > 0) {
-					mFrameRate.numerator *= get_bits(data, data_size, (offset - 3) * 8 + 73, 2) + 1;
-					mFrameRate.denominator *= get_bits(data, data_size, (offset - 3) * 8 + 75, 5) + 1;
-				}
+                if (mFrameRate.numerator > 0) {
+                    mFrameRate.numerator *= get_bits(data, data_size, (offset - 3) * 8 + 73, 2) + 1;
+                    mFrameRate.denominator *= get_bits(data, data_size, (offset - 3) * 8 + 75, 5) + 1;
+                }
 
-				mProfileAndLevel = get_bits(data, data_size, (offset - 3) * 8 + 36, 8);				
-				mIsProgressive = (get_bits(data, data_size, (offset - 3) * 8 + 44, 1) == 1);	
-				mChromaFormat = get_bits(data, data_size, (offset - 3) * 8 + 45, 2); 
-				switch (mChromaFormat)
-				{
-				  case 2    : mChromaFormat = 422; break; 
-				  case 1    : mChromaFormat = 420; break;
-				  case 3    : mChromaFormat = 444; break;
-				  default   : mChromaFormat = 0;   break;
-				}
-			}
-			else if (seqExt == 0x10)  //sequence display extension
-			{ 
-				mHaveDisplayExtention = true;
-				extType = 3;
-               
-				//PAL 001 NTSC 010 SECAM 011 MAC 100
-				mVideoFormat = get_bits(data, data_size, (offset - 3) * 8 + 36, 3);
+                mProfileAndLevel = get_bits(data, data_size, (offset - 3) * 8 + 36, 8);
+                mIsProgressive = (get_bits(data, data_size, (offset - 3) * 8 + 44, 1) == 1);
+                mChromaFormat = get_bits(data, data_size, (offset - 3) * 8 + 45, 2);
+                switch (mChromaFormat)
+                {
+                    case 2 : mChromaFormat = 422; break;
+                    case 1 : mChromaFormat = 420; break;
+                    case 3 : mChromaFormat = 444; break;
+                    default: mChromaFormat = 0;   break;
+                }
+            }
+            else if (ext_id == 0x02) // sequence display extension
+            {
+                mHaveDisplayExtension = true;
 
-				if (get_bits(data, data_size, (offset - 3) * 8 + 39, 1) == 1)
-				{
-					mHaveColorDescription = true; 
-					// mColorPrimaries == mTransferCharacteristics == mMatrixCoeffs = 1 => BT.709, SMPTE 274M
-					// -- " -- = 0000 0101 => BT.470 system B, G, I
-					//         = 0000 0110 => SMPTE 170M
-					//         = 0000 0111 => SMPTE 240M
-					mColorPrimaries          = get_bits(data, data_size, (offset - 3) * 8 + 40, 8);
-					mTransferCharacteristics = get_bits(data, data_size, (offset - 3) * 8 + 48, 8);
-					mMatrixCoeffs			 = get_bits(data, data_size, (offset - 3) * 8 + 54, 8);
-				}
+                // PAL 001 NTSC 010 SECAM 011 MAC 100
+                mVideoFormat = get_bits(data, data_size, (offset - 3) * 8 + 36, 3);
 
-				mDHorizontalSize = get_bits(data, data_size, (offset - 3) * 8 + 64, 14);
-				mDVerticalSize   = get_bits(data, data_size, (offset - 3) * 8 + 80, 14);
-			}
-			else if (seqExt == 0x1000) //picture coding extension
-			{ 
-				mHavePicCodingExtention = true;
-				extType = 4;
+                if (get_bits(data, data_size, (offset - 3) * 8 + 39, 1) == 1)
+                {
+                    mHaveColorDescription = true;
+                    // mColorPrimaries == mTransferCharacteristics == mMatrixCoeffs = 1 => BT.709, SMPTE 274M
+                    // -- " -- = 0000 0101 => BT.470 system B, G, I
+                    //         = 0000 0110 => SMPTE 170M
+                    //         = 0000 0111 => SMPTE 240M
+                    mColorPrimaries          = get_bits(data, data_size, (offset - 3) * 8 + 40, 8);
+                    mTransferCharacteristics = get_bits(data, data_size, (offset - 3) * 8 + 48, 8);
+                    mMatrixCoeffs            = get_bits(data, data_size, (offset - 3) * 8 + 56, 8);
+                }
 
-				//tf=01 bf=10 frame=11 
-				mPicStructure = get_bits(data, data_size, (offset - 3) * 8 + 62, 2);
-				//if mIsProgressive == 0 => top or bottom
-				mIsTFF = get_bits(data, data_size, (offset - 3) * 8 + 64, 1);
-				//0 intelaced, 1 progessive
-				mProgressiveFrame = get_bits(data, data_size, (offset - 3) * 8 + 64, 1);
-			}
-		}
-		else if (state == GROUP_HEADER_CODE) {
-			mHaveGOPHeader = true;
-			mClosedGOP = get_bits(data, data_size, (offset - 3) * 8 + 57, 1);
-		}
-		else if (state == PICTURE_START_CODE) {
-			mTemporalReference = get_bits(data, data_size, (offset - 3) * 8 + 32, 10);
-			switch (get_bits(data, data_size, (offset - 3) * 8 + 42, 3))
-			{
-			case 0x01:
-				mFrameType = I_FRAME;
-				break;
-			case 0x02:
-				mFrameType = P_FRAME;
-				break;
-			case 0x03:
-				mFrameType = B_FRAME;
-				break;
-			default:
-				mFrameType = UNKNOWN_FRAME_TYPE;
-				break;
-			}
+                mDHorizontalSize = get_bits(data, data_size, (offset - 3) * 8 + 64, 14);
+                mDVerticalSize   = get_bits(data, data_size, (offset - 3) * 8 + 79, 14);
+            }
+            else if (ext_id == 0x08) // picture coding extension
+            {
+                mHavePicCodingExtension = true;
 
-			//!= 0xffff => const
-			mVBVDelay = get_bits(data, data_size, (offset - 3) * 8 + 45, 16);
+                // if mIsProgressive == 0 => top or bottom
+                mIsTFF = get_bits(data, data_size, (offset - 3) * 8 + 56, 1);
+            }
+        }
+        else if (state == GROUP_HEADER_CODE) {
+            mHaveGOPHeader = true;
+            mClosedGOP = get_bits(data, data_size, (offset - 3) * 8 + 57, 1);
+        }
+        else if (state == PICTURE_START_CODE) {
+            mTemporalReference = get_bits(data, data_size, (offset - 3) * 8 + 32, 10);
+            switch (get_bits(data, data_size, (offset - 3) * 8 + 42, 3))
+            {
+            case 0x01:
+                mFrameType = I_FRAME;
+                break;
+            case 0x02:
+                mFrameType = P_FRAME;
+                break;
+            case 0x03:
+                mFrameType = B_FRAME;
+                break;
+            default:
+                mFrameType = UNKNOWN_FRAME_TYPE;
+                break;
+            }
 
-			break;
-		}
+            //!= 0xffff => const
+            mVBVDelay = get_bits(data, data_size, (offset - 3) * 8 + 45, 16);
+        }
+        else if (state >= MIN_SLICE_START_CODE && state <= MAX_SLICE_START_CODE) {
+            break;
+        }
 
-		offset++;
-	}
-
-	return extType;
+        offset++;
+    }
 }
 
-void MPEG2EssenceParser::Reset()
+void MPEG2EssenceParser::ResetFrameSize()
 {
     mOffset = 0;
-    mState = mVBVDelay = 0xffffffff;
+    mState = 0xffffffff;
     mSequenceHeader = false;
     mGroupHeader = false;
     mPictureStart = false;
+}
+
+void MPEG2EssenceParser::ResetFrameInfo()
+{
+    mHaveSequenceHeader = false;
+    mHaveSequenceExtension = false;
+    mHaveDisplayExtension = false;
+    mHavePicCodingExtension = false;
+    mHaveColorDescription = false;
+    mHaveGOPHeader = false;
+
+    mFrameType = UNKNOWN_FRAME_TYPE;
+    mTemporalReference = 0;
+    mVBVDelay = 0xffffffff;
+    mIsTFF = false;
 }
 

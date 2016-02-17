@@ -156,6 +156,7 @@ public:
 public:
     int64_t GetDuration() const     { return mDuration; }
     int64_t GetStreamOffset() const { return mStreamOffset; }
+    bool RepeatInFooter() const     { return mRepeatInFooter; }
 
 public:
     void AddIndexEntry(uint32_t track_index, int64_t position, int8_t temporal_offset,
@@ -169,7 +170,7 @@ public:
 public:
     bool HaveSegments();
     bool HaveWrittenSegments();
-    void WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition, int flavour);
+    void WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition);
 
 private:
     void CreateDeltaEntries(const std::vector<uint32_t> &element_sizes);
@@ -177,7 +178,8 @@ private:
 
     void UpdateVBEIndex(const std::vector<uint32_t> &element_sizes);
 
-	void WriteVBESegments(mxfpp::File *mxf_file, std::vector<RDD9IndexTableSegment*> &segments, mxfpp::Partition *partition);
+    void WriteVBESegments(mxfpp::File *mxf_file, mxfpp::Partition *partition,
+                          std::vector<RDD9IndexTableSegment*> &segments);
 
 private:
     uint32_t mIndexSID;

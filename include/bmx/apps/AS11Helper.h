@@ -32,14 +32,18 @@
 #ifndef AS11_HELPER_H_
 #define AS11_HELPER_H_
 
-#include <bmx/apps/FWHelper.h>
+#include <vector>
+
+#include <bmx/apps/FrameworkHelper.h>
 #include <bmx/as11/AS11Info.h>
+#include <bmx/as11/AS11WriterHelper.h>
 #include <bmx/mxf_reader/MXFFileReader.h>
 
 
 
 namespace bmx
 {
+
 
 class AS11Helper
 {
@@ -55,6 +59,7 @@ public:
 
     void ReadSourceInfo(MXFFileReader *source_file);
 
+    bool SupportFrameworkType(const char *type_str);
     bool ParseFrameworkFile(const char *type_str, const char *filename);
     bool ParseSegmentationFile(const char *filename, Rational frame_rate);
     bool SetFrameworkProperty(const char *type_str, const char *name, const char *value);

@@ -35,6 +35,7 @@
 #include <bmx/rdd9_mxf/RDD9Track.h>
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
 #include <bmx/writer_helper/MPEG2LGWriterHelper.h>
+#include <bmx/mxf_helper/MPEG2Validator.h>
 #include <bmx/ByteArray.h>
 
 
@@ -53,7 +54,7 @@ public:
     void SetAspectRatio(Rational aspect_ratio);         // default 16/9
     void SetPartitionInterval(int64_t frame_count);     // default 0 (single partition)
     void SetAFD(uint8_t afd);                           // default not set
-	void SetMpegDescriptorsChecks(const char *shimname, const char *fname, int maxSameWarnMessages, bool printDefaults, bool looseChecks);
+    void SetValidator(EssenceValidator *validator);
 
 protected:
     virtual void PrepareWrite(uint8_t track_count);
@@ -63,6 +64,7 @@ protected:
 private:
     PictureMXFDescriptorHelper *mPictureDescriptorHelper;
     MPEG2LGWriterHelper mWriterHelper;
+    MPEG2Validator *mValidator;
 };
 
 

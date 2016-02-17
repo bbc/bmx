@@ -214,7 +214,7 @@ static void print_m2v_frame_info(AppInfoWriter *info_writer, EssenceParser *pars
                                  uint32_t frame_size, int64_t frame_num)
 {
     MPEG2EssenceParser *m2v_parser = dynamic_cast<MPEG2EssenceParser*>(parser);
-    m2v_parser->ParseFrameInfo(buffer->data, frame_size);
+    m2v_parser->ParseFrameAllInfo(buffer->data, frame_size);
 
     info_writer->StartArrayElement("frame", (size_t)frame_num);
 
@@ -225,11 +225,23 @@ static void print_m2v_frame_info(AppInfoWriter *info_writer, EssenceParser *pars
         info_writer->WriteIntegerItem("vertical_size", m2v_parser->GetVerticalSize());
         if (m2v_parser->HaveKnownAspectRatio())
             info_writer->WriteRationalItem("aspect_ratio", m2v_parser->GetAspectRatio());
-        info_writer->WriteRationalItem("frame_rate", m2v_parser->GetFrameRate());
+        if (m2v_parser->HaveKnownFrameRate())
+            info_writer->WriteRationalItem("frame_rate", m2v_parser->GetFrameRate());
         info_writer->WriteIntegerItem("bit_rate", m2v_parser->GetBitRate());
         info_writer->WriteBoolItem("low_delay", m2v_parser->IsLowDelay());
         info_writer->WriteIntegerItem("profile_and_level", m2v_parser->GetProfileAndLevel());
         info_writer->WriteBoolItem("progressive", m2v_parser->IsProgressive());
+        info_writer->WriteIntegerItem("chroma_format", m2v_parser->GetChromaFormat());
+    }
+    if (m2v_parser->HaveDisplayExtension()) {
+        info_writer->WriteIntegerItem("video_format", m2v_parser->GetVideoFormat());
+        info_writer->WriteIntegerItem("display_horiz_size", m2v_parser->GetDHorizontalSize());
+        info_writer->WriteIntegerItem("display_vert_size", m2v_parser->GetDVerticalSize());
+        if (m2v_parser->HaveColorDescription()) {
+            info_writer->WriteIntegerItem("color_primaries", m2v_parser->GetColorPrimaries());
+            info_writer->WriteIntegerItem("transfer_chars", m2v_parser->GetTransferCharacteristics());
+            info_writer->WriteIntegerItem("matrix_coeffs", m2v_parser->GetMatrixCoeffs());
+        }
     }
     info_writer->WriteBoolItem("gop_header", m2v_parser->HaveGOPHeader());
     if (m2v_parser->HaveGOPHeader())
@@ -242,6 +254,9 @@ static void print_m2v_frame_info(AppInfoWriter *info_writer, EssenceParser *pars
         default:      info_writer->WriteStringItem("frame_type", "Unknown"); break;
     }
     info_writer->WriteIntegerItem("temporal_ref", m2v_parser->GetTemporalReference());
+    info_writer->WriteIntegerItem("vbv_delay", m2v_parser->GetVBVDelay());
+    if (m2v_parser->HavePicCodingExtension())
+        info_writer->WriteBoolItem("top_field_first", m2v_parser->IsTFF());
 
     info_writer->EndArrayElement();
 }
@@ -429,7 +444,7 @@ int main(int argc, const char **argv)
                 parser = new MPEG2EssenceParser();
                 print_frame_info = print_m2v_frame_info;
                 if (text_info_writer)
-                    text_info_writer->PushItemValueIndent(strlen("profile_and_level "));
+                    text_info_writer->PushItemValueIndent(strlen("display_horiz_size "));
                 break;
             case VC3_INPUT:
                 parser = new VC3EssenceParser();

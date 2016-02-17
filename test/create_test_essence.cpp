@@ -106,6 +106,7 @@ typedef enum
     TYPE_VC3_720P_1258,
     TYPE_VC3_1080P_1259,
     TYPE_VC3_1080I_1260,
+    TYPE_AS10_MPEG2LG_422P_HL_1080I,
     TYPE_END,
 } EssenceType;
 
@@ -928,6 +929,9 @@ int main(int argc, const char **argv)
         case TYPE_MPEG2LG_422P_HL_720P:
         case TYPE_MPEG2LG_MP_HL_720P:
             write_mpeg2lg(file, type, duration, true, false);
+            break;
+        case TYPE_AS10_MPEG2LG_422P_HL_1080I:
+            write_mpeg2lg(file, TYPE_MPEG2LG_422P_HL_1080I, duration, false, true);
             break;
         case TYPE_UNC_SD:
         case TYPE_UNC_HD_1080I:

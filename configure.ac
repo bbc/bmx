@@ -273,6 +273,7 @@ AC_CONFIG_FILES([
 	test/Makefile
 	test/ard_zdf_hdf/Makefile
 	test/as02/Makefile
+	test/as10/Makefile
 	test/as11/Makefile
 	test/bmxtranswrap/Makefile
 	test/mca/Makefile
@@ -294,6 +295,7 @@ AC_CONFIG_FILES([
 	msvc_build/Makefile
 	msvc_build/vs10/Makefile
 	meta/Makefile
+	meta/as10/Makefile
 	meta/as11/Makefile
 	meta/mxf2raw/Makefile
 	meta/rdd6/Makefile

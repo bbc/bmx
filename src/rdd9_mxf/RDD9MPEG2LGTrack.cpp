@@ -53,6 +53,7 @@ RDD9MPEG2LGTrack::RDD9MPEG2LGTrack(RDD9File *file, uint32_t track_index, uint32_
 {
     mPictureDescriptorHelper = dynamic_cast<PictureMXFDescriptorHelper*>(mDescriptorHelper);
     BMX_ASSERT(mPictureDescriptorHelper);
+    mValidator = 0;
 
     mPictureDescriptorHelper->SetAspectRatio(ASPECT_RATIO_16_9);
     mTrackNumber = MXF_MPEG_PICT_TRACK_NUM(0x01, MXF_MPEG_PICT_FRAME_WRAPPED_EE_TYPE, 0x00);
@@ -61,6 +62,7 @@ RDD9MPEG2LGTrack::RDD9MPEG2LGTrack(RDD9File *file, uint32_t track_index, uint32_
 
 RDD9MPEG2LGTrack::~RDD9MPEG2LGTrack()
 {
+    delete mValidator;
 }
 
 void RDD9MPEG2LGTrack::SetAspectRatio(Rational aspect_ratio)
@@ -77,15 +79,18 @@ void RDD9MPEG2LGTrack::SetAFD(uint8_t afd)
     mPictureDescriptorHelper->SetAFD(afd);
 }
 
-void RDD9MPEG2LGTrack::SetMpegDescriptorsChecks(const char *shimname, const char *fname, int maxSameWarnMessages, bool printDefaults, bool looseChecks)
+void RDD9MPEG2LGTrack::SetValidator(EssenceValidator *validator)
 {
-	if (shimname != NULL)
-		mWriterHelper.shim(shimname);
+    MPEG2Validator *mpeg2_validator = dynamic_cast<MPEG2Validator*>(validator);
+    BMX_ASSERT(mpeg2_validator);
+    MPEG2LGMXFDescriptorHelper *mpeg2_writer_helper = dynamic_cast<MPEG2LGMXFDescriptorHelper*>(mPictureDescriptorHelper);
+    BMX_ASSERT(mpeg2_writer_helper);
 
-	if (fname != NULL)
-		mWriterHelper.ParseDescriptorRefValues(fname); 
-	
-	mWriterHelper.DoAllHeadersChecks(true, maxSameWarnMessages, printDefaults, looseChecks);
+    delete mValidator;
+    mValidator = mpeg2_validator;
+
+    mpeg2_validator->SetDescriptorHelper(mpeg2_writer_helper);
+    mpeg2_validator->SetWriterHelper(&mWriterHelper);
 }
 
 void RDD9MPEG2LGTrack::PrepareWrite(uint8_t track_count)
@@ -102,6 +107,9 @@ void RDD9MPEG2LGTrack::WriteSamplesInt(const unsigned char *data, uint32_t size,
     BMX_CHECK(data && size);
 
     mWriterHelper.ProcessFrame(data, size);
+
+    if (mValidator)
+        mValidator->ProcessFrame(data, size);
 
 
     // update previous index entry if temporal offset now known
@@ -144,7 +152,9 @@ void RDD9MPEG2LGTrack::CompleteWrite()
             break;
     }
 
-	mWriterHelper.ReportCheckedHeaders();
+    if (mValidator)
+        mValidator->CompleteWrite();
+
 
     // update the file descriptor with info extracted from the essence data
     MPEGVideoDescriptor *mpeg_descriptor = dynamic_cast<MPEGVideoDescriptor*>(mDescriptorHelper->GetFileDescriptor());

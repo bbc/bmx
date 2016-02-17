@@ -8,6 +8,7 @@
   <xs:include schemaLocation="bbc_archive_info.xsd"/>
   <xs:include schemaLocation="avid_info.xsd"/>
   <xs:include schemaLocation="as11_info.xsd"/>
+  <xs:include schemaLocation="as10_info.xsd"/>
 
   <xs:element name="bmx">
     <xs:complexType>

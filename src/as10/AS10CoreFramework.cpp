@@ -1,8 +1,7 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2016, British Broadcasting Corporation
  * All Rights Reserved.
  *
- * Author: Philip de Nier
  * AS10 contribution : Andrei Klotchkivski
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,15 +33,12 @@
 #include "config.h"
 #endif
 
-#include <cstring>
-
 #include <libMXF++/MXF.h>
 
 #include <bmx/as10/AS10CoreFramework.h>
 #include <bmx/as10/AS10DMS.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
-
 
 using namespace std;
 using namespace bmx;
@@ -70,89 +66,110 @@ AS10CoreFramework::AS10CoreFramework(HeaderMetadata *header_metadata, ::MXFMetad
 AS10CoreFramework::~AS10CoreFramework()
 {}
 
-bool AS10CoreFramework::HaveProperty(char *name)
-{
-	std::string strname = name;
-	if (strname == "ShimName")
-	    return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10ShimName));
-	if (strname == "Type")
-		return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10Type));
-	if (strname == "MainTitle")
-		return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10MainTitle));
-	if (strname == "SubTitle")
-		return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10SubTitle));
-	if (strname == "TitleDescription")
-		return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10TitleDescription));
-	if (strname == "OrganizationName")
-		return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10OrganizationName));
-	if (strname == "PersonName")
-		return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10PersonName));
-	if (strname == "LocationDescription")
-		return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10LocationDescription));
-	if (strname == "CommonSpanningID")
-		return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10CommonSpanningID));
-	if (strname == "SpanningNumber")
-		return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10SpanningNumber));
-	if (strname == "CumulativeDuration")
-		return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10CumulativeDuration));
-	return false;
-}
-
 string AS10CoreFramework::GetShimName()
 {
-	return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10ShimName));
+    return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10ShimName));
 }
+
+bool AS10CoreFramework::HaveType()
+{
+    return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10Type));
+}
+
 string AS10CoreFramework::GetType()
 {
-	return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10Type));
+    return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10Type));
+}
+
+bool AS10CoreFramework::HaveMainTitle()
+{
+    return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10MainTitle));
 }
 
 string AS10CoreFramework::GetMainTitle()
 {
-	return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10MainTitle));
+    return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10MainTitle));
+}
+
+bool AS10CoreFramework::HaveSubTitle()
+{
+    return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10SubTitle));
 }
 
 string AS10CoreFramework::GetSubTitle()
 {
-	return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10SubTitle));
+    return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10SubTitle));
+}
+
+bool AS10CoreFramework::HaveTitleDescription()
+{
+    return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10TitleDescription));
 }
 
 string AS10CoreFramework::GetTitleDescription()
 {
-	return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10TitleDescription));
+    return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10TitleDescription));
+}
+
+bool AS10CoreFramework::HaveOrganizationName()
+{
+    return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10OrganizationName));
 }
 
 string AS10CoreFramework::GetOrganizationName()
 {
-	return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10OrganizationName));
+    return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10OrganizationName));
+}
+
+bool AS10CoreFramework::HavePersonName()
+{
+    return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10PersonName));
 }
 
 string AS10CoreFramework::GetPersonName()
 {
-	return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10PersonName));
+    return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10PersonName));
+}
+
+bool AS10CoreFramework::HaveLocationDescription()
+{
+    return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10LocationDescription));
 }
 
 string AS10CoreFramework::GetLocationDescription()
 {
-	return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10LocationDescription));
+    return getStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10LocationDescription));
+}
+
+bool AS10CoreFramework::HaveSpanningNumber()
+{
+    return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10SpanningNumber));
 }
 
 uint16_t AS10CoreFramework::GetSpanningNumber()
 {
-	return getUInt16Item(&MXF_ITEM_K(AS10CoreFramework, AS10SpanningNumber));
+    return getUInt16Item(&MXF_ITEM_K(AS10CoreFramework, AS10SpanningNumber));
+}
+
+bool AS10CoreFramework::HaveCommonSpanningID()
+{
+    return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10CommonSpanningID));
 }
 
 mxfUMID AS10CoreFramework::GetCommonSpanningID()
 {
-	return getUMIDItem(&MXF_ITEM_K(AS10CoreFramework, AS10CommonSpanningID));
+    return getUMIDItem(&MXF_ITEM_K(AS10CoreFramework, AS10CommonSpanningID));
+}
+
+bool AS10CoreFramework::HaveCumulativeDuration()
+{
+    return haveItem(&MXF_ITEM_K(AS10CoreFramework, AS10CumulativeDuration));
 }
 
 int64_t AS10CoreFramework::GetCumulativeDuration()
 {
-	return getPositionItem(&MXF_ITEM_K(AS10CoreFramework, AS10CumulativeDuration));
+    return getPositionItem(&MXF_ITEM_K(AS10CoreFramework, AS10CumulativeDuration));
 }
-
-// setters 
 
 void AS10CoreFramework::SetShimName(string value)
 {
@@ -161,7 +178,7 @@ void AS10CoreFramework::SetShimName(string value)
 
 void AS10CoreFramework::SetType(string value)
 {
-	setStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10Type), value);
+    setStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10Type), value);
 }
 
 void AS10CoreFramework::SetMainTitle(string value)
@@ -176,7 +193,7 @@ void AS10CoreFramework::SetSubTitle(string value)
 
 void AS10CoreFramework::SetTitleDescription(string value)
 {
-	setStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10TitleDescription), value);
+    setStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10TitleDescription), value);
 }
 
 void AS10CoreFramework::SetOrganizationName(string value)
@@ -191,20 +208,20 @@ void AS10CoreFramework::SetPersonName(string value)
 
 void AS10CoreFramework::SetSpanningNumber(uint16_t value)
 {
-	setUInt16Item(&MXF_ITEM_K(AS10CoreFramework, AS10SpanningNumber), value);
+    setUInt16Item(&MXF_ITEM_K(AS10CoreFramework, AS10SpanningNumber), value);
 }
 
 void AS10CoreFramework::SetLocationDescription(string value)
 {
-	setStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10LocationDescription), value);
+    setStringItem(&MXF_ITEM_K(AS10CoreFramework, AS10LocationDescription), value);
 }
 
- void AS10CoreFramework::SetCommonSpanningID(mxfUMID value)
+void AS10CoreFramework::SetCommonSpanningID(mxfUMID value)
 {
-	setUMIDItem(&MXF_ITEM_K(AS10CoreFramework, AS10CommonSpanningID), value);
+    setUMIDItem(&MXF_ITEM_K(AS10CoreFramework, AS10CommonSpanningID), value);
 }
 
- void AS10CoreFramework::SetCumulativeDuration(int64_t value)
- {
-	 setPositionItem(&MXF_ITEM_K(AS10CoreFramework, AS10CumulativeDuration), value);
- }
+void AS10CoreFramework::SetCumulativeDuration(int64_t value)
+{
+    setPositionItem(&MXF_ITEM_K(AS10CoreFramework, AS10CumulativeDuration), value);
+}

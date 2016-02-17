@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AMWA AS-10 Dictionary -->
+<MXFDictionary>
+
+    <MXFLabels>
+        <AS10CoreSchemeLabel detail="AS-10 Core DM Scheme" ul="06 0e 2b 34 04 01 01 01 0d 01 07 01 0a 01 00 00"/>
+    </MXFLabels>
+
+		<AS10CoreFramework base="DM_Framework" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 07 01 0a 01 01 00">
+        <ShimName             type="UTF16String" use="required" globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0a 01 01 01"/>
+        <Type                 type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0a 01 01 02"/>
+        <MainTitle            type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0a 01 01 03"/>
+        <SubTitle             type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0a 01 01 04"/>
+        <TitleDescription     type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0a 01 01 05"/>
+        <OrganizationName     type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0a 01 01 06"/>
+        <PersonName           type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0a 01 01 07"/>
+        <LocationDescription  type="UTF16String" use="optional" globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0a 01 01 08"/>
+        <CommonSpanningID     type="UMID"        use="optional" globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0a 01 01 09"/>
+        <SpanningNumber       type="UInt16"      use="optional" globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0a 01 01 0a"/>
+        <CumulativeDuration   type="Position"    use="optional" globalKey="06 0e 2b 34 01 01 01 01 0d 01 07 01 0a 01 01 0b"/>
+		</AS10CoreFramework>
+
+</MXFDictionary>

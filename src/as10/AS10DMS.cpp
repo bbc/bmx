@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2016, British Broadcasting Corporation
  * All Rights Reserved.
- *
- * Author: Philip de Nier
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -50,7 +48,7 @@ void AS10DMS::RegisterExtensions(HeaderMetadata *header_metadata)
 {
     // register AS-10 framework set and items in data model
 
-DataModel *data_model = header_metadata->getDataModel();
+    DataModel *data_model = header_metadata->getDataModel();
 
 #define MXF_LABEL(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15) \
     {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15}
@@ -64,7 +62,7 @@ DataModel *data_model = header_metadata->getDataModel();
 #include <bmx/as10/as10_extensions_data_model.h>
     data_model->finalise();
 
-AS10CoreFramework::RegisterObjectFactory(header_metadata);
 
+    AS10CoreFramework::RegisterObjectFactory(header_metadata);
 }
 

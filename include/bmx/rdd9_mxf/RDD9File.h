@@ -40,6 +40,7 @@
 #include <bmx/rdd9_mxf/RDD9Track.h>
 #include <bmx/rdd9_mxf/RDD9MPEG2LGTrack.h>
 #include <bmx/rdd9_mxf/RDD9PCMTrack.h>
+#include <bmx/rdd9_mxf/RDD9Validator.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFChecksumFile.h>
 
@@ -66,11 +67,10 @@ public:
     void SetCreationDate(mxfTimestamp creation_date);                   // default generated ('now')
     void SetGenerationUID(mxfUUID generation_uid);                      // default generated
     void SetMaterialPackageUID(mxfUMID package_uid);                    // default generated
-	void SetMaterialPackageUID10Byte(uint8_t materialTypeByte);         // as10 case
     void SetFileSourcePackageUID(mxfUMID package_uid);                  // default generated
-	void SetFileSourcePackageUID10Byte(uint8_t materialTypeByte);       // as10 case  
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);                // default 8192
     void SetPartitionInterval(int64_t frame_count);                     // default 10sec
+    void SetValidator(RDD9Validator *validator);
 
 public:
     void SetOutputStartOffset(int64_t offset);
@@ -131,6 +131,8 @@ private:
     mxfUUID mGenerationUID;
     mxfUMID mMaterialPackageUID;
     mxfUMID mFileSourcePackageUID;
+
+    RDD9Validator *mValidator;
 
     int64_t mOutputStartOffset;
     int64_t mOutputEndOffset;

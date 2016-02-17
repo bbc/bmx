@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bmx xmlns="http://bbc.co.uk/rd/bmx/201312" created="1970-01-01T00:00:00.000Z" version="0.1">
+  <application>
+    <name>mxf2raw</name>
+    <lib_name>RegLib</lib_name>
+    <lib_version>0.0.0</lib_version>
+    <build_timestamp>1970-01-01T00:00:00.000Z</build_timestamp>
+    <scm_version>regtest-head</scm_version>
+  </application>
+  <files size="1">
+    <file index="0">
+      <file_uri>regtest_file_uri</file_uri>
+      <mxf_version>1.3</mxf_version>
+      <op_label external_essence="false" non_stream="false" multi_track="true" label="urn:smpte:ul:060e2b34.04010101.0d010201.01010900">OP1A</op_label>
+      <frame_wrapped>true</frame_wrapped>
+      <identifications size="1">
+        <identification index="0">
+          <generation_uid>urn:uuid:00000000-0000-0000-0000-000000000001</generation_uid>
+          <company_name>RegCo</company_name>
+          <product_name>RegLib</product_name>
+          <product_version>1.0.0.0.0</product_version>
+          <version_string>0.0.0</version_string>
+          <product_uid>urn:uuid:00000000-0000-0000-0000-000000000000</product_uid>
+          <modified_date>1000-01-01T00:00:00</modified_date>
+          <toolkit_version>1.0.0.0.0</toolkit_version>
+          <platform>libMXF (Linux)</platform>
+        </identification>
+      </identifications>
+      <material_packages size="1">
+        <material_package index="0">
+          <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000001</package_uid>
+          <name>La vie du chat</name>
+          <creation_date>1000-01-01T00:00:00</creation_date>
+          <modified_date>1000-01-01T00:00:00</modified_date>
+        </material_package>
+      </material_packages>
+      <file_source_packages size="1">
+        <file_source_package index="0">
+          <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000002</package_uid>
+          <creation_date>1000-01-01T00:00:00</creation_date>
+          <modified_date>1000-01-01T00:00:00</modified_date>
+        </file_source_package>
+      </file_source_packages>
+    </file>
+  </files>
+  <clip>
+    <name>La vie du chat</name>
+    <edit_rate>25/1</edit_rate>
+    <duration count="36">00:00:01:11</duration>
+    <start_timecodes>
+      <material>22:22:22:22</material>
+      <file_source>22:22:22:22</file_source>
+    </start_timecodes>
+    <tracks size="9">
+      <track index="0">
+        <essence_kind>Picture</essence_kind>
+        <essence_type>MPEG_2_Long_GOP_422P_HL_1080i</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010102.0d010301.02046001</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="36">00:00:01:11</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>2</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>2</track_id>
+              <track_number>0x15010500</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <picture_descriptor>
+          <coding_label>urn:smpte:ul:060e2b34.04010103.04010202.01040300</coding_label>
+          <signal_standard value="4">SMPTE_274</signal_standard>
+          <frame_layout value="1">Separate_Fields</frame_layout>
+          <stored_width>1920</stored_width>
+          <stored_height>1088</stored_height>
+          <display_width>1920</display_width>
+          <display_height>1080</display_height>
+          <display_x_offset>0</display_x_offset>
+          <display_y_offset>0</display_y_offset>
+          <aspect_ratio>16/9</aspect_ratio>
+          <cdci_descriptor>
+            <component_depth>8</component_depth>
+            <horiz_subsamp>2</horiz_subsamp>
+            <vert_subsamp>1</vert_subsamp>
+            <color_siting value="0">Cositing</color_siting>
+          </cdci_descriptor>
+        </picture_descriptor>
+      </track>
+      <track index="1">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060300</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="36">00:00:01:11</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>4</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>4</track_id>
+              <track_number>0x16080300</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <audio_ref_level>0</audio_ref_level>
+        </sound_descriptor>
+      </track>
+      <track index="2">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060300</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="36">00:00:01:11</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>5</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>5</track_id>
+              <track_number>0x16080301</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <audio_ref_level>0</audio_ref_level>
+        </sound_descriptor>
+      </track>
+      <track index="3">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060300</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="36">00:00:01:11</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>6</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>6</track_id>
+              <track_number>0x16080302</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <audio_ref_level>0</audio_ref_level>
+        </sound_descriptor>
+      </track>
+      <track index="4">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060300</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="36">00:00:01:11</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>7</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>7</track_id>
+              <track_number>0x16080303</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <audio_ref_level>0</audio_ref_level>
+        </sound_descriptor>
+      </track>
+      <track index="5">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060300</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="36">00:00:01:11</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>8</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>8</track_id>
+              <track_number>0x16080304</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <audio_ref_level>0</audio_ref_level>
+        </sound_descriptor>
+      </track>
+      <track index="6">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060300</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="36">00:00:01:11</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>9</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>9</track_id>
+              <track_number>0x16080305</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <audio_ref_level>0</audio_ref_level>
+        </sound_descriptor>
+      </track>
+      <track index="7">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060300</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="36">00:00:01:11</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>10</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>10</track_id>
+              <track_number>0x16080306</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <audio_ref_level>0</audio_ref_level>
+        </sound_descriptor>
+      </track>
+      <track index="8">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060300</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="36">00:00:01:11</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>11</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000d00.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>11</track_id>
+              <track_number>0x16080307</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <audio_ref_level>0</audio_ref_level>
+        </sound_descriptor>
+      </track>
+    </tracks>
+    <as10>
+      <core>
+        <shim_name>HIGH_HD_2014</shim_name>
+        <type>Documentaire</type>
+        <main_title>La vie du chat</main_title>
+        <sub_title>La chasse</sub_title>
+        <title_description>Le chat sort la nuit pour chasser</title_description>
+        <person_name>Toto</person_name>
+        <organization_name>Org</organization_name>
+        <location_description>Paris</location_description>
+        <common_spanning_id>urn:smpte:umid:01020304.05060708.09101112.13141516.17181920.21222324.25262728.29303132</common_spanning_id>
+        <spanning_number>0</spanning_number>
+        <cumulative_duration count="1">00:00:00:01</cumulative_duration>
+      </core>
+    </as10>
+  </clip>
+</bmx>

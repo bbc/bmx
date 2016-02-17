@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+  <xs:element name="as10">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="core" type="core_type" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="core_type">
+    <xs:sequence>
+      <xs:element name="shim_name" type="xs:string"/>
+      <xs:element name="type" type="xs:string" minOccurs="0"/>
+      <xs:element name="main_title" type="xs:string" minOccurs="0"/>
+      <xs:element name="sub_title" type="xs:string" minOccurs="0"/>
+      <xs:element name="title_description" type="xs:string" minOccurs="0"/>
+      <xs:element name="person_name" type="xs:string" minOccurs="0"/>
+      <xs:element name="organization_name" type="xs:string" minOccurs="0"/>
+      <xs:element name="location_description" type="xs:string" minOccurs="0"/>
+      <xs:element name="common_spanning_id" type="umid_type" minOccurs="0"/>
+      <xs:element name="spanning_number" type="uint16_type" minOccurs="0"/>
+      <xs:element name="cumulative_duration" type="duration_type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

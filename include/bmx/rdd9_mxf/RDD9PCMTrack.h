@@ -60,6 +60,9 @@ public:
     const std::vector<uint32_t>& GetSampleSequence() const  { return mSampleSequence; }
     uint8_t GetSequenceOffset() const                       { return mWaveDescriptorHelper->GetSequenceOffset(); }
     std::vector<uint32_t> GetShiftedSampleSequence() const;
+    Rational GetSamplingRate() const                        { return mWaveDescriptorHelper->GetSamplingRate(); }
+    uint32_t GetQuantizationBits() const                    { return mWaveDescriptorHelper->GetQuantizationBits(); }
+    uint32_t GetChannelCount() const                        { return mWaveDescriptorHelper->GetChannelCount(); }
 
 protected:
     virtual void PrepareWrite(uint8_t track_count);

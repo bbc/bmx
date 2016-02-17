@@ -35,7 +35,6 @@
 
 #include <algorithm>
 
-#include <bmx/rdd9_mxf/RDD9Flavours.h>
 #include <bmx/rdd9_mxf/RDD9ContentPackage.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/BMXException.h>
@@ -165,7 +164,10 @@ RDD9IndexTableSegment::RDD9IndexTableSegment(uint32_t index_sid, uint32_t body_s
 
     mEntries.SetAllocBlockSize(INDEX_ENTRIES_INCREMENT * index_entry_size);
 
-    // InstanceUID is set when writing to account for repeats
+    mxfUUID uuid;
+    mxf_generate_uuid(&uuid);
+
+    mSegment.setInstanceUID(uuid);
     mSegment.setIndexEditRate(frame_rate);
     mSegment.setIndexStartPosition(start_position);
     mSegment.setIndexDuration(0);
@@ -365,20 +367,17 @@ bool RDD9IndexTable::HaveWrittenSegments()
     return !mWrittenIndexSegments.empty();
 }
 
-void RDD9IndexTable::WriteSegments(File *mxf_file, Partition *partition, int flavour)
+void RDD9IndexTable::WriteSegments(File *mxf_file, Partition *partition)
 {
     BMX_ASSERT(HaveSegments());
     BMX_ASSERT(mDuration > 0);
 
     partition->markIndexStart(mxf_file);
 
-	//mod akl
     if (partition->isFooter() && mRepeatInFooter)
-	  WriteVBESegments(mxf_file, mWrittenIndexSegments, (flavour & RDD9_AS10_FLAVOUR) ? partition : NULL);
-	
-    WriteVBESegments(mxf_file, mIndexSegments, NULL);
+        WriteVBESegments(mxf_file, partition, mWrittenIndexSegments);
+    WriteVBESegments(mxf_file, partition, mIndexSegments);
 
-    partition->fillToKag(mxf_file);
     partition->markIndexEnd(mxf_file);
 
 
@@ -476,19 +475,13 @@ void RDD9IndexTable::UpdateVBEIndex(const vector<uint32_t> &element_sizes)
     mIndexSegments.back()->AddIndexEntry(&entry, mStreamOffset, slice_cp_offsets);
 }
 
-void RDD9IndexTable::WriteVBESegments(File *mxf_file, vector<RDD9IndexTableSegment*> &segments, mxfpp::Partition *partition)
+void RDD9IndexTable::WriteVBESegments(File *mxf_file, Partition *partition, vector<RDD9IndexTableSegment*> &segments)
 {
     size_t i;
     for (i = 0; i < segments.size(); i++) {
         IndexTableSegment *segment = segments[i]->GetSegment();
         ByteArray *entries = segments[i]->GetEntries();
 
-		if (partition == NULL)
-		{
-        mxfUUID uuid;
-        mxf_generate_uuid(&uuid);
-        segment->setInstanceUID(uuid);
-		}
         // Note: RDD9 states that PosTableCount is not encoded but mxf_write_index_table_segment will write it with
         //       the default value 0
         segment->writeHeader(mxf_file, (uint32_t)mDeltaEntries.size(), (uint32_t)segment->getIndexDuration());
@@ -505,9 +498,7 @@ void RDD9IndexTable::WriteVBESegments(File *mxf_file, vector<RDD9IndexTableSegme
         segment->writeIndexEntryArrayHeader(mxf_file, mSliceCount, 0, (uint32_t)segment->getIndexDuration());
         mxf_file->write(entries->GetBytes(), entries->GetSize());
 
-		if(partition != NULL) 
-			partition->fillToKag(mxf_file);
+        partition->fillToKag(mxf_file);
     }
 }
-
 

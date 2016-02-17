@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2013, British Broadcasting Corporation
+ * Copyright (C) 2016, British Broadcasting Corporation
  * All Rights Reserved.
- *
- * Author: Philip de Nier
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:

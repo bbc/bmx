@@ -2,7 +2,6 @@ library_includedir = $(includedir)/bmx-@BMX_MAJORMINOR@
 nobase_library_include_HEADERS = \
 	bmx/BitBuffer.h \
 	bmx/ByteArray.h \
-	bmx/BMXShimNames.h \
 	bmx/Checksum.h \
 	bmx/CRC32.h \
 	bmx/EssenceType.h \
@@ -27,14 +26,13 @@ nobase_library_include_HEADERS = \
 	bmx/apps/AppXMLInfoWriter.h \
 	bmx/apps/AS10Helper.h \
 	bmx/apps/AS11Helper.h \
-	bmx/apps/FWHelper.h \
+	bmx/apps/FrameworkHelper.h \
 	bmx/apps/MCALabelHelper.h \
 	bmx/frame/DataBufferArray.h \
 	bmx/frame/Frame.h \
 	bmx/frame/FrameBuffer.h \
 	bmx/writer_helper/AVCIWriterHelper.h \
 	bmx/writer_helper/D10WriterHelper.h \
-	bmx/writer_helper/MPEG2LGWriterAS10Shims.h \
 	bmx/writer_helper/MPEG2LGWriterHelper.h \
 	bmx/writer_helper/XMLWriterHelper.h \
 	bmx/as02/AS02AVCITrack.h \
@@ -53,6 +51,9 @@ nobase_library_include_HEADERS = \
 	bmx/as10/AS10DMS.h \
 	bmx/as10/AS10CoreFramework.h \
 	bmx/as10/AS10Info.h \
+	bmx/as10/AS10MPEG2Validator.h \
+	bmx/as10/AS10RDD9Validator.h \
+	bmx/as10/AS10ShimNames.h \
 	bmx/as10/AS10WriterHelper.h \
 	bmx/as10/as10_extensions_data_model.h \
 	bmx/as11/AS11DMS.h \
@@ -95,6 +96,7 @@ nobase_library_include_HEADERS = \
 	bmx/rdd9_mxf/RDD9MPEG2LGTrack.h \
 	bmx/rdd9_mxf/RDD9PCMTrack.h \
 	bmx/rdd9_mxf/RDD9Track.h \
+	bmx/rdd9_mxf/RDD9Validator.h \
 	bmx/rdd9_mxf/RDD9VBIDataTrack.h \
 	bmx/avid_mxf/AvidAlphaTrack.h \
 	bmx/avid_mxf/AvidAVCITrack.h \
@@ -133,8 +135,10 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_helper/D10MXFDescriptorHelper.h \
 	bmx/mxf_helper/DataMXFDescriptorHelper.h \
 	bmx/mxf_helper/DVMXFDescriptorHelper.h \
+	bmx/mxf_helper/EssenceValidator.h \
 	bmx/mxf_helper/MJPEGMXFDescriptorHelper.h \
 	bmx/mxf_helper/MPEG2LGMXFDescriptorHelper.h \
+	bmx/mxf_helper/MPEG2Validator.h \
 	bmx/mxf_helper/MXFDescriptorHelper.h \
 	bmx/mxf_helper/MXFFileFactory.h \
 	bmx/mxf_helper/PictureMXFDescriptorHelper.h \

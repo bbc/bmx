@@ -9,6 +9,7 @@ librdd9mxf_la_SOURCES = \
 	RDD9PCMTrack.cpp \
 	RDD9MPEG2LGTrack.cpp \
 	RDD9Track.cpp \
+	RDD9Validator.cpp \
 	RDD9VBIDataTrack.cpp
 
 librdd9mxf_la_CXXFLAGS = $(BMX_CFLAGS)

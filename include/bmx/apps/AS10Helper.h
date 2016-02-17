@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2016, British Broadcasting Corporation
  * All Rights Reserved.
- *
- * Author: Philip de Nier
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,14 +30,18 @@
 #ifndef AS10_HELPER_H_
 #define AS10_HELPER_H_
 
-#include <bmx/apps/FWHelper.h>
+#include <vector>
+
+#include <bmx/apps/FrameworkHelper.h>
 #include <bmx/as10/AS10Info.h>
+#include <bmx/as10/AS10WriterHelper.h>
 #include <bmx/mxf_reader/MXFFileReader.h>
 
 
 
 namespace bmx
 {
+
 
 class AS10Helper
 {
@@ -49,12 +51,13 @@ public:
 
     void ReadSourceInfo(MXFFileReader *source_file);
 
+    bool SupportFrameworkType(const char *type_str);
     bool ParseFrameworkFile(const char *type_str, const char *filename);
-	bool SetFrameworkProperty(const char *type_str, const char *name, const char *value);
+    bool SetFrameworkProperty(const char *type_str, const char *name, const char *value);
 
     bool HaveMainTitle() const;
     std::string GetMainTitle() const;
-	const char* GetShimName() const;
+    const char* GetShimName() const;
 
 public:
     void AddMetadata(ClipWriter *clip);
@@ -63,21 +66,20 @@ public:
 private:
     bool ParseFrameworkType(const char *type_str, FrameworkType *type) const;
     void SetFrameworkProperty(FrameworkType type, std::string name, std::string value);
-	
+
 private:
     std::vector<FrameworkProperty> mFrameworkProperties;
 
     AS10Info *mSourceInfo;
-    Timecode mSourceStartTimecode;
     std::string mSourceMainTitle;
 
     AS10WriterHelper *mWriterHelper;
     FrameworkHelper *mAS10FrameworkHelper;
 };
 
+
 };
 
 
 
 #endif
-

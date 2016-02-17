@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2016, British Broadcasting Corporation
  * All Rights Reserved.
- *
- * Author: Philip de Nier
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -48,41 +46,31 @@ using namespace bmx;
 using namespace mxfpp;
 
 
-#define VERSION_TYPE_VAL(major, minor)  ((((major) & 0xff) << 8) | ((minor) & 0xff))
-
-
-static void write_core_framework(AppInfoWriter *info_writer, AS10CoreFramework *cf)
+static void write_core_framework(AppInfoWriter *info_writer, AS10CoreFramework *cf, Rational frame_rate)
 {
-    info_writer->WriteStringItem("ShimName", cf->GetShimName());
-	if (cf->HaveProperty("Type"))
-      info_writer->WriteStringItem("Type", cf->GetType());
-	if (cf->HaveProperty("MainTitle"))
-      info_writer->WriteStringItem("MainTitle", cf->GetMainTitle());
-	if (cf->HaveProperty("SubTitle"))
-	  info_writer->WriteStringItem("SubTitle", cf->GetSubTitle());
-	if (cf->HaveProperty("TitleDescription"))
-      info_writer->WriteStringItem("TitleDescription", cf->GetTitleDescription());
-	if (cf->HaveProperty("PersonName"))
-	  info_writer->WriteStringItem("PersonName", cf->GetPersonName());
-	if (cf->HaveProperty("OrganizationName"))
-	  info_writer->WriteStringItem("OrganizationName", cf->GetOrganizationName());
-	if (cf->HaveProperty("LocationDescription"))
-	  info_writer->WriteStringItem("LocationDescription", cf->GetLocationDescription());
-	if (cf->HaveProperty("CommonSpanningID"))
-	{
-		mxfUMID zeroId;
-		memset(&zeroId, 0, sizeof(mxfUMID));
-		mxfUMID csID = cf->GetCommonSpanningID();
-		if (memcmp(&csID, &zeroId, sizeof(mxfUMID)) == 0)
-			info_writer->WriteStringItem("CommonSpanningID", "urn:smpte:umid:0");
-		else
-			info_writer->WriteUMIDItem("CommonSpanningID", cf->GetCommonSpanningID());
-	}
-	if (cf->HaveProperty("SpanningNumber"))
-	  info_writer->WriteIntegerItem("SpanningNumber", cf->GetSpanningNumber());
-	if (cf->HaveProperty("CumulativeDuration"))
-      info_writer->WriteIntegerItem("CumulativeDuration", cf->GetCumulativeDuration());
+  info_writer->WriteStringItem("shim_name", cf->GetShimName());
+  if (cf->HaveType())
+      info_writer->WriteStringItem("type", cf->GetType());
+  if (cf->HaveMainTitle())
+      info_writer->WriteStringItem("main_title", cf->GetMainTitle());
+  if (cf->HaveSubTitle())
+      info_writer->WriteStringItem("sub_title", cf->GetSubTitle());
+  if (cf->HaveTitleDescription())
+      info_writer->WriteStringItem("title_description", cf->GetTitleDescription());
+  if (cf->HavePersonName())
+      info_writer->WriteStringItem("person_name", cf->GetPersonName());
+  if (cf->HaveOrganizationName())
+      info_writer->WriteStringItem("organization_name", cf->GetOrganizationName());
+  if (cf->HaveLocationDescription())
+      info_writer->WriteStringItem("location_description", cf->GetLocationDescription());
+  if (cf->HaveCommonSpanningID())
+      info_writer->WriteUMIDItem("common_spanning_id", cf->GetCommonSpanningID());
+  if (cf->HaveSpanningNumber())
+      info_writer->WriteIntegerItem("spanning_number", cf->GetSpanningNumber());
+  if (cf->HaveCumulativeDuration())
+      info_writer->WriteDurationItem("cumulative_duration", cf->GetCumulativeDuration(), frame_rate);
 }
+
 
 void bmx::as10_register_extensions(MXFFileReader *file_reader)
 {
@@ -99,19 +87,14 @@ void bmx::as10_write_info(AppInfoWriter *info_writer, MXFFileReader *file_reader
         return;
     }
 
-    Rational frame_rate = file_reader->GetEditRate();
-    Timecode start_timecode = file_reader->GetMaterialTimecode(0);
-    BMX_CHECK(file_reader->GetFixedLeadFillerOffset() == 0);
-
     info_writer->StartSection("as10");
 
-    if (info.core) 
-	{
+    if (info.core) {
         info_writer->StartSection("core");
-        write_core_framework(info_writer, info.core);
+        write_core_framework(info_writer, info.core, file_reader->GetEditRate());
         info_writer->EndSection();
     }
- 
+
     info_writer->EndSection();
 }
 

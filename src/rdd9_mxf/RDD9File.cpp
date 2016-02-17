@@ -52,7 +52,6 @@ using namespace mxfpp;
 
 
 #define MAX_GOP_SIZE    15
-#define MIXED_GROUP_COMPONENTS_IN_SINGLE_CONTAINER 0x0d
 
 static const uint32_t TIMECODE_TRACK_ID         = 1;
 static const uint32_t FIRST_PICTURE_TRACK_ID    = 2;
@@ -110,17 +109,20 @@ RDD9File::RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate)
     mFileSourcePackage = 0;
     mFirstWrite = true;
     mPartitionInterval = 10 * frame_rate.numerator / frame_rate.denominator;
+    mValidator = 0;
     mPartitionFrameCount = 0;
     mMXFChecksumFile = 0;
 
-	if (flavour & RDD9_AS10_FLAVOUR)
-	{
-		SetMaterialPackageUID10Byte(MIXED_GROUP_COMPONENTS_IN_SINGLE_CONTAINER);
-		SetFileSourcePackageUID10Byte(MIXED_GROUP_COMPONENTS_IN_SINGLE_CONTAINER);
-	}
+    if ((flavour & RDD9_AS10_FLAVOUR)) {
+        // octet10 = 0x0d indicates "mixed group of components in a single container e.g. video & stereo audio pair"
+        // note: this value is not required by AS-10 or RDD-9; they don't mention it. It is kept here to help minimise
+        // any differences with Sony originated files
+        mMaterialPackageUID.octet10   = 0x0d;
+        mFileSourcePackageUID.octet10 = 0x0d;
+    }
 
-    mIndexTable = new RDD9IndexTable(INDEX_SID, BODY_SID, frame_rate, 
-		             ((flavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (flavour & RDD9_AS10_FLAVOUR)));
+    mIndexTable = new RDD9IndexTable(INDEX_SID, BODY_SID, frame_rate,
+                     ((flavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (flavour & RDD9_AS10_FLAVOUR)));
 
     mCPManager = new RDD9ContentPackageManager(mMXFFile, mIndexTable, frame_rate);
 
@@ -191,19 +193,9 @@ void RDD9File::SetMaterialPackageUID(mxfUMID package_uid)
     mMaterialPackageUID = package_uid;
 }
 
-void RDD9File::SetMaterialPackageUID10Byte(uint8_t materialTypeByte)
-{
-	mMaterialPackageUID.octet10 = materialTypeByte;
-}
-
 void RDD9File::SetFileSourcePackageUID(mxfUMID package_uid)
 {
     mFileSourcePackageUID = package_uid;
-}
-
-void RDD9File::SetFileSourcePackageUID10Byte(uint8_t materialTypeByte)
-{
-	mFileSourcePackageUID.octet10 = materialTypeByte;
 }
 
 void RDD9File::ReserveHeaderMetadataSpace(uint32_t min_bytes)
@@ -215,6 +207,14 @@ void RDD9File::SetPartitionInterval(int64_t frame_count)
 {
     BMX_CHECK(frame_count >= 0);
     mPartitionInterval = frame_count;
+}
+
+void RDD9File::SetValidator(RDD9Validator *validator)
+{
+    delete mValidator;
+    mValidator = validator;
+
+    mValidator->SetRDD9File(this);
 }
 
 void RDD9File::SetOutputStartOffset(int64_t offset)
@@ -279,14 +279,16 @@ void RDD9File::PrepareHeaderMetadata()
     uint8_t ac = mTrackCounts[MXF_SOUND_DDEF];
     if (ac == 0)
         BMX_EXCEPTION(("Require at least 1 sound track"));
-
-    if (mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR) {
+    if ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
         if ((ac != 8) && (ac != 16))
             log_warn("There are %u audio tracks; ARD ZDF profile requires 8 or 16 audio tracks\n", ac);
     }
     else if ((ac != 2) && (ac != 4) && (ac != 8)) {
         log_warn("There are %u audio tracks; RDD9 requires 2, 4, or 8 audio tracks\n", ac);
     }
+
+    if (mValidator)
+        mValidator->PrepareHeaderMetadata();
 
     // sort tracks, picture - sound - data
     stable_sort(mTracks.begin(), mTracks.end(), compare_track);
@@ -300,8 +302,9 @@ void RDD9File::PrepareHeaderMetadata()
         last_track_number[mTracks[i]->GetDataDef()] = mTracks[i]->GetOutputTrackNumber();
     }
 
-    if (mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR)
+    if ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR))
         mIndexTable->SetExtensions(MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE);
+
 
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite(mTrackCounts[mTracks[i]->GetDataDef()]);
@@ -380,16 +383,10 @@ void RDD9File::CompleteWrite()
     Partition &footer_partition = mMXFFile->createPartition();
     footer_partition.setKey(&MXF_PP_K(ClosedComplete, Footer));
 
-	//akl ? || (mFlavour & RDD9_AS10_FLAVOUR)
-    if (mIndexTable->HaveSegments() ||
-        ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR) && mIndexTable->HaveWrittenSegments()))
-    {
+    if (mIndexTable->HaveSegments() || (mIndexTable->HaveWrittenSegments() && mIndexTable->RepeatInFooter()))
         footer_partition.setIndexSID(INDEX_SID);
-    }
     else
-    {
         footer_partition.setIndexSID(0);
-    }
     footer_partition.setBodySID(0);
     footer_partition.setKagSize(KAG_SIZE);
     footer_partition.write(mMXFFile);
@@ -404,22 +401,21 @@ void RDD9File::CompleteWrite()
 
 
     // write any remaining VBE index segments
-	//akl ? || (mFlavour & RDD9_AS10_FLAVOUR)
-    if (mIndexTable->HaveSegments() ||
-        ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR) && mIndexTable->HaveWrittenSegments()))
-    {
-        mIndexTable->WriteSegments(mMXFFile, &footer_partition, mFlavour);
-    }
+
+    if (mIndexTable->HaveSegments() || (mIndexTable->HaveWrittenSegments() && mIndexTable->RepeatInFooter()))
+        mIndexTable->WriteSegments(mMXFFile, &footer_partition);
 
 
     // write the RIP
 
     mMXFFile->writeRIP();
 
+
     // update footer partition and flush to file
 
     mMXFFile->updatePartitions();
     mMXFFile->closeMemoryFile();
+
 
     // update header partition if not writing in a single pass
 
@@ -518,7 +514,7 @@ void RDD9File::CreateHeaderMetadata()
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         preface->appendEssenceContainers(*iter);
     preface->setDMSchemes(vector<mxfUL>());
-    if ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR) || mFlavour & RDD9_AS10_FLAVOUR)
+    if ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (mFlavour & RDD9_AS10_FLAVOUR))
         preface->setIsRIPPresent(true);
 
     // Preface - Identification
@@ -547,9 +543,7 @@ void RDD9File::CreateHeaderMetadata()
     // Preface - ContentStorage - MaterialPackage
     mMaterialPackage = new MaterialPackage(mHeaderMetadata);
     content_storage->appendPackages(mMaterialPackage);
-	
     mMaterialPackage->setPackageUID(mMaterialPackageUID);
-
     mMaterialPackage->setPackageCreationDate(mCreationDate);
     mMaterialPackage->setPackageModifiedDate(mCreationDate);
     if (!mClipName.empty())
@@ -629,9 +623,11 @@ void RDD9File::CreateFile()
 {
     BMX_ASSERT(mHeaderMetadata);
 
+
     // set minimum llen
 
     mMXFFile->setMinLLen(4);
+
 
     // write the header metadata
 
@@ -741,7 +737,7 @@ void RDD9File::WriteContentPackages(bool final_write)
             body_partition.write(mMXFFile);
 
             if (mIndexTable->HaveSegments())
-                mIndexTable->WriteSegments(mMXFFile, &body_partition, mFlavour);
+                mIndexTable->WriteSegments(mMXFFile, &body_partition);
 
             mMXFFile->updatePartitions();
             mMXFFile->closeMemoryFile();

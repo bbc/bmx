@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2016, British Broadcasting Corporation
  * All Rights Reserved.
- *
- * Author: Philip de Nier
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -56,30 +54,39 @@ public:
     AS10CoreFramework(mxfpp::HeaderMetadata *header_metadata);
     virtual ~AS10CoreFramework();
 
-	bool HaveProperty(char *name);
-	std::string GetShimName();
-	std::string GetType();
+    std::string GetShimName();
+    bool HaveType();
+    std::string GetType();
+    bool HaveMainTitle();
     std::string GetMainTitle();
-	std::string GetSubTitle();
-	std::string GetTitleDescription();
-	std::string GetPersonName();
-	std::string GetOrganizationName();
-	std::string GetLocationDescription();
-	mxfUMID  GetCommonSpanningID(); 
-	uint16_t GetSpanningNumber();
-	int64_t GetCumulativeDuration();
+    bool HaveSubTitle();
+    std::string GetSubTitle();
+    bool HaveTitleDescription();
+    std::string GetTitleDescription();
+    bool HavePersonName();
+    std::string GetPersonName();
+    bool HaveOrganizationName();
+    std::string GetOrganizationName();
+    bool HaveLocationDescription();
+    std::string GetLocationDescription();
+    bool HaveCommonSpanningID();
+    mxfUMID GetCommonSpanningID();
+    bool HaveSpanningNumber();
+    uint16_t GetSpanningNumber();
+    bool HaveCumulativeDuration();
+    int64_t GetCumulativeDuration();
 
     void SetShimName(std::string value);
     void SetType(std::string value);
     void SetMainTitle(std::string value);
     void SetSubTitle(std::string value);
-	void SetTitleDescription(std::string value);
-	void SetOrganizationName(std::string value);
-	void SetPersonName(std::string value);
-	void SetLocationDescription(std::string value); 
-	void SetCommonSpanningID(mxfUMID value);
-	void SetSpanningNumber(uint16_t value);
-	void SetCumulativeDuration(int64_t value);
+    void SetTitleDescription(std::string value);
+    void SetOrganizationName(std::string value);
+    void SetPersonName(std::string value);
+    void SetLocationDescription(std::string value);
+    void SetCommonSpanningID(mxfUMID value);
+    void SetSpanningNumber(uint16_t value);
+    void SetCumulativeDuration(int64_t value);
 
 protected:
     AS10CoreFramework(mxfpp::HeaderMetadata *header_metadata, ::MXFMetadataSet *c_metadata_set);
@@ -91,4 +98,3 @@ protected:
 
 
 #endif
-

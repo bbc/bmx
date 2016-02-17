@@ -44,7 +44,7 @@
 #define MXFDESC_RDD9_FLAVOUR                  0x0008
 #define MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR   0x0010
 #define MXFDESC_RDD9_AS10_FLAVOUR             0x0020
-#define MXFDESC_RDD9_AS10_HHD2014_FLAVOUR     0x0060
+
 
 
 namespace bmx

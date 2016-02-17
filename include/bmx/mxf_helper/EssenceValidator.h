@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2011, British Broadcasting Corporation
+ * Copyright (C) 2016, British Broadcasting Corporation
  * All Rights Reserved.
- *
- * Author: Philip de Nier
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,75 +27,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FW_HELPER_H_
-#define FW_HELPER_H_
+#ifndef BMX_ESSENCE_VALIDATOR_H_
+#define BMX_ESSENCE_VALIDATOR_H_
 
-#include <string>
-#include <vector>
-
-#include <libMXF++/MXF.h>
-
-#include <bmx/as11/AS11WriterHelper.h>
-#include <bmx/as10/AS10WriterHelper.h>
+#include <inttypes.h>
 
 
 namespace bmx
 {
 
 
-typedef enum
-{
-    AS11_CORE_FRAMEWORK_TYPE,
-    DPP_FRAMEWORK_TYPE,
-    AS10_CORE_FRAMEWORK_TYPE
-} FrameworkType;
-
-
-typedef struct
-{
-    const char *name;
-    mxfKey item_key;
-} PropertyInfo;
-
-typedef struct
-{
-    const char *name;
-    mxfKey set_key;
-    const PropertyInfo *property_info;
-} FrameworkInfo;
-
-typedef struct
-{
-    FrameworkType type;
-    std::string name;
-    std::string value;
-} FrameworkProperty;
-
-
-
-class FrameworkHelper
+class EssenceValidator
 {
 public:
-	FrameworkHelper(AS10WriterHelper *writer_helper, mxfpp::DMFramework *framework);
-	FrameworkHelper(AS11WriterHelper *writer_helper, mxfpp::DMFramework *framework);
-    
-    ~FrameworkHelper();
+    virtual ~EssenceValidator() {};
 
-    bool SetProperty(std::string name, std::string value);
-
-    mxfpp::DMFramework* GetFramework() const { return mFramework; }
-
-private:
-    mxfpp::DMFramework *mFramework;
-    Timecode mStartTimecode;
-    Rational mFrameRate;
-    mxfpp::SetDef *mSetDef;
-    const FrameworkInfo *mFrameworkInfo;
+    virtual void ProcessFrame(const unsigned char *data, uint32_t size) = 0;
+    virtual void CompleteWrite() = 0;
 };
 
-};
 
+
+};
 
 
 #endif
-
