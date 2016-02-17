@@ -358,12 +358,12 @@ static void write_d10(FILE *file, int type, unsigned int duration)
         write_buffer(file, data, frame_size);
 }
 
-static void write_mpeg2lg(FILE *file, int type, unsigned int duration)
+static void write_mpeg2lg(FILE *file, int type, unsigned int duration, bool low_delay, bool closed_gop)
 {
     MPEGInfo mpeg_info;
     memset(&mpeg_info, 0, sizeof(mpeg_info));
     mpeg_info.is_progressive = false;
-    mpeg_info.low_delay      = true;
+    mpeg_info.low_delay      = low_delay;
 
     uint32_t i_frame_size, non_i_frame_size;
     switch (type)
@@ -438,87 +438,159 @@ static void write_mpeg2lg(FILE *file, int type, unsigned int duration)
         switch (i % 12) {
             case 0:
                 mpeg_info.seq_header   = true;
-                mpeg_info.closed_gop   = (i == 0);
-                mpeg_info.temporal_ref = 2;
-                mpeg_info.frame_type   = MPEG_I_FRAME_TYPE;
+                if (closed_gop) {
+                    mpeg_info.closed_gop   = true;
+                    mpeg_info.temporal_ref = 0;
+                    mpeg_info.frame_type   = MPEG_I_FRAME_TYPE;
+                } else {
+                    mpeg_info.closed_gop   = (i == 0);
+                    mpeg_info.temporal_ref = 2;
+                    mpeg_info.frame_type   = MPEG_I_FRAME_TYPE;
+                }
                 fill_mpeg_frame(data, i_frame_size, &mpeg_info);
                 break;
             case 1:
                 mpeg_info.seq_header   = false;
-                mpeg_info.closed_gop   = false;
-                mpeg_info.temporal_ref = 0;
-                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                if (closed_gop) {
+                    mpeg_info.closed_gop   = true;
+                    mpeg_info.temporal_ref = 3;
+                    mpeg_info.frame_type   = MPEG_P_FRAME_TYPE;
+                } else {
+                    mpeg_info.closed_gop   = false;
+                    mpeg_info.temporal_ref = 0;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                }
                 fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 2:
                 mpeg_info.seq_header   = false;
-                mpeg_info.closed_gop   = false;
-                mpeg_info.temporal_ref = 1;
-                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                if (closed_gop) {
+                    mpeg_info.closed_gop   = true;
+                    mpeg_info.temporal_ref = 1;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                } else {
+                    mpeg_info.closed_gop   = false;
+                    mpeg_info.temporal_ref = 1;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                }
                 fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 3:
                 mpeg_info.seq_header   = false;
-                mpeg_info.closed_gop   = false;
-                mpeg_info.temporal_ref = 5;
-                mpeg_info.frame_type   = MPEG_P_FRAME_TYPE;
+                if (closed_gop) {
+                    mpeg_info.closed_gop   = true;
+                    mpeg_info.temporal_ref = 2;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                } else {
+                    mpeg_info.closed_gop   = false;
+                    mpeg_info.temporal_ref = 5;
+                    mpeg_info.frame_type   = MPEG_P_FRAME_TYPE;
+                }
                 fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 4:
                 mpeg_info.seq_header   = false;
-                mpeg_info.closed_gop   = false;
-                mpeg_info.temporal_ref = 3;
-                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                if (closed_gop) {
+                    mpeg_info.closed_gop   = true;
+                    mpeg_info.temporal_ref = 6;
+                    mpeg_info.frame_type   = MPEG_P_FRAME_TYPE;
+                } else {
+                    mpeg_info.closed_gop   = false;
+                    mpeg_info.temporal_ref = 3;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                }
                 fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 5:
                 mpeg_info.seq_header   = false;
-                mpeg_info.closed_gop   = false;
-                mpeg_info.temporal_ref = 4;
-                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                if (closed_gop) {
+                    mpeg_info.closed_gop   = true;
+                    mpeg_info.temporal_ref = 4;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                } else {
+                    mpeg_info.closed_gop   = false;
+                    mpeg_info.temporal_ref = 4;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                }
                 fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 6:
                 mpeg_info.seq_header   = false;
-                mpeg_info.closed_gop   = false;
-                mpeg_info.temporal_ref = 8;
-                mpeg_info.frame_type   = MPEG_P_FRAME_TYPE;
+                if (closed_gop) {
+                    mpeg_info.closed_gop   = true;
+                    mpeg_info.temporal_ref = 5;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                } else {
+                    mpeg_info.closed_gop   = false;
+                    mpeg_info.temporal_ref = 8;
+                    mpeg_info.frame_type   = MPEG_P_FRAME_TYPE;
+                }
                 fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 7:
                 mpeg_info.seq_header   = false;
-                mpeg_info.closed_gop   = false;
-                mpeg_info.temporal_ref = 6;
-                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                if (closed_gop) {
+                    mpeg_info.closed_gop   = true;
+                    mpeg_info.temporal_ref = 9;
+                    mpeg_info.frame_type   = MPEG_P_FRAME_TYPE;
+                } else {
+                    mpeg_info.closed_gop   = false;
+                    mpeg_info.temporal_ref = 6;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                }
                 fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 8:
                 mpeg_info.seq_header   = false;
-                mpeg_info.closed_gop   = false;
-                mpeg_info.temporal_ref = 7;
-                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                if (closed_gop) {
+                    mpeg_info.closed_gop   = true;
+                    mpeg_info.temporal_ref = 7;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                } else {
+                    mpeg_info.closed_gop   = false;
+                    mpeg_info.temporal_ref = 7;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                }
                 fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 9:
                 mpeg_info.seq_header   = false;
-                mpeg_info.closed_gop   = false;
-                mpeg_info.temporal_ref = 11;
-                mpeg_info.frame_type   = MPEG_P_FRAME_TYPE;
+                if (closed_gop) {
+                    mpeg_info.closed_gop   = true;
+                    mpeg_info.temporal_ref = 8;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                } else {
+                    mpeg_info.closed_gop   = false;
+                    mpeg_info.temporal_ref = 11;
+                    mpeg_info.frame_type   = MPEG_P_FRAME_TYPE;
+                }
                 fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 10:
                 mpeg_info.seq_header   = false;
-                mpeg_info.closed_gop   = false;
-                mpeg_info.temporal_ref = 9;
-                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                if (closed_gop) {
+                    mpeg_info.closed_gop   = true;
+                    mpeg_info.temporal_ref = 11;
+                    mpeg_info.frame_type   = MPEG_P_FRAME_TYPE;
+                } else {
+                    mpeg_info.closed_gop   = false;
+                    mpeg_info.temporal_ref = 9;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                }
                 fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 11:
             default:
                 mpeg_info.seq_header   = false;
-                mpeg_info.closed_gop   = false;
-                mpeg_info.temporal_ref = 10;
-                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                if (closed_gop) {
+                    mpeg_info.closed_gop   = true;
+                    mpeg_info.temporal_ref = 10;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                } else {
+                    mpeg_info.closed_gop   = false;
+                    mpeg_info.temporal_ref = 10;
+                    mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                }
                 fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
         }
@@ -855,7 +927,7 @@ int main(int argc, const char **argv)
         case TYPE_MPEG2LG_MP_HL_1080P_1440:
         case TYPE_MPEG2LG_422P_HL_720P:
         case TYPE_MPEG2LG_MP_HL_720P:
-            write_mpeg2lg(file, type, duration);
+            write_mpeg2lg(file, type, duration, true, false);
             break;
         case TYPE_UNC_SD:
         case TYPE_UNC_HD_1080I:
