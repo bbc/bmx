@@ -109,6 +109,20 @@ typedef enum
     TYPE_END,
 } EssenceType;
 
+typedef struct
+{
+    bool seq_header;
+    uint8_t profile_level;
+    bool is_progressive;
+    uint8_t chroma_format;
+    uint32_t bit_rate;
+    bool low_delay;
+    bool closed_gop;
+    uint32_t h_size;
+    uint32_t v_size;
+    uint32_t temporal_ref;
+    uint8_t frame_type;
+} MPEGInfo;
 
 
 // access unit delimiter NAL + start of sequence parameter set NAL
@@ -155,44 +169,44 @@ static void set_mpeg_bits(unsigned char *data, uint32_t bit_offset, uint8_t num_
 
 static void set_mpeg_start_code(unsigned char *data, uint32_t offset, uint32_t code)
 {
-    data[offset] = (unsigned char)((code >> 24) & 0xff);
+    data[offset    ] = (unsigned char)((code >> 24) & 0xff);
     data[offset + 1] = (unsigned char)((code >> 16) & 0xff);
     data[offset + 2] = (unsigned char)((code >> 8) & 0xff);
     data[offset + 3] = (unsigned char)(code & 0xff);
 }
 
-static void fill_mpeg_frame(unsigned char *data, uint32_t data_size,
-                            bool seq_header, uint32_t bit_rate, bool low_delay, bool closed_gop,
-                            uint32_t h_size, uint32_t v_size,
-                            uint32_t temporal_ref, uint32_t frame_type)
+static void fill_mpeg_frame(unsigned char *data, uint32_t data_size, const MPEGInfo *info)
 {
     assert(data_size > 400);
 
     uint32_t set_offset = 0;
-    if (seq_header) {
+    if (info->seq_header) {
         set_mpeg_start_code(data, 0, MPEG_SEQUENCE_HEADER_CODE);
         set_offset = 0;
-        set_mpeg_bits(data, set_offset * 8 + 32, 12, h_size);
-        set_mpeg_bits(data, set_offset * 8 + 44, 12, v_size);
-        set_mpeg_bits(data, set_offset * 8 + 64, 18, bit_rate);
+        set_mpeg_bits(data, set_offset * 8 + 32, 12, info->h_size);
+        set_mpeg_bits(data, set_offset * 8 + 44, 12, info->v_size);
+        set_mpeg_bits(data, set_offset * 8 + 64, 18, info->bit_rate);
         set_offset += 100;
 
         set_mpeg_start_code(data, set_offset, MPEG_SEQUENCE_EXT_CODE);
         set_mpeg_bits(data, set_offset * 8 + 32, 4, 0x01);
-        set_mpeg_bits(data, set_offset * 8 + 47, 2, h_size >> 12);
-        set_mpeg_bits(data, set_offset * 8 + 49, 2, v_size >> 12);
-        set_mpeg_bits(data, set_offset * 8 + 51, 12, bit_rate >> 18);
-        set_mpeg_bits(data, set_offset * 8 + 72, 1, low_delay);
+        set_mpeg_bits(data, set_offset * 8 + 36, 8,  info->profile_level);
+        set_mpeg_bits(data, set_offset * 8 + 44, 1,  info->is_progressive);
+        set_mpeg_bits(data, set_offset * 8 + 45, 2,  info->chroma_format);
+        set_mpeg_bits(data, set_offset * 8 + 47, 2,  info->h_size >> 12);
+        set_mpeg_bits(data, set_offset * 8 + 49, 2,  info->v_size >> 12);
+        set_mpeg_bits(data, set_offset * 8 + 51, 12, info->bit_rate >> 18);
+        set_mpeg_bits(data, set_offset * 8 + 72, 1,  info->low_delay);
         set_offset += 100;
 
         set_mpeg_start_code(data, set_offset, MPEG_GROUP_HEADER_CODE);
-        set_mpeg_bits(data, set_offset * 8 + 57, 1, closed_gop);
+        set_mpeg_bits(data, set_offset * 8 + 57, 1, info->closed_gop);
         set_offset += 100;
     }
 
     set_mpeg_start_code(data, set_offset, MPEG_PICTURE_START_CODE);
-    set_mpeg_bits(data, set_offset * 8 + 32, 10, temporal_ref);
-    set_mpeg_bits(data, set_offset * 8 + 42, 3, frame_type);
+    set_mpeg_bits(data, set_offset * 8 + 32, 10, info->temporal_ref);
+    set_mpeg_bits(data, set_offset * 8 + 42, 3,  info->frame_type);
 }
 
 static void write_buffer(FILE *file, const unsigned char *buffer, size_t size)
@@ -309,6 +323,16 @@ static void write_avci50_720(FILE *file, unsigned int duration)
 
 static void write_d10(FILE *file, int type, unsigned int duration)
 {
+    MPEGInfo mpeg_info;
+    memset(&mpeg_info, 0, sizeof(mpeg_info));
+    mpeg_info.seq_header     = true;
+    mpeg_info.profile_level  = 0; // TODO: update along with md5 updates
+    mpeg_info.chroma_format  = 0; // TODO: update along with md5 updates
+    mpeg_info.low_delay      = true;
+    mpeg_info.h_size         = 720;
+    mpeg_info.v_size         = 608;
+    mpeg_info.frame_type     = MPEG_I_FRAME_TYPE;
+
     uint32_t frame_size;
     switch (type)
     {
@@ -323,13 +347,11 @@ static void write_d10(FILE *file, int type, unsigned int duration)
             frame_size = 150000;
             break;
     }
+    mpeg_info.bit_rate = (frame_size * 25 * 8) / 400;
 
     unsigned char *data = new unsigned char[frame_size];
     memset(data, 0, frame_size);
-    fill_mpeg_frame(data, frame_size,
-                    true, (frame_size * 25 * 8) / 400, true, false,
-                    720, 608,
-                    0, MPEG_I_FRAME_TYPE);
+    fill_mpeg_frame(data, frame_size, &mpeg_info);
 
     unsigned int i;
     for (i = 0; i < duration; i++)
@@ -338,39 +360,44 @@ static void write_d10(FILE *file, int type, unsigned int duration)
 
 static void write_mpeg2lg(FILE *file, int type, unsigned int duration)
 {
+    MPEGInfo mpeg_info;
+    memset(&mpeg_info, 0, sizeof(mpeg_info));
+    mpeg_info.profile_level  = 0; // TODO: update along with md5 updates
+    mpeg_info.is_progressive = false;
+    mpeg_info.chroma_format  = 0; // TODO: update along with md5 updates
+    mpeg_info.low_delay      = true;
+
     uint32_t i_frame_size, non_i_frame_size;
-    uint32_t width, height;
-    uint32_t bit_rate;
     switch (type)
     {
         case TYPE_MPEG2LG_422P_HL_1080I:
         case TYPE_MPEG2LG_422P_HL_1080P:
         case TYPE_MPEG2LG_MP_HL_1080I:
         case TYPE_MPEG2LG_MP_HL_1080P:
-            i_frame_size = 270000;
+            i_frame_size     = 270000;
             non_i_frame_size = 240000;
-            width = 1920;
-            height = 1080;
-            bit_rate = (50 * 1000 * 1000) / 400;
+            mpeg_info.h_size   = 1920;
+            mpeg_info.v_size   = 1080;
+            mpeg_info.bit_rate = (50 * 1000 * 1000) / 400;
             break;
         case TYPE_MPEG2LG_422P_HL_720P:
         case TYPE_MPEG2LG_MP_HL_720P:
-            i_frame_size = 270000;
+            i_frame_size     = 270000;
             non_i_frame_size = 240000;
-            width = 1280;
-            height = 720;
-            bit_rate = (50 * 1000 * 1000) / 400;
+            mpeg_info.h_size   = 1280;
+            mpeg_info.v_size   = 720;
+            mpeg_info.bit_rate = (50 * 1000 * 1000) / 400;
             break;
         case TYPE_MPEG2LG_MP_H14_1080I:
         case TYPE_MPEG2LG_MP_H14_1080P:
         case TYPE_MPEG2LG_MP_HL_1080I_1440:
         case TYPE_MPEG2LG_MP_HL_1080P_1440:
         default:
-            i_frame_size = 195000;
+            i_frame_size     = 195000;
             non_i_frame_size = 165000;
-            width = 1440;
-            height = 1080;
-            bit_rate = (35 * 1000 * 1000) / 400;
+            mpeg_info.h_size   = 1440;
+            mpeg_info.v_size   = 1080;
+            mpeg_info.bit_rate = (35 * 1000 * 1000) / 400;
             break;
     }
     uint32_t max_frame_size = i_frame_size > non_i_frame_size ? i_frame_size : non_i_frame_size;
@@ -382,41 +409,89 @@ static void write_mpeg2lg(FILE *file, int type, unsigned int duration)
         memset(data, 0, max_frame_size);
         switch (i % 12) {
             case 0:
-                fill_mpeg_frame(data, i_frame_size, true, bit_rate, true, i == 0, width, height, 2, MPEG_I_FRAME_TYPE);
+                mpeg_info.seq_header   = true;
+                mpeg_info.closed_gop   = (i == 0);
+                mpeg_info.temporal_ref = 2;
+                mpeg_info.frame_type   = MPEG_I_FRAME_TYPE;
+                fill_mpeg_frame(data, i_frame_size, &mpeg_info);
                 break;
             case 1:
-                fill_mpeg_frame(data, non_i_frame_size, false, bit_rate, true, false, width, height, 0, MPEG_B_FRAME_TYPE);
+                mpeg_info.seq_header   = false;
+                mpeg_info.closed_gop   = false;
+                mpeg_info.temporal_ref = 0;
+                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 2:
-                fill_mpeg_frame(data, non_i_frame_size, false, bit_rate, true, false, width, height, 1, MPEG_B_FRAME_TYPE);
+                mpeg_info.seq_header   = false;
+                mpeg_info.closed_gop   = false;
+                mpeg_info.temporal_ref = 1;
+                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 3:
-                fill_mpeg_frame(data, non_i_frame_size, false, bit_rate, true, false, width, height, 5, MPEG_P_FRAME_TYPE);
+                mpeg_info.seq_header   = false;
+                mpeg_info.closed_gop   = false;
+                mpeg_info.temporal_ref = 5;
+                mpeg_info.frame_type   = MPEG_P_FRAME_TYPE;
+                fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 4:
-                fill_mpeg_frame(data, non_i_frame_size, false, bit_rate, true, false, width, height, 3, MPEG_B_FRAME_TYPE);
+                mpeg_info.seq_header   = false;
+                mpeg_info.closed_gop   = false;
+                mpeg_info.temporal_ref = 3;
+                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 5:
-                fill_mpeg_frame(data, non_i_frame_size, false, bit_rate, true, false, width, height, 4, MPEG_B_FRAME_TYPE);
+                mpeg_info.seq_header   = false;
+                mpeg_info.closed_gop   = false;
+                mpeg_info.temporal_ref = 4;
+                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 6:
-                fill_mpeg_frame(data, non_i_frame_size, false, bit_rate, true, false, width, height, 8, MPEG_P_FRAME_TYPE);
+                mpeg_info.seq_header   = false;
+                mpeg_info.closed_gop   = false;
+                mpeg_info.temporal_ref = 8;
+                mpeg_info.frame_type   = MPEG_P_FRAME_TYPE;
+                fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 7:
-                fill_mpeg_frame(data, non_i_frame_size, false, bit_rate, true, false, width, height, 6, MPEG_B_FRAME_TYPE);
+                mpeg_info.seq_header   = false;
+                mpeg_info.closed_gop   = false;
+                mpeg_info.temporal_ref = 6;
+                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 8:
-                fill_mpeg_frame(data, non_i_frame_size, false, bit_rate, true, false, width, height, 7, MPEG_B_FRAME_TYPE);
+                mpeg_info.seq_header   = false;
+                mpeg_info.closed_gop   = false;
+                mpeg_info.temporal_ref = 7;
+                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 9:
-                fill_mpeg_frame(data, non_i_frame_size, false, bit_rate, true, false, width, height, 11, MPEG_P_FRAME_TYPE);
+                mpeg_info.seq_header   = false;
+                mpeg_info.closed_gop   = false;
+                mpeg_info.temporal_ref = 11;
+                mpeg_info.frame_type   = MPEG_P_FRAME_TYPE;
+                fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 10:
-                fill_mpeg_frame(data, non_i_frame_size, false, bit_rate, true, false, width, height, 9, MPEG_B_FRAME_TYPE);
+                mpeg_info.seq_header   = false;
+                mpeg_info.closed_gop   = false;
+                mpeg_info.temporal_ref = 9;
+                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
             case 11:
             default:
-                fill_mpeg_frame(data, non_i_frame_size, false, bit_rate, true, false, width, height, 10, MPEG_B_FRAME_TYPE);
+                mpeg_info.seq_header   = false;
+                mpeg_info.closed_gop   = false;
+                mpeg_info.temporal_ref = 10;
+                mpeg_info.frame_type   = MPEG_B_FRAME_TYPE;
+                fill_mpeg_frame(data, non_i_frame_size, &mpeg_info);
                 break;
         }
 
