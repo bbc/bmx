@@ -326,8 +326,8 @@ static void write_d10(FILE *file, int type, unsigned int duration)
     MPEGInfo mpeg_info;
     memset(&mpeg_info, 0, sizeof(mpeg_info));
     mpeg_info.seq_header     = true;
-    mpeg_info.profile_level  = 0; // TODO: update along with md5 updates
-    mpeg_info.chroma_format  = 0; // TODO: update along with md5 updates
+    mpeg_info.profile_level  = 133;
+    mpeg_info.chroma_format  = 2;
     mpeg_info.low_delay      = true;
     mpeg_info.h_size         = 720;
     mpeg_info.v_size         = 608;
@@ -362,9 +362,7 @@ static void write_mpeg2lg(FILE *file, int type, unsigned int duration)
 {
     MPEGInfo mpeg_info;
     memset(&mpeg_info, 0, sizeof(mpeg_info));
-    mpeg_info.profile_level  = 0; // TODO: update along with md5 updates
     mpeg_info.is_progressive = false;
-    mpeg_info.chroma_format  = 0; // TODO: update along with md5 updates
     mpeg_info.low_delay      = true;
 
     uint32_t i_frame_size, non_i_frame_size;
@@ -372,32 +370,62 @@ static void write_mpeg2lg(FILE *file, int type, unsigned int duration)
     {
         case TYPE_MPEG2LG_422P_HL_1080I:
         case TYPE_MPEG2LG_422P_HL_1080P:
+            i_frame_size     = 270000;
+            non_i_frame_size = 240000;
+            mpeg_info.profile_level = 0x82;
+            mpeg_info.chroma_format = 2;
+            mpeg_info.h_size        = 1920;
+            mpeg_info.v_size        = 1080;
+            mpeg_info.bit_rate      = (50 * 1000 * 1000) / 400;
+            break;
+        case TYPE_MPEG2LG_422P_HL_720P:
+            i_frame_size     = 270000;
+            non_i_frame_size = 240000;
+            mpeg_info.profile_level = 0x82;
+            mpeg_info.chroma_format = 2;
+            mpeg_info.h_size        = 1280;
+            mpeg_info.v_size        = 720;
+            mpeg_info.bit_rate      = (50 * 1000 * 1000) / 400;
+            break;
         case TYPE_MPEG2LG_MP_HL_1080I:
         case TYPE_MPEG2LG_MP_HL_1080P:
             i_frame_size     = 270000;
             non_i_frame_size = 240000;
-            mpeg_info.h_size   = 1920;
-            mpeg_info.v_size   = 1080;
-            mpeg_info.bit_rate = (50 * 1000 * 1000) / 400;
+            mpeg_info.profile_level = 0x44;
+            mpeg_info.chroma_format = 1;
+            mpeg_info.h_size        = 1920;
+            mpeg_info.v_size        = 1080;
+            mpeg_info.bit_rate      = (50 * 1000 * 1000) / 400;
             break;
-        case TYPE_MPEG2LG_422P_HL_720P:
         case TYPE_MPEG2LG_MP_HL_720P:
             i_frame_size     = 270000;
             non_i_frame_size = 240000;
-            mpeg_info.h_size   = 1280;
-            mpeg_info.v_size   = 720;
-            mpeg_info.bit_rate = (50 * 1000 * 1000) / 400;
+            mpeg_info.profile_level = 0x44;
+            mpeg_info.chroma_format = 1;
+            mpeg_info.h_size        = 1280;
+            mpeg_info.v_size        = 720;
+            mpeg_info.bit_rate      = (50 * 1000 * 1000) / 400;
+            break;
+        case TYPE_MPEG2LG_MP_HL_1080I_1440:
+        case TYPE_MPEG2LG_MP_HL_1080P_1440:
+            i_frame_size     = 195000;
+            non_i_frame_size = 165000;
+            mpeg_info.profile_level = 0x44;
+            mpeg_info.chroma_format = 1;
+            mpeg_info.h_size        = 1440;
+            mpeg_info.v_size        = 1080;
+            mpeg_info.bit_rate      = (35 * 1000 * 1000) / 400;
             break;
         case TYPE_MPEG2LG_MP_H14_1080I:
         case TYPE_MPEG2LG_MP_H14_1080P:
-        case TYPE_MPEG2LG_MP_HL_1080I_1440:
-        case TYPE_MPEG2LG_MP_HL_1080P_1440:
         default:
             i_frame_size     = 195000;
             non_i_frame_size = 165000;
-            mpeg_info.h_size   = 1440;
-            mpeg_info.v_size   = 1080;
-            mpeg_info.bit_rate = (35 * 1000 * 1000) / 400;
+            mpeg_info.profile_level = 0x46;
+            mpeg_info.chroma_format = 1;
+            mpeg_info.h_size        = 1440;
+            mpeg_info.v_size        = 1080;
+            mpeg_info.bit_rate      = (35 * 1000 * 1000) / 400;
             break;
     }
     uint32_t max_frame_size = i_frame_size > non_i_frame_size ? i_frame_size : non_i_frame_size;
