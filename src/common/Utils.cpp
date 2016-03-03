@@ -885,12 +885,12 @@ bmx::UMID bmx::generate_umid()
     return umid;
 }
 
-bmx::UUID bmx::create_uuid_from_name(const unsigned char *ns, size_t ns_size, const string &name)
+bmx::UUID bmx::create_uuid_from_name(const void *ns, size_t ns_size, const string &name)
 {
     unsigned char digest[16];
     MD5Context ctx;
     md5_init(&ctx);
-    md5_update(&ctx, ns, (uint32_t)ns_size);
+    md5_update(&ctx, (const unsigned char*)ns, (uint32_t)ns_size);
     md5_update(&ctx, (const unsigned char*)name.c_str(), (uint32_t)name.size());
     md5_final(digest, &ctx);
 
@@ -904,7 +904,7 @@ bmx::UUID bmx::create_uuid_from_name(const unsigned char *ns, size_t ns_size, co
 
 bmx::UUID bmx::create_uuid_from_name(const string &name)
 {
-  return create_uuid_from_name((const unsigned char*)BMX_NAMESPACE.c_str(), BMX_NAMESPACE.size(), name);
+  return create_uuid_from_name(BMX_NAMESPACE.c_str(), BMX_NAMESPACE.size(), name);
 }
 
 uint16_t bmx::get_rounded_tc_base(Rational rate)

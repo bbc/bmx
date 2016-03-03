@@ -108,7 +108,7 @@ Timestamp generate_timestamp_now();
 UUID generate_uuid();
 UMID generate_umid();
 
-UUID create_uuid_from_name(const unsigned char *ns, size_t ns_size, const std::string &name);
+UUID create_uuid_from_name(const void *ns, size_t ns_size, const std::string &name);
 UUID create_uuid_from_name(const std::string &name);
 
 uint16_t get_rounded_tc_base(Rational rate);
