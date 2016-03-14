@@ -303,7 +303,7 @@ void AS10MPEG2Validator::ParseDescriptorRefValues(const char *filename)
                             mHDRefaults.mSampleRate.issetbyuser = true;
                         else
                         {
-                            fprintf(stderr, "invalid aspect ratio %u/%u, only 24000:1001, 30000:1001, 60000:1001 are allowed...\n", num, den);
+                            fprintf(stderr, "invalid sample rate %u/%u, only 24000:1001, 30000:1001, 60000:1001 are allowed...\n", num, den);
                             fatalError = true;
                         }
                     }
@@ -319,13 +319,13 @@ void AS10MPEG2Validator::ParseDescriptorRefValues(const char *filename)
                             mHDRefaults.mSampleRate.issetbyuser = true;
                         else
                         {
-                            fprintf(stderr, "invalid aspect ratio %u/%u, only 24, 25, 30, 50, 60 are allowed...\n", num, den);
+                            fprintf(stderr, "invalid sample rate %u/%u, only 24, 25, 30, 50, 60 are allowed...\n", num, den);
                             fatalError = true;
                         }
                     }
                     else
                     {
-                        fprintf(stderr, "aspect ratio %s should be defined as n or n:m\n", value.c_str());
+                        fprintf(stderr, "sample rate %s should be defined as n or n:m\n", value.c_str());
                         fatalError = true;
                     }
                 }
