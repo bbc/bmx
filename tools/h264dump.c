@@ -111,6 +111,7 @@ typedef struct
     uint8_t separate_colour_plane_flag;
     uint64_t chroma_array_type;
     uint8_t cpb_dpb_delays_present_flag;
+    uint8_t initial_cpb_removal_delay_length_minus1;
     uint8_t cpb_removal_delay_length_minus1;
     uint8_t dpb_removal_delay_length_minus1;
     uint8_t pic_struct_present_flag;
@@ -227,6 +228,9 @@ static void set_and_init_sps(ParseContext *context, uint8_t seq_parameter_set_id
     context->sps = &context->sps_cache[seq_parameter_set_id];
     memset(context->sps, 0, sizeof(*context->sps));
     context->sps->seq_parameter_set_id = seq_parameter_set_id;
+    context->sps->initial_cpb_removal_delay_length_minus1 = 23;
+    context->sps->cpb_removal_delay_length_minus1 = 23;
+    context->sps->dpb_removal_delay_length_minus1 = 23;
     context->sps->time_offset_length = 24;
     context->sps->chroma_format_idc = 1;
     context->sps->chroma_array_type = 1;
@@ -971,6 +975,7 @@ static int hrd_parameters(ParseContext *context)
     }
     context->indent--;
     u(5); PRINT_UINT("initial_cpb_removal_delay_length_minus1");
+    context->sps->initial_cpb_removal_delay_length_minus1 = (uint8_t)context->value;
     u(5); PRINT_UINT("cpb_removal_delay_length_minus1");
     context->sps->cpb_removal_delay_length_minus1 = (uint8_t)context->value;
     u(5); PRINT_UINT("dpb_removal_delay_length_minus1");
@@ -1521,9 +1526,9 @@ static int buffering_period(ParseContext *context, uint64_t payload_type, uint64
         printf("%*c nal:\n", context->indent * 4, ' ');
         context->indent++;
         for (sched_sel_idx = 0; sched_sel_idx <= context->sps->cpb_cnt_minus1; sched_sel_idx++) {
-            u(context->sps->cpb_removal_delay_length_minus1 + 1);
+            u(context->sps->initial_cpb_removal_delay_length_minus1 + 1);
             printf("%*c initial_cpb_removal_delay[%" PRIu64 "]        : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
-            u(context->sps->cpb_removal_delay_length_minus1 + 1);
+            u(context->sps->initial_cpb_removal_delay_length_minus1 + 1);
             printf("%*c initial_cpb_removal_delay_offset[%" PRIu64 "] : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
         }
         context->indent--;
@@ -1533,9 +1538,9 @@ static int buffering_period(ParseContext *context, uint64_t payload_type, uint64
         printf("%*c vcl:\n", context->indent * 4, ' ');
         context->indent++;
         for (sched_sel_idx = 0; sched_sel_idx <= context->sps->cpb_cnt_minus1; sched_sel_idx++) {
-            u(context->sps->cpb_removal_delay_length_minus1 + 1);
+            u(context->sps->initial_cpb_removal_delay_length_minus1 + 1);
             printf("%*c initial_cpb_removal_delay [%" PRIu64 "]       : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
-            u(context->sps->cpb_removal_delay_length_minus1 + 1);
+            u(context->sps->initial_cpb_removal_delay_length_minus1 + 1);
             printf("%*c initial_cpb_removal_delay_offset[%" PRIu64 "] : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
         }
         context->indent--;
