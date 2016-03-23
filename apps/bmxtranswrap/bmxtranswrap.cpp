@@ -369,10 +369,12 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --rw-intl               Interleave input reads with output writes\n");
     fprintf(stderr, "  --rw-intl-size          The interleave size. Default is %u\n", DEFAULT_RW_INTL_SIZE);
     fprintf(stderr, "                          Value must be a multiple of the system page size, %u\n", mxf_get_system_page_size());
-#if defined(_WIN32) && !defined(__MINGW32__)
+#if defined(_WIN32)
     fprintf(stderr, "  --seq-scan              Set the sequential scan hint for optimizing file caching whilst reading\n");
+#if !defined(__MINGW32__)
     fprintf(stderr, "  --mmap-file             Use memory-mapped file I/O for the MXF files\n");
     fprintf(stderr, "                          Note: this may reduce file I/O performance and was found to be slower over network drives\n");
+#endif
 #endif
     fprintf(stderr, "  --avcihead <format> <file> <offset>\n");
     fprintf(stderr, "                          Default AVC-Intra sequence header data (512 bytes) to use when the input file does not have it\n");
@@ -1046,15 +1048,17 @@ int main(int argc, const char** argv)
             rw_interleave_size = uvalue;
             cmdln_index++;
         }
-#if defined(_WIN32) && !defined(__MINGW32__)
+#if defined(_WIN32)
         else if (strcmp(argv[cmdln_index], "--seq-scan") == 0)
         {
             input_file_flags |= MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
         }
+#if !defined(__MINGW32__)
         else if (strcmp(argv[cmdln_index], "--mmap-file") == 0)
         {
             use_mmap_file = true;
         }
+#endif
 #endif
         else if (strcmp(argv[cmdln_index], "--avcihead") == 0)
         {

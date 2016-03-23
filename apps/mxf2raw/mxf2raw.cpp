@@ -1507,10 +1507,12 @@ static void usage(const char *cmd)
     fprintf(stderr, " --noro                Don't include roll-out frames\n");
     fprintf(stderr, " --rt <factor>         Read at realtime rate x <factor>, where <factor> is a floating point value\n");
     fprintf(stderr, "                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
-#if defined(_WIN32) && !defined(__MINGW32__)
+#if defined(_WIN32)
     fprintf(stderr, " --no-seq-scan         Do not set the sequential scan hint for optimizing file caching\n");
+#if !defined(__MINGW32__)
     fprintf(stderr, " --mmap-file           Use memory-mapped file I/O for the MXF files\n");
     fprintf(stderr, "                       Note: this may reduce file I/O performance and was found to be slower over network drives\n");
+#endif
 #endif
     fprintf(stderr, " --gf                  Support growing files. Retry reading a frame when it fails\n");
     fprintf(stderr, " --gf-retries <max>    Set the maximum times to retry reading a frame. The default is %u.\n", DEFAULT_GF_RETRIES);
@@ -1577,7 +1579,7 @@ int main(int argc, const char** argv)
     int64_t duration = -1;
     bool no_precharge = false;
     bool no_rollout = false;
-#if defined(_WIN32) && !defined(__MINGW32__)
+#if defined(_WIN32)
     int file_flags = MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
 #else
     int file_flags = 0;
@@ -1963,15 +1965,17 @@ int main(int argc, const char** argv)
             realtime = true;
             cmdln_index++;
         }
-#if defined(_WIN32) && !defined(__MINGW32__)
+#if defined(_WIN32)
         else if (strcmp(argv[cmdln_index], "--no-seq-scan") == 0)
         {
             file_flags &= ~MXF_WIN32_FLAG_SEQUENTIAL_SCAN;
         }
+#if !defined(__MINGW32__)
         else if (strcmp(argv[cmdln_index], "--mmap-file") == 0)
         {
             use_mmap_file = true;
         }
+#endif
 #endif
         else if (strcmp(argv[cmdln_index], "--gf") == 0)
         {
