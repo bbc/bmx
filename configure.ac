@@ -151,12 +151,19 @@ PKG_CHECK_MODULES(LIBMXFPP, libMXF++-${LIBMXFPP_MAJORMINOR} >= 1.0.3)
 AC_SUBST(LIBMXFPP_CFLAGS)
 AC_SUBST(LIBMXFPP_LIBS)
 
-LIBCURL_VER="7.22.0"
-PKG_CHECK_MODULES(LIBCURL, libcurl >= $LIBCURL_VER, HAVE_LIBCURL=yes, HAVE_LIBCURL=no)
-if test "x${HAVE_LIBCURL}" == xyes; then
-	AC_DEFINE([HAVE_LIBCURL], [1], [Define to 1 if you have the libcurl library])
-else
-	AC_MSG_WARN([Disabled HTTP file access because libcurl >= $LIBCURL_VER not found])
+AC_ARG_WITH(curl,
+	AC_HELP_STRING([--with-curl],
+		[support HTTP file access using libcurl [default=check]]),
+	with_curl=no,
+	with_curl=check)
+if test x"$with_curl" == xcheck; then
+	LIBCURL_VER="7.22.0"
+	PKG_CHECK_MODULES(LIBCURL, libcurl >= $LIBCURL_VER, HAVE_LIBCURL=yes, HAVE_LIBCURL=no)
+	if test "x${HAVE_LIBCURL}" == xyes; then
+		AC_DEFINE([HAVE_LIBCURL], [1], [Define if you have the libcurl library])
+	else
+		AC_MSG_WARN([Disabled HTTP file access because libcurl >= $LIBCURL_VER not found])
+	fi
 fi
 
 
