@@ -52,10 +52,13 @@ using namespace mxfpp;
 
 
 
+static const uint32_t FIRST_XML_TRACK_ID = 9001;
+
 static const uint32_t KAG_SIZE = 0x200;
 
-static const uint32_t INDEX_SID = 1;
-static const uint32_t BODY_SID  = 2;
+static const uint32_t INDEX_SID         = 1;
+static const uint32_t BODY_SID          = 2;
+static const uint32_t FIRST_STREAM_SID  = 10;
 
 static const mxfRational AUDIO_SAMPLING_RATE = SAMPLING_RATE_48K;
 
@@ -128,6 +131,8 @@ D10File::D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mFileSourcePackage = 0;
     mCPManager = new D10ContentPackageManager(frame_rate);
     mIndexSegment = 0;
+    mFirstWrite = true;
+    mRequireBodyPartition = false;
     mMXFChecksumFile = 0;
 
     if (flavour & D10_SINGLE_PASS_MD5_WRITE_FLAVOUR) {
@@ -141,6 +146,8 @@ D10File::~D10File()
     size_t i;
     for (i = 0; i < mTracks.size(); i++)
         delete mTracks[i];
+    for (i = 0; i < mXMLTracks.size(); i++)
+        delete mXMLTracks[i];
 
     delete mMXFFile;
     delete mDataModel;
@@ -236,6 +243,16 @@ D10Track* D10File::CreateTrack(EssenceType essence_type)
     return mTracks.back();
 }
 
+D10XMLTrack* D10File::CreateXMLTrack()
+{
+    uint32_t track_id    = FIRST_XML_TRACK_ID + mXMLTracks.size();
+    uint32_t track_index = (uint32_t)mTracks.size();
+    uint32_t stream_id   = FIRST_STREAM_SID + mXMLTracks.size();
+
+    mXMLTracks.push_back(new D10XMLTrack(this, track_index, track_id, stream_id));
+    return mXMLTracks.back();
+}
+
 void D10File::PrepareHeaderMetadata()
 {
     if (mHeaderMetadata)
@@ -292,8 +309,20 @@ void D10File::WriteSamples(uint32_t track_index, const unsigned char *data, uint
 
     GetTrack(track_index)->WriteSamplesInt(data, size, num_samples);
 
-    while (mCPManager->HaveContentPackage())
+    while (mCPManager->HaveContentPackage()) {
+        if (mFirstWrite && mRequireBodyPartition) {
+            if (mInputDuration >= 0)
+                BMX_EXCEPTION(("XML track's Generic Stream partition is incompatible with single pass flavours"));
+            Partition &ess_partition = mMXFFile->createPartition();
+            ess_partition.setKey(&MXF_PP_K(OpenComplete, Body));
+            ess_partition.setBodySID(BODY_SID);
+            ess_partition.write(mMXFFile);
+
+            mFirstWrite = false;
+        }
+
         mCPManager->WriteNextContentPackage(mMXFFile);
+    }
 }
 
 void D10File::CompleteWrite()
@@ -368,6 +397,17 @@ void D10File::CompleteWrite()
 
         mMXFFile->updatePartitions();
         mMXFFile->closeMemoryFile();
+
+
+        // re-write the generic stream partition packs
+
+        mMXFFile->updateGenericStreamPartitions();
+
+
+        // update body partition status and re-write the partition packs
+
+        if (mRequireBodyPartition)
+            mMXFFile->updateBodyPartitions(&MXF_PP_K(ClosedComplete, Body));
     }
 
 
@@ -406,7 +446,10 @@ void D10File::CreateHeaderMetadata()
     preface->setVersion(MXF_PREFACE_VER(1, 2));
     preface->setOperationalPattern(MXF_OP_L(1a, MultiTrack_Stream_Internal));
     preface->appendEssenceContainers(mEssenceContainerUL);
-    preface->setDMSchemes(vector<mxfUL>());
+    if (mXMLTracks.empty())
+        preface->setDMSchemes(vector<mxfUL>());
+    else
+        preface->appendDMSchemes(MXF_DM_L(RP2057));
 
     // Preface - Identification
     Identification *ident = new Identification(mHeaderMetadata);
@@ -591,11 +634,28 @@ void D10File::CreateHeaderMetadata()
         sound_descriptor->setChannelCount(mCPManager->GetSoundChannelCount());
         sound_descriptor->setQuantizationBits(16);
     }
+
+    for (i = 0; i < mXMLTracks.size(); i++)
+        mXMLTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage);
 }
 
 void D10File::CreateFile()
 {
     BMX_ASSERT(mHeaderMetadata);
+
+    // check whether a body partition is required
+
+    mRequireBodyPartition = false;
+    size_t i;
+    for (i = 0; i < mXMLTracks.size(); i++) {
+        D10XMLTrack *xml_track = mXMLTracks[i];
+        if (xml_track->RequireStreamPartition()) {
+            if (mInputDuration >= 0)
+                BMX_EXCEPTION(("XML track's Generic Stream partition is incompatible with single pass flavours"));
+            mRequireBodyPartition = true;
+            break;
+        }
+    }
 
 
     // set minimum llen
@@ -617,7 +677,10 @@ void D10File::CreateFile()
         header_partition.setKey(&MXF_PP_K(OpenIncomplete, Header));
     header_partition.setVersion(1, 2);  // v1.2 - smpte 377-2004
     header_partition.setIndexSID(INDEX_SID);
-    header_partition.setBodySID(BODY_SID);
+    if (mRequireBodyPartition)
+        header_partition.setBodySID(0);
+    else
+        header_partition.setBodySID(BODY_SID);
     header_partition.setKagSize(KAG_SIZE);
     header_partition.setOperationalPattern(&MXF_OP_L(1a, MultiTrack_Stream_Internal));
     header_partition.addEssenceContainer(&mEssenceContainerUL);
@@ -641,7 +704,6 @@ void D10File::CreateFile()
     mIndexSegment->setBodySID(BODY_SID);
 
     const std::vector<uint32_t> &ext_delta_entries = mCPManager->GetExtDeltaEntryArray();
-    size_t i;
     for (i = 0; i < ext_delta_entries.size(); i++)
         mIndexSegment->appendDeltaEntry(0, 0, ext_delta_entries[i]);
     mIndexSegment->setEditUnitByteCount(mCPManager->GetContentPackageSize());
@@ -656,6 +718,22 @@ void D10File::CreateFile()
 
     mMXFFile->updatePartitions();
     mMXFFile->closeMemoryFile();
+
+
+    // write generic stream partitions
+
+    for (i = 0; i < mXMLTracks.size(); i++) {
+        D10XMLTrack *xml_track = mXMLTracks[i];
+        if (xml_track->RequireStreamPartition()) {
+            if (mInputDuration >= 0)
+                BMX_EXCEPTION(("XML track's Generic Stream partition is incompatible with single pass flavours"));
+            Partition &stream_partition = mMXFFile->createPartition();
+            stream_partition.setKey(&MXF_GS_PP_K(GenericStream));
+            stream_partition.setBodySID(xml_track->GetStreamId());
+            stream_partition.write(mMXFFile);
+            xml_track->WriteStreamXMLData(mMXFFile);
+        }
+    }
 }
 
 void D10File::UpdatePackageMetadata()

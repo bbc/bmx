@@ -368,6 +368,9 @@
     <ClInclude Include="..\..\..\include\bmx\d10_mxf\D10Track.h">
       <Filter>Header Files\d10_mxf</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\d10_mxf\D10XMLTrack.h">
+      <Filter>Header Files\d10_mxf</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\essence_parser\AVCEssenceParser.h">
       <Filter>Header Files\essence_parser</Filter>
     </ClInclude>
@@ -621,6 +624,9 @@
       <Filter>Header Files\rdd9_mxf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9VBIDataTrack.h">
+      <Filter>Header Files\rdd9_mxf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9XMLTrack.h">
       <Filter>Header Files\rdd9_mxf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\st436\RDD6BitBuffer.h">
@@ -901,6 +907,9 @@
     <ClCompile Include="..\..\..\src\d10_mxf\D10Track.cpp">
       <Filter>Source Files\d10_mxf</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\d10_mxf\D10XMLTrack.cpp">
+      <Filter>Source Files\d10_mxf</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\essence_parser\AVCEssenceParser.cpp">
       <Filter>Source Files\essence_parser</Filter>
     </ClCompile>
@@ -1136,6 +1145,9 @@
       <Filter>Source Files\rdd9_mxf</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9VBIDataTrack.cpp">
+      <Filter>Source Files\rdd9_mxf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9XMLTrack.cpp">
       <Filter>Source Files\rdd9_mxf</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\st436\RDD6BitBuffer.cpp">

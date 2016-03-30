@@ -12,15 +12,26 @@ sampledir=/tmp/
 
 create_test_file()
 {
-    $testdir/create_test_essence -t 42 -d 3 $tmpdir/audio.pcm
-    $testdir/create_test_essence -t 7 -d 3 $tmpdir/video.h264
+    if test $1 = "op1a"; then
+            $testdir/create_test_essence -t 42 -d 3 $tmpdir/audio.pcm
+            $testdir/create_test_essence -t 7 -d 3 $tmpdir/video
+            videoformat=avci100_1080i
+    elif test $1 = "d10"; then
+            $testdir/create_test_essence -t 42 -d 3 $tmpdir/audio.pcm
+            $testdir/create_test_essence -t 11 -d 3 $tmpdir/video
+            videoformat=d10_50
+    else
+            $testdir/create_test_essence -t 42 -d 24 $tmpdir/audio.pcm
+            $testdir/create_test_essence -t 14 -d 24 $tmpdir/video
+            videoformat=mpeg2lg_422p_hl_1080i
+    fi
 
     $appsdir/raw2bmx/raw2bmx \
         --regtest \
-        -t op1a \
+        -t $1 \
         -f 25 \
         -y 10:00:00:00 \
-        -o $1 \
+        -o $2 \
         --embed-xml $base/utf8.xml \
         --embed-xml $base/utf16be.xml \
         --embed-xml $base/utf16le.xml \
@@ -30,7 +41,7 @@ create_test_file()
         --embed-xml $base/other.xml \
         --embed-xml $base/other.xml \
         --embed-xml $base/utf8_noprolog.xml \
-        --avci100_1080i $tmpdir/video.h264 \
+        --$videoformat $tmpdir/video \
         -q 24 --pcm $tmpdir/audio.pcm \
         -q 24 --pcm $tmpdir/audio.pcm \
         >/dev/null
@@ -50,11 +61,11 @@ create_read_result()
 
 check()
 {
-    create_test_file $tmpdir/test.mxf &&
+    create_test_file $1 $tmpdir/test.mxf &&
         $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
-        diff $tmpdir/test.md5 $base/test.md5 &&
+        diff $tmpdir/test.md5 $base/test_$1.md5 &&
         create_read_result $tmpdir/test.xml $tmpdir/textobject $tmpdir/test.mxf &&
-        diff $tmpdir/test.xml $base/info.xml &&
+        diff $tmpdir/test.xml $base/info_$1.xml &&
         diff $tmpdir/textobject_0.xml $base/utf8.xml &&
         diff $tmpdir/textobject_1.xml $base/utf16be.xml &&
         diff $tmpdir/textobject_2.xml $base/utf16le.xml &&
@@ -66,26 +77,42 @@ check()
 
 create_data()
 {
-    create_test_file $tmpdir/test.mxf &&
-        $md5tool < $tmpdir/test.mxf > $base/test.md5 &&
-        create_read_result $base/info.xml $tmpdir/textobject $tmpdir/test.mxf
+    create_test_file $1 $tmpdir/test.mxf &&
+        $md5tool < $tmpdir/test.mxf > $base/test_$1.md5 &&
+        create_read_result $base/info_$1.xml $tmpdir/textobject $tmpdir/test.mxf
 }
 
 create_sample()
 {
-    create_test_file $sampledir/test.mxf &&
-        create_read_result $sampledir/test.xml $sampledir/textobject $sampledir/test.mxf
+    create_test_file $1 $sampledir/test_$1.mxf &&
+        create_read_result $sampledir/test_$1.xml $sampledir/textobject_$1 $sampledir/test_$1.mxf
+}
+
+
+check_all()
+{
+    check op1a && check rdd9 && check d10
+}
+
+create_data_all()
+{
+    create_data op1a && create_data rdd9 && create_data d10
+}
+
+create_sample_all()
+{
+    create_sample op1a && create_sample rdd9 && create_sample d10
 }
 
 
 mkdir -p $tmpdir
 
 if test "$1" = "create_data" ; then
-    create_data
+    create_data_all
 elif test "$1" = "create_sample" ; then
-    create_sample
+    create_sample_all
 else
-    check
+    check_all
 fi
 res=$?
 

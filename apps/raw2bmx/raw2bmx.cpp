@@ -395,7 +395,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --clip-wrap             Use clip wrapping for a single sound track\n");
     fprintf(stderr, "    --mp-track-num          Use the material package track number property to define a track order. By default the track number is set to 0\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/op1a:\n");
+    fprintf(stderr, "  op1a/rdd9/d10:\n");
     fprintf(stderr, "    --xml-scheme-id <id>    Set the XML payload scheme identifier associated with the following --embed-xml option.\n");
     fprintf(stderr, "                            The <id> is one of the following:\n");
     fprintf(stderr, "                                * a SMPTE UL, formatted as a 'urn:smpte:ul:...',\n");
@@ -2776,7 +2776,10 @@ int main(int argc, const char** argv)
     try
     {
         // check the XML files exist
-        if (clip_type == CW_OP1A_CLIP_TYPE) {
+        if (clip_type == CW_OP1A_CLIP_TYPE ||
+            clip_type == CW_RDD9_CLIP_TYPE ||
+            clip_type == CW_D10_CLIP_TYPE)
+        {
             size_t i;
             for (i = 0; i < embed_xml.size(); i++) {
                 const EmbedXMLInfo &info = embed_xml[i];
@@ -2786,7 +2789,8 @@ int main(int argc, const char** argv)
                 }
             }
         } else if (!embed_xml.empty()) {
-            log_warn("Embedding XML is only supported in OP-1A clip type\n");
+            log_warn("Embedding XML is not supported for clip type %s\n",
+                     clip_type_to_string(clip_type, clip_sub_type));
         }
 
         // update Avid uncompressed essence types if component depth equals 10
@@ -3231,7 +3235,7 @@ int main(int argc, const char** argv)
                     log_error("Essence type '%s' @%d/%d fps not supported for clip type '%s'\n",
                               essence_type_to_string(input->essence_type),
                               frame_rate.numerator, frame_rate.denominator,
-                              clip_type_to_string(clip_type, clip_sub_type).c_str());
+                              clip_type_to_string(clip_type, clip_sub_type));
                     throw false;
                 }
             }
@@ -3925,16 +3929,18 @@ int main(int argc, const char** argv)
 
         // embed XML
 
-        if (clip_type == CW_OP1A_CLIP_TYPE) {
-            OP1AFile *op1a_clip = clip->GetOP1AClip();
+        if (clip_type == CW_OP1A_CLIP_TYPE ||
+            clip_type == CW_RDD9_CLIP_TYPE ||
+            clip_type == CW_D10_CLIP_TYPE)
+        {
             for (i = 0; i < embed_xml.size(); i++) {
                 const EmbedXMLInfo &info = embed_xml[i];
-                OP1AXMLTrack *xml_track = op1a_clip->CreateXMLTrack();
+                ClipWriterTrack *xml_track = clip->CreateXMLTrack();
                 if (info.scheme_id != g_Null_UL)
-                    xml_track->SetSchemeId(info.scheme_id);
+                    xml_track->SetXMLSchemeId(info.scheme_id);
                 if (info.lang)
-                  xml_track->SetLanguageCode(info.lang);
-                xml_track->SetSource(info.filename);
+                  xml_track->SetXMLLanguageCode(info.lang);
+                xml_track->SetXMLSource(info.filename);
             }
         }
 

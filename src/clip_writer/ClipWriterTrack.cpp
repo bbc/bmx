@@ -45,6 +45,7 @@
 #include <bmx/mxf_op1a/OP1AAVCITrack.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_op1a/OP1ADataTrack.h>
+#include <bmx/mxf_op1a/OP1AXMLTrack.h>
 #include <bmx/avid_mxf/AvidPictureTrack.h>
 #include <bmx/avid_mxf/AvidDVTrack.h>
 #include <bmx/avid_mxf/AvidD10Track.h>
@@ -57,9 +58,11 @@
 #include <bmx/avid_mxf/AvidPCMTrack.h>
 #include <bmx/d10_mxf/D10MPEGTrack.h>
 #include <bmx/d10_mxf/D10PCMTrack.h>
+#include <bmx/d10_mxf/D10XMLTrack.h>
 #include <bmx/rdd9_mxf/RDD9MPEG2LGTrack.h>
 #include <bmx/rdd9_mxf/RDD9PCMTrack.h>
 #include <bmx/rdd9_mxf/RDD9DataTrack.h>
+#include <bmx/rdd9_mxf/RDD9XMLTrack.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -103,6 +106,9 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AS02Track *track)
     mD10Track = 0;
     mRDD9Track = 0;
     mWaveTrack = 0;
+    mOP1AXMLTrack = 0;
+    mD10XMLTrack = 0;
+    mRDD9XMLTrack = 0;
 }
 
 ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, OP1ATrack *track)
@@ -115,6 +121,9 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, OP1ATrack *track)
     mD10Track = 0;
     mRDD9Track = 0;
     mWaveTrack = 0;
+    mOP1AXMLTrack = 0;
+    mD10XMLTrack = 0;
+    mRDD9XMLTrack = 0;
 }
 
 ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AvidTrack *track)
@@ -127,6 +136,9 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, AvidTrack *track)
     mD10Track = 0;
     mRDD9Track = 0;
     mWaveTrack = 0;
+    mOP1AXMLTrack = 0;
+    mD10XMLTrack = 0;
+    mRDD9XMLTrack = 0;
 }
 
 ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, D10Track *track)
@@ -139,6 +151,9 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, D10Track *track)
     mD10Track = track;
     mRDD9Track = 0;
     mWaveTrack = 0;
+    mOP1AXMLTrack = 0;
+    mD10XMLTrack = 0;
+    mRDD9XMLTrack = 0;
 }
 
 ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, RDD9Track *track)
@@ -151,6 +166,9 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, RDD9Track *track)
     mD10Track = 0;
     mRDD9Track = track;
     mWaveTrack = 0;
+    mOP1AXMLTrack = 0;
+    mD10XMLTrack = 0;
+    mRDD9XMLTrack = 0;
 }
 
 ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, WaveTrackWriter *track)
@@ -163,6 +181,54 @@ ClipWriterTrack::ClipWriterTrack(EssenceType essence_type, WaveTrackWriter *trac
     mD10Track = 0;
     mRDD9Track = 0;
     mWaveTrack = track;
+    mOP1AXMLTrack = 0;
+    mD10XMLTrack = 0;
+    mRDD9XMLTrack = 0;
+}
+
+ClipWriterTrack::ClipWriterTrack(OP1AXMLTrack *track)
+{
+    mClipType = CW_OP1A_CLIP_TYPE;
+    mEssenceType = UNKNOWN_ESSENCE_TYPE;
+    mAS02Track = 0;
+    mOP1ATrack = 0;
+    mAvidTrack = 0;
+    mD10Track = 0;
+    mRDD9Track = 0;
+    mWaveTrack = 0;
+    mOP1AXMLTrack = track;
+    mD10XMLTrack = 0;
+    mRDD9XMLTrack = 0;
+}
+
+ClipWriterTrack::ClipWriterTrack(D10XMLTrack *track)
+{
+    mClipType = CW_D10_CLIP_TYPE;
+    mEssenceType = UNKNOWN_ESSENCE_TYPE;
+    mAS02Track = 0;
+    mOP1ATrack = 0;
+    mAvidTrack = 0;
+    mD10Track = 0;
+    mRDD9Track = 0;
+    mWaveTrack = 0;
+    mOP1AXMLTrack = 0;
+    mD10XMLTrack = track;
+    mRDD9XMLTrack = 0;
+}
+
+ClipWriterTrack::ClipWriterTrack(RDD9XMLTrack *track)
+{
+    mClipType = CW_RDD9_CLIP_TYPE;
+    mEssenceType = UNKNOWN_ESSENCE_TYPE;
+    mAS02Track = 0;
+    mOP1ATrack = 0;
+    mAvidTrack = 0;
+    mD10Track = 0;
+    mRDD9Track = 0;
+    mWaveTrack = 0;
+    mOP1AXMLTrack = 0;
+    mD10XMLTrack = 0;
+    mRDD9XMLTrack = track;
 }
 
 ClipWriterTrack::~ClipWriterTrack()
@@ -976,6 +1042,111 @@ void ClipWriterTrack::SetMaxDataSize(uint32_t size)
         case CW_AS02_CLIP_TYPE:
         case CW_AVID_CLIP_TYPE:
         case CW_D10_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
+void ClipWriterTrack::SetXMLSource(const string &filename)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1AXMLTrack *xml_track = dynamic_cast<OP1AXMLTrack*>(mOP1AXMLTrack);
+            if (xml_track)
+                xml_track->SetSource(filename);
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9XMLTrack *xml_track = dynamic_cast<RDD9XMLTrack*>(mRDD9XMLTrack);
+            if (xml_track)
+                xml_track->SetSource(filename);
+            break;
+        }
+        case CW_D10_CLIP_TYPE:
+        {
+            D10XMLTrack *xml_track = dynamic_cast<D10XMLTrack*>(mD10XMLTrack);
+            if (xml_track)
+                xml_track->SetSource(filename);
+            break;
+        }
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
+void ClipWriterTrack::SetXMLSchemeId(UL id)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1AXMLTrack *xml_track = dynamic_cast<OP1AXMLTrack*>(mOP1AXMLTrack);
+            if (xml_track)
+                xml_track->SetSchemeId(id);
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9XMLTrack *xml_track = dynamic_cast<RDD9XMLTrack*>(mRDD9XMLTrack);
+            if (xml_track)
+                xml_track->SetSchemeId(id);
+            break;
+        }
+        case CW_D10_CLIP_TYPE:
+        {
+            D10XMLTrack *xml_track = dynamic_cast<D10XMLTrack*>(mD10XMLTrack);
+            if (xml_track)
+                xml_track->SetSchemeId(id);
+            break;
+        }
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
+void ClipWriterTrack::SetXMLLanguageCode(const string &code)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1AXMLTrack *xml_track = dynamic_cast<OP1AXMLTrack*>(mOP1AXMLTrack);
+            if (xml_track)
+                xml_track->SetLanguageCode(code);
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9XMLTrack *xml_track = dynamic_cast<RDD9XMLTrack*>(mRDD9XMLTrack);
+            if (xml_track)
+                xml_track->SetLanguageCode(code);
+            break;
+        }
+        case CW_D10_CLIP_TYPE:
+        {
+            D10XMLTrack *xml_track = dynamic_cast<D10XMLTrack*>(mD10XMLTrack);
+            if (xml_track)
+                xml_track->SetLanguageCode(code);
+            break;
+        }
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
         case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:

@@ -39,6 +39,7 @@
 #include <bmx/d10_mxf/D10Track.h>
 #include <bmx/d10_mxf/D10MPEGTrack.h>
 #include <bmx/d10_mxf/D10PCMTrack.h>
+#include <bmx/d10_mxf/D10XMLTrack.h>
 #include <bmx/mxf_helper/MXFFileFactory.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFChecksumFile.h>
@@ -80,6 +81,7 @@ public:
 
 public:
     D10Track* CreateTrack(EssenceType essence_type);
+    D10XMLTrack* CreateXMLTrack();
 
 public:
     void PrepareHeaderMetadata();
@@ -137,6 +139,7 @@ private:
     std::map<uint32_t, D10Track*> mTrackMap;
     D10MPEGTrack *mPictureTrack;
     D10PCMTrack *mFirstSoundTrack;
+    std::vector<D10XMLTrack*> mXMLTracks;
 
     mxfUL mEssenceContainerUL;
 
@@ -149,6 +152,9 @@ private:
 
     D10ContentPackageManager *mCPManager;
     mxfpp::IndexTableSegment *mIndexSegment;
+
+    bool mFirstWrite;
+    bool mRequireBodyPartition;
 
     MXFChecksumFile *mMXFChecksumFile;
     std::string mMD5DigestStr;

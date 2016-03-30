@@ -57,9 +57,13 @@ static const uint32_t TIMECODE_TRACK_ID         = 1;
 static const uint32_t FIRST_PICTURE_TRACK_ID    = 2;
 static const uint32_t FIRST_SOUND_TRACK_ID      = 4;
 static const uint32_t FIRST_DATA_TRACK_ID       = 101;
+static const uint32_t FIRST_XML_TRACK_ID        = 9001;
+
 static const uint32_t KAG_SIZE                  = 0x200;
 static const uint32_t INDEX_SID                 = 1;
 static const uint32_t BODY_SID                  = 2;
+static const uint32_t FIRST_STREAM_SID          = 10;
+
 static const uint32_t MEMORY_WRITE_CHUNK_SIZE   = 8192;
 
 
@@ -145,6 +149,8 @@ RDD9File::~RDD9File()
     size_t i;
     for (i = 0; i < mTracks.size(); i++)
         delete mTracks[i];
+    for (i = 0; i < mXMLTracks.size(); i++)
+        delete mXMLTracks[i];
 
     delete mMXFFile;
     delete mDataModel;
@@ -265,6 +271,16 @@ RDD9Track* RDD9File::CreateTrack(EssenceType essence_type)
     mTrackMap[mTracks.back()->GetTrackIndex()] = mTracks.back();
 
     return mTracks.back();
+}
+
+RDD9XMLTrack* RDD9File::CreateXMLTrack()
+{
+    uint32_t track_id    = FIRST_XML_TRACK_ID + mXMLTracks.size();
+    uint32_t track_index = (uint32_t)mTracks.size();
+    uint32_t stream_id   = FIRST_STREAM_SID + mXMLTracks.size();
+
+    mXMLTracks.push_back(new RDD9XMLTrack(this, track_index, track_id, stream_id));
+    return mXMLTracks.back();
 }
 
 void RDD9File::PrepareHeaderMetadata()
@@ -447,6 +463,11 @@ void RDD9File::CompleteWrite()
         mMXFFile->closeMemoryFile();
 
 
+        // update and re-write the generic stream partition packs
+
+        mMXFFile->updateGenericStreamPartitions();
+
+
         // update body partition status and re-write the partition packs
 
         if (!(mFlavour & RDD9_NO_BODY_PART_UPDATE_FLAVOUR))
@@ -513,7 +534,10 @@ void RDD9File::CreateHeaderMetadata()
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         preface->appendEssenceContainers(*iter);
-    preface->setDMSchemes(vector<mxfUL>());
+    if (mXMLTracks.empty())
+        preface->setDMSchemes(vector<mxfUL>());
+    else
+        preface->appendDMSchemes(MXF_DM_L(RP2057));
     if ((mFlavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (mFlavour & RDD9_AS10_FLAVOUR))
         preface->setIsRIPPresent(true);
 
@@ -617,6 +641,8 @@ void RDD9File::CreateHeaderMetadata()
     size_t i;
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage, mFileSourcePackage);
+    for (i = 0; i < mXMLTracks.size(); i++)
+        mXMLTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage);
 }
 
 void RDD9File::CreateFile()
@@ -654,6 +680,21 @@ void RDD9File::CreateFile()
 
     mMXFFile->updatePartitions();
     mMXFFile->closeMemoryFile();
+
+
+    // write generic stream partitions
+
+    size_t i;
+    for (i = 0; i < mXMLTracks.size(); i++) {
+        RDD9XMLTrack *xml_track = mXMLTracks[i];
+        if (xml_track->RequireStreamPartition()) {
+            Partition &stream_partition = mMXFFile->createPartition();
+            stream_partition.setKey(&MXF_GS_PP_K(GenericStream));
+            stream_partition.setBodySID(xml_track->GetStreamId());
+            stream_partition.write(mMXFFile);
+            xml_track->WriteStreamXMLData(mMXFFile);
+        }
+    }
 }
 
 void RDD9File::UpdatePackageMetadata()

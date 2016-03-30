@@ -542,17 +542,9 @@ void OP1AFile::CompleteWrite()
         mMXFFile->closeMemoryFile();
 
 
-        // re-write the generic stream partition packs
+        // update and re-write the generic stream partition packs
 
-        vector<Partition*> partitions = mMXFFile->getPartitions();
-        size_t i;
-        for (i = 0; i < partitions.size(); i++) {
-            Partition *partition = partitions[i];
-            if (partition->isGenericStream()) {
-                mMXFFile->updatePartitions(i, i + partitions.size() - 1);
-                break;
-            }
-        }
+        mMXFFile->updateGenericStreamPartitions();
 
 
         // re-write the CBE index table segment(s) that are not in the header metadata
@@ -811,7 +803,7 @@ void OP1AFile::CreateFile()
         OP1AXMLTrack *xml_track = mXMLTracks[i];
         if (xml_track->RequireStreamPartition()) {
             if (header_partition.getIndexSID() || header_partition.getBodySID())
-                BMX_EXCEPTION(("XML track's Generic Stream partition is incompatible with minimal partitions OP-1A flavour"));
+                BMX_EXCEPTION(("XML track's Generic Stream partition is incompatible with minimal partitions flavour"));
 
             if (mMXFFile->isMemoryFileOpen())
                 mMXFFile->closeMemoryFile();

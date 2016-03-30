@@ -87,6 +87,7 @@ nobase_library_include_HEADERS = \
 	bmx/d10_mxf/D10MPEGTrack.h \
 	bmx/d10_mxf/D10PCMTrack.h \
 	bmx/d10_mxf/D10Track.h \
+	bmx/d10_mxf/D10XMLTrack.h \
 	bmx/rdd9_mxf/RDD9ANCDataTrack.h \
 	bmx/rdd9_mxf/RDD9ContentPackage.h \
 	bmx/rdd9_mxf/RDD9DataTrack.h \
@@ -98,6 +99,7 @@ nobase_library_include_HEADERS = \
 	bmx/rdd9_mxf/RDD9Track.h \
 	bmx/rdd9_mxf/RDD9Validator.h \
 	bmx/rdd9_mxf/RDD9VBIDataTrack.h \
+	bmx/rdd9_mxf/RDD9XMLTrack.h \
 	bmx/avid_mxf/AvidAlphaTrack.h \
 	bmx/avid_mxf/AvidAVCITrack.h \
 	bmx/avid_mxf/AvidClip.h \

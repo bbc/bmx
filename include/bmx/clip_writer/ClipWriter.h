@@ -60,8 +60,6 @@ public:
     static ClipWriter* OpenNewRDD9Clip(int flavour, mxfpp::File *file, Rational frame_rate);
     static ClipWriter* OpenNewWaveClip(WaveIO *file);
 
-    static std::string ClipWriterTypeToString(ClipWriterType clip_type);
-
 public:
     ClipWriter(AS02Bundle *bundle, AS02Clip *clip);
     ClipWriter(OP1AFile *clip);
@@ -78,6 +76,7 @@ public:
 
 public:
     ClipWriterTrack* CreateTrack(EssenceType essence_type, std::string track_filename = "");
+    ClipWriterTrack* CreateXMLTrack();
 
 public:
     void PrepareHeaderMetadata();

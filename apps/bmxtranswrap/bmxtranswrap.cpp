@@ -462,6 +462,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            The timecode fields are ignored, i.e. they are set to 'undefined' values in the RDD-6 metadata stream\n");
     fprintf(stderr, "    --rdd6-lines <lines>    The line numbers for carriage of the RDD-6 ANC data. <lines> is a pair of numbers separated by a ','. Default is '%u,%u'\n", DEFAULT_RDD6_LINES[0], DEFAULT_RDD6_LINES[1]);
     fprintf(stderr, "    --rdd6-sdid <sdid>      The SDID value indicating the first audio channel pair associated with the RDD-6 data. Default is %u\n", DEFAULT_RDD6_SDID);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "  op1a/rdd9/d10:\n");
     fprintf(stderr, "    --xml-scheme-id <id>    Set the XML payload scheme identifier associated with the following --embed-xml option.\n");
     fprintf(stderr, "                            The <id> is one of the following:\n");
     fprintf(stderr, "                                * a SMPTE UL, formatted as a 'urn:smpte:ul:...',\n");
@@ -2019,7 +2021,10 @@ int main(int argc, const char** argv)
     {
         // check the XML files exist
 
-        if (clip_type == CW_OP1A_CLIP_TYPE) {
+        if (clip_type == CW_OP1A_CLIP_TYPE ||
+            clip_type == CW_RDD9_CLIP_TYPE ||
+            clip_type == CW_D10_CLIP_TYPE)
+        {
             size_t i;
             for (i = 0; i < embed_xml.size(); i++) {
                 const EmbedXMLInfo &info = embed_xml[i];
@@ -2029,7 +2034,8 @@ int main(int argc, const char** argv)
                 }
             }
         } else if (!embed_xml.empty()) {
-            log_warn("Embedding XML is only supported in OP-1A clip type\n");
+            log_warn("Embedding XML is not supported for clip type %s\n",
+                     clip_type_to_string(clip_type, clip_sub_type));
         }
 
 
@@ -2043,8 +2049,8 @@ int main(int argc, const char** argv)
         if (rdd6_filename) {
             if (clip_type != CW_OP1A_CLIP_TYPE) {
                 log_error("RDD-6 file input only supported for '%s' and '%s' clip types\n",
-                          clip_type_to_string(CW_OP1A_CLIP_TYPE, NO_CLIP_SUB_TYPE).c_str(),
-                          clip_type_to_string(CW_OP1A_CLIP_TYPE, AS11_CLIP_SUB_TYPE).c_str());
+                          clip_type_to_string(CW_OP1A_CLIP_TYPE, NO_CLIP_SUB_TYPE),
+                          clip_type_to_string(CW_OP1A_CLIP_TYPE, AS11_CLIP_SUB_TYPE));
                 throw false;
             }
 
@@ -2203,7 +2209,7 @@ int main(int argc, const char** argv)
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              sampling_rate.numerator, sampling_rate.denominator,
-                             clip_type_to_string(clip_type, clip_sub_type).c_str());
+                             clip_type_to_string(clip_type, clip_sub_type));
                     is_enabled = false;
                 } else if (input_sound_info->bits_per_sample == 0 || input_sound_info->bits_per_sample > 32) {
                     log_warn("Track %" PRIszt " (%s) bits per sample %u not supported\n",
@@ -2257,7 +2263,7 @@ int main(int argc, const char** argv)
                              i,
                              essence_type_to_string(input_track_info->essence_type),
                              frame_rate.numerator, frame_rate.denominator,
-                             clip_type_to_string(clip_type, clip_sub_type).c_str());
+                             clip_type_to_string(clip_type, clip_sub_type));
                     is_enabled = false;
                 } else if (input_track_info->essence_type == VBI_DATA) {
                     if (!pass_vbi) {
@@ -2406,7 +2412,7 @@ int main(int argc, const char** argv)
                     }
                     if (!no_rollout) {
                         log_warn("'%s' clip type does not support rollout\n",
-                                 clip_type_to_string(clip_type, clip_sub_type).c_str());
+                                 clip_type_to_string(clip_type, clip_sub_type));
                     }
                     log_info("Rollout resulted in %" PRId64 " frame adjustment of duration\n",
                              output_duration - original_output_duration);
@@ -3184,16 +3190,18 @@ int main(int argc, const char** argv)
 
         // embed XML
 
-        if (clip_type == CW_OP1A_CLIP_TYPE) {
-            OP1AFile *op1a_clip = clip->GetOP1AClip();
+        if (clip_type == CW_OP1A_CLIP_TYPE ||
+            clip_type == CW_RDD9_CLIP_TYPE ||
+            clip_type == CW_D10_CLIP_TYPE)
+        {
             for (i = 0; i < embed_xml.size(); i++) {
                 const EmbedXMLInfo &info = embed_xml[i];
-                OP1AXMLTrack *xml_track = op1a_clip->CreateXMLTrack();
+                ClipWriterTrack *xml_track = clip->CreateXMLTrack();
                 if (info.scheme_id != g_Null_UL)
-                    xml_track->SetSchemeId(info.scheme_id);
+                    xml_track->SetXMLSchemeId(info.scheme_id);
                 if (info.lang)
-                  xml_track->SetLanguageCode(info.lang);
-                xml_track->SetSource(info.filename);
+                  xml_track->SetXMLLanguageCode(info.lang);
+                xml_track->SetXMLSource(info.filename);
             }
         }
 

@@ -73,6 +73,13 @@ typedef struct
     AVCIHeaderFormat format;
 } AVCIHeaderFormatInfo;
 
+typedef struct
+{
+    ClipWriterType type;
+    ClipSubType sub_type;
+    const char *str;
+} ClipWriterTypeStringMap;
+
 
 static const ColorMap COLOR_MAP[] =
 {
@@ -126,6 +133,21 @@ static const AVCIHeaderFormatInfo AVCI_HEADER_FORMAT_INFO[] =
     {"AVC-Intra 200 1080p59.94",  {AVCI200_1080P,  {60000, 1001}}},
 };
 
+static const ClipWriterTypeStringMap CLIP_WRITER_TYPE_STRING_MAP[] =
+{
+    {CW_UNKNOWN_CLIP_TYPE,   NO_CLIP_SUB_TYPE,    "unknown"},
+    {CW_AS02_CLIP_TYPE,      NO_CLIP_SUB_TYPE,    "AS-02"},
+    {CW_OP1A_CLIP_TYPE,      AS11_CLIP_SUB_TYPE,  "AS-11 MXF OP-1A"},
+    {CW_OP1A_CLIP_TYPE,      NO_CLIP_SUB_TYPE,    "MXF OP-1A"},
+    {CW_AVID_CLIP_TYPE,      NO_CLIP_SUB_TYPE,    "Avid MXF"},
+    {CW_D10_CLIP_TYPE,       AS11_CLIP_SUB_TYPE,  "AS-11 D-10 MXF"},
+    {CW_D10_CLIP_TYPE,       NO_CLIP_SUB_TYPE,    "D-10 MXF"},
+    {CW_RDD9_CLIP_TYPE,      AS10_CLIP_SUB_TYPE,  "AS-10 RDD9 MXF"},
+    {CW_RDD9_CLIP_TYPE,      NO_CLIP_SUB_TYPE,    "RDD9 MXF"},
+    {CW_WAVE_CLIP_TYPE,      NO_CLIP_SUB_TYPE,    "Wave"},
+};
+
+
 
 
 static bool parse_hex_string(const char *hex_str, unsigned char *octets, size_t octets_size)
@@ -177,22 +199,18 @@ string bmx::get_app_version_info(const char *app_name)
 }
 
 
-string bmx::clip_type_to_string(ClipWriterType clip_type, ClipSubType sub_clip_type)
+const char* bmx::clip_type_to_string(ClipWriterType clip_type, ClipSubType sub_clip_type)
 {
-    string sub_type_str;
-    switch (sub_clip_type)
-    {
-        case AS11_CLIP_SUB_TYPE:
-            sub_type_str = "AS-11 ";
-            break;
-        case AS10_CLIP_SUB_TYPE:
-            sub_type_str = "AS-10 ";
-            break;
-        case NO_CLIP_SUB_TYPE:
-            break;
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(CLIP_WRITER_TYPE_STRING_MAP); i++) {
+        if (clip_type     == CLIP_WRITER_TYPE_STRING_MAP[i].type &&
+            sub_clip_type == CLIP_WRITER_TYPE_STRING_MAP[i].sub_type)
+        {
+            return CLIP_WRITER_TYPE_STRING_MAP[i].str;
+        }
     }
 
-    return sub_type_str + ClipWriter::ClipWriterTypeToString(clip_type);
+    return "";
 }
 
 

@@ -40,6 +40,7 @@
 #include <bmx/rdd9_mxf/RDD9Track.h>
 #include <bmx/rdd9_mxf/RDD9MPEG2LGTrack.h>
 #include <bmx/rdd9_mxf/RDD9PCMTrack.h>
+#include <bmx/rdd9_mxf/RDD9XMLTrack.h>
 #include <bmx/rdd9_mxf/RDD9Validator.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFChecksumFile.h>
@@ -77,6 +78,7 @@ public:
     void SetOutputEndOffset(int64_t offset);
 
     RDD9Track* CreateTrack(EssenceType essence_type);
+    RDD9XMLTrack* CreateXMLTrack();
 
 public:
     void PrepareHeaderMetadata();
@@ -147,6 +149,7 @@ private:
     std::map<MXFDataDefEnum, uint8_t> mTrackCounts;
     bool mHaveANCTrack;
     bool mHaveVBITrack;
+    std::vector<RDD9XMLTrack*> mXMLTracks;
 
     std::set<mxfUL> mEssenceContainerULs;
 

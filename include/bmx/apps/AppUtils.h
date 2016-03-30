@@ -83,7 +83,7 @@ typedef struct
 
 std::string get_app_version_info(const char *app_name);
 
-std::string clip_type_to_string(ClipWriterType clip_type, ClipSubType sub_clip_type);
+const char* clip_type_to_string(ClipWriterType clip_type, ClipSubType sub_clip_type);
 
 size_t get_num_avci_header_formats();
 const char* get_avci_header_format_string(size_t index);

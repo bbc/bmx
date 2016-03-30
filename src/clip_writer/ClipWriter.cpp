@@ -41,24 +41,6 @@ using namespace mxfpp;
 using namespace bmx;
 
 
-typedef struct
-{
-    ClipWriterType type;
-    const char *str;
-} ClipWriterTypeStringMap;
-
-static const ClipWriterTypeStringMap CLIP_WRITER_TYPE_STRING_MAP[] =
-{
-    {CW_UNKNOWN_CLIP_TYPE,   "unknown"},
-    {CW_AS02_CLIP_TYPE,      "AS-02"},
-    {CW_OP1A_CLIP_TYPE,      "MXF OP-1A"},
-    {CW_AVID_CLIP_TYPE,      "Avid MXF"},
-    {CW_D10_CLIP_TYPE,       "D-10 MXF"},
-    {CW_RDD9_CLIP_TYPE,      "RDD9 MXF"},
-    {CW_WAVE_CLIP_TYPE,      "Wave"},
-};
-
-
 
 ClipWriter* ClipWriter::OpenNewAS02Clip(string bundle_directory, bool create_bundle_dir, Rational frame_rate,
                                         MXFFileFactory *file_factory, bool take_factory_ownership)
@@ -91,18 +73,6 @@ ClipWriter* ClipWriter::OpenNewRDD9Clip(int flavour, File *file, Rational frame_
 ClipWriter* ClipWriter::OpenNewWaveClip(WaveIO *file)
 {
     return new ClipWriter(new WaveWriter(file, true));
-}
-
-string ClipWriter::ClipWriterTypeToString(ClipWriterType clip_type)
-{
-    size_t i;
-    for (i = 0; i < BMX_ARRAY_SIZE(CLIP_WRITER_TYPE_STRING_MAP); i++) {
-        if (clip_type == CLIP_WRITER_TYPE_STRING_MAP[i].type)
-            return CLIP_WRITER_TYPE_STRING_MAP[i].str;
-    }
-
-    BMX_ASSERT(false);
-    return "";
 }
 
 ClipWriter::ClipWriter(AS02Bundle *bundle, AS02Clip *clip)
@@ -302,6 +272,32 @@ ClipWriterTrack* ClipWriter::CreateTrack(EssenceType essence_type, string track_
             BMX_CHECK(essence_type == WAVE_PCM);
             track = new ClipWriterTrack(essence_type, mWaveClip->CreateTrack());
             break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    mTracks.push_back(track);
+    return track;
+}
+
+ClipWriterTrack* ClipWriter::CreateXMLTrack()
+{
+    ClipWriterTrack *track = 0;
+    switch (mType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+            track = new ClipWriterTrack(mOP1AClip->CreateXMLTrack());
+            break;
+        case CW_D10_CLIP_TYPE:
+            track = new ClipWriterTrack(mD10Clip->CreateXMLTrack());
+            break;
+        case CW_RDD9_CLIP_TYPE:
+            track = new ClipWriterTrack(mRDD9Clip->CreateXMLTrack());
+            break;
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;

@@ -164,6 +164,7 @@
     <ClInclude Include="..\..\..\include\bmx\d10_mxf\D10MPEGTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\d10_mxf\D10PCMTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\d10_mxf\D10Track.h" />
+    <ClInclude Include="..\..\..\include\bmx\d10_mxf\D10XMLTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\AVCEssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\AVCIEssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\AVCIRawEssenceReader.h" />
@@ -249,6 +250,7 @@
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9Track.h" />
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9Validator.h" />
     <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9VBIDataTrack.h" />
+    <ClInclude Include="..\..\..\include\bmx\rdd9_mxf\RDD9XMLTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\st436\RDD6BitBuffer.h" />
     <ClInclude Include="..\..\..\include\bmx\st436\RDD6Metadata.h" />
     <ClInclude Include="..\..\..\include\bmx\st436\ST436Element.h" />
@@ -343,6 +345,7 @@
     <ClCompile Include="..\..\..\src\d10_mxf\D10MPEGTrack.cpp" />
     <ClCompile Include="..\..\..\src\d10_mxf\D10PCMTrack.cpp" />
     <ClCompile Include="..\..\..\src\d10_mxf\D10Track.cpp" />
+    <ClCompile Include="..\..\..\src\d10_mxf\D10XMLTrack.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\AVCEssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\AVCIEssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\AVCIRawEssenceReader.cpp" />
@@ -422,6 +425,7 @@
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9Track.cpp" />
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9Validator.cpp" />
     <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9VBIDataTrack.cpp" />
+    <ClCompile Include="..\..\..\src\rdd9_mxf\RDD9XMLTrack.cpp" />
     <ClCompile Include="..\..\..\src\st436\RDD6BitBuffer.cpp" />
     <ClCompile Include="..\..\..\src\st436\RDD6Metadata.cpp" />
     <ClCompile Include="..\..\..\src\st436\ST436Element.cpp" />

@@ -223,7 +223,7 @@ void AS10Helper::AddMetadata(ClipWriter *clip)
 {
     if (clip->GetType() != CW_RDD9_CLIP_TYPE) {
         BMX_EXCEPTION(("AS-10 is not supported in clip type '%s'",
-                       clip_type_to_string(clip->GetType(), NO_CLIP_SUB_TYPE).c_str()));
+                       clip_type_to_string(clip->GetType(), NO_CLIP_SUB_TYPE)));
     }
 
     mWriterHelper = new AS10WriterHelper(clip);

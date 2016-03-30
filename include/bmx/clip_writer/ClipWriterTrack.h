@@ -39,6 +39,9 @@
 #include <bmx/d10_mxf/D10Track.h>
 #include <bmx/rdd9_mxf/RDD9Track.h>
 #include <bmx/wave/WaveTrackWriter.h>
+#include <bmx/mxf_op1a/OP1AXMLTrack.h>
+#include <bmx/d10_mxf/D10XMLTrack.h>
+#include <bmx/rdd9_mxf/RDD9XMLTrack.h>
 #include <bmx/writer_helper/AVCIWriterHelper.h>
 
 
@@ -72,6 +75,9 @@ public:
     ClipWriterTrack(EssenceType essence_type, D10Track *track);
     ClipWriterTrack(EssenceType essence_type, RDD9Track *track);
     ClipWriterTrack(EssenceType essence_type, WaveTrackWriter *track);
+    ClipWriterTrack(OP1AXMLTrack *track);
+    ClipWriterTrack(D10XMLTrack *track);
+    ClipWriterTrack(RDD9XMLTrack *track);
     virtual ~ClipWriterTrack();
 
 public:
@@ -103,6 +109,11 @@ public:
     void SetConstantDataSize(uint32_t size);
     void SetMaxDataSize(uint32_t size);
 
+    // XML properties
+    void SetXMLSource(const std::string &filename);
+    void SetXMLSchemeId(UL id);
+    void SetXMLLanguageCode(const std::string &code);
+
 public:
     void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
 
@@ -129,6 +140,9 @@ public:
     D10Track* GetD10Track()         const { return mD10Track; }
     RDD9Track* GetRDD9Track()       const { return mRDD9Track; }
     WaveTrackWriter* GetWaveTrack() const { return mWaveTrack; }
+    OP1AXMLTrack* GetOP1AXMLTrack() const { return mOP1AXMLTrack; }
+    D10XMLTrack* GetD10XMLTrack()   const { return mD10XMLTrack; }
+    RDD9XMLTrack* GetRDD9XMLTrack() const { return mRDD9XMLTrack; }
 
 private:
     ClipWriterType mClipType;
@@ -139,6 +153,9 @@ private:
     D10Track *mD10Track;
     RDD9Track *mRDD9Track;
     WaveTrackWriter *mWaveTrack;
+    OP1AXMLTrack *mOP1AXMLTrack;
+    D10XMLTrack *mD10XMLTrack;
+    RDD9XMLTrack *mRDD9XMLTrack;
 };
 
 

@@ -5,7 +5,8 @@ libd10mxf_la_SOURCES = \
 	D10File.cpp \
 	D10PCMTrack.cpp \
 	D10MPEGTrack.cpp \
-	D10Track.cpp
+	D10Track.cpp \
+	D10XMLTrack.cpp
 
 libd10mxf_la_CXXFLAGS = $(BMX_CFLAGS)
 
