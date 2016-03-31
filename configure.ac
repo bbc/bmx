@@ -295,6 +295,7 @@ AC_CONFIG_FILES([
 	test/text_object/Makefile
 	apps/Makefile
 	apps/mxf2raw/Makefile
+	apps/writers/Makefile
 	apps/raw2bmx/Makefile
 	apps/bmxtranswrap/Makefile
 	apps/bmxparse/Makefile

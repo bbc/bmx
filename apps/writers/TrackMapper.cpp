@@ -47,7 +47,7 @@ using namespace std;
 using namespace bmx;
 
 
-TrackMapper::InputTrack::InputTrack()
+TrackMapper::InputTrackInfo::InputTrackInfo()
 {
     external_index = 0;
     data_def = MXF_UNKNOWN_DDEF;
@@ -237,14 +237,14 @@ TrackMapper::ParsedDefinition::~ParsedDefinition()
 
 
 
-void TrackMapper::DumpOutputTrackMap(FILE *file, const vector<InputTrack> &input_tracks,
+void TrackMapper::DumpOutputTrackMap(FILE *file, const vector<InputTrackInfo> &input_tracks,
                                      const vector<OutputTrackMap> &track_maps)
 {
     map<uint32_t, uint32_t> input_base_channels;
     uint32_t total_channels = 0;
     size_t i;
     for (i = 0; i < input_tracks.size(); i++) {
-        const InputTrack &input_track = input_tracks[i];
+        const InputTrackInfo &input_track = input_tracks[i];
         if (input_track.essence_type == WAVE_PCM) {
             input_base_channels[i] = total_channels;
             total_channels += input_track.channel_count;
@@ -316,8 +316,8 @@ void TrackMapper::SetMapType(MapType type)
         ClearDefinition();
 }
 
-vector<TrackMapper::OutputTrackMap> TrackMapper::MapTracks(const vector<InputTrack> &input_tracks,
-                                                           vector<InputTrack> *unused_input_tracks)
+vector<TrackMapper::OutputTrackMap> TrackMapper::MapTracks(const vector<InputTrackInfo> &input_tracks,
+                                                           vector<InputTrackInfo> *unused_input_tracks)
 {
     switch (mMapType)
     {
@@ -337,8 +337,8 @@ vector<TrackMapper::OutputTrackMap> TrackMapper::MapTracks(const vector<InputTra
     return vector<TrackMapper::OutputTrackMap>(); // for the compiler
 }
 
-vector<TrackMapper::OutputTrackMap> TrackMapper::DefinitionMapTracks(const vector<InputTrack> &input_tracks,
-                                                                     vector<InputTrack> *unused_input_tracks)
+vector<TrackMapper::OutputTrackMap> TrackMapper::DefinitionMapTracks(const vector<InputTrackInfo> &input_tracks,
+                                                                     vector<InputTrackInfo> *unused_input_tracks)
 {
     vector<TrackMapper::OutputTrackMap> output;
 
@@ -352,7 +352,7 @@ vector<TrackMapper::OutputTrackMap> TrackMapper::DefinitionMapTracks(const vecto
     set<size_t> unused_channels;
     size_t i;
     for (i = 0; i < input_tracks.size(); i++) {
-        const InputTrack &input_track = input_tracks[i];
+        const InputTrackInfo &input_track = input_tracks[i];
         if (input_track.essence_type == WAVE_PCM) {
             size_t c;
             for (c = 0; c < input_track.channel_count; c++) {
@@ -378,7 +378,7 @@ vector<TrackMapper::OutputTrackMap> TrackMapper::DefinitionMapTracks(const vecto
                 if (input->index < input_channels.size()) {
                     uint32_t input_track_index    = input_channels[input->index].first;
                     uint32_t input_channel_index  = input_channels[input->index].second;
-                    const InputTrack &input_track = input_tracks[input_track_index];
+                    const InputTrackInfo &input_track = input_tracks[input_track_index];
 
                     track_map.essence_type    = input_track.essence_type;
                     track_map.data_def        = input_track.data_def;
@@ -424,7 +424,7 @@ vector<TrackMapper::OutputTrackMap> TrackMapper::DefinitionMapTracks(const vecto
                 for (r = input_range->from_index; r <= input_range->to_index && r < input_channels.size(); r++) {
                     uint32_t input_track_index    = input_channels[r].first;
                     uint32_t input_channel_index  = input_channels[r].second;
-                    const InputTrack &input_track = input_tracks[input_track_index];
+                    const InputTrackInfo &input_track = input_tracks[input_track_index];
 
                     track_map.essence_type    = input_track.essence_type;
                     track_map.data_def        = input_track.data_def;
@@ -451,7 +451,7 @@ vector<TrackMapper::OutputTrackMap> TrackMapper::DefinitionMapTracks(const vecto
                 for (iter = unused_channels.begin(); iter != unused_channels.end(); iter++) {
                     uint32_t input_track_index    = input_channels[*iter].first;
                     uint32_t input_channel_index  = input_channels[*iter].second;
-                    const InputTrack &input_track = input_tracks[input_track_index];
+                    const InputTrackInfo &input_track = input_tracks[input_track_index];
 
                     track_map.essence_type    = input_track.essence_type;
                     track_map.data_def        = input_track.data_def;
@@ -489,13 +489,13 @@ vector<TrackMapper::OutputTrackMap> TrackMapper::DefinitionMapTracks(const vecto
     return output;
 }
 
-vector<TrackMapper::OutputTrackMap> TrackMapper::MonoAudioMapTracks(const vector<InputTrack> &input_tracks)
+vector<TrackMapper::OutputTrackMap> TrackMapper::MonoAudioMapTracks(const vector<InputTrackInfo> &input_tracks)
 {
     vector<OutputTrackMap> output;
 
     size_t i;
     for (i = 0; i < input_tracks.size(); i++) {
-        const InputTrack &input_track = input_tracks[i];
+        const InputTrackInfo &input_track = input_tracks[i];
         if (input_track.essence_type == WAVE_PCM) {
             uint32_t c;
             for (c = 0; c < input_track.channel_count; c++) {
@@ -537,7 +537,7 @@ vector<TrackMapper::OutputTrackMap> TrackMapper::MonoAudioMapTracks(const vector
     return output;
 }
 
-vector<TrackMapper::OutputTrackMap> TrackMapper::StereoAudioMapTracks(const vector<InputTrack> &input_tracks)
+vector<TrackMapper::OutputTrackMap> TrackMapper::StereoAudioMapTracks(const vector<InputTrackInfo> &input_tracks)
 {
     vector<OutputTrackMap> output;
 
@@ -545,7 +545,7 @@ vector<TrackMapper::OutputTrackMap> TrackMapper::StereoAudioMapTracks(const vect
     bool have_mono_channel = false;
     size_t i;
     for (i = 0; i < input_tracks.size(); i++) {
-        const InputTrack &input_track = input_tracks[i];
+        const InputTrackInfo &input_track = input_tracks[i];
         if (input_track.essence_type == WAVE_PCM) {
             uint32_t c = 0;
             if (have_mono_channel && c < input_track.channel_count) {
@@ -621,7 +621,7 @@ vector<TrackMapper::OutputTrackMap> TrackMapper::StereoAudioMapTracks(const vect
     return output;
 }
 
-vector<TrackMapper::OutputTrackMap> TrackMapper::SingleMCAudioMapTracks(const vector<InputTrack> &input_tracks)
+vector<TrackMapper::OutputTrackMap> TrackMapper::SingleMCAudioMapTracks(const vector<InputTrackInfo> &input_tracks)
 {
     vector<OutputTrackMap> output;
 
@@ -629,7 +629,7 @@ vector<TrackMapper::OutputTrackMap> TrackMapper::SingleMCAudioMapTracks(const ve
     bool have_pcm_output = false;
     size_t i;
     for (i = 0; i < input_tracks.size(); i++) {
-        const InputTrack &input_track = input_tracks[i];
+        const InputTrackInfo &input_track = input_tracks[i];
         if (input_track.essence_type == WAVE_PCM) {
             if (!have_pcm_output) {
                 OutputTrackMap track_map;
@@ -676,7 +676,7 @@ vector<TrackMapper::OutputTrackMap> TrackMapper::SingleMCAudioMapTracks(const ve
     return output;
 }
 
-bool TrackMapper::CheckCompatibleAudio(const vector<InputTrack> &input_tracks, vector<OutputTrackMap> &output)
+bool TrackMapper::CheckCompatibleAudio(const vector<InputTrackInfo> &input_tracks, vector<OutputTrackMap> &output)
 {
     size_t i;
     for (i = 0; i < output.size(); i++) {
@@ -686,7 +686,7 @@ bool TrackMapper::CheckCompatibleAudio(const vector<InputTrack> &input_tracks, v
             for (c = 0; c < track_map.channel_maps.size(); c++) {
                 TrackChannelMap &channel_map = track_map.channel_maps[c];
                 if (channel_map.have_input) {
-                    const InputTrack &input_track = input_tracks[channel_map.input_index];
+                    const InputTrackInfo &input_track = input_tracks[channel_map.input_index];
                     if (input_track.bits_per_sample != track_map.bits_per_sample) {
                         log_error("PCM bits per sample is not the same for all channels in output track\n");
                         return false;

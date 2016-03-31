@@ -29,65 +29,37 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+
+#ifndef BMX_RAW_INPUT_TRACK_H_
+#define BMX_RAW_INPUT_TRACK_H_
+
+#include "../writers/InputTrack.h"
+
+typedef struct RawInput RawInput;
+
+
+namespace bmx
+{
+
+
+class RawInputTrack : public InputTrack
+{
+public:
+    RawInputTrack(RawInput *raw_input, MXFDataDefEnum data_def);
+    virtual ~RawInputTrack();
+
+public:
+    virtual MXFDataDefEnum GetDataDef() { return mDataDef; }
+
+    RawInput* GetRawInput() { return mRawInput; }
+
+private:
+    RawInput *mRawInput;
+    MXFDataDefEnum mDataDef;
+};
+
+
+};
+
+
 #endif
-
-#include "InputTrack.h"
-
-#include "OutputTrack.h"
-#include <bmx/BMXException.h>
-#include <bmx/Logging.h>
-
-using namespace std;
-using namespace bmx;
-
-
-InputTrack::InputTrack(MXFTrackReader *track_reader)
-{
-    mTrackReader = track_reader;
-}
-
-InputTrack::~InputTrack()
-{
-}
-
-void InputTrack::AddOutput(OutputTrack *output_track, uint32_t output_channel_index, uint32_t input_channel_index)
-{
-    OutputMap output_map;
-    output_map.output_track         = output_track;
-    output_map.output_channel_index = output_channel_index;
-    output_map.input_channel_index  = input_channel_index;
-
-    mOutputMaps.push_back(output_map);
-}
-
-const MXFTrackInfo* InputTrack::GetTrackInfo()
-{
-    return mTrackReader->GetTrackInfo();
-}
-
-FrameBuffer* InputTrack::GetFrameBuffer()
-{
-    return mTrackReader->GetFrameBuffer();
-}
-
-size_t InputTrack::GetOutputTrackCount()
-{
-    return mOutputMaps.size();
-}
-
-OutputTrack* InputTrack::GetOutputTrack(size_t track_index)
-{
-    return mOutputMaps[track_index].output_track;
-}
-
-uint32_t InputTrack::GetOutputChannelIndex(size_t track_index)
-{
-    return mOutputMaps[track_index].output_channel_index;
-}
-
-uint32_t InputTrack::GetInputChannelIndex(size_t track_index)
-{
-    return mOutputMaps[track_index].input_channel_index;
-}

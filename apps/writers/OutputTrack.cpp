@@ -76,7 +76,7 @@ void OutputTrack::AddInput(InputTrack *input_track, uint32_t input_channel_index
     if (output_channel_index + 1 > mChannelCount)
         mChannelCount = output_channel_index + 1;
 
-    BMX_ASSERT(mChannelCount == 1 || input_track->GetTrackInfo()->data_def == MXF_SOUND_DDEF);
+    BMX_ASSERT(mChannelCount == 1 || input_track->GetDataDef() == MXF_SOUND_DDEF);
 }
 
 void OutputTrack::AddSilenceChannel(uint32_t output_channel_index)
@@ -102,16 +102,10 @@ void OutputTrack::SetFilter(EssenceFilter *filter)
     mFilter = filter;
 }
 
-const MXFTrackReader* OutputTrack::GetFirstInputTrackReader()
+InputTrack* OutputTrack::GetFirstInputTrack()
 {
     BMX_ASSERT(!mInputMaps.empty());
-    return mInputMaps.begin()->second.input_track->GetTrackReader();
-}
-
-const MXFTrackInfo* OutputTrack::GetFirstInputTrackInfo()
-{
-    BMX_ASSERT(!mInputMaps.empty());
-    return mInputMaps.begin()->second.input_track->GetTrackInfo();
+    return mInputMaps.begin()->second.input_track;
 }
 
 void OutputTrack::WriteSamples(uint32_t output_channel_index,

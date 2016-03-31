@@ -45,9 +45,9 @@
 #include <map>
 #include <algorithm>
 
-#include "InputTrack.h"
-#include "OutputTrack.h"
-#include "TrackMapper.h"
+#include "MXFInputTrack.h"
+#include "../writers/OutputTrack.h"
+#include "../writers/TrackMapper.h"
 #include <bmx/mxf_reader/MXFFileReader.h>
 #include <bmx/mxf_reader/MXFGroupReader.h>
 #include <bmx/mxf_reader/MXFSequenceReader.h>
@@ -126,6 +126,12 @@ extern bool BMX_REGRESSION_TEST;
 };
 
 
+
+static bool regtest_output_track_map_comp(const TrackMapper::OutputTrackMap &left,
+                                          const TrackMapper::OutputTrackMap &right)
+{
+    return left.data_def < right.data_def;
+}
 
 static bool filter_anc_manifest_element(const ANCManifestElement *element, set<ANCDataType> &filter)
 {
@@ -2738,8 +2744,8 @@ int main(int argc, const char** argv)
         }
 
         // map WAVE PCM tracks
-        vector<TrackMapper::InputTrack> unused_input_tracks;
-        vector<TrackMapper::InputTrack> mapper_input_tracks;
+        vector<TrackMapper::InputTrackInfo> unused_input_tracks;
+        vector<TrackMapper::InputTrackInfo> mapper_input_tracks;
         for (i = 0; i < reader->GetNumTrackReaders(); i++) {
             MXFTrackReader *input_track_reader = reader->GetTrackReader(i);
             if (!input_track_reader->IsEnabled())
@@ -2748,7 +2754,7 @@ int main(int argc, const char** argv)
             const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
             const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
 
-            TrackMapper::InputTrack mapper_input_track;
+            TrackMapper::InputTrackInfo mapper_input_track;
             if (input_track_info->essence_type == WAVE_PCM ||
                 input_track_info->essence_type == D10_AES3_PCM)
             {
@@ -2813,10 +2819,15 @@ int main(int argc, const char** argv)
             throw false;
         }
 
+        // the order determines the regression test's MXF identifiers values and so the
+        // output_track_maps are ordered to ensure the regression test isn't effected
+        // It also helps analysing MXF dumps as the tracks will be in a consistent order
+        std::stable_sort(output_track_maps.begin(), output_track_maps.end(), regtest_output_track_map_comp);
+
         // create the output tracks
-        map<uint32_t, InputTrack*> created_input_tracks;
+        map<uint32_t, MXFInputTrack*> created_input_tracks;
         vector<OutputTrack*> output_tracks;
-        vector<InputTrack*> input_tracks;
+        vector<MXFInputTrack*> input_tracks;
         map<MXFDataDefEnum, uint32_t> phys_src_track_indexes;
         for (i = 0; i < output_track_maps.size(); i++) {
             const TrackMapper::OutputTrackMap &output_track_map = output_track_maps[i];
@@ -2842,11 +2853,11 @@ int main(int argc, const char** argv)
 
                 if (channel_map.have_input) {
                     MXFTrackReader *input_track_reader = reader->GetTrackReader(channel_map.input_external_index);
-                    InputTrack *input_track;
+                    MXFInputTrack *input_track;
                     if (created_input_tracks.count(channel_map.input_external_index)) {
                         input_track = created_input_tracks[channel_map.input_external_index];
                     } else {
-                        input_track = new InputTrack(input_track_reader);
+                        input_track = new MXFInputTrack(input_track_reader);
                         input_tracks.push_back(input_track);
                         created_input_tracks[channel_map.input_external_index] = input_track;
                     }
@@ -2871,7 +2882,8 @@ int main(int argc, const char** argv)
             ClipWriterTrack *clip_track = output_track->GetClipTrack();
             EssenceType output_essence_type = clip_track->GetEssenceType();
 
-            const MXFTrackReader *input_track_reader = output_track->GetFirstInputTrackReader();
+            MXFInputTrack *input_track = dynamic_cast<MXFInputTrack*>(output_track->GetFirstInputTrack());
+            const MXFTrackReader *input_track_reader = input_track->GetTrackReader();
             const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
             const MXFPictureTrackInfo *input_picture_info = dynamic_cast<const MXFPictureTrackInfo*>(input_track_info);
             const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
@@ -3302,7 +3314,7 @@ int main(int argc, const char** argv)
             // check whether sufficient frame data is available
             // if the frame is empty then check zero PCM sample padding is possible
             for (i = 0; i < input_tracks.size(); i++) {
-                InputTrack *input_track = input_tracks[i];
+                MXFInputTrack *input_track = input_tracks[i];
                 Frame *frame = input_track->GetFrameBuffer()->GetLastFrame(false);
                 BMX_ASSERT(frame);
                 if (!frame->IsComplete()) {
@@ -3337,7 +3349,7 @@ int main(int argc, const char** argv)
             }
 
             for (i = 0; i < input_tracks.size(); i++) {
-                InputTrack *input_track = input_tracks[i];
+                MXFInputTrack *input_track = input_tracks[i];
 
                 Frame *frame = input_track->GetFrameBuffer()->GetLastFrame(true);
                 BMX_ASSERT(frame);

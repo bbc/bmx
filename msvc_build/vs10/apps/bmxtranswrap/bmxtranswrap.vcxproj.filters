@@ -14,24 +14,30 @@
     <ClCompile Include="..\..\..\..\apps\bmxtranswrap\bmxtranswrap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\apps\bmxtranswrap\InputTrack.cpp">
+    <ClCompile Include="..\..\..\..\apps\bmxtranswrap\MXFInputTrack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\apps\bmxtranswrap\OutputTrack.cpp">
+    <ClCompile Include="..\..\..\..\apps\writers\InputTrack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\apps\bmxtranswrap\TrackMapper.cpp">
+    <ClCompile Include="..\..\..\..\apps\writers\OutputTrack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\apps\writers\TrackMapper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\apps\bmxtranswrap\InputTrack.h">
+    <ClInclude Include="..\..\..\..\apps\bmxtranswrap\MXFInputTrack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\apps\bmxtranswrap\OutputTrack.h">
+    <ClInclude Include="..\..\..\..\apps\writers\InputTrack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\apps\bmxtranswrap\TrackMapper.h">
+    <ClInclude Include="..\..\..\..\apps\writers\OutputTrack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\apps\writers\TrackMapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

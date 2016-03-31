@@ -66,8 +66,7 @@ public:
     void SkipPrecharge(int64_t num_read);
 
 public:
-    const MXFTrackReader* GetFirstInputTrackReader();
-    const MXFTrackInfo* GetFirstInputTrackInfo();
+    InputTrack* GetFirstInputTrack();
 
     ClipWriterTrack* GetClipTrack() { return mClipWriterTrack; }
     uint32_t GetPhysSrcTrackIndex() { return mPhysSrcTrackIndex; }

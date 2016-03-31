@@ -29,54 +29,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-#ifndef BMX_INPUT_TRACK_H_
-#define BMX_INPUT_TRACK_H_
-
-#include <vector>
-
-#include <bmx/mxf_reader/MXFTrackReader.h>
-
-
-namespace bmx
-{
-
-
-class OutputTrack;
-
-class InputTrack
-{
-public:
-    InputTrack(MXFTrackReader *track_reader);
-    ~InputTrack();
-
-    void AddOutput(OutputTrack *output_track, uint32_t output_channel_index, uint32_t input_channel_index);
-
-public:
-    MXFTrackReader* GetTrackReader() { return mTrackReader; }
-    const MXFTrackInfo* GetTrackInfo();
-    FrameBuffer* GetFrameBuffer();
-
-    size_t GetOutputTrackCount();
-    OutputTrack* GetOutputTrack(size_t track_index);
-    uint32_t GetOutputChannelIndex(size_t track_index);
-    uint32_t GetInputChannelIndex(size_t track_index);
-
-private:
-    typedef struct
-    {
-        OutputTrack *output_track;
-        uint32_t output_channel_index;
-        uint32_t input_channel_index;
-    } OutputMap;
-
-private:
-    MXFTrackReader *mTrackReader;
-    std::vector<OutputMap> mOutputMaps;
-};
-
-
-};
-
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
+
+#include "RawInputTrack.h"
+
+using namespace std;
+using namespace bmx;
+
+
+RawInputTrack::RawInputTrack(RawInput *raw_input, MXFDataDefEnum data_def)
+: InputTrack()
+{
+    mRawInput = raw_input;
+    mDataDef = data_def;
+}
+
+RawInputTrack::~RawInputTrack()
+{
+}

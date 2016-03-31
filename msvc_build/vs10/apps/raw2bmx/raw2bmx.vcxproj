@@ -87,6 +87,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\apps\raw2bmx\raw2bmx.cpp" />
+    <ClCompile Include="..\..\..\..\apps\raw2bmx\RawInputTrack.cpp" />
+    <ClCompile Include="..\..\..\..\apps\writers\InputTrack.cpp" />
+    <ClCompile Include="..\..\..\..\apps\writers\OutputTrack.cpp" />
+    <ClCompile Include="..\..\..\..\apps\writers\TrackMapper.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\apps\raw2bmx\RawInputTrack.h" />
+    <ClInclude Include="..\..\..\..\apps\writers\InputTrack.h" />
+    <ClInclude Include="..\..\..\..\apps\writers\OutputTrack.h" />
+    <ClInclude Include="..\..\..\..\apps\writers\TrackMapper.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\bmx\bmx.vcxproj">

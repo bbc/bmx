@@ -58,10 +58,10 @@ public:
         SINGLE_MC_AUDIO_MAP,
     } MapType;
 
-    class InputTrack
+    class InputTrackInfo
     {
     public:
-        InputTrack();
+        InputTrackInfo();
 
         uint32_t external_index;
         int data_def;
@@ -96,7 +96,7 @@ public:
     };
 
 public:
-    static void DumpOutputTrackMap(FILE *file, const std::vector<InputTrack> &input_tracks,
+    static void DumpOutputTrackMap(FILE *file, const std::vector<InputTrackInfo> &input_tracks,
                                    const std::vector<OutputTrackMap> &track_maps);
 
 public:
@@ -106,19 +106,19 @@ public:
     bool ParseMapDef(const std::string &def_str);
     void SetMapType(MapType type);
 
-    std::vector<OutputTrackMap> MapTracks(const std::vector<InputTrack> &input_tracks,
-                                          std::vector<InputTrack> *unused_input_tracks);
+    std::vector<OutputTrackMap> MapTracks(const std::vector<InputTrackInfo> &input_tracks,
+                                          std::vector<InputTrackInfo> *unused_input_tracks);
 
     MapType GetMapType() const { return mMapType; }
 
 private:
-    std::vector<OutputTrackMap> DefinitionMapTracks(const std::vector<InputTrack> &input_tracks,
-                                                    std::vector<InputTrack> *unused_input_tracks);
-    std::vector<OutputTrackMap> MonoAudioMapTracks(const std::vector<InputTrack> &input_tracks);
-    std::vector<OutputTrackMap> StereoAudioMapTracks(const std::vector<InputTrack> &input_tracks);
-    std::vector<OutputTrackMap> SingleMCAudioMapTracks(const std::vector<InputTrack> &input_tracks);
+    std::vector<OutputTrackMap> DefinitionMapTracks(const std::vector<InputTrackInfo> &input_tracks,
+                                                    std::vector<InputTrackInfo> *unused_input_tracks);
+    std::vector<OutputTrackMap> MonoAudioMapTracks(const std::vector<InputTrackInfo> &input_tracks);
+    std::vector<OutputTrackMap> StereoAudioMapTracks(const std::vector<InputTrackInfo> &input_tracks);
+    std::vector<OutputTrackMap> SingleMCAudioMapTracks(const std::vector<InputTrackInfo> &input_tracks);
 
-    bool CheckCompatibleAudio(const std::vector<InputTrack> &input_tracks, std::vector<OutputTrackMap> &output);
+    bool CheckCompatibleAudio(const std::vector<InputTrackInfo> &input_tracks, std::vector<OutputTrackMap> &output);
 
     void ClearDefinition();
 

@@ -10,7 +10,7 @@ tmpdir=/tmp/mca_temp$$
 sampledir=/tmp/
 
 
-create_file()
+create_test_ess()
 {
     $testdir/create_test_essence -t 42 -d 3 -s 0 $tmpdir/audio0
     $testdir/create_test_essence -t 42 -d 3 -s 1 $tmpdir/audio1
@@ -21,6 +21,11 @@ create_file()
     $testdir/create_test_essence -t 42 -d 3 -s 6 $tmpdir/audio6
     $testdir/create_test_essence -t 42 -d 3 -s 7 $tmpdir/audio7
     $testdir/create_test_essence -t 7 -d 3 $tmpdir/video
+}
+
+create_file_bmxtranswrap()
+{
+    create_test_ess
 
     $appsdir/raw2bmx/raw2bmx \
         --regtest \
@@ -55,24 +60,65 @@ create_file()
         $2
 }
 
+create_file_raw2bmx()
+{
+    create_test_ess
+
+    $appsdir/raw2bmx/raw2bmx \
+        --regtest \
+        -t wave \
+        -o $tmpdir/input.wav \
+        -q 24 --locked true --pcm $tmpdir/audio0 \
+        -q 24 --locked true --pcm $tmpdir/audio1 \
+        -q 24 --locked true --pcm $tmpdir/audio2 \
+        -q 24 --locked true --pcm $tmpdir/audio3 \
+        -q 24 --locked true --pcm $tmpdir/audio4 \
+        -q 24 --locked true --pcm $tmpdir/audio5 \
+        >/dev/null
+
+    $appsdir/raw2bmx/raw2bmx \
+        --regtest \
+        -t op1a \
+        -f 25 \
+        -o $2 \
+        --track-map $1 \
+        --avci100_1080i $tmpdir/video \
+        --locked true --wave $tmpdir/input.wav \
+        -q 24 --locked true --pcm $tmpdir/audio6 \
+        -q 24 --locked true --pcm $tmpdir/audio7 \
+        >/dev/null
+
+    $appsdir/mxf2raw/mxf2raw \
+        --regtest \
+        --info \
+        --info-format xml \
+        --info-file $3 \
+        --mca-detail \
+        $2
+}
+
 
 check()
 {
-    create_file $1 $tmpdir/test.mxf $tmpdir/test.xml &&
-        $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
-        diff $tmpdir/test.md5 $base/mca_$2.md5 &&
-        diff $tmpdir/test.xml $base/mca_$2.xml
+    create_file_bmxtranswrap $1 $tmpdir/test1.mxf $tmpdir/test1.xml &&
+        $md5tool < $tmpdir/test1.mxf > $tmpdir/test1.md5 &&
+        diff $tmpdir/test1.md5 $base/mca_$2.md5 &&
+        diff $tmpdir/test1.xml $base/mca_$2.xml &&
+    create_file_raw2bmx $1 $tmpdir/test2.mxf $tmpdir/test2.xml &&
+        $md5tool < $tmpdir/test2.mxf > $tmpdir/test2.md5 &&
+        diff $tmpdir/test2.md5 $base/mca_$2.md5 &&
+        diff $tmpdir/test2.xml $base/mca_$2.xml
 }
 
 create_data()
 {
-    create_file $1 $tmpdir/test.mxf $base/mca_$2.xml &&
+    create_file_bmxtranswrap $1 $tmpdir/test.mxf $base/mca_$2.xml &&
         $md5tool < $tmpdir/test.mxf > $base/mca_$2.md5
 }
 
 create_sample()
 {
-    create_file $1 $sampledir/mca_$2.mxf $sampledir/mca_$2.xml
+    create_file_bmxtranswrap $1 $sampledir/mca_$2.mxf $sampledir/mca_$2.xml
 }
 
 

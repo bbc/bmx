@@ -87,14 +87,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\apps\bmxtranswrap\bmxtranswrap.cpp" />
-    <ClCompile Include="..\..\..\..\apps\bmxtranswrap\InputTrack.cpp" />
-    <ClCompile Include="..\..\..\..\apps\bmxtranswrap\OutputTrack.cpp" />
-    <ClCompile Include="..\..\..\..\apps\bmxtranswrap\TrackMapper.cpp" />
+    <ClCompile Include="..\..\..\..\apps\bmxtranswrap\MXFInputTrack.cpp" />
+    <ClCompile Include="..\..\..\..\apps\writers\InputTrack.cpp" />
+    <ClCompile Include="..\..\..\..\apps\writers\OutputTrack.cpp" />
+    <ClCompile Include="..\..\..\..\apps\writers\TrackMapper.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\apps\bmxtranswrap\InputTrack.h" />
-    <ClInclude Include="..\..\..\..\apps\bmxtranswrap\OutputTrack.h" />
-    <ClInclude Include="..\..\..\..\apps\bmxtranswrap\TrackMapper.h" />
+    <ClInclude Include="..\..\..\..\apps\bmxtranswrap\MXFInputTrack.h" />
+    <ClInclude Include="..\..\..\..\apps\writers\InputTrack.h" />
+    <ClInclude Include="..\..\..\..\apps\writers\OutputTrack.h" />
+    <ClInclude Include="..\..\..\..\apps\writers\TrackMapper.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\bmx\bmx.vcxproj">
