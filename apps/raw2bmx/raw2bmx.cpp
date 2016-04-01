@@ -473,6 +473,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "                                * 'as11-mode-1', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02020000,\n");
     fprintf(stderr, "                                * 'as11-mode-2', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02030000\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "  op1a/as11op1a:\n");
+    fprintf(stderr, "    --track-mca-labels <scheme> <file>   Insert audio labels defined in <file> using the symbol <scheme>\n");
+    fprintf(stderr, "                                         The available <scheme>s are: 'as11'\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Input Options (must precede the input to which it applies):\n");
     fprintf(stderr, "  -a <n:d>                Image aspect ratio. Either 4:3 or 16:9. Default parsed or 16:9\n");
@@ -663,6 +667,7 @@ int main(int argc, const char** argv)
     TrackMapper track_mapper;
     bool dump_track_map = false;
     bool dump_track_map_exit = false;
+    vector<pair<string, string> > track_mca_labels;
     bool use_avc_subdesc = false;
     UL audio_layout_mode_label = g_Null_UL;
     int value, num, den;
@@ -1414,6 +1419,23 @@ int main(int argc, const char** argv)
         {
             dump_track_map = true;
             dump_track_map_exit = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--track-mca-labels") == 0)
+        {
+            if (cmdln_index + 3 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (strcmp(argv[cmdln_index + 1], "as11") != 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "MCA labels scheme '%s' is not supported\n", argv[cmdln_index + 1]);
+                return 1;
+            }
+            track_mca_labels.push_back(make_pair(argv[cmdln_index + 1], argv[cmdln_index + 2]));
+            cmdln_index += 2;
         }
         else if (strcmp(argv[cmdln_index], "--use-avc-subdesc") == 0)
         {
@@ -3928,6 +3950,24 @@ int main(int argc, const char** argv)
             as11_helper.AddMetadata(clip);
         else if (clip_sub_type == AS10_CLIP_SUB_TYPE)
             as10_helper.AddMetadata(clip);
+
+
+        // insert MCA labels
+
+        if (!track_mca_labels.empty()) {
+            MCALabelHelper label_helper;
+            AS11Helper::IndexAS11MCALabels(&label_helper);
+
+            size_t i;
+            for (i = 0; i < track_mca_labels.size(); i++) {
+                BMX_ASSERT(track_mca_labels[i].first == "as11");
+                if (!label_helper.ParseTrackLabels(track_mca_labels[i].second)) {
+                    log_error("Failed to parse audio labels file '%s'\n", track_mca_labels[i].second.c_str());
+                    throw false;
+                }
+                label_helper.InsertTrackLabels(clip);
+            }
+        }
 
 
         // read more than 1 sample to improve efficiency if the input is sound only and the output
