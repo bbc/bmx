@@ -41,6 +41,6 @@ create-data:
 
 .PHONY: create-samples
 create-samples:
-	${srcdir}/test_mca.sh create_sample
-	${srcdir}/test_labels.sh create_sample
+	${srcdir}/test_mca.sh create_samples
+	${srcdir}/test_labels.sh create_samples
 

@@ -11,7 +11,7 @@ create-data:
 	${srcdir}/avci100_1080i50.sh create_data
 	${srcdir}/rdd9_422p_1080i50.sh create_data
 
-.PHONY: create-sample
-create-sample:
-	${srcdir}/avci100_1080i50.sh create_sample
-	${srcdir}/rdd9_422p_1080i50.sh create_sample
+.PHONY: create-samples
+create-samples:
+	${srcdir}/avci100_1080i50.sh create_samples
+	${srcdir}/rdd9_422p_1080i50.sh create_samples

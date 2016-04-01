@@ -116,7 +116,7 @@ create_data()
         $md5tool < $tmpdir/test.mxf > $base/mca_$2.md5
 }
 
-create_sample()
+create_samples()
 {
     create_file_bmxtranswrap $1 $sampledir/mca_$2.mxf $sampledir/mca_$2.xml
 }
@@ -148,17 +148,17 @@ create_data_all()
         create_data "7,6;5,4;3,2;1,0" reorder_stereo
 }
 
-create_sample_all()
+create_samples_all()
 {
-    create_sample mono mono &&
-        create_sample stereo stereo &&
-        create_sample singlemca singlemca &&
-        create_sample mx monorem &&
-        create_sample "0-1;x" stereoprem &&
-        create_sample "0-1;s2,2-5" stereops2p4 &&
-        create_sample "0-1;0-1;mx" stereopstereopmonorem &&
-        create_sample "7;6;5;4;3;2;1;0" reorder_mono &&
-        create_sample "7,6;5,4;3,2;1,0" reorder_stereo
+    create_samples mono mono &&
+        create_samples stereo stereo &&
+        create_samples singlemca singlemca &&
+        create_samples mx monorem &&
+        create_samples "0-1;x" stereoprem &&
+        create_samples "0-1;s2,2-5" stereops2p4 &&
+        create_samples "0-1;0-1;mx" stereopstereopmonorem &&
+        create_samples "7;6;5;4;3;2;1;0" reorder_mono &&
+        create_samples "7,6;5,4;3,2;1,0" reorder_stereo
 }
 
 
@@ -166,8 +166,8 @@ mkdir -p $tmpdir
 
 if test "$1" = "create_data" ; then
     create_data_all
-elif test "$1" = "create_sample" ; then
-    create_sample_all
+elif test "$1" = "create_samples" ; then
+    create_samples_all
 else
     check_all
 fi

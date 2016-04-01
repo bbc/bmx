@@ -60,7 +60,7 @@ create_data()
         create_read_result $base/$2.xml $tmpdir/test.mxf
 }
 
-create_sample()
+create_samples()
 {
     create_test_file $1 $2 $sampledir/as11_$2.mxf &&
         create_read_result $sampledir/as11_$2.xml $sampledir/as11_$2.mxf
@@ -77,9 +77,9 @@ create_data_all()
     create_data 7 avci100_1080i && create_data 11 d10_50
 }
 
-create_sample_all()
+create_samples_all()
 {
-    create_sample 7 avci100_1080i && create_sample 11 d10_50
+    create_samples 7 avci100_1080i && create_samples 11 d10_50
 }
 
 
@@ -87,8 +87,8 @@ mkdir -p $tmpdir
 
 if test "$1" = "create_data" ; then
     create_data_all
-elif test "$1" = "create_sample" ; then
-    create_sample_all
+elif test "$1" = "create_samples" ; then
+    create_samples_all
 else
     check_all
 fi

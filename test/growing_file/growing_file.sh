@@ -75,7 +75,7 @@ create_data()
     run_test $md5file && cp $testtxt $gftxt
 }
 
-create_sample()
+create_samples()
 {
     out=$1
     if test -z $out ; then
@@ -93,8 +93,8 @@ if test -z "$1" ; then
     check
 elif test "$1" = "create_data" ; then
     create_data
-elif test "$1" = "create_sample" ; then
-    create_sample $2
+elif test "$1" = "create_samples" ; then
+    create_samples $2
 fi
 res=$?
 

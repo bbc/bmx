@@ -37,6 +37,6 @@ create-samples:
 	${srcdir}/samples.sh 24 14 mpeg2lg_422p_hl_1080i
 	${srcdir}/samples.sh 24 15 mpeg2lg_mp_h14_1080i
 	${srcdir}/samples.sh 24 16 mpeg2lg_mp_hl_1920_1080i
-	${srcdir}/anc.sh create_sample
-	${srcdir}/vbi.sh create_sample
+	${srcdir}/anc.sh create_samples
+	${srcdir}/vbi.sh create_samples
 

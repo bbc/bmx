@@ -15,5 +15,5 @@ create-data:
 
 .PHONY: create-samples
 create-samples:
-	${srcdir}/test.sh create_sample
+	${srcdir}/test.sh create_samples
 

@@ -8,7 +8,7 @@ EXTRA_DIST = growing_file.sh growing_file.md5
 create-data:
 	${srcdir}/growing_file.sh create_data
 
-.PHONY: create-sample
-create-sample:
-	${srcdir}/growing_file.sh create_sample sample.txt
+.PHONY: create-samples
+create-samples:
+	${srcdir}/growing_file.sh create_samples sample.txt
 

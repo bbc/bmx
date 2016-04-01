@@ -90,7 +90,7 @@ create_data()
         $md5tool < $tmpdir/testtw.mxf > $base/$1_tw.md5
 }
 
-create_sample()
+create_samples()
 {
     create_raw2bmx $sampledir/as10_$1_rb.mxf $sampledir/as10_$1_rb.xml &&
     create_bmxtranswrap $sampledir/as10_$1_rb.mxf $sampledir/as10_$1_tw.mxf $sampledir/as10_$1_tw.xml
@@ -107,9 +107,9 @@ create_data_all()
     create_data high_hd_2014
 }
 
-create_sample_all()
+create_samples_all()
 {
-    create_sample high_hd_2014
+    create_samples high_hd_2014
 }
 
 
@@ -117,8 +117,8 @@ mkdir -p $tmpdir
 
 if test "$1" = "create_data" ; then
     create_data_all
-elif test "$1" = "create_sample" ; then
-    create_sample_all
+elif test "$1" = "create_samples" ; then
+    create_samples_all
 else
     check_all
 fi

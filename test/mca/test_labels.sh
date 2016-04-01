@@ -120,7 +120,7 @@ create_data()
         $md5tool < $tmpdir/test.mxf > $base/mcalabels_$3.md5
 }
 
-create_sample()
+create_samples()
 {
     create_file_bmxtranswrap $1 $2 $sampledir/mca_labels_$3.mxf $sampledir/mca_labels_$3.xml
 }
@@ -140,11 +140,11 @@ create_data_all()
         create_data "0,1;2-7" $base/mess.txt mess
 }
 
-create_sample_all()
+create_samples_all()
 {
-    create_sample stereo $base/stereo.txt stereo &&
-        create_sample "0,1;2-7" $base/stereop51.txt stereop51 &&
-        create_sample "0,1;2-7" $base/mess.txt mess
+    create_samples stereo $base/stereo.txt stereo &&
+        create_samples "0,1;2-7" $base/stereop51.txt stereop51 &&
+        create_samples "0,1;2-7" $base/mess.txt mess
 }
 
 
@@ -152,8 +152,8 @@ mkdir -p $tmpdir
 
 if test "$1" = "create_data" ; then
     create_data_all
-elif test "$1" = "create_sample" ; then
-    create_sample_all
+elif test "$1" = "create_samples" ; then
+    create_samples_all
 else
     check_all
 fi

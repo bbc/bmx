@@ -68,7 +68,7 @@ create_data()
         $md5tool < $base/$1.xml >> $base/$1.md5
 }
 
-create_sample()
+create_samples()
 {
     create_test_file $1 $2 $3 &&
         extract_rdd6_xml $1 &&
@@ -82,8 +82,8 @@ run_test()
 
     if test "$1" = "create_data" ; then
         create_data $2 $3 $4
-    elif test "$1" = "create_sample" ; then
-        create_sample $2 $3 $4
+    elif test "$1" = "create_samples" ; then
+        create_samples $2 $3 $4
     else
         check $1 $2 $3
     fi

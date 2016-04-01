@@ -14,10 +14,10 @@ create-data:
 	${srcdir}/test1.sh create_data
 	${srcdir}/test2.sh create_data
 
-.PHONY: create-sample
-create-sample:
-	${srcdir}/test1.sh create_sample
-	${srcdir}/test2.sh create_sample
+.PHONY: create-samples
+create-samples:
+	${srcdir}/test1.sh create_samples
+	${srcdir}/test2.sh create_samples
 
 
 noinst_PROGRAMS = test_rdd6_xml

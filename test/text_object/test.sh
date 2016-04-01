@@ -82,7 +82,7 @@ create_data()
         create_read_result $base/info_$1.xml $tmpdir/textobject $tmpdir/test.mxf
 }
 
-create_sample()
+create_samples()
 {
     create_test_file $1 $sampledir/test_$1.mxf &&
         create_read_result $sampledir/test_$1.xml $sampledir/textobject_$1 $sampledir/test_$1.mxf
@@ -99,9 +99,9 @@ create_data_all()
     create_data op1a && create_data rdd9 && create_data d10
 }
 
-create_sample_all()
+create_samples_all()
 {
-    create_sample op1a && create_sample rdd9 && create_sample d10
+    create_samples op1a && create_samples rdd9 && create_samples d10
 }
 
 
@@ -109,8 +109,8 @@ mkdir -p $tmpdir
 
 if test "$1" = "create_data" ; then
     create_data_all
-elif test "$1" = "create_sample" ; then
-    create_sample_all
+elif test "$1" = "create_samples" ; then
+    create_samples_all
 else
     check_all
 fi

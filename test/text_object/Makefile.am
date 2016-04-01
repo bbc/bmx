@@ -18,6 +18,6 @@ EXTRA_DIST = \
 create-data:
 	${srcdir}/test.sh create_data
 
-.PHONY: create-sample
-create-sample:
-	${srcdir}/test.sh create_sample
+.PHONY: create-samples
+create-samples:
+	${srcdir}/test.sh create_samples

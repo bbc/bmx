@@ -51,7 +51,7 @@ create_data()
         $md5tool < $tmpdir/$prefix.mxf > $base/$prefix.md5
 }
 
-create_sample()
+create_samples()
 {
     create_test_file ardzdfhdf_$prefix &&
         mv $tmpdir/ardzdfhdf_$prefix.mxf $sampledir
@@ -62,8 +62,8 @@ mkdir -p $tmpdir
 
 if test "$1" = "create_data" ; then
     create_data
-elif test "$1" = "create_sample" ; then
-    create_sample
+elif test "$1" = "create_samples" ; then
+    create_samples
 else
     check
 fi

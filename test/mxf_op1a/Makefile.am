@@ -223,6 +223,6 @@ create-samples:
 	${srcdir}/samples.sh 3 38 vc3_720p_1251
 	${srcdir}/samples.sh 3 39 vc3_720p_1252
 	${srcdir}/samples.sh 3 40 vc3_1080p_1253
-	${srcdir}/anc.sh create_sample
-	${srcdir}/vbi.sh create_sample
+	${srcdir}/anc.sh create_samples
+	${srcdir}/vbi.sh create_samples
 

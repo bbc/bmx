@@ -48,7 +48,7 @@ create_data()
     run_test $testmd5 && cp $testmd5 $md5file
 }
 
-create_sample()
+create_samples()
 {
     mv $testmxf $sample
 }
@@ -62,8 +62,8 @@ if test -z "$1" ; then
     check
 elif test "$1" = "create_data" ; then
     create_data
-elif test "$1" = "create_sample" ; then
-    create_sample
+elif test "$1" = "create_samples" ; then
+    create_samples
 fi
 res=$?
 
