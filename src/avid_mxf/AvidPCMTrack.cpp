@@ -124,6 +124,11 @@ vector<uint32_t> AvidPCMTrack::GetShiftedSampleSequence() const
     return shifted_sample_sequence;
 }
 
+uint32_t AvidPCMTrack::GetChannelCount() const
+{
+    return mWaveDescriptorHelper->GetChannelCount();
+}
+
 int64_t AvidPCMTrack::GetOutputDuration(bool clip_frame_rate) const
 {
     if (clip_frame_rate)

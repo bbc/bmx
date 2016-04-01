@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MCA_LABEL_HELPER_H_
-#define MCA_LABEL_HELPER_H_
+#ifndef BMX_APP_MCA_LABEL_HELPER_H_
+#define BMX_APP_MCA_LABEL_HELPER_H_
 
 #include <string>
 #include <vector>
@@ -61,11 +61,11 @@ typedef struct
 
 class ClipWriter;
 
-class MCALabelHelper
+class AppMCALabelHelper
 {
 public:
-    MCALabelHelper();
-    ~MCALabelHelper();
+    AppMCALabelHelper();
+    ~AppMCALabelHelper();
 
     bool IndexLabels(const MCALabelEntry *entries, size_t num_entries);
 

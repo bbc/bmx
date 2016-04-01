@@ -179,6 +179,9 @@
     <ClInclude Include="..\..\..\include\bmx\apps\AppInfoWriter.h">
       <Filter>Header Files\apps</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\apps\AppMCALabelHelper.h">
+      <Filter>Header Files\apps</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\apps\AppMXFFileFactory.h">
       <Filter>Header Files\apps</Filter>
     </ClInclude>
@@ -198,9 +201,6 @@
       <Filter>Header Files\apps</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\apps\FrameworkHelper.h">
-      <Filter>Header Files\apps</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\bmx\apps\MCALabelHelper.h">
       <Filter>Header Files\apps</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\apps\ps_avci_header_data.h">
@@ -464,6 +464,9 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MXFFileFactory.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\MXFMCALabelHelper.h">
+      <Filter>Header Files\mxf_helper</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\PictureMXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
@@ -682,6 +685,9 @@
     <ClCompile Include="..\..\..\src\apps\AppInfoWriter.cpp">
       <Filter>Source Files\apps</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\apps\AppMCALabelHelper.cpp">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\apps\AppMXFFileFactory.cpp">
       <Filter>Source Files\apps</Filter>
     </ClCompile>
@@ -701,9 +707,6 @@
       <Filter>Source Files\apps</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\apps\FrameworkHelper.cpp">
-      <Filter>Source Files\apps</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\apps\MCALabelHelper.cpp">
       <Filter>Source Files\apps</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\as02\AS02AVCITrack.cpp">
@@ -989,6 +992,9 @@
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_helper\MXFFileFactory.cpp">
+      <Filter>Source Files\mxf_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_helper\MXFMCALabelHelper.cpp">
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_helper\PictureMXFDescriptorHelper.cpp">

@@ -12,6 +12,7 @@ libmxfhelper_la_SOURCES = \
 	MPEG2Validator.cpp \
 	MXFDescriptorHelper.cpp \
 	MXFFileFactory.cpp \
+	MXFMCALabelHelper.cpp \
 	PictureMXFDescriptorHelper.cpp \
 	SoundMXFDescriptorHelper.cpp \
 	UncCDCIMXFDescriptorHelper.cpp \

@@ -20,6 +20,7 @@ nobase_library_include_HEADERS = \
 	bmx/XMLWriter.h \
 	bmx/Version.h \
 	bmx/apps/AppInfoWriter.h \
+	bmx/apps/AppMCALabelHelper.h \
 	bmx/apps/AppMXFFileFactory.h \
 	bmx/apps/AppTextInfoWriter.h \
 	bmx/apps/AppUtils.h \
@@ -27,7 +28,6 @@ nobase_library_include_HEADERS = \
 	bmx/apps/AS10Helper.h \
 	bmx/apps/AS11Helper.h \
 	bmx/apps/FrameworkHelper.h \
-	bmx/apps/MCALabelHelper.h \
 	bmx/frame/DataBufferArray.h \
 	bmx/frame/Frame.h \
 	bmx/frame/FrameBuffer.h \
@@ -143,6 +143,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_helper/MPEG2Validator.h \
 	bmx/mxf_helper/MXFDescriptorHelper.h \
 	bmx/mxf_helper/MXFFileFactory.h \
+	bmx/mxf_helper/MXFMCALabelHelper.h \
 	bmx/mxf_helper/PictureMXFDescriptorHelper.h \
 	bmx/mxf_helper/SoundMXFDescriptorHelper.h \
 	bmx/mxf_helper/UncCDCIMXFDescriptorHelper.h \

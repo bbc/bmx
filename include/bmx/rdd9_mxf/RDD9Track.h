@@ -83,10 +83,10 @@ protected:
     RDD9Track(RDD9File *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
               Rational frame_rate, EssenceType essence_type);
 
-    void AddHeaderMetadata(mxfpp::HeaderMetadata *header_metadata, mxfpp::MaterialPackage *material_package,
-                           mxfpp::SourcePackage *file_source_package);
-
 protected:
+    virtual void AddHeaderMetadata(mxfpp::HeaderMetadata *header_metadata, mxfpp::MaterialPackage *material_package,
+                                   mxfpp::SourcePackage *file_source_package);
+
     virtual void PrepareWrite(uint8_t track_count) = 0;
     virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
     virtual void CompleteWrite() {}

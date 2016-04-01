@@ -41,6 +41,7 @@
 #include <algorithm>
 
 #include <bmx/rdd9_mxf/RDD9File.h>
+#include <bmx/mxf_helper/MXFMCALabelHelper.h>
 #include <bmx/Version.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/BMXException.h>
@@ -106,8 +107,7 @@ RDD9File::RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate)
     mOutputEndOffset = 0;
     mHaveANCTrack = false;
     mHaveVBITrack = false;
-    mDataModel = 0;
-    mHeaderMetadata = 0;
+    mHavePreparedHeaderMetadata = false;
     mHeaderMetadataEndPos = 0;
     mMaterialPackage = 0;
     mFileSourcePackage = 0;
@@ -116,6 +116,9 @@ RDD9File::RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate)
     mValidator = 0;
     mPartitionFrameCount = 0;
     mMXFChecksumFile = 0;
+
+    mDataModel = new DataModel();
+    mHeaderMetadata = new HeaderMetadata(mDataModel);
 
     if ((flavour & RDD9_AS10_FLAVOUR)) {
         // octet10 = 0x0d indicates "mixed group of components in a single container e.g. video & stereo audio pair"
@@ -285,7 +288,7 @@ RDD9XMLTrack* RDD9File::CreateXMLTrack()
 
 void RDD9File::PrepareHeaderMetadata()
 {
-    if (mHeaderMetadata)
+    if (mHavePreparedHeaderMetadata)
         return;
 
     if (mTrackCounts[MXF_PICTURE_DDEF] == 0)
@@ -336,13 +339,15 @@ void RDD9File::PrepareHeaderMetadata()
         mEssenceContainerULs.insert(MXF_EC_L(MultipleWrappings));
 
     CreateHeaderMetadata();
+
+    mHavePreparedHeaderMetadata = true;
 }
 
 void RDD9File::PrepareWrite()
 {
     mReserveMinBytes += 256; // account for extra bytes when updating header metadata
 
-    if (!mHeaderMetadata)
+    if (!mHavePreparedHeaderMetadata)
         PrepareHeaderMetadata();
 
     CreateFile();
@@ -511,16 +516,11 @@ RDD9Track* RDD9File::GetTrack(uint32_t track_index)
 
 void RDD9File::CreateHeaderMetadata()
 {
-    BMX_ASSERT(!mHeaderMetadata);
+    BMX_ASSERT(!mHavePreparedHeaderMetadata);
 
     int64_t material_track_duration = -1; // unknown - could be updated if not writing in a single pass
     int64_t source_track_duration   = -1; // unknown - could be updated if not writing in a single pass
     int64_t source_track_origin     =  0; // could be updated if not writing in a single pass
-
-
-    // create the header metadata
-    mDataModel = new DataModel();
-    mHeaderMetadata = new HeaderMetadata(mDataModel);
 
 
     // Preface
@@ -647,7 +647,11 @@ void RDD9File::CreateHeaderMetadata()
 
 void RDD9File::CreateFile()
 {
-    BMX_ASSERT(mHeaderMetadata);
+    BMX_ASSERT(mHavePreparedHeaderMetadata);
+
+    // Check all the referenced MCA labels are present
+
+    CheckMCALabels();
 
 
     // set minimum llen
@@ -794,3 +798,19 @@ void RDD9File::WriteContentPackages(bool final_write)
     }
 }
 
+void RDD9File::CheckMCALabels()
+{
+    vector<MCALabelSubDescriptor*> mca_labels;
+    size_t t;
+    for (t = 0; t < mTracks.size(); t++) {
+        RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mTracks[t]);
+        if (!pcm_track)
+            continue;
+
+        const vector<MCALabelSubDescriptor*> &track_mca_labels = pcm_track->GetMCALabels();
+        mca_labels.insert(mca_labels.end(), track_mca_labels.begin(), track_mca_labels.end());
+    }
+
+    if (!check_mca_labels(mca_labels))
+      BMX_EXCEPTION(("Invalid MCA labels"));
+}

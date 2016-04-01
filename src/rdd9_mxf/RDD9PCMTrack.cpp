@@ -127,12 +127,87 @@ void RDD9PCMTrack::SetSequenceOffset(uint8_t offset)
     mCPManager->SetSoundSequenceOffset(offset);
 }
 
+AudioChannelLabelSubDescriptor* RDD9PCMTrack::AddAudioChannelLabel(AudioChannelLabelSubDescriptor *copy_from)
+{
+    AudioChannelLabelSubDescriptor *desc;
+    if (copy_from)
+        desc = dynamic_cast<AudioChannelLabelSubDescriptor*>(copy_from->clone(mRDD9File->GetHeaderMetadata()));
+    else
+        desc = new AudioChannelLabelSubDescriptor(mRDD9File->GetHeaderMetadata());
+    desc->setMCALinkID(generate_uuid());
+    mMCALabels.push_back(desc);
+
+    if (mRDD9File->HavePreparedHeaderMetadata())
+      mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(mMCALabels.back());
+
+    return desc;
+}
+
+SoundfieldGroupLabelSubDescriptor* RDD9PCMTrack::AddSoundfieldGroupLabel(SoundfieldGroupLabelSubDescriptor *copy_from)
+{
+    SoundfieldGroupLabelSubDescriptor *desc;
+    if (copy_from) {
+        desc = dynamic_cast<SoundfieldGroupLabelSubDescriptor*>(copy_from->clone(mRDD9File->GetHeaderMetadata()));
+    } else {
+        desc = new SoundfieldGroupLabelSubDescriptor(mRDD9File->GetHeaderMetadata());
+        desc->setMCALinkID(generate_uuid());
+    }
+    mMCALabels.push_back(desc);
+
+    if (mRDD9File->HavePreparedHeaderMetadata())
+      mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(mMCALabels.back());
+
+    return desc;
+}
+
+GroupOfSoundfieldGroupsLabelSubDescriptor* RDD9PCMTrack::AddGroupOfSoundfieldGroupLabel(
+        GroupOfSoundfieldGroupsLabelSubDescriptor *copy_from)
+{
+    GroupOfSoundfieldGroupsLabelSubDescriptor *desc;
+    if (copy_from) {
+        desc = dynamic_cast<GroupOfSoundfieldGroupsLabelSubDescriptor*>(copy_from->clone(mRDD9File->GetHeaderMetadata()));
+    } else {
+        desc = new GroupOfSoundfieldGroupsLabelSubDescriptor(mRDD9File->GetHeaderMetadata());
+        desc->setMCALinkID(generate_uuid());
+    }
+    mMCALabels.push_back(desc);
+
+    if (mRDD9File->HavePreparedHeaderMetadata())
+      mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(mMCALabels.back());
+
+    return desc;
+}
+
 vector<uint32_t> RDD9PCMTrack::GetShiftedSampleSequence() const
 {
     vector<uint32_t> shifted_sample_sequence = mSampleSequence;
     offset_sample_sequence(shifted_sample_sequence, mWaveDescriptorHelper->GetSequenceOffset());
 
     return shifted_sample_sequence;
+}
+
+void RDD9PCMTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPackage *material_package,
+                                     SourcePackage *file_source_package)
+{
+    size_t i;
+    for (i = 0; i < mMCALabels.size(); i++) {
+        MCALabelSubDescriptor *desc = mMCALabels[i];
+        BMX_CHECK(desc->validate(true));
+
+        const AudioChannelLabelSubDescriptor *c_desc  = dynamic_cast<const AudioChannelLabelSubDescriptor*>(desc);
+        if (c_desc) {
+            BMX_CHECK(c_desc->haveMCAChannelID());
+            BMX_CHECK(c_desc->getMCAChannelID() > 0);
+            BMX_CHECK(c_desc->getMCAChannelID() <= mWaveDescriptorHelper->GetChannelCount());
+        }
+    }
+
+    RDD9Track::AddHeaderMetadata(header_metadata, material_package, file_source_package);
+
+    for (i = 0; i < mMCALabels.size(); i++) {
+        header_metadata->moveToEnd(mMCALabels[i]); // so that they appear after the descriptor in the file
+        mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(mMCALabels[i]);
+    }
 }
 
 void RDD9PCMTrack::PrepareWrite(uint8_t track_count)

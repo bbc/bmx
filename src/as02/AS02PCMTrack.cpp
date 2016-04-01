@@ -134,6 +134,11 @@ vector<uint32_t> AS02PCMTrack::GetShiftedSampleSequence() const
     return shifted_sample_sequence;
 }
 
+uint32_t AS02PCMTrack::GetChannelCount() const
+{
+    return mWaveDescriptorHelper->GetChannelCount();
+}
+
 void AS02PCMTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
     BMX_ASSERT(mMXFFile);

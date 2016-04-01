@@ -101,6 +101,7 @@
     <ClInclude Include="..\..\..\include\bmx\XMLUtils.h" />
     <ClInclude Include="..\..\..\include\bmx\XMLWriter.h" />
     <ClInclude Include="..\..\..\include\bmx\apps\AppInfoWriter.h" />
+    <ClInclude Include="..\..\..\include\bmx\apps\AppMCALabelHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\apps\AppMXFFileFactory.h" />
     <ClInclude Include="..\..\..\include\bmx\apps\AppTextInfoWriter.h" />
     <ClInclude Include="..\..\..\include\bmx\apps\AppUtils.h" />
@@ -108,7 +109,6 @@
     <ClInclude Include="..\..\..\include\bmx\apps\AS10Helper.h" />
     <ClInclude Include="..\..\..\include\bmx\apps\AS11Helper.h" />
     <ClInclude Include="..\..\..\include\bmx\apps\FrameworkHelper.h" />
-    <ClInclude Include="..\..\..\include\bmx\apps\MCALabelHelper.h" />
     <ClInclude Include="..\..\..\src\apps\ps_avci_header_data.h" />
     <ClInclude Include="..\..\..\include\bmx\as02\AS02AVCITrack.h" />
     <ClInclude Include="..\..\..\include\bmx\as02\AS02Bundle.h" />
@@ -196,6 +196,7 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MPEG2Validator.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MXFFileFactory.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\MXFMCALabelHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\PictureMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\SoundMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\UncCDCIMXFDescriptorHelper.h" />
@@ -270,6 +271,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\st436\RDD6MetadataXML.cpp" />
     <ClCompile Include="..\..\..\src\apps\AppInfoWriter.cpp" />
+    <ClCompile Include="..\..\..\src\apps\AppMCALabelHelper.cpp" />
     <ClCompile Include="..\..\..\src\apps\AppMXFFileFactory.cpp" />
     <ClCompile Include="..\..\..\src\apps\AppTextInfoWriter.cpp" />
     <ClCompile Include="..\..\..\src\apps\AppUtils.cpp" />
@@ -277,7 +279,6 @@
     <ClCompile Include="..\..\..\src\apps\AS10Helper.cpp" />
     <ClCompile Include="..\..\..\src\apps\AS11Helper.cpp" />
     <ClCompile Include="..\..\..\src\apps\FrameworkHelper.cpp" />
-    <ClCompile Include="..\..\..\src\apps\MCALabelHelper.cpp" />
     <ClCompile Include="..\..\..\src\as02\AS02AVCITrack.cpp" />
     <ClCompile Include="..\..\..\src\as02\AS02Bundle.cpp" />
     <ClCompile Include="..\..\..\src\as02\AS02Clip.cpp" />
@@ -373,6 +374,7 @@
     <ClCompile Include="..\..\..\src\mxf_helper\MPEG2Validator.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\MXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\MXFFileFactory.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_helper\MXFMCALabelHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\PictureMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\SoundMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\UncCDCIMXFDescriptorHelper.cpp" />

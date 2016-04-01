@@ -69,6 +69,7 @@
 #include <bmx/Logging.h>
 
 using namespace std;
+using namespace mxfpp;
 using namespace bmx;
 
 
@@ -992,6 +993,100 @@ void ClipWriterTrack::SetChannelAssignment(UL label)
     }
 }
 
+AudioChannelLabelSubDescriptor* ClipWriterTrack::AddAudioChannelLabel(AudioChannelLabelSubDescriptor *copy_from)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
+            if (pcm_track)
+                return pcm_track->AddAudioChannelLabel(copy_from);
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
+            if (pcm_track)
+                return pcm_track->AddAudioChannelLabel(copy_from);
+            break;
+        }
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_D10_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0;
+}
+
+SoundfieldGroupLabelSubDescriptor* ClipWriterTrack::AddSoundfieldGroupLabel(SoundfieldGroupLabelSubDescriptor *copy_from)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
+            if (pcm_track)
+                return pcm_track->AddSoundfieldGroupLabel(copy_from);
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
+            if (pcm_track)
+                return pcm_track->AddSoundfieldGroupLabel(copy_from);
+            break;
+        }
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_D10_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0;
+}
+
+GroupOfSoundfieldGroupsLabelSubDescriptor* ClipWriterTrack::AddGroupOfSoundfieldGroupLabel(
+            GroupOfSoundfieldGroupsLabelSubDescriptor *copy_from)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
+            if (pcm_track)
+                return pcm_track->AddGroupOfSoundfieldGroupLabel(copy_from);
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
+            if (pcm_track)
+                return pcm_track->AddGroupOfSoundfieldGroupLabel(copy_from);
+            break;
+        }
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_D10_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0;
+}
+
 void ClipWriterTrack::SetConstantDataSize(uint32_t size)
 {
     switch (mClipType)
@@ -1359,6 +1454,55 @@ vector<uint32_t> ClipWriterTrack::GetShiftedSampleSequence() const
     }
 
     return vector<uint32_t>(1, 1);
+}
+
+uint32_t ClipWriterTrack::GetChannelCount() const
+{
+    switch (mClipType)
+    {
+        case CW_AS02_CLIP_TYPE:
+        {
+            AS02PCMTrack *pcm_track = dynamic_cast<AS02PCMTrack*>(mAS02Track);
+            if (pcm_track)
+                return pcm_track->GetChannelCount();
+            break;
+        }
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
+            if (pcm_track)
+                return pcm_track->GetChannelCount();
+            break;
+        }
+        case CW_AVID_CLIP_TYPE:
+        {
+            AvidPCMTrack *pcm_track = dynamic_cast<AvidPCMTrack*>(mAvidTrack);
+            if (pcm_track)
+                return pcm_track->GetChannelCount();
+            break;
+        }
+        case CW_D10_CLIP_TYPE:
+        {
+            D10PCMTrack *pcm_track = dynamic_cast<D10PCMTrack*>(mD10Track);
+            if (pcm_track)
+                return pcm_track->GetChannelCount();
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
+            if (pcm_track)
+                return pcm_track->GetChannelCount();
+            break;
+        }
+        case CW_WAVE_CLIP_TYPE:
+            return mWaveTrack->GetChannelCount();
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0;
 }
 
 int64_t ClipWriterTrack::GetDuration() const

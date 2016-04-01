@@ -98,7 +98,7 @@ static int64_t get_offset(uint16_t to_tc_base, uint16_t from_tc_base, int64_t fr
 
 
 
-bool AS11WriterHelper::IndexAS11MCALabels(MCALabelHelper *labels_helper)
+bool AS11WriterHelper::IndexAS11MCALabels(AppMCALabelHelper *labels_helper)
 {
     return labels_helper->IndexLabels(AS11_MCA_LABELS, BMX_ARRAY_SIZE(AS11_MCA_LABELS));
 }

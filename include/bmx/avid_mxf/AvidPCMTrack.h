@@ -61,6 +61,7 @@ public:
     const std::vector<uint32_t>& GetSampleSequence() const { return mSampleSequence; }
     uint8_t GetSequenceOffset() const { return mWaveDescriptorHelper->GetSequenceOffset(); }
     std::vector<uint32_t> GetShiftedSampleSequence() const;
+    uint32_t GetChannelCount() const;
 
 public:
     virtual int64_t GetOutputDuration(bool clip_frame_rate) const;

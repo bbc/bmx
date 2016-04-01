@@ -33,7 +33,7 @@
 #include "config.h"
 #endif
 
-#include <bmx/apps/MCALabelHelper.h>
+#include <bmx/apps/AppMCALabelHelper.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -42,6 +42,7 @@
 
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
+#include <bmx/rdd9_mxf/RDD9PCMTrack.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -51,12 +52,12 @@ using namespace mxfpp;
 using namespace bmx;
 
 
-MCALabelHelper::LabelLine::LabelLine()
+AppMCALabelHelper::LabelLine::LabelLine()
 {
     Reset();
 }
 
-void MCALabelHelper::LabelLine::Reset()
+void AppMCALabelHelper::LabelLine::Reset()
 {
     label = 0;
     id.clear();
@@ -65,7 +66,7 @@ void MCALabelHelper::LabelLine::Reset()
 }
 
 
-void MCALabelHelper::SoundfieldGroup::Reset()
+void AppMCALabelHelper::SoundfieldGroup::Reset()
 {
     sg_label_line.Reset();
     c_label_lines.clear();
@@ -74,16 +75,16 @@ void MCALabelHelper::SoundfieldGroup::Reset()
 
 
 
-MCALabelHelper::MCALabelHelper()
+AppMCALabelHelper::AppMCALabelHelper()
 {
 }
 
-MCALabelHelper::~MCALabelHelper()
+AppMCALabelHelper::~AppMCALabelHelper()
 {
     ClearTrackLabels();
 }
 
-bool MCALabelHelper::IndexLabels(const MCALabelEntry *entries, size_t num_entries)
+bool AppMCALabelHelper::IndexLabels(const MCALabelEntry *entries, size_t num_entries)
 {
     size_t i;
     for (i = 0; i < num_entries; i++) {
@@ -98,7 +99,7 @@ bool MCALabelHelper::IndexLabels(const MCALabelEntry *entries, size_t num_entrie
     return true;
 }
 
-bool MCALabelHelper::ParseTrackLabels(const string &filename)
+bool AppMCALabelHelper::ParseTrackLabels(const string &filename)
 {
     ClearTrackLabels();
 
@@ -143,17 +144,18 @@ bool MCALabelHelper::ParseTrackLabels(const string &filename)
     }
 }
 
-void MCALabelHelper::InsertTrackLabels(ClipWriter *clip)
+void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
 {
-    OP1AFile *op1a_file = clip->GetOP1AClip();
-    BMX_CHECK(op1a_file);
+    BMX_CHECK(clip->GetOP1AClip() || clip->GetRDD9Clip());
 
-    vector<OP1APCMTrack*> pcm_tracks;
+    vector<ClipWriterTrack*> pcm_tracks;
     size_t i;
-    for (i = 0; i < op1a_file->GetNumTracks(); i++) {
-        OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(op1a_file->GetTrack(i));
-        if (pcm_track)
-            pcm_tracks.push_back(pcm_track);
+    for (i = 0; i < clip->GetNumTracks(); i++) {
+        ClipWriterTrack *clip_track = clip->GetTrack(i);
+        OP1APCMTrack *op1a_pcm_track = dynamic_cast<OP1APCMTrack*>(clip_track->GetOP1ATrack());
+        RDD9PCMTrack *rdd9_pcm_track = dynamic_cast<RDD9PCMTrack*>(clip_track->GetRDD9Track());
+        if (op1a_pcm_track || rdd9_pcm_track)
+            pcm_tracks.push_back(clip_track);
     }
 
     map<string, SoundfieldGroupLabelSubDescriptor*> package_sg_desc_byid;
@@ -166,7 +168,7 @@ void MCALabelHelper::InsertTrackLabels(ClipWriter *clip)
 
         if (track_labels->track_index >= pcm_tracks.size())
             BMX_EXCEPTION(("PCM (only) output track index %u does not exist", track_labels->track_index));
-        OP1APCMTrack *pcm_track = pcm_tracks[track_labels->track_index];
+        ClipWriterTrack *pcm_track = pcm_tracks[track_labels->track_index];
 
         map<string, SoundfieldGroupLabelSubDescriptor*> track_sg_desc_byid;
         map<string, GroupOfSoundfieldGroupsLabelSubDescriptor*> track_gosg_desc_byid;
@@ -296,7 +298,7 @@ void MCALabelHelper::InsertTrackLabels(ClipWriter *clip)
     }
 }
 
-void MCALabelHelper::ParseTrackLines(const vector<string> &lines)
+void AppMCALabelHelper::ParseTrackLines(const vector<string> &lines)
 {
     TrackLabels *track_labels = 0;
     try
@@ -350,7 +352,7 @@ void MCALabelHelper::ParseTrackLines(const vector<string> &lines)
     }
 }
 
-MCALabelHelper::LabelLine MCALabelHelper::ParseLabelLine(const string &line)
+AppMCALabelHelper::LabelLine AppMCALabelHelper::ParseLabelLine(const string &line)
 {
     LabelLine label_line;
 
@@ -391,7 +393,7 @@ MCALabelHelper::LabelLine MCALabelHelper::ParseLabelLine(const string &line)
     return label_line;
 }
 
-const MCALabelEntry* MCALabelHelper::Find(const string &id_str)
+const MCALabelEntry* AppMCALabelHelper::Find(const string &id_str)
 {
     if (mEntries.count(id_str))
         return mEntries[id_str];
@@ -399,7 +401,7 @@ const MCALabelEntry* MCALabelHelper::Find(const string &id_str)
         return 0;
 }
 
-void MCALabelHelper::ClearTrackLabels()
+void AppMCALabelHelper::ClearTrackLabels()
 {
     size_t i;
     for (i = 0; i < mTrackLabels.size(); i++)

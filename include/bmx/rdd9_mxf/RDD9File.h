@@ -88,6 +88,7 @@ public:
     void CompleteWrite();
 
 public:
+    bool HavePreparedHeaderMetadata() const          { return mHavePreparedHeaderMetadata; }
     mxfpp::HeaderMetadata* GetHeaderMetadata() const { return mHeaderMetadata; }
     mxfpp::DataModel* GetDataModel() const           { return mDataModel; }
 
@@ -114,6 +115,8 @@ private:
     void UpdateTrackMetadata(mxfpp::GenericPackage *package, int64_t origin, int64_t duration);
 
     void WriteContentPackages(bool final_write);
+
+    void CheckMCALabels();
 
 private:
     int mFlavour;
@@ -155,6 +158,7 @@ private:
 
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;
+    bool mHavePreparedHeaderMetadata;
     int64_t mHeaderMetadataEndPos;
 
     mxfpp::MaterialPackage *mMaterialPackage;

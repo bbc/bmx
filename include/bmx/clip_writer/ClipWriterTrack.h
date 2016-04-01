@@ -104,6 +104,12 @@ public:
     void SetDialNorm(int8_t dial_norm);             // default not set
     void SetSequenceOffset(uint8_t offset);         // default D10 determined from input or not set
     void SetChannelAssignment(UL label);            // default not set
+    mxfpp::AudioChannelLabelSubDescriptor* AddAudioChannelLabel(
+        mxfpp::AudioChannelLabelSubDescriptor *copy_from = 0);
+    mxfpp::SoundfieldGroupLabelSubDescriptor* AddSoundfieldGroupLabel(
+        mxfpp::SoundfieldGroupLabelSubDescriptor *copy_from = 0);
+    mxfpp::GroupOfSoundfieldGroupsLabelSubDescriptor* AddGroupOfSoundfieldGroupLabel(
+        mxfpp::GroupOfSoundfieldGroupsLabelSubDescriptor *copy_from = 0);
 
     // Data properties
     void SetConstantDataSize(uint32_t size);
@@ -126,6 +132,7 @@ public:
     bool IsSingleField() const;
 
     std::vector<uint32_t> GetShiftedSampleSequence() const;
+    uint32_t GetChannelCount() const;
 
     int64_t GetDuration() const;
     int64_t GetContainerDuration() const;

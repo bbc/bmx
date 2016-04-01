@@ -60,6 +60,7 @@ public:
     const std::vector<uint32_t>& GetSampleSequence() const { return mSampleSequence; }
     uint8_t GetSequenceOffset() const { return mWaveDescriptorHelper->GetSequenceOffset(); }
     std::vector<uint32_t> GetShiftedSampleSequence() const;
+    uint32_t GetChannelCount() const;
 
 public:
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);

@@ -473,7 +473,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                                * 'as11-mode-1', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02020000,\n");
     fprintf(stderr, "                                * 'as11-mode-2', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02030000\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "  op1a/as11op1a:\n");
+    fprintf(stderr, "  op1a/as11op1a/rdd9:\n");
     fprintf(stderr, "    --track-mca-labels <scheme> <file>   Insert audio labels defined in <file> using the symbol <scheme>\n");
     fprintf(stderr, "                                         The available <scheme>s are: 'as11'\n");
     fprintf(stderr, "\n");
@@ -3961,7 +3961,7 @@ int main(int argc, const char** argv)
         // insert MCA labels
 
         if (!track_mca_labels.empty()) {
-            MCALabelHelper label_helper;
+            AppMCALabelHelper label_helper;
             AS11Helper::IndexAS11MCALabels(&label_helper);
 
             size_t i;

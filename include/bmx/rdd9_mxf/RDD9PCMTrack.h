@@ -56,6 +56,13 @@ public:
     void SetDialNorm(int8_t dial_norm);                 // default not set
     void SetSequenceOffset(uint8_t offset);             // default not set
 
+    mxfpp::AudioChannelLabelSubDescriptor* AddAudioChannelLabel(
+        mxfpp::AudioChannelLabelSubDescriptor *copy_from = 0);
+    mxfpp::SoundfieldGroupLabelSubDescriptor* AddSoundfieldGroupLabel(
+        mxfpp::SoundfieldGroupLabelSubDescriptor *copy_from = 0);
+    mxfpp::GroupOfSoundfieldGroupsLabelSubDescriptor* AddGroupOfSoundfieldGroupLabel(
+        mxfpp::GroupOfSoundfieldGroupsLabelSubDescriptor *copy_from = 0);
+
 public:
     const std::vector<uint32_t>& GetSampleSequence() const  { return mSampleSequence; }
     uint8_t GetSequenceOffset() const                       { return mWaveDescriptorHelper->GetSequenceOffset(); }
@@ -64,7 +71,12 @@ public:
     uint32_t GetQuantizationBits() const                    { return mWaveDescriptorHelper->GetQuantizationBits(); }
     uint32_t GetChannelCount() const                        { return mWaveDescriptorHelper->GetChannelCount(); }
 
+    const std::vector<mxfpp::MCALabelSubDescriptor*>& GetMCALabels() const { return mMCALabels; }
+
 protected:
+    virtual void AddHeaderMetadata(mxfpp::HeaderMetadata *header_metadata, mxfpp::MaterialPackage *material_package,
+                                   mxfpp::SourcePackage *file_source_package);
+
     virtual void PrepareWrite(uint8_t track_count);
     virtual void CompleteWrite();
 
@@ -74,6 +86,7 @@ private:
 private:
     WaveMXFDescriptorHelper *mWaveDescriptorHelper;
     std::vector<uint32_t> mSampleSequence;
+    std::vector<mxfpp::MCALabelSubDescriptor*> mMCALabels;
 };
 
 
