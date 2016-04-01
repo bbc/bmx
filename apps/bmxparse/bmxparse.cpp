@@ -369,7 +369,7 @@ int main(int argc, const char **argv)
             }
             cmdln_index++;
         }
-        if (strcmp(argv[cmdln_index], "--single-field") == 0)
+        else if (strcmp(argv[cmdln_index], "--single-field") == 0)
         {
             single_field = true;
         }
