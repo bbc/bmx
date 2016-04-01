@@ -803,7 +803,9 @@ void OP1AFile::CreateFile()
         OP1AXMLTrack *xml_track = mXMLTracks[i];
         if (xml_track->RequireStreamPartition()) {
             if (header_partition.getIndexSID() || header_partition.getBodySID())
-                BMX_EXCEPTION(("XML track's Generic Stream partition is incompatible with minimal partitions flavour"));
+                BMX_EXCEPTION(("XML track's Generic Stream partition is currently incompatible with minimal partitions flavour"));
+            if (mSupportCompleteSinglePass)
+                BMX_EXCEPTION(("XML track's Generic Stream partition is currently incompatible with single pass flavour"));
 
             if (mMXFFile->isMemoryFileOpen())
                 mMXFFile->closeMemoryFile();

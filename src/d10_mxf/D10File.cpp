@@ -312,7 +312,8 @@ void D10File::WriteSamples(uint32_t track_index, const unsigned char *data, uint
     while (mCPManager->HaveContentPackage()) {
         if (mFirstWrite && mRequireBodyPartition) {
             if (mInputDuration >= 0)
-                BMX_EXCEPTION(("XML track's Generic Stream partition is incompatible with single pass flavours"));
+                BMX_EXCEPTION(("XML track's Generic Stream partition is currently incompatible with single pass flavours"));
+
             Partition &ess_partition = mMXFFile->createPartition();
             ess_partition.setKey(&MXF_PP_K(OpenComplete, Body));
             ess_partition.setBodySID(BODY_SID);
@@ -651,7 +652,7 @@ void D10File::CreateFile()
         D10XMLTrack *xml_track = mXMLTracks[i];
         if (xml_track->RequireStreamPartition()) {
             if (mInputDuration >= 0)
-                BMX_EXCEPTION(("XML track's Generic Stream partition is incompatible with single pass flavours"));
+                BMX_EXCEPTION(("XML track's Generic Stream partition is currently incompatible with single pass flavours"));
             mRequireBodyPartition = true;
             break;
         }
@@ -726,7 +727,8 @@ void D10File::CreateFile()
         D10XMLTrack *xml_track = mXMLTracks[i];
         if (xml_track->RequireStreamPartition()) {
             if (mInputDuration >= 0)
-                BMX_EXCEPTION(("XML track's Generic Stream partition is incompatible with single pass flavours"));
+                BMX_EXCEPTION(("XML track's Generic Stream partition is currently incompatible with single pass flavours"));
+
             Partition &stream_partition = mMXFFile->createPartition();
             stream_partition.setKey(&MXF_GS_PP_K(GenericStream));
             stream_partition.setBodySID(xml_track->GetStreamId());
