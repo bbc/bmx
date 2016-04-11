@@ -127,6 +127,11 @@ void RDD9PCMTrack::SetSequenceOffset(uint8_t offset)
     mCPManager->SetSoundSequenceOffset(offset);
 }
 
+void RDD9PCMTrack::SetChannelAssignment(UL label)
+{
+    mWaveDescriptorHelper->SetChannelAssignment(label);
+}
+
 AudioChannelLabelSubDescriptor* RDD9PCMTrack::AddAudioChannelLabel(AudioChannelLabelSubDescriptor *copy_from)
 {
     AudioChannelLabelSubDescriptor *desc;

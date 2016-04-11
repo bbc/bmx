@@ -545,14 +545,14 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            is shown as '<output track channel> <- <input channel>\n");
     fprintf(stderr, "    --dump-track-map-exit   Same as --dump-track-map, but exit immediately afterwards\n");
     fprintf(stderr, "    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "  op1a/as11op1a/rdd9:\n");
     fprintf(stderr, "    --audio-layout <label>  Set the Wave essence descriptor channel assignment label which identifies the audio layout mode in operation\n");
     fprintf(stderr, "                            The <label> is one of the following:\n");
     fprintf(stderr, "                                * a SMPTE UL, formatted as a 'urn:smpte:ul:...',\n");
     fprintf(stderr, "                                * 'as11-mode-0', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02010000,\n");
     fprintf(stderr, "                                * 'as11-mode-1', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02020000,\n");
     fprintf(stderr, "                                * 'as11-mode-2', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02030000\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  op1a/as11op1a/rdd9:\n");
     fprintf(stderr, "    --track-mca-labels <scheme> <file>   Insert audio labels defined in <file> using the symbol <scheme>\n");
     fprintf(stderr, "                                         The available <scheme>s are: 'as11'\n");
     fprintf(stderr, "\n");

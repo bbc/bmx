@@ -982,9 +982,15 @@ void ClipWriterTrack::SetChannelAssignment(UL label)
                 pcm_track->SetChannelAssignment(label);
             break;
         }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9PCMTrack *pcm_track = dynamic_cast<RDD9PCMTrack*>(mRDD9Track);
+            if (pcm_track)
+                pcm_track->SetChannelAssignment(label);
+            break;
+        }
         case CW_AVID_CLIP_TYPE:
         case CW_D10_CLIP_TYPE:
-        case CW_RDD9_CLIP_TYPE:
         case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
