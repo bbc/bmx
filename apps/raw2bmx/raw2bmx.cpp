@@ -353,6 +353,11 @@ static void usage(const char *cmd)
         fprintf(stderr, "%s", get_ps_avci_header_format_string(i));
     }
     fprintf(stderr, "\n");
+    fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks. See below for details of the <expr> format\n");
+    fprintf(stderr, "  --dump-track-map        Dump the output audio track map to stderr.\n");
+    fprintf(stderr, "                          The dumps consists of a list output tracks, where each output track channel\n");
+    fprintf(stderr, "                          is shown as '<output track channel> <- <input channel>\n");
+    fprintf(stderr, "  --dump-track-map-exit   Same as --dump-track-map, but exit immediately afterwards\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02:\n");
     fprintf(stderr, "    --mic-type <type>       Media integrity check type: 'md5' or 'none'. Default 'md5'\n");
@@ -461,11 +466,6 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --orig <name>           Set originator in the output Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02/op1a/as11op1a:\n");
-    fprintf(stderr, "    --track-map <expr>      Map input audio channels to output tracks. See below for details of the <expr> format\n");
-    fprintf(stderr, "    --dump-track-map        Dump the output audio track map to stderr.\n");
-    fprintf(stderr, "                            The dumps consists of a list output tracks, where each output track channel\n");
-    fprintf(stderr, "                            is shown as '<output track channel> <- <input channel>\n");
-    fprintf(stderr, "    --dump-track-map-exit   Same as --dump-track-map, but exit immediately afterwards\n");
     fprintf(stderr, "    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/as11op1a/rdd9:\n");
