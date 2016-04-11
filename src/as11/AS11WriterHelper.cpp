@@ -139,6 +139,9 @@ void AS11WriterHelper::SetSpecificationId(AS11SpecificationId spec_id)
             preface->appendULArrayItem(&MXF_ITEM_K(Preface, SpecificationIdentifiers), AS11_BLOCKS_FF_0_WIP);
             preface->appendULArrayItem(&MXF_ITEM_K(Preface, SpecificationIdentifiers), AS11_BLOCKS_FF_6_WIP);
             break;
+        case AS11_X7_SPEC:
+            preface->appendULArrayItem(&MXF_ITEM_K(Preface, SpecificationIdentifiers), AS11_BLOCKS_FF_7_WIP);
+            break;
         case UNKNOWN_AS11_SPEC:
             break;
     }

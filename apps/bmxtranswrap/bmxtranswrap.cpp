@@ -430,6 +430,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                                       as11-x2 : AMWA AS-11 X2 specification\n");
     fprintf(stderr, "                                       as11-x3 : AMWA AS-11 X3 specification\n");
     fprintf(stderr, "                                       as11-x4 : AMWA AS-11 X4 specification\n");
+    fprintf(stderr, "                                       as11-x7 : AMWA AS-11 X7 specification\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02/as11op1a/as11d10/op1a/d10/rdd9/as10:\n");
     fprintf(stderr, "    --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default is input file's value or not set\n");

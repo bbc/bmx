@@ -374,6 +374,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                                       as11-x2 : AMWA AS-11 X2 specification\n");
     fprintf(stderr, "                                       as11-x3 : AMWA AS-11 X3 specification\n");
     fprintf(stderr, "                                       as11-x4 : AMWA AS-11 X4 specification\n");
+    fprintf(stderr, "                                       as11-x7 : AMWA AS-11 X7 specification\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/op1a/rdd9/as10:\n");
     fprintf(stderr, "    --out-start <offset>    Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");

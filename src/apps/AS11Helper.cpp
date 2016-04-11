@@ -132,6 +132,21 @@ static const FrameworkInfo AS11_FRAMEWORK_INFO[] =
     {0, g_Null_Key, 0},
 };
 
+typedef struct
+{
+    const char *name;
+    AS11SpecificationId id;
+} SpecIdMap;
+
+static const SpecIdMap AS11_SPEC_ID_MAP[] =
+{
+    {"as11-x1",   AS11_X1_SPEC},
+    {"as11-x2",   AS11_X2_SPEC},
+    {"as11-x3",   AS11_X3_SPEC},
+    {"as11-x4",   AS11_X4_SPEC},
+    {"as11-x7",   AS11_X7_SPEC},
+};
+
 
 static string get_short_name(string name)
 {
@@ -397,18 +412,15 @@ bool AS11Helper::SetFrameworkProperty(const char *type_str, const char *name, co
 
 bool AS11Helper::ParseSpecificationId(const string &spec_id_str)
 {
-    if (spec_id_str == "as11-x1")
-        mAS11SpecId = AS11_X1_SPEC;
-    else if (spec_id_str == "as11-x2")
-        mAS11SpecId = AS11_X2_SPEC;
-    else if (spec_id_str == "as11-x3")
-        mAS11SpecId = AS11_X3_SPEC;
-    else if (spec_id_str == "as11-x4")
-        mAS11SpecId = AS11_X4_SPEC;
-    else
-        return false;
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(AS11_SPEC_ID_MAP); i++) {
+        if (spec_id_str == AS11_SPEC_ID_MAP[i].name) {
+            mAS11SpecId = AS11_SPEC_ID_MAP[i].id;
+            return true;
+        }
+    }
 
-    return true;
+    return false;
 }
 
 bool AS11Helper::HaveProgrammeTitle() const
