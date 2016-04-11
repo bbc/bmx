@@ -63,6 +63,7 @@ void AppMCALabelHelper::LabelLine::Reset()
     id.clear();
     channel_index = (uint32_t)(-1);
     language.clear();
+    repeat = true;
 }
 
 
@@ -158,6 +159,32 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
             pcm_tracks.push_back(clip_track);
     }
 
+    // create maps to check whether a sg or gosg can be repeated within the package
+    // if is must not be repeated then the entry is set to false; otherwise the entry is not set
+    map<string, bool> repeat_sg_byid;
+    map<string, bool> repeat_gosg_byid;
+    for (i = 0; i < mTrackLabels.size(); i++) {
+        TrackLabels *track_labels = mTrackLabels[i];
+        if (track_labels->soundfield_groups.empty())
+            continue;
+        size_t g;
+        for (g = 0; g < track_labels->soundfield_groups.size(); g++) {
+            SoundfieldGroup &sg = track_labels->soundfield_groups[g];
+            if (sg.sg_label_line.label) {
+                LabelLine &sg_label_line = sg.sg_label_line;
+                if (!sg_label_line.repeat && !sg_label_line.id.empty())
+                    repeat_sg_byid[sg_label_line.id] = false;
+            }
+            size_t l;
+            for (l = 0; l < sg.gosg_label_lines.size(); l++) {
+                LabelLine &gosg_label_line = sg.gosg_label_lines[l];
+                if (!gosg_label_line.repeat && !gosg_label_line.id.empty())
+                    repeat_gosg_byid[gosg_label_line.id] = false;
+            }
+        }
+    }
+
+
     map<string, SoundfieldGroupLabelSubDescriptor*> package_sg_desc_byid;
     map<string, GroupOfSoundfieldGroupsLabelSubDescriptor*> package_gosg_desc_byid;
 
@@ -197,9 +224,11 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                                        gosg_label_line.id.c_str()));
                     }
 
-                    if (!track_gosg_desc_byid.count(gosg_label_line.id)) {
-                        gosg_desc = pcm_track->AddGroupOfSoundfieldGroupLabel(gosg_desc);
-                        track_gosg_desc_byid[gosg_label_line.id] = gosg_desc;
+                    if (!repeat_gosg_byid.count(gosg_label_line.id) || repeat_gosg_byid[gosg_label_line.id]) {
+                        if (!track_gosg_desc_byid.count(gosg_label_line.id)) {
+                            gosg_desc = pcm_track->AddGroupOfSoundfieldGroupLabel(gosg_desc);
+                            track_gosg_desc_byid[gosg_label_line.id] = gosg_desc;
+                        }
                     }
                 } else {
                     gosg_desc = pcm_track->AddGroupOfSoundfieldGroupLabel();
@@ -249,9 +278,11 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                         }
                     }
 
-                    if (!track_sg_desc_byid.count(sg_label_line.id)) {
-                        sg_desc = pcm_track->AddSoundfieldGroupLabel(sg_desc);
-                        track_sg_desc_byid[sg_label_line.id] = sg_desc;
+                    if (!repeat_sg_byid.count(sg_label_line.id) || repeat_sg_byid[sg_label_line.id]) {
+                        if (!track_sg_desc_byid.count(sg_label_line.id)) {
+                            sg_desc = pcm_track->AddSoundfieldGroupLabel(sg_desc);
+                            track_sg_desc_byid[sg_label_line.id] = sg_desc;
+                        }
                     }
                 } else {
                     sg_desc = pcm_track->AddSoundfieldGroupLabel();
@@ -382,6 +413,11 @@ AppMCALabelHelper::LabelLine AppMCALabelHelper::ParseLabelLine(const string &lin
             label_line.channel_index = channel_index;
         } else if (name == "lang") {
             label_line.language = value;
+        } else if (name == "repeat") {
+            if (value == "0" || value == "false" || value == "no")
+                label_line.repeat = false;
+            else
+                label_line.repeat = true;
         } else {
             log_warn("Ignoring unknown audio label attribute '%s'\n", elements[i].c_str());
         }

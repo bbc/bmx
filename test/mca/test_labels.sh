@@ -129,6 +129,7 @@ create_samples()
 check_all()
 {
     check stereo $base/stereo.txt stereo &&
+        check mono $base/mono.txt mono &&
         check "0,1;2-7" $base/stereop51.txt stereop51 &&
         check "0,1;2-7" $base/mess.txt mess
 }
@@ -136,6 +137,7 @@ check_all()
 create_data_all()
 {
     create_data stereo $base/stereo.txt stereo &&
+        create_data mono $base/mono.txt mono &&
         create_data "0,1;2-7" $base/stereop51.txt stereop51 &&
         create_data "0,1;2-7" $base/mess.txt mess
 }
@@ -143,6 +145,7 @@ create_data_all()
 create_samples_all()
 {
     create_samples stereo $base/stereo.txt stereo &&
+        create_samples mono $base/mono.txt mono &&
         create_samples "0,1;2-7" $base/stereop51.txt stereop51 &&
         create_samples "0,1;2-7" $base/mess.txt mess
 }

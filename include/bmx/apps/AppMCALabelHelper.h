@@ -86,6 +86,7 @@ private:
         std::string id;
         uint32_t channel_index; // starts from 0. Note that the descriptor ChannelID starts from 1!
         std::string language;
+        bool repeat;
     };
 
     class SoundfieldGroup
