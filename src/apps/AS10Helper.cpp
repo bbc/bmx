@@ -117,8 +117,10 @@ bool AS10Helper::SupportFrameworkType(const char *type_str)
 bool AS10Helper::ParseFrameworkFile(const char *type_str, const char *filename)
 {
     FrameworkType type;
-    if (!ParseFrameworkType(type_str, &type))
+    if (!ParseFrameworkType(type_str, &type)) {
+        log_warn("Unknown AS-10 framework type '%s'\n", type_str);
         return false;
+    }
 
     FILE *file = fopen(filename, "rb");
     if (!file) {
@@ -171,8 +173,10 @@ bool AS10Helper::ParseFrameworkFile(const char *type_str, const char *filename)
 bool AS10Helper::SetFrameworkProperty(const char *type_str, const char *name, const char *value)
 {
     FrameworkType type;
-    if (!ParseFrameworkType(type_str, &type))
+    if (!ParseFrameworkType(type_str, &type)) {
+        log_warn("Unknown AS-10 framework type '%s'\n", type_str);
         return false;
+    }
 
     SetFrameworkProperty(type, name, value);
     return true;
@@ -271,10 +275,9 @@ bool AS10Helper::ParseFrameworkType(const char *type_str, FrameworkType *type) c
     if (strcmp(type_str, "as10") == 0) {
         *type = AS10_CORE_FRAMEWORK_TYPE;
         return true;
+    } else {
+        return false;
     }
-
-    log_warn("Unknown framework type '%s'\n", type_str);
-    return false;
 }
 
 void AS10Helper::SetFrameworkProperty(FrameworkType type, string name, string value)

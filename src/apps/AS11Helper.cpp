@@ -246,8 +246,10 @@ bool AS11Helper::SupportFrameworkType(const char *type_str)
 bool AS11Helper::ParseFrameworkFile(const char *type_str, const char *filename)
 {
     FrameworkType type;
-    if (!ParseFrameworkType(type_str, &type))
+    if (!ParseFrameworkType(type_str, &type)) {
+        log_warn("Unknown AS-11 framework type '%s'\n", type_str);
         return false;
+    }
 
     FILE *file = fopen(filename, "rb");
     if (!file) {
@@ -384,8 +386,10 @@ bool AS11Helper::ParseSegmentationFile(const char *filename, Rational frame_rate
 bool AS11Helper::SetFrameworkProperty(const char *type_str, const char *name, const char *value)
 {
     FrameworkType type;
-    if (!ParseFrameworkType(type_str, &type))
+    if (!ParseFrameworkType(type_str, &type)) {
+        log_warn("Unknown AS-11 framework type '%s'\n", type_str);
         return false;
+    }
 
     SetFrameworkProperty(type, name, value);
     return true;
@@ -562,10 +566,9 @@ bool AS11Helper::ParseFrameworkType(const char *type_str, FrameworkType *type) c
     } else if (strcmp(type_str, "dpp") == 0) {
         *type = DPP_FRAMEWORK_TYPE;
         return true;
+    } else {
+        return false;
     }
-
-    log_warn("Unknown framework type '%s'\n", type_str);
-    return false;
 }
 
 void AS11Helper::SetFrameworkProperty(FrameworkType type, std::string name, std::string value)
