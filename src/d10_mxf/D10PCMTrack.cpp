@@ -90,14 +90,16 @@ void D10PCMTrack::SetSamplingRate(mxfRational sampling_rate)
 
 void D10PCMTrack::SetQuantizationBits(uint32_t bits)
 {
-    BMX_CHECK(bits == 16 || bits == 24);
+    BMX_CHECK_M(bits == 16 || bits == 24,
+                ("Audio quantization bits is set to %u; D-10 requires audio quantization bits 16 or 24", bits));
 
     mSoundDescriptorHelper->SetQuantizationBits(bits);
 }
 
 void D10PCMTrack::SetChannelCount(uint32_t count)
 {
-    BMX_CHECK(count == 1); // currently support one channel per track only
+    BMX_CHECK_M(count == 1,
+                ("Channel count set to %u; D10 currently requires a single channel per \"track\" representing a D10 AES3 channel", count));
 
     mSoundDescriptorHelper->SetChannelCount(count);
 }
