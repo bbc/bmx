@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2016, British Broadcasting Corporation
  * All Rights Reserved.
- *
- * Author: Philip de Nier
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,72 +27,61 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_AS02_VERSION_H_
-#define BMX_AS02_VERSION_H_
+#ifndef BMX_UNIQUE_ID_HELPER_H_
+#define BMX_UNIQUE_ID_HELPER_H_
 
-#include <vector>
+#include <map>
 #include <set>
+#include <string>
 
-#include <libMXF++/MXF.h>
-
-#include <bmx/as02/AS02Bundle.h>
-#include <bmx/as02/AS02Clip.h>
-#include <bmx/as02/AS02Manifest.h>
-
+#include <bmx/BMXTypes.h>
 
 
 namespace bmx
 {
 
 
-class AS02Version : public AS02Clip
+typedef enum
+{
+    PICTURE_TRACK_TYPE  = MXF_PICTURE_DDEF,
+    SOUND_TRACK_TYPE    = MXF_SOUND_DDEF,
+    TIMECODE_TRACK_TYPE = MXF_TIMECODE_DDEF,
+    DATA_TRACK_TYPE     = MXF_DATA_DDEF,
+    DM_TRACK_TYPE       = MXF_DM_DDEF,
+    XML_TRACK_TYPE      = 256,
+    INDEX_STREAM_TYPE   = 1024,
+    BODY_STREAM_TYPE    = 1025,
+    GENERIC_STREAM_TYPE = 1026,
+} UniqueIdType;
+
+
+class UniqueIdHelper
 {
 public:
-    static AS02Version* OpenNewPrimary(AS02Bundle *bundle, mxfRational frame_rate);
-    static AS02Version* OpenNew(AS02Bundle *bundle, std::string name, mxfRational frame_rate);
+    UniqueIdHelper();
+    ~UniqueIdHelper();
 
-public:
-    virtual ~AS02Version();
+    uint32_t GetNextId();
 
-public:
-    virtual void PrepareWrite();
-    virtual void CompleteWrite();
+    void SetStartId(int type, uint32_t start_id);
+    uint32_t GetNextId(int type);
 
-    virtual UniqueIdHelper* GetTrackIdHelper()  { return &mTrackIdHelper; }
-    virtual UniqueIdHelper* GetStreamIdHelper() { return &mStreamIdHelper; }
+    uint32_t SetId(const std::string &str_id, uint32_t suggest_id = 0);
+    uint32_t GetId(const std::string &str_id);
 
 private:
-    AS02Version(AS02Bundle *bundle, std::string filepath, std::string rel_uri, mxfpp::File *mxf_file,
-                mxfRational frame_rate);
-
-    void CreateHeaderMetadata();
-    void CreateFile();
-    void UpdatePackageMetadata();
+    uint32_t GetNextId(uint32_t &next_id);
 
 private:
-    mxfpp::File *mMXFFile;
-    AS02ManifestFile *mManifestFile;
-
-    mxfUMID mMaterialPackageUID;
-
-    mxfpp::DataModel *mDataModel;
-    mxfpp::HeaderMetadata *mHeaderMetadata;
-    int64_t mHeaderMetadataEndPos;
-
-    std::set<mxfUL> mEssenceContainerULs;
-
-    mxfpp::MaterialPackage *mMaterialPackage;
-
-    std::vector<mxfpp::SourcePackage*> mFilePackages;
-
-    UniqueIdHelper mTrackIdHelper;
-    UniqueIdHelper mStreamIdHelper;
+    uint32_t mNextId;
+    std::map<int, uint32_t> mNextIdByType;
+    std::map<std::string, uint32_t> mIdByStr;
+    std::set<uint32_t> mUsedIds;
 };
 
 
-};
 
+};
 
 
 #endif
-

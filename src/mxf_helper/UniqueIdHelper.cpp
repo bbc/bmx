@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2016, British Broadcasting Corporation
  * All Rights Reserved.
- *
- * Author: Philip de Nier
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,72 +27,79 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_AS02_VERSION_H_
-#define BMX_AS02_VERSION_H_
-
-#include <vector>
-#include <set>
-
-#include <libMXF++/MXF.h>
-
-#include <bmx/as02/AS02Bundle.h>
-#include <bmx/as02/AS02Clip.h>
-#include <bmx/as02/AS02Manifest.h>
-
-
-
-namespace bmx
-{
-
-
-class AS02Version : public AS02Clip
-{
-public:
-    static AS02Version* OpenNewPrimary(AS02Bundle *bundle, mxfRational frame_rate);
-    static AS02Version* OpenNew(AS02Bundle *bundle, std::string name, mxfRational frame_rate);
-
-public:
-    virtual ~AS02Version();
-
-public:
-    virtual void PrepareWrite();
-    virtual void CompleteWrite();
-
-    virtual UniqueIdHelper* GetTrackIdHelper()  { return &mTrackIdHelper; }
-    virtual UniqueIdHelper* GetStreamIdHelper() { return &mStreamIdHelper; }
-
-private:
-    AS02Version(AS02Bundle *bundle, std::string filepath, std::string rel_uri, mxfpp::File *mxf_file,
-                mxfRational frame_rate);
-
-    void CreateHeaderMetadata();
-    void CreateFile();
-    void UpdatePackageMetadata();
-
-private:
-    mxfpp::File *mMXFFile;
-    AS02ManifestFile *mManifestFile;
-
-    mxfUMID mMaterialPackageUID;
-
-    mxfpp::DataModel *mDataModel;
-    mxfpp::HeaderMetadata *mHeaderMetadata;
-    int64_t mHeaderMetadataEndPos;
-
-    std::set<mxfUL> mEssenceContainerULs;
-
-    mxfpp::MaterialPackage *mMaterialPackage;
-
-    std::vector<mxfpp::SourcePackage*> mFilePackages;
-
-    UniqueIdHelper mTrackIdHelper;
-    UniqueIdHelper mStreamIdHelper;
-};
-
-
-};
-
-
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
 
+#define __STDC_LIMIT_MACROS
+
+#include <limits.h>
+
+#include <bmx/mxf_helper/UniqueIdHelper.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
+
+using namespace std;
+using namespace bmx;
+
+
+UniqueIdHelper::UniqueIdHelper()
+{
+    mNextId = 1;
+}
+
+UniqueIdHelper::~UniqueIdHelper()
+{
+}
+
+uint32_t UniqueIdHelper::GetNextId()
+{
+    return GetNextId(mNextId);
+}
+
+void UniqueIdHelper::SetStartId(int data_def, uint32_t start_id)
+{
+    mNextIdByType[data_def] = start_id;
+}
+
+uint32_t UniqueIdHelper::GetNextId(int data_def)
+{
+    if (mNextIdByType.count(data_def))
+        return GetNextId(mNextIdByType[data_def]);
+    else
+        return GetNextId();
+}
+
+uint32_t UniqueIdHelper::SetId(const string &str_id, uint32_t suggest_id)
+{
+    BMX_CHECK(!mIdByStr.count(str_id));
+
+    uint32_t id;
+    if (suggest_id == 0) {
+        id = GetNextId();
+    } else {
+        uint32_t next_id = suggest_id;
+        id = GetNextId(next_id);
+    }
+    mIdByStr[str_id] = id;
+    return id;
+}
+
+uint32_t UniqueIdHelper::GetId(const string &str_id)
+{
+    BMX_CHECK(mIdByStr.count(str_id));
+    return mIdByStr[str_id];
+}
+
+uint32_t UniqueIdHelper::GetNextId(uint32_t &next_id)
+{
+    BMX_CHECK(mUsedIds.size() != UINT32_MAX);
+    while (!next_id && mUsedIds.count(next_id))
+        next_id++;
+
+    uint32_t result = next_id;
+    mUsedIds.insert(result);
+    next_id++;
+
+    return result;
+}

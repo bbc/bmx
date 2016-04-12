@@ -51,10 +51,6 @@ using namespace mxfpp;
 
 
 
-static uint32_t TIMECODE_TRACK_ID       = 901;
-static uint32_t FIRST_VIDEO_TRACK_ID    = 1001;
-static uint32_t FIRST_AUDIO_TRACK_ID    = 2001;
-
 static const char TIMECODE_TRACK_NAME[]     = "Timecode";
 static const char VIDEO_TRACK_NAME_PREFIX[] = "Video";
 static const char AUDIO_TRACK_NAME_PREFIX[] = "Audio";
@@ -103,6 +99,10 @@ AS02Version::AS02Version(AS02Bundle *bundle, string filepath, string rel_uri, mx
     mDataModel = 0;
     mHeaderMetadata = 0;
     mHeaderMetadataEndPos = 0;
+
+    mTrackIdHelper.SetId(TIMECODE_TRACK_NAME, 901);
+    mTrackIdHelper.SetStartId(MXF_PICTURE_DDEF, 1001);
+    mTrackIdHelper.SetStartId(MXF_SOUND_DDEF,   2001);
 
     mManifestFile = bundle->GetManifest()->RegisterFile(rel_uri, VERSION_FILE_ROLE);
     mManifestFile->SetId(mMaterialPackageUID);
@@ -238,7 +238,7 @@ void AS02Version::CreateHeaderMetadata()
     Track *timecode_track = new Track(mHeaderMetadata);
     mMaterialPackage->appendTracks(timecode_track);
     timecode_track->setTrackName(TIMECODE_TRACK_NAME);
-    timecode_track->setTrackID(TIMECODE_TRACK_ID);
+    timecode_track->setTrackID(mTrackIdHelper.GetId(TIMECODE_TRACK_NAME));
     timecode_track->setTrackNumber(0);
     timecode_track->setEditRate(mClipFrameRate);
     timecode_track->setOrigin(0);
@@ -267,8 +267,8 @@ void AS02Version::CreateHeaderMetadata()
                                 get_version_track_name(VIDEO_TRACK_NAME_PREFIX, video_count) :
                                 get_version_track_name(AUDIO_TRACK_NAME_PREFIX, audio_count));
         track->setTrackID(mTracks[i]->IsPicture() ?
-                            FIRST_VIDEO_TRACK_ID + video_count :
-                            FIRST_AUDIO_TRACK_ID + audio_count);
+                            mTrackIdHelper.GetNextId(MXF_PICTURE_DDEF) :
+                            mTrackIdHelper.GetNextId(MXF_SOUND_DDEF));
         track->setTrackNumber(mTracks[i]->GetOutputTrackNumber());
         track->setEditRate(mTracks[i]->GetSampleRate());
         track->setOrigin(0);

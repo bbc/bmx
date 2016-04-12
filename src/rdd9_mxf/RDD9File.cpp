@@ -54,17 +54,7 @@ using namespace mxfpp;
 
 #define MAX_GOP_SIZE    15
 
-static const uint32_t TIMECODE_TRACK_ID         = 1;
-static const uint32_t FIRST_PICTURE_TRACK_ID    = 2;
-static const uint32_t FIRST_SOUND_TRACK_ID      = 4;
-static const uint32_t FIRST_DATA_TRACK_ID       = 101;
-static const uint32_t FIRST_XML_TRACK_ID        = 9001;
-
 static const uint32_t KAG_SIZE                  = 0x200;
-static const uint32_t INDEX_SID                 = 1;
-static const uint32_t BODY_SID                  = 2;
-static const uint32_t FIRST_STREAM_SID          = 10;
-
 static const uint32_t MEMORY_WRITE_CHUNK_SIZE   = 8192;
 
 
@@ -117,6 +107,16 @@ RDD9File::RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate)
     mPartitionFrameCount = 0;
     mMXFChecksumFile = 0;
 
+    mTrackIdHelper.SetId("TimecodeTrack", 1);
+    mTrackIdHelper.SetStartId(MXF_PICTURE_DDEF, 2);
+    mTrackIdHelper.SetStartId(MXF_SOUND_DDEF,   4);
+    mTrackIdHelper.SetStartId(MXF_DATA_DDEF,    101);
+    mTrackIdHelper.SetStartId(XML_TRACK_TYPE,   9001);
+
+    mStreamIdHelper.SetId("IndexStream", 1);
+    mStreamIdHelper.SetId("BodyStream",  2);
+    mStreamIdHelper.SetStartId(GENERIC_STREAM_TYPE, 10);
+
     mDataModel = new DataModel();
     mHeaderMetadata = new HeaderMetadata(mDataModel);
 
@@ -128,7 +128,7 @@ RDD9File::RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate)
         mFileSourcePackageUID.octet10 = 0x0d;
     }
 
-    mIndexTable = new RDD9IndexTable(INDEX_SID, BODY_SID, frame_rate,
+    mIndexTable = new RDD9IndexTable(mStreamIdHelper.GetId("IndexStream"), mStreamIdHelper.GetId("BodyStream"), frame_rate,
                      ((flavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (flavour & RDD9_AS10_FLAVOUR)));
 
     mCPManager = new RDD9ContentPackageManager(mMXFFile, mIndexTable, frame_rate);
@@ -252,21 +252,10 @@ RDD9Track* RDD9File::CreateTrack(EssenceType essence_type)
     }
 
     MXFDataDefEnum data_def = convert_essence_type_to_data_def(essence_type);
-    uint32_t track_id;
-    uint8_t track_type_number;
-
-    if (data_def == MXF_PICTURE_DDEF) {
-        if (mTrackCounts[MXF_PICTURE_DDEF] > 1)
-            BMX_EXCEPTION(("A maximum of 2 MPEG-2 Long GOP picture tracks are supported"));
-        track_id = FIRST_PICTURE_TRACK_ID;
-    } else if (data_def == MXF_SOUND_DDEF) {
-        track_id = FIRST_SOUND_TRACK_ID;
-    } else {
-        track_id = FIRST_DATA_TRACK_ID;
-    }
-
-    track_id += mTrackCounts[data_def];
-    track_type_number = mTrackCounts[data_def];
+    if (data_def == MXF_PICTURE_DDEF && mTrackCounts[MXF_PICTURE_DDEF] > 1)
+        BMX_EXCEPTION(("A maximum of 2 MPEG-2 Long GOP picture tracks are supported"));
+    uint32_t track_id = mTrackIdHelper.GetNextId(data_def);
+    uint8_t track_type_number = mTrackCounts[data_def];
     mTrackCounts[data_def]++;
 
     mTracks.push_back(RDD9Track::Create(this, (uint32_t)mTracks.size(), track_id, track_type_number, mEditRate,
@@ -278,9 +267,9 @@ RDD9Track* RDD9File::CreateTrack(EssenceType essence_type)
 
 RDD9XMLTrack* RDD9File::CreateXMLTrack()
 {
-    uint32_t track_id    = FIRST_XML_TRACK_ID + mXMLTracks.size();
+    uint32_t track_id    = mTrackIdHelper.GetNextId(XML_TRACK_TYPE);
     uint32_t track_index = (uint32_t)mTracks.size();
-    uint32_t stream_id   = FIRST_STREAM_SID + mXMLTracks.size();
+    uint32_t stream_id   = mStreamIdHelper.GetNextId(GENERIC_STREAM_TYPE);
 
     mXMLTracks.push_back(new RDD9XMLTrack(this, track_index, track_id, stream_id));
     return mXMLTracks.back();
@@ -405,7 +394,7 @@ void RDD9File::CompleteWrite()
     footer_partition.setKey(&MXF_PP_K(ClosedComplete, Footer));
 
     if (mIndexTable->HaveSegments() || (mIndexTable->HaveWrittenSegments() && mIndexTable->RepeatInFooter()))
-        footer_partition.setIndexSID(INDEX_SID);
+        footer_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
     else
         footer_partition.setIndexSID(0);
     footer_partition.setBodySID(0);
@@ -561,8 +550,8 @@ void RDD9File::CreateHeaderMetadata()
     EssenceContainerData *ess_container_data = new EssenceContainerData(mHeaderMetadata);
     content_storage->appendEssenceContainerData(ess_container_data);
     ess_container_data->setLinkedPackageUID(mFileSourcePackageUID);
-    ess_container_data->setIndexSID(INDEX_SID);
-    ess_container_data->setBodySID(BODY_SID);
+    ess_container_data->setIndexSID(mStreamIdHelper.GetId("IndexStream"));
+    ess_container_data->setBodySID(mStreamIdHelper.GetId("BodyStream"));
 
     // Preface - ContentStorage - MaterialPackage
     mMaterialPackage = new MaterialPackage(mHeaderMetadata);
@@ -577,7 +566,7 @@ void RDD9File::CreateHeaderMetadata()
     Track *timecode_track = new Track(mHeaderMetadata);
     mMaterialPackage->appendTracks(timecode_track);
     timecode_track->setTrackName("TC1");
-    timecode_track->setTrackID(TIMECODE_TRACK_ID);
+    timecode_track->setTrackID(mTrackIdHelper.GetId("TimecodeTrack"));
     timecode_track->setTrackNumber(0);
     timecode_track->setEditRate(mEditRate);
     timecode_track->setOrigin(0);
@@ -608,7 +597,7 @@ void RDD9File::CreateHeaderMetadata()
     timecode_track = new Track(mHeaderMetadata);
     mFileSourcePackage->appendTracks(timecode_track);
     timecode_track->setTrackName("TC1");
-    timecode_track->setTrackID(TIMECODE_TRACK_ID);
+    timecode_track->setTrackID(1);
     timecode_track->setTrackNumber(0);
     timecode_track->setEditRate(mEditRate);
     timecode_track->setOrigin(source_track_origin);
@@ -773,10 +762,10 @@ void RDD9File::WriteContentPackages(bool final_write)
             Partition &body_partition = mMXFFile->createPartition();
             body_partition.setKey(&MXF_PP_K(OpenComplete, Body));
             if (mIndexTable->HaveSegments())
-                body_partition.setIndexSID(INDEX_SID);
+                body_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
             else
                 body_partition.setIndexSID(0);
-            body_partition.setBodySID(BODY_SID);
+            body_partition.setBodySID(mStreamIdHelper.GetId("BodyStream"));
             body_partition.setKagSize(KAG_SIZE);
             body_partition.setBodyOffset(mIndexTable->GetStreamOffset());
             body_partition.write(mMXFFile);

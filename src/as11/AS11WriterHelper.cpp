@@ -86,9 +86,9 @@ static const MCALabelEntry AS11_MCA_LABELS[] =
         {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x03, 0x02, 0x03, 0x20, 0x01, 0x00, 0x00, 0x00}},
 };
 
-static const uint32_t AS11_CORE_TRACK_ID          = 5001;
-static const uint32_t AS11_SEGMENTATION_TRACK_ID  = 5002;
-static const uint32_t AS11_UKDPP_TRACK_ID         = 5101;
+static const char *AS11_CORE_TRACK_NAME         = "AS_11_Core";
+static const char *AS11_SEGMENTATION_TRACK_NAME = "AS_11_Segmentation";
+static const char *AS11_UKDPP_TRACK_NAME        = "AS_11_UKDPP";
 
 
 static int64_t get_offset(uint16_t to_tc_base, uint16_t from_tc_base, int64_t from_offset)
@@ -109,6 +109,12 @@ AS11WriterHelper::AS11WriterHelper(ClipWriter *clip)
     mSegmentationSequence = 0;
 
     AS11Info::RegisterExtensions(clip->GetHeaderMetadata());
+
+    UniqueIdHelper *track_id_helper = clip->GetTrackIdHelper();
+    BMX_ASSERT(track_id_helper);
+    track_id_helper->SetId(AS11_CORE_TRACK_NAME,         5001);
+    track_id_helper->SetId(AS11_SEGMENTATION_TRACK_NAME, 5002);
+    track_id_helper->SetId(AS11_UKDPP_TRACK_NAME,        5101);
 }
 
 AS11WriterHelper::~AS11WriterHelper()
@@ -150,13 +156,13 @@ void AS11WriterHelper::SetSpecificationId(AS11SpecificationId spec_id)
 void AS11WriterHelper::InsertAS11CoreFramework(AS11CoreFramework *framework)
 {
     AppendDMSLabel(MXF_DM_L(AS11CoreDescriptiveScheme));
-    InsertFramework(AS11_CORE_TRACK_ID, "AS_11_Core", framework);
+    InsertFramework(mClip->GetTrackIdHelper()->GetId(AS11_CORE_TRACK_NAME), AS11_CORE_TRACK_NAME, framework);
 }
 
 void AS11WriterHelper::InsertUKDPPFramework(UKDPPFramework *framework)
 {
     AppendDMSLabel(MXF_DM_L(UKDPPDescriptiveScheme));
-    InsertFramework(AS11_UKDPP_TRACK_ID, "AS_11_UKDPP", framework);
+    InsertFramework(mClip->GetTrackIdHelper()->GetId(AS11_UKDPP_TRACK_NAME), AS11_UKDPP_TRACK_NAME, framework);
 }
 
 void AS11WriterHelper::InsertPosSegmentation(vector<AS11PosSegment> segments)
@@ -174,8 +180,8 @@ void AS11WriterHelper::InsertPosSegmentation(vector<AS11PosSegment> segments)
     // Preface - ContentStorage - Package - DM Track
     Track *dm_track = new Track(header_metadata);
     material_package->appendTracks(dm_track);
-    dm_track->setTrackName("AS_11_Segmentation");
-    dm_track->setTrackID(AS11_SEGMENTATION_TRACK_ID);
+    dm_track->setTrackName(AS11_SEGMENTATION_TRACK_NAME);
+    dm_track->setTrackID(mClip->GetTrackIdHelper()->GetId(AS11_SEGMENTATION_TRACK_NAME));
     dm_track->setTrackNumber(0);
     dm_track->setEditRate(mClip->GetFrameRate());
     dm_track->setOrigin(0);

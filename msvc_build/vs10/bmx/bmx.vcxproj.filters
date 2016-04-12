@@ -479,6 +479,9 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\UncRGBAMXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\UniqueIdHelper.h">
+      <Filter>Header Files\mxf_helper</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\VBIDataMXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
@@ -1010,6 +1013,9 @@
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_helper\VBIDataMXFDescriptorHelper.cpp">
+      <Filter>Source Files\mxf_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_helper\UniqueIdHelper.cpp">
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_helper\VC3MXFDescriptorHelper.cpp">

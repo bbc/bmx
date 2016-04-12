@@ -46,7 +46,7 @@ using namespace bmx;
 using namespace mxfpp;
 
 
-static const uint32_t AS10_CORE_TRACK_ID = 6001;
+static const char *AS10_CORE_TRACK_NAME = "AS_10_Core";
 
 
 AS10WriterHelper::AS10WriterHelper(ClipWriter *clip)
@@ -54,6 +54,10 @@ AS10WriterHelper::AS10WriterHelper(ClipWriter *clip)
     mClip = clip;
 
     AS10Info::RegisterExtensions(clip->GetHeaderMetadata());
+
+    UniqueIdHelper *track_id_helper = clip->GetTrackIdHelper();
+    BMX_ASSERT(track_id_helper);
+    track_id_helper->SetId(AS10_CORE_TRACK_NAME, 6001);
 }
 
 AS10WriterHelper::~AS10WriterHelper()
@@ -63,7 +67,7 @@ AS10WriterHelper::~AS10WriterHelper()
 void AS10WriterHelper::InsertAS10CoreFramework(AS10CoreFramework *framework)
 {
     AppendDMSLabel(MXF_DM_L(AS10CoreDescriptiveScheme));
-    InsertFramework(AS10_CORE_TRACK_ID, "AS_10_Core", framework);
+    InsertFramework(mClip->GetTrackIdHelper()->GetId(AS10_CORE_TRACK_NAME), AS10_CORE_TRACK_NAME, framework);
 }
 
 void AS10WriterHelper::AppendDMSLabel(mxfUL scheme_label)

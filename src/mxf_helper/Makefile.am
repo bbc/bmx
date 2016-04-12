@@ -17,6 +17,7 @@ libmxfhelper_la_SOURCES = \
 	SoundMXFDescriptorHelper.cpp \
 	UncCDCIMXFDescriptorHelper.cpp \
 	UncRGBAMXFDescriptorHelper.cpp \
+	UniqueIdHelper.cpp \
 	VBIDataMXFDescriptorHelper.cpp \
 	VC3MXFDescriptorHelper.cpp \
 	WaveMXFDescriptorHelper.cpp

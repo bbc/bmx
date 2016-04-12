@@ -52,16 +52,8 @@ using namespace mxfpp;
 
 
 
-static const uint32_t FIRST_XML_TRACK_ID = 9001;
-
-static const uint32_t KAG_SIZE = 0x200;
-
-static const uint32_t INDEX_SID         = 1;
-static const uint32_t BODY_SID          = 2;
-static const uint32_t FIRST_STREAM_SID  = 10;
-
-static const mxfRational AUDIO_SAMPLING_RATE = SAMPLING_RATE_48K;
-
+static const uint32_t KAG_SIZE                = 0x200;
+static const mxfRational AUDIO_SAMPLING_RATE  = SAMPLING_RATE_48K;
 static const uint32_t MEMORY_WRITE_CHUNK_SIZE = 8192;
 
 
@@ -134,6 +126,15 @@ D10File::D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mFirstWrite = true;
     mRequireBodyPartition = false;
     mMXFChecksumFile = 0;
+
+    mTrackIdHelper.SetId("TimecodeTrack", 1);
+    mTrackIdHelper.SetId("PictureTrack",  2);
+    mTrackIdHelper.SetId("SoundTrack",    3);
+    mTrackIdHelper.SetStartId(XML_TRACK_TYPE, 9001);
+
+    mStreamIdHelper.SetId("IndexStream", 1);
+    mStreamIdHelper.SetId("BodyStream",  2);
+    mStreamIdHelper.SetStartId(GENERIC_STREAM_TYPE, 10);
 
     if (flavour & D10_SINGLE_PASS_MD5_WRITE_FLAVOUR) {
         mMXFChecksumFile = mxf_checksum_file_open(mMXFFile->getCFile(), MD5_CHECKSUM);
@@ -245,9 +246,9 @@ D10Track* D10File::CreateTrack(EssenceType essence_type)
 
 D10XMLTrack* D10File::CreateXMLTrack()
 {
-    uint32_t track_id    = FIRST_XML_TRACK_ID + mXMLTracks.size();
+    uint32_t track_id    = mTrackIdHelper.GetNextId(XML_TRACK_TYPE);
     uint32_t track_index = (uint32_t)mTracks.size();
-    uint32_t stream_id   = FIRST_STREAM_SID + mXMLTracks.size();
+    uint32_t stream_id   = mStreamIdHelper.GetNextId(GENERIC_STREAM_TYPE);
 
     mXMLTracks.push_back(new D10XMLTrack(this, track_index, track_id, stream_id));
     return mXMLTracks.back();
@@ -316,7 +317,7 @@ void D10File::WriteSamples(uint32_t track_index, const unsigned char *data, uint
 
             Partition &ess_partition = mMXFFile->createPartition();
             ess_partition.setKey(&MXF_PP_K(OpenComplete, Body));
-            ess_partition.setBodySID(BODY_SID);
+            ess_partition.setBodySID(mStreamIdHelper.GetId("BodyStream"));
             ess_partition.write(mMXFFile);
 
             mFirstWrite = false;
@@ -472,8 +473,8 @@ void D10File::CreateHeaderMetadata()
     EssenceContainerData *ess_container_data = new EssenceContainerData(mHeaderMetadata);
     content_storage->appendEssenceContainerData(ess_container_data);
     ess_container_data->setLinkedPackageUID(mFileSourcePackageUID);
-    ess_container_data->setIndexSID(INDEX_SID);
-    ess_container_data->setBodySID(BODY_SID);
+    ess_container_data->setIndexSID(mStreamIdHelper.GetId("IndexStream"));
+    ess_container_data->setBodySID(mStreamIdHelper.GetId("BodyStream"));
 
     // Preface - ContentStorage - MaterialPackage
     mMaterialPackage = new MaterialPackage(mHeaderMetadata);
@@ -488,7 +489,7 @@ void D10File::CreateHeaderMetadata()
     Track *timecode_track = new Track(mHeaderMetadata);
     mMaterialPackage->appendTracks(timecode_track);
     timecode_track->setTrackName("TC1");
-    timecode_track->setTrackID(1);
+    timecode_track->setTrackID(mTrackIdHelper.GetId("TimecodeTrack"));
     timecode_track->setTrackNumber(0);
     timecode_track->setEditRate(mFrameRate);
     timecode_track->setOrigin(0);
@@ -547,12 +548,13 @@ void D10File::CreateHeaderMetadata()
         bool is_picture = (i == 0);
         mxfUL data_def = (is_picture ? MXF_DDEF_L(Picture) : MXF_DDEF_L(Sound));
         string track_name = get_track_name((is_picture ? MXF_PICTURE_DDEF : MXF_SOUND_DDEF), (is_picture ? 1 : i));
+        uint32_t track_id = (is_picture ? mTrackIdHelper.GetId("PictureTrack") : mTrackIdHelper.GetId("SoundTrack"));
 
         // Preface - ContentStorage - MaterialPackage - Timeline Track
         Track *track = new Track(mHeaderMetadata);
         mMaterialPackage->appendTracks(track);
         track->setTrackName(track_name);
-        track->setTrackID(i + 2);
+        track->setTrackID(track_id);
         track->setTrackNumber(0);
         track->setEditRate(mFrameRate);
         track->setOrigin(0);
@@ -576,7 +578,7 @@ void D10File::CreateHeaderMetadata()
         track = new Track(mHeaderMetadata);
         mFileSourcePackage->appendTracks(track);
         track->setTrackName(track_name);
-        track->setTrackID(i + 2);
+        track->setTrackID(track_id);
         track->setTrackNumber(is_picture ? MXF_D10_PICTURE_TRACK_NUM(0x00) : MXF_D10_SOUND_TRACK_NUM(0x00));
         track->setEditRate(mFrameRate);
         track->setOrigin(0);
@@ -609,7 +611,7 @@ void D10File::CreateHeaderMetadata()
     CDCIEssenceDescriptor *cdci_descriptor =
         dynamic_cast<CDCIEssenceDescriptor*>(mPictureTrack->CreateFileDescriptor(mHeaderMetadata));
     mult_descriptor->appendSubDescriptorUIDs(cdci_descriptor);
-    cdci_descriptor->setLinkedTrackID(2);
+    cdci_descriptor->setLinkedTrackID(mTrackIdHelper.GetId("PictureTrack"));
     cdci_descriptor->setEssenceContainer(mEssenceContainerUL);
     if (mInputDuration >= 0)
         cdci_descriptor->setContainerDuration(mInputDuration);
@@ -617,7 +619,7 @@ void D10File::CreateHeaderMetadata()
     // Preface - ContentStorage - SourcePackage - MultipleDescriptor - GenericSoundEssenceDescriptor
     GenericSoundEssenceDescriptor *sound_descriptor = new GenericSoundEssenceDescriptor(mHeaderMetadata);
     mult_descriptor->appendSubDescriptorUIDs(sound_descriptor);
-    sound_descriptor->setLinkedTrackID(3);
+    sound_descriptor->setLinkedTrackID(mTrackIdHelper.GetId("SoundTrack"));
     sound_descriptor->setSampleRate(mFrameRate);
     sound_descriptor->setEssenceContainer(mEssenceContainerUL);
     if (mInputDuration >= 0)
@@ -677,11 +679,11 @@ void D10File::CreateFile()
     else
         header_partition.setKey(&MXF_PP_K(OpenIncomplete, Header));
     header_partition.setVersion(1, 2);  // v1.2 - smpte 377-2004
-    header_partition.setIndexSID(INDEX_SID);
+    header_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
     if (mRequireBodyPartition)
         header_partition.setBodySID(0);
     else
-        header_partition.setBodySID(BODY_SID);
+        header_partition.setBodySID(mStreamIdHelper.GetId("BodyStream"));
     header_partition.setKagSize(KAG_SIZE);
     header_partition.setOperationalPattern(&MXF_OP_L(1a, MultiTrack_Stream_Internal));
     header_partition.addEssenceContainer(&mEssenceContainerUL);
@@ -701,8 +703,8 @@ void D10File::CreateFile()
     mIndexSegment->setInstanceUID(uuid);
     mIndexSegment->setIndexEditRate(mFrameRate);
     mIndexSegment->setIndexDuration(mInputDuration >= 0 ? mInputDuration : 0);
-    mIndexSegment->setIndexSID(INDEX_SID);
-    mIndexSegment->setBodySID(BODY_SID);
+    mIndexSegment->setIndexSID(mStreamIdHelper.GetId("IndexStream"));
+    mIndexSegment->setBodySID(mStreamIdHelper.GetId("BodyStream"));
 
     const std::vector<uint32_t> &ext_delta_entries = mCPManager->GetExtDeltaEntryArray();
     for (i = 0; i < ext_delta_entries.size(); i++)

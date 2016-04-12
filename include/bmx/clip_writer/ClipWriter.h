@@ -39,7 +39,7 @@
 #include <bmx/d10_mxf/D10File.h>
 #include <bmx/rdd9_mxf/RDD9File.h>
 #include <bmx/wave/WaveWriter.h>
-
+#include <bmx/mxf_helper/UniqueIdHelper.h>
 #include <bmx/clip_writer/ClipWriterTrack.h>
 
 
@@ -87,6 +87,9 @@ public:
 public:
     mxfpp::HeaderMetadata* GetHeaderMetadata() const;
     mxfpp::DataModel* GetDataModel() const;
+
+    UniqueIdHelper* GetTrackIdHelper();
+    UniqueIdHelper* GetStreamIdHelper();
 
     Rational GetFrameRate() const;
     Timecode GetStartTimecode() const;

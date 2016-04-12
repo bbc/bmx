@@ -41,6 +41,7 @@
 #include <bmx/mxf_op1a/OP1ATrack.h>
 #include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
 #include <bmx/mxf_op1a/OP1AXMLTrack.h>
+#include <bmx/mxf_helper/UniqueIdHelper.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFChecksumFile.h>
 
@@ -124,6 +125,9 @@ public:
 
     int GetFlavour() const { return mFlavour; }
 
+    UniqueIdHelper* GetTrackIdHelper()  { return &mTrackIdHelper; }
+    UniqueIdHelper* GetStreamIdHelper() { return &mStreamIdHelper; }
+
 private:
     OP1AIndexTable* GetIndexTable() const { return mIndexTable; }
     OP1AContentPackageManager* GetContentPackageManager() const { return mCPManager; }
@@ -199,6 +203,9 @@ private:
     std::string mMD5DigestStr;
 
     uint32_t mCBEIndexPartitionIndex;
+
+    UniqueIdHelper mTrackIdHelper;
+    UniqueIdHelper mStreamIdHelper;
 };
 
 

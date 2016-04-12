@@ -437,6 +437,52 @@ DataModel* ClipWriter::GetDataModel() const
     return 0;
 }
 
+UniqueIdHelper* ClipWriter::GetTrackIdHelper()
+{
+    switch (mType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+            return mOP1AClip->GetTrackIdHelper();
+        case CW_RDD9_CLIP_TYPE:
+            return mRDD9Clip->GetTrackIdHelper();
+        case CW_D10_CLIP_TYPE:
+            return mD10Clip->GetTrackIdHelper();
+        case CW_AS02_CLIP_TYPE:
+            return mAS02Clip->GetTrackIdHelper();
+        case CW_AVID_CLIP_TYPE:
+            return mAvidClip->GetTrackIdHelper();
+        case CW_WAVE_CLIP_TYPE:
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0; // for the compiler
+}
+
+UniqueIdHelper* ClipWriter::GetStreamIdHelper()
+{
+    switch (mType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+            return mOP1AClip->GetStreamIdHelper();
+        case CW_RDD9_CLIP_TYPE:
+            return mRDD9Clip->GetStreamIdHelper();
+        case CW_D10_CLIP_TYPE:
+            return mD10Clip->GetStreamIdHelper();
+        case CW_AS02_CLIP_TYPE:
+            return mAS02Clip->GetStreamIdHelper();
+        case CW_AVID_CLIP_TYPE:
+            return mAvidClip->GetStreamIdHelper();
+        case CW_WAVE_CLIP_TYPE:
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0; // for the compiler
+}
+
 Rational ClipWriter::GetFrameRate() const
 {
     switch (mType)

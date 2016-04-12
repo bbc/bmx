@@ -42,6 +42,7 @@
 #include <bmx/rdd9_mxf/RDD9PCMTrack.h>
 #include <bmx/rdd9_mxf/RDD9XMLTrack.h>
 #include <bmx/rdd9_mxf/RDD9Validator.h>
+#include <bmx/mxf_helper/UniqueIdHelper.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFChecksumFile.h>
 
@@ -103,6 +104,9 @@ public:
     std::string GetMD5DigestStr() const { return mMD5DigestStr; }
 
     int GetFlavour() const { return mFlavour; }
+
+    UniqueIdHelper* GetTrackIdHelper()  { return &mTrackIdHelper; }
+    UniqueIdHelper* GetStreamIdHelper() { return &mStreamIdHelper; }
 
 private:
     RDD9IndexTable* GetIndexTable() const                       { return mIndexTable; }
@@ -169,6 +173,9 @@ private:
 
     MXFChecksumFile *mMXFChecksumFile;
     std::string mMD5DigestStr;
+
+    UniqueIdHelper mTrackIdHelper;
+    UniqueIdHelper mStreamIdHelper;
 };
 
 

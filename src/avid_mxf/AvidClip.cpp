@@ -58,10 +58,6 @@ using namespace mxfpp;
 #define MAX_LOCATORS    4095
 
 
-static uint32_t DM_TRACK_ID     = 1000;
-static uint32_t DM_TRACK_NUMBER = 1;
-
-
 
 static bool compare_track(const AvidTrack *left, const AvidTrack *right)
 {
@@ -115,6 +111,8 @@ AvidClip::AvidClip(int flavour, mxfRational frame_rate, MXFFileFactory *file_fac
     mHavePhysSourceTimecodeTrack = false;
     mMaterialTimecodeComponent = 0;
     mLocatorDescribedTrackId = 0;
+
+    mTrackIdHelper.SetId("LocatorTrack", 1000);
 
     CreateMinimalHeaderMetadata();
 }
@@ -558,9 +556,9 @@ void AvidClip::CreateMaterialPackage()
 
     bool have_described_track_id = false;
     int64_t track_growing_duration = -1;
-    uint32_t track_id = 1;
     size_t i;
     for (i = 0; i < mTracks.size(); i++) {
+        uint32_t track_id = mTrackIdHelper.GetNextId();
 
         // initial duration is -1 or mGrowingDuration if flavour is growing file
         if (mGrowingDuration >= 0) {
@@ -603,8 +601,6 @@ void AvidClip::CreateMaterialPackage()
         pair<mxfUMID, uint32_t> source_ref = mTracks[i]->GetSourceReference();
         source_clip->setSourcePackageID(source_ref.first);
         source_clip->setSourceTrackID(source_ref.second);
-
-        track_id++;
     }
 
 
@@ -616,7 +612,7 @@ void AvidClip::CreateMaterialPackage()
         Track *tc_track = new Track(mHeaderMetadata);
         mMaterialPackage->appendTracks(tc_track);
         tc_track->setTrackName("TC1");
-        tc_track->setTrackID(track_id);
+        tc_track->setTrackID(mTrackIdHelper.GetNextId());
         tc_track->setTrackNumber(1);
         tc_track->setEditRate(mClipFrameRate);
         tc_track->setOrigin(0);
@@ -672,8 +668,8 @@ void AvidClip::UpdateHeaderMetadata()
             // not setting EventOrigin because this results in an error in Avid MediaComposer 3.0
             EventTrack *event_track = new EventTrack(track_header_metadata);
             track_material_package->appendTracks(event_track);
-            event_track->setTrackID(DM_TRACK_ID);
-            event_track->setTrackNumber(DM_TRACK_NUMBER);
+            event_track->setTrackID(mTrackIdHelper.GetId("LocatorTrack"));
+            event_track->setTrackNumber(1);
             event_track->setEventEditRate(mClipFrameRate);
 
             // Preface - ContentStorage - MaterialPackage - (DM) Event Track - (DM) Sequence

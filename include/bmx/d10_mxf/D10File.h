@@ -41,6 +41,7 @@
 #include <bmx/d10_mxf/D10PCMTrack.h>
 #include <bmx/d10_mxf/D10XMLTrack.h>
 #include <bmx/mxf_helper/MXFFileFactory.h>
+#include <bmx/mxf_helper/UniqueIdHelper.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFChecksumFile.h>
 
@@ -107,6 +108,9 @@ public:
 
     std::string GetMD5DigestStr() const { return mMD5DigestStr; }
 
+    UniqueIdHelper* GetTrackIdHelper()  { return &mTrackIdHelper; }
+    UniqueIdHelper* GetStreamIdHelper() { return &mStreamIdHelper; }
+
 private:
     D10ContentPackageManager* GetContentPackageManager() const { return mCPManager; }
 
@@ -158,6 +162,9 @@ private:
 
     MXFChecksumFile *mMXFChecksumFile;
     std::string mMD5DigestStr;
+
+    UniqueIdHelper mTrackIdHelper;
+    UniqueIdHelper mStreamIdHelper;
 };
 
 

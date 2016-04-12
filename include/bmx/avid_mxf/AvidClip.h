@@ -41,6 +41,7 @@
 
 #include <bmx/avid_mxf/AvidTrack.h>
 #include <bmx/mxf_helper/MXFFileFactory.h>
+#include <bmx/mxf_helper/UniqueIdHelper.h>
 #include <bmx/avid_mxf/AvidTypes.h>
 
 
@@ -112,6 +113,9 @@ public:
 
     mxfUMID GetMaterialPackageUID() const { return mMaterialPackageUID; }
 
+    UniqueIdHelper* GetTrackIdHelper()  { return &mTrackIdHelper; }
+    UniqueIdHelper* GetStreamIdHelper() { return &mStreamIdHelper; }
+
 private:
     void CreateMinimalHeaderMetadata();
     void CreateMaterialPackage();
@@ -161,6 +165,9 @@ private:
     uint32_t mLocatorDescribedTrackId;
 
     std::vector<AvidTrack*> mTracks;
+
+    UniqueIdHelper mTrackIdHelper;
+    UniqueIdHelper mStreamIdHelper;
 };
 
 

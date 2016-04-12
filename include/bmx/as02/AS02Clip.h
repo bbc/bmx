@@ -36,6 +36,7 @@
 
 #include <libMXF++/MXF.h>
 
+#include <bmx/mxf_helper/UniqueIdHelper.h>
 #include <bmx/as02/AS02Track.h>
 
 
@@ -67,6 +68,9 @@ public:
     virtual void PrepareWrite();
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
     virtual void CompleteWrite();
+
+    virtual UniqueIdHelper* GetTrackIdHelper() = 0;
+    virtual UniqueIdHelper* GetStreamIdHelper() = 0;
 
 public:
     mxfRational GetFrameRate() const { return mClipFrameRate; }

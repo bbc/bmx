@@ -54,21 +54,8 @@ using namespace bmx;
 using namespace mxfpp;
 
 
-
-static const uint32_t TIMECODE_TRACK_ID         = 901;
-static const uint32_t FIRST_PICTURE_TRACK_ID    = 1001;
-static const uint32_t FIRST_SOUND_TRACK_ID      = 2001;
-static const uint32_t FIRST_DATA_TRACK_ID       = 3001;
-static const uint32_t FIRST_XML_TRACK_ID        = 9001;
-
 static const char TIMECODE_TRACK_NAME[]         = "TC1";
-
-static const uint32_t INDEX_SID                 = 1;
-static const uint32_t BODY_SID                  = 2;
-static const uint32_t FIRST_STREAM_SID          = 10;
-
 static const uint8_t MIN_LLEN                   = 4;
-
 static const uint32_t MEMORY_WRITE_CHUNK_SIZE   = 8192;
 
 
@@ -128,10 +115,21 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mMXFChecksumFile = 0;
     mCBEIndexPartitionIndex = 0;
 
+    mTrackIdHelper.SetId("TimecodeTrack", 901);
+    mTrackIdHelper.SetStartId(MXF_PICTURE_DDEF, 1001);
+    mTrackIdHelper.SetStartId(MXF_SOUND_DDEF,   2001);
+    mTrackIdHelper.SetStartId(MXF_DATA_DDEF,    3001);
+    mTrackIdHelper.SetStartId(XML_TRACK_TYPE,   9001);
+
+    mStreamIdHelper.SetId("IndexStream", 1);
+    mStreamIdHelper.SetId("BodyStream",  2);
+    mStreamIdHelper.SetStartId(GENERIC_STREAM_TYPE, 10);
+
     mDataModel = new DataModel();
     mHeaderMetadata = new HeaderMetadata(mDataModel);
 
-    mIndexTable = new OP1AIndexTable(INDEX_SID, BODY_SID, frame_rate, (flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR));
+    mIndexTable = new OP1AIndexTable(mStreamIdHelper.GetId("IndexStream"), mStreamIdHelper.GetId("BodyStream"), frame_rate,
+                                     (flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR));
     mCPManager = new OP1AContentPackageManager(mMXFFile, mIndexTable, frame_rate, mEssencePartitionKAGSize, MIN_LLEN);
 
     if (flavour & OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR) {
@@ -269,16 +267,8 @@ OP1ATrack* OP1AFile::CreateTrack(EssenceType essence_type)
     }
 
     MXFDataDefEnum data_def = convert_essence_type_to_data_def(essence_type);
-    uint32_t track_id;
-    uint8_t track_type_number;
-    if (data_def == MXF_PICTURE_DDEF)
-        track_id = FIRST_PICTURE_TRACK_ID;
-    else if (data_def == MXF_SOUND_DDEF)
-        track_id = FIRST_SOUND_TRACK_ID;
-    else
-        track_id = FIRST_DATA_TRACK_ID;
-    track_id += mTrackCounts[data_def];
-    track_type_number = mTrackCounts[data_def];
+    uint32_t track_id = mTrackIdHelper.GetNextId(data_def);
+    uint8_t track_type_number = mTrackCounts[data_def];
     mTrackCounts[data_def]++;
 
     BMX_CHECK_M(mFrameWrapped || (mTracks.empty() && data_def == MXF_SOUND_DDEF && mTrackCounts[data_def] == 1),
@@ -298,9 +288,9 @@ OP1ATrack* OP1AFile::CreateTrack(EssenceType essence_type)
 
 OP1AXMLTrack* OP1AFile::CreateXMLTrack()
 {
-    uint32_t track_id    = FIRST_XML_TRACK_ID + mXMLTracks.size();
+    uint32_t track_id    = mTrackIdHelper.GetNextId(XML_TRACK_TYPE);
     uint32_t track_index = (uint32_t)mTracks.size();
-    uint32_t stream_id   = FIRST_STREAM_SID + mXMLTracks.size();
+    uint32_t stream_id   = mStreamIdHelper.GetNextId(GENERIC_STREAM_TYPE);
 
     mXMLTracks.push_back(new OP1AXMLTrack(this, track_index, track_id, stream_id));
     return mXMLTracks.back();
@@ -442,7 +432,7 @@ void OP1AFile::CompleteWrite()
     {
         Partition &index_partition = mMXFFile->createPartition();
         index_partition.setKey(&MXF_PP_K(ClosedComplete, Body)); // will be complete when memory flushed
-        index_partition.setIndexSID(INDEX_SID);
+        index_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
         index_partition.setBodySID(0);
         index_partition.setKagSize(mKAGSize);
         index_partition.write(mMXFFile);
@@ -465,7 +455,7 @@ void OP1AFile::CompleteWrite()
     if (((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) &&
           mIndexTable->IsVBE() && mIndexTable->HaveSegments())
     {
-        footer_partition.setIndexSID(INDEX_SID);
+        footer_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
     }
     else
     {
@@ -655,8 +645,8 @@ void OP1AFile::CreateHeaderMetadata()
     EssenceContainerData *ess_container_data = new EssenceContainerData(mHeaderMetadata);
     content_storage->appendEssenceContainerData(ess_container_data);
     ess_container_data->setLinkedPackageUID(mFileSourcePackageUID);
-    ess_container_data->setIndexSID(INDEX_SID);
-    ess_container_data->setBodySID(BODY_SID);
+    ess_container_data->setIndexSID(mStreamIdHelper.GetId("IndexStream"));
+    ess_container_data->setBodySID(mStreamIdHelper.GetId("BodyStream"));
 
     // Preface - ContentStorage - MaterialPackage
     mMaterialPackage = new MaterialPackage(mHeaderMetadata);
@@ -671,7 +661,7 @@ void OP1AFile::CreateHeaderMetadata()
     Track *timecode_track = new Track(mHeaderMetadata);
     mMaterialPackage->appendTracks(timecode_track);
     timecode_track->setTrackName(TIMECODE_TRACK_NAME);
-    timecode_track->setTrackID(TIMECODE_TRACK_ID);
+    timecode_track->setTrackID(mTrackIdHelper.GetId("TimecodeTrack"));
     timecode_track->setTrackNumber(0);
     timecode_track->setEditRate(mEditRate);
     timecode_track->setOrigin(0);
@@ -702,7 +692,7 @@ void OP1AFile::CreateHeaderMetadata()
     timecode_track = new Track(mHeaderMetadata);
     mFileSourcePackage->appendTracks(timecode_track);
     timecode_track->setTrackName(TIMECODE_TRACK_NAME);
-    timecode_track->setTrackID(TIMECODE_TRACK_ID);
+    timecode_track->setTrackID(901);
     timecode_track->setTrackNumber(0);
     timecode_track->setEditRate(mEditRate);
     timecode_track->setOrigin(source_track_origin);
@@ -772,14 +762,14 @@ void OP1AFile::CreateFile()
     if (((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) &&
         mIndexTable->IsCBE())
     {
-        header_partition.setIndexSID(INDEX_SID);
+        header_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
     }
     else
     {
         header_partition.setIndexSID(0);
     }
     if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR))
-        header_partition.setBodySID(BODY_SID);
+        header_partition.setBodySID(mStreamIdHelper.GetId("BodyStream"));
     else
         header_partition.setBodySID(0);
     header_partition.setKagSize(mKAGSize);
@@ -909,7 +899,7 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
                         index_partition.setKey(&MXF_PP_K(ClosedComplete, Body));
                     else
                         index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
-                    index_partition.setIndexSID(INDEX_SID);
+                    index_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
                     index_partition.setBodySID(0);
                     index_partition.setKagSize(mKAGSize);
                     index_partition.write(mMXFFile);
@@ -941,9 +931,9 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
 
                 Partition &index_partition = mMXFFile->createPartition();
                 index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
-                index_partition.setIndexSID(INDEX_SID);
+                index_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
                 if ((mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) {
-                    index_partition.setBodySID(BODY_SID);
+                    index_partition.setBodySID(mStreamIdHelper.GetId("BodyStream"));
                     index_partition.setKagSize(mEssencePartitionKAGSize);
                     index_partition.setBodyOffset(ess_partition_body_offset);
                     start_ess_partition = false;
@@ -967,7 +957,7 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
             else
                 ess_partition.setKey(&MXF_PP_K(OpenComplete, Body));
             ess_partition.setIndexSID(0);
-            ess_partition.setBodySID(BODY_SID);
+            ess_partition.setBodySID(mStreamIdHelper.GetId("BodyStream"));
             ess_partition.setKagSize(mEssencePartitionKAGSize);
             ess_partition.setBodyOffset(ess_partition_body_offset);
             ess_partition.write(mMXFFile);
