@@ -74,7 +74,7 @@ D10ContentPackageInfo::D10ContentPackageInfo()
     sound_sequence_offset_set = false;
     sound_sequence_offset = 0;
     max_sound_sample_count = 0;
-    sound_sample_size = 0;
+    sound_ch_sample_size = 0;
     system_item_size = 0;
     picture_item_size = 0;
     sound_item_size = 0;
@@ -135,10 +135,12 @@ void D10ContentPackage::Reset(int64_t position)
 
     unsigned char *output = mSoundData.GetBytes();
     output[3] = mInfo->mute_sound_flags; // byte 3 channel valid flags
-    map<uint32_t, uint8_t>::const_iterator iter;
+    map<uint32_t, D10SoundChannelInfo>::const_iterator iter;
     for (iter = mInfo->sound_channels.begin(); iter != mInfo->sound_channels.end(); iter++) {
         mSoundChannelSampleCount[iter->first] = 0;
-        output[3] |= (1 << iter->second);
+        uint8_t c;
+        for (c = 0; c < iter->second.count; c++)
+            output[3] |= (1 << (iter->second.index + c));
     }
     output[3] &= ~mInfo->invalid_sound_flags;
 }
@@ -188,7 +190,7 @@ uint32_t D10ContentPackage::WriteSamples(uint32_t track_index, const unsigned ch
         if (write_num_samples > num_samples)
             write_num_samples = num_samples;
 
-        BMX_CHECK(size >= write_num_samples * mInfo->sound_sample_size);
+        BMX_CHECK(size >= write_num_samples * mInfo->sound_ch_sample_size * mInfo->sound_channels[track_index].count);
         CopySoundSamples(data, write_num_samples, mInfo->sound_channels[track_index], output_start_sample);
         mSoundChannelSampleCount[track_index] += write_num_samples;
     }
@@ -263,39 +265,56 @@ void D10ContentPackage::Write(File *mxf_file)
     mxf_file->writeFill(mInfo->sound_item_size - (mxfKey_extlen + LLEN + mSoundData.GetSize()));
 }
 
-void D10ContentPackage::CopySoundSamples(const unsigned char *data, uint32_t num_samples, uint8_t channel,
-                                         uint32_t output_start_sample)
+void D10ContentPackage::CopySoundSamples(const unsigned char *data, uint32_t num_samples,
+                                         const D10SoundChannelInfo &channel_info, uint32_t output_start_sample)
 {
     const unsigned char *input = data;
     unsigned char *output = mSoundData.GetBytes();
-    uint8_t flag = (1 << channel);
 
-    // don'c copy if channel was flagged as invalid or muted
-    if (!(flag & output[3]) || (flag & mInfo->mute_sound_flags))
+    uint8_t copy_flags = 0;
+    uint8_t c;
+    for (c = 0; c < channel_info.count; c++) {
+        uint8_t flag = (1 << (channel_info.index + c));
+        if ((flag & output[3]) && !(flag & mInfo->mute_sound_flags))
+            copy_flags |= flag;
+    }
+    if (!copy_flags)
         return;
 
-    output += 4 + output_start_sample * 4 * 8 + channel * 4;
+    output += 4 + output_start_sample * 4 * 8 + channel_info.index * 4;
 
     uint32_t s;
-    if (mInfo->sound_sample_size == 3) { // 24-bit
+    if (mInfo->sound_ch_sample_size == 3) { // 24-bit
         for (s = 0; s < num_samples; s++) {
-            output[0] = channel                  | ((input[0] << 4) & 0xf0);
-            output[1] = ((input[0] >> 4) & 0x0f) | ((input[1] << 4) & 0xf0);
-            output[2] = ((input[1] >> 4) & 0x0f) | ((input[2] << 4) & 0xf0);
-            output[3] = ((input[2] >> 4) & 0x0f);
+            uint8_t c;
+            for (c = 0; c < channel_info.count; c++) {
+                if ((copy_flags & (1 << (channel_info.index + c)))) {
+                    output[0] = (channel_info.index + c) | ((input[0] << 4) & 0xf0);
+                    output[1] = ((input[0] >> 4) & 0x0f) | ((input[1] << 4) & 0xf0);
+                    output[2] = ((input[1] >> 4) & 0x0f) | ((input[2] << 4) & 0xf0);
+                    output[3] = ((input[2] >> 4) & 0x0f);
+                }
+                input += 3;
+                output += 4;
+            }
 
-            input += 3;
-            output += 4 * 8;
+            output += 4 * (8 - channel_info.count);
         }
     } else { // 16-bit
         for (s = 0; s < num_samples; s++) {
-            output[0] = channel;
-            output[1] =                            ((input[0] << 4) & 0xf0);
-            output[2] = ((input[0] >> 4) & 0x0f) | ((input[1] << 4) & 0xf0);
-            output[3] = ((input[1] >> 4) & 0x0f);
+            uint8_t c;
+            for (c = 0; c < channel_info.count; c++) {
+                if ((copy_flags & (1 << (channel_info.index + c)))) {
+                    output[0] = channel_info.index + c;
+                    output[1] =                            ((input[0] << 4) & 0xf0);
+                    output[2] = ((input[0] >> 4) & 0x0f) | ((input[1] << 4) & 0xf0);
+                    output[3] = ((input[1] >> 4) & 0x0f);
+                }
+                input += 2;
+                output += 4;
+            }
 
-            input += 2;
-            output += 4 * 8;
+            output += 4 * (8 - channel_info.count);
         }
     }
 }
@@ -363,7 +382,7 @@ D10ContentPackageManager::D10ContentPackageManager(mxfRational frame_rate)
     mInfo.is_25hz = (frame_rate.numerator == 25);
 
     // defaults used when no sound data present
-    mInfo.sound_sample_size = 24;
+    mInfo.sound_ch_sample_size = 3;
     if (mInfo.is_25hz) {
         mInfo.sound_sample_sequence.push_back(1920);
         mInfo.max_sound_sample_count = 1920;
@@ -435,32 +454,34 @@ void D10ContentPackageManager::RegisterMPEGTrackElement(uint32_t track_index, ui
 }
 
 void D10ContentPackageManager::RegisterPCMTrackElement(uint32_t track_index, uint8_t output_channel_index,
-                                                       vector<uint32_t> sample_sequence, uint32_t sample_size)
+                                                       vector<uint32_t> sample_sequence, uint32_t input_sample_size,
+                                                       uint32_t channel_count)
 {
-    BMX_CHECK(output_channel_index < 8);
+    BMX_CHECK(channel_count > 0);
+    BMX_CHECK(output_channel_index + channel_count <= 8);
     BMX_CHECK((mInfo.is_25hz && sample_sequence.size() == 1) || (!mInfo.is_25hz && sample_sequence.size() == 5));
-    BMX_CHECK(sample_size == 2 || sample_size == 3);
+    BMX_CHECK(input_sample_size == 2 * channel_count || input_sample_size == 3 * channel_count);
 
-    map<uint32_t, uint8_t>::const_iterator iter;
+    map<uint32_t, D10SoundChannelInfo>::const_iterator iter;
     for (iter = mInfo.sound_channels.begin(); iter != mInfo.sound_channels.end(); iter++) {
-        BMX_CHECK_M(iter->second != output_channel_index,
-                   ("Duplicate AES-3 channel indexes %d (track number %d)",
-                     output_channel_index, output_channel_index + 1));
+        BMX_CHECK_M(iter->second.index + iter->second.count <= output_channel_index ||
+                    iter->second.index >= output_channel_index + channel_count,
+                    ("Duplicate AES-3 channel indexes"));
     }
 
     // set or check sample sequence and size
     if (mInfo.sound_channels.empty()) {
         mInfo.sound_sample_sequence = sample_sequence;
-        mInfo.sound_sample_size = sample_size;
+        mInfo.sound_ch_sample_size  = input_sample_size / channel_count;
         size_t i;
         for (i = 0; i < sample_sequence.size(); i++) {
             if (sample_sequence[i] > mInfo.max_sound_sample_count)
                 mInfo.max_sound_sample_count = sample_sequence[i];
         }
         BMX_CHECK((mInfo.is_25hz  && mInfo.max_sound_sample_count == 1920) ||
-                 (!mInfo.is_25hz && mInfo.max_sound_sample_count == 1602));
+                  (!mInfo.is_25hz && mInfo.max_sound_sample_count == 1602));
     } else {
-        BMX_CHECK(sample_size == mInfo.sound_sample_size);
+        BMX_CHECK(input_sample_size / channel_count == mInfo.sound_ch_sample_size);
         BMX_CHECK(sample_sequence.size() == mInfo.sound_sample_sequence.size());
         size_t i;
         for (i = 0; i < sample_sequence.size(); i++) {
@@ -468,7 +489,10 @@ void D10ContentPackageManager::RegisterPCMTrackElement(uint32_t track_index, uin
         }
     }
 
-    mInfo.sound_channels[track_index] = output_channel_index;
+    D10SoundChannelInfo channel_info;
+    channel_info.index = output_channel_index;
+    channel_info.count = channel_count;
+    mInfo.sound_channels[track_index] = channel_info;
 }
 
 void D10ContentPackageManager::PrepareWrite()
@@ -523,11 +547,15 @@ void D10ContentPackageManager::WriteSamples(uint32_t track_index, const unsigned
     while (cp_index < mContentPackages.size() && mContentPackages[cp_index]->IsComplete(track_index))
         cp_index++;
 
-    uint32_t sample_size = (track_index == mInfo.picture_track_index ? mInfo.picture_sample_size :
-                                                                       mInfo.sound_sample_size);
-    BMX_CHECK(size >= sample_size * num_samples);
+    uint32_t input_sample_size;
+    if (track_index == mInfo.picture_track_index)
+        input_sample_size = mInfo.picture_sample_size;
+    else
+        input_sample_size = mInfo.sound_ch_sample_size * mInfo.sound_channels[track_index].count;
+
+    BMX_CHECK(size >= input_sample_size * num_samples);
     const unsigned char *data_ptr = data;
-    uint32_t rem_size = sample_size * num_samples;
+    uint32_t rem_size = input_sample_size * num_samples;
     uint32_t rem_num_samples = num_samples;
     while (rem_num_samples > 0) {
         if (cp_index >= mContentPackages.size())
@@ -536,8 +564,8 @@ void D10ContentPackageManager::WriteSamples(uint32_t track_index, const unsigned
         uint32_t num_written = mContentPackages[cp_index]->WriteSamples(track_index, data_ptr, rem_size,
                                                                         rem_num_samples);
         rem_num_samples -= num_written;
-        rem_size -= num_written * sample_size;
-        data_ptr += num_written * sample_size;
+        rem_size -= num_written * input_sample_size;
+        data_ptr += num_written * input_sample_size;
 
         cp_index++;
     }
@@ -559,13 +587,13 @@ void D10ContentPackageManager::WriteSample(uint32_t track_index, const CDataBuff
 
 uint8_t D10ContentPackageManager::GetSoundChannelCount() const
 {
-    uint8_t flags = mInfo.mute_sound_flags;
-    map<uint32_t, uint8_t>::const_iterator iter;
+    uint8_t max_flags = mInfo.mute_sound_flags;
+    map<uint32_t, D10SoundChannelInfo>::const_iterator iter;
     for (iter = mInfo.sound_channels.begin(); iter != mInfo.sound_channels.end(); iter++)
-        flags |= (1 << iter->second);
-    flags &= ~mInfo.invalid_sound_flags;
+        max_flags |= (1 << (iter->second.index + iter->second.count - 1));
+    max_flags &= ~mInfo.invalid_sound_flags;
 
-    return (flags & 0xf0) ? 8 : 4;
+    return (max_flags & 0xf0) ? 8 : 4;
 }
 
 int64_t D10ContentPackageManager::GetDuration() const

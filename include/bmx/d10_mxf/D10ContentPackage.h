@@ -48,6 +48,12 @@ namespace bmx
 {
 
 
+typedef struct
+{
+    uint8_t index;
+    uint8_t count;
+} D10SoundChannelInfo;
+
 class D10ContentPackageInfo
 {
 public:
@@ -61,12 +67,12 @@ public:
     bool have_input_user_timecode;
     uint32_t picture_track_index;
     uint32_t picture_sample_size;
-    std::map<uint32_t, uint8_t> sound_channels;
+    std::map<uint32_t, D10SoundChannelInfo> sound_channels;
     std::vector<uint32_t> sound_sample_sequence;
     bool sound_sequence_offset_set;
     uint8_t sound_sequence_offset;
     uint32_t max_sound_sample_count;
-    uint32_t sound_sample_size;
+    uint32_t sound_ch_sample_size;
     uint32_t system_item_size;
     uint32_t picture_item_size;
     uint32_t sound_item_size;
@@ -95,7 +101,7 @@ public:
     void Write(mxfpp::File *mxf_file);
 
 private:
-    void CopySoundSamples(const unsigned char *data, uint32_t num_samples, uint8_t channel,
+    void CopySoundSamples(const unsigned char *data, uint32_t num_samples, const D10SoundChannelInfo &channel_info,
                           uint32_t output_start_sample);
 
     uint32_t WriteSystemItem(mxfpp::File *mxf_file);
@@ -128,7 +134,7 @@ public:
 
     void RegisterMPEGTrackElement(uint32_t track_index, uint32_t sample_size);
     void RegisterPCMTrackElement(uint32_t track_index, uint8_t output_channel_index,
-                                 std::vector<uint32_t> sample_sequence, uint32_t sample_size);
+                                 std::vector<uint32_t> sample_sequence, uint32_t sample_size, uint32_t channel_count);
 
     void PrepareWrite();
 

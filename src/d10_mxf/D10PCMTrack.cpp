@@ -98,8 +98,7 @@ void D10PCMTrack::SetQuantizationBits(uint32_t bits)
 
 void D10PCMTrack::SetChannelCount(uint32_t count)
 {
-    BMX_CHECK_M(count == 1,
-                ("Channel count set to %u; D10 currently requires a single channel per \"track\" representing a D10 AES3 channel", count));
+    BMX_CHECK(count <= 8);
 
     mSoundDescriptorHelper->SetChannelCount(count);
 }
@@ -146,7 +145,8 @@ vector<uint32_t> D10PCMTrack::GetShiftedSampleSequence() const
 void D10PCMTrack::PrepareWrite()
 {
     mCPManager->RegisterPCMTrackElement(mTrackIndex, mOutputTrackNumber - 1, mSampleSequence,
-                                        mSoundDescriptorHelper->GetSampleSize());
+                                        mSoundDescriptorHelper->GetSampleSize(),
+                                        mSoundDescriptorHelper->GetChannelCount());
 }
 
 void D10PCMTrack::SetSampleSequence()
