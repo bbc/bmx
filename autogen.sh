@@ -13,7 +13,7 @@ fi
 
 set -x
 aclocal -I m4
-$lt
+$lt -c
 autoheader -f
 automake --foreign --add-missing -c
 autoconf
