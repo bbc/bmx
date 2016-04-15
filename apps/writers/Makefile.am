@@ -9,3 +9,4 @@ libwriters_la_SOURCES = \
 	TrackMapper.h
 
 libwriters_la_CXXFLAGS = $(BMX_CFLAGS)
+libwriters_la_LIBADD = $(BMX_LDADDLIBS)
