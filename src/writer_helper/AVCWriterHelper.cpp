@@ -302,6 +302,17 @@ void AVCWriterHelper::CompleteProcess()
     while (!mDecodedFrames.empty())
         PopDecodedFrame();
 
+    if (!mUnlimitedGOPSize) {
+        if (mPosition - mGOPStartPosition > UINT16_MAX) {
+            mUnlimitedGOPSize = true;
+            mMaxGOP = 0;
+        } else {
+            uint16_t gop_size = (uint16_t)(mPosition - mGOPStartPosition);
+            if (gop_size > mMaxGOP)
+                mMaxGOP = gop_size;
+        }
+    }
+
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mDescriptorHelper->GetFileDescriptor());
     BMX_ASSERT(cdci_descriptor);
