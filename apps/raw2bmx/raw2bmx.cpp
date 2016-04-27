@@ -328,7 +328,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          <ver> has format '<major>.<minor>.<patch>.<build>.<release>' and is the Product Version property. Set to '0.0.0.0.0' to omit it\n");
     fprintf(stderr, "                          <verstr> is a string and is the Version String property\n");
     fprintf(stderr, "                          <uid> is a UUID (see Notes at the end) and is the Product UID property\n");
-    fprintf(stderr, "  -f <rate>               Frame rate: 23976 (24000/1001), 24, 25, 2997 (30000/1001), 30, 50, 5994 (60000/1001) or 60. Default parsed or 25\n");
+    fprintf(stderr, "  -f <rate>               Set the frame rate, overriding any frame rate parsed from the essence data\n");
+    fprintf(stderr, "                          The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)\n");
+    fprintf(stderr, "  --dflt-rate <rate>      Set the default frame rate which is used when no rate is provided by the essence data. Without this option the default is 25\n");
+    fprintf(stderr, "                          The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Start timecode. Default 00:00:00:00\n");
     fprintf(stderr, "                          The c character in the pattern should be ':' for non-drop frame; any other character indicates drop frame\n");
     fprintf(stderr, "  --clip <name>           Set the clip name\n");
@@ -625,7 +628,8 @@ int main(int argc, const char** argv)
     RawInput input;
     Timecode start_timecode;
     const char *start_timecode_str = 0;
-    Rational frame_rate = FRAME_RATE_25;
+    Rational default_frame_rate = FRAME_RATE_25;
+    Rational frame_rate = ZERO_RATIONAL;
     bool frame_rate_set = false;
     int64_t duration = -1;
     int64_t output_start_offset = 0;
@@ -809,6 +813,22 @@ int main(int argc, const char** argv)
                 return 1;
             }
             frame_rate_set = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--dflt-rate") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_frame_rate(argv[cmdln_index + 1], &default_frame_rate))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "-y") == 0)
@@ -2941,6 +2961,9 @@ int main(int argc, const char** argv)
         fprintf(stderr, "No raw inputs given\n");
         return 1;
     }
+
+    if (!frame_rate_set)
+        frame_rate = default_frame_rate;
 
     if (clip_sub_type == AS10_CLIP_SUB_TYPE) {
         const char *as10_shim_name = as10_helper.GetShimName();

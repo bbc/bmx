@@ -322,30 +322,26 @@ bool bmx::parse_log_level(const char *level_str, LogLevel *level)
 
 bool bmx::parse_frame_rate(const char *rate_str, Rational *frame_rate)
 {
-    unsigned int value;
-    if (sscanf(rate_str, "%u", &value) != 1)
-        return false;
+    unsigned int num, den;
+    if (sscanf(rate_str, "%u/%u", &num, &den) == 2) {
+        frame_rate->numerator   = num;
+        frame_rate->denominator = den;
+        return true;
+    } else if (sscanf(rate_str, "%u", &num) == 1) {
+        if (num == 23976) {
+            *frame_rate = FRAME_RATE_23976;
+        } else if (num == 2997) {
+            *frame_rate = FRAME_RATE_2997;
+        } else if (num == 5994) {
+            *frame_rate = FRAME_RATE_5994;
+        } else {
+            frame_rate->numerator   = num;
+            frame_rate->denominator = 1;
+        }
+        return true;
+    }
 
-    if (value == 23976)
-        *frame_rate = FRAME_RATE_23976;
-    else if (value == 24)
-        *frame_rate = FRAME_RATE_24;
-    else if (value == 25)
-        *frame_rate = FRAME_RATE_25;
-    else if (value == 2997)
-        *frame_rate = FRAME_RATE_2997;
-    else if (value == 30)
-        *frame_rate = FRAME_RATE_30;
-    else if (value == 50)
-        *frame_rate = FRAME_RATE_50;
-    else if (value == 5994)
-        *frame_rate = FRAME_RATE_5994;
-    else if (value == 60)
-        *frame_rate = FRAME_RATE_60;
-    else
-        return false;
-
-    return true;
+    return false;
 }
 
 bool bmx::parse_timecode(const char *tc_str, Rational frame_rate, Timecode *timecode)
