@@ -66,17 +66,17 @@ static bool compare_track(RDD9Track *left, RDD9Track *right)
 
 
 
-RDD9File::RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate)
+RDD9File::RDD9File(int flavour, File *mxf_file, Rational frame_rate)
 {
-    BMX_CHECK(frame_rate == FRAME_RATE_23976 ||
-              frame_rate == FRAME_RATE_24 ||
-              frame_rate == FRAME_RATE_25 ||
-              frame_rate == FRAME_RATE_2997 ||
-              frame_rate == FRAME_RATE_50 ||
-              frame_rate == FRAME_RATE_5994);
-
-    if (frame_rate == FRAME_RATE_24)
-        log_warn("Frame rate is 24Hz; RDD9 does not list this rate in the supported rates list\n");
+    if (frame_rate != FRAME_RATE_23976 &&
+        frame_rate != FRAME_RATE_25 &&
+        frame_rate != FRAME_RATE_2997 &&
+        frame_rate != FRAME_RATE_50 &&
+        frame_rate != FRAME_RATE_5994)
+    {
+        log_warn("RDD9 does not list %d/dHz in the supported rates list\n",
+                 frame_rate.numerator, frame_rate.denominator);
+    }
 
     mFlavour = flavour;
     mMXFFile = mxf_file;

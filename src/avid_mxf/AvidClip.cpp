@@ -75,15 +75,6 @@ static bool compare_locator(const AvidLocator &left, const AvidLocator &right)
 AvidClip::AvidClip(int flavour, mxfRational frame_rate, MXFFileFactory *file_factory, bool take_factory_ownership,
                    string filename_prefix)
 {
-    BMX_CHECK(frame_rate == FRAME_RATE_23976 ||
-              frame_rate == FRAME_RATE_24 ||
-              frame_rate == FRAME_RATE_25 ||
-              frame_rate == FRAME_RATE_2997 ||
-              frame_rate == FRAME_RATE_30 ||
-              frame_rate == FRAME_RATE_50 ||
-              frame_rate == FRAME_RATE_5994 ||
-              frame_rate == FRAME_RATE_60);
-
     mFlavour = flavour;
     mFileFactory = file_factory;
     mOwnFileFactory = take_factory_ownership;
