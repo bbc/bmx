@@ -145,6 +145,7 @@ static const SpecIdMap AS11_SPEC_ID_MAP[] =
     {"as11-x3",   AS11_X3_SPEC},
     {"as11-x4",   AS11_X4_SPEC},
     {"as11-x7",   AS11_X7_SPEC},
+    {"as11-x8",   AS11_X8_SPEC},
 };
 
 
