@@ -159,31 +159,6 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
             pcm_tracks.push_back(clip_track);
     }
 
-    // create maps to check whether a sg or gosg can be repeated within the package
-    // if is must not be repeated then the entry is set to false; otherwise the entry is not set
-    map<string, bool> repeat_sg_byid;
-    map<string, bool> repeat_gosg_byid;
-    for (i = 0; i < mTrackLabels.size(); i++) {
-        TrackLabels *track_labels = mTrackLabels[i];
-        if (track_labels->soundfield_groups.empty())
-            continue;
-        size_t g;
-        for (g = 0; g < track_labels->soundfield_groups.size(); g++) {
-            SoundfieldGroup &sg = track_labels->soundfield_groups[g];
-            if (sg.sg_label_line.label) {
-                LabelLine &sg_label_line = sg.sg_label_line;
-                if (!sg_label_line.repeat && !sg_label_line.id.empty())
-                    repeat_sg_byid[sg_label_line.id] = false;
-            }
-            size_t l;
-            for (l = 0; l < sg.gosg_label_lines.size(); l++) {
-                LabelLine &gosg_label_line = sg.gosg_label_lines[l];
-                if (!gosg_label_line.repeat && !gosg_label_line.id.empty())
-                    repeat_gosg_byid[gosg_label_line.id] = false;
-            }
-        }
-    }
-
 
     map<string, SoundfieldGroupLabelSubDescriptor*> package_sg_desc_byid;
     map<string, GroupOfSoundfieldGroupsLabelSubDescriptor*> package_gosg_desc_byid;
@@ -224,13 +199,16 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                                        gosg_label_line.id.c_str()));
                     }
 
-                    if (!repeat_gosg_byid.count(gosg_label_line.id) || repeat_gosg_byid[gosg_label_line.id]) {
-                        if (!track_gosg_desc_byid.count(gosg_label_line.id)) {
-                            gosg_desc = pcm_track->AddGroupOfSoundfieldGroupLabel(gosg_desc);
-                            track_gosg_desc_byid[gosg_label_line.id] = gosg_desc;
-                        }
+                    if (gosg_label_line.repeat && !track_gosg_desc_byid.count(gosg_label_line.id)) {
+                        gosg_desc = pcm_track->AddGroupOfSoundfieldGroupLabel(gosg_desc);
+                        track_gosg_desc_byid[gosg_label_line.id] = gosg_desc;
                     }
                 } else {
+                    if (!gosg_label_line.repeat) {
+                        log_warn("Ignoring 'repeat' false attribute on first occurance of group of soundfield group label with id '%s'\n",
+                                 gosg_label_line.id.c_str());
+                    }
+
                     gosg_desc = pcm_track->AddGroupOfSoundfieldGroupLabel();
                     gosg_desc->setMCALabelDictionaryID(gosg_label_line.label->dict_id);
                     gosg_desc->setMCATagSymbol(gosg_label_line.label->tag_symbol);
@@ -278,13 +256,16 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                         }
                     }
 
-                    if (!repeat_sg_byid.count(sg_label_line.id) || repeat_sg_byid[sg_label_line.id]) {
-                        if (!track_sg_desc_byid.count(sg_label_line.id)) {
-                            sg_desc = pcm_track->AddSoundfieldGroupLabel(sg_desc);
-                            track_sg_desc_byid[sg_label_line.id] = sg_desc;
-                        }
+                    if (sg_label_line.repeat && !track_sg_desc_byid.count(sg_label_line.id)) {
+                        sg_desc = pcm_track->AddSoundfieldGroupLabel(sg_desc);
+                        track_sg_desc_byid[sg_label_line.id] = sg_desc;
                     }
                 } else {
+                    if (!sg_label_line.repeat) {
+                        log_warn("Ignoring 'repeat' false attribute on first occurance of soundfield group label with id '%s'\n",
+                                 sg_label_line.id.c_str());
+                    }
+
                     sg_desc = pcm_track->AddSoundfieldGroupLabel();
                     sg_desc->setMCALabelDictionaryID(sg_label_line.label->dict_id);
                     sg_desc->setMCATagSymbol(sg_label_line.label->tag_symbol);

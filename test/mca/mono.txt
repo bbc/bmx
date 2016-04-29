@@ -1,42 +1,42 @@
 0
 chL, chan=0
-sgST, id=sg1, lang=en, repeat=false
-ggMPg, id=gosg1, repeat=false
+sgST, id=sg1, lang=en
+ggMPg, id=gosg1
 
 1
 chR, chan=0
-sgST, id=sg1
-ggMPg, id=gosg1
+sgST, id=sg1, repeat=false
+ggMPg, id=gosg1, repeat=false
 
 2
 chL, chan=0
-sgST, id=sg2, lang=de, repeat=false
-ggAPg, id=gosg2, repeat=false
+sgST, id=sg2, lang=de
+ggAPg, id=gosg2
 
 3
 chR, chan=0
-sgST, id=sg2
-ggAPg, id=gosg2
+sgST, id=sg2, repeat=false
+ggAPg, id=gosg2, repeat=false
 
 4
 chL, chan=0
-sgST, id=sg3, lang=fr, repeat=false
-ggAPg, id=gosg2
+sgST, id=sg3, lang=fr
+ggAPg, id=gosg2, repeat=false
 
 5
 chR, chan=0
-sgST, id=sg3
-ggAPg, id=gosg2
+sgST, id=sg3, repeat=false
+ggAPg, id=gosg2, repeat=false
 
 6
 chL, chan=0
-sgST, id=sg4, lang=es, repeat=false
-ggAPg, id=gosg2
+sgST, id=sg4, lang=es
+ggAPg, id=gosg2, repeat=false
 
 
 7
 chR, chan=0
-sgST, id=sg4
-ggAPg, id=gosg2
+sgST, id=sg4, repeat=false
+ggAPg, id=gosg2, repeat=false
 
 
