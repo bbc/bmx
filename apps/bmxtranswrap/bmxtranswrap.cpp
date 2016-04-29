@@ -326,7 +326,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -p                      Print progress percentage to stdout\n");
     fprintf(stderr, "  -l <file>               Log filename. Default log to stderr/stdout\n");
     fprintf(stderr, " --log-level <level>      Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
-    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, rdd9, as10, wave. Default is op1a\n");
+    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, as11rdd9, op1a, avid, d10, rdd9, as10, wave. Default is op1a\n");
     fprintf(stderr, "* -o <name>               as02: <name> is a bundle name\n");
     fprintf(stderr, "                          as11op1a/as11d10/op1a/d10/rdd9/as10/wave: <name> is a filename\n");
     fprintf(stderr, "                          avid: <name> is a filename prefix\n");
@@ -424,7 +424,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  as02/as11op1a/op1a/rdd9/as10:\n");
     fprintf(stderr, "    --part <interval>       Video essence partition interval in frames in input edit rate units, or seconds with 's' suffix. Default single partition\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/as11d10:\n");
+    fprintf(stderr, "  as11op1a/as11d10/as11rdd9:\n");
     fprintf(stderr, "    --dm <fwork> <name> <value>    Set descriptive framework property. <fwork> is 'as11' or 'dpp'\n");
     fprintf(stderr, "    --dm-file <fwork> <name>       Parse and set descriptive framework properties from text file <name>. <fwork> is 'as11' or 'dpp'\n");
     fprintf(stderr, "    --seg <name>                   Parse and set segmentation data from text file <name>\n");

@@ -143,6 +143,7 @@ static const ClipWriterTypeStringMap CLIP_WRITER_TYPE_STRING_MAP[] =
     {CW_D10_CLIP_TYPE,       AS11_CLIP_SUB_TYPE,  "AS-11 D-10 MXF"},
     {CW_D10_CLIP_TYPE,       NO_CLIP_SUB_TYPE,    "D-10 MXF"},
     {CW_RDD9_CLIP_TYPE,      AS10_CLIP_SUB_TYPE,  "AS-10 RDD9 MXF"},
+    {CW_RDD9_CLIP_TYPE,      AS11_CLIP_SUB_TYPE,  "AS-11 RDD9 MXF"},
     {CW_RDD9_CLIP_TYPE,      NO_CLIP_SUB_TYPE,    "RDD9 MXF"},
     {CW_WAVE_CLIP_TYPE,      NO_CLIP_SUB_TYPE,    "Wave"},
 };
@@ -595,6 +596,9 @@ bool bmx::parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type, 
         *clip_sub_type = AS11_CLIP_SUB_TYPE;
     } else if (strcmp(clip_type_str, "as11d10") == 0) {
         *clip_type     = CW_D10_CLIP_TYPE;
+        *clip_sub_type = AS11_CLIP_SUB_TYPE;
+    } else if (strcmp(clip_type_str, "as11rdd9") == 0) {
+        *clip_type     = CW_RDD9_CLIP_TYPE;
         *clip_sub_type = AS11_CLIP_SUB_TYPE;
     } else if (strcmp(clip_type_str, "op1a") == 0) {
         *clip_type     = CW_OP1A_CLIP_TYPE;

@@ -468,7 +468,10 @@ bool AS11Helper::HaveAS11CoreFramework() const
 
 void AS11Helper::AddMetadata(ClipWriter *clip)
 {
-    if (clip->GetType() != CW_OP1A_CLIP_TYPE && clip->GetType() != CW_D10_CLIP_TYPE) {
+    if (clip->GetType() != CW_OP1A_CLIP_TYPE &&
+        clip->GetType() != CW_D10_CLIP_TYPE &&
+        clip->GetType() != CW_RDD9_CLIP_TYPE)
+    {
         BMX_EXCEPTION(("AS-11 is not supported in clip type '%s'",
                        clip_type_to_string(clip->GetType(), NO_CLIP_SUB_TYPE)));
     }
