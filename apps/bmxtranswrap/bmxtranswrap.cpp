@@ -431,12 +431,12 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --pass-dm                      Copy descriptive metadata from the input file. The metadata can be overidden by other options\n");
     fprintf(stderr, "    --spec-id <id>                 Set the AS-11 specification identifier labels associated with <id>\n");
     fprintf(stderr, "                                   The <id> is one of the following:\n");
-    fprintf(stderr, "                                       as11-x1 : AMWA AS-11 X1 specification\n");
-    fprintf(stderr, "                                       as11-x2 : AMWA AS-11 X2 specification\n");
-    fprintf(stderr, "                                       as11-x3 : AMWA AS-11 X3 specification\n");
-    fprintf(stderr, "                                       as11-x4 : AMWA AS-11 X4 specification\n");
-    fprintf(stderr, "                                       as11-x7 : AMWA AS-11 X7 specification\n");
-    fprintf(stderr, "                                       as11-x8 : AMWA AS-11 X7 specification\n");
+    fprintf(stderr, "                                       as11-x1 : AMWA AS-11 X1, delivery of finished UHD programs to Digital Production Partnership (DPP) broadcasters\n");
+    fprintf(stderr, "                                       as11-x2 : AMWA AS-11 X2, delivery of finished HD AVC Intra programs to a broadcaster or publisher\n");
+    fprintf(stderr, "                                       as11-x3 : AMWA AS-11 X3, delivery of finished HD AVC Long GOP programs to a broadcaster or publisher\n");
+    fprintf(stderr, "                                       as11-x4 : AMWA AS-11 X4, delivery of finished HD AVC Long GOP programs to a broadcaster or publisher\n");
+    fprintf(stderr, "                                       as11-x7 : AMWA AS-11 X7, delivery of finished SD D10 programs to a broadcaster or publisher\n");
+    fprintf(stderr, "                                       as11-x8 : AMWA AS-11 X8, delivery of finished HD (MPEG-2) programs to North American Broadcasters Association (NABA) broadcasters\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02/as11op1a/as11d10/op1a/d10/rdd9/as10:\n");
     fprintf(stderr, "    --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default is input file's value or not set\n");

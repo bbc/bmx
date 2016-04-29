@@ -375,12 +375,12 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --seg <name>                   Parse and set segmentation data from text file <name>\n");
     fprintf(stderr, "    --spec-id <id>                 Set the AS-11 specification identifier labels associated with <id>\n");
     fprintf(stderr, "                                   The <id> is one of the following:\n");
-    fprintf(stderr, "                                       as11-x1 : AMWA AS-11 X1 specification\n");
-    fprintf(stderr, "                                       as11-x2 : AMWA AS-11 X2 specification\n");
-    fprintf(stderr, "                                       as11-x3 : AMWA AS-11 X3 specification\n");
-    fprintf(stderr, "                                       as11-x4 : AMWA AS-11 X4 specification\n");
-    fprintf(stderr, "                                       as11-x7 : AMWA AS-11 X7 specification\n");
-    fprintf(stderr, "                                       as11-x8 : AMWA AS-11 X8 specification\n");
+    fprintf(stderr, "                                       as11-x1 : AMWA AS-11 X1, delivery of finished UHD programs to Digital Production Partnership (DPP) broadcasters\n");
+    fprintf(stderr, "                                       as11-x2 : AMWA AS-11 X2, delivery of finished HD AVC Intra programs to a broadcaster or publisher\n");
+    fprintf(stderr, "                                       as11-x3 : AMWA AS-11 X3, delivery of finished HD AVC Long GOP programs to a broadcaster or publisher\n");
+    fprintf(stderr, "                                       as11-x4 : AMWA AS-11 X4, delivery of finished HD AVC Long GOP programs to a broadcaster or publisher\n");
+    fprintf(stderr, "                                       as11-x7 : AMWA AS-11 X7, delivery of finished SD D10 programs to a broadcaster or publisher\n");
+    fprintf(stderr, "                                       as11-x8 : AMWA AS-11 X8, delivery of finished HD (MPEG-2) programs to North American Broadcasters Association (NABA) broadcasters\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/op1a/rdd9/as10:\n");
     fprintf(stderr, "    --out-start <offset>    Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
