@@ -434,6 +434,11 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     }
 }
 
+MXFFrameLayout MPEG2LGMXFDescriptorHelper::GetFrameLayout() const
+{
+    return SUPPORTED_ESSENCE[mEssenceIndex].frame_layout;
+}
+
 mxfUL MPEG2LGMXFDescriptorHelper::ChooseEssenceContainerUL() const
 {
     if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {

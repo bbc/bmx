@@ -67,6 +67,9 @@ public:
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
     virtual void UpdateFileDescriptor();
 
+public:
+    MXFFrameLayout GetFrameLayout() const;
+
 protected:
     virtual mxfUL ChooseEssenceContainerUL() const;
 

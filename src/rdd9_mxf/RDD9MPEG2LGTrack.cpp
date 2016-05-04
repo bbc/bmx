@@ -135,22 +135,32 @@ void RDD9MPEG2LGTrack::WriteSamplesInt(const unsigned char *data, uint32_t size,
 
 void RDD9MPEG2LGTrack::CompleteWrite()
 {
+    MPEG2LGMXFDescriptorHelper *mpeg2_writer_helper = dynamic_cast<MPEG2LGMXFDescriptorHelper*>(mPictureDescriptorHelper);
+    BMX_ASSERT(mpeg2_writer_helper);
+
     if (!mWriterHelper.CheckTemporalOffsetsComplete(mRDD9File->mOutputEndOffset))
         log_warn("Incomplete MPEG-2 temporal offset data in index table\n");
 
     uint16_t max_gop_size = mWriterHelper.GetMaxGOP();
-    switch (mEssenceType)
+    bool is_progressive = (mpeg2_writer_helper->GetFrameLayout() == MXF_FULL_FRAME ||
+                           mpeg2_writer_helper->GetFrameLayout() == MXF_SEGMENTED_FRAME);
+    if ((mEditRate == FRAME_RATE_2997 && is_progressive) ||
+        (mEditRate == FRAME_RATE_5994 && !is_progressive))
     {
-        case MPEG2LG_422P_HL_720P:
-        case MPEG2LG_MP_HL_720P:
-            if (max_gop_size > 12)
-                log_warn("Maximum GOP size %u exceeds maximum 12 specified for 720 in SMPTE RDD9\n", max_gop_size);
-            break;
-        default:
-            if (max_gop_size > 15)
-                log_warn("Maximum GOP size %u exceeds maximum 15 specified for 1080 in SMPTE RDD9\n", max_gop_size);
-            break;
+        // 29.97p/59.94i
+        if (max_gop_size > 15)
+            log_warn("Maximum GOP size %u exceeds maximum 15 specified in SMPTE RDD9\n", max_gop_size);
     }
+    else if ((mEditRate == FRAME_RATE_23976 && is_progressive) ||
+              mEditRate == FRAME_RATE_25 ||
+             (mEditRate == FRAME_RATE_50    && is_progressive) ||
+             (mEditRate == FRAME_RATE_5994  && !is_progressive))
+    {
+        // 23.98p/25p/50i/50p/59.94p
+        if (max_gop_size > 12)
+            log_warn("Maximum GOP size %u exceeds maximum 12 specified in SMPTE RDD9\n", max_gop_size);
+    }
+    // else outside RDD-9 spec.
 
     if (mValidator)
         mValidator->CompleteWrite();
