@@ -117,6 +117,7 @@ bool parse_checksum_type(const char *type_str, ChecksumType *type);
 bool parse_rdd6_lines(const char *lines_str, uint16_t *lines);
 bool parse_track_indexes(const char *tracks_str, std::set<uint32_t> *track_indexes);
 bool parse_mxf_auid(const char *mxf_auid_str, UL *mxf_auid);
+bool parse_bytes_size(const char *size_str, int64_t *size_out);
 
 std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def);
 

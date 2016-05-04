@@ -777,6 +777,31 @@ bool bmx::parse_mxf_auid(const char *mxf_auid_str, UL *mxf_auid)
     return true;
 }
 
+bool bmx::parse_bytes_size(const char *size_str, int64_t *size_out)
+{
+    double sizef;
+    if (sscanf(size_str, "%lf", &sizef) != 1 || sizef < 0.0)
+        return false;
+
+    const char *suffix = size_str;
+    while ((*suffix >= '0' && *suffix <= '9') || *suffix == '.')
+        suffix++;
+
+    if (suffix) {
+        if (*suffix == 'k' || *suffix == 'K')
+            sizef *= 1024.0;
+        if (*suffix == 'm' || *suffix == 'M')
+            sizef *= 1048576.0;
+        if (*suffix == 'g' || *suffix == 'G')
+            sizef *= 1073741824.0;
+        if (*suffix == 't' || *suffix == 'T')
+            sizef *= 1099511627776.0;
+    }
+
+    *size_out = (int64_t)(sizef + 0.5);
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {

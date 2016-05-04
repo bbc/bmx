@@ -245,6 +245,31 @@ void ClipWriter::SetProductInfo(string company_name, string product_name, mxfPro
     }
 }
 
+void ClipWriter::ReserveHeaderMetadataSpace(uint32_t min_bytes)
+{
+    switch (mType)
+    {
+        case CW_AS02_CLIP_TYPE:
+            mAS02Clip->ReserveHeaderMetadataSpace(min_bytes);
+            break;
+        case CW_OP1A_CLIP_TYPE:
+            mOP1AClip->ReserveHeaderMetadataSpace(min_bytes);
+            break;
+        case CW_D10_CLIP_TYPE:
+            mD10Clip->ReserveHeaderMetadataSpace(min_bytes);
+            break;
+        case CW_RDD9_CLIP_TYPE:
+            mRDD9Clip->ReserveHeaderMetadataSpace(min_bytes);
+            break;
+        case CW_AVID_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
 ClipWriterTrack* ClipWriter::CreateTrack(EssenceType essence_type, string track_filename)
 {
     ClipWriterTrack *track = 0;

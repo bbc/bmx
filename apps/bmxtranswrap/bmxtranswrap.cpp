@@ -414,6 +414,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          is shown as '<output track channel> <- <input channel>\n");
     fprintf(stderr, "  --dump-track-map-exit   Same as --dump-track-map, but exit immediately afterwards\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "  as11op1a/as11d10/as11rdd9/op1a/rdd9/d10:\n");
+    fprintf(stderr, "    --head-fill <bytes>     Reserve minimum <bytes> at the end of the header metadata using a KLV Fill\n");
+    fprintf(stderr, "                            Add a 'K' suffix for kibibytes and 'M' for mibibytes\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "  as02:\n");
     fprintf(stderr, "    --mic-type <type>       Media integrity check type: 'md5' or 'none'. Default 'md5'\n");
     fprintf(stderr, "    --mic-file              Calculate checksum for entire essence component file. Default is essence only\n");
@@ -731,8 +735,10 @@ int main(int argc, const char** argv)
     vector<pair<string, string> > track_mca_labels;
     bool use_avc_subdesc = false;
     UL audio_layout_mode_label = g_Null_UL;
+    BMX_OPT_PROP_DECL_DEF(uint32_t, head_fill, 0);
     int value, num, den;
     unsigned int uvalue;
+    int64_t i64value;
     int cmdln_index;
 
     memset(&next_embed_xml, 0, sizeof(next_embed_xml));
@@ -1864,6 +1870,23 @@ int main(int argc, const char** argv)
             dump_track_map = true;
             dump_track_map_exit = true;
         }
+        else if (strcmp(argv[cmdln_index], "--head-fill") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_bytes_size(argv[cmdln_index + 1], &i64value) || i64value > UINT32_MAX)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(head_fill, (uint32_t)i64value);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--use-avc-subdesc") == 0)
         {
             use_avc_subdesc = true;
@@ -2606,6 +2629,9 @@ int main(int argc, const char** argv)
             AS02Clip *as02_clip = clip->GetAS02Clip();
             AS02Bundle *bundle = as02_clip->GetBundle();
 
+            if (BMX_OPT_PROP_IS_SET(head_fill))
+                as02_clip->ReserveHeaderMetadataSpace(head_fill);
+
             bundle->GetManifest()->SetDefaultMICType(mic_type);
             bundle->GetManifest()->SetDefaultMICScope(ENTIRE_FILE_MIC_SCOPE);
 
@@ -2627,7 +2653,9 @@ int main(int argc, const char** argv)
             if (flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)
                 op1a_clip->SetInputDuration(reader->GetReadDuration());
 
-            if (clip_sub_type == AS11_CLIP_SUB_TYPE)
+            if (BMX_OPT_PROP_IS_SET(head_fill))
+                op1a_clip->ReserveHeaderMetadataSpace(head_fill);
+            else if (clip_sub_type == AS11_CLIP_SUB_TYPE)
                 op1a_clip->ReserveHeaderMetadataSpace(16384); // min is 8192
 
             if (clip_sub_type != AS11_CLIP_SUB_TYPE)
@@ -2720,15 +2748,20 @@ int main(int argc, const char** argv)
             if (flavour & D10_SINGLE_PASS_WRITE_FLAVOUR)
                 d10_clip->SetInputDuration(reader->GetReadDuration());
 
-            if (clip_sub_type == AS11_CLIP_SUB_TYPE)
+            if (BMX_OPT_PROP_IS_SET(head_fill))
+                d10_clip->ReserveHeaderMetadataSpace(head_fill);
+            else if (clip_sub_type == AS11_CLIP_SUB_TYPE)
                 d10_clip->ReserveHeaderMetadataSpace(16384); // min is 8192
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
             RDD9File *rdd9_clip = clip->GetRDD9Clip();
 
-            if (clip_sub_type == AS10_CLIP_SUB_TYPE) {
+            if (BMX_OPT_PROP_IS_SET(head_fill))
+                rdd9_clip->ReserveHeaderMetadataSpace(head_fill);
+            else if (clip_sub_type == AS10_CLIP_SUB_TYPE || clip_sub_type == AS11_CLIP_SUB_TYPE)
                 rdd9_clip->ReserveHeaderMetadataSpace(16384); // min is 8192
-                rdd9_clip->SetValidator(new AS10RDD9Validator(as10_shim, as10_loose_checks));
-            }
+
+            if (clip_sub_type == AS10_CLIP_SUB_TYPE)
+              rdd9_clip->SetValidator(new AS10RDD9Validator(as10_shim, as10_loose_checks));
 
             if (partition_interval_set)
                 rdd9_clip->SetPartitionInterval(partition_interval);

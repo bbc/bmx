@@ -73,6 +73,7 @@ public:
     void SetStartTimecode(Timecode start_timecode);                 // default 00:00:00:00 non-drop
     void SetProductInfo(std::string company_name, std::string product_name, mxfProductVersion product_version,
                         std::string version, mxfUUID product_uid);
+    void ReserveHeaderMetadataSpace(uint32_t min_bytes);
 
 public:
     ClipWriterTrack* CreateTrack(EssenceType essence_type, std::string track_filename = "");
