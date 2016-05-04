@@ -2,7 +2,7 @@
 <MXFDictionary>
 
   <MXFLabels>
-    <RP2057TextMetadata detail="RP 2057 - Text-Based Metadata Carriage in MXF" ul="06 0e 2b 34 04 01 01 01 0d 01 04 01 04 01 01 00"/>
+    <RP2057TextMetadata detail="RP 2057 - Text-Based Metadata Carriage in MXF" ul="06 0e 2b 34 04 01 01 0c 0d 01 04 01 04 01 01 00"/>
   </MXFLabels>
 
   <Preface>
