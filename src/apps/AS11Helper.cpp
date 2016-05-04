@@ -350,18 +350,39 @@ bool AS11Helper::ParseSegmentationFile(const char *filename, Rational frame_rate
 
         int part_num = 0, part_total = 0;
         int som_h = 0, som_m = 0, som_s = 0, som_f = 0;
+        int eom_h = 0, eom_m = 0, eom_s = 0, eom_f = 0;
         int dur_h = 0, dur_m = 0, dur_s = 0, dur_f = 0;
+        char som_dc = 0;
+        char eom_dc = 0;
         char xc = 0;
         if (!line_str.empty()) {
-            if (sscanf(line_str.c_str(), "%d/%d %d:%d:%d:%d %d:%d:%d:%d",
+            int line_type = 0;
+            if (sscanf(line_str.c_str(), "%d/%d %d:%d:%d%c%d E%d:%d:%d%c%d",
                        &part_num, &part_total,
-                       &som_h, &som_m, &som_s, &som_f,
-                       &dur_h, &dur_m, &dur_s, &dur_f) != 10 &&
-                (sscanf(line_str.c_str(), "%d/%d %d:%d:%d:%d %c",
-                       &part_num, &part_total,
-                       &som_h, &som_m, &som_s, &som_f, &xc) != 7 ||
-                   (xc != 'x' && xc != 'X')))
+                       &som_h, &som_m, &som_s, &som_dc, &som_f,
+                       &eom_h, &eom_m, &eom_s, &eom_dc, &eom_f) == 12)
             {
+                line_type = 1;
+            }
+            else if (sscanf(line_str.c_str(), "%d/%d %d:%d:%d%c%d D%d:%d:%d:%d",
+                            &part_num, &part_total,
+                            &som_h, &som_m, &som_s, &som_dc, &som_f,
+                            &dur_h, &dur_m, &dur_s, &dur_f) == 11 ||
+                     sscanf(line_str.c_str(), "%d/%d %d:%d:%d%c%d %d:%d:%d:%d",
+                            &part_num, &part_total,
+                            &som_h, &som_m, &som_s, &som_dc, &som_f,
+                            &dur_h, &dur_m, &dur_s, &dur_f) == 11)
+            {
+                line_type = 2;
+            }
+            else if (sscanf(line_str.c_str(), "%d/%d %d:%d:%d%c%d %c",
+                            &part_num, &part_total,
+                            &som_h, &som_m, &som_s, &som_dc, &som_f, &xc) == 8 &&
+                     (xc == 'x' || xc == 'X'))
+            {
+                line_type = 3;
+            }
+            if (line_type == 0) {
                 fprintf(stderr, "Failed to parse segment line %d\n", line_num);
                 fclose(file);
                 mSegments.clear();
@@ -371,9 +392,19 @@ bool AS11Helper::ParseSegmentationFile(const char *filename, Rational frame_rate
             AS11TCSegment segment;
             segment.part_number  = part_num;
             segment.part_total   = part_total;
-            segment.start.Init(frame_rate, false, som_h, som_m, som_s, som_f);
+            segment.start.Init(frame_rate, (som_dc != ':'), som_h, som_m, som_s, som_f);
             segment.duration     = 0;
-            if (!xc) {
+            if (line_type == 1) {
+                Timecode end(frame_rate, (eom_dc != ':'), eom_h, eom_m, eom_s, eom_f);
+                segment.duration = end.GetOffset() - segment.start.GetOffset();
+                if (segment.duration <= 0) {
+                    fprintf(stderr, "Invalid end timecode on line %d resulting in duration %" PRId64 "\n",
+                            line_num, segment.duration);
+                    fclose(file);
+                    mSegments.clear();
+                    return false;
+                }
+            } else if (line_type == 2) {
                 segment.duration = (int64_t)dur_h * 60 * 60 * rounded_rate +
                                    (int64_t)dur_m * 60 * rounded_rate +
                                    (int64_t)dur_s * rounded_rate +
@@ -381,7 +412,7 @@ bool AS11Helper::ParseSegmentationFile(const char *filename, Rational frame_rate
             }
             mSegments.push_back(segment);
 
-            if (xc) {
+            if (line_type == 3) {
                 last_tc_xx = true;
                 break;
             }
