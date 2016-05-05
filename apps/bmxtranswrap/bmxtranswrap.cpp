@@ -39,6 +39,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cerrno>
+#include <limits.h>
 
 #include <string>
 #include <vector>

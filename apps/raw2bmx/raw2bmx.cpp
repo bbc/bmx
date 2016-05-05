@@ -34,10 +34,12 @@
 #endif
 
 #define __STDC_FORMAT_MACROS
+#define __STDC_LIMIT_MACROS
 
 #include <cstdio>
 #include <cstring>
 #include <cerrno>
+#include <limits.h>
 
 #include <string>
 #include <vector>

@@ -39,6 +39,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cerrno>
+#include <limits.h>
 
 #if defined(_WIN32)
 #include <io.h>
