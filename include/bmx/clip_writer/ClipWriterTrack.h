@@ -43,6 +43,7 @@
 #include <bmx/d10_mxf/D10XMLTrack.h>
 #include <bmx/rdd9_mxf/RDD9XMLTrack.h>
 #include <bmx/writer_helper/AVCIWriterHelper.h>
+#include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
 
 
 
@@ -93,6 +94,7 @@ public:
     void SetUseAVCSubDescriptor(bool enable);                       // default false
     void SetAFD(uint8_t afd);                                       // default not set
     void SetInputHeight(uint32_t height);                           // uncompressed; default 0
+    PictureMXFDescriptorHelper* GetPictureDescriptorHelper();
 
     // Sound properties
     void SetAES3Mapping(bool enable);               // default BWF mapping

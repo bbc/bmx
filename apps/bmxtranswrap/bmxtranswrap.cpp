@@ -404,11 +404,32 @@ static void usage(const char *cmd)
         fprintf(stderr, "%s", get_ps_avci_header_format_string(i));
     }
     fprintf(stderr, "\n");
-    fprintf(stderr, "  -a <n:d>                Override or set the image aspect ratio. Either 4:3 or 16:9.\n");
+    fprintf(stderr, "  -a <n:d>                Override or set the image aspect ratio\n");
     fprintf(stderr, "  --bsar                  Set image aspect ratio in video bitstream. Currently supports D-10 essence types only\n");
     fprintf(stderr, "  --locked <bool>         Override or set flag indicating whether the number of audio samples is locked to the video. Either true or false\n");
     fprintf(stderr, "  --audio-ref <level>     Override or set audio reference level, number of dBm for 0VU\n");
     fprintf(stderr, "  --dial-norm <value>     Override or set gain to be applied to normalize perceived loudness of the clip\n");
+    fprintf(stderr, "  --signal-std  <value>   Override or set the video signal standard. The <value> is one of the following:\n");
+    fprintf(stderr, "                              'none', 'bt601', 'bt1358', 'st347', 'st274', 'st296', 'st349', 'st428'\n");
+    fprintf(stderr, "  --frame-layout <value>  Override or set the video frame layout. The <value> is one of the following:\n");
+    fprintf(stderr, "                              'fullframe', 'separatefield', 'singlefield', 'mixedfield', 'segmentedframe'\n");
+    fprintf(stderr, "  --field-dom <value>     Override or set which field is first in temporal order. The <value> is 1 or 2\n");
+    fprintf(stderr, "  --transfer-ch <value>   Override or set the transfer characteristic label\n");
+    fprintf(stderr, "                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
+    fprintf(stderr, "                              'bt470', 'bt709', 'st240', 'st274', 'bt1361', 'linear', 'dcdm',\n");
+    fprintf(stderr, "                              'iec61966', 'bt2020', 'st2084'\n");
+    fprintf(stderr, "  --coding-eq <value>     Override or set the coding equations label\n");
+    fprintf(stderr, "                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
+    fprintf(stderr, "                              'bt601', 'bt709', 'st240', 'ycgco', 'gbr', 'bt2020'\n");
+    fprintf(stderr, "  --color-prim <value>    Override or set the color primaries label\n");
+    fprintf(stderr, "                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
+    fprintf(stderr, "                              'st170', 'bt470', 'bt709', 'bt2020', 'dcdm', 'p3'\n");
+    fprintf(stderr, "  --color-siting <value>  Override or set the color siting. The <value> is one of the following:\n");
+    fprintf(stderr, "                              'cositing', 'horizmp', '3tap', 'quincunx', 'bt601', 'linealt', 'vertmp', 'unknown'\n");
+    fprintf(stderr, "                              (Note that 'bt601' is deprecated in SMPTE ST 377-1. Use 'cositing' instead)\n");
+    fprintf(stderr, "  --black-level <value>   Override or set the black reference level\n");
+    fprintf(stderr, "  --white-level <value>   Override or set the white reference level\n");
+    fprintf(stderr, "  --color-range <value>   Override or set the color range\n");
     fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks. See below for details of the <expr> format\n");
     fprintf(stderr, "  --dump-track-map        Dump the output audio track map to stderr.\n");
     fprintf(stderr, "                          The dumps consists of a list output tracks, where each output track channel\n");
@@ -657,20 +678,26 @@ int main(int argc, const char** argv)
     bool do_print_version = false;
     bool use_group_reader = false;
     bool keep_input_order = false;
-    uint8_t user_afd = 0;
+    BMX_OPT_PROP_DECL_DEF(uint8_t, user_afd, 0);
     vector<AVCIHeaderInput> avci_header_inputs;
     bool show_progress = false;
     bool single_pass = false;
     bool output_file_md5 = false;
-    Rational user_aspect_ratio = ASPECT_RATIO_16_9;
-    bool user_aspect_ratio_set = false;
+    BMX_OPT_PROP_DECL_DEF(Rational, user_aspect_ratio, ASPECT_RATIO_16_9);
     bool set_bs_aspect_ratio = false;
-    bool user_locked = false;
-    bool user_locked_set = false;
-    int8_t user_audio_ref_level = 0;
-    bool user_audio_ref_level_set = false;
-    int8_t user_dial_norm = 0;
-    bool user_dial_norm_set = false;
+    BMX_OPT_PROP_DECL_DEF(bool, user_locked, false);
+    BMX_OPT_PROP_DECL_DEF(int8_t, user_audio_ref_level, 0);
+    BMX_OPT_PROP_DECL_DEF(int8_t, user_dial_norm, 0);
+    BMX_OPT_PROP_DECL_DEF(MXFSignalStandard, user_signal_standard, MXF_SIGNAL_STANDARD_NONE);
+    BMX_OPT_PROP_DECL_DEF(MXFFrameLayout, user_frame_layout, MXF_FULL_FRAME);
+    BMX_OPT_PROP_DECL_DEF(uint8_t, user_field_dominance, 1);
+    BMX_OPT_PROP_DECL_DEF(mxfUL, user_transfer_ch, g_Null_UL);
+    BMX_OPT_PROP_DECL_DEF(mxfUL, user_coding_equations, g_Null_UL);
+    BMX_OPT_PROP_DECL_DEF(mxfUL, user_color_primaries, g_Null_UL);
+    BMX_OPT_PROP_DECL_DEF(MXFColorSiting, user_color_siting, MXF_COLOR_SITING_UNKNOWN);
+    BMX_OPT_PROP_DECL_DEF(uint32_t, user_black_ref_level, 0);
+    BMX_OPT_PROP_DECL_DEF(uint32_t, user_white_ref_level, 0);
+    BMX_OPT_PROP_DECL_DEF(uint32_t, user_color_range, 0);
     bool input_file_md5 = false;
     int input_file_flags = 0;
     bool no_precharge = false;
@@ -1111,18 +1138,15 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%d:%d", &num, &den) != 2 ||
-                ((num != 4 || den != 3) && (num != 16 || den != 9)))
+            if (sscanf(argv[cmdln_index + 1], "%d:%d", &num, &den) != 2 || num <= 0 || den <= 0)
             {
                 usage(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
-            if (num == 4)
-                user_aspect_ratio = ASPECT_RATIO_4_3;
-            else
-                user_aspect_ratio = ASPECT_RATIO_16_9;
-            user_aspect_ratio_set = true;
+            user_aspect_ratio.numerator   = num;
+            user_aspect_ratio.denominator = den;
+            BMX_OPT_PROP_MARK(user_aspect_ratio, true);
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--bsar") == 0)
@@ -1143,7 +1167,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
-            user_locked_set = true;
+            BMX_OPT_PROP_MARK(user_locked, true);
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--audio-ref") == 0)
@@ -1161,8 +1185,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
-            user_audio_ref_level = value;
-            user_audio_ref_level_set = true;
+            BMX_OPT_PROP_SET(user_audio_ref_level, value);
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--dial-norm") == 0)
@@ -1180,8 +1203,167 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
-            user_dial_norm = value;
-            user_dial_norm_set = true;
+            BMX_OPT_PROP_SET(user_dial_norm, value);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--signal-std") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_signal_standard(argv[cmdln_index + 1], &user_signal_standard)) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_MARK(user_signal_standard, true);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--frame-layout") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_frame_layout(argv[cmdln_index + 1], &user_frame_layout)) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_MARK(user_frame_layout, true);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--field-dom") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_field_dominance(argv[cmdln_index + 1], &user_field_dominance)) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_MARK(user_field_dominance, true);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--transfer-ch") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_transfer_ch(argv[cmdln_index + 1], &user_transfer_ch)) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_MARK(user_transfer_ch, true);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--coding-eq") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_coding_equations(argv[cmdln_index + 1], &user_coding_equations)) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_MARK(user_coding_equations, true);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--color-prim") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_color_primaries(argv[cmdln_index + 1], &user_color_primaries)) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_MARK(user_color_primaries, true);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--color-siting") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_color_siting(argv[cmdln_index + 1], &user_color_siting)) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_MARK(user_color_siting, true);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--black-level") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_black_ref_level, uvalue);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--white-level") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_white_ref_level, uvalue);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--color-range") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_color_range, uvalue);
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--mic-type") == 0)
@@ -1386,7 +1568,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
-            user_afd = value;
+            BMX_OPT_PROP_SET(user_afd, value);
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--single-pass") == 0)
@@ -2930,8 +3112,10 @@ int main(int argc, const char** argv)
             const MXFPictureTrackInfo *input_picture_info = dynamic_cast<const MXFPictureTrackInfo*>(input_track_info);
             const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
 
-            uint8_t afd = user_afd;
-            if (!afd && input_picture_info)
+            uint8_t afd = 0;
+            if (BMX_OPT_PROP_IS_SET(user_afd))
+                afd = user_afd;
+            else if (input_picture_info)
                 afd = input_picture_info->afd;
 
             // TODO: track number setting and check AES-3 channel validity
@@ -2970,7 +3154,7 @@ int main(int argc, const char** argv)
                 case IEC_DV25:
                 case DVBASED_DV25:
                 case DV50:
-                    if (user_aspect_ratio_set)
+                    if (BMX_OPT_PROP_IS_SET(user_aspect_ratio))
                         clip_track->SetAspectRatio(user_aspect_ratio);
                     else
                         clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
@@ -2979,7 +3163,7 @@ int main(int argc, const char** argv)
                     break;
                 case DV100_1080I:
                 case DV100_720P:
-                    if (user_aspect_ratio_set)
+                    if (BMX_OPT_PROP_IS_SET(user_aspect_ratio))
                         clip_track->SetAspectRatio(user_aspect_ratio);
                     else
                         clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
@@ -2990,7 +3174,7 @@ int main(int argc, const char** argv)
                 case D10_30:
                 case D10_40:
                 case D10_50:
-                    if (user_aspect_ratio_set) {
+                    if (BMX_OPT_PROP_IS_SET(user_aspect_ratio)) {
                         clip_track->SetAspectRatio(user_aspect_ratio);
                         if (set_bs_aspect_ratio)
                             output_track->SetFilter(new MPEG2AspectRatioFilter(user_aspect_ratio));
@@ -3098,7 +3282,7 @@ int main(int argc, const char** argv)
                 case AVID_10BIT_UNC_HD_1080I:
                 case AVID_10BIT_UNC_HD_1080P:
                 case AVID_10BIT_UNC_HD_720P:
-                    if (user_aspect_ratio_set)
+                    if (BMX_OPT_PROP_IS_SET(user_aspect_ratio))
                         clip_track->SetAspectRatio(user_aspect_ratio);
                     else
                         clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
@@ -3111,7 +3295,7 @@ int main(int argc, const char** argv)
                 case AVID_ALPHA_HD_1080I:
                 case AVID_ALPHA_HD_1080P:
                 case AVID_ALPHA_HD_720P:
-                    if (user_aspect_ratio_set)
+                    if (BMX_OPT_PROP_IS_SET(user_aspect_ratio))
                         clip_track->SetAspectRatio(user_aspect_ratio);
                     else
                         clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
@@ -3150,7 +3334,7 @@ int main(int argc, const char** argv)
                 case MJPEG_15_1S:
                     if (afd)
                         clip_track->SetAFD(afd);
-                    if (user_aspect_ratio_set)
+                    if (BMX_OPT_PROP_IS_SET(user_aspect_ratio))
                         clip_track->SetAspectRatio(user_aspect_ratio);
                     else
                         clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
@@ -3176,15 +3360,15 @@ int main(int argc, const char** argv)
                     clip_track->SetSamplingRate(input_sound_info->sampling_rate);
                     clip_track->SetQuantizationBits(input_sound_info->bits_per_sample);
                     clip_track->SetChannelCount(output_track->GetChannelCount());
-                    if (user_locked_set)
+                    if (BMX_OPT_PROP_IS_SET(user_locked))
                         clip_track->SetLocked(user_locked);
                     else if (BMX_OPT_PROP_IS_SET(input_sound_info->locked))
                         clip_track->SetLocked(input_sound_info->locked);
-                    if (user_audio_ref_level_set)
+                    if (BMX_OPT_PROP_IS_SET(user_audio_ref_level))
                         clip_track->SetAudioRefLevel(user_audio_ref_level);
                     else if (BMX_OPT_PROP_IS_SET(input_sound_info->audio_ref_level))
                         clip_track->SetAudioRefLevel(input_sound_info->audio_ref_level);
-                    if (user_dial_norm_set)
+                    if (BMX_OPT_PROP_IS_SET(user_dial_norm))
                         clip_track->SetDialNorm(user_dial_norm);
                     else if (BMX_OPT_PROP_IS_SET(input_sound_info->dial_norm))
                         clip_track->SetDialNorm(input_sound_info->dial_norm);
@@ -3215,6 +3399,30 @@ int main(int argc, const char** argv)
                 case DATA_ESSENCE:
                 case UNKNOWN_ESSENCE_TYPE:
                     BMX_ASSERT(false);
+            }
+
+            PictureMXFDescriptorHelper *pict_helper = clip_track->GetPictureDescriptorHelper();
+            if (pict_helper) {
+                if (BMX_OPT_PROP_IS_SET(user_signal_standard))
+                    pict_helper->SetSignalStandard(user_signal_standard);
+                if (BMX_OPT_PROP_IS_SET(user_frame_layout))
+                    pict_helper->SetFrameLayout(user_frame_layout);
+                if (BMX_OPT_PROP_IS_SET(user_field_dominance))
+                    pict_helper->SetFieldDominance(user_field_dominance);
+                if (BMX_OPT_PROP_IS_SET(user_transfer_ch))
+                    pict_helper->SetTransferCharacteristic(user_transfer_ch);
+                if (BMX_OPT_PROP_IS_SET(user_coding_equations))
+                    pict_helper->SetCodingEquations(user_coding_equations);
+                if (BMX_OPT_PROP_IS_SET(user_color_primaries))
+                    pict_helper->SetColorPrimaries(user_color_primaries);
+                if (BMX_OPT_PROP_IS_SET(user_color_siting))
+                    pict_helper->SetColorSiting(user_color_siting);
+                if (BMX_OPT_PROP_IS_SET(user_black_ref_level))
+                    pict_helper->SetBlackRefLevel(user_black_ref_level);
+                if (BMX_OPT_PROP_IS_SET(user_white_ref_level))
+                    pict_helper->SetWhiteRefLevel(user_white_ref_level);
+                if (BMX_OPT_PROP_IS_SET(user_color_range))
+                    pict_helper->SetColorRange(user_color_range);
             }
         }
 

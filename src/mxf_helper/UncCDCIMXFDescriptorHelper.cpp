@@ -392,9 +392,9 @@ void UncCDCIMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setHorizontalSubsampling(2);
     cdci_descriptor->setVerticalSubsampling(1);
     if ((mFlavour & MXFDESC_AVID_FLAVOUR) || (mFlavour & MXFDESC_SMPTE_377_2004_FLAVOUR))
-        SetColorSiting(MXF_COLOR_SITING_REC601);
+        SetColorSitingMod(MXF_COLOR_SITING_REC601);
     else
-        SetColorSiting(MXF_COLOR_SITING_COSITING);
+        SetColorSitingMod(MXF_COLOR_SITING_COSITING);
     cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
     if (!(mFlavour & MXFDESC_AVID_FLAVOUR) &&
         SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_MIXED_FIELDS)
@@ -425,7 +425,7 @@ void UncCDCIMXFDescriptorHelper::UpdateFileDescriptor()
     if (!mxf_equals_ul(&SUPPORTED_ESSENCE[mEssenceIndex].coding_eq, &g_Null_UL) &&
         (!(mFlavour & MXFDESC_AVID_FLAVOUR) || (mEssenceType != UNC_SD && mEssenceType != AVID_10BIT_UNC_SD)))
     {
-        SetCodingEquations(SUPPORTED_ESSENCE[mEssenceIndex].coding_eq);
+        SetCodingEquationsMod(SUPPORTED_ESSENCE[mEssenceIndex].coding_eq);
     }
     if (!(mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setSignalStandard(SUPPORTED_ESSENCE[mEssenceIndex].signal_standard);
@@ -449,7 +449,7 @@ void UncCDCIMXFDescriptorHelper::UpdateFileDescriptor()
 
 uint32_t UncCDCIMXFDescriptorHelper::GetImageAlignmentOffset()
 {
-    if (mImageAlignmentOffsetSet)
+    if (BMX_OPT_PROP_IS_SET(mImageAlignmentOffset))
         return mImageAlignmentOffset;
     else if ((mFlavour & MXFDESC_AVID_FLAVOUR))
         return AVID_IMAGE_ALIGNMENT;
@@ -459,7 +459,7 @@ uint32_t UncCDCIMXFDescriptorHelper::GetImageAlignmentOffset()
 
 uint32_t UncCDCIMXFDescriptorHelper::GetImageStartOffset()
 {
-    if (mImageStartOffsetSet)
+    if (BMX_OPT_PROP_IS_SET(mImageStartOffset))
         return mImageStartOffset;
     else if (!(mFlavour & MXFDESC_AVID_FLAVOUR))
         return 0;

@@ -236,7 +236,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     BMX_ASSERT((mFlavour & MXFDESC_AVID_FLAVOUR) || mpeg_descriptor);
 
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
-    SetCodingEquations(ITUR_BT709_CODING_EQ);
+    SetCodingEquationsMod(ITUR_BT709_CODING_EQ);
     if (!(mFlavour & MXFDESC_AVID_FLAVOUR)) {
         if (mEssenceType == MPEG2LG_422P_HL_720P ||
             mEssenceType == MPEG2LG_MP_HL_720P)
@@ -255,14 +255,14 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     {
         // 4:2:2
         if ((mFlavour & MXFDESC_AVID_FLAVOUR))
-            SetColorSiting(MXF_COLOR_SITING_REC601);
+            SetColorSitingMod(MXF_COLOR_SITING_REC601);
         else
-            SetColorSiting(MXF_COLOR_SITING_COSITING);
+            SetColorSitingMod(MXF_COLOR_SITING_COSITING);
     }
     else
     {
         // 4:2:0
-        SetColorSiting(MXF_COLOR_SITING_VERT_MIDPOINT);
+        SetColorSitingMod(MXF_COLOR_SITING_VERT_MIDPOINT);
     }
     switch (mEssenceType)
     {

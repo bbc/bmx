@@ -118,6 +118,13 @@ bool parse_rdd6_lines(const char *lines_str, uint16_t *lines);
 bool parse_track_indexes(const char *tracks_str, std::set<uint32_t> *track_indexes);
 bool parse_mxf_auid(const char *mxf_auid_str, UL *mxf_auid);
 bool parse_bytes_size(const char *size_str, int64_t *size_out);
+bool parse_signal_standard(const char *str, MXFSignalStandard *value);
+bool parse_frame_layout(const char *str, MXFFrameLayout *value);
+bool parse_field_dominance(const char *str, uint8_t *field_num);
+bool parse_transfer_ch(const char *str, UL *label);
+bool parse_coding_equations(const char *str, UL *label);
+bool parse_color_primaries(const char *str, UL *label);
+bool parse_color_siting(const char *str, MXFColorSiting *value);
 
 std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def);
 

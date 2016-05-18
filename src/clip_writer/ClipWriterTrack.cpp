@@ -610,6 +610,55 @@ void ClipWriterTrack::SetInputHeight(uint32_t height)
     }
 }
 
+PictureMXFDescriptorHelper* ClipWriterTrack::GetPictureDescriptorHelper()
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1APictureTrack *picture_track = dynamic_cast<OP1APictureTrack*>(mOP1ATrack);
+            if (picture_track)
+                return picture_track->GetPictureDescriptorHelper();
+            break;
+        }
+        case CW_AS02_CLIP_TYPE:
+        {
+            AS02PictureTrack *picture_track = dynamic_cast<AS02PictureTrack*>(mAS02Track);
+            if (picture_track)
+                return picture_track->GetPictureDescriptorHelper();
+            break;
+        }
+        case CW_AVID_CLIP_TYPE:
+        {
+            AvidPictureTrack *picture_track = dynamic_cast<AvidPictureTrack*>(mAvidTrack);
+            if (picture_track)
+                return picture_track->GetPictureDescriptorHelper();
+            break;
+        }
+        case CW_D10_CLIP_TYPE:
+        {
+            D10MPEGTrack *picture_track = dynamic_cast<D10MPEGTrack*>(mD10Track);
+            if (picture_track)
+                return picture_track->GetPictureDescriptorHelper();
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        {
+            RDD9MPEG2LGTrack *picture_track = dynamic_cast<RDD9MPEG2LGTrack*>(mRDD9Track);
+            if (picture_track)
+                return picture_track->GetPictureDescriptorHelper();
+            break;
+        }
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return 0;
+}
+
 void ClipWriterTrack::SetAES3Mapping(bool enable)
 {
     switch (mClipType)

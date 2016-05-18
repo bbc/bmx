@@ -199,12 +199,12 @@ void MJPEGMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
     cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_ITU601);
     cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
-    SetColorSiting(MXF_COLOR_SITING_REC601);
+    SetColorSitingMod(MXF_COLOR_SITING_REC601);
     cdci_descriptor->setComponentDepth(8);
     cdci_descriptor->setBlackRefLevel(16);
     cdci_descriptor->setWhiteReflevel(235);
     cdci_descriptor->setColorRange(225);
-    SetCodingEquations(ITUR_BT601_CODING_EQ);
+    SetCodingEquationsMod(ITUR_BT601_CODING_EQ);
     cdci_descriptor->setStoredWidth(SUPPORTED_ESSENCE[mEssenceIndex].stored_width);
     cdci_descriptor->setStoredHeight(SUPPORTED_ESSENCE[mEssenceIndex].stored_height);
     cdci_descriptor->setDisplayWidth(cdci_descriptor->getStoredWidth());

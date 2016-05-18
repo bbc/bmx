@@ -34,6 +34,7 @@
 
 
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
+#include <bmx/BMXTypes.h>
 
 
 
@@ -64,8 +65,18 @@ public:
 
 public:
     // configure and create new descriptor
-    void SetAspectRatio(mxfRational aspect_ratio);  // default 16/9
-    void SetAFD(uint8_t afd);                       // default not set
+    void SetAspectRatio(mxfRational aspect_ratio);
+    void SetAFD(uint8_t afd);
+    void SetSignalStandard(MXFSignalStandard signal_standard);
+    void SetFrameLayout(MXFFrameLayout frame_layout);
+    void SetFieldDominance(uint8_t field_num);
+    void SetTransferCharacteristic(mxfUL label);
+    void SetCodingEquations(mxfUL label);
+    void SetColorPrimaries(mxfUL label);
+    void SetColorSiting(MXFColorSiting color_siting);
+    void SetBlackRefLevel(uint32_t level);
+    void SetWhiteRefLevel(uint32_t level);
+    void SetColorRange(uint32_t range);
 
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
     virtual void UpdateFileDescriptor();
@@ -101,19 +112,26 @@ public:
 protected:
     virtual mxfUL ChooseEssenceContainerUL() const;
 
-    void SetCodingEquations(mxfUL label);
-    void SetColorSiting(uint8_t color_siting);
+    void SetCodingEquationsMod(mxfUL label);
+    void SetColorSitingMod(uint8_t color_siting);
 
 protected:
-    mxfRational mAspectRatio;
-    uint8_t mAFD;
     int32_t mAvidResolutionId;
-    uint32_t mImageAlignmentOffset;
-    bool mImageAlignmentOffsetSet;
-    uint32_t mImageStartOffset;
-    bool mImageStartOffsetSet;
-    uint32_t mImageEndOffset;
-    bool mImageEndOffsetSet;
+    BMX_OPT_PROP_DECL(mxfRational, mAspectRatio);
+    BMX_OPT_PROP_DECL(uint8_t, mAFD);
+    BMX_OPT_PROP_DECL(uint32_t, mImageAlignmentOffset);
+    BMX_OPT_PROP_DECL(uint32_t, mImageStartOffset);
+    BMX_OPT_PROP_DECL(uint32_t, mImageEndOffset);
+    BMX_OPT_PROP_DECL(MXFSignalStandard, mSignalStandard);
+    BMX_OPT_PROP_DECL(MXFFrameLayout, mFrameLayout);
+    BMX_OPT_PROP_DECL(uint8_t, mFieldDominance);
+    BMX_OPT_PROP_DECL(mxfUL, mTransferCh);
+    BMX_OPT_PROP_DECL(mxfUL, mCodingEquations);
+    BMX_OPT_PROP_DECL(mxfUL, mColorPrimaries);
+    BMX_OPT_PROP_DECL(MXFColorSiting, mColorSiting);
+    BMX_OPT_PROP_DECL(uint32_t, mBlackRefLevel);
+    BMX_OPT_PROP_DECL(uint32_t, mWhiteRefLevel);
+    BMX_OPT_PROP_DECL(uint32_t, mColorRange);
 };
 
 

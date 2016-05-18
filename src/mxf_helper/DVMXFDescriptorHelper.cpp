@@ -256,7 +256,7 @@ void DVMXFDescriptorHelper::UpdateFileDescriptor()
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(cdci_descriptor);
 
-    SetColorSiting(SUPPORTED_ESSENCE[mEssenceIndex].color_siting);
+    SetColorSitingMod(SUPPORTED_ESSENCE[mEssenceIndex].color_siting);
     cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
     cdci_descriptor->setImageAlignmentOffset(1);
     cdci_descriptor->setComponentDepth(mComponentDepth);
@@ -264,7 +264,7 @@ void DVMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setWhiteReflevel(235);
     cdci_descriptor->setColorRange(225);
     cdci_descriptor->setSignalStandard(SUPPORTED_ESSENCE[mEssenceIndex].signal_standard);
-    SetCodingEquations(SUPPORTED_ESSENCE[mEssenceIndex].coding_eq);
+    SetCodingEquationsMod(SUPPORTED_ESSENCE[mEssenceIndex].coding_eq);
     cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0]);
     cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1]);
     if ((mFlavour & MXFDESC_AVID_FLAVOUR))

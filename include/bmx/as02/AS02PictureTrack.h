@@ -53,6 +53,8 @@ public:
     void SetPartitionInterval(int64_t frame_count);     // default 0 (single partition)
     void SetAFD(uint8_t afd);                           // default not set
 
+    PictureMXFDescriptorHelper* GetPictureDescriptorHelper() { return mPictureDescriptorHelper; }
+
 public:
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
     virtual void WriteSample(const CDataBuffer *data_array, uint32_t array_size);

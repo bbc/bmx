@@ -332,7 +332,7 @@ void UncRGBAMXFDescriptorHelper::UpdateFileDescriptor()
 
 uint32_t UncRGBAMXFDescriptorHelper::GetImageAlignmentOffset()
 {
-    if (mImageAlignmentOffsetSet)
+    if (BMX_OPT_PROP_IS_SET(mImageAlignmentOffset))
         return mImageAlignmentOffset;
     else if ((mFlavour & MXFDESC_AVID_FLAVOUR))
         return AVID_IMAGE_ALIGNMENT;
@@ -342,7 +342,7 @@ uint32_t UncRGBAMXFDescriptorHelper::GetImageAlignmentOffset()
 
 uint32_t UncRGBAMXFDescriptorHelper::GetImageEndOffset()
 {
-    if (mImageEndOffsetSet)
+    if (BMX_OPT_PROP_IS_SET(mImageEndOffset))
         return mImageEndOffset;
     else if (!(mFlavour & MXFDESC_AVID_FLAVOUR))
         return 0;

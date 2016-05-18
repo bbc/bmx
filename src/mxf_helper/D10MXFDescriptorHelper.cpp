@@ -248,7 +248,7 @@ void D10MXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setComponentDepth(8);
     cdci_descriptor->setHorizontalSubsampling(2);
     cdci_descriptor->setVerticalSubsampling(1);
-    SetColorSiting(MXF_COLOR_SITING_REC601);
+    SetColorSitingMod(MXF_COLOR_SITING_REC601);
     cdci_descriptor->setReversedByteOrder(false);
     cdci_descriptor->setPaddingBits(0);
     cdci_descriptor->setBlackRefLevel(16);

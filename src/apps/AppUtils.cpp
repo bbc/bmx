@@ -80,6 +80,12 @@ typedef struct
     const char *str;
 } ClipWriterTypeStringMap;
 
+typedef struct
+{
+    const char *name;
+    UL label;
+} NameLabelMap;
+
 
 static const ColorMap COLOR_MAP[] =
 {
@@ -796,6 +802,148 @@ bool bmx::parse_bytes_size(const char *size_str, int64_t *size_out)
 
     *size_out = (int64_t)(sizef + 0.5);
     return true;
+}
+
+bool bmx::parse_signal_standard(const char *str, MXFSignalStandard *value)
+{
+    static const char* enum_strings[] =
+    {
+        "none", "bt601", "bt1358", "st347", "st274", "st296", "st349", "st428"
+    };
+
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(enum_strings); i++) {
+        if (strcmp(str, enum_strings[i]) == 0) {
+            *value = (MXFSignalStandard)i;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool bmx::parse_frame_layout(const char *str, MXFFrameLayout *value)
+{
+    static const char* enum_strings[] =
+    {
+        "fullframe", "separatefield", "singlefield", "mixedfield", "segmentedframe"
+    };
+
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(enum_strings); i++) {
+        if (strcmp(str, enum_strings[i]) == 0) {
+            *value = (MXFFrameLayout)i;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool bmx::parse_field_dominance(const char *str, uint8_t *field_num)
+{
+    int value;
+    if (sscanf(str, "%d", &value) == 1 && value >= 1 && value <= 2) {
+        *field_num = value;
+        return true;
+    }
+
+    return false;
+}
+
+bool bmx::parse_transfer_ch(const char *str, UL *label)
+{
+    static const NameLabelMap name_label_map[] =
+    {
+        {"bt470",     ITUR_BT470_TRANSFER_CH},
+        {"bt709",     ITUR_BT709_TRANSFER_CH},
+        {"st240",     SMPTE240M_TRANSFER_CH},
+        {"st274",     SMPTE_274M_296M_TRANSFER_CH},
+        {"bt1361",    ITU1361_TRANSFER_CH},
+        {"linear",    LINEAR_TRANSFER_CH},
+        {"dcdm",      SMPTE_DCDM_TRANSFER_CH},
+        {"iec61966",  IEC6196624_XVYCC_TRANSFER_CH},
+        {"bt2020",    ITU2020_TRANSFER_CH},
+        {"st2084",    SMPTE_ST2084_TRANSFER_CH},
+    };
+
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(name_label_map); i++) {
+        if (strcmp(str, name_label_map[i].name) == 0) {
+            *label = name_label_map[i].label;
+            return true;
+        }
+    }
+
+    return parse_mxf_auid(str, label);
+}
+
+bool bmx::parse_coding_equations(const char *str, UL *label)
+{
+    static const NameLabelMap name_label_map[] =
+    {
+        {"bt601",   ITUR_BT601_CODING_EQ},
+        {"bt709",   ITUR_BT709_CODING_EQ},
+        {"st240",   SMPTE_240M_CODING_EQ},
+        {"ycgco",   Y_CG_CO_CODING_EQ},
+        {"gbr",     GBR_CODING_EQ},
+        {"bt2020",  ITU2020_NCL_CODING_EQ},
+    };
+
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(name_label_map); i++) {
+        if (strcmp(str, name_label_map[i].name) == 0) {
+            *label = name_label_map[i].label;
+            return true;
+        }
+    }
+
+    return parse_mxf_auid(str, label);
+}
+
+bool bmx::parse_color_primaries(const char *str, UL *label)
+{
+    static const NameLabelMap name_label_map[] =
+    {
+        {"st170",   SMPTE170M_COLOR_PRIM},
+        {"bt470",   ITU470_PAL_COLOR_PRIM},
+        {"bt709",   ITU709_COLOR_PRIM},
+        {"bt2020",  ITU2020_COLOR_PRIM},
+        {"dcdm",    SMPTE_DCDM_COLOR_PRIM},
+        {"p3",      P3D65_COLOR_PRIM},
+    };
+
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(name_label_map); i++) {
+        if (strcmp(str, name_label_map[i].name) == 0) {
+            *label = name_label_map[i].label;
+            return true;
+        }
+    }
+
+    return parse_mxf_auid(str, label);
+}
+
+bool bmx::parse_color_siting(const char *str, MXFColorSiting *value)
+{
+    static const char* enum_strings[] =
+    {
+        "cositing", "horizmp", "3tap", "quincunx", "bt601", "linealt", "vertmp"
+    };
+
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(enum_strings); i++) {
+        if (strcmp(str, enum_strings[i]) == 0) {
+            *value = (MXFColorSiting)i;
+            return true;
+        }
+    }
+    if (strcmp(str, "unknown") == 0) {
+        *value = MXF_COLOR_SITING_UNKNOWN;
+        return true;
+    }
+
+    return false;
 }
 
 

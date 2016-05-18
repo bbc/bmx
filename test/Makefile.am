@@ -1,6 +1,6 @@
 SUBDIRS = . as02 as11 mxf_op1a rdd9_mxf d10_mxf avid_mxf mxf_reader \
 	wave growing_file rdd6 ard_zdf_hdf text_object bmxtranswrap mca \
-	as10
+	as10 misc
 
 check_PROGRAMS = create_test_essence file_truncate file_md5
 

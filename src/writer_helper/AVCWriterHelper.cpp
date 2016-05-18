@@ -319,18 +319,18 @@ void AVCWriterHelper::CompleteProcess()
 
     if (!cdci_descriptor->haveFrameLayout()) {
         // TODO: not sure progressive/interlaced can be deduced from the coding parameters
-        if (mPictureType == FRAME_PICTURE && mCodingType == FRAME_CODING) {
+        if (mPictureType == FRAME_PICTURE && mCodingType == FRAME_CODING)
             cdci_descriptor->setFrameLayout(MXF_FULL_FRAME);
-        } else {
-            // TODO: this is extremenly messy!
-            if (cdci_descriptor->haveStoredHeight())
-                cdci_descriptor->setStoredHeight(cdci_descriptor->getStoredHeight() / 2);
-            if (cdci_descriptor->haveDisplayHeight())
-                cdci_descriptor->setDisplayHeight(cdci_descriptor->getDisplayHeight() / 2);
-            if (cdci_descriptor->haveSampledHeight())
-                cdci_descriptor->setSampledHeight(cdci_descriptor->getSampledHeight() / 2);
+        else
             cdci_descriptor->setFrameLayout(MXF_SEPARATE_FIELDS);
-        }
+    }
+    if (cdci_descriptor->getFrameLayout() == MXF_SEPARATE_FIELDS) {
+        if (cdci_descriptor->haveStoredHeight())
+            cdci_descriptor->setStoredHeight(cdci_descriptor->getStoredHeight() / 2);
+        if (cdci_descriptor->haveDisplayHeight())
+            cdci_descriptor->setDisplayHeight(cdci_descriptor->getDisplayHeight() / 2);
+        if (cdci_descriptor->haveSampledHeight())
+            cdci_descriptor->setSampledHeight(cdci_descriptor->getSampledHeight() / 2);
     }
     if (!cdci_descriptor->haveVideoLineMap()) {
         // TODO: take signal standard into account
@@ -338,12 +338,15 @@ void AVCWriterHelper::CompleteProcess()
             cdci_descriptor->appendVideoLineMap(1);
             cdci_descriptor->appendVideoLineMap(0);
         } else {
+            int32_t height_factor = 1;
+            if (cdci_descriptor->getFrameLayout() == MXF_MIXED_FIELDS ||
+                cdci_descriptor->getFrameLayout() == MXF_SEGMENTED_FRAME)
+            {
+                height_factor = 2;
+            }
             cdci_descriptor->appendVideoLineMap(1);
-            // TODO: use Display height? assume will always have display/stored height at this point?
             if (cdci_descriptor->haveDisplayHeight())
-              cdci_descriptor->appendVideoLineMap((int32_t)(cdci_descriptor->getDisplayHeight() + 1));
-            else if (cdci_descriptor->haveStoredHeight())
-              cdci_descriptor->appendVideoLineMap((int32_t)(cdci_descriptor->getStoredHeight() + 1));
+              cdci_descriptor->appendVideoLineMap((int32_t)(cdci_descriptor->getDisplayHeight() / height_factor + 1));
             else
               cdci_descriptor->appendVideoLineMap(0);
         }

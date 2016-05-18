@@ -174,15 +174,22 @@ PictureMXFDescriptorHelper::PictureMXFDescriptorHelper()
 : MXFDescriptorHelper()
 {
     mEssenceType = PICTURE_ESSENCE;
-    mAspectRatio = ASPECT_RATIO_16_9;
-    mAFD = 0;
     mAvidResolutionId = 0;
-    mImageAlignmentOffset = 1;
-    mImageAlignmentOffsetSet = false;
-    mImageStartOffset = 0;
-    mImageStartOffsetSet = false;
-    mImageEndOffset = 0;
-    mImageEndOffsetSet = false;
+    BMX_OPT_PROP_DEFAULT(mAspectRatio, ASPECT_RATIO_16_9);
+    BMX_OPT_PROP_DEFAULT(mAFD, 0);
+    BMX_OPT_PROP_DEFAULT(mImageAlignmentOffset, 1);
+    BMX_OPT_PROP_DEFAULT(mImageStartOffset, 0);
+    BMX_OPT_PROP_DEFAULT(mImageEndOffset, 0);
+    BMX_OPT_PROP_DEFAULT(mSignalStandard, MXF_SIGNAL_STANDARD_NONE);
+    BMX_OPT_PROP_DEFAULT(mFrameLayout, MXF_FULL_FRAME);
+    BMX_OPT_PROP_DEFAULT(mColorSiting, MXF_COLOR_SITING_UNKNOWN);
+    BMX_OPT_PROP_DEFAULT(mFieldDominance, 1);
+    BMX_OPT_PROP_DEFAULT(mBlackRefLevel, 0);
+    BMX_OPT_PROP_DEFAULT(mWhiteRefLevel, 0);
+    BMX_OPT_PROP_DEFAULT(mColorRange, 0);
+    BMX_OPT_PROP_DEFAULT(mTransferCh, g_Null_UL);
+    BMX_OPT_PROP_DEFAULT(mCodingEquations, g_Null_UL);
+    BMX_OPT_PROP_DEFAULT(mColorPrimaries, g_Null_UL);
 }
 
 PictureMXFDescriptorHelper::~PictureMXFDescriptorHelper()
@@ -196,46 +203,106 @@ void PictureMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uin
 
     GenericPictureEssenceDescriptor *picture_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(file_descriptor);
     BMX_ASSERT(picture_descriptor);
-
-    if (picture_descriptor->haveActiveFormatDescriptor()) {
-        decode_afd(picture_descriptor->getActiveFormatDescriptor(), mxf_version, &mAFD, &mAspectRatio);
-    } else {
-        mAFD = 0;
-        mAspectRatio = ZERO_RATIONAL;
-    }
+    CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(picture_descriptor);
 
     if (picture_descriptor->haveAspectRatio())
-        mAspectRatio = picture_descriptor->getAspectRatio();
-
+        BMX_OPT_PROP_SET(mAspectRatio, picture_descriptor->getAspectRatio());
+    if (picture_descriptor->haveActiveFormatDescriptor()) {
+        mxfRational afd_aspect_ratio;
+        decode_afd(picture_descriptor->getActiveFormatDescriptor(), mxf_version, &mAFD, &afd_aspect_ratio);
+        BMX_OPT_PROP_MARK(mAFD, true);
+        // the Aspect Ratio property takes precedence over the value encoded in the AFD
+        if (!BMX_OPT_PROP_IS_SET(mAspectRatio))
+            mAspectRatio = afd_aspect_ratio;
+    }
     if (picture_descriptor->haveImageAlignmentOffset())
-        mImageAlignmentOffset = picture_descriptor->getImageAlignmentOffset();
-    else
-        mImageAlignmentOffset = 1;
-    mImageAlignmentOffsetSet = true;
-
+        BMX_OPT_PROP_SET(mImageAlignmentOffset, picture_descriptor->getImageAlignmentOffset());
     if (picture_descriptor->haveImageStartOffset())
-        mImageStartOffset = picture_descriptor->getImageStartOffset();
-    else
-        mImageStartOffset = 0;
-    mImageStartOffsetSet = true;
-
+        BMX_OPT_PROP_SET(mImageStartOffset, picture_descriptor->getImageStartOffset());
     if (picture_descriptor->haveImageEndOffset())
-        mImageEndOffset = picture_descriptor->getImageEndOffset();
-    else
-        mImageEndOffset = 0;
-    mImageEndOffsetSet = true;
+        BMX_OPT_PROP_SET(mImageEndOffset, picture_descriptor->getImageEndOffset());
+    if (picture_descriptor->haveSignalStandard())
+        BMX_OPT_PROP_SET(mSignalStandard, picture_descriptor->getSignalStandard());
+    if (picture_descriptor->haveFrameLayout())
+        BMX_OPT_PROP_SET(mFrameLayout, picture_descriptor->getFrameLayout());
+    if (picture_descriptor->haveFieldDominance())
+        BMX_OPT_PROP_SET(mFieldDominance, picture_descriptor->getFieldDominance());
+    if (picture_descriptor->haveCaptureGamma())
+        BMX_OPT_PROP_SET(mTransferCh, picture_descriptor->getCaptureGamma());
+    if (picture_descriptor->haveCodingEquations())
+        BMX_OPT_PROP_SET(mCodingEquations, picture_descriptor->getCodingEquations());
+    if (picture_descriptor->haveColorPrimaries())
+        BMX_OPT_PROP_SET(mColorPrimaries, picture_descriptor->getColorPrimaries());
+    if (cdci_descriptor) {
+        if (cdci_descriptor->haveColorSiting())
+            BMX_OPT_PROP_SET(mColorSiting, cdci_descriptor->getColorSiting());
+        if (cdci_descriptor->haveBlackRefLevel())
+            BMX_OPT_PROP_SET(mBlackRefLevel, cdci_descriptor->getBlackRefLevel());
+        if (cdci_descriptor->haveWhiteReflevel())
+            BMX_OPT_PROP_SET(mWhiteRefLevel, cdci_descriptor->getWhiteReflevel());
+        if (cdci_descriptor->haveColorRange())
+            BMX_OPT_PROP_SET(mColorRange, cdci_descriptor->getColorRange());
+    }
 }
 
 void PictureMXFDescriptorHelper::SetAspectRatio(mxfRational aspect_ratio)
 {
-    BMX_ASSERT(!mFileDescriptor);
-
-    mAspectRatio = aspect_ratio;
+    BMX_OPT_PROP_SET(mAspectRatio, aspect_ratio);
 }
 
 void PictureMXFDescriptorHelper::SetAFD(uint8_t afd)
 {
-    mAFD = afd;
+    BMX_OPT_PROP_SET(mAFD, afd);
+}
+
+void PictureMXFDescriptorHelper::SetSignalStandard(MXFSignalStandard signal_standard)
+{
+    BMX_OPT_PROP_SET(mSignalStandard, signal_standard);
+}
+
+void PictureMXFDescriptorHelper::SetFrameLayout(MXFFrameLayout frame_layout)
+{
+    BMX_OPT_PROP_SET(mFrameLayout, frame_layout);
+}
+
+void PictureMXFDescriptorHelper::SetFieldDominance(uint8_t field_num)
+{
+    BMX_OPT_PROP_SET(mFieldDominance, field_num);
+}
+
+void PictureMXFDescriptorHelper::SetTransferCharacteristic(mxfUL label)
+{
+    BMX_OPT_PROP_SET(mTransferCh, label);
+}
+
+void PictureMXFDescriptorHelper::SetCodingEquations(mxfUL label)
+{
+    BMX_OPT_PROP_SET(mCodingEquations, label);
+}
+
+void PictureMXFDescriptorHelper::SetColorPrimaries(mxfUL label)
+{
+    BMX_OPT_PROP_SET(mColorPrimaries, label);
+}
+
+void PictureMXFDescriptorHelper::SetColorSiting(MXFColorSiting color_siting)
+{
+    BMX_OPT_PROP_SET(mColorSiting, color_siting);
+}
+
+void PictureMXFDescriptorHelper::SetBlackRefLevel(uint32_t level)
+{
+    BMX_OPT_PROP_SET(mBlackRefLevel, level);
+}
+
+void PictureMXFDescriptorHelper::SetWhiteRefLevel(uint32_t level)
+{
+    BMX_OPT_PROP_SET(mWhiteRefLevel, level);
+}
+
+void PictureMXFDescriptorHelper::SetColorRange(uint32_t range)
+{
+    BMX_OPT_PROP_SET(mColorRange, range);
 }
 
 FileDescriptor* PictureMXFDescriptorHelper::CreateFileDescriptor(HeaderMetadata *header_metadata)
@@ -253,10 +320,34 @@ void PictureMXFDescriptorHelper::UpdateFileDescriptor()
 
     GenericPictureEssenceDescriptor *picture_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(picture_descriptor);
+    CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
 
     picture_descriptor->setAspectRatio(mAspectRatio);
-    if (mAFD)
+    // TODO: what should be done if the source AFD value's aspect ratio != mAspectRatio?
+    if (BMX_OPT_PROP_IS_SET(mAFD))
         picture_descriptor->setActiveFormatDescriptor(encode_afd(mAFD, mAspectRatio));
+    if (BMX_OPT_PROP_IS_SET(mSignalStandard))
+        picture_descriptor->setSignalStandard(mSignalStandard);
+    if (BMX_OPT_PROP_IS_SET(mFrameLayout))
+        picture_descriptor->setFrameLayout(mFrameLayout);
+    if (BMX_OPT_PROP_IS_SET(mFieldDominance))
+        picture_descriptor->setFieldDominance(mFieldDominance);
+    if (BMX_OPT_PROP_IS_SET(mTransferCh))
+        picture_descriptor->setCaptureGamma(mTransferCh);
+    if (BMX_OPT_PROP_IS_SET(mCodingEquations))
+        SetCodingEquationsMod(mCodingEquations);
+    if (BMX_OPT_PROP_IS_SET(mColorPrimaries))
+        picture_descriptor->setColorPrimaries(mColorPrimaries);
+    if (cdci_descriptor) {
+        if (BMX_OPT_PROP_IS_SET(mColorSiting))
+            SetColorSitingMod(mColorSiting);
+        if (BMX_OPT_PROP_IS_SET(mBlackRefLevel))
+            cdci_descriptor->setBlackRefLevel(mBlackRefLevel);
+        if (BMX_OPT_PROP_IS_SET(mWhiteRefLevel))
+            cdci_descriptor->setWhiteReflevel(mWhiteRefLevel);
+        if (BMX_OPT_PROP_IS_SET(mColorRange))
+            cdci_descriptor->setColorRange(mColorRange);
+    }
 
     if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
         if (GetImageAlignmentOffset() > 1)
@@ -349,7 +440,7 @@ mxfUL PictureMXFDescriptorHelper::ChooseEssenceContainerUL() const
     return g_Null_UL;
 }
 
-void PictureMXFDescriptorHelper::SetCodingEquations(mxfUL label)
+void PictureMXFDescriptorHelper::SetCodingEquationsMod(mxfUL label)
 {
     GenericPictureEssenceDescriptor *picture_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(picture_descriptor);
@@ -367,7 +458,7 @@ void PictureMXFDescriptorHelper::SetCodingEquations(mxfUL label)
     }
 }
 
-void PictureMXFDescriptorHelper::SetColorSiting(uint8_t color_siting)
+void PictureMXFDescriptorHelper::SetColorSitingMod(uint8_t color_siting)
 {
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
     BMX_ASSERT(cdci_descriptor);
@@ -385,4 +476,3 @@ void PictureMXFDescriptorHelper::SetColorSiting(uint8_t color_siting)
             cdci_descriptor->setColorSiting(color_siting);
     }
 }
-

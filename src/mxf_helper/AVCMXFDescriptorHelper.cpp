@@ -213,43 +213,44 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
             cdci_descriptor->setHorizontalSubsampling(2);
             cdci_descriptor->setVerticalSubsampling(2);
             // TODO: assuming chroma sample locations are identical on both fields
-            switch (essence_parser->GetChromaLocation())
-            {
-                case 0:
-                    SetColorSiting(MXF_COLOR_SITING_VERT_MIDPOINT);
-                    break;
-                case 1:
-                    SetColorSiting(MXF_COLOR_SITING_QUINCUNX);
-                    break;
-                case 2:
-                    SetColorSiting(MXF_COLOR_SITING_COSITING);
-                    break;
-                case 3:
-                    SetColorSiting(MXF_COLOR_SITING_HORIZ_MIDPOINT);
-                    break;
-                default:
-                    break;
+            if (!cdci_descriptor->haveColorSiting()) {
+                switch (essence_parser->GetChromaLocation())
+                {
+                    case 0:
+                        SetColorSitingMod(MXF_COLOR_SITING_VERT_MIDPOINT);
+                        break;
+                    case 1:
+                        SetColorSitingMod(MXF_COLOR_SITING_QUINCUNX);
+                        break;
+                    case 2:
+                        SetColorSitingMod(MXF_COLOR_SITING_COSITING);
+                        break;
+                    case 3:
+                        SetColorSitingMod(MXF_COLOR_SITING_HORIZ_MIDPOINT);
+                        break;
+                    default:
+                        break;
+                }
             }
             break;
         case 2: // 4:2:2
             cdci_descriptor->setHorizontalSubsampling(2);
             cdci_descriptor->setVerticalSubsampling(1);
-            SetColorSiting(MXF_COLOR_SITING_COSITING);
+            if (!cdci_descriptor->haveColorSiting())
+                SetColorSitingMod(MXF_COLOR_SITING_COSITING);
             break;
         case 3: // 4:4:4
             cdci_descriptor->setHorizontalSubsampling(1);
             cdci_descriptor->setVerticalSubsampling(1);
-            SetColorSiting(MXF_COLOR_SITING_COSITING);
+            if (!cdci_descriptor->haveColorSiting())
+                SetColorSitingMod(MXF_COLOR_SITING_COSITING);
             break;
         case 0: // Monochrome
         default:
             break;
     }
 
-    // TODO
-    // BlackRefLevel;
-    // WhiteRefLevel;
-    // ColorRange;
+    // TODO: extract BlackRefLevel, WhiteRefLevel, ColorRange if possible
 
     if (!cdci_descriptor->haveSignalStandard()) {
         switch (essence_parser->GetVideoFormat()) {
@@ -306,11 +307,11 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
     if (!cdci_descriptor->haveCodingEquations()) {
         switch (essence_parser->GetMatrixCoefficients()) {
             case 1:
-                SetCodingEquations(ITUR_BT709_CODING_EQ);
+                SetCodingEquationsMod(ITUR_BT709_CODING_EQ);
                 break;
             case 5:
             case 6:
-                SetCodingEquations(ITUR_BT601_CODING_EQ);
+                SetCodingEquationsMod(ITUR_BT601_CODING_EQ);
                 break;
             default:
                 break;

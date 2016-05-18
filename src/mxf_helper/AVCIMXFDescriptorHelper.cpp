@@ -363,7 +363,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
         default:
             BMX_ASSERT(false);
     }
-    SetColorSiting(0x00); // coSiting
+    SetColorSitingMod(0x00); // coSiting
     cdci_descriptor->setComponentDepth(10);
     cdci_descriptor->setBlackRefLevel(64);
     cdci_descriptor->setWhiteReflevel(940);
@@ -371,7 +371,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
     if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR))
         cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
     else
-        SetCodingEquations(ITUR_BT709_CODING_EQ);
+        SetCodingEquationsMod(ITUR_BT709_CODING_EQ);
     switch (mEssenceType)
     {
         case AVCI200_1080I:

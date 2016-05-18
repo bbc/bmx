@@ -75,4 +75,3 @@ void OP1APictureTrack::PrepareWrite(uint8_t track_count)
     mCPManager->RegisterPictureTrackElement(mTrackIndex, mEssenceElementKey, true);
     mIndexTable->RegisterPictureTrackElement(mTrackIndex, true, false);
 }
-
