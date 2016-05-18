@@ -62,6 +62,7 @@ public:
 
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
     virtual void UpdateFileDescriptor();
+    virtual void UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc_in);
     void UpdateFileDescriptor(AVCEssenceParser *essence_parser);
 
     mxfpp::AVCSubDescriptor* GetAVCSubDescriptor() const { return mAVCSubDescriptor; }

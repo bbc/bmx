@@ -51,8 +51,6 @@ public:
     void SetAspectRatio(mxfRational aspect_ratio);
     void SetAFD(uint8_t afd);
 
-    PictureMXFDescriptorHelper* GetPictureDescriptorHelper() { return mPictureDescriptorHelper; }
-
 protected:
     virtual void PrepareWrite(uint8_t track_count);
 

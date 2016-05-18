@@ -49,8 +49,6 @@ public:
 
     void SetAspectRatio(mxfRational aspect_ratio);     // default 16/9
 
-    PictureMXFDescriptorHelper* GetPictureDescriptorHelper() { return mPictureDescriptorHelper; }
-
 public:
     bool IsPicture() const { return true; }
 

@@ -63,6 +63,8 @@ public:
 
     void SetOutputTrackNumber(uint32_t track_number);
 
+    MXFDescriptorHelper* GetMXFDescriptorHelper() { return mDescriptorHelper; }
+
 public:
     void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
 

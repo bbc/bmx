@@ -54,8 +54,6 @@ public:
     void SetAspectRatio(mxfRational aspect_ratio);                  // default 16/9
     void SetAFD(uint8_t afd);                                       // default not set
 
-    PictureMXFDescriptorHelper* GetPictureDescriptorHelper() { return mD10DescriptorHelper; }
-
 public:
     mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
 

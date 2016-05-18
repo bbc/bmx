@@ -65,6 +65,8 @@ public:
     virtual bool SupportOutputStartOffset() { return false; }
     void SetOutputStartOffset(int64_t offset);
 
+    MXFDescriptorHelper* GetMXFDescriptorHelper() { return mDescriptorHelper; }
+
 public:
     virtual void PrepareWrite();
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);

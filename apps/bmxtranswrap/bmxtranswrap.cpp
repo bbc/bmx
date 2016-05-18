@@ -430,6 +430,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --black-level <value>   Override or set the black reference level\n");
     fprintf(stderr, "  --white-level <value>   Override or set the white reference level\n");
     fprintf(stderr, "  --color-range <value>   Override or set the color range\n");
+    fprintf(stderr, "  --ignore-input-desc     Don't use input MXF file descriptor properties to fill in missing information\n");
     fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks. See below for details of the <expr> format\n");
     fprintf(stderr, "  --dump-track-map        Dump the output audio track map to stderr.\n");
     fprintf(stderr, "                          The dumps consists of a list output tracks, where each output track channel\n");
@@ -698,6 +699,7 @@ int main(int argc, const char** argv)
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_black_ref_level, 0);
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_white_ref_level, 0);
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_color_range, 0);
+    bool ignore_input_desc = false;
     bool input_file_md5 = false;
     int input_file_flags = 0;
     bool no_precharge = false;
@@ -1365,6 +1367,10 @@ int main(int argc, const char** argv)
             }
             BMX_OPT_PROP_SET(user_color_range, uvalue);
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--ignore-input-desc") == 0)
+        {
+            ignore_input_desc = true;
         }
         else if (strcmp(argv[cmdln_index], "--mic-type") == 0)
         {
@@ -3401,7 +3407,8 @@ int main(int argc, const char** argv)
                     BMX_ASSERT(false);
             }
 
-            PictureMXFDescriptorHelper *pict_helper = clip_track->GetPictureDescriptorHelper();
+            PictureMXFDescriptorHelper *pict_helper =
+                    dynamic_cast<PictureMXFDescriptorHelper*>(clip_track->GetMXFDescriptorHelper());
             if (pict_helper) {
                 if (BMX_OPT_PROP_IS_SET(user_signal_standard))
                     pict_helper->SetSignalStandard(user_signal_standard);
@@ -3463,9 +3470,25 @@ int main(int argc, const char** argv)
         }
 
 
-        // prepare the clip's header metadata
+        // prepare the clip's header metadata and update file descriptors from input where supported
 
         clip->PrepareHeaderMetadata();
+
+        if (!ignore_input_desc) {
+            for (i = 0; i < output_tracks.size(); i++) {
+                OutputTrack *output_track = output_tracks[i];
+                if (output_track->HaveInputTrack()) {
+                    InputTrack *first_track = output_track->GetFirstInputTrack();
+                    const MXFTrackReader *input_track_reader = dynamic_cast<MXFInputTrack*>(first_track)->GetTrackReader();
+                    MXFDescriptorHelper *desc_helper = output_track->GetClipTrack()->GetMXFDescriptorHelper();
+                    if (desc_helper && input_track_reader) {
+                        FileDescriptor *file_desc = input_track_reader->GetFileDescriptor();
+                        if (file_desc)
+                            desc_helper->UpdateFileDescriptor(file_desc);
+                    }
+                }
+            }
+        }
 
 
         // add AS-10/11 descriptive metadata

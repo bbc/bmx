@@ -50,6 +50,10 @@ create_bmxtranswrap()
         -t op1a \
         -f 25 \
         -o $tmpdir/input.mxf \
+        --frame-layout segmentedframe \
+        --black-level 65 \
+        --white-level 938 \
+        --color-range 899 \
         --avc_high_422_intra $tmpdir/video \
         -q 24 --locked true --pcm $tmpdir/audio0 \
         -q 24 --locked true --pcm $tmpdir/audio1 \
@@ -60,14 +64,10 @@ create_bmxtranswrap()
         -t op1a \
         -o $1 \
         --signal-std st428 \
-        --frame-layout segmentedframe \
         --transfer-ch bt2020 \
         --coding-eq gbr \
         --color-prim dcdm \
         --color-siting quincunx \
-        --black-level 65 \
-        --white-level 938 \
-        --color-range 899 \
         $tmpdir/input.mxf \
         >/dev/null
 }

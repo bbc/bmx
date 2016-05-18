@@ -181,6 +181,36 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
 }
 
+void AVCMXFDescriptorHelper::UpdateFileDescriptor(FileDescriptor *file_desc_in)
+{
+    CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
+    BMX_ASSERT(cdci_descriptor);
+
+    CDCIEssenceDescriptor *cdci_desc_in = dynamic_cast<CDCIEssenceDescriptor*>(file_desc_in);
+    BMX_CHECK(cdci_desc_in);
+
+#define SET_PROPERTY(name)                                                \
+    if (cdci_desc_in->have##name() && !cdci_descriptor->have##name())     \
+        cdci_descriptor->set##name(cdci_desc_in->get##name());
+
+    // TODO: move these to PictureMXFDescriptorHelper once this update is supported across all formats
+
+    SET_PROPERTY(SignalStandard)
+    SET_PROPERTY(FrameLayout)
+    SET_PROPERTY(AspectRatio)
+    SET_PROPERTY(ActiveFormatDescriptor)
+    SET_PROPERTY(VideoLineMap)
+    SET_PROPERTY(FieldDominance)
+    SET_PROPERTY(CaptureGamma)
+    SET_PROPERTY(CodingEquations)
+    SET_PROPERTY(ColorPrimaries)
+    if (!cdci_descriptor->haveColorSiting() && cdci_desc_in->haveColorSiting())
+        SetColorSitingMod(cdci_desc_in->getColorSiting());
+    SET_PROPERTY(BlackRefLevel)
+    SET_PROPERTY(WhiteReflevel)
+    SET_PROPERTY(ColorRange)
+}
+
 void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_parser)
 {
     UpdateFileDescriptor();
@@ -203,10 +233,11 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
 
     // TODO: Display/StoredF2Offset
     // TODO: need to parse the pic_timing SEI to set this
-    // cdci_descriptor->setFieldDominance(1);
+    //if (!cdci_descriptor->haveFieldDominance()) ...
 
     cdci_descriptor->setComponentDepth(essence_parser->GetComponentDepth());
 
+    // TODO: check existing chroma siting doesn't contradict chroma format
     switch (essence_parser->GetChromaFormat())
     {
         case 1: // 4:2:0
@@ -251,6 +282,7 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
     }
 
     // TODO: extract BlackRefLevel, WhiteRefLevel, ColorRange if possible
+    // TODO: check levels and range don't component depth (and possibly full range flag?)
 
     if (!cdci_descriptor->haveSignalStandard()) {
         switch (essence_parser->GetVideoFormat()) {

@@ -56,8 +56,6 @@ public:
     void SetAFD(uint8_t afd);                           // default not set
     void SetValidator(EssenceValidator *validator);
 
-    PictureMXFDescriptorHelper* GetPictureDescriptorHelper() { return mPictureDescriptorHelper; }
-
 protected:
     virtual void PrepareWrite(uint8_t track_count);
     virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);

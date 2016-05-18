@@ -84,6 +84,7 @@ public:
 public:
     // General properties
     void SetOutputTrackNumber(uint32_t track_number);
+    MXFDescriptorHelper* GetMXFDescriptorHelper();
 
     // Picture properties
     void SetAspectRatio(Rational aspect_ratio);                     // default 16/9
@@ -94,7 +95,6 @@ public:
     void SetUseAVCSubDescriptor(bool enable);                       // default false
     void SetAFD(uint8_t afd);                                       // default not set
     void SetInputHeight(uint32_t height);                           // uncompressed; default 0
-    PictureMXFDescriptorHelper* GetPictureDescriptorHelper();
 
     // Sound properties
     void SetAES3Mapping(bool enable);               // default BWF mapping
