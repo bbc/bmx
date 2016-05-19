@@ -146,6 +146,7 @@ public:
 
     void AddOffset(int64_t offset);
     void AddOffset(int64_t offset, Rational rate);
+    void AddDuration(bool drop_frame, int16_t hour, int16_t min, int16_t sec, int16_t frame);
 
     int64_t GetMaxOffset() const;
 

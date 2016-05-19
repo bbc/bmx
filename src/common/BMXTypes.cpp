@@ -175,6 +175,34 @@ void Timecode::AddOffset(int64_t offset, Rational rate)
     AddOffset(convert_position(offset, mRoundedTCBase, get_rounded_tc_base(rate), ROUND_AUTO));
 }
 
+void Timecode::AddDuration(bool drop_frame, int16_t hour, int16_t min, int16_t sec, int16_t frame)
+{
+    // convert 'this' timecode to the same drop_frame, add the time elements and then re-init 'this' with the result
+
+    Timecode adj_tc(mRoundedTCBase, drop_frame, mOffset);
+
+    int32_t new_hour  = adj_tc.GetHour()  + hour;
+    int16_t new_min   = adj_tc.GetMin()   + (min % 60);
+    int16_t new_sec   = adj_tc.GetSec()   + (sec % 60);
+    int32_t new_frame = adj_tc.GetFrame() + (frame % mRoundedTCBase);
+    if (new_frame >= (int32_t)mRoundedTCBase) {
+        new_frame -= mRoundedTCBase;
+        new_sec++;
+    }
+    if (new_sec >= 60) {
+        new_sec -= 60;
+        new_min++;
+    }
+    if (new_min >= 60) {
+        new_min -= 60;
+        new_hour++;
+    }
+    new_hour %= 24;
+    adj_tc.Init((int16_t)new_hour, new_min, new_sec, (int16_t)new_frame);
+
+    Init(mRoundedTCBase, mDropFrame, adj_tc.GetOffset());
+}
+
 int64_t Timecode::GetMaxOffset() const
 {
     return 24 * mFramesPerHour;

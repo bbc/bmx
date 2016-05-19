@@ -326,7 +326,6 @@ bool AS11Helper::ParseSegmentationFile(const char *filename, Rational frame_rate
         return false;
     }
 
-    const uint16_t rounded_rate = get_rounded_tc_base(frame_rate);
     bool last_tc_xx = false;
     int line_num = 0;
     int c = '1';
@@ -354,6 +353,7 @@ bool AS11Helper::ParseSegmentationFile(const char *filename, Rational frame_rate
         int dur_h = 0, dur_m = 0, dur_s = 0, dur_f = 0;
         char som_dc = 0;
         char eom_dc = 0;
+        char dur_dc = 0;
         char xc = 0;
         if (!line_str.empty()) {
             int line_type = 0;
@@ -364,14 +364,14 @@ bool AS11Helper::ParseSegmentationFile(const char *filename, Rational frame_rate
             {
                 line_type = 1;
             }
-            else if (sscanf(line_str.c_str(), "%d/%d %d:%d:%d%c%d D%d:%d:%d:%d",
+            else if (sscanf(line_str.c_str(), "%d/%d %d:%d:%d%c%d D%d:%d:%d%c%d",
                             &part_num, &part_total,
                             &som_h, &som_m, &som_s, &som_dc, &som_f,
-                            &dur_h, &dur_m, &dur_s, &dur_f) == 11 ||
-                     sscanf(line_str.c_str(), "%d/%d %d:%d:%d%c%d %d:%d:%d:%d",
+                            &dur_h, &dur_m, &dur_s, &dur_dc, &dur_f) == 12 ||
+                     sscanf(line_str.c_str(), "%d/%d %d:%d:%d%c%d %d:%d:%d%c%d",
                             &part_num, &part_total,
                             &som_h, &som_m, &som_s, &som_dc, &som_f,
-                            &dur_h, &dur_m, &dur_s, &dur_f) == 11)
+                            &dur_h, &dur_m, &dur_s, &dur_dc, &dur_f) == 12)
             {
                 line_type = 2;
             }
@@ -405,10 +405,9 @@ bool AS11Helper::ParseSegmentationFile(const char *filename, Rational frame_rate
                     return false;
                 }
             } else if (line_type == 2) {
-                segment.duration = (int64_t)dur_h * 60 * 60 * rounded_rate +
-                                   (int64_t)dur_m * 60 * rounded_rate +
-                                   (int64_t)dur_s * rounded_rate +
-                                   (int64_t)dur_f;
+                Timecode end = segment.start;
+                end.AddDuration((dur_dc != ':'), dur_h, dur_m, dur_s, dur_f);
+                segment.duration = end.GetOffset() - segment.start.GetOffset();
             }
             mSegments.push_back(segment);
 
