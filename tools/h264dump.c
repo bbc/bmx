@@ -113,7 +113,7 @@ typedef struct
     uint8_t cpb_dpb_delays_present_flag;
     uint8_t initial_cpb_removal_delay_length_minus1;
     uint8_t cpb_removal_delay_length_minus1;
-    uint8_t dpb_removal_delay_length_minus1;
+    uint8_t dpb_output_delay_length_minus1;
     uint8_t pic_struct_present_flag;
     uint8_t time_offset_length;
     uint8_t log2_max_frame_num_minus4;
@@ -230,7 +230,7 @@ static void set_and_init_sps(ParseContext *context, uint8_t seq_parameter_set_id
     context->sps->seq_parameter_set_id = seq_parameter_set_id;
     context->sps->initial_cpb_removal_delay_length_minus1 = 23;
     context->sps->cpb_removal_delay_length_minus1 = 23;
-    context->sps->dpb_removal_delay_length_minus1 = 23;
+    context->sps->dpb_output_delay_length_minus1 = 23;
     context->sps->time_offset_length = 24;
     context->sps->chroma_format_idc = 1;
     context->sps->chroma_array_type = 1;
@@ -978,8 +978,8 @@ static int hrd_parameters(ParseContext *context)
     context->sps->initial_cpb_removal_delay_length_minus1 = (uint8_t)context->value;
     u(5); PRINT_UINT("cpb_removal_delay_length_minus1");
     context->sps->cpb_removal_delay_length_minus1 = (uint8_t)context->value;
-    u(5); PRINT_UINT("dpb_removal_delay_length_minus1");
-    context->sps->dpb_removal_delay_length_minus1 = (uint8_t)context->value;
+    u(5); PRINT_UINT("dpb_output_delay_length_minus1");
+    context->sps->dpb_output_delay_length_minus1 = (uint8_t)context->value;
     u(5); PRINT_UINT("time_offset_length");
     context->sps->time_offset_length = (uint8_t)context->value;
 
@@ -1564,7 +1564,7 @@ static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t pay
 
     if (context->sps->cpb_dpb_delays_present_flag) {
         u(context->sps->cpb_removal_delay_length_minus1 + 1); PRINT_UINT("cpb_removal_delay");
-        u(context->sps->dpb_removal_delay_length_minus1 + 1); PRINT_UINT("dpb_removal_delay");
+        u(context->sps->dpb_output_delay_length_minus1 + 1); PRINT_UINT("dpb_output_delay");
     }
     if (context->sps->pic_struct_present_flag) {
         uint64_t pic_struct;
