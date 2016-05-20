@@ -1015,9 +1015,11 @@ static int vui_parameters(ParseContext *context)
         u(1); PRINT_UINT("video_full_range_flag");
         u(1); PRINT_UINT("colour_description_present_flag");
         if (context->value) {
+            context->indent++;
             u(8); PRINT_UINT("colour_primaries");
             u(8); PRINT_UINT("transfer_characteristics");
             u(8); PRINT_UINT("matrix_coefficients");
+            context->indent--;
         }
         context->indent--;
     }
