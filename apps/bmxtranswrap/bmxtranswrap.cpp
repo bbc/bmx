@@ -3547,7 +3547,8 @@ int main(int argc, const char** argv)
         // complete AS-11 descriptive metadata
 
         if (clip_sub_type == AS11_CLIP_SUB_TYPE &&
-                ((clip_type == CW_OP1A_CLIP_TYPE && !(flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)) ||
+                ((clip_type != CW_OP1A_CLIP_TYPE && clip_type != CW_D10_CLIP_TYPE) ||
+                 (clip_type == CW_OP1A_CLIP_TYPE && !(flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)) ||
                  (clip_type == CW_D10_CLIP_TYPE  && !(flavour & D10_SINGLE_PASS_WRITE_FLAVOUR))))
         {
             as11_helper.Complete();
