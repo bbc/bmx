@@ -15,14 +15,25 @@ create_test_file()
     $testdir/create_test_essence -t 42 -d 24 $tmpdir/audio
     $testdir/create_test_essence -t $1 -d 24 $tmpdir/video
 
+    type=
+    coreopts=
+    dppopts=
+    if test $2 != mpeg2lg_422p_hl_1080i; then
+        type=as11op1a
+        coreopts="--dm-file as11 $base/as11_core_framework.txt"
+        dppopts="--dm-file dpp $base/ukdpp_framework.txt"
+    else
+        type=as11rdd9
+    fi
+
     $appsdir/raw2bmx/raw2bmx \
         --regtest \
-        -t as11op1a \
+        -t $type \
         -f 25 \
         -y 09:58:00:00 \
         -o $3 \
-        --dm-file as11 $base/as11_core_framework.txt \
-        --dm-file dpp $base/ukdpp_framework.txt \
+        $coreopts \
+        $dppopts \
         --seg $base/as11_segmentation_framework.txt \
         --afd 10 -a 16:9 --$2 $tmpdir/video \
         -q 24 --locked true --pcm $tmpdir/audio \
@@ -69,17 +80,23 @@ create_samples()
 
 check_all()
 {
-    check 7 avci100_1080i && check 11 d10_50
+    check 7 avci100_1080i &&
+        check 11 d10_50 &&
+        check 14 mpeg2lg_422p_hl_1080i
 }
 
 create_data_all()
 {
-    create_data 7 avci100_1080i && create_data 11 d10_50
+    create_data 7 avci100_1080i &&
+        create_data 11 d10_50 &&
+        create_data 14 mpeg2lg_422p_hl_1080i
 }
 
 create_samples_all()
 {
-    create_samples 7 avci100_1080i && create_samples 11 d10_50
+    create_samples 7 avci100_1080i &&
+        create_samples 11 d10_50 &&
+        create_samples 14 mpeg2lg_422p_hl_1080i
 }
 
 
