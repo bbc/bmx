@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libMXF++", "..\..\..\libMXF
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bmxparse", "apps\bmxparse\bmxparse.vcxproj", "{962BD99C-B16B-4C26-9B9B-36AC8C6FEEC8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bmxtimecode", "apps\bmxtimecode.vcxproj", "{24DD9BEE-B01B-4D13-BF5C-8047A325A39B}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bmxtranswrap", "apps\bmxtranswrap\bmxtranswrap.vcxproj", "{66CB2EA7-A853-45D1-80BC-254E451DE950}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "raw2bmx", "apps\raw2bmx\raw2bmx.vcxproj", "{BF415E6B-C90A-449D-A697-06B6CD724614}"
@@ -45,6 +47,10 @@ Global
 		{962BD99C-B16B-4C26-9B9B-36AC8C6FEEC8}.Debug|Win32.Build.0 = Debug|Win32
 		{962BD99C-B16B-4C26-9B9B-36AC8C6FEEC8}.Release|Win32.ActiveCfg = Release|Win32
 		{962BD99C-B16B-4C26-9B9B-36AC8C6FEEC8}.Release|Win32.Build.0 = Release|Win32
+		{24DD9BEE-B01B-4D13-BF5C-8047A325A39B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{24DD9BEE-B01B-4D13-BF5C-8047A325A39B}.Debug|Win32.Build.0 = Debug|Win32
+		{24DD9BEE-B01B-4D13-BF5C-8047A325A39B}.Release|Win32.ActiveCfg = Release|Win32
+		{24DD9BEE-B01B-4D13-BF5C-8047A325A39B}.Release|Win32.Build.0 = Release|Win32
 		{66CB2EA7-A853-45D1-80BC-254E451DE950}.Debug|Win32.ActiveCfg = Debug|Win32
 		{66CB2EA7-A853-45D1-80BC-254E451DE950}.Debug|Win32.Build.0 = Debug|Win32
 		{66CB2EA7-A853-45D1-80BC-254E451DE950}.Release|Win32.ActiveCfg = Release|Win32
