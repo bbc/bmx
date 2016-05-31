@@ -109,12 +109,11 @@ int main(int argc, const char **argv)
     Timecode timecode;
     int64_t offset;
     if (!value_str) {
+        timecode.Init(frame_rate, drop_frame, 0);
+        int64_t max_offset = timecode.GetMaxOffset();
         int64_t i;
-        int64_t max_offset = 24 * 60 * 60 * get_rounded_tc_base(frame_rate);
         for (i = 0; i < max_offset; i++) {
             timecode.Init(frame_rate, drop_frame, i);
-            if (i > 0 && timecode.GetOffset() == 0)
-                break;
             printf("%8" PRId64 ": %s\n", i, get_timecode_string(timecode).c_str());
         }
     } else if (parse_timecode(value_str, frame_rate, &timecode)) {
