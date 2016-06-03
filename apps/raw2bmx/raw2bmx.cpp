@@ -3658,7 +3658,7 @@ int main(int argc, const char** argv)
                     }
                     input->essence_type = avc_parser->GetEssenceType();
 
-                    if (!frame_rate_set)
+                    if (!frame_rate_set && avc_parser->HaveFrameRate())
                         frame_rate = avc_parser->GetFrameRate();
 
                     // TODO: other parameters?
