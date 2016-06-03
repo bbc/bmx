@@ -3276,6 +3276,8 @@ int main(int argc, const char** argv)
                 case AVC_HIGH_422_INTRA:
                 case AVC_HIGH_444_INTRA:
                 case AVC_CAVLC_444_INTRA:
+                    if (BMX_OPT_PROP_IS_SET(user_aspect_ratio))
+                        clip_track->SetAspectRatio(user_aspect_ratio);
                     if (afd)
                         clip_track->SetAFD(afd);
                     break;
