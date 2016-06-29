@@ -1556,20 +1556,22 @@ static void dump_hdlr_atom()
     indent();
     printf("component_flags_mask: 0x%08x\n", component_flags_mask);
 
-    uint64_t component_name_len;
-    if (g_qt_brand) {
-        uint8_t qt_component_name_len;
-        MOV_CHECK(read_uint8(&qt_component_name_len));
-        component_name_len = qt_component_name_len;
-    } else {
-        component_name_len = CURRENT_ATOM.rem_size;
-    }
-    indent();
-    printf("component_name: ");
-    if (component_name_len == 0) {
-        printf("\n");
-    } else {
-        dump_string(component_name_len, 2);
+    if (CURRENT_ATOM.rem_size > 0) {
+        uint64_t component_name_len;
+        if (g_qt_brand) {
+            uint8_t qt_component_name_len;
+            MOV_CHECK(read_uint8(&qt_component_name_len));
+            component_name_len = qt_component_name_len;
+        } else {
+            component_name_len = CURRENT_ATOM.rem_size;
+        }
+        indent();
+        printf("component_name: ");
+        if (component_name_len == 0) {
+            printf("\n");
+        } else {
+            dump_string(component_name_len, 2);
+        }
     }
 }
 
@@ -3041,6 +3043,7 @@ static void dump_meta_atom()
 {
     static const DumpFuncMap dump_func_map[] =
     {
+        {{'h','d','l','r'}, dump_hdlr_atom},
         {{'k','e','y','s'}, dump_keys_atom},
         {{'i','l','s','t'}, dump_ilst_atom},
     };
