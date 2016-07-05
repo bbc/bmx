@@ -65,7 +65,7 @@ static bool parse_frame_rate(const char *rate_str, Rational *frame_rate)
 
 static void usage(const char *name)
 {
-    fprintf(stderr, "%s [--drop] [--non-drop] [--rate (<n>|<n>/<d>)] [all|<timecode>|<frame count>]\n", name);
+    fprintf(stderr, "%s [--drop] [--non-drop] [--rate (<n>|<n>/<d>)] (all|<timecode>|<frame count>)\n", name);
 }
 
 int main(int argc, const char **argv)
