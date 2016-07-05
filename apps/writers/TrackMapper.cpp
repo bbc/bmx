@@ -81,6 +81,7 @@ void TrackMapper::OutputTrackMap::Reset()
 }
 
 
+
 TrackMapper::ParsedInput* TrackMapper::ParsedInput::Parse(ParsedDefinition *def, const string &ele_str)
 {
     (void)def;
@@ -269,6 +270,17 @@ void TrackMapper::DumpOutputTrackMap(FILE *file, const vector<InputTrackInfo> &i
             }
         }
     }
+}
+
+bool TrackMapper::IsMonoOutputTrackMap(const vector<OutputTrackMap> &track_maps)
+{
+    size_t i;
+    for (i = 0; i < track_maps.size(); i++) {
+        if (track_maps[i].channel_maps.size() != 1)
+            return false;
+    }
+
+    return true;
 }
 
 TrackMapper::TrackMapper()

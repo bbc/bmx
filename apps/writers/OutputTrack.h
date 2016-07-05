@@ -47,6 +47,24 @@ namespace bmx
 
 class InputTrack;
 
+
+class OutputTrackSoundInfo
+{
+public:
+    OutputTrackSoundInfo();
+
+    void Copy(const OutputTrackSoundInfo &from);
+
+public:
+    mxfRational sampling_rate;
+    uint32_t bits_per_sample;
+    uint8_t sequence_offset;
+    BMX_OPT_PROP_DECL(bool, locked);
+    BMX_OPT_PROP_DECL(int8_t, audio_ref_level);
+    BMX_OPT_PROP_DECL(int8_t, dial_norm);
+};
+
+
 class OutputTrack
 {
 public:
@@ -63,16 +81,19 @@ public:
     void WriteSamples(uint32_t output_channel_index, unsigned char *data, uint32_t size, uint32_t num_samples);
     void WritePaddingSamples(uint32_t output_channel_index, uint32_t num_samples);
 
+    void WriteSilenceSamples(uint32_t num_samples);
+
     void SkipPrecharge(int64_t num_read);
 
 public:
-    InputTrack* GetFirstInputTrack();
-
     ClipWriterTrack* GetClipTrack() { return mClipWriterTrack; }
     uint32_t GetPhysSrcTrackIndex() { return mPhysSrcTrackIndex; }
     bool HaveInputTrack()           { return !mInputMaps.empty(); }
     uint32_t GetChannelCount()      { return mChannelCount; }
     bool HaveSkipPrecharge()        { return mRemSkipPrecharge > 0; }
+    bool IsSilenceTrack();
+    OutputTrackSoundInfo* GetSoundInfo();
+    InputTrack* GetFirstInputTrack();
 
 private:
     typedef struct
@@ -92,6 +113,7 @@ private:
     ByteArray mSampleBuffer;
     uint32_t mNumSamples;
     size_t mAvailableChannelCount;
+    OutputTrackSoundInfo mSoundInfo;
 };
 
 

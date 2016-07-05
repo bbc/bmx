@@ -2966,13 +2966,6 @@ int main(int argc, const char** argv)
 
         // map input to output tracks
 
-        // TODO: a non-mono audio mapping requires changes to the Avid physical source package track layout and
-        // also depends on support in Avid products
-        if (clip_type == CW_AVID_CLIP_TYPE && track_mapper.GetMapType() != TrackMapper::MONO_AUDIO_MAP) {
-            log_error("Avid clip type only supports 'mono' audio track mapping\n");
-            throw false;
-        }
-
         // map WAVE PCM tracks
         vector<TrackMapper::InputTrackInfo> unused_input_tracks;
         vector<TrackMapper::InputTrackInfo> mapper_input_tracks;
@@ -3003,6 +2996,13 @@ int main(int argc, const char** argv)
             track_mapper.DumpOutputTrackMap(stderr, mapper_input_tracks, output_track_maps);
             if (dump_track_map_exit)
                 throw true;
+        }
+
+        // TODO: a non-mono audio mapping requires changes to the Avid physical source package track layout and
+        // also depends on support in Avid products
+        if (clip_type == CW_AVID_CLIP_TYPE && !TrackMapper::IsMonoOutputTrackMap(output_track_maps)) {
+            log_error("Avid clip type only supports mono audio track mapping\n");
+            throw false;
         }
 
         for (i = 0; i < unused_input_tracks.size(); i++) {
@@ -3092,6 +3092,21 @@ int main(int argc, const char** argv)
                         created_input_tracks[channel_map.input_external_index] = input_track;
                     }
 
+                    // copy across sound info to OutputTrack
+                    if (!output_track->HaveInputTrack()) {
+                        const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
+                        const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
+                        if (input_sound_info) {
+                            OutputTrackSoundInfo *output_sound_info = output_track->GetSoundInfo();
+                            output_sound_info->sampling_rate   = input_sound_info->sampling_rate;
+                            output_sound_info->bits_per_sample = input_sound_info->bits_per_sample;
+                            output_sound_info->sequence_offset = input_sound_info->sequence_offset;
+                            BMX_OPT_PROP_COPY(output_sound_info->locked,          input_sound_info->locked);
+                            BMX_OPT_PROP_COPY(output_sound_info->audio_ref_level, input_sound_info->audio_ref_level);
+                            BMX_OPT_PROP_COPY(output_sound_info->dial_norm,       input_sound_info->dial_norm);
+                        }
+                    }
+
                     output_track->AddInput(input_track, channel_map.input_channel_index, channel_map.output_channel_index);
                     input_track->AddOutput(output_track, channel_map.output_channel_index, channel_map.input_channel_index);
                 } else {
@@ -3103,6 +3118,28 @@ int main(int argc, const char** argv)
         }
 
 
+        // initialise silence output track info using the first non-silent sound track info
+
+        OutputTrackSoundInfo *donor_sound_info = 0;
+        for (i = 0; i < output_tracks.size(); i++) {
+            OutputTrack *output_track = output_tracks[i];
+            if (!output_track->IsSilenceTrack() && output_track->GetSoundInfo()) {
+                donor_sound_info = output_track->GetSoundInfo();
+                break;
+            }
+        }
+        for (i = 0; i < output_tracks.size(); i++) {
+            OutputTrack *output_track = output_tracks[i];
+            if (output_track->IsSilenceTrack()) {
+                if (!donor_sound_info) {
+                    log_error("All sound tracks containing silence is currently not supported\n");
+                    throw false;
+                }
+                output_track->GetSoundInfo()->Copy(*donor_sound_info);
+            }
+        }
+
+
         // initialise output tracks
 
         unsigned char avci_header_data[AVCI_HEADER_SIZE];
@@ -3111,12 +3148,21 @@ int main(int argc, const char** argv)
 
             ClipWriterTrack *clip_track = output_track->GetClipTrack();
             EssenceType output_essence_type = clip_track->GetEssenceType();
+            MXFDataDefEnum output_data_def = convert_essence_type_to_data_def(output_essence_type);
 
-            MXFInputTrack *input_track = dynamic_cast<MXFInputTrack*>(output_track->GetFirstInputTrack());
-            const MXFTrackReader *input_track_reader = input_track->GetTrackReader();
-            const MXFTrackInfo *input_track_info = input_track_reader->GetTrackInfo();
-            const MXFPictureTrackInfo *input_picture_info = dynamic_cast<const MXFPictureTrackInfo*>(input_track_info);
-            const MXFSoundTrackInfo *input_sound_info = dynamic_cast<const MXFSoundTrackInfo*>(input_track_info);
+            MXFInputTrack *input_track = 0;
+            const MXFTrackReader *input_track_reader = 0;
+            const MXFTrackInfo *input_track_info = 0;
+            const MXFPictureTrackInfo *input_picture_info = 0;
+            if (output_track->HaveInputTrack()) {
+                input_track = dynamic_cast<MXFInputTrack*>(output_track->GetFirstInputTrack());
+                input_track_reader = input_track->GetTrackReader();
+                input_track_info = input_track_reader->GetTrackInfo();
+                input_picture_info = dynamic_cast<const MXFPictureTrackInfo*>(input_track_info);
+            } else {
+                BMX_ASSERT(output_essence_type == WAVE_PCM);
+            }
+            const OutputTrackSoundInfo *output_sound_info = output_track->GetSoundInfo();
 
             uint8_t afd = 0;
             if (BMX_OPT_PROP_IS_SET(user_afd))
@@ -3145,16 +3191,17 @@ int main(int argc, const char** argv)
                     output_track->SetSkipPrecharge(- precharge); // skip precharge frames
 
                 if (physical_package) {
-                    if (input_track_info->data_def == MXF_PICTURE_DDEF) {
+                    if (output_data_def == MXF_PICTURE_DDEF) {
                         avid_track->SetSourceRef(physical_package_picture_refs[output_track->GetPhysSrcTrackIndex()].first,
                                                  physical_package_picture_refs[output_track->GetPhysSrcTrackIndex()].second);
-                    } else if (input_track_info->data_def == MXF_SOUND_DDEF) {
+                    } else if (output_data_def == MXF_SOUND_DDEF) {
                         avid_track->SetSourceRef(physical_package_sound_refs[output_track->GetPhysSrcTrackIndex()].first,
                                                  physical_package_sound_refs[output_track->GetPhysSrcTrackIndex()].second);
                     }
                 }
             }
 
+            BMX_ASSERT(input_track || output_essence_type == WAVE_PCM);
             switch (output_essence_type)
             {
                 case IEC_DV25:
@@ -3365,23 +3412,23 @@ int main(int argc, const char** argv)
                         clip_track->SetAFD(afd);
                     break;
                 case WAVE_PCM:
-                    clip_track->SetSamplingRate(input_sound_info->sampling_rate);
-                    clip_track->SetQuantizationBits(input_sound_info->bits_per_sample);
+                    clip_track->SetSamplingRate(output_sound_info->sampling_rate);
+                    clip_track->SetQuantizationBits(output_sound_info->bits_per_sample);
                     clip_track->SetChannelCount(output_track->GetChannelCount());
                     if (BMX_OPT_PROP_IS_SET(user_locked))
                         clip_track->SetLocked(user_locked);
-                    else if (BMX_OPT_PROP_IS_SET(input_sound_info->locked))
-                        clip_track->SetLocked(input_sound_info->locked);
+                    else if (BMX_OPT_PROP_IS_SET(output_sound_info->locked))
+                        clip_track->SetLocked(output_sound_info->locked);
                     if (BMX_OPT_PROP_IS_SET(user_audio_ref_level))
                         clip_track->SetAudioRefLevel(user_audio_ref_level);
-                    else if (BMX_OPT_PROP_IS_SET(input_sound_info->audio_ref_level))
-                        clip_track->SetAudioRefLevel(input_sound_info->audio_ref_level);
+                    else if (BMX_OPT_PROP_IS_SET(output_sound_info->audio_ref_level))
+                        clip_track->SetAudioRefLevel(output_sound_info->audio_ref_level);
                     if (BMX_OPT_PROP_IS_SET(user_dial_norm))
                         clip_track->SetDialNorm(user_dial_norm);
-                    else if (BMX_OPT_PROP_IS_SET(input_sound_info->dial_norm))
-                        clip_track->SetDialNorm(input_sound_info->dial_norm);
-                    if (clip_type == CW_D10_CLIP_TYPE || input_sound_info->sequence_offset)
-                        clip_track->SetSequenceOffset(input_sound_info->sequence_offset);
+                    else if (BMX_OPT_PROP_IS_SET(output_sound_info->dial_norm))
+                        clip_track->SetDialNorm(output_sound_info->dial_norm);
+                    if (clip_type == CW_D10_CLIP_TYPE || output_sound_info->sequence_offset)
+                        clip_track->SetSequenceOffset(output_sound_info->sequence_offset);
                     if (audio_layout_mode_label != g_Null_UL)
                         clip_track->SetChannelAssignment(audio_layout_mode_label);
                     break;
@@ -3638,6 +3685,7 @@ int main(int argc, const char** argv)
                 prev_container_duration = container_duration;
             }
 
+            uint32_t first_sound_num_samples = 0;
             for (i = 0; i < input_tracks.size(); i++) {
                 MXFInputTrack *input_track = input_tracks[i];
 
@@ -3678,7 +3726,7 @@ int main(int argc, const char** argv)
                         channel_block_align = (bits_per_sample + 7) / 8;
                     }
 
-                    uint32_t num_samples;
+                    uint32_t num_samples = 0;
                     if (output_track->HaveSkipPrecharge())
                     {
                         output_track->SkipPrecharge(num_read);
@@ -3687,7 +3735,8 @@ int main(int argc, const char** argv)
                     {
                         BMX_ASSERT(input_track_info->essence_type == WAVE_PCM);
                         BMX_ASSERT(input_sound_info->edit_rate == input_sound_info->sampling_rate);
-                        output_track->WritePaddingSamples(output_channel_index, frame->request_num_samples);
+                        num_samples = frame->request_num_samples;
+                        output_track->WritePaddingSamples(output_channel_index, num_samples);
                     }
                     else if ((input_sound_info && input_sound_info->channel_count > 1) ||
                              input_track_info->essence_type == D10_AES3_PCM)
@@ -3726,13 +3775,30 @@ int main(int argc, const char** argv)
                                                    frame->GetSize(),
                                                    num_samples);
                     }
+
+                    if (input_sound_info && first_sound_num_samples == 0 && num_samples > 0)
+                        first_sound_num_samples = num_samples;
                 }
 
                 delete frame;
             }
 
+            // write samples for silence tracks
+            for (i = 0; i < output_tracks.size(); i++) {
+                OutputTrack *output_track = output_tracks[i];
+                if (output_track->IsSilenceTrack()) {
+                    if (output_track->HaveSkipPrecharge())
+                        output_track->SkipPrecharge(num_read);
+                    else
+                        output_track->WriteSilenceSamples(first_sound_num_samples);
+                }
+            }
+
+
             if (rdd6_filename) {
-                BMX_ASSERT(!output_tracks.back()->HaveInputTrack()); // expecting last track to be RDD-6 from an XML file
+                // expecting last track to be RDD-6 from an XML file
+                BMX_ASSERT(!output_tracks.back()->HaveInputTrack() &&
+                           !output_tracks.back()->IsSilenceTrack());
 
                 rdd6_frame.UpdateStaticFrame(&rdd6_static_sequence);
 

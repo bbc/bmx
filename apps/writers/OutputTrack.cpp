@@ -39,11 +39,33 @@
 
 #include "InputTrack.h"
 #include <bmx/essence_parser/SoundConversion.h>
+#include <bmx/MXFUtils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
 using namespace std;
 using namespace bmx;
+
+
+OutputTrackSoundInfo::OutputTrackSoundInfo()
+{
+    sampling_rate = ZERO_RATIONAL;
+    bits_per_sample = 0;
+    sequence_offset = 0;
+    BMX_OPT_PROP_DEFAULT(locked, false);
+    BMX_OPT_PROP_DEFAULT(audio_ref_level, 0);
+    BMX_OPT_PROP_DEFAULT(dial_norm, 0);
+}
+
+void OutputTrackSoundInfo::Copy(const OutputTrackSoundInfo &from)
+{
+    sampling_rate   = from.sampling_rate;
+    bits_per_sample = from.bits_per_sample;
+    sequence_offset = from.sequence_offset;
+    BMX_OPT_PROP_COPY(locked,          from.locked);
+    BMX_OPT_PROP_COPY(audio_ref_level, from.audio_ref_level);
+    BMX_OPT_PROP_COPY(dial_norm,       from.dial_norm);
+}
 
 
 OutputTrack::OutputTrack(ClipWriterTrack *clip_writer_track)
@@ -100,6 +122,19 @@ void OutputTrack::SetFilter(EssenceFilter *filter)
 {
     delete mFilter;
     mFilter = filter;
+}
+
+bool OutputTrack::IsSilenceTrack()
+{
+    return mInputMaps.empty() && GetSoundInfo();
+}
+
+OutputTrackSoundInfo* OutputTrack::GetSoundInfo()
+{
+    if (convert_essence_type_to_data_def(mClipWriterTrack->GetEssenceType()) == MXF_SOUND_DDEF)
+        return &mSoundInfo;
+    else
+        return 0;
 }
 
 InputTrack* OutputTrack::GetFirstInputTrack()
@@ -193,6 +228,39 @@ void OutputTrack::WriteSamples(uint32_t output_channel_index,
 void OutputTrack::WritePaddingSamples(uint32_t output_channel_index, uint32_t num_samples)
 {
     WriteSamples(output_channel_index, 0, 0, num_samples);
+}
+
+void OutputTrack::WriteSilenceSamples(uint32_t num_samples)
+{
+    BMX_ASSERT(mInputMaps.empty());
+
+    uint32_t frame_size = num_samples * mClipWriterTrack->GetSampleSize();
+    if (mSampleBuffer.GetAllocatedSize() < frame_size)
+        mSampleBuffer.Allocate(frame_size); // will clear data
+    mSampleBuffer.SetSize(frame_size);
+
+    if (mFilter) {
+        if (mFilter->SupportsInPlaceFilter()) {
+            mFilter->Filter(mSampleBuffer.GetBytes(), mSampleBuffer.GetSize());
+            mClipWriterTrack->WriteSamples(mSampleBuffer.GetBytes(), mSampleBuffer.GetSize(), num_samples);
+        } else {
+            unsigned char *f_data = 0;
+            try
+            {
+                uint32_t f_size;
+                mFilter->Filter(mSampleBuffer.GetBytes(), mSampleBuffer.GetSize(), &f_data, &f_size);
+                mClipWriterTrack->WriteSamples(f_data, f_size, num_samples);
+                delete [] f_data;
+            }
+            catch (...)
+            {
+                delete [] f_data;
+                throw;
+            }
+        }
+    } else {
+        mClipWriterTrack->WriteSamples(mSampleBuffer.GetBytes(), mSampleBuffer.GetSize(), num_samples);
+    }
 }
 
 void OutputTrack::SkipPrecharge(int64_t num_read)

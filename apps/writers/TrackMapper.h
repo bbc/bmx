@@ -98,6 +98,7 @@ public:
 public:
     static void DumpOutputTrackMap(FILE *file, const std::vector<InputTrackInfo> &input_tracks,
                                    const std::vector<OutputTrackMap> &track_maps);
+    static bool IsMonoOutputTrackMap(const std::vector<OutputTrackMap> &track_maps);
 
 public:
     TrackMapper();

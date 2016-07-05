@@ -3944,13 +3944,6 @@ int main(int argc, const char** argv)
 
         // map input to output tracks
 
-        // TODO: a non-mono audio mapping requires changes to the Avid physical source package track layout and
-        // also depends on support in Avid products
-        if (clip_type == CW_AVID_CLIP_TYPE && track_mapper.GetMapType() != TrackMapper::MONO_AUDIO_MAP) {
-            log_error("Avid clip type only supports 'mono' audio track mapping\n");
-            throw false;
-        }
-
         // map WAVE PCM tracks
         vector<TrackMapper::InputTrackInfo> unused_input_tracks;
         vector<TrackMapper::InputTrackInfo> mapper_input_tracks;
@@ -3976,6 +3969,13 @@ int main(int argc, const char** argv)
             track_mapper.DumpOutputTrackMap(stderr, mapper_input_tracks, output_track_maps);
             if (dump_track_map_exit)
                 throw true;
+        }
+
+        // TODO: a non-mono audio mapping requires changes to the Avid physical source package track layout and
+        // also depends on support in Avid products
+        if (clip_type == CW_AVID_CLIP_TYPE && !TrackMapper::IsMonoOutputTrackMap(output_track_maps)) {
+            log_error("Avid clip type only supports mono audio track mapping\n");
+            throw false;
         }
 
         for (i = 0; i < unused_input_tracks.size(); i++) {
@@ -4064,6 +4064,19 @@ int main(int argc, const char** argv)
                         created_input_tracks[channel_map.input_external_index] = input_track;
                     }
 
+                    // copy across sound info to OutputTrack
+                    if (!output_track->HaveInputTrack() &&
+                        convert_essence_type_to_data_def(input->essence_type) == MXF_SOUND_DDEF)
+                    {
+                        OutputTrackSoundInfo *output_sound_info = output_track->GetSoundInfo();
+                        output_sound_info->sampling_rate   = input->sampling_rate;
+                        output_sound_info->bits_per_sample = input->bits_per_sample;
+                        output_sound_info->sequence_offset = 0;
+                        BMX_OPT_PROP_COPY(output_sound_info->locked,          input->locked);
+                        BMX_OPT_PROP_COPY(output_sound_info->audio_ref_level, input->audio_ref_level);
+                        BMX_OPT_PROP_COPY(output_sound_info->dial_norm,       input->dial_norm);
+                    }
+
                     output_track->AddInput(input_track, channel_map.input_channel_index, channel_map.output_channel_index);
                     input_track->AddOutput(output_track, channel_map.output_channel_index, channel_map.input_channel_index);
                 } else {
@@ -4075,6 +4088,28 @@ int main(int argc, const char** argv)
         }
 
 
+        // initialise silence output track info using the first non-silent sound track info
+
+        OutputTrackSoundInfo *donor_sound_info = 0;
+        for (i = 0; i < output_tracks.size(); i++) {
+            OutputTrack *output_track = output_tracks[i];
+            if (!output_track->IsSilenceTrack() && output_track->GetSoundInfo()) {
+                donor_sound_info = output_track->GetSoundInfo();
+                break;
+            }
+        }
+        for (i = 0; i < output_tracks.size(); i++) {
+            OutputTrack *output_track = output_tracks[i];
+            if (output_track->IsSilenceTrack()) {
+                if (!donor_sound_info) {
+                    log_error("All sound tracks containing silence is currently not supported\n");
+                    throw false;
+                }
+                output_track->GetSoundInfo()->Copy(*donor_sound_info);
+            }
+        }
+
+
         // initialize output clip tracks
 
         unsigned char avci_header_data[AVCI_HEADER_SIZE];
@@ -4083,20 +4118,30 @@ int main(int argc, const char** argv)
 
             ClipWriterTrack *clip_track = output_track->GetClipTrack();
 
-            RawInputTrack *input_track = dynamic_cast<RawInputTrack*>(output_track->GetFirstInputTrack());
-            RawInput *input = input_track->GetRawInput();
-            MXFDataDefEnum data_def = convert_essence_type_to_data_def(input->essence_type);
+            RawInputTrack *input_track = 0;
+            RawInput *input = 0;
+            EssenceType essence_type;
+            if (output_track->HaveInputTrack()) {
+                input_track = dynamic_cast<RawInputTrack*>(output_track->GetFirstInputTrack());
+                input = input_track->GetRawInput();
+                essence_type = input->essence_type;
+            } else {
+                essence_type = clip_track->GetEssenceType();
+            }
+            MXFDataDefEnum data_def = convert_essence_type_to_data_def(essence_type);
+            const OutputTrackSoundInfo *output_sound_info = output_track->GetSoundInfo();
 
-
-            if (BMX_OPT_PROP_IS_SET(input->track_number))
+            if (input && BMX_OPT_PROP_IS_SET(input->track_number))
                 clip_track->SetOutputTrackNumber(input->track_number);
 
             if (clip_type == CW_AS02_CLIP_TYPE) {
                 AS02Track *as02_track = clip_track->GetAS02Track();
                 as02_track->SetMICType(mic_type);
                 as02_track->SetMICScope(ess_component_mic_scope);
-                as02_track->SetOutputStartOffset(input->output_start_offset);
-                as02_track->SetOutputEndOffset(- input->output_end_offset);
+                if (input) {
+                    as02_track->SetOutputStartOffset(input->output_start_offset);
+                    as02_track->SetOutputEndOffset(- input->output_end_offset);
+                }
 
                 if (partition_interval_set) {
                     AS02PictureTrack *as02_pict_track = dynamic_cast<AS02PictureTrack*>(as02_track);
@@ -4117,7 +4162,8 @@ int main(int argc, const char** argv)
                 }
             }
 
-            switch (input->essence_type)
+            BMX_ASSERT(input || essence_type == WAVE_PCM);
+            switch (essence_type)
             {
                 case IEC_DV25:
                 case DVBASED_DV25:
@@ -4274,15 +4320,15 @@ int main(int argc, const char** argv)
                         clip_track->SetAFD(input->afd);
                     break;
                 case WAVE_PCM:
-                    clip_track->SetSamplingRate(input->sampling_rate);
-                    clip_track->SetQuantizationBits(input->bits_per_sample);
+                    clip_track->SetSamplingRate(output_sound_info->sampling_rate);
+                    clip_track->SetQuantizationBits(output_sound_info->bits_per_sample);
                     clip_track->SetChannelCount(output_track->GetChannelCount());
-                    if (BMX_OPT_PROP_IS_SET(input->locked))
-                        clip_track->SetLocked(input->locked);
-                    if (BMX_OPT_PROP_IS_SET(input->audio_ref_level))
-                        clip_track->SetAudioRefLevel(input->audio_ref_level);
-                    if (BMX_OPT_PROP_IS_SET(input->dial_norm))
-                        clip_track->SetDialNorm(input->dial_norm);
+                    if (BMX_OPT_PROP_IS_SET(output_sound_info->locked))
+                        clip_track->SetLocked(output_sound_info->locked);
+                    if (BMX_OPT_PROP_IS_SET(output_sound_info->audio_ref_level))
+                        clip_track->SetAudioRefLevel(output_sound_info->audio_ref_level);
+                    if (BMX_OPT_PROP_IS_SET(output_sound_info->dial_norm))
+                        clip_track->SetDialNorm(output_sound_info->dial_norm);
                     // force D10 sequence offset to 0 and default to 0 for other clip types
                     if (clip_type == CW_D10_CLIP_TYPE || sequence_offset_set)
                         clip_track->SetSequenceOffset(sequence_offset);
@@ -4579,6 +4625,7 @@ int main(int argc, const char** argv)
             total_read += min_num_samples;
 
             // write samples from input buffers
+            uint32_t first_sound_num_samples = 0;
             for (i = 0; i < input_tracks.size(); i++) {
                 RawInputTrack *input_track = input_tracks[i];
                 RawInput *input = input_track->GetRawInput();
@@ -4618,7 +4665,20 @@ int main(int argc, const char** argv)
                                                    num_samples);
                         // frames popped and deleted in read_samples()
                     }
+
+                    if (convert_essence_type_to_data_def(input->essence_type) == MXF_SOUND_DDEF &&
+                        first_sound_num_samples == 0 && num_samples > 0)
+                    {
+                        first_sound_num_samples = num_samples;
+                    }
                 }
+            }
+
+            // write samples for silence tracks
+            for (i = 0; i < output_tracks.size(); i++) {
+                OutputTrack *output_track = output_tracks[i];
+                if (output_track->IsSilenceTrack())
+                    output_track->WriteSilenceSamples(first_sound_num_samples);
             }
 
             if (min_num_samples < max_samples_per_read)

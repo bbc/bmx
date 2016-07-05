@@ -132,7 +132,9 @@ check_all()
         check "0-1;s2,2-5" stereops2p4 &&
         check "0-1;0-1;mx" stereopstereopmonorem &&
         check "7;6;5;4;3;2;1;0" reorder_mono &&
-        check "7,6;5,4;3,2;1,0" reorder_stereo
+        check "7,6;5,4;3,2;1,0" reorder_stereo &&
+        check "m1-2,s2" mono_silence &&
+        check "s2;1-2" stereo_silence
 }
 
 create_data_all()
@@ -145,7 +147,9 @@ create_data_all()
         create_data "0-1;s2,2-5" stereops2p4 &&
         create_data "0-1;0-1;mx" stereopstereopmonorem &&
         create_data "7;6;5;4;3;2;1;0" reorder_mono &&
-        create_data "7,6;5,4;3,2;1,0" reorder_stereo
+        create_data "7,6;5,4;3,2;1,0" reorder_stereo &&
+        create_data "m1-2,s2" mono_silence &&
+        create_data "s2;1-2" stereo_silence
 }
 
 create_samples_all()
@@ -158,7 +162,9 @@ create_samples_all()
         create_samples "0-1;s2,2-5" stereops2p4 &&
         create_samples "0-1;0-1;mx" stereopstereopmonorem &&
         create_samples "7;6;5;4;3;2;1;0" reorder_mono &&
-        create_samples "7,6;5,4;3,2;1,0" reorder_stereo
+        create_samples "7,6;5,4;3,2;1,0" reorder_stereo &&
+        create_samples "m1-2,s2" mono_silence &&
+        create_samples "s2;1-2" stereo_silence
 }
 
 
