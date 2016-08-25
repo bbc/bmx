@@ -791,6 +791,22 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
     mFrameNum             = mPrimPicSliceHeader.frame_num;
 }
 
+bool AVCEssenceParser::CheckFrameHasAVCIHeader(const unsigned char *data, uint32_t data_size)
+{
+    // check whether the second NAL is a sequence parameter set
+
+    uint32_t first_offset = NextStartCodePrefix(data, data_size);
+    if (first_offset == ESSENCE_PARSER_NULL_OFFSET)
+      return false;
+
+    uint32_t next_offset = NextStartCodePrefix(&data[first_offset + 3], data_size - (first_offset + 3));
+    if (next_offset == ESSENCE_PARSER_NULL_OFFSET)
+      return false;
+    next_offset += first_offset + 3;
+
+    return (data[next_offset + 3] & 0x1f) == SEQUENCE_PARAMETER_SET;
+}
+
 void AVCEssenceParser::DecodePOC(POCState *poc_state, int32_t *pic_order_cnt)
 {
     BMX_ASSERT(mSPS.count(mActiveSPSId));

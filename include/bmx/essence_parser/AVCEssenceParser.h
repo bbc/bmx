@@ -152,6 +152,8 @@ public:
 
     void ParseNALUnits(const unsigned char *data, uint32_t size, std::vector<NALReference> *nals);
 
+    bool CheckFrameHasAVCIHeader(const unsigned char *data, uint32_t data_size);
+
 public:
     uint8_t GetProfile() const            { return mProfile; }
     uint8_t GetProfileConstraint() const  { return mProfileConstraint; }

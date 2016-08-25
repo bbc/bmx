@@ -83,9 +83,7 @@ uint32_t AVCIRawEssenceReader::ReadSamples(uint32_t num_samples)
     }
 
 
-    mAVCParser->ParseFrameInfo(mSampleBuffer.GetBytes(), mSampleBuffer.GetSize());
-
-    if (mAVCParser->FrameHasActiveSPS()) {
+    if (mAVCParser->CheckFrameHasAVCIHeader(mSampleBuffer.GetBytes(), mSampleBuffer.GetSize())) {
         if (mSampleBuffer.GetSize() < mFixedSampleSize) {
             if (ReadBytes(AVCI_HEADER_SIZE) != AVCI_HEADER_SIZE) {
                 mLastSampleRead = true;

@@ -2086,8 +2086,7 @@ void MXFFileReader::ExtractFrameInfo()
                              track_info->essence_type == AVCI50_1080P ||
                              track_info->essence_type == AVCI50_720P))
                 {
-                    avc_parser.ParseFrameInfo(frame->GetBytes(), frame->GetSize());
-                    picture_info->have_avci_header = avc_parser.FrameHasActiveSPS();
+                    picture_info->have_avci_header = avc_parser.CheckFrameHasAVCIHeader(frame->GetBytes(), frame->GetSize());
                     if (picture_info->have_avci_header) {
                         dynamic_cast<MXFFileTrackReader*>(mInternalTrackReaders[i])->SetAVCIHeader(
                             frame->GetBytes(), frame->GetSize());
