@@ -50,6 +50,7 @@ using namespace mxfpp;
 void MXFAPPInfo::RegisterExtensions(HeaderMetadata *header_metadata)
 {
     BMX_CHECK(mxf_app_load_extensions(header_metadata->getDataModel()->getCDataModel()));
+    header_metadata->getDataModel()->finalise();
 }
 
 bool MXFAPPInfo::IsAPP(HeaderMetadata *header_metadata)
