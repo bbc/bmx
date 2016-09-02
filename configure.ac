@@ -166,6 +166,17 @@ if test x"$with_curl" == xcheck; then
 	fi
 fi
 
+AC_ARG_ENABLE(bbcarch_check,
+	AC_HELP_STRING([--enable-bbcarch-check],
+		[enable checking BBC archive MXF [[default=no]]]),
+	enable_bbcarch_check=$enableval,
+	enable_bbcarch_check="no")
+if test x"$enable_bbcarch_check" = xyes; then
+	AC_CHECK_LIB(writearchivemxf-${LIBMXF_MAJORMINOR},prepare_archive_mxf_file,,
+		[AC_MSG_ERROR([writearchivemxf-${LIBMXF_MAJORMINOR} not found])])
+fi
+AM_CONDITIONAL(ENABLE_BBCARCH_CHECK, test x"$enable_bbcarch_check" = xyes)
+
 
 dnl-----------------------------------------------------------------------------
 dnl -- Checks for header files.
@@ -294,6 +305,7 @@ AC_CONFIG_FILES([
 	test/growing_file/Makefile
 	test/rdd6/Makefile
 	test/text_object/Makefile
+	test/bbcarchive/Makefile
 	apps/Makefile
 	apps/mxf2raw/Makefile
 	apps/writers/Makefile

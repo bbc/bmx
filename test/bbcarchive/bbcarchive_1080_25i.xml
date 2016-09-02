@@ -1,0 +1,270 @@
+ (created='1970-01-01 00:00:00.000')
+Application
+  name            : mxf2raw
+  lib_name        : RegLib
+  lib_version     : 0.0.0
+  build_timestamp : 1970-01-01 00:00:00.000
+  scm_version     : regtest-head
+Files: (1)
+  File #0:
+    file_uri        : regtest_file_uri
+    mxf_version     : 1.2
+    op_label        : OP1A (external_essence='false', non_stream='false', multi_track='true', label='urn:smpte:ul:060e2b34.04010101.0d010201.01010900')
+    frame_wrapped   : true
+    Identifications: (1)
+      Identification #0:
+        generation_uid  : urn:uuid:00000000-0000-0000-0000-000000000002
+        company_name    : BBC
+        product_name    : BBC Archive MXF Writer
+        version_string  : Version August 2011
+        product_uid     : urn:uuid:9e2608b1-c9fe-4448-88df-2694cf77599a
+        modified_date   : 0-00-00 00:00:00.000
+        toolkit_version : 1.0.0.0.0
+        platform        : libMXF (Linux)
+    MaterialPackages: (1)
+      MaterialPackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000003
+        name            : Archive preservation DGN377505
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+    FileSourcePackages: (1)
+      FileSourcePackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+    PhysicalSourcePackages: (1)
+      PhysicalSourcePackage #0:
+        package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001
+        name            : DGN377505
+        creation_date   : 0-00-00 00:00:00.000
+        modified_date   : 0-00-00 00:00:00.000
+Clip
+  name            : Archive preservation DGN377505
+  edit_rate       : 25/1
+  duration        : 00:00:00:03 (count='3')
+  StartTimecodes:
+    material        : 00:00:00:00
+    physical_source : 00:00:00:00 (name='DGN377505')
+  Tracks: (7)
+    Track #0:
+      essence_kind    : Picture
+      essence_type    : Unc_HD_1080i
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02050229
+      edit_rate       : 25/1
+      duration        : 00:00:00:03 (count='3')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000003
+            track_id        : 2
+            track_number    : 0
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 1
+            track_number    : 0x15010201
+            file_uri        : regtest_file_uri
+      PictureDescriptor:
+        signal_standard : SMPTE_274 (value='4')
+        frame_layout    : Mixed_Fields (value='3')
+        stored_width    : 1920
+        stored_height   : 1080
+        display_width   : 1920
+        display_height  : 1080
+        aspect_ratio    : 16/9
+        CDCIDescriptor:
+          component_depth : 8
+          horiz_subsamp   : 2
+          vert_subsamp    : 1
+          color_siting    : Unknown (value='255')
+    Track #1:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:03 (count='3')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000003
+            track_id        : 3
+            track_number    : 0
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 2
+            track_number    : 0x16060101
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate        : 48000/1
+        bits_per_sample      : 20
+        block_align          : 3
+        channel_count        : 1
+        locked               : true
+    Track #2:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:03 (count='3')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000003
+            track_id        : 4
+            track_number    : 0
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 3
+            track_number    : 0x16060102
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate        : 48000/1
+        bits_per_sample      : 20
+        block_align          : 3
+        channel_count        : 1
+        locked               : true
+    Track #3:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:03 (count='3')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000003
+            track_id        : 5
+            track_number    : 0
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 4
+            track_number    : 0x16060103
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate        : 48000/1
+        bits_per_sample      : 20
+        block_align          : 3
+        channel_count        : 1
+        locked               : true
+    Track #4:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:03 (count='3')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000003
+            track_id        : 6
+            track_number    : 0
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 5
+            track_number    : 0x16060104
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate        : 48000/1
+        bits_per_sample      : 20
+        block_align          : 3
+        channel_count        : 1
+        locked               : true
+    Track #5:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:03 (count='3')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000003
+            track_id        : 7
+            track_number    : 0
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 6
+            track_number    : 0x16060105
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate        : 48000/1
+        bits_per_sample      : 20
+        block_align          : 3
+        channel_count        : 1
+        locked               : true
+    Track #6:
+      essence_kind    : Sound
+      essence_type    : WAVE_PCM
+      ec_label        : urn:smpte:ul:060e2b34.04010101.0d010301.02060100
+      edit_rate       : 25/1
+      duration        : 00:00:00:03 (count='3')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000003
+            track_id        : 8
+            track_number    : 0
+          FileSource:
+            package_uid     : urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002
+            track_id        : 7
+            track_number    : 0x16060106
+            file_uri        : regtest_file_uri
+      SoundDescriptor:
+        sampling_rate        : 48000/1
+        bits_per_sample      : 20
+        block_align          : 3
+        channel_count        : 1
+        locked               : true
+  BBCArchive:
+    original_filename : ABC.mxf
+    EventCounts:
+      vtr_errors        : 1
+      pse_failures      : 1
+      digibeta_dropouts : 1
+      timecode_breaks   : 1
+    SourceInfax:
+      format            : D3
+      programme_title   : D3 preservation programme
+      transmission_date : 2006-02-02
+      programme_number  : LME1306H
+      production_code   : 71
+      spool_status      : T
+      stock_date        : 2006-01-01
+      spool_descriptor  : PROGRAMME BACKING COPY
+      memo              : Bla bla bla
+      duration          : 00:28:52:00 (count='1732', rate='1')
+      spoolNumber       : DGN377505
+      accession_number  : DC193783
+      catalogue_detail  : LONPROG
+      item_number       : 1
+    LTOInfax:
+      format            : LTO
+      programme_title   : D3 preservation programme
+      transmission_date : 2006-02-02
+      item_number       : 0
+    Events:
+      DigibetaDropouts: (1)
+        DigibetaDropout #0:
+          position : 00:00:00:00 (count='0')
+          vitc     : 10:00:00:00
+          ltc      : 10:00:00:00
+          strength : 160
+      PSEFailures: (1)
+        PSEFailure #0:
+          position         : 00:00:00:00 (count='0')
+          vitc             : 10:00:00:00
+          ltc              : 10:00:00:00
+          luminance_flash  : 3.000000
+      TimecodeBreaks: (1)
+        TimecodeBreak #0:
+          position : 00:00:00:00 (count='0')
+          vitc     : 10:00:00:00
+          ltc      : 10:00:00:00
+          type     : VITC
+      VTRErrors: (1)
+        VTRError #0:
+          position     : 00:00:00:00 (count='0')
+          vitc         : 10:00:00:00
+          ltc          : 10:00:00:00
+          error_code   : 0x01
+          video_status : Almost_Good (value='1')
+          audio_status : Good (value='0')
