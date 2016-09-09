@@ -651,8 +651,12 @@ static void write_track_mca_label_info(AppInfoWriter *info_writer, MXFReader *re
     size_t i;
     for (i = 0; i < sound_info->mca_labels.size(); i++) {
         AudioChannelLabelSubDescriptor *c_label = sound_info->mca_labels[i];
-        BMX_CHECK(c_label->haveMCAChannelID());
-        c_labels[c_label->getMCAChannelID()].push_back(c_label);
+        if (c_label->haveMCAChannelID()) {
+            c_labels[c_label->getMCAChannelID()].push_back(c_label);
+        } else {
+            BMX_CHECK(sound_info->channel_count == 1);
+            c_labels[1].push_back(c_label);
+        }
 
         if (c_label->haveSoundfieldGroupLinkID()) {
             UUID link_id = c_label->getSoundfieldGroupLinkID();

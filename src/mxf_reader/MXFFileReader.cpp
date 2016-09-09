@@ -1803,13 +1803,20 @@ void MXFFileReader::ProcessMCALabels(FileDescriptor *file_desc, MXFSoundTrackInf
         for (i = 0; i < sub_descs.size(); i++) {
             AudioChannelLabelSubDescriptor *c_label = dynamic_cast<AudioChannelLabelSubDescriptor*>(sub_descs[i]);
             if (c_label) {
-                if (!c_label->haveMCAChannelID())
-                    BMX_EXCEPTION(("MCA channel label is missing the channel id property"));
-                if (c_label->getMCAChannelID() == 0)
-                    BMX_EXCEPTION(("MCA channel label channel id value 0 is invalid; channel id starts counting from 1"));
-                if (c_label->getMCAChannelID() > sound_track_info->channel_count) {
-                    BMX_EXCEPTION(("MCA channel label channel id %u exceeds channel count %u",
-                                   c_label->getMCAChannelID(), sound_track_info->channel_count));
+                if (sound_track_info->channel_count == 0) {
+                    BMX_EXCEPTION(("MCA channel label in track containing 0 channels"));
+                } else if (c_label->haveMCAChannelID()) {
+                    if (c_label->getMCAChannelID() == 0)
+                        BMX_EXCEPTION(("MCA channel label channel id value 0 is invalid; channel id starts counting from 1"));
+                    if (c_label->getMCAChannelID() > sound_track_info->channel_count) {
+                        BMX_EXCEPTION(("MCA channel label channel id %u exceeds channel count %u",
+                                       c_label->getMCAChannelID(), sound_track_info->channel_count));
+                    }
+                } else {
+                    if (sound_track_info->channel_count > 1) {
+                        BMX_EXCEPTION(("MCA channel label is missing the channel id property in a track containing %u channels",
+                                       sound_track_info->channel_count));
+                    }
                 }
                 mMCALabelIndex->CheckReferences(c_label);
                 mca_labels.push_back(c_label);

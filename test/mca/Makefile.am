@@ -17,6 +17,7 @@ EXTRA_DIST = \
 	mcalabels_stereop51.md5 \
 	mcalabels_mess.md5 \
 	mcalabels_mono.md5 \
+	mcalabels_mononochan.md5 \
 	mca_mono.xml \
 	mca_stereo.xml \
 	mca_singlemca.xml \
@@ -32,10 +33,12 @@ EXTRA_DIST = \
 	mcalabels_stereop51.xml \
 	mcalabels_mess.xml \
 	mcalabels_mono.xml \
+	mcalabels_mononochan.xml \
 	stereo.txt \
 	stereop51.txt \
 	mess.txt \
 	mono.txt \
+	mononochan.txt \
 	test_mca.sh \
 	test_labels.sh
 

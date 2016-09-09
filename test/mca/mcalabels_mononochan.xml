@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bmx xmlns="http://bbc.co.uk/rd/bmx/201312" created="1970-01-01T00:00:00.000Z" version="0.1">
+  <application>
+    <name>mxf2raw</name>
+    <lib_name>RegLib</lib_name>
+    <lib_version>0.0.0</lib_version>
+    <build_timestamp>1970-01-01T00:00:00.000Z</build_timestamp>
+    <scm_version>regtest-head</scm_version>
+  </application>
+  <files size="1">
+    <file index="0">
+      <file_uri>regtest_file_uri</file_uri>
+      <mxf_version>1.3</mxf_version>
+      <op_label external_essence="false" non_stream="false" multi_track="true" label="urn:smpte:ul:060e2b34.04010101.0d010201.01010900">OP1A</op_label>
+      <frame_wrapped>true</frame_wrapped>
+      <identifications size="1">
+        <identification index="0">
+          <generation_uid>urn:uuid:00000000-0000-0000-0000-000000000001</generation_uid>
+          <company_name>RegCo</company_name>
+          <product_name>RegLib</product_name>
+          <product_version>1.0.0.0.0</product_version>
+          <version_string>0.0.0</version_string>
+          <product_uid>urn:uuid:00000000-0000-0000-0000-000000000000</product_uid>
+          <modified_date>1000-01-01T00:00:00</modified_date>
+          <toolkit_version>1.0.0.0.0</toolkit_version>
+          <platform>libMXF (Linux)</platform>
+        </identification>
+      </identifications>
+      <material_packages size="1">
+        <material_package index="0">
+          <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+          <creation_date>1000-01-01T00:00:00</creation_date>
+          <modified_date>1000-01-01T00:00:00</modified_date>
+        </material_package>
+      </material_packages>
+      <file_source_packages size="1">
+        <file_source_package index="0">
+          <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+          <creation_date>1000-01-01T00:00:00</creation_date>
+          <modified_date>1000-01-01T00:00:00</modified_date>
+        </file_source_package>
+      </file_source_packages>
+    </file>
+  </files>
+  <clip>
+    <edit_rate>25/1</edit_rate>
+    <duration count="3">00:00:00:03</duration>
+    <start_timecodes>
+      <material>00:00:00:00</material>
+      <file_source>00:00:00:00</file_source>
+    </start_timecodes>
+    <tracks size="9">
+      <track index="0">
+        <essence_kind>Picture</essence_kind>
+        <essence_type>AVCI_100_1080i</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.0401010a.0d010301.02106001</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="3">00:00:00:03</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>1001</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>1001</track_id>
+              <track_number>0x15010500</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <picture_descriptor>
+          <coding_label>urn:smpte:ul:060e2b34.0401010a.04010202.01323102</coding_label>
+          <signal_standard value="4">SMPTE_274</signal_standard>
+          <frame_layout value="1">Separate_Fields</frame_layout>
+          <stored_width>1920</stored_width>
+          <stored_height>1080</stored_height>
+          <display_width>1920</display_width>
+          <display_height>1080</display_height>
+          <aspect_ratio>16/9</aspect_ratio>
+          <avci_header>true</avci_header>
+          <cdci_descriptor>
+            <component_depth>10</component_depth>
+            <horiz_subsamp>2</horiz_subsamp>
+            <vert_subsamp>1</vert_subsamp>
+            <color_siting value="0">Cositing</color_siting>
+          </cdci_descriptor>
+        </picture_descriptor>
+      </track>
+      <track index="1">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060100</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="3">00:00:00:03</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>2001</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>2001</track_id>
+              <track_number>0x16080100</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <channel_assignment>urn:smpte:ul:060e2b34.04010101.0d010801.02010000</channel_assignment>
+          <mca_labels>
+            <channel_summary>chL</channel_summary>
+            <sg_summary>sgST</sg_summary>
+            <gosg_summary>ggMPg</gosg_summary>
+            <channels size="1">
+              <channel index="0">
+                <index>0</index>
+                <id>1</id>
+                <labels size="1">
+                  <channel_label index="0">
+                    <link_id>urn:uuid:00000000-0000-0000-0000-000000010003</link_id>
+                    <dict_id>urn:smpte:ul:060e2b34.0401010d.03020101.00000000</dict_id>
+                    <tag_symbol>chL</tag_symbol>
+                    <tag_name>Left</tag_name>
+                    <sg_link_id tag_symbol="sgST">urn:uuid:00000000-0000-0000-0000-000000010002</sg_link_id>
+                  </channel_label>
+                </labels>
+              </channel>
+            </channels>
+            <soundfield_groups size="1">
+              <soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010002</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.0401010d.03020220.01000000</dict_id>
+                <tag_symbol>sgST</tag_symbol>
+                <tag_name>Standard Stereo</tag_name>
+                <language>en</language>
+                <gosg_link_ids size="1">
+                  <gosg_link_id index="0">
+                    <link_id tag_symbol="ggMPg">urn:uuid:00000000-0000-0000-0000-000000010001</link_id>
+                  </gosg_link_id>
+                </gosg_link_ids>
+              </soundfield_group>
+            </soundfield_groups>
+            <group_of_soundfield_groups size="1">
+              <group_of_soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010001</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.0401010d.03020320.01000000</dict_id>
+                <tag_symbol>ggMPg</tag_symbol>
+                <tag_name>Main Program</tag_name>
+              </group_of_soundfield_group>
+            </group_of_soundfield_groups>
+          </mca_labels>
+        </sound_descriptor>
+      </track>
+      <track index="2">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060100</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="3">00:00:00:03</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>2002</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>2002</track_id>
+              <track_number>0x16080101</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <channel_assignment>urn:smpte:ul:060e2b34.04010101.0d010801.02010000</channel_assignment>
+          <mca_labels>
+            <channel_summary>chR</channel_summary>
+            <sg_summary>sgST</sg_summary>
+            <gosg_summary>ggMPg</gosg_summary>
+            <channels size="1">
+              <channel index="0">
+                <index>0</index>
+                <id>1</id>
+                <labels size="1">
+                  <channel_label index="0">
+                    <link_id>urn:uuid:00000000-0000-0000-0000-000000010004</link_id>
+                    <dict_id>urn:smpte:ul:060e2b34.0401010d.03020102.00000000</dict_id>
+                    <tag_symbol>chR</tag_symbol>
+                    <tag_name>Right</tag_name>
+                    <sg_link_id tag_symbol="sgST">urn:uuid:00000000-0000-0000-0000-000000010002</sg_link_id>
+                  </channel_label>
+                </labels>
+              </channel>
+            </channels>
+            <soundfield_groups size="1">
+              <soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010002</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.0401010d.03020220.01000000</dict_id>
+                <tag_symbol>sgST</tag_symbol>
+                <tag_name>Standard Stereo</tag_name>
+                <language>en</language>
+                <gosg_link_ids size="1">
+                  <gosg_link_id index="0">
+                    <link_id tag_symbol="ggMPg">urn:uuid:00000000-0000-0000-0000-000000010001</link_id>
+                  </gosg_link_id>
+                </gosg_link_ids>
+              </soundfield_group>
+            </soundfield_groups>
+            <group_of_soundfield_groups size="1">
+              <group_of_soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010001</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.0401010d.03020320.01000000</dict_id>
+                <tag_symbol>ggMPg</tag_symbol>
+                <tag_name>Main Program</tag_name>
+              </group_of_soundfield_group>
+            </group_of_soundfield_groups>
+          </mca_labels>
+        </sound_descriptor>
+      </track>
+      <track index="3">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060100</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="3">00:00:00:03</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>2003</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>2003</track_id>
+              <track_number>0x16080102</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <channel_assignment>urn:smpte:ul:060e2b34.04010101.0d010801.02010000</channel_assignment>
+          <mca_labels>
+            <channel_summary>chL</channel_summary>
+            <sg_summary>sgST</sg_summary>
+            <gosg_summary>ggAPg</gosg_summary>
+            <channels size="1">
+              <channel index="0">
+                <index>0</index>
+                <id>1</id>
+                <labels size="1">
+                  <channel_label index="0">
+                    <link_id>urn:uuid:00000000-0000-0000-0000-000000010007</link_id>
+                    <dict_id>urn:smpte:ul:060e2b34.0401010d.03020101.00000000</dict_id>
+                    <tag_symbol>chL</tag_symbol>
+                    <tag_name>Left</tag_name>
+                    <sg_link_id tag_symbol="sgST">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
+                  </channel_label>
+                </labels>
+              </channel>
+            </channels>
+            <soundfield_groups size="1">
+              <soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010006</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.0401010d.03020220.01000000</dict_id>
+                <tag_symbol>sgST</tag_symbol>
+                <tag_name>Standard Stereo</tag_name>
+                <language>de</language>
+                <gosg_link_ids size="1">
+                  <gosg_link_id index="0">
+                    <link_id tag_symbol="ggAPg">urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
+                  </gosg_link_id>
+                </gosg_link_ids>
+              </soundfield_group>
+            </soundfield_groups>
+            <group_of_soundfield_groups size="1">
+              <group_of_soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.04010101.0d010801.01030100</dict_id>
+                <tag_symbol>ggAPg</tag_symbol>
+                <tag_name>Alternative Program</tag_name>
+              </group_of_soundfield_group>
+            </group_of_soundfield_groups>
+          </mca_labels>
+        </sound_descriptor>
+      </track>
+      <track index="4">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060100</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="3">00:00:00:03</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>2004</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>2004</track_id>
+              <track_number>0x16080103</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <channel_assignment>urn:smpte:ul:060e2b34.04010101.0d010801.02010000</channel_assignment>
+          <mca_labels>
+            <channel_summary>chR</channel_summary>
+            <sg_summary>sgST</sg_summary>
+            <gosg_summary>ggAPg</gosg_summary>
+            <channels size="1">
+              <channel index="0">
+                <index>0</index>
+                <id>1</id>
+                <labels size="1">
+                  <channel_label index="0">
+                    <link_id>urn:uuid:00000000-0000-0000-0000-000000010008</link_id>
+                    <dict_id>urn:smpte:ul:060e2b34.0401010d.03020102.00000000</dict_id>
+                    <tag_symbol>chR</tag_symbol>
+                    <tag_name>Right</tag_name>
+                    <sg_link_id tag_symbol="sgST">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
+                  </channel_label>
+                </labels>
+              </channel>
+            </channels>
+            <soundfield_groups size="1">
+              <soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010006</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.0401010d.03020220.01000000</dict_id>
+                <tag_symbol>sgST</tag_symbol>
+                <tag_name>Standard Stereo</tag_name>
+                <language>de</language>
+                <gosg_link_ids size="1">
+                  <gosg_link_id index="0">
+                    <link_id tag_symbol="ggAPg">urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
+                  </gosg_link_id>
+                </gosg_link_ids>
+              </soundfield_group>
+            </soundfield_groups>
+            <group_of_soundfield_groups size="1">
+              <group_of_soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.04010101.0d010801.01030100</dict_id>
+                <tag_symbol>ggAPg</tag_symbol>
+                <tag_name>Alternative Program</tag_name>
+              </group_of_soundfield_group>
+            </group_of_soundfield_groups>
+          </mca_labels>
+        </sound_descriptor>
+      </track>
+      <track index="5">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060100</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="3">00:00:00:03</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>2005</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>2005</track_id>
+              <track_number>0x16080104</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <channel_assignment>urn:smpte:ul:060e2b34.04010101.0d010801.02010000</channel_assignment>
+          <mca_labels>
+            <channel_summary>chL</channel_summary>
+            <sg_summary>sgST</sg_summary>
+            <gosg_summary>ggAPg</gosg_summary>
+            <channels size="1">
+              <channel index="0">
+                <index>0</index>
+                <id>1</id>
+                <labels size="1">
+                  <channel_label index="0">
+                    <link_id>urn:uuid:00000000-0000-0000-0000-00000001000a</link_id>
+                    <dict_id>urn:smpte:ul:060e2b34.0401010d.03020101.00000000</dict_id>
+                    <tag_symbol>chL</tag_symbol>
+                    <tag_name>Left</tag_name>
+                    <sg_link_id tag_symbol="sgST">urn:uuid:00000000-0000-0000-0000-000000010009</sg_link_id>
+                  </channel_label>
+                </labels>
+              </channel>
+            </channels>
+            <soundfield_groups size="1">
+              <soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010009</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.0401010d.03020220.01000000</dict_id>
+                <tag_symbol>sgST</tag_symbol>
+                <tag_name>Standard Stereo</tag_name>
+                <language>fr</language>
+                <gosg_link_ids size="1">
+                  <gosg_link_id index="0">
+                    <link_id tag_symbol="ggAPg">urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
+                  </gosg_link_id>
+                </gosg_link_ids>
+              </soundfield_group>
+            </soundfield_groups>
+            <group_of_soundfield_groups size="1">
+              <group_of_soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.04010101.0d010801.01030100</dict_id>
+                <tag_symbol>ggAPg</tag_symbol>
+                <tag_name>Alternative Program</tag_name>
+              </group_of_soundfield_group>
+            </group_of_soundfield_groups>
+          </mca_labels>
+        </sound_descriptor>
+      </track>
+      <track index="6">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060100</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="3">00:00:00:03</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>2006</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>2006</track_id>
+              <track_number>0x16080105</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <channel_assignment>urn:smpte:ul:060e2b34.04010101.0d010801.02010000</channel_assignment>
+          <mca_labels>
+            <channel_summary>chR</channel_summary>
+            <sg_summary>sgST</sg_summary>
+            <gosg_summary>ggAPg</gosg_summary>
+            <channels size="1">
+              <channel index="0">
+                <index>0</index>
+                <id>1</id>
+                <labels size="1">
+                  <channel_label index="0">
+                    <link_id>urn:uuid:00000000-0000-0000-0000-00000001000b</link_id>
+                    <dict_id>urn:smpte:ul:060e2b34.0401010d.03020102.00000000</dict_id>
+                    <tag_symbol>chR</tag_symbol>
+                    <tag_name>Right</tag_name>
+                    <sg_link_id tag_symbol="sgST">urn:uuid:00000000-0000-0000-0000-000000010009</sg_link_id>
+                  </channel_label>
+                </labels>
+              </channel>
+            </channels>
+            <soundfield_groups size="1">
+              <soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010009</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.0401010d.03020220.01000000</dict_id>
+                <tag_symbol>sgST</tag_symbol>
+                <tag_name>Standard Stereo</tag_name>
+                <language>fr</language>
+                <gosg_link_ids size="1">
+                  <gosg_link_id index="0">
+                    <link_id tag_symbol="ggAPg">urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
+                  </gosg_link_id>
+                </gosg_link_ids>
+              </soundfield_group>
+            </soundfield_groups>
+            <group_of_soundfield_groups size="1">
+              <group_of_soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.04010101.0d010801.01030100</dict_id>
+                <tag_symbol>ggAPg</tag_symbol>
+                <tag_name>Alternative Program</tag_name>
+              </group_of_soundfield_group>
+            </group_of_soundfield_groups>
+          </mca_labels>
+        </sound_descriptor>
+      </track>
+      <track index="7">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060100</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="3">00:00:00:03</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>2007</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>2007</track_id>
+              <track_number>0x16080106</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <channel_assignment>urn:smpte:ul:060e2b34.04010101.0d010801.02010000</channel_assignment>
+          <mca_labels>
+            <channel_summary>chL</channel_summary>
+            <sg_summary>sgST</sg_summary>
+            <gosg_summary>ggAPg</gosg_summary>
+            <channels size="1">
+              <channel index="0">
+                <index>0</index>
+                <id>1</id>
+                <labels size="1">
+                  <channel_label index="0">
+                    <link_id>urn:uuid:00000000-0000-0000-0000-00000001000d</link_id>
+                    <dict_id>urn:smpte:ul:060e2b34.0401010d.03020101.00000000</dict_id>
+                    <tag_symbol>chL</tag_symbol>
+                    <tag_name>Left</tag_name>
+                    <sg_link_id tag_symbol="sgST">urn:uuid:00000000-0000-0000-0000-00000001000c</sg_link_id>
+                  </channel_label>
+                </labels>
+              </channel>
+            </channels>
+            <soundfield_groups size="1">
+              <soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-00000001000c</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.0401010d.03020220.01000000</dict_id>
+                <tag_symbol>sgST</tag_symbol>
+                <tag_name>Standard Stereo</tag_name>
+                <language>es</language>
+                <gosg_link_ids size="1">
+                  <gosg_link_id index="0">
+                    <link_id tag_symbol="ggAPg">urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
+                  </gosg_link_id>
+                </gosg_link_ids>
+              </soundfield_group>
+            </soundfield_groups>
+            <group_of_soundfield_groups size="1">
+              <group_of_soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.04010101.0d010801.01030100</dict_id>
+                <tag_symbol>ggAPg</tag_symbol>
+                <tag_name>Alternative Program</tag_name>
+              </group_of_soundfield_group>
+            </group_of_soundfield_groups>
+          </mca_labels>
+        </sound_descriptor>
+      </track>
+      <track index="8">
+        <essence_kind>Sound</essence_kind>
+        <essence_type>WAVE_PCM</essence_type>
+        <ec_label>urn:smpte:ul:060e2b34.04010101.0d010301.02060100</ec_label>
+        <edit_rate>25/1</edit_rate>
+        <duration count="3">00:00:00:03</duration>
+        <packages size="1">
+          <package index="0">
+            <material>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000001</package_uid>
+              <track_id>2008</track_id>
+              <track_number>0</track_number>
+            </material>
+            <file_source>
+              <package_uid>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</package_uid>
+              <track_id>2008</track_id>
+              <track_number>0x16080107</track_number>
+              <file_uri>regtest_file_uri</file_uri>
+            </file_source>
+          </package>
+        </packages>
+        <sound_descriptor>
+          <sampling_rate>48000/1</sampling_rate>
+          <bits_per_sample>24</bits_per_sample>
+          <block_align>3</block_align>
+          <channel_count>1</channel_count>
+          <locked>true</locked>
+          <channel_assignment>urn:smpte:ul:060e2b34.04010101.0d010801.02010000</channel_assignment>
+          <mca_labels>
+            <channel_summary>chR</channel_summary>
+            <sg_summary>sgST</sg_summary>
+            <gosg_summary>ggAPg</gosg_summary>
+            <channels size="1">
+              <channel index="0">
+                <index>0</index>
+                <id>1</id>
+                <labels size="1">
+                  <channel_label index="0">
+                    <link_id>urn:uuid:00000000-0000-0000-0000-00000001000e</link_id>
+                    <dict_id>urn:smpte:ul:060e2b34.0401010d.03020102.00000000</dict_id>
+                    <tag_symbol>chR</tag_symbol>
+                    <tag_name>Right</tag_name>
+                    <sg_link_id tag_symbol="sgST">urn:uuid:00000000-0000-0000-0000-00000001000c</sg_link_id>
+                  </channel_label>
+                </labels>
+              </channel>
+            </channels>
+            <soundfield_groups size="1">
+              <soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-00000001000c</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.0401010d.03020220.01000000</dict_id>
+                <tag_symbol>sgST</tag_symbol>
+                <tag_name>Standard Stereo</tag_name>
+                <language>es</language>
+                <gosg_link_ids size="1">
+                  <gosg_link_id index="0">
+                    <link_id tag_symbol="ggAPg">urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
+                  </gosg_link_id>
+                </gosg_link_ids>
+              </soundfield_group>
+            </soundfield_groups>
+            <group_of_soundfield_groups size="1">
+              <group_of_soundfield_group index="0">
+                <link_id>urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
+                <dict_id>urn:smpte:ul:060e2b34.04010101.0d010801.01030100</dict_id>
+                <tag_symbol>ggAPg</tag_symbol>
+                <tag_name>Alternative Program</tag_name>
+              </group_of_soundfield_group>
+            </group_of_soundfield_groups>
+          </mca_labels>
+        </sound_descriptor>
+      </track>
+    </tracks>
+  </clip>
+</bmx>

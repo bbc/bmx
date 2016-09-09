@@ -1,0 +1,42 @@
+0
+chL
+sgST, id=sg1, lang=en
+ggMPg, id=gosg1
+
+1
+chR
+sgST, id=sg1, repeat=false
+ggMPg, id=gosg1, repeat=false
+
+2
+chL
+sgST, id=sg2, lang=de
+ggAPg, id=gosg2
+
+3
+chR
+sgST, id=sg2, repeat=false
+ggAPg, id=gosg2, repeat=false
+
+4
+chL
+sgST, id=sg3, lang=fr
+ggAPg, id=gosg2, repeat=false
+
+5
+chR
+sgST, id=sg3, repeat=false
+ggAPg, id=gosg2, repeat=false
+
+6
+chL
+sgST, id=sg4, lang=es
+ggAPg, id=gosg2, repeat=false
+
+
+7
+chR
+sgST, id=sg4, repeat=false
+ggAPg, id=gosg2, repeat=false
+
+

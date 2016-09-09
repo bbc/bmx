@@ -289,13 +289,19 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
             for (c = 0; c < sg.c_label_lines.size(); c++) {
                 LabelLine &c_label_line = sg.c_label_lines[c];
 
-                if (c_label_line.channel_index >= pcm_track->GetChannelCount()) {
-                    BMX_EXCEPTION(("Channel label channel index %u >= track channel count %u",
-                                   c_label_line.channel_index, pcm_track->GetChannelCount()));
+                if (c_label_line.channel_index != (uint32_t)(-1)) {
+                    if (c_label_line.channel_index >= pcm_track->GetChannelCount()) {
+                        BMX_EXCEPTION(("Channel label channel index %u >= track channel count %u",
+                                       c_label_line.channel_index, pcm_track->GetChannelCount()));
+                    }
+                } else if (pcm_track->GetChannelCount() != 1) {
+                    BMX_EXCEPTION(("Missing channel label channel index in track with %u channels",
+                                   pcm_track->GetChannelCount()));
                 }
 
                 AudioChannelLabelSubDescriptor *a_desc = pcm_track->AddAudioChannelLabel();
-                a_desc->setMCAChannelID(c_label_line.channel_index + 1); // +1 because MCAChannelID starts from 1
+                if (c_label_line.channel_index != (uint32_t)(-1))
+                    a_desc->setMCAChannelID(c_label_line.channel_index + 1); // +1 because MCAChannelID starts from 1
                 a_desc->setMCALabelDictionaryID(c_label_line.label->dict_id);
                 a_desc->setMCATagSymbol(c_label_line.label->tag_symbol);
                 if (c_label_line.label->tag_name && c_label_line.label->tag_name[0])
@@ -403,9 +409,6 @@ AppMCALabelHelper::LabelLine AppMCALabelHelper::ParseLabelLine(const string &lin
             log_warn("Ignoring unknown audio label attribute '%s'\n", elements[i].c_str());
         }
     }
-
-    if (label_line.label->type == AUDIO_CHANNEL_LABEL && label_line.channel_index == (uint32_t)(-1))
-        throw BMXException("Missing 'chan' audio channel label attribute");
 
     return label_line;
 }

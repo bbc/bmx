@@ -201,9 +201,12 @@ void RDD9PCMTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPa
 
         const AudioChannelLabelSubDescriptor *c_desc  = dynamic_cast<const AudioChannelLabelSubDescriptor*>(desc);
         if (c_desc) {
-            BMX_CHECK(c_desc->haveMCAChannelID());
-            BMX_CHECK(c_desc->getMCAChannelID() > 0);
-            BMX_CHECK(c_desc->getMCAChannelID() <= mWaveDescriptorHelper->GetChannelCount());
+            if (c_desc->haveMCAChannelID()) {
+                BMX_CHECK(c_desc->getMCAChannelID() > 0);
+                BMX_CHECK(c_desc->getMCAChannelID() <= mWaveDescriptorHelper->GetChannelCount());
+            } else {
+                BMX_CHECK(mWaveDescriptorHelper->GetChannelCount() == 1);
+            }
         }
     }
 
