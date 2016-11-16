@@ -44,6 +44,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <sstream>
 
 #include "RawInputTrack.h"
 #include "../writers/OutputTrack.h"
@@ -479,6 +480,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "                              - a file URL starting with 'file://'\n");
     fprintf(stderr, "                              - an absolute Windows (starts with '[A-Z]:') or *nix (starts with '/') filename\n");
     fprintf(stderr, "                              - a relative filename, which will be converted to an absolute filename\n");
+    fprintf(stderr, "    --aux <hh:mm:sscff>     Set up to 5 auxiliary start timecodes. Multiple timecodes are separated by commas e.g. --aux 15:02:15:23,09:37:08:10\n");
+    fprintf(stderr, "                            The c character in the pattern should be ':' for non-drop frame; any other character indicates drop frame\n");
     fprintf(stderr, "    --comment <string>      Add 'Comments' user comment to the MaterialPackage\n");
     fprintf(stderr, "    --desc <string>         Add 'Descript' user comment to the MaterialPackage\n");
     fprintf(stderr, "    --tag <name> <value>    Add <name> user comment to the MaterialPackage. Option can be used multiple times\n");
@@ -679,6 +682,8 @@ int main(int argc, const char** argv)
     RawInput input;
     Timecode start_timecode;
     const char *start_timecode_str = 0;
+    vector<Timecode> auxiliary_timecodes;
+    vector<string> auxiliary_timecode_strings;
     Rational default_frame_rate = FRAME_RATE_25;
     Rational frame_rate = ZERO_RATIONAL;
     bool frame_rate_set = false;
@@ -1327,6 +1332,22 @@ int main(int argc, const char** argv)
                 return 1;
             }
             import_name = argv[cmdln_index + 1];
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--aux") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            istringstream aux_ss(argv[cmdln_index + 1]);
+            string curr_aux;
+            while (getline(aux_ss, curr_aux, ','))
+            {
+                auxiliary_timecode_strings.push_back(curr_aux);
+            }
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--comment") == 0)
@@ -3728,6 +3749,22 @@ int main(int argc, const char** argv)
             throw false;
         }
 
+        if (auxiliary_timecode_strings.size() > 5)
+        {
+            log_error("Avid only supports up to 5 auxilliary timecode tracks.\n");
+            throw false;
+        }
+        for (size_t i = 0; i < auxiliary_timecode_strings.size(); i++)
+        {
+            Timecode auxiliary_timecode;
+            if (!parse_timecode(auxiliary_timecode_strings[i].c_str(), frame_rate, &auxiliary_timecode)) {
+                usage(argv[0]);
+                log_error("Invalid value '%s' for option '--aux'\n", auxiliary_timecode_strings[i].c_str());
+                throw false;
+            }
+            auxiliary_timecodes.push_back(auxiliary_timecode);
+        }
+
         if (partition_interval_str) {
             if (!parse_partition_interval(partition_interval_str, frame_rate, &partition_interval))
             {
@@ -3853,6 +3890,8 @@ int main(int argc, const char** argv)
         vector<pair<mxfUMID, uint32_t> > physical_package_sound_refs;
 
         clip->SetStartTimecode(start_timecode);
+        if (auxiliary_timecodes.size() > 0)
+            clip->SetAuxiliaryTimecodes(auxiliary_timecodes);
         if (clip_name)
             clip->SetClipName(clip_name);
         else if (clip_sub_type == AS11_CLIP_SUB_TYPE && as11_helper.HaveProgrammeTitle())

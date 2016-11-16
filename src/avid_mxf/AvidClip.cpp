@@ -57,6 +57,9 @@ using namespace mxfpp;
 // max locators limited by number of string references in a strong reference vector ((2^16 - 1) / 16)
 #define MAX_LOCATORS    4095
 
+// defines the first track that avid will read as auxiliary timecode (Auxiliary TC1)
+// Avid auxiliary timecode tracks start from track number 3 (track 1 = normal TC, track 2 = AUX24)
+#define AUX_START_TRACK    3
 
 
 static bool compare_track(const AvidTrack *left, const AvidTrack *right)
@@ -135,6 +138,11 @@ void AvidClip::SetStartTimecode(Timecode start_timecode)
 {
     mStartTimecode = start_timecode;
     mStartTimecodeSet = true;
+}
+
+void AvidClip::SetAuxiliaryTimecodes(const vector<Timecode> &aux_timecodes)
+{
+    mAuxTimecodes = aux_timecodes;
 }
 
 void AvidClip::SetProductInfo(string company_name, string product_name, mxfProductVersion product_version,
@@ -272,6 +280,48 @@ SourcePackage* AvidClip::CreateDefaultTapeSource(string name, uint32_t num_video
     tc_component->setRoundedTimecodeBase(get_rounded_tc_base(mClipFrameRate));
     tc_component->setDropFrame(false);
     tc_component->setStartTimecode(0);
+    track_id++;
+
+    string aux_track_base_name = "AUXTC";
+    for (uint32_t i = 0; i < mAuxTimecodes.size(); i++)
+    {
+        uint32_t currentAuxTrack = AUX_START_TRACK + i;
+        // Preface - ContentStorage - tape SourcePackage - timecode Timeline Track
+        Track *aux_tc_track = new Track(mHeaderMetadata);
+        tape_package->appendTracks(aux_tc_track);
+        char aux_track_num[21];
+        sprintf(aux_track_num, "%u", i+1);
+        aux_tc_track->setTrackName(aux_track_base_name + aux_track_num);
+        aux_tc_track->setTrackID(track_id);
+        // Avid auxiliary timecode tracks start from track number 3 (track 1 = normal TC, track 2 = AUX24)
+        aux_tc_track->setTrackNumber(currentAuxTrack);
+        aux_tc_track->setEditRate(mClipFrameRate);
+        aux_tc_track->setOrigin(0);
+
+        // Preface - ContentStorage - tape SourcePackage - timecode Timeline Track - Sequence
+        Sequence *aux_sequence = new Sequence(mHeaderMetadata);
+        aux_tc_track->setSequence(aux_sequence);
+        aux_sequence->setDataDefinition(MXF_DDEF_L(Timecode));
+        aux_sequence->setDuration(tape_duration);
+
+        // Preface - ContentStorage - tape SourcePackage - Timecode Track - Filler
+        StructuralComponent *filler = dynamic_cast<StructuralComponent*>(
+            mHeaderMetadata->createAndWrap(&MXF_SET_K(Filler)));
+        aux_sequence->appendStructuralComponents(filler);
+        filler->setDataDefinition(MXF_DDEF_L(Timecode));
+        filler->setDuration(mStartTimecode.GetOffset());
+
+        // Preface - ContentStorage - tape SourcePackage - Timecode Track - TimecodeComponent
+        TimecodeComponent *aux_tc_component = new TimecodeComponent(mHeaderMetadata);
+        aux_sequence->appendStructuralComponents(aux_tc_component);
+        aux_tc_component->setDataDefinition(MXF_DDEF_L(Timecode));
+        aux_tc_component->setDuration(tape_duration - mStartTimecode.GetOffset());
+        aux_tc_component->setRoundedTimecodeBase(mAuxTimecodes[i].GetRoundedTCBase());
+        aux_tc_component->setDropFrame(mAuxTimecodes[i].IsDropFrame());
+        aux_tc_component->setStartTimecode(mAuxTimecodes[i].GetOffset());
+
+        track_id++;
+    }
 
     // Preface - ContentStorage - tape SourcePackage - TapeDescriptor
     GenericDescriptor *tape_descriptor = dynamic_cast<GenericDescriptor*>(
@@ -365,6 +415,48 @@ SourcePackage* AvidClip::CreateDefaultImportSource(string uri, string name,
     tc_component->setRoundedTimecodeBase(get_rounded_tc_base(mClipFrameRate));
     tc_component->setDropFrame(false);
     tc_component->setStartTimecode(0);
+    track_id++;
+
+    string aux_track_base_name = "AUXTC";
+    for (uint32_t i = 0; i < mAuxTimecodes.size(); i++)
+    {
+        uint32_t currentAuxTrack = AUX_START_TRACK + i;
+        // Preface - ContentStorage - import SourcePackage - timecode Timeline Track
+        Track *aux_tc_track = new Track(mHeaderMetadata);
+        import_package->appendTracks(aux_tc_track);
+        char aux_track_num[21];
+        sprintf(aux_track_num, "%u", i+1);
+        aux_tc_track->setTrackName(aux_track_base_name + aux_track_num);
+        aux_tc_track->setTrackID(track_id);
+        // Avid auxiliary timecode tracks start from track number 3 (track 1 = normal TC, track 2 = AUX24)
+        aux_tc_track->setTrackNumber(currentAuxTrack);
+        aux_tc_track->setEditRate(mClipFrameRate);
+        aux_tc_track->setOrigin(0);
+
+        // Preface - ContentStorage - import SourcePackage - timecode Timeline Track - Sequence
+        Sequence *aux_sequence = new Sequence(mHeaderMetadata);
+        aux_tc_track->setSequence(aux_sequence);
+        aux_sequence->setDataDefinition(MXF_DDEF_L(Timecode));
+        aux_sequence->setDuration(import_duration);
+
+        // Preface - ContentStorage - import SourcePackage - Timecode Track - Filler
+        StructuralComponent *filler = dynamic_cast<StructuralComponent*>(
+            mHeaderMetadata->createAndWrap(&MXF_SET_K(Filler)));
+        aux_sequence->appendStructuralComponents(filler);
+        filler->setDataDefinition(MXF_DDEF_L(Timecode));
+        filler->setDuration(mStartTimecode.GetOffset());
+
+        // Preface - ContentStorage - import SourcePackage - Timecode Track - TimecodeComponent
+        TimecodeComponent *aux_tc_component = new TimecodeComponent(mHeaderMetadata);
+        aux_sequence->appendStructuralComponents(aux_tc_component);
+        aux_tc_component->setDataDefinition(MXF_DDEF_L(Timecode));
+        aux_tc_component->setDuration(import_duration - mStartTimecode.GetOffset());
+        aux_tc_component->setRoundedTimecodeBase(mAuxTimecodes[i].GetRoundedTCBase());
+        aux_tc_component->setDropFrame(mAuxTimecodes[i].IsDropFrame());
+        aux_tc_component->setStartTimecode(mAuxTimecodes[i].GetOffset());
+
+        track_id++;
+    }
 
     // Preface - ContentStorage - import SourcePackage - ImportDescriptor
     GenericDescriptor *import_descriptor = dynamic_cast<GenericDescriptor*>(

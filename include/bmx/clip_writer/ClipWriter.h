@@ -32,7 +32,6 @@
 #ifndef BMX_CLIP_WRITER_H_
 #define BMX_CLIP_WRITER_H_
 
-
 #include <bmx/as02/AS02Clip.h>
 #include <bmx/mxf_op1a/OP1AFile.h>
 #include <bmx/avid_mxf/AvidClip.h>
@@ -71,6 +70,7 @@ public:
 
     void SetClipName(std::string name);                             // default ""
     void SetStartTimecode(Timecode start_timecode);                 // default 00:00:00:00 non-drop
+    void SetAuxiliaryTimecodes(const std::vector<Timecode> &aux_timecodes);
     void SetProductInfo(std::string company_name, std::string product_name, mxfProductVersion product_version,
                         std::string version, mxfUUID product_uid);
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);

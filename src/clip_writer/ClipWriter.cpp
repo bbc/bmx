@@ -217,6 +217,18 @@ void ClipWriter::SetStartTimecode(Timecode start_timecode)
     }
 }
 
+void ClipWriter::SetAuxiliaryTimecodes(const vector<Timecode> &aux_timecodes)
+{
+    switch (mType)
+    {
+        case CW_AVID_CLIP_TYPE:
+            mAvidClip->SetAuxiliaryTimecodes(aux_timecodes);
+            break;
+        default:
+            break;
+    }
+}
+
 void ClipWriter::SetProductInfo(string company_name, string product_name, mxfProductVersion product_version,
                                 string version, mxfUUID product_uid)
 {

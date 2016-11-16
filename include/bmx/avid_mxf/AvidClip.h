@@ -68,6 +68,7 @@ public:
     void SetProjectName(std::string name);                              // default ""
     void SetClipName(std::string name);                                 // default ""
     void SetStartTimecode(Timecode start_timecode);                     // default 00:00:00:00, non-drop frame
+    void SetAuxiliaryTimecodes(const std::vector<Timecode> &aux_timecodes);
     void SetProductInfo(std::string company_name, std::string product_name, mxfProductVersion product_version,
                         std::string version, mxfUUID product_uid);
     void SetCreationDate(mxfTimestamp creation_date);                   // default generated ('now')
@@ -138,6 +139,7 @@ private:
     std::string mFilenamePrefix;
     Timecode mStartTimecode;
     bool mStartTimecodeSet;
+    std::vector<Timecode> mAuxTimecodes;
     std::string mCompanyName;
     std::string mProductName;
     mxfProductVersion mProductVersion;
