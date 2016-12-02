@@ -34,6 +34,7 @@
 #endif
 
 #define __STDC_FORMAT_MACROS
+#define __STDC_LIMIT_MACROS
 
 #include <cstdio>
 #include <cstdlib>
@@ -48,6 +49,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <limits.h>
 
 #include <vector>
 #include <string>
@@ -98,7 +100,6 @@ static const uint32_t SOUN_COMPONENT_SUB_TYPE = MKTAG("soun");
 static const uint32_t TMCD_COMPONENT_SUB_TYPE = MKTAG("tmcd");
 
 
-static bool g_file_size_64bit = false;
 static FILE *g_mov_file = 0;
 static vector<MOVAtom> g_atoms;
 static uint64_t g_file_offset;
@@ -705,7 +706,7 @@ static void dump_uint32_tag(uint32_t value)
 
 static void dump_file_size(uint64_t value)
 {
-    if (g_file_size_64bit)
+    if (value > UINT32_MAX)
         printf("%20" PRIu64 " (0x%016" PRIx64 ")", value, value);
     else
         printf("%10u (0x%08x)", (uint32_t)value, (uint32_t)value);
@@ -3874,21 +3875,6 @@ int main(int argc, const char **argv)
         fprintf(stderr, "Failed to open quicktime file '%s': %s\n", filename, strerror(errno));
         return 1;
     }
-
-    // check whether file has 64-bit size
-
-#if defined(_WIN32)
-    struct _stati64 stat_buf;
-    if (_stati64(filename, &stat_buf) != 0)
-#else
-    struct stat stat_buf;
-    if (stat(filename, &stat_buf) != 0)
-#endif
-    {
-        fprintf(stderr, "Failed to stat quicktime file '%s': %s\n", filename, strerror(errno));
-        return 1;
-    }
-    g_file_size_64bit = (stat_buf.st_size > 0xffffffff);
 
 
     // dump file
