@@ -79,7 +79,7 @@ public:
         uint64_t frame_height;
         uint8_t color_diff_format_index;
         uint8_t source_sampling;
-        uint8_t top_field_first;
+        bool top_field_first;
         int32_t frame_rate_numer;
         int32_t frame_rate_denom;
         uint64_t pixel_aspect_ratio_numer;
