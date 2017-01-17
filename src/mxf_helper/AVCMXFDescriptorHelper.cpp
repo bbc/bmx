@@ -307,7 +307,12 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
             case 7:
                 cdci_descriptor->setColorPrimaries(SMPTE170M_COLOR_PRIM);
                 break;
-            // TODO: 8?
+            case 9:
+                cdci_descriptor->setColorPrimaries(ITU2020_COLOR_PRIM);
+                break;
+            case 10:
+                cdci_descriptor->setColorPrimaries(SMPTE_DCDM_COLOR_PRIM);
+                break;
             default:
                 break;
         }
@@ -328,9 +333,21 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
             case 8:
                 cdci_descriptor->setCaptureGamma(LINEAR_TRANSFER_CH);
                 break;
-            // TODO: 9,10,11?
+            case 11:
+                cdci_descriptor->setCaptureGamma(IEC6196624_XVYCC_TRANSFER_CH);
+                break;
             case 12:
                 cdci_descriptor->setCaptureGamma(ITU1361_TRANSFER_CH);
+                break;
+            case 14:
+            case 15:
+                cdci_descriptor->setCaptureGamma(ITU2020_TRANSFER_CH);
+                break;
+            case 16:
+                cdci_descriptor->setCaptureGamma(SMPTE_ST2084_TRANSFER_CH);
+                break;
+            case 17:
+                cdci_descriptor->setCaptureGamma(SMPTE_DCDM_TRANSFER_CH);
                 break;
             case 18:
                 cdci_descriptor->setCaptureGamma(HLG_OETF_TRANSFER_CH);
@@ -341,12 +358,24 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
     }
     if (!cdci_descriptor->haveCodingEquations()) {
         switch (essence_parser->GetMatrixCoefficients()) {
+            case 0:
+                SetCodingEquationsMod(GBR_CODING_EQ);
+                break;
             case 1:
                 SetCodingEquationsMod(ITUR_BT709_CODING_EQ);
                 break;
             case 5:
             case 6:
                 SetCodingEquationsMod(ITUR_BT601_CODING_EQ);
+                break;
+            case 7:
+                SetCodingEquationsMod(SMPTE_240M_CODING_EQ);
+                break;
+            case 8:
+                SetCodingEquationsMod(Y_CG_CO_CODING_EQ);
+                break;
+            case 9:
+                SetCodingEquationsMod(ITU2020_NCL_CODING_EQ);
                 break;
             default:
                 break;
