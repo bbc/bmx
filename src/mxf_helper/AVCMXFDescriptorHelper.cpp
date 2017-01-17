@@ -332,6 +332,9 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
             case 12:
                 cdci_descriptor->setCaptureGamma(ITU1361_TRANSFER_CH);
                 break;
+            case 18:
+                cdci_descriptor->setCaptureGamma(HLG_OETF_TRANSFER_CH);
+                break;
             default:
                 break;
         }

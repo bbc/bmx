@@ -866,6 +866,7 @@ bool bmx::parse_transfer_ch(const char *str, UL *label)
         {"iec61966",  IEC6196624_XVYCC_TRANSFER_CH},
         {"bt2020",    ITU2020_TRANSFER_CH},
         {"st2084",    SMPTE_ST2084_TRANSFER_CH},
+        {"hlg",       HLG_OETF_TRANSFER_CH},
     };
 
     size_t i;

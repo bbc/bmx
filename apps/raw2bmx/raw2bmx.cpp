@@ -531,7 +531,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --transfer-ch <value>   Set the transfer characteristic label\n");
     fprintf(stderr, "                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
     fprintf(stderr, "                              'bt470', 'bt709', 'st240', 'st274', 'bt1361', 'linear', 'dcdm',\n");
-    fprintf(stderr, "                              'iec61966', 'bt2020', 'st2084'\n");
+    fprintf(stderr, "                              'iec61966', 'bt2020', 'st2084', 'hlg'\n");
     fprintf(stderr, "  --coding-eq <value>     Set the coding equations label\n");
     fprintf(stderr, "                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
     fprintf(stderr, "                              'bt601', 'bt709', 'st240', 'ycgco', 'gbr', 'bt2020'\n");
