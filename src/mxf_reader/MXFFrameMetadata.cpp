@@ -120,7 +120,9 @@ SDTICPSystemMetadata::SDTICPSystemMetadata()
 : FrameMetadata(SDTI_CP_SYSTEM_METADATA_FMETA_ID)
 {
     mCPRate = ZERO_RATIONAL;
-    mHaveUserTimecode = 0;
+    mHaveCreationTimecode = false;
+    memset(&mCreationTimecode, 0, sizeof(mCreationTimecode));
+    mHaveUserTimecode = false;
     memset(&mUserTimecode, 0, sizeof(mUserTimecode));
 }
 

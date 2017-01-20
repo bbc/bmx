@@ -1503,9 +1503,7 @@ void MXFFileReader::GetStartTimecodes(Preface *preface, Track *infile_mp_track)
             if (GetReferencedPackage(preface, ref_track, ref_offset, PHYSICAL_SOURCE_PACKAGE_TYPE,
                                      &ref_package, &ref_track, &ref_offset))
             {
-                if (GetStartTimecode(ref_package, ref_track, ref_offset, &start_timecode))
-                    mPhysicalSourceStartTimecode = new Timecode(start_timecode);
-
+                GetPhysicalSourceStartTimecodes(ref_package, ref_track, ref_offset);
                 if (ref_package->haveName())
                     mPhysicalSourcePackageName = ref_package->getName();
             }
@@ -1536,8 +1534,11 @@ bool MXFFileReader::GetStartTimecode(GenericPackage *package, Track *ref_track, 
             size_t j;
             for (j = 0; j < components.size(); j++) {
                 tc_component = dynamic_cast<TimecodeComponent*>(components[j]);
-                if (tc_component)
+                if (tc_component) {
+                    if (j + 1 < components.size())
+                        log_warn("Only reading the first component of timecode track component and ignoring the rest\n");
                     break;
+                }
             }
         }
         if (tc_component)
@@ -1557,6 +1558,102 @@ bool MXFFileReader::GetStartTimecode(GenericPackage *package, Track *ref_track, 
     timecode->Init(tc_component->getRoundedTimecodeBase(),
                    tc_component->getDropFrame(),
                    tc_component->getStartTimecode() + tc_offset);
+    return true;
+}
+
+bool MXFFileReader::GetPhysicalSourceStartTimecodes(GenericPackage *package, Track *ref_track, int64_t offset)
+{
+    TimecodeComponent *primary_tc_component = 0;
+    vector<pair<int64_t, TimecodeComponent*> > avid_aux_tc_components;
+    vector<GenericTrack*> tracks = package->getTracks();
+    size_t i;
+    for (i = 0; i < tracks.size(); i++) {
+        Track *track = dynamic_cast<Track*>(tracks[i]);
+        if (!track)
+            continue;
+
+        StructuralComponent *track_sequence = track->getSequence();
+        mxfUL data_def_ul = track_sequence->getDataDefinition();
+        if (!mxf_is_timecode(&data_def_ul))
+            continue;
+
+        int64_t filler = 0;
+        Sequence *sequence = dynamic_cast<Sequence*>(track_sequence);
+        TimecodeComponent *tc_component = dynamic_cast<TimecodeComponent*>(track_sequence);
+        if (sequence) {
+            vector<StructuralComponent*> components = sequence->getStructuralComponents();
+            size_t j;
+            for (j = 0; j < components.size(); j++) {
+                if (*components[j]->getKey() == MXF_SET_K(Filler)) {
+                    if (!components[j]->haveDuration())
+                        break;
+                    filler += components[j]->getDuration();
+                } else {
+                    tc_component = dynamic_cast<TimecodeComponent*>(components[j]);
+                    if (tc_component && j + 1 < components.size())
+                        log_warn("Only reading the first component of timecode track component and ignoring the rest\n");
+                    break;
+                }
+            }
+        }
+        if (!tc_component)
+            continue;
+
+        if (!mxf_is_op_atom(&mOPLabel) || track->getTrackNumber() == 0) {
+            if (filler == 0)
+                primary_tc_component = tc_component;
+            else
+                log_warn("Ignoring physical source timecode track with filler\n");
+            break;
+        }
+        if (track->getTrackNumber() == 1) {
+            if (filler == 0)
+                primary_tc_component = tc_component;
+            else
+                log_warn("Ignoring primary physical source timecode track with filler\n");
+        } else if (track->getTrackNumber() >= 3 && track->getTrackNumber() < 8) {
+            if (avid_aux_tc_components.empty())
+                avid_aux_tc_components.resize(5);
+            avid_aux_tc_components[track->getTrackNumber() - 3] = make_pair(filler, tc_component);
+        }
+    }
+    if (!primary_tc_component && avid_aux_tc_components.empty())
+        return false;
+
+    for (i = 0; i < 1 + avid_aux_tc_components.size(); i++) {
+        int64_t filler;
+        TimecodeComponent *tc_component;
+        if (i == 0) {
+            filler = 0;
+            tc_component = primary_tc_component;
+        } else {
+            if (!avid_aux_tc_components[i - 1].second)
+                continue;
+            filler = avid_aux_tc_components[i - 1].first;
+            tc_component = avid_aux_tc_components[i - 1].second;
+        }
+
+        // the timecode offset is 0 or it is the offset in the referenced track converted to an offset in the timecode track
+        BMX_ASSERT(offset == 0 || ref_track);
+        int64_t tc_offset = offset;
+        if (ref_track)
+            tc_offset = convert_tc_offset(normalize_rate(ref_track->getEditRate()), offset,
+                                          tc_component->getRoundedTimecodeBase());
+
+        if (tc_offset >= filler) {
+            Timecode *timecode = new Timecode(tc_component->getRoundedTimecodeBase(),
+                                              tc_component->getDropFrame(),
+                                              tc_component->getStartTimecode() + tc_offset - filler);
+            if (i == 0) {
+                mPhysicalSourceStartTimecode = timecode;
+            } else {
+                if (mAvidAuxTimecodes.empty())
+                    mAvidAuxTimecodes.resize(5);
+                mAvidAuxTimecodes[i - 1] = timecode;
+            }
+        }
+    }
+
     return true;
 }
 

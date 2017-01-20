@@ -69,6 +69,9 @@ MXFReader::~MXFReader()
     delete mMaterialStartTimecode;
     delete mFileSourceStartTimecode;
     delete mPhysicalSourceStartTimecode;
+    size_t i;
+    for (i = 0 ; i < mAvidAuxTimecodes.size(); i++)
+        delete mAvidAuxTimecodes[i];
     if (mOwnFileIndex)
         delete mFileIndex;
     if (mOwnMCALabelIndex)
@@ -130,6 +133,19 @@ Timecode MXFReader::GetPhysicalSourceTimecode(int64_t position) const
         return Timecode(get_rounded_tc_base(mEditRate), false);
 
     return CreateTimecode(mPhysicalSourceStartTimecode, position);
+}
+
+bool MXFReader::HaveAvidAuxTimecode(size_t index) const
+{
+    return index < mAvidAuxTimecodes.size() && mAvidAuxTimecodes[index];
+}
+
+Timecode MXFReader::GetAvidAuxTimecode(size_t index, int64_t position) const
+{
+    if (!HaveAvidAuxTimecode(index))
+        return Timecode(get_rounded_tc_base(mEditRate), false);
+
+    return CreateTimecode(mAvidAuxTimecodes[index], position);
 }
 
 bool MXFReader::HavePlayoutTimecode() const

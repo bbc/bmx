@@ -1341,6 +1341,105 @@ static bool update_rdd6_xml(Frame *frame, RDD6MetadataFrame *rdd6_frame, vector<
     return true;
 }
 
+static void write_timecodes(MXFReader *reader, Frame *frame, FILE *tc_file)
+{
+    static const char *null_timecode_str = "__:__:__:__";
+
+    bool have_sys_item_creation_tc = false;
+    Timecode sys_item_creation_tc;
+    bool have_sys_item_user_tc = false;
+    Timecode sys_item_user_tc;
+    const SS1TimecodeArray *ss1_timecodes = 0;
+
+    const vector<FrameMetadata*> *metadata = frame->GetMetadata(SDTI_CP_SYSTEM_METADATA_FMETA_ID);
+    if (metadata && !metadata->empty()) {
+        const SDTICPSystemMetadata *sdticp_meta = dynamic_cast<const SDTICPSystemMetadata*>((*metadata)[0]);
+
+        if (sdticp_meta->mHaveCreationTimecode) {
+            sys_item_creation_tc = decode_smpte_timecode(sdticp_meta->mCPRate,
+                                                         sdticp_meta->mCreationTimecode.bytes,
+                                                         BMX_ARRAY_SIZE(sdticp_meta->mCreationTimecode.bytes));
+            have_sys_item_creation_tc = true;
+        }
+        if (sdticp_meta->mHaveUserTimecode) {
+            sys_item_user_tc = decode_smpte_timecode(sdticp_meta->mCPRate,
+                                                     sdticp_meta->mUserTimecode.bytes,
+                                                     BMX_ARRAY_SIZE(sdticp_meta->mUserTimecode.bytes));
+            have_sys_item_user_tc = true;
+        }
+    }
+    metadata = frame->GetMetadata(SYSTEM_SCHEME_1_FMETA_ID);
+    if (metadata) {
+        size_t i;
+        for (i = 0; i < metadata->size(); i++) {
+            const SystemScheme1Metadata *ss1_meta = dynamic_cast<const SystemScheme1Metadata*>((*metadata)[i]);
+            if (ss1_meta->GetType() == SystemScheme1Metadata::TIMECODE_ARRAY) {
+                ss1_timecodes = dynamic_cast<const SS1TimecodeArray*>(ss1_meta);
+                break;
+            }
+        }
+    }
+
+    Timecode timecode;
+    // position timecode
+    timecode.Init(frame->edit_rate, false, frame->position);
+    fprintf(tc_file, "%s", get_timecode_string(timecode).c_str());
+    // material package timecode
+    if (reader->HaveMaterialTimecode()) {
+        timecode = reader->GetMaterialTimecode(frame->position);
+        fprintf(tc_file, " %s", get_timecode_string(timecode).c_str());
+    } else {
+        fprintf(tc_file, " %s", null_timecode_str);
+    }
+    // file source package timecode
+    if (reader->HaveFileSourceTimecode()) {
+        timecode = reader->GetFileSourceTimecode(frame->position);
+        fprintf(tc_file, " %s", get_timecode_string(timecode).c_str());
+    } else {
+        fprintf(tc_file, " %s", null_timecode_str);
+    }
+    // physical source package timecode
+    if (reader->HavePhysicalSourceTimecode()) {
+        timecode = reader->GetPhysicalSourceTimecode(frame->position);
+        fprintf(tc_file, " %s", get_timecode_string(timecode).c_str());
+    } else {
+        fprintf(tc_file, " %s", null_timecode_str);
+    }
+    // Avid auxiliary timecodes
+    size_t i;
+    for (i = 0; i < 5; i++) {
+        if (reader->HaveAvidAuxTimecode(i)) {
+            timecode = reader->GetAvidAuxTimecode(i, frame->position);
+            fprintf(tc_file, " %s", get_timecode_string(timecode).c_str());
+        } else {
+            fprintf(tc_file, " %s", null_timecode_str);
+        }
+    }
+    // system item user date/time timecode
+    if (have_sys_item_user_tc)
+        fprintf(tc_file, " %s", get_timecode_string(sys_item_user_tc).c_str());
+    else
+        fprintf(tc_file, " %s", null_timecode_str);
+    // system item creation date/time timecode
+    if (have_sys_item_creation_tc)
+        fprintf(tc_file, " %s", get_timecode_string(sys_item_creation_tc).c_str());
+    else
+        fprintf(tc_file, " %s", null_timecode_str);
+    // system scheme 1 timecode array
+    for (i = 0; i < 4; i++) {
+        if (ss1_timecodes && i < ss1_timecodes->mS12MTimecodes.size()) {
+            timecode = decode_smpte_timecode(frame->edit_rate,
+                                             ss1_timecodes->mS12MTimecodes[i].bytes,
+                                             BMX_ARRAY_SIZE(ss1_timecodes->mS12MTimecodes[i].bytes));
+            fprintf(tc_file, " %s", get_timecode_string(timecode).c_str());
+        } else {
+            fprintf(tc_file, " %s", null_timecode_str);
+        }
+    }
+
+    fprintf(tc_file, "\n");
+}
+
 static string create_raw_filename(string ess_prefix, bool wrap_klv, MXFDataDefEnum data_def, uint32_t index,
                                   int32_t child_index)
 {
@@ -1489,6 +1588,13 @@ static void usage(const char *cmd)
     fprintf(stderr, " --no-app-events-tc    Don't extract timecodes from the essence container to associate with the APP events metadata\n");
     fprintf(stderr, " --app-crc32 <fname>   Extract APP CRC-32 frame data to <fname>\n");
     fprintf(stderr, " --app-tc <fname>      Extract APP timecodes to <fname>\n");
+    fprintf(stderr, " --all-tc <fname>      Extract header and content package metadata timecodes to <fname>\n");
+    fprintf(stderr, "                       The list of timecodes extracted for each frame is as follows:\n");
+    fprintf(stderr, "                         frame position, material package, file source package, physical source package,\n");
+    fprintf(stderr, "                         5 x Avid auxiliary, system item user, system item creation,\n");
+    fprintf(stderr, "                         4 x system scheme 1 timecode array\n");
+    fprintf(stderr, "                       The header metadata timecodes are limited to the set extracted by bmx and what bmx accepts\n");
+    fprintf(stderr, "                       If the timecode property is not present then __:__:__:__ is printed\n");
     fprintf(stderr, " --avid                Extract Avid metadata\n");
     fprintf(stderr, " --st436-mf <count>    Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
     fprintf(stderr, " --rdd6 <frames> <filename>\n");
@@ -1566,6 +1672,7 @@ int main(int argc, const char** argv)
     bool check_app_crc32 = false;
     const char *app_crc32_filename = 0;
     const char *app_tc_filename = 0;
+    const char *all_tc_filename = 0;
     bool do_avid_info = false;
     uint32_t st436_manifest_count = DEFAULT_ST436_MANIFEST_COUNT;
     const char *rdd6_filename = 0;
@@ -1827,6 +1934,18 @@ int main(int argc, const char** argv)
                 return 1;
             }
             app_tc_filename = argv[cmdln_index + 1];
+            do_ess_read = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--all-tc") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            all_tc_filename = argv[cmdln_index + 1];
             do_ess_read = true;
             cmdln_index++;
         }
@@ -2448,6 +2567,24 @@ int main(int argc, const char** argv)
                 }
             }
 
+            // open all timecode output file
+            FILE *all_tc_file = 0;
+            if (all_tc_filename) {
+                all_tc_file = fopen(all_tc_filename, "wb");
+                if (!all_tc_file) {
+                    log_error("Failed to open all timecode file '%s': %s\n",
+                              all_tc_filename, bmx_strerror(errno).c_str());
+                    throw false;
+                }
+                fprintf(all_tc_file,
+                        "# %9s|%11s|%11s|%11s|%11s|%11s|%11s|%11s|%11s|%11s|%11s|%11s|%11s|%11s|%11s|\n",
+                        "position",
+                        "material p", "file src p", "phys src p",
+                        "aux 1", "aux 2", "aux 3", "aux 4", "aux 5",
+                        "sys user", "sys create",
+                        "ss1 1", "ss1 2", "ss1 3", "ss1 4");
+            }
+
             // open raw files and check if have video
             bool have_video = false;
             map<size_t, size_t> track_raw_file_map;
@@ -2544,6 +2681,7 @@ int main(int argc, const char** argv)
 
                 vector<uint64_t> crc32_data(reader->GetNumTrackReaders(), UINT64_MAX);
                 bool have_app_tc = false;
+                bool written_timecodes = false;
                 size_t i;
                 for (i = 0; i < reader->GetNumTrackReaders(); i++) {
                     MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
@@ -2625,6 +2763,11 @@ int main(int argc, const char** argv)
                                     break;
                                 }
                             }
+                        }
+
+                        if (all_tc_file && !written_timecodes) {
+                            write_timecodes(reader, frame, all_tc_file);
+                            written_timecodes = true;
                         }
 
                         if (ess_output_prefix) {
@@ -2768,6 +2911,8 @@ int main(int argc, const char** argv)
                 fclose(app_tc_file);
             if (app_crc32_file)
                 fclose(app_crc32_file);
+            if (all_tc_file)
+                fclose(all_tc_file);
         }
 
         if (have_anc_track && rdd6_filename && !rdd6_failed && last_rdd6_frame != rdd6_frame_max && !rdd6_done) {

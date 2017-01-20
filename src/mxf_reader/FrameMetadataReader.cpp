@@ -221,6 +221,15 @@ bool SDTICPSystemMetadataReader::ProcessFrameMetadata(const mxfKey *key, uint64_
         }
     }
 
+    // Creation Timecode (Creation Date / Timestamp)
+    if (mMetadata->mCPRate.numerator != 0 &&
+        (bytes[0] & 0x30) &&    // creation date/time stamp flag
+        bytes[23] == 0x81)      // SMPTE 12M Timecode
+    {
+        mMetadata->mHaveCreationTimecode = true;
+        memcpy(mMetadata->mCreationTimecode.bytes, &bytes[24], sizeof(mMetadata->mCreationTimecode.bytes));
+    }
+
     // User Timecode (User Date / Timestamp)
     if (mMetadata->mCPRate.numerator != 0 &&
         num_read >= 57 &&

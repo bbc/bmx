@@ -110,6 +110,9 @@ public:
     Timecode GetFileSourceTimecode(int64_t position = CURRENT_POSITION_VALUE) const;
     bool HavePhysicalSourceTimecode() const { return mPhysicalSourceStartTimecode != 0; }
     Timecode GetPhysicalSourceTimecode(int64_t position = CURRENT_POSITION_VALUE) const;
+    bool HaveAvidAuxTimecodes() const { return !mAvidAuxTimecodes.empty(); }
+    bool HaveAvidAuxTimecode(size_t index) const;
+    Timecode GetAvidAuxTimecode(size_t index, int64_t position = CURRENT_POSITION_VALUE) const;
 
     bool HavePlayoutTimecode() const;
     Timecode GetPlayoutTimecode(int64_t position = CURRENT_POSITION_VALUE) const;
@@ -152,6 +155,7 @@ protected:
     Timecode *mMaterialStartTimecode;
     Timecode *mFileSourceStartTimecode;
     Timecode *mPhysicalSourceStartTimecode;
+    std::vector<Timecode*> mAvidAuxTimecodes;
 
     std::string mMaterialPackageName;
     mxfUMID mMaterialPackageUID;

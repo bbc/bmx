@@ -113,6 +113,8 @@ public:
 
 public:
     Rational mCPRate;
+    bool mHaveCreationTimecode;
+    SMPTE12MTimecode mCreationTimecode;
     bool mHaveUserTimecode;
     SMPTE12MTimecode mUserTimecode;
 };
