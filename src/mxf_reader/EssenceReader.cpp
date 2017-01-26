@@ -133,7 +133,7 @@ Frame* EssenceReaderBuffer::GetFrame(uint32_t track_index)
 
 void EssenceReaderBuffer::PushFrames(uint32_t actual_read_num_samples)
 {
-    size_t t;
+    uint32_t t;
     for (t = 0; t < mFileReader->GetNumInternalTrackReaders(); t++) {
         Frame *frame;
         if (mBufferFrames)
@@ -439,7 +439,7 @@ uint32_t EssenceReader::Read(uint32_t num_samples)
             mIndexTableHelper.GetEditUnit(start_position, &temporal_offset, &key_frame_offset,
                                           &flags, &essence_offset);
         }
-        size_t i;
+        uint32_t i;
         for (i = 0; i < mFileReader->GetNumInternalTrackReaders(); i++) {
             Frame *frame = mReadFrameBuffer.GetFrame(i);
             if (frame) {
@@ -605,7 +605,7 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                     // frame does not yet exist - create it if track is enabled
                     track_reader = mFileReader->GetInternalTrackReaderByNumber(track_number);
                     if (start_position == mPosition && track_reader && track_reader->IsEnabled()) {
-                        frame = mReadFrameBuffer.GetFrame(track_reader->GetTrackIndex());
+                        frame = mReadFrameBuffer.GetFrame((uint32_t)track_reader->GetTrackIndex());
 
                         BMX_CHECK(cp_num_read <= UINT32_MAX);
 
@@ -628,7 +628,7 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                     // frame exists if track is enabled - get it
                     track_reader = enabled_track_readers[track_number];
                     if (track_reader)
-                        frame = mReadFrameBuffer.GetFrame(track_reader->GetTrackIndex());
+                        frame = mReadFrameBuffer.GetFrame((uint32_t)track_reader->GetTrackIndex());
                 }
 
                 if (frame) {

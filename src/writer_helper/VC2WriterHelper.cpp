@@ -282,7 +282,7 @@ uint32_t VC2WriterHelper::ProcessFrame(const unsigned char *data, uint32_t size,
     mFirstFrame = false;
 
     *data_array = &mDataArray[0];
-    *array_size = mDataArray.size();
+    *array_size = (uint32_t)mDataArray.size();
 
     return output_frame_size;
 }

@@ -247,7 +247,7 @@ void TrackMapper::DumpOutputTrackMap(FILE *file, const vector<InputTrackInfo> &i
     for (i = 0; i < input_tracks.size(); i++) {
         const InputTrackInfo &input_track = input_tracks[i];
         if (input_track.essence_type == WAVE_PCM) {
-            input_base_channels[i] = total_channels;
+            input_base_channels[(uint32_t)i] = total_channels;
             total_channels += input_track.channel_count;
         }
     }
@@ -369,7 +369,7 @@ vector<TrackMapper::OutputTrackMap> TrackMapper::DefinitionMapTracks(const vecto
             size_t c;
             for (c = 0; c < input_track.channel_count; c++) {
                 unused_channels.insert(input_channels.size());
-                input_channels.push_back(make_pair((uint32_t)i, c));
+                input_channels.push_back(make_pair((uint32_t)i, (uint32_t)c));
             }
         }
     }

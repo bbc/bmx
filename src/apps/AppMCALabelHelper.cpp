@@ -152,7 +152,7 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
     vector<ClipWriterTrack*> pcm_tracks;
     size_t i;
     for (i = 0; i < clip->GetNumTracks(); i++) {
-        ClipWriterTrack *clip_track = clip->GetTrack(i);
+        ClipWriterTrack *clip_track = clip->GetTrack((uint32_t)i);
         OP1APCMTrack *op1a_pcm_track = dynamic_cast<OP1APCMTrack*>(clip_track->GetOP1ATrack());
         RDD9PCMTrack *rdd9_pcm_track = dynamic_cast<RDD9PCMTrack*>(clip_track->GetRDD9Track());
         if (op1a_pcm_track || rdd9_pcm_track)

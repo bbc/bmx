@@ -203,7 +203,7 @@ private:
     MXFChecksumFile *mMXFChecksumFile;
     std::string mMD5DigestStr;
 
-    uint32_t mCBEIndexPartitionIndex;
+    size_t mCBEIndexPartitionIndex;
 
     UniqueIdHelper mTrackIdHelper;
     UniqueIdHelper mStreamIdHelper;

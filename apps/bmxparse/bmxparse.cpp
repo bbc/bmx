@@ -662,7 +662,7 @@ int main(int argc, const char **argv)
 
         Buffer buffer;
         buffer.Fill(file);
-        uint32_t frame_start = parser->ParseFrameStart(buffer.data, buffer.size);
+        uint32_t frame_start = parser->ParseFrameStart(buffer.data, (uint32_t)buffer.size);
         if (frame_start == ESSENCE_PARSER_NULL_OFFSET) {
             log_error("Failed to find valid frame start within %" PRIszt " bytes\n", buffer.size);
             throw false;
@@ -678,7 +678,7 @@ int main(int argc, const char **argv)
                 frame_start = 0;
             }
 
-            frame_size = parser->ParseFrameSize(buffer.data, buffer.size);
+            frame_size = parser->ParseFrameSize(buffer.data, (uint32_t)buffer.size);
             if (frame_size == ESSENCE_PARSER_NULL_OFFSET) {
                 if (buffer.Fill(file) == 0)
                     break;
@@ -692,7 +692,7 @@ int main(int argc, const char **argv)
             }
         }
         if (buffer.size > 0) {
-            print_frame_info(info_writer, parser, parser_data, &buffer, buffer.size, frame_count);
+            print_frame_info(info_writer, parser, parser_data, &buffer, (uint32_t)buffer.size, frame_count);
             frame_count++;
         }
 

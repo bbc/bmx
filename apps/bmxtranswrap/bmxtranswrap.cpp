@@ -301,7 +301,7 @@ static void write_anc_samples(OutputTrack *output_track, Frame *frame, set<ANCDa
     output_track->WriteSamples(0, anc_buffer.GetBytes(), anc_buffer.GetSize(), 1);
 }
 
-static void disable_tracks(MXFReader *reader, const set<uint32_t> &track_indexes,
+static void disable_tracks(MXFReader *reader, const set<size_t> &track_indexes,
                            bool disable_audio, bool disable_video, bool disable_data)
 {
     size_t i;
@@ -637,7 +637,7 @@ int main(int argc, const char** argv)
     Rational timecode_rate = FRAME_RATE_25;
     bool timecode_rate_set = false;
     vector<const char *> input_filenames;
-    map<size_t, set<uint32_t> > disable_track_indexes;
+    map<size_t, set<size_t> > disable_track_indexes;
     map<size_t, bool> disable_audio;
     map<size_t, bool> disable_video;
     map<size_t, bool> disable_data;

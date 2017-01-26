@@ -387,7 +387,7 @@ static void calc_file_checksums(const vector<const char *> &filenames, const vec
     }
 }
 
-static void disable_tracks(MXFReader *reader, const set<uint32_t> &track_indexes,
+static void disable_tracks(MXFReader *reader, const set<size_t> &track_indexes,
                            bool disable_audio, bool disable_video, bool disable_data)
 {
     size_t i;
@@ -1466,14 +1466,14 @@ static string create_raw_filename(string ess_prefix, bool wrap_klv, MXFDataDefEn
     return ess_prefix + buffer;
 }
 
-static string create_text_object_filename(string prefix, bool is_xml, uint32_t index)
+static string create_text_object_filename(string prefix, bool is_xml, size_t index)
 {
     const char *suffix = ".txt";
     if (is_xml)
         suffix = ".xml";
 
     char buffer[32];
-    bmx_snprintf(buffer, sizeof(buffer), "_%u%s", index, suffix);
+    bmx_snprintf(buffer, sizeof(buffer), "_%" PRIszt "%s", index, suffix);
 
     return prefix + buffer;
 }
@@ -1681,7 +1681,7 @@ int main(int argc, const char** argv)
     bool do_ess_read = false;
     const char *ess_output_prefix = 0;
     set<MXFDataDefEnum> wrap_klv_mask;
-    map<size_t, set<uint32_t> > disable_track_indexes;
+    map<size_t, set<size_t> > disable_track_indexes;
     map<size_t, bool> disable_audio;
     map<size_t, bool> disable_video;
     map<size_t, bool> disable_data;
