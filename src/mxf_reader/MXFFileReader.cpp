@@ -1531,15 +1531,10 @@ bool MXFFileReader::GetStartTimecode(GenericPackage *package, Track *ref_track, 
         tc_component = dynamic_cast<TimecodeComponent*>(track_sequence);
         if (sequence) {
             vector<StructuralComponent*> components = sequence->getStructuralComponents();
-            size_t j;
-            for (j = 0; j < components.size(); j++) {
-                tc_component = dynamic_cast<TimecodeComponent*>(components[j]);
-                if (tc_component) {
-                    if (j + 1 < components.size())
-                        log_warn("Only reading the first component of timecode track component and ignoring the rest\n");
-                    break;
-                }
-            }
+            if (components.size() == 1)
+                tc_component = dynamic_cast<TimecodeComponent*>(components[0]);
+            else if (components.size() > 1)
+                log_warn("Ignoring timecode track with multiple components\n");
         }
         if (tc_component)
             break;
@@ -1589,9 +1584,10 @@ bool MXFFileReader::GetPhysicalSourceStartTimecodes(GenericPackage *package, Tra
                         break;
                     filler += components[j]->getDuration();
                 } else {
-                    tc_component = dynamic_cast<TimecodeComponent*>(components[j]);
-                    if (tc_component && j + 1 < components.size())
-                        log_warn("Only reading the first component of timecode track component and ignoring the rest\n");
+                    if (j + 1 >= components.size())
+                        tc_component = dynamic_cast<TimecodeComponent*>(components[j]);
+                    else
+                        log_warn("Ignoring physical source timecode track with multiple components\n");
                     break;
                 }
             }
