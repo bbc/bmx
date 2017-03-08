@@ -73,6 +73,7 @@ public:
     void SetAuxiliaryTimecodes(const std::vector<Timecode> &aux_timecodes);
     void SetProductInfo(std::string company_name, std::string product_name, mxfProductVersion product_version,
                         std::string version, mxfUUID product_uid);
+    void SetCreationDate(mxfTimestamp creation_date);
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);
 
 public:

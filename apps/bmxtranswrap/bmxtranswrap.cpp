@@ -342,6 +342,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                          <ver> has format '<major>.<minor>.<patch>.<build>.<release>' and is the Product Version property. Set to '0.0.0.0.0' to omit it\n");
     fprintf(stderr, "                          <verstr> is a string and is the Version String property\n");
     fprintf(stderr, "                          <uid> is a UUID (see Notes at the end) and is the Product UID property\n");
+    fprintf(stderr, "  --create-date <tstamp>  Set the creation date in the MXF Identification set. Default is 'now'\n");
     fprintf(stderr, "  --input-file-md5        Calculate an MD5 checksum of the input file\n");
     fprintf(stderr, "  -y <hh:mm:sscff>        Override input start timecode. Default 00:00:00:00\n");
     fprintf(stderr, "                          The c character in the pattern should be ':' for non-drop frame; any other character indicates drop frame\n");
@@ -741,6 +742,8 @@ int main(int argc, const char** argv)
     mxfProductVersion product_version;
     string version_string;
     UUID product_uid;
+    Timestamp creation_date;
+    bool creation_date_set = false;
     bool ps_avcihead = false;
     bool replace_avid_avcihead = false;
     bool avid_gf = false;
@@ -877,6 +880,23 @@ int main(int argc, const char** argv)
             }
             product_info_set = true;
             cmdln_index += 5;
+        }
+        else if (strcmp(argv[cmdln_index], "--create-date") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_timestamp(argv[cmdln_index + 1], &creation_date))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            creation_date_set = true;
+            cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--input-file-md5") == 0)
         {
@@ -2836,6 +2856,8 @@ int main(int argc, const char** argv)
         else if (clip_sub_type == AS10_CLIP_SUB_TYPE && as10_helper.HaveMainTitle())
             clip->SetClipName(as10_helper.GetMainTitle());
         clip->SetProductInfo(company_name, product_name, product_version, version_string, product_uid);
+        if (creation_date_set)
+            clip->SetCreationDate(creation_date);
 
         if (clip_type == CW_AS02_CLIP_TYPE) {
             AS02Clip *as02_clip = clip->GetAS02Clip();

@@ -257,6 +257,33 @@ void ClipWriter::SetProductInfo(string company_name, string product_name, mxfPro
     }
 }
 
+void ClipWriter::SetCreationDate(mxfTimestamp creation_date)
+{
+    switch (mType)
+    {
+        case CW_AS02_CLIP_TYPE:
+            mAS02Clip->SetCreationDate(creation_date);
+            break;
+        case CW_OP1A_CLIP_TYPE:
+            mOP1AClip->SetCreationDate(creation_date);
+            break;
+        case CW_AVID_CLIP_TYPE:
+            mAvidClip->SetCreationDate(creation_date);
+            break;
+        case CW_D10_CLIP_TYPE:
+            mD10Clip->SetCreationDate(creation_date);
+            break;
+        case CW_RDD9_CLIP_TYPE:
+            mRDD9Clip->SetCreationDate(creation_date);
+            break;
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
 void ClipWriter::ReserveHeaderMetadataSpace(uint32_t min_bytes)
 {
     switch (mType)
