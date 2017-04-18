@@ -224,6 +224,29 @@ static uint32_t calc_st2020_max_size(const MXFDataTrackInfo *data_info)
     return calc_st2020_max_size(sample_coding_10bit, (uint32_t)sdids.size());
 }
 
+static void construct_anc_rdd6_sub_frame(RDD6MetadataFrame *rdd6_frame,
+                                         bool is_first_sub_frame,
+                                         bmx::ByteArray *rdd6_buffer,
+                                         uint8_t sdid, uint16_t line_number,
+                                         bmx::ByteArray *anc_buffer)
+{
+    rdd6_buffer->SetSize(0);
+    rdd6_frame->ConstructST2020(rdd6_buffer, sdid, is_first_sub_frame);
+
+    ST436Element output_element(false);
+    ST436Line line(false);
+    line.wrapping_type         = VANC_FRAME;
+    line.payload_sample_coding = ANC_8_BIT_COMP_LUMA;
+    line.line_number           = line_number;
+    line.payload_sample_count  = rdd6_buffer->GetSize();
+    line.payload_data          = rdd6_buffer->GetBytes();
+    line.payload_size          = rdd6_buffer->GetSize(); // alignment left to ST436Element::Construct
+    output_element.lines.push_back(line);
+
+    anc_buffer->SetSize(0);
+    output_element.Construct(anc_buffer);
+}
+
 static void construct_anc_rdd6(RDD6MetadataFrame *rdd6_frame,
                                bmx::ByteArray *rdd6_first_buffer, bmx::ByteArray *rdd6_second_buffer,
                                uint8_t sdid, uint16_t *line_numbers,
@@ -500,7 +523,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --vbi-max <size>        Use to indicate that the ST 436 VBI frame element data, excl. key and length, has a maximum <size>. A variable size is assumed by default\n");
     fprintf(stderr, "    --rdd6 <file>           Add ST 436 ANC data track containing 'static' RDD-6 audio metadata from XML <file>\n");
     fprintf(stderr, "                            The timecode fields are ignored, i.e. they are set to 'undefined' values in the RDD-6 metadata stream\n");
-    fprintf(stderr, "    --rdd6-lines <lines>    The line numbers for carriage of the RDD-6 ANC data. <lines> is a pair of numbers separated by a ','. Default is '%u,%u'\n", DEFAULT_RDD6_LINES[0], DEFAULT_RDD6_LINES[1]);
+    fprintf(stderr, "    --rdd6-lines <lines>    A single or pair of line numbers, using ',' as the separator, for carriage of the RDD-6 ANC data. The default is a pair of numbers, '%u,%u'\n", DEFAULT_RDD6_LINES[0], DEFAULT_RDD6_LINES[1]);
     fprintf(stderr, "    --rdd6-sdid <sdid>      The SDID value indicating the first audio channel pair associated with the RDD-6 data. Default is %u\n", DEFAULT_RDD6_SDID);
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/rdd9/d10:\n");
@@ -2296,40 +2319,6 @@ int main(int argc, const char** argv)
         }
 
 
-        // open RDD-6 XML file
-
-        RDD6MetadataSequence rdd6_static_sequence;
-        RDD6MetadataFrame rdd6_frame;
-        bmx::ByteArray rdd6_first_buffer, rdd6_second_buffer;
-        bmx::ByteArray anc_buffer;
-        uint32_t rdd6_const_size = 0;
-        if (rdd6_filename) {
-            if (clip_type != CW_OP1A_CLIP_TYPE) {
-                log_error("RDD-6 file input only supported for '%s' and '%s' clip types\n",
-                          clip_type_to_string(CW_OP1A_CLIP_TYPE, NO_CLIP_SUB_TYPE),
-                          clip_type_to_string(CW_OP1A_CLIP_TYPE, AS11_CLIP_SUB_TYPE));
-                throw false;
-            }
-
-            if (!rdd6_frame.ParseXML(rdd6_filename)) {
-                log_error("Failed to read and parse RDD-6 file '%s'\n", rdd6_filename);
-                throw false;
-            }
-            if (!rdd6_frame.first_sub_frame)
-                log_error("Missing first sub-frame in RDD-6 file\n");
-            if (!rdd6_frame.second_sub_frame)
-                log_error("Missing second sub-frame in RDD-6 file\n");
-            if (!rdd6_frame.first_sub_frame || !rdd6_frame.second_sub_frame)
-                throw false;
-
-            rdd6_frame.InitStaticSequence(&rdd6_static_sequence);
-
-            rdd6_frame.UpdateStaticFrame(&rdd6_static_sequence);
-            construct_anc_rdd6(&rdd6_frame, &rdd6_first_buffer, &rdd6_second_buffer, rdd6_sdid, rdd6_lines, &anc_buffer);
-            rdd6_const_size = anc_buffer.GetSize();
-        }
-
-
         // open an MXFReader using the input filenames
 
         AppMXFFileFactory file_factory;
@@ -2425,6 +2414,46 @@ int main(int argc, const char** argv)
         reader->SetEmptyFrames(true);
 
         Rational frame_rate = reader->GetEditRate();
+
+
+        // open RDD-6 XML file
+
+        RDD6MetadataSequence rdd6_static_sequence;
+        RDD6MetadataFrame rdd6_frame;
+        bmx::ByteArray rdd6_first_buffer, rdd6_second_buffer;
+        bmx::ByteArray anc_buffer;
+        uint32_t rdd6_const_size = 0;
+        bool rdd6_pair_in_frame = true;
+        if (rdd6_filename) {
+            if (clip_type != CW_OP1A_CLIP_TYPE) {
+                log_error("RDD-6 file input only supported for '%s' and '%s' clip types\n",
+                          clip_type_to_string(CW_OP1A_CLIP_TYPE, NO_CLIP_SUB_TYPE),
+                          clip_type_to_string(CW_OP1A_CLIP_TYPE, AS11_CLIP_SUB_TYPE));
+                throw false;
+            }
+
+            if (!rdd6_frame.ParseXML(rdd6_filename)) {
+                log_error("Failed to read and parse RDD-6 file '%s'\n", rdd6_filename);
+                throw false;
+            }
+            if (!rdd6_frame.first_sub_frame)
+                log_error("Missing first sub-frame in RDD-6 file\n");
+            if (!rdd6_frame.second_sub_frame)
+                log_error("Missing second sub-frame in RDD-6 file\n");
+            if (!rdd6_frame.first_sub_frame || !rdd6_frame.second_sub_frame)
+                throw false;
+
+            if ((int64_t)frame_rate.numerator > 30 * (int64_t)frame_rate.denominator)
+                rdd6_pair_in_frame = false;
+
+            rdd6_frame.InitStaticSequence(&rdd6_static_sequence);
+
+            if (rdd6_pair_in_frame) {
+                rdd6_frame.UpdateStaticFrame(&rdd6_static_sequence);
+                construct_anc_rdd6(&rdd6_frame, &rdd6_first_buffer, &rdd6_second_buffer, rdd6_sdid, rdd6_lines, &anc_buffer);
+                rdd6_const_size = anc_buffer.GetSize();
+            } // else the individual RDD-6 sub-frames have different sizes
+        }
 
 
         // check whether the frame rate is a sound sampling rate
@@ -2587,33 +2616,6 @@ int main(int argc, const char** argv)
         if (!reader->IsEnabled()) {
             log_error("All tracks are disabled\n");
             throw false;
-        }
-
-
-        // check RDD-6 support
-
-        if (rdd6_filename) {
-            if (frame_rate != FRAME_RATE_25) {
-                log_error("Frame rate %d/%d is currently not supported with RDD-6\n",
-                          frame_rate.numerator, frame_rate.denominator);
-                throw false;
-            }
-            for (i = 0; i < reader->GetNumTrackReaders(); i++) {
-                MXFTrackReader *track_reader = reader->GetTrackReader(i);
-                if (!track_reader->IsEnabled())
-                    continue;
-
-                const MXFPictureTrackInfo *picture_info =
-                    dynamic_cast<const MXFPictureTrackInfo*>(track_reader->GetTrackInfo());
-                if (picture_info &&
-                    picture_info->frame_layout != MXF_SEPARATE_FIELDS &&
-                    picture_info->frame_layout != MXF_MIXED_FIELDS)
-                {
-                    log_error("Track %" PRIszt " frame layout %u is currently not supported with RDD-6\n",
-                              i, picture_info->frame_layout);
-                    throw false;
-                }
-            }
         }
 
 
@@ -3678,6 +3680,7 @@ int main(int argc, const char** argv)
 
         int64_t read_duration = reader->GetReadDuration();
         int64_t total_read = 0;
+        bool even_frame = true;
         int64_t duration_at_precharge_end = -1;
         int64_t duration_at_rollout_start = -1;
         int64_t container_duration;
@@ -3854,12 +3857,22 @@ int main(int argc, const char** argv)
                 BMX_ASSERT(!output_tracks.back()->HaveInputTrack() &&
                            !output_tracks.back()->IsSilenceTrack());
 
-                rdd6_frame.UpdateStaticFrame(&rdd6_static_sequence);
+                if (rdd6_pair_in_frame || even_frame)
+                    rdd6_frame.UpdateStaticFrame(&rdd6_static_sequence);
 
-                construct_anc_rdd6(&rdd6_frame, &rdd6_first_buffer, &rdd6_second_buffer, rdd6_sdid, rdd6_lines, &anc_buffer);
+                if (rdd6_pair_in_frame) {
+                    construct_anc_rdd6(&rdd6_frame, &rdd6_first_buffer, &rdd6_second_buffer, rdd6_sdid, rdd6_lines, &anc_buffer);
+                } else {
+                    if (even_frame)
+                        construct_anc_rdd6_sub_frame(&rdd6_frame, true, &rdd6_first_buffer, rdd6_sdid, rdd6_lines[0], &anc_buffer);
+                    else
+                        construct_anc_rdd6_sub_frame(&rdd6_frame, false, &rdd6_second_buffer, rdd6_sdid, rdd6_lines[1], &anc_buffer);
+                }
                 output_tracks.back()->WriteSamples(0, anc_buffer.GetBytes(), anc_buffer.GetSize(), 1);
 
-                rdd6_static_sequence.UpdateForNextStaticFrame();
+                if (rdd6_pair_in_frame || !even_frame)
+                    rdd6_static_sequence.UpdateForNextStaticFrame();
+                even_frame = !even_frame;
             }
 
 

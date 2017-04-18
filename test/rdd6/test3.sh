@@ -3,4 +3,4 @@
 base=$(dirname $0)
 . $base/common.sh
 
-run_test $@ test2 25 "9,572" 4
+run_test $@ test3 50 "0" 4

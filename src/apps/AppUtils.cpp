@@ -723,12 +723,15 @@ bool bmx::parse_rdd6_lines(const char *lines_str, uint16_t *lines)
 {
     const char *line_1_str = lines_str;
     const char *line_2_str = strchr(lines_str, ',');
-    if (!line_2_str)
-        return false;
-    line_2_str++;
+    if (line_2_str)
+        line_2_str++;
 
     unsigned int line_1, line_2;
-    if (sscanf(line_1_str, "%u", &line_1) != 1 || sscanf(line_2_str, "%u", &line_2) != 1)
+    if (sscanf(line_1_str, "%u", &line_1) != 1)
+        return false;
+    if (!line_2_str)
+        line_2 = line_1;
+    else if (sscanf(line_2_str, "%u", &line_2) != 1)
         return false;
 
     lines[0] = line_1;

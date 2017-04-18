@@ -1713,6 +1713,34 @@ void RDD6MetadataFrame::ParseST2020(const unsigned char *st2020_data_a, uint32_t
     Parse8Bit(&buffer);
 }
 
+bool RDD6MetadataFrame::GetST2020SubFrameIndex(const unsigned char *st2020_data, uint32_t st2020_size,
+                                               bool *first)
+{
+    const unsigned char *data = 0;
+    uint32_t size = 0;
+
+    ParseST2020Header(st2020_data, st2020_size, &data, &size);
+
+    RDD6GetBitBuffer buffer(data, size, 0, 0);
+    uint8_t byte;
+    uint16_t sync_word = 0;
+    while (buffer.GetUInt8(&byte)) {
+        sync_word = (sync_word << 8) | byte;
+
+        if (sync_word == RDD6MetadataSubFrame::FIRST_SUBFRAME_SYNC_WORD) {
+            *first = true;
+            return true;
+        } else if (sync_word == RDD6MetadataSubFrame::SECOND_SUBFRAME_SYNC_WORD) {
+            *first = false;
+            return true;
+        } else if (sync_word == END_FRAME_SYNC_WORD) {
+            break;
+        }
+    }
+
+    return false;
+}
+
 void RDD6MetadataFrame::Construct8Bit(ByteArray *data, uint32_t *first_end_offset)
 {
     PutBitBuffer buffer(data);
@@ -1771,7 +1799,7 @@ void RDD6MetadataFrame::Parse8Bit(RDD6GetBitBuffer *buffer)
         }
     }
 
-    if (sync_word != END_FRAME_SYNC_WORD)
+    if (second_sub_frame && sync_word != END_FRAME_SYNC_WORD)
         log_warn("Missing RDD6 metadata end frame sync word\n");
     if (!read_first && !read_second)
         log_warn("Failed to find first or second RDD6 metadata subframe\n");

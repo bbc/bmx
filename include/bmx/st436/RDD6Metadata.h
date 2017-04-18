@@ -428,6 +428,8 @@ public:
     void ConstructST2020(ByteArray *data, uint8_t sdid, bool first);
     void ParseST2020(const unsigned char *st2020_data_a, uint32_t st2020_size_a,
                      const unsigned char *st2020_data_b, uint32_t st2020_size_b);
+    bool GetST2020SubFrameIndex(const unsigned char *st2020_data, uint32_t st2020_size,
+                                bool *first);
 
     void Construct8Bit(ByteArray *data, uint32_t *first_end_offset);
     void Construct8Bit(PutBitBuffer *buffer, uint32_t *first_end_offset);

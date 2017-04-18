@@ -1263,8 +1263,7 @@ static void write_data(FILE *file, const string &filename, const unsigned char *
 }
 
 static bool update_rdd6_xml(Frame *frame, RDD6MetadataFrame *rdd6_frame, vector<string> *cumulative_desc_chars,
-                            vector<bool> *have_start, vector<bool> *have_end, bool *done,
-                            bool *is_empty)
+                            vector<bool> *have_start, vector<bool> *have_end, bool *done)
 {
     ST436Element st436_element(false);
     st436_element.Parse(frame->GetBytes(), frame->GetSize());
@@ -1281,35 +1280,46 @@ static bool update_rdd6_xml(Frame *frame, RDD6MetadataFrame *rdd6_frame, vector<
             rdd6_lines.push_back(&st436_element.lines[i]);
         }
     }
-    if (rdd6_lines.empty()) {
-        *is_empty = true;
+    if (rdd6_lines.empty())
         return true;
-    }
 
     RDD6MetadataFrame next_rdd6_frame;
     RDD6MetadataFrame *parse_rdd6_frame;
-    if (rdd6_frame->first_sub_frame || rdd6_frame->second_sub_frame)
+    if (rdd6_frame->first_sub_frame && rdd6_frame->second_sub_frame) {
         parse_rdd6_frame = &next_rdd6_frame;
-    else
+    } else {
+        if (rdd6_lines.size() == 1) {
+            bool is_first_sub_frame;
+            if (!rdd6_frame->GetST2020SubFrameIndex(rdd6_lines[0]->payload_data, rdd6_lines[0]->payload_size,
+                                                    &is_first_sub_frame))
+            {
+                log_warn("ST-436 ANC data contains 1 RDD-6 line but could not parse a sub-frame\n");
+                return false;
+            }
+        }
         parse_rdd6_frame = rdd6_frame;
+    }
 
     if (rdd6_lines.size() >= 2) {
         if (rdd6_lines.size() > 2)
             log_warn("ST-436 ANC data contains %" PRIszt " RDD-6 lines; only using the first 2\n", rdd6_lines.size());
         parse_rdd6_frame->ParseST2020(rdd6_lines[0]->payload_data, rdd6_lines[0]->payload_size,
                                       rdd6_lines[1]->payload_data, rdd6_lines[1]->payload_size);
+        if (parse_rdd6_frame == rdd6_frame)
+            parse_rdd6_frame->BufferPayloads(); // buffer because referenced frame data will de deleted
+        if (!parse_rdd6_frame->IsComplete()) {
+            log_warn("RDD-6 frame data is incomplete\n");
+            return false;
+        }
     } else {
-        log_warn("ST-436 ANC data only contains a single RDD-6 line\n");
         parse_rdd6_frame->ParseST2020(rdd6_lines[0]->payload_data, rdd6_lines[0]->payload_size,
                                       0, 0);
-    }
-    if (!parse_rdd6_frame->IsComplete()) {
-        log_warn("RDD-6 frame data is incomplete\n");
-        return false;
+        if (parse_rdd6_frame == rdd6_frame)
+            parse_rdd6_frame->BufferPayloads(); // buffer because referenced frame data will de deleted
     }
 
-    if (parse_rdd6_frame == rdd6_frame)
-        parse_rdd6_frame->BufferPayloads(); // buffer because referenced frame data will de deleted
+    if (rdd6_lines.size() == 1 && parse_rdd6_frame->second_sub_frame)
+        return true; // description chars are in the first sub frame only
 
     bool all_done = true;
     vector<uint8_t> desc_chars;
@@ -2808,9 +2818,8 @@ int main(int argc, const char** argv)
                                 (last_rdd6_frame >= 0 && frame->position <= rdd6_frame_max &&
                                     frame->position == last_rdd6_frame + 1))
                             {
-                                bool is_empty;
                                 if (update_rdd6_xml(frame, &rdd6_frame, &rdd6_desc_chars, &rdd6_have_start,
-                                                    &rdd6_have_end, &rdd6_done, &is_empty))
+                                                    &rdd6_have_end, &rdd6_done))
                                 {
                                     last_rdd6_frame = frame->position;
                                 }
@@ -2939,9 +2948,8 @@ int main(int argc, const char** argv)
                         }
 
                         if (reader->GetTrackReader(i)->GetTrackInfo()->essence_type == ANC_DATA) {
-                            bool is_empty;
                             if (update_rdd6_xml(frame, &rdd6_frame, &rdd6_desc_chars, &rdd6_have_start,
-                                                &rdd6_have_end, &rdd6_done, &is_empty))
+                                                &rdd6_have_end, &rdd6_done))
                             {
                                 last_rdd6_frame = frame->position;
                             }
