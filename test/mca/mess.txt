@@ -1,8 +1,11 @@
+ # a comment
 0
-chL, chan=0
+chL, chan=0 # comment after a line
 chR, chan=1
+# comment between lines but not interpreted as a new group
 sgST, id=g1, lang=en
 ggAPg, id=1
+# comment
 
 1
 chL, chan=0, lang=fr

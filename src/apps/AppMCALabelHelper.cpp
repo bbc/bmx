@@ -116,9 +116,12 @@ bool AppMCALabelHelper::ParseTrackLabels(const string &filename)
         vector<string> track_lines;
         string line;
         while (std::getline(input, line)) {
+            size_t comment_hash = line.rfind("#");
+            if (comment_hash != string::npos)
+                line = line.substr(0, comment_hash);
             line = trim_string(line);
             if (line.empty()) {
-                if (!track_lines.empty()) {
+                if (!track_lines.empty() && comment_hash == string::npos) {
                     ParseTrackLines(track_lines);
                     track_lines.clear();
                 }
