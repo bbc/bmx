@@ -911,6 +911,21 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
     Preface *preface = mHeaderMetadata->getPreface();
     mMXFVersion = preface->getVersion();
 
+    // check there is <= 1 essence container data in the file
+    ContentStorage *content_storage = preface->getContentStorage();
+    vector<EssenceContainerData*> ess_container_data;
+    if (content_storage->haveEssenceContainerData()) {
+        ess_container_data = content_storage->getEssenceContainerData();
+        if (ess_container_data.size() > 1) {
+            if (mxf_is_op_1b(&mOPLabel))
+                log_error("OP-1B with multiple essence containers is not supported\n");
+            else
+                log_error("Multiple essence containers is not supported\n");
+            THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
+        }
+    }
+
+
     // index packages from this file
     mPackageResolver->ExtractPackages(this);
 
@@ -1112,21 +1127,12 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
 
     // get the body and index SIDs linked to (singular) internal essence file source package
     if (!mInternalTrackReaders.empty()) {
-        ContentStorage *content_storage = preface->getContentStorage();
-        vector<EssenceContainerData*> ess_data;
-        if (content_storage->haveEssenceContainerData())
-            ess_data = content_storage->getEssenceContainerData();
-        if (ess_data.empty()) {
+        if (ess_container_data.empty()) {
             log_error("Missing EssenceContainerData set\n");
             THROW_RESULT(MXF_RESULT_NO_ESSENCE);
         }
-
-        // only support single essence container (not OP-1B with multiple internal essence file source packages)
-        if (ess_data.size() != 1) {
-            log_error("Multiple essence containers is not supported\n");
-            THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
-        }
-        EssenceContainerData *single_ess_data = ess_data[0];
+        BMX_ASSERT(ess_container_data.size() == 1);
+        EssenceContainerData *single_ess_data = ess_container_data[0];
 
         mxfUMID linked_package_uid = single_ess_data->getLinkedPackageUID();
         for (i = 0; i < mInternalTrackReaders.size(); i++) {
