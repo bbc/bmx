@@ -347,11 +347,6 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setColorRange(225);
 
     if ((mFlavour & MXFDESC_RDD9_FLAVOUR)) {
-        if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_SEPARATE_FIELDS) {
-            cdci_descriptor->setStoredF2Offset(0);
-            cdci_descriptor->setDisplayF2Offset(0);
-            cdci_descriptor->setFieldDominance(1);
-        }
         cdci_descriptor->setSampledXOffset(0);
         cdci_descriptor->setSampledYOffset(0);
         cdci_descriptor->setDisplayXOffset(0);
@@ -359,22 +354,15 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
         cdci_descriptor->setImageStartOffset(0);
         cdci_descriptor->setImageEndOffset(0);
         cdci_descriptor->setPaddingBits(0);
-
-        if ((mFlavour & MXFDESC_RDD9_AS10_FLAVOUR)) {
-            // These properties are set for AS-10 to avoid differences with Sony RDD-9 files.
-            // ImageAlignmentOffset should be 1 (the ST 377 default) but Sony RDD-9 files
-            // set the value to 0
-            cdci_descriptor->setImageAlignmentOffset(0);
-            cdci_descriptor->setReversedByteOrder(false);
-            if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout != MXF_SEPARATE_FIELDS) {
-                // These properties should not be present according to ST 377 for MXF_FULL_FRAME and
-                // MXF_SEGMENTED_FRAME. However, Sony RDD-9 files set the values and so the same is done
-                // here for AS-10 to avoid differences
-                cdci_descriptor->setStoredF2Offset(0);
-                cdci_descriptor->setDisplayF2Offset(0);
-                cdci_descriptor->setFieldDominance(1);
-            }
-        }
+        // ImageAlignmentOffset should be 1 (the ST 377 default) but Sony RDD-9 files set the value to 0
+        cdci_descriptor->setImageAlignmentOffset(0);
+        cdci_descriptor->setReversedByteOrder(false);
+        // These properties should not be present according to ST 377 for MXF_FULL_FRAME and
+        // MXF_SEGMENTED_FRAME. However, Sony RDD-9 files set the values and so the same is done
+        // here to avoid differences
+        cdci_descriptor->setStoredF2Offset(0);
+        cdci_descriptor->setDisplayF2Offset(0);
+        cdci_descriptor->setFieldDominance(1);
     } else if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
         cdci_descriptor->setSampledXOffset(0);
         cdci_descriptor->setSampledYOffset(0);
