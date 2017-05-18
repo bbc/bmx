@@ -117,6 +117,7 @@
           <block_align>12</block_align>
           <channel_count>4</channel_count>
           <d10_aes3_valid_flags>00000011b</d10_aes3_valid_flags>
+          <locked>true</locked>
         </sound_descriptor>
       </track>
     </tracks>

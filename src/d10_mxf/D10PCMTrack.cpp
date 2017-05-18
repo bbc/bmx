@@ -59,6 +59,7 @@ D10PCMTrack::D10PCMTrack(D10File *file, uint32_t track_index, mxfRational frame_
     mSoundDescriptorHelper->SetSamplingRate(SAMPLING_RATE_48K);
     mSoundDescriptorHelper->SetQuantizationBits(16);
     mSoundDescriptorHelper->SetChannelCount(1);
+    mSoundDescriptorHelper->SetLocked(true);
 
     mOutputTrackNumber = 1; // overrides init in D10Track
 

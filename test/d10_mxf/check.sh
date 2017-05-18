@@ -14,7 +14,7 @@ BASE_COMMAND="../../apps/raw2bmx/raw2bmx --regtest -t d10 -o ${TEMP_DIR}/d10test
 ../create_test_essence -t $2 -d $1 ${TEMP_DIR}/test_in.raw
 
 # write
-$BASE_COMMAND -a 16:9 --$3 ${TEMP_DIR}/test_in.raw -q 16 --locked true --pcm ${TEMP_DIR}/pcm.raw -q 16 --locked true --pcm ${TEMP_DIR}/pcm.raw >/dev/null
+$BASE_COMMAND -a 16:9 --$3 ${TEMP_DIR}/test_in.raw -q 16 --pcm ${TEMP_DIR}/pcm.raw -q 16 --locked true --pcm ${TEMP_DIR}/pcm.raw >/dev/null
 
 # calculate md5sum and compare with expected value
 $MD5TOOL < ${TEMP_DIR}/d10test.mxf > ${TEMP_DIR}/test.md5
