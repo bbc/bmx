@@ -2786,6 +2786,7 @@ int main(int argc, const char** argv)
             } else if (clip_sub_type == AS11_CLIP_SUB_TYPE) {
                 if (as11_helper.HaveAS11CoreFramework()) // AS11 Core Framework has the Audio Track Layout property
                     flavour |= OP1A_MP_TRACK_NUMBER_FLAVOUR;
+                flavour |= OP1A_AS11_FLAVOUR;
             } else {
                 if (mp_track_num)
                     flavour |= OP1A_MP_TRACK_NUMBER_FLAVOUR;
@@ -2800,6 +2801,8 @@ int main(int argc, const char** argv)
                 flavour |= OP1A_SINGLE_PASS_WRITE_FLAVOUR;
         } else if (clip_type == CW_D10_CLIP_TYPE) {
             flavour = D10_DEFAULT_FLAVOUR;
+            if (clip_sub_type == AS11_CLIP_SUB_TYPE)
+                flavour |= D10_AS11_FLAVOUR;
             if (output_file_md5)
                 flavour |= D10_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
@@ -2809,6 +2812,8 @@ int main(int argc, const char** argv)
                 flavour = RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR;
             else if (clip_sub_type == AS10_CLIP_SUB_TYPE)
                 flavour = RDD9_AS10_FLAVOUR;
+            else if (clip_sub_type == AS11_CLIP_SUB_TYPE)
+                flavour = RDD9_AS11_FLAVOUR;
             if (output_file_md5)
                 flavour |= RDD9_SINGLE_PASS_MD5_WRITE_FLAVOUR;
             else if (single_pass)
@@ -2891,8 +2896,6 @@ int main(int argc, const char** argv)
 
             if (BMX_OPT_PROP_IS_SET(head_fill))
                 op1a_clip->ReserveHeaderMetadataSpace(head_fill);
-            else if (clip_sub_type == AS11_CLIP_SUB_TYPE)
-                op1a_clip->ReserveHeaderMetadataSpace(16384); // min is 8192
 
             if (clip_sub_type != AS11_CLIP_SUB_TYPE)
                 op1a_clip->SetClipWrapped(clip_wrap);
@@ -2986,15 +2989,11 @@ int main(int argc, const char** argv)
 
             if (BMX_OPT_PROP_IS_SET(head_fill))
                 d10_clip->ReserveHeaderMetadataSpace(head_fill);
-            else if (clip_sub_type == AS11_CLIP_SUB_TYPE)
-                d10_clip->ReserveHeaderMetadataSpace(16384); // min is 8192
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
             RDD9File *rdd9_clip = clip->GetRDD9Clip();
 
             if (BMX_OPT_PROP_IS_SET(head_fill))
                 rdd9_clip->ReserveHeaderMetadataSpace(head_fill);
-            else if (clip_sub_type == AS10_CLIP_SUB_TYPE || clip_sub_type == AS11_CLIP_SUB_TYPE)
-                rdd9_clip->ReserveHeaderMetadataSpace(16384); // min is 8192
 
             if (clip_sub_type == AS10_CLIP_SUB_TYPE)
               rdd9_clip->SetValidator(new AS10RDD9Validator(as10_shim, as10_loose_checks));

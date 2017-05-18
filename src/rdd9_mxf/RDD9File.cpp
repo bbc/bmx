@@ -140,6 +140,8 @@ RDD9File::RDD9File(int flavour, File *mxf_file, Rational frame_rate)
 
     if ((flavour & RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (flavour & RDD9_AS10_FLAVOUR))
         ReserveHeaderMetadataSpace(2 * 1024 * 1024 + 8192);
+    else if ((flavour & RDD9_AS11_FLAVOUR))
+        ReserveHeaderMetadataSpace(4 * 1024 * 1024 + 8192);
 
     if (!(flavour & RDD9_SMPTE_377_2004_FLAVOUR)) {
         // use fill key with correct version number

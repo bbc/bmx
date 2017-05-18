@@ -49,6 +49,7 @@
 #define D10_DEFAULT_FLAVOUR                 0x0000
 #define D10_SINGLE_PASS_WRITE_FLAVOUR       0x0001
 #define D10_SINGLE_PASS_MD5_WRITE_FLAVOUR   0x0003
+#define D10_AS11_FLAVOUR                    0x0004
 
 
 

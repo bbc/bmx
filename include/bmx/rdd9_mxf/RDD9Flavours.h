@@ -37,6 +37,7 @@
 #define RDD9_NO_BODY_PART_UPDATE_FLAVOUR        0x0008
 #define RDD9_ARD_ZDF_HDF_PROFILE_FLAVOUR        0x0010
 #define RDD9_AS10_FLAVOUR                       0x0020
+#define RDD9_AS11_FLAVOUR                       0x0040
 
 
 #endif

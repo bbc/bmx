@@ -136,10 +136,12 @@ D10File::D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mStreamIdHelper.SetId("BodyStream",  2);
     mStreamIdHelper.SetStartId(GENERIC_STREAM_TYPE, 10);
 
-    if (flavour & D10_SINGLE_PASS_MD5_WRITE_FLAVOUR) {
+    if ((flavour & D10_SINGLE_PASS_MD5_WRITE_FLAVOUR)) {
         mMXFChecksumFile = mxf_checksum_file_open(mMXFFile->getCFile(), MD5_CHECKSUM);
         mMXFFile->swapCFile(mxf_checksum_file_get_file(mMXFChecksumFile));
     }
+    if ((flavour & D10_AS11_FLAVOUR))
+        ReserveHeaderMetadataSpace(4 * 1024 * 1024 + 8192);
 }
 
 D10File::~D10File()
