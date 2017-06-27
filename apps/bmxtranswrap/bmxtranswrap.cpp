@@ -397,6 +397,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --start <frame>         Set the start frame in input edit rate units. Default is 0\n");
     fprintf(stderr, "  --dur <frame>           Set the duration in frames in input edit rate units. Default is minimum input duration\n");
     fprintf(stderr, "  --check-end             Check at the start that the last (start + duration - 1) frame can be read\n");
+    fprintf(stderr, "  --check-end-tolerance <frame> Allow output duration shorter than input declared duration\n");
     fprintf(stderr, "  --check-complete        Check that the input file is complete\n");
     fprintf(stderr, "  --group                 Use the group reader instead of the sequence reader\n");
     fprintf(stderr, "                          Use this option if the files have different material packages\n");
@@ -741,6 +742,7 @@ int main(int argc, const char** argv)
     bool start_set = false;
     int64_t duration = -1;
     bool check_end = false;
+    int  check_end_tolerance = 0;
     bool check_complete = false;
     const char *clip_name = 0;
     MICType mic_type = MD5_MIC_TYPE;
@@ -1094,6 +1096,24 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--check-end") == 0)
         {
             check_end = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--check-end-tolerance") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
+                value <= 0 )
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            check_end_tolerance = value;
+            cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--check-complete") == 0)
         {
@@ -3032,12 +3052,16 @@ int main(int argc, const char** argv)
                 }
             }
 
-            reader->SetReadLimits(read_start + precharge, - precharge + output_duration + rollout, true);
-
-            if (check_end && !reader->CheckReadLastFrame()) {
-                log_error("Check for last frame failed\n");
-                throw false;
+            if (check_end) {
+                reader->SetReadLimits(read_start + precharge, max<int64_t>(0, -precharge + output_duration + rollout - check_end_tolerance), true);
+                if (!reader->CheckReadLastFrame()) {
+                    log_error("Check for last frame failed\n");
+                    throw false;
+                }
             }
+
+            if (!check_end || check_end_tolerance != 0)
+                reader->SetReadLimits(read_start + precharge, - precharge + output_duration + rollout, true);
         }
 
 
@@ -4409,9 +4433,10 @@ int main(int argc, const char** argv)
 
 
         if (read_duration >= 0 && total_read != read_duration) {
-            bmx::log(reader->IsComplete() ? ERROR_LOG : WARN_LOG,
-                     "Read less (%" PRId64 ") samples than expected (%" PRId64 ")\n", total_read, read_duration);
-            if (reader->IsComplete())
+            bool isError = reader->IsComplete() && total_read < read_duration - check_end_tolerance;
+            bmx::log(isError ? ERROR_LOG : WARN_LOG,
+                        "Read less (%" PRId64 ") samples than expected (%" PRId64 ")\n", total_read, read_duration);
+            if (isError)
                 cmd_result = 1;
         }
 
