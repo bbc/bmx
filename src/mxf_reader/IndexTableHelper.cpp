@@ -161,6 +161,22 @@ void IndexTableHelperSegment::ProcessIndexTableSegment(Rational expected_edit_ra
         if (GET_STREAM_OFFSET(0) == GET_STREAM_OFFSET(1)) {
             // eg. Avid MPEG-2 Long GOP (eg. XDCAM) has 2 identical entries per frame
             mHavePairedIndexEntries = true;
+            if (getIndexDuration() * 2 > mNumIndexEntries) {
+                // a file produced by Avid AMT (v 2.10.0.923.5) and Generic Helper (v 12.1.21.25134.5) had
+                // index duration == index entry count - 1 even though the entries are pairs
+                // This conflicts with a file produced by Avid Media Composer 5.0.3 which had the index
+                // duration == (index entry count - 1) / 2
+                if (!(getIndexDuration() & 1) &&
+                    (getIndexDuration() == mNumIndexEntries || getIndexDuration() + 1 == mNumIndexEntries))
+                {
+                    setIndexDuration(getIndexDuration() / 2);
+                }
+                else
+                {
+                    BMX_EXCEPTION(("VBE index table duration %" PRId64 " does not match index entry count %" PRId64,
+                                   getIndexDuration(), mNumIndexEntries));
+                }
+            }
             if (mNumIndexEntries > getIndexDuration() * 2) {
                 mHaveExtraIndexEntries = true;
                 mIndexEndOffset = GET_STREAM_OFFSET(getIndexDuration() * 2);
