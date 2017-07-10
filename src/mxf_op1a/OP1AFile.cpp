@@ -810,6 +810,7 @@ void OP1AFile::CreateFile()
             stream_partition.setBodySID(xml_track->GetStreamId());
             stream_partition.write(mMXFFile);
             xml_track->WriteStreamXMLData(mMXFFile);
+            stream_partition.fillToKag(mMXFFile);
         }
     }
 }
