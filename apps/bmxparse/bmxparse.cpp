@@ -43,6 +43,7 @@
 #include <bmx/essence_parser/DVEssenceParser.h>
 #include <bmx/essence_parser/MJPEGEssenceParser.h>
 #include <bmx/essence_parser/MPEG2EssenceParser.h>
+#include <bmx/essence_parser/RDD36EssenceParser.h>
 #include <bmx/essence_parser/VC3EssenceParser.h>
 #include <bmx/essence_parser/VC2EssenceParser.h>
 #include <bmx/apps/AppTextInfoWriter.h>
@@ -66,9 +67,104 @@ typedef enum
     DV_INPUT,
     MJPEG_INPUT,
     M2V_INPUT,
+    RDD36_INPUT,
     VC3_INPUT,
     VC2_INPUT,
 } InputType;
+
+static const EnumInfo RDD36_CHROMA_FORMAT_ENUM[] =
+{
+    {0,     "Reserved"},
+    {1,     "Reserved"},
+    {2,     "4:2:2"},
+    {3,     "4:4:4"},
+    {0, 0}
+};
+
+static const EnumInfo RDD36_INTERLACE_MODE_ENUM[] =
+{
+    {0,     "Progressive frame"},
+    {1,     "Interlaced frame (TFF)"},
+    {2,     "Interlaced frame (BFF)"},
+    {3,     "Reserved"},
+    {0, 0}
+};
+
+static const EnumInfo RDD36_ASPECT_RATIO_ENUM[] =
+{
+    {0,     "Reserved"},
+    {1,     "Square pixels"},
+    {2,     "4:3"},
+    {3,     "16:9"},
+    {0, 0}
+};
+
+static const EnumInfo ITU_COLOR_PRIMARIES_ENUM[] =
+{
+    {0,     "Unknown/unspecified"},
+    {1,     "ITU-R BT.709"},
+    {2,     "Unknown/unspecified"},
+    {3,     "Reserved"},
+    {4,     "ITU-R BT.470-6 M"},
+    {5,     "ITU-R BT.601 625"},
+    {6,     "ITU-R BT.601 525"},
+    {7,     "SMPTE 240M"},
+    {8,     "Film"},
+    {9,     "ITU-R BT.2020"},
+    {10,    "SMPTE ST 428-1"},
+    {11,    "DCI P3"},
+    {12,    "P3 D65"},
+    {0, 0}
+};
+
+static const EnumInfo ITU_TRANSFER_CHAR_ENUM[] =
+{
+    {0,     "Unknown/unspecified"},
+    {1,     "ITU-R BT.601/BT.709/BT.2020"},
+    {2,     "Unknown/unspecified"},
+    {3,     "Reserved"},
+    {4,     "ITU-R BT.470-6 gamma 2.2"},
+    {5,     "ITU-R BT.470-6 gamma 2.8"},
+    {6,     "SMPTE 170M"},
+    {7,     "SMPTE 240M"},
+    {8,     "Linear"},
+    {9,     "Log"},
+    {10,    "Log Sqrt"},
+    {11,    "IEC 61966-2-4"},
+    {12,    "ITU-R BT.1361"},
+    {13,    "IEC 61966-2-1"},
+    {14,    "ITU-R BT.2020 10 bit"},
+    {15,    "ITU-R BT.2020 12 bit"},
+    {16,    "SMPTE ST 2084"},
+    {17,    "SMPTE ST 428-1"},
+    {18,    "HLG"},
+    {0, 0}
+};
+
+static const EnumInfo ITU_MATRIX_COEFF_ENUM[] =
+{
+    {0,     "GBR"},
+    {1,     "ITU-R BT.709"},
+    {2,     "Unknown/unspecified"},
+    {3,     "Reserved"},
+    {4,     "FCC"},
+    {5,     "ITU-R BT.601 625"},
+    {6,     "ITU-R BT.601 525"},
+    {7,     "SMPTE 240M"},
+    {8,     "YCgCo"},
+    {9,     "ITU-R BT.2020 NCL"},
+    {10,    "ITU-R BT.2020 CL"},
+    {11,    "SMPTE ST 2085"},
+    {0, 0}
+};
+
+static const EnumInfo RDD36_ALPHA_CHANNEL_TYPE_ENUM[] =
+{
+    {0,     "Not present"},
+    {1,     "8 bits/sample integral"},
+    {2,     "16 bits/sample integral"},
+    {0, 0}
+};
 
 static const EnumInfo VC2_LEVEL_ENUM[] =
 {
@@ -380,6 +476,31 @@ static void print_m2v_frame_info(AppInfoWriter *info_writer, EssenceParser *pars
     info_writer->EndArrayElement();
 }
 
+static void print_rdd36_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
+                                   Buffer *buffer, uint32_t frame_size, int64_t frame_num)
+{
+    (void)parser_data;
+    RDD36EssenceParser *rdd36_parser = dynamic_cast<RDD36EssenceParser*>(parser);
+    rdd36_parser->ParseFrameInfo(buffer->data, frame_size);
+
+    info_writer->StartArrayElement("frame", (size_t)frame_num);
+
+    info_writer->WriteIntegerItem("size", frame_size);
+
+    info_writer->WriteRationalItem("frame_rate", rdd36_parser->GetFrameRate());
+    info_writer->WriteIntegerItem("frame_width", rdd36_parser->GetWidth());
+    info_writer->WriteIntegerItem("frame_height", rdd36_parser->GetHeight());
+    info_writer->WriteEnumItem("chroma_format", RDD36_CHROMA_FORMAT_ENUM, rdd36_parser->GetChromaFormat());
+    info_writer->WriteEnumItem("interlace_mode", RDD36_INTERLACE_MODE_ENUM, rdd36_parser->GetInterlaceMode());
+    info_writer->WriteEnumItem("aspect_ratio", RDD36_ASPECT_RATIO_ENUM, rdd36_parser->GetAspectRatioCode());
+    info_writer->WriteEnumItem("color_primaries", ITU_COLOR_PRIMARIES_ENUM, rdd36_parser->GetColorPrimaries(), "Reserved");
+    info_writer->WriteEnumItem("transfer_characteristic", ITU_TRANSFER_CHAR_ENUM, rdd36_parser->GetTransferCharacteristic(), "Reserved");
+    info_writer->WriteEnumItem("matrix_coefficients", ITU_MATRIX_COEFF_ENUM, rdd36_parser->GetMatrixCoefficients(), "Reserved");
+    info_writer->WriteEnumItem("alpha_channel_type", RDD36_ALPHA_CHANNEL_TYPE_ENUM, rdd36_parser->GetAlphaChannelType(), "Reserved");
+
+    info_writer->EndArrayElement();
+}
+
 static void print_vc2_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
                                  Buffer *buffer, uint32_t frame_size, int64_t frame_num)
 {
@@ -486,6 +607,8 @@ static bool parse_type_str(const char *type_str, InputType *input_type)
         *input_type = M2V_INPUT;
     else if (strcmp(type_str, "vc2") == 0)
         *input_type = VC2_INPUT;
+    else if (strcmp(type_str, "rdd36") == 0)
+        *input_type = RDD36_INPUT;
     else if (strcmp(type_str, "vc3") == 0)
         *input_type = VC3_INPUT;
     else
@@ -498,7 +621,7 @@ static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
     fprintf(stderr, "Usage: %s <<options>> <type> <filename>\n", cmd);
-    fprintf(stderr, "    <type> is 'avc', 'dv', 'mjpeg', 'm2v', 'vc2' or 'vc3'\n");
+    fprintf(stderr, "    <type> is 'avc', 'dv', 'mjpeg', 'm2v', 'rdd36', 'vc2' or 'vc3'\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, " -h | --help           Show usage and exit\n");
     fprintf(stderr, " -v | --version        Print version info to stderr\n");
@@ -644,6 +767,12 @@ int main(int argc, const char **argv)
                 print_frame_info = print_m2v_frame_info;
                 if (text_info_writer)
                     text_info_writer->PushItemValueIndent(strlen("display_horiz_size "));
+                break;
+            case RDD36_INPUT:
+                parser = new RDD36EssenceParser();
+                print_frame_info = print_rdd36_frame_info;
+                if (text_info_writer)
+                    text_info_writer->PushItemValueIndent(strlen("transfer_characteristic "));
                 break;
             case VC2_INPUT:
                 parser = new VC2EssenceParser();

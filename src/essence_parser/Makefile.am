@@ -13,6 +13,7 @@ libessenceparser_la_SOURCES = \
 	MPEG2EssenceParser.cpp \
 	RawEssenceReader.cpp \
 	SoundConversion.cpp \
+	RDD36EssenceParser.cpp \
 	VC2EssenceParser.cpp \
 	VC3EssenceParser.cpp
 

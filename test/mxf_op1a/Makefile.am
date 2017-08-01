@@ -32,6 +32,8 @@ TESTS = \
 	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test \
 	vbi.sh \
+	rdd36_422.test \
+	rdd36_4444.test \
 	vc2.test \
 	vc3_1080p_1235.test \
 	vc3_1080p_1237.test \
@@ -80,6 +82,8 @@ EXTRA_DIST = \
 	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test \
 	vbi.sh \
+	rdd36_422.test \
+	rdd36_4444.test \
 	vc2.test \
 	vc3_1080p_1235.test \
 	vc3_1080p_1237.test \
@@ -124,6 +128,8 @@ EXTRA_DIST = \
 	mpeg2lg_mp_hl_1920_1080i.md5 \
 	mpeg2lg_mp_h14_1080i.md5 \
 	vbi.md5 \
+	rdd36_422.md5 \
+	rdd36_4444.md5 \
 	vc2.md5 \
 	vc3_1080p_1235.md5 \
 	vc3_1080p_1237.md5 \
@@ -174,6 +180,8 @@ create-data:
 	${srcdir}/create.sh ${srcdir} 3 19 unc_1080p
 	${srcdir}/create.sh ${srcdir} 3 20 unc_720p
 	${srcdir}/create.sh ${srcdir} 3 45 unc_3840
+	${srcdir}/create.sh ${srcdir} 3 55 rdd36_422
+	${srcdir}/create.sh ${srcdir} 3 56 rdd36_4444
 	${srcdir}/create.sh ${srcdir} 3 54 vc2
 	${srcdir}/create.sh ${srcdir} 3 31 vc3_1080p_1235
 	${srcdir}/create.sh ${srcdir} 3 32 vc3_1080p_1237
@@ -222,6 +230,8 @@ create-samples:
 	${srcdir}/samples.sh 3 19 unc_1080p
 	${srcdir}/samples.sh 3 20 unc_720p
 	${srcdir}/samples.sh 3 45 unc_3840
+	${srcdir}/samples.sh 3 55 rdd36_422
+	${srcdir}/samples.sh 3 56 rdd36_4444
 	${srcdir}/samples.sh 3 54 vc2
 	${srcdir}/samples.sh 3 31 vc3_1080p_1235
 	${srcdir}/samples.sh 3 32 vc3_1080p_1237

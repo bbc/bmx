@@ -155,6 +155,7 @@ public:
     void SetEditRate(mxfRational edit_rate);
     void SetExtensions(mxfOptBool single_index_location, mxfOptBool single_essence_location,
                        mxfOptBool forward_index_direction);
+    void SetRepeatIndexTable(bool enable);
 
     void RegisterSystemItem();
     void RegisterPictureTrackElement(uint32_t track_index, bool is_cbe, bool apply_temporal_reordering);
@@ -167,11 +168,12 @@ public:
     void SetInputDuration(int64_t duration);
 
 public:
-    bool IsCBE() const { return mIsCBE; }
-    bool IsVBE() const { return !mIsCBE; }
-    bool RequireIndexTableSegmentPair() const { return mIsCBE && mHaveAVCI; }
+    bool IsCBE() const                          { return mIsCBE; }
+    bool IsVBE() const                          { return !mIsCBE; }
+    bool RequireIndexTableSegmentPair() const   { return mIsCBE && mHaveAVCI; }
+    bool RepeatIndexTable() const               { return mRepeatIndexTable; }
 
-    int64_t GetDuration() const { return mDuration; }
+    int64_t GetDuration() const     { return mDuration; }
     int64_t GetStreamOffset() const { return mStreamOffset; }
 
     void GetCBEEditUnitSize(uint32_t *first, uint32_t *non_first) const;
@@ -191,6 +193,7 @@ public:
 
 public:
     bool HaveSegments();
+    bool HaveFooterSegments();
     void WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition, bool final_write);
 
     bool RequireUpdatesAtEnd(int64_t end_offset) const;
@@ -207,8 +210,8 @@ private:
     void UpdateCBEIndex(uint32_t size, std::vector<uint32_t> &element_sizes);
     void UpdateVBEIndex(std::vector<uint32_t> &element_sizes);
 
-    void WriteCBESegments(mxfpp::File *mxf_file, bool final_write);
-    void WriteVBESegments(mxfpp::File *mxf_file);
+    void WriteCBESegments(mxfpp::File *mxf_file, mxfpp::Partition *partition, bool final_write);
+    void WriteVBESegments(mxfpp::File *mxf_file, mxfpp::Partition *partition, std::vector<OP1AIndexTableSegment*> &segments);
 
 private:
     uint32_t mIndexSID;
@@ -218,6 +221,7 @@ private:
     mxfOptBool mSingleIndexLocation;
     mxfOptBool mSingleEssenceLocation;
     mxfOptBool mForwardIndexDirection;
+    bool mRepeatIndexTable;
     int64_t mInputDuration;
 
     std::vector<OP1AIndexTableElement*> mIndexElements;
@@ -233,6 +237,9 @@ private:
     std::vector<OP1AIndexTableSegment*> mIndexSegments;
     int64_t mDuration;
     int64_t mStreamOffset;
+
+    std::vector<OP1AIndexTableSegment*> mWrittenVBEIndexSegments;
+    bool mHaveWrittenCBE;
 };
 
 

@@ -46,6 +46,7 @@
 #include <bmx/mxf_op1a/OP1AAVCTrack.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_op1a/OP1ADataTrack.h>
+#include <bmx/mxf_op1a/OP1ARDD36Track.h>
 #include <bmx/mxf_op1a/OP1AVC2Track.h>
 #include <bmx/mxf_op1a/OP1AXMLTrack.h>
 #include <bmx/avid_mxf/AvidPictureTrack.h>
@@ -355,10 +356,13 @@ void ClipWriterTrack::SetComponentDepth(uint32_t depth)
         {
             OP1ADVTrack *dv_track = dynamic_cast<OP1ADVTrack*>(mOP1ATrack);
             OP1AUncTrack *unc_track = dynamic_cast<OP1AUncTrack*>(mOP1ATrack);
+            OP1ARDD36Track *rdd36_track = dynamic_cast<OP1ARDD36Track*>(mOP1ATrack);
             if (dv_track)
                 dv_track->SetComponentDepth(depth);
             else if (unc_track)
                 unc_track->SetComponentDepth(depth);
+            else if (rdd36_track)
+                rdd36_track->SetComponentDepth(depth);
             break;
         }
         case CW_AVID_CLIP_TYPE:

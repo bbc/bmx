@@ -109,11 +109,13 @@ public:
     int32_t GetAvidFirstFrameOffset();
     void SetFirstFrameOffset(int32_t offset);
 
-protected:
-    virtual mxfUL ChooseEssenceContainerUL() const;
 
+    // value depends on flavour
     void SetCodingEquationsMod(mxfUL label);
     void SetColorSitingMod(uint8_t color_siting);
+
+protected:
+    virtual mxfUL ChooseEssenceContainerUL() const;
 
 protected:
     int32_t mAvidResolutionId;

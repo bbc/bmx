@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013, British Broadcasting Corporation
+ * Copyright (C) 2017, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,12 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_AVC_MXF_DESCRIPTOR_HELPER_H_
-#define BMX_AVC_MXF_DESCRIPTOR_HELPER_H_
+#ifndef BMX_OP1A_RDD36_TRACK_H_
+#define BMX_OP1A_RDD36_TRACK_H_
 
-
-#include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
-#include <bmx/essence_parser/AVCEssenceParser.h>
+#include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
+#include <bmx/mxf_op1a/OP1APictureTrack.h>
 
 
 
@@ -42,45 +41,24 @@ namespace bmx
 {
 
 
-class AVCMXFDescriptorHelper : public PictureMXFDescriptorHelper
+class OP1ARDD36Track : public OP1APictureTrack
 {
 public:
-    static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
-    static bool IsSupported(EssenceType essence_type);
+    OP1ARDD36Track(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+                   mxfRational frame_rate, EssenceType essence_type);
+    virtual ~OP1ARDD36Track();
 
-    static void MapColorPrimaries(uint8_t avc_value, PictureMXFDescriptorHelper *pict_helper);
-    static void MapTransferCharacteristic(uint8_t avc_value, PictureMXFDescriptorHelper *pict_helper);
-    static void MapMatrixCoefficients(uint8_t avc_value, PictureMXFDescriptorHelper *pict_helper);
-
-public:
-    AVCMXFDescriptorHelper();
-    virtual ~AVCMXFDescriptorHelper();
-
-public:
-    // initialize from existing descriptor
-    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
-
-public:
-    // configure and create new descriptor
-    virtual void SetEssenceType(EssenceType essence_type);
-
-    virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
-    virtual void UpdateFileDescriptor();
-    virtual void UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc_in);
-    void UpdateFileDescriptor(AVCEssenceParser *essence_parser);
-
-    mxfpp::AVCSubDescriptor* GetAVCSubDescriptor() const { return mAVCSubDescriptor; }
+    void SetComponentDepth(uint32_t depth); // default 10
 
 protected:
-    virtual mxfUL ChooseEssenceContainerUL() const;
+    virtual void PrepareWrite(uint8_t track_count);
+    virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
 
 private:
-    void UpdateEssenceIndex();
-
-private:
-    size_t mEssenceIndex;
-    mxfpp::AVCSubDescriptor *mAVCSubDescriptor;
+    RDD36MXFDescriptorHelper *mRDD36DescriptorHelper;
+    int64_t mPosition;
 };
+
 
 
 };
@@ -88,4 +66,3 @@ private:
 
 
 #endif
-

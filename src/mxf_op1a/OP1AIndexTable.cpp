@@ -289,6 +289,7 @@ OP1AIndexTable::OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRationa
     mSingleIndexLocation = MXF_OPT_BOOL_NOT_PRESENT;
     mSingleEssenceLocation = MXF_OPT_BOOL_NOT_PRESENT;
     mForwardIndexDirection = MXF_OPT_BOOL_NOT_PRESENT;
+    mRepeatIndexTable = false;
     mInputDuration = -1;
     mIsCBE = true;
     mHaveAVCI = false;
@@ -297,6 +298,7 @@ OP1AIndexTable::OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRationa
     mAVCIFirstIndexSegment = 0;
     mDuration = 0;
     mStreamOffset = 0;
+    mHaveWrittenCBE = false;
 }
 
 OP1AIndexTable::~OP1AIndexTable()
@@ -308,6 +310,8 @@ OP1AIndexTable::~OP1AIndexTable()
     delete mAVCIFirstIndexSegment;
     for (i = 0; i < mIndexSegments.size(); i++)
         delete mIndexSegments[i];
+    for (i = 0; i < mWrittenVBEIndexSegments.size(); i++)
+        delete mWrittenVBEIndexSegments[i];
 }
 
 void OP1AIndexTable::SetEditRate(mxfRational edit_rate)
@@ -322,6 +326,11 @@ void OP1AIndexTable::SetExtensions(mxfOptBool single_index_location, mxfOptBool 
     mSingleIndexLocation   = single_index_location;
     mSingleEssenceLocation = single_essence_location;
     mForwardIndexDirection = forward_index_direction;
+}
+
+void OP1AIndexTable::SetRepeatIndexTable(bool enable)
+{
+    mRepeatIndexTable = enable;
 }
 
 void OP1AIndexTable::SetInputDuration(int64_t duration)
@@ -522,20 +531,47 @@ bool OP1AIndexTable::HaveSegments()
     return mIsCBE || (!mIndexSegments.empty() && mIndexSegments[0]->GetDuration() > 0);
 }
 
+bool OP1AIndexTable::HaveFooterSegments()
+{
+    if (mIsCBE)
+        return mHaveWrittenCBE && mRepeatIndexTable;
+    else
+        return HaveSegments() || (!mWrittenVBEIndexSegments.empty() && mRepeatIndexTable);
+}
+
 void OP1AIndexTable::WriteSegments(File *mxf_file, Partition *partition, bool final_write)
 {
-    BMX_ASSERT(HaveSegments());
     BMX_ASSERT(mDuration > 0);
 
     partition->markIndexStart(mxf_file);
-
-    if (mIsCBE)
-        WriteCBESegments(mxf_file, final_write);
-    else
-        WriteVBESegments(mxf_file);
-
-    partition->fillToKag(mxf_file);
+    if (mIsCBE) {
+        WriteCBESegments(mxf_file, partition, final_write);
+    } else {
+        if (partition->isFooter() && mRepeatIndexTable)
+            WriteVBESegments(mxf_file, partition, mWrittenVBEIndexSegments);
+        WriteVBESegments(mxf_file, partition, mIndexSegments);
+    }
     partition->markIndexEnd(mxf_file);
+
+    if (mIsCBE) {
+        mHaveWrittenCBE = true;
+    } else {
+        if (!partition->isFooter() && mRepeatIndexTable) {
+            size_t i;
+            for (i = 0; i < mIndexSegments.size(); i++)
+                mWrittenVBEIndexSegments.push_back(mIndexSegments[i]);
+        } else {
+            size_t i;
+            for (i = 0; i < mIndexSegments.size(); i++)
+                delete mIndexSegments[i];
+            if (partition->isFooter() && mRepeatIndexTable) {
+                for (i = 0; i < mWrittenVBEIndexSegments.size(); i++)
+                    delete mWrittenVBEIndexSegments[i];
+                mWrittenVBEIndexSegments.clear();
+            }
+        }
+        mIndexSegments.clear();
+    }
 }
 
 bool OP1AIndexTable::RequireUpdatesAtEnd(int64_t end_offset) const
@@ -706,7 +742,7 @@ void OP1AIndexTable::UpdateVBEIndex(vector<uint32_t> &element_sizes)
     mIndexSegments.back()->AddIndexEntry(&entry, mStreamOffset, slice_cp_offsets);
 }
 
-void OP1AIndexTable::WriteCBESegments(File *mxf_file, bool final_write)
+void OP1AIndexTable::WriteCBESegments(File *mxf_file, Partition *partition, bool final_write)
 {
     if (mAVCIFirstIndexSegment) {
         BMX_CHECK(mxf_write_index_table_segment(mxf_file->getCFile(),
@@ -728,15 +764,18 @@ void OP1AIndexTable::WriteCBESegments(File *mxf_file, bool final_write)
                                                 mIndexSegments[0]->GetSegment()->getCIndexTableSegment()));
         mIndexSegments[0]->GetSegment()->setIndexDuration(orig_duration);
     }
+
+    partition->fillToKag(mxf_file);
 }
 
-void OP1AIndexTable::WriteVBESegments(File *mxf_file)
+void OP1AIndexTable::WriteVBESegments(File *mxf_file, Partition *partition, vector<OP1AIndexTableSegment*> &segments)
 {
     BMX_ASSERT(mInputDuration < 0);
+
     size_t i;
-    for (i = 0; i < mIndexSegments.size(); i++) {
-        IndexTableSegment *segment = mIndexSegments[i]->GetSegment();
-        ByteArray *entries = mIndexSegments[i]->GetEntries();
+    for (i = 0; i < segments.size(); i++) {
+        IndexTableSegment *segment = segments[i]->GetSegment();
+        ByteArray *entries = segments[i]->GetEntries();
 
         segment->writeHeader(mxf_file, (uint32_t)mDeltaEntries.size(), (uint32_t)segment->getIndexDuration());
 
@@ -752,9 +791,7 @@ void OP1AIndexTable::WriteVBESegments(File *mxf_file)
         segment->writeIndexEntryArrayHeader(mxf_file, mSliceCount, 0, (uint32_t)segment->getIndexDuration());
         mxf_file->write(entries->GetBytes(), entries->GetSize());
 
-        delete mIndexSegments[i];
+        partition->fillToKag(mxf_file);
     }
-
-    mIndexSegments.clear();
 }
 

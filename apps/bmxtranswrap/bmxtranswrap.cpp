@@ -55,6 +55,7 @@
 #include <bmx/mxf_reader/MXFFrameMetadata.h>
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
+#include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as02/AS02PictureTrack.h>
 #include <bmx/wave/WaveFileIO.h>
@@ -459,6 +460,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --black-level <value>   Override or set the black reference level\n");
     fprintf(stderr, "  --white-level <value>   Override or set the white reference level\n");
     fprintf(stderr, "  --color-range <value>   Override or set the color range\n");
+    fprintf(stderr, "  --rdd36-opaque          Override and treat RDD-36 4444 or 4444 XQ as opaque by omitting the Alpha Sample Depth property\n");
+    fprintf(stderr, "  --rdd36-comp-depth <value>   Override of set component depth for RDD-36. Defaults to 10 if not present in input file\n");
     fprintf(stderr, "  --ignore-input-desc     Don't use input MXF file descriptor properties to fill in missing information\n");
     fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks. See below for details of the <expr> format\n");
     fprintf(stderr, "  --dump-track-map        Dump the output audio track map to stderr.\n");
@@ -545,6 +548,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            separate partitions for header metadata, index tables, essence container data and footer\n");
     fprintf(stderr, "    --body-part             Create separate body partitions for essence data\n");
     fprintf(stderr, "                            and don't create separate body partitions for index table segments\n");
+    fprintf(stderr, "    --repeat-index          Repeat the index table segments in the footer partition\n");
     fprintf(stderr, "    --clip-wrap             Use clip wrapping for a single sound track\n");
     fprintf(stderr, "    --mp-track-num          Use the material package track number property to define a track order. By default the track number is set to 0\n");
     fprintf(stderr, "\n");
@@ -728,6 +732,8 @@ int main(int argc, const char** argv)
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_black_ref_level, 0);
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_white_ref_level, 0);
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_color_range, 0);
+    BMX_OPT_PROP_DECL_DEF(bool, user_rdd36_opaque, false);
+    BMX_OPT_PROP_DECL_DEF(uint32_t, user_rdd36_component_depth, 10);
     bool ignore_input_desc = false;
     bool input_file_md5 = false;
     int input_file_flags = 0;
@@ -752,6 +758,7 @@ int main(int argc, const char** argv)
     bool force_no_avci_head = false;
     bool min_part = false;
     bool body_part = false;
+    bool repeat_index = false;
     bool clip_wrap = false;
     bool realtime = false;
     float rt_factor = 1.0;
@@ -801,6 +808,7 @@ int main(int argc, const char** argv)
     int value, num, den;
     unsigned int uvalue;
     int64_t i64value;
+    bool msvc_block_limit;
     int cmdln_index;
 
     memset(&next_embed_xml, 0, sizeof(next_embed_xml));
@@ -813,6 +821,8 @@ int main(int argc, const char** argv)
 
     for (cmdln_index = 1; cmdln_index < argc; cmdln_index++)
     {
+        msvc_block_limit = false;
+
         if (strcmp(argv[cmdln_index], "--help") == 0 ||
             strcmp(argv[cmdln_index], "-h") == 0)
         {
@@ -1434,6 +1444,28 @@ int main(int argc, const char** argv)
             BMX_OPT_PROP_SET(user_color_range, uvalue);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--rdd36-opaque") == 0)
+        {
+            BMX_OPT_PROP_SET(user_rdd36_opaque, true);
+        }
+        else if (strcmp(argv[cmdln_index], "--rdd36-comp-depth") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
+                (value != 8 && value != 10))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_rdd36_component_depth, value);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--ignore-input-desc") == 0)
         {
             ignore_input_desc = true;
@@ -1854,6 +1886,10 @@ int main(int argc, const char** argv)
         {
             body_part = true;
         }
+        else if (strcmp(argv[cmdln_index], "--repeat-index") == 0)
+        {
+            repeat_index = true;
+        }
         else if (strcmp(argv[cmdln_index], "--clip-wrap") == 0)
         {
             clip_wrap = true;
@@ -2146,47 +2182,58 @@ int main(int argc, const char** argv)
         {
             use_avc_subdesc = true;
         }
-        else if (strcmp(argv[cmdln_index], "--audio-layout") == 0)
-        {
-            if (cmdln_index + 1 >= argc)
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
-                return 1;
-            }
-            if (!AS11Helper::ParseAudioLayoutMode(argv[cmdln_index + 1], &audio_layout_mode_label) &&
-                !parse_mxf_auid(argv[cmdln_index + 1], &audio_layout_mode_label))
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
-                return 1;
-            }
-            cmdln_index++;
-        }
-        else if (strcmp(argv[cmdln_index], "--track-mca-labels") == 0)
-        {
-            if (cmdln_index + 3 >= argc)
-            {
-                usage(argv[0]);
-                fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
-                return 1;
-            }
-            if (strcmp(argv[cmdln_index + 1], "as11") != 0)
-            {
-                usage(argv[0]);
-                fprintf(stderr, "MCA labels scheme '%s' is not supported\n", argv[cmdln_index + 1]);
-                return 1;
-            }
-            track_mca_labels.push_back(make_pair(argv[cmdln_index + 1], argv[cmdln_index + 2]));
-            cmdln_index += 2;
-        }
-        else if (strcmp(argv[cmdln_index], "--regtest") == 0)
-        {
-            BMX_REGRESSION_TEST = true;
-        }
         else
         {
-            break;
+            // break if/else here to workaround Visual C++ error
+            // C1061: compiler limit : blocks nested too deeply
+            msvc_block_limit = true;
+        }
+
+        if (msvc_block_limit)
+        {
+            // ...continue if/else here
+            if (strcmp(argv[cmdln_index], "--audio-layout") == 0)
+            {
+                if (cmdln_index + 1 >= argc)
+                {
+                    usage(argv[0]);
+                    fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                    return 1;
+                }
+                if (!AS11Helper::ParseAudioLayoutMode(argv[cmdln_index + 1], &audio_layout_mode_label) &&
+                    !parse_mxf_auid(argv[cmdln_index + 1], &audio_layout_mode_label))
+                {
+                    usage(argv[0]);
+                    fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                    return 1;
+                }
+                cmdln_index++;
+            }
+            else if (strcmp(argv[cmdln_index], "--track-mca-labels") == 0)
+            {
+                if (cmdln_index + 3 >= argc)
+                {
+                    usage(argv[0]);
+                    fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
+                    return 1;
+                }
+                if (strcmp(argv[cmdln_index + 1], "as11") != 0)
+                {
+                    usage(argv[0]);
+                    fprintf(stderr, "MCA labels scheme '%s' is not supported\n", argv[cmdln_index + 1]);
+                    return 1;
+                }
+                track_mca_labels.push_back(make_pair(argv[cmdln_index + 1], argv[cmdln_index + 2]));
+                cmdln_index += 2;
+            }
+            else if (strcmp(argv[cmdln_index], "--regtest") == 0)
+            {
+                BMX_REGRESSION_TEST = true;
+            }
+            else
+            {
+                break;
+            }
         }
     }
 
@@ -2897,6 +2944,9 @@ int main(int argc, const char** argv)
             if (BMX_OPT_PROP_IS_SET(head_fill))
                 op1a_clip->ReserveHeaderMetadataSpace(head_fill);
 
+            if (repeat_index)
+                op1a_clip->SetRepeatIndexTable(true);
+
             if (clip_sub_type != AS11_CLIP_SUB_TYPE)
                 op1a_clip->SetClipWrapped(clip_wrap);
             if (partition_interval_set)
@@ -3440,6 +3490,21 @@ int main(int argc, const char** argv)
                     else
                         clip_track->SetAspectRatio(input_picture_info->aspect_ratio);
                     break;
+                case RDD36_422_PROXY:
+                case RDD36_422_LT:
+                case RDD36_422:
+                case RDD36_422_HQ:
+                case RDD36_4444:
+                case RDD36_4444_XQ:
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    if (BMX_OPT_PROP_IS_SET(user_aspect_ratio))
+                        clip_track->SetAspectRatio(user_aspect_ratio);
+                    if (BMX_OPT_PROP_IS_SET(user_rdd36_component_depth))
+                        clip_track->SetComponentDepth(user_rdd36_component_depth);
+                    else if (input_picture_info->component_depth > 0)
+                        clip_track->SetComponentDepth(input_picture_info->component_depth);
+                    break;
                 case VC2:
                     if (afd)
                         clip_track->SetAFD(afd);
@@ -3534,6 +3599,12 @@ int main(int argc, const char** argv)
                     pict_helper->SetWhiteRefLevel(user_white_ref_level);
                 if (BMX_OPT_PROP_IS_SET(user_color_range))
                     pict_helper->SetColorRange(user_color_range);
+
+                RDD36MXFDescriptorHelper *rdd36_helper = dynamic_cast<RDD36MXFDescriptorHelper*>(pict_helper);
+                if (rdd36_helper) {
+                    if (BMX_OPT_PROP_IS_SET(user_rdd36_opaque))
+                        rdd36_helper->SetIsOpaque(user_rdd36_opaque);
+                }
             }
         }
 

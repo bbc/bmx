@@ -96,8 +96,10 @@ public:
     virtual void WriteProductVersionItem(const std::string &name, mxfProductVersion value);
     virtual void WriteDurationItem(const std::string &name, int64_t duration, Rational rate);
     virtual void WritePositionItem(const std::string &name, int64_t position, Rational rate);
-    virtual void WriteEnumItem(const std::string &name, const EnumInfo *enum_info, int enum_value);
-    virtual void WriteEnumStringItem(const std::string &name, const EnumInfo *enum_info, int enum_value);
+    virtual void WriteEnumItem(const std::string &name, const EnumInfo *enum_info, int enum_value,
+                               const std::string &default_name = "");
+    virtual void WriteEnumStringItem(const std::string &name, const EnumInfo *enum_info, int enum_value,
+                                     const std::string &default_name = "");
 
     virtual void WriteFormatItem(const std::string &name, const char *format, ...);
 

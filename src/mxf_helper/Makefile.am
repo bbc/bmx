@@ -14,6 +14,7 @@ libmxfhelper_la_SOURCES = \
 	MXFFileFactory.cpp \
 	MXFMCALabelHelper.cpp \
 	PictureMXFDescriptorHelper.cpp \
+	RDD36MXFDescriptorHelper.cpp \
 	SoundMXFDescriptorHelper.cpp \
 	UncCDCIMXFDescriptorHelper.cpp \
 	UncRGBAMXFDescriptorHelper.cpp \

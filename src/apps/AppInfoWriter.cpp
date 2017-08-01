@@ -399,12 +399,13 @@ void AppInfoWriter::WritePositionItem(const string &name, int64_t position, Rati
     }
 }
 
-void AppInfoWriter::WriteEnumItem(const string &name, const EnumInfo *enum_info, int enum_value)
+void AppInfoWriter::WriteEnumItem(const string &name, const EnumInfo *enum_info, int enum_value,
+                                  const string &default_name)
 {
     if (mIsAnnotation) {
-        WriteEnumStringItem(name, enum_info, enum_value);
+        WriteEnumStringItem(name, enum_info, enum_value, default_name);
     } else {
-        const char *enum_name = "";
+        const char *enum_name = default_name.c_str();
         const EnumInfo *enum_info_ptr = enum_info;
         while (enum_info_ptr->name) {
             if (enum_info_ptr->value == enum_value) {
@@ -422,9 +423,10 @@ void AppInfoWriter::WriteEnumItem(const string &name, const EnumInfo *enum_info,
     }
 }
 
-void AppInfoWriter::WriteEnumStringItem(const string &name, const EnumInfo *enum_info, int enum_value)
+void AppInfoWriter::WriteEnumStringItem(const string &name, const EnumInfo *enum_info, int enum_value,
+                                        const string &default_name)
 {
-    const char *enum_name = "";
+    const char *enum_name = default_name.c_str();
     const EnumInfo *enum_info_ptr = enum_info;
     while (enum_info_ptr->name) {
         if (enum_info_ptr->value == enum_value) {

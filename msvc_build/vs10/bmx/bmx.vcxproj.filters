@@ -413,6 +413,12 @@
     <ClInclude Include="..\..\..\include\bmx\essence_parser\SoundConversion.h">
       <Filter>Header Files\essence_parser</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\essence_parser\RDD36EssenceParser.h">
+      <Filter>Header Files\essence_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\essence_parser\VC2EssenceParser.h">
+      <Filter>Header Files\essence_parser</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\essence_parser\VC3EssenceParser.h">
       <Filter>Header Files\essence_parser</Filter>
     </ClInclude>
@@ -467,6 +473,9 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\PictureMXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\RDD36MXFDescriptorHelper.h">
+      <Filter>Header Files\mxf_helper</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\SoundMXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
@@ -480,6 +489,9 @@
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\VBIDataMXFDescriptorHelper.h">
+      <Filter>Header Files\mxf_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\VC2MXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\VC3MXFDescriptorHelper.h">
@@ -524,6 +536,9 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1APictureTrack.h">
       <Filter>Header Files\mxf_op1a</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1ARDD36Track.h">
+      <Filter>Header Files\mxf_op1a</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1ATrack.h">
       <Filter>Header Files\mxf_op1a</Filter>
     </ClInclude>
@@ -531,6 +546,9 @@
       <Filter>Header Files\mxf_op1a</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AVBIDataTrack.h">
+      <Filter>Header Files\mxf_op1a</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AVC2Track.h">
       <Filter>Header Files\mxf_op1a</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AVC3Track.h">
@@ -678,6 +696,9 @@
       <Filter>Header Files\writer_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\writer_helper\MPEG2LGWriterHelper.h">
+      <Filter>Header Files\writer_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\writer_helper\VC2WriterHelper.h">
       <Filter>Header Files\writer_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\writer_helper\XMLWriterHelper.h">
@@ -952,6 +973,12 @@
     <ClCompile Include="..\..\..\src\essence_parser\SoundConversion.cpp">
       <Filter>Source Files\essence_parser</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\essence_parser\RDD36EssenceParser.cpp">
+      <Filter>Source Files\essence_parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\essence_parser\VC2EssenceParser.cpp">
+      <Filter>Source Files\essence_parser</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\essence_parser\VC3EssenceParser.cpp">
       <Filter>Source Files\essence_parser</Filter>
     </ClCompile>
@@ -1003,6 +1030,9 @@
     <ClCompile Include="..\..\..\src\mxf_helper\PictureMXFDescriptorHelper.cpp">
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_helper\RDD36MXFDescriptorHelper.cpp">
+      <Filter>Source Files\mxf_helper</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_helper\SoundMXFDescriptorHelper.cpp">
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
@@ -1016,6 +1046,9 @@
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_helper\UniqueIdHelper.cpp">
+      <Filter>Source Files\mxf_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_helper\VC2MXFDescriptorHelper.cpp">
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_helper\VC3MXFDescriptorHelper.cpp">
@@ -1060,6 +1093,9 @@
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1APictureTrack.cpp">
       <Filter>Source Files\mxf_op1a</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_op1a\OP1ARDD36Track.cpp">
+      <Filter>Source Files\mxf_op1a</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1ATrack.cpp">
       <Filter>Source Files\mxf_op1a</Filter>
     </ClCompile>
@@ -1067,6 +1103,9 @@
       <Filter>Source Files\mxf_op1a</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AVBIDataTrack.cpp">
+      <Filter>Source Files\mxf_op1a</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_op1a\OP1AVC2Track.cpp">
       <Filter>Source Files\mxf_op1a</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AVC3Track.cpp">
@@ -1208,6 +1247,9 @@
       <Filter>Source Files\writer_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\writer_helper\MPEG2LGWriterHelper.cpp">
+      <Filter>Source Files\writer_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\writer_helper\VC2WriterHelper.cpp">
       <Filter>Source Files\writer_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\writer_helper\XMLWriterHelper.cpp">

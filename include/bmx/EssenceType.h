@@ -103,6 +103,13 @@ typedef enum
     MPEG2LG_MP_HL_720P,
     MPEG2LG_MP_H14_1080I,
     MPEG2LG_MP_H14_1080P,
+    // RDD-36 (ProRes)
+    RDD36_422_PROXY,
+    RDD36_422_LT,
+    RDD36_422,
+    RDD36_422_HQ,
+    RDD36_4444,
+    RDD36_4444_XQ,
     // VC-2
     VC2,
     // VC-3

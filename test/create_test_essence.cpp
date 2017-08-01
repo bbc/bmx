@@ -108,7 +108,9 @@ typedef enum
     TYPE_VC3_1080I_1260                 = 52,
     TYPE_AS10_MPEG2LG_422P_HL_1080I     = 53,
     TYPE_VC2                            = 54,
-    TYPE_END                            = 55,
+    TYPE_RDD36_422                      = 55,
+    TYPE_RDD36_4444                     = 56,
+    TYPE_END                            = 57,
 } EssenceType;
 
 typedef struct
@@ -185,7 +187,7 @@ static void init_data(int init_val)
     }
 }
 
-static void set_mpeg_bit(unsigned char *data, uint32_t bit_offset, unsigned char bit)
+static void set_bit(unsigned char *data, uint32_t bit_offset, unsigned char bit)
 {
     unsigned char bit_byte = bit << (7 - (bit_offset % 8));
     unsigned char byte = data[bit_offset / 8];
@@ -200,7 +202,7 @@ static void set_mpeg_bits(unsigned char *data, uint32_t bit_offset, uint8_t num_
 
     uint8_t i;
     for (i = 0; i < num_bits; i++)
-        set_mpeg_bit(data, bit_offset + i, (value >> (num_bits - i - 1)) & 1);
+        set_bit(data, bit_offset + i, (value >> (num_bits - i - 1)) & 1);
 }
 
 static void set_mpeg_start_code(unsigned char *data, uint32_t offset, uint32_t code)
@@ -684,6 +686,62 @@ static void write_unc(FILE *file, int type, unsigned int duration)
     write_data(file, duration * frame_size);
 }
 
+static void set_rdd36_bits(unsigned char *data, uint32_t *bit_offset, uint8_t num_bits, uint32_t value)
+{
+    assert(num_bits <= 32);
+
+    uint8_t i;
+    for (i = 0; i < num_bits; i++)
+        set_bit(data, (*bit_offset) + i, (value >> (num_bits - i - 1)) & 1);
+    *bit_offset += num_bits;
+}
+
+static void write_rdd36(FILE *file, int type, unsigned int duration)
+{
+    #define RDD36_FRAME_SIZE        64
+    #define RDD32_FRAME_HEADER_SIZE 20
+
+    unsigned char data[RDD36_FRAME_SIZE];
+    memset(data, 0, sizeof(data));
+    uint32_t bit_offset = 0;
+    set_rdd36_bits(data, &bit_offset, 32, RDD36_FRAME_SIZE);        // frame_size
+    set_rdd36_bits(data, &bit_offset, 32, 0x69637066);              // frame identifier
+    set_rdd36_bits(data, &bit_offset, 16, RDD32_FRAME_HEADER_SIZE); // frame header size
+    set_rdd36_bits(data, &bit_offset,  8, 0);                       // reserved
+    set_rdd36_bits(data, &bit_offset,  8, 1);                       // bitstream version
+    set_rdd36_bits(data, &bit_offset, 32, 0x20626d78);              // encoder identifier
+    set_rdd36_bits(data, &bit_offset, 16, 1920);                    // width
+    set_rdd36_bits(data, &bit_offset, 16, 1080);                    // height
+    if (type == TYPE_RDD36_422)
+        set_rdd36_bits(data, &bit_offset, 2, 2);                    // chroma_format
+    else
+        set_rdd36_bits(data, &bit_offset, 2, 3);                    // chroma_format
+    set_rdd36_bits(data, &bit_offset,  2, 0);                       // reserved
+    if (type == TYPE_RDD36_422)
+        set_rdd36_bits(data, &bit_offset,  2, 1);                   // interlace mode
+    else
+        set_rdd36_bits(data, &bit_offset,  2, 0);                   // interlace mode
+    set_rdd36_bits(data, &bit_offset,  2, 0);                       // reserved
+    set_rdd36_bits(data, &bit_offset,  4, 3);                       // aspect ratio
+    if (type == TYPE_RDD36_422)
+        set_rdd36_bits(data, &bit_offset,  4, 3);                   // frame rate
+    else
+        set_rdd36_bits(data, &bit_offset,  4, 6);                   // frame rate
+    set_rdd36_bits(data, &bit_offset,  8, 1);                       // color primaries
+    set_rdd36_bits(data, &bit_offset,  8, 1);                       // transfer characteristic
+    set_rdd36_bits(data, &bit_offset,  8, 1);                       // matrix coefficients
+    set_rdd36_bits(data, &bit_offset,  4, 0);                       // reserved
+    if (type == TYPE_RDD36_422)
+        set_rdd36_bits(data, &bit_offset, 4, 0);                    // alpha channel type
+    else
+        set_rdd36_bits(data, &bit_offset, 4, 1);                    // alpha channel type
+    // the rest is not parsed by RDD36EssenceParser
+
+    unsigned int i;
+    for (i = 0; i < duration; i++)
+        write_buffer(file, data, RDD36_FRAME_SIZE);
+}
+
 static void set_vc2_parse_info(unsigned char *data, uint8_t parse_code, uint32_t next_parse_offset,
                                uint32_t prev_parse_offset)
 {
@@ -894,6 +952,8 @@ static void print_usage(const char *cmd)
     fprintf(stderr, " 52: VC3/DNxHD 1260 1080i\n");
     fprintf(stderr, " 53: MPEG-2 Long GOP 422P@HL 1080i (AS-10)\n");
     fprintf(stderr, " 54: VC2\n");
+    fprintf(stderr, " 55: RDD-36 422 Profile\n");
+    fprintf(stderr, " 56: RDD-36 4444 Profile\n");
 }
 
 int main(int argc, const char **argv)
@@ -1058,6 +1118,10 @@ int main(int argc, const char **argv)
         case TYPE_UNC_HD_720P:
         case TYPE_UNC_UHD_3840:
             write_unc(file, type, duration);
+            break;
+        case TYPE_RDD36_422:
+        case TYPE_RDD36_4444:
+            write_rdd36(file, type, duration);
             break;
         case TYPE_VC2:
             write_vc2(file, duration);

@@ -80,6 +80,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_op1a/OP1AMPEG2LGTrack.h \
 	bmx/mxf_op1a/OP1APCMTrack.h \
 	bmx/mxf_op1a/OP1APictureTrack.h \
+	bmx/mxf_op1a/OP1ARDD36Track.h \
 	bmx/mxf_op1a/OP1ATrack.h \
 	bmx/mxf_op1a/OP1AUncTrack.h \
 	bmx/mxf_op1a/OP1AVBIDataTrack.h \
@@ -133,6 +134,7 @@ nobase_library_include_HEADERS = \
 	bmx/essence_parser/MPEG2AspectRatioFilter.h \
 	bmx/essence_parser/MPEG2EssenceParser.h \
 	bmx/essence_parser/RawEssenceReader.h \
+	bmx/essence_parser/RDD36EssenceParser.h \
 	bmx/essence_parser/VC2EssenceParser.h \
 	bmx/essence_parser/VC3EssenceParser.h \
 	bmx/mxf_helper/ANCDataMXFDescriptorHelper.h \
@@ -149,6 +151,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_helper/MXFFileFactory.h \
 	bmx/mxf_helper/MXFMCALabelHelper.h \
 	bmx/mxf_helper/PictureMXFDescriptorHelper.h \
+	bmx/mxf_helper/RDD36MXFDescriptorHelper.h \
 	bmx/mxf_helper/SoundMXFDescriptorHelper.h \
 	bmx/mxf_helper/UncCDCIMXFDescriptorHelper.h \
 	bmx/mxf_helper/UncRGBAMXFDescriptorHelper.h \

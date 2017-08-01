@@ -13,6 +13,7 @@ libmxfop1a_la_SOURCES = \
 	OP1AMPEG2LGTrack.cpp \
 	OP1APCMTrack.cpp \
 	OP1APictureTrack.cpp \
+	OP1ARDD36Track.cpp \
 	OP1ATrack.cpp \
 	OP1AUncTrack.cpp \
 	OP1AVBIDataTrack.cpp \

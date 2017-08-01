@@ -106,6 +106,105 @@ bool AVCMXFDescriptorHelper::IsSupported(EssenceType essence_type)
     return false;
 }
 
+void AVCMXFDescriptorHelper::MapColorPrimaries(uint8_t avc_value, PictureMXFDescriptorHelper *pict_helper)
+{
+    CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(pict_helper->GetFileDescriptor());
+    BMX_ASSERT(cdci_descriptor);
+
+    switch (avc_value) {
+        case 1:
+            cdci_descriptor->setColorPrimaries(ITU709_COLOR_PRIM);
+            break;
+        case 4:
+        case 5:
+            cdci_descriptor->setColorPrimaries(ITU470_PAL_COLOR_PRIM);
+            break;
+        case 6:
+        case 7:
+            cdci_descriptor->setColorPrimaries(SMPTE170M_COLOR_PRIM);
+            break;
+        case 9:
+            cdci_descriptor->setColorPrimaries(ITU2020_COLOR_PRIM);
+            break;
+        case 10:
+            cdci_descriptor->setColorPrimaries(SMPTE_DCDM_COLOR_PRIM);
+            break;
+        default:
+            break;
+    }
+}
+
+void AVCMXFDescriptorHelper::MapTransferCharacteristic(uint8_t avc_value, PictureMXFDescriptorHelper *pict_helper)
+{
+    CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(pict_helper->GetFileDescriptor());
+    BMX_ASSERT(cdci_descriptor);
+
+    switch (avc_value) {
+        case 1:
+        case 6:
+            cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
+            break;
+        case 4:
+        case 5:
+            cdci_descriptor->setCaptureGamma(ITUR_BT470_TRANSFER_CH);
+            break;
+        case 7:
+            cdci_descriptor->setCaptureGamma(SMPTE240M_TRANSFER_CH);
+            break;
+        case 8:
+            cdci_descriptor->setCaptureGamma(LINEAR_TRANSFER_CH);
+            break;
+        case 11:
+            cdci_descriptor->setCaptureGamma(IEC6196624_XVYCC_TRANSFER_CH);
+            break;
+        case 12:
+            cdci_descriptor->setCaptureGamma(ITU1361_TRANSFER_CH);
+            break;
+        case 14:
+        case 15:
+            cdci_descriptor->setCaptureGamma(ITU2020_TRANSFER_CH);
+            break;
+        case 16:
+            cdci_descriptor->setCaptureGamma(SMPTE_ST2084_TRANSFER_CH);
+            break;
+        case 17:
+            cdci_descriptor->setCaptureGamma(SMPTE_DCDM_TRANSFER_CH);
+            break;
+        case 18:
+            cdci_descriptor->setCaptureGamma(HLG_OETF_TRANSFER_CH);
+            break;
+        default:
+            break;
+    }
+}
+
+void AVCMXFDescriptorHelper::MapMatrixCoefficients(uint8_t avc_value, PictureMXFDescriptorHelper *pict_helper)
+{
+    switch (avc_value) {
+        case 0:
+            pict_helper->SetCodingEquationsMod(GBR_CODING_EQ);
+            break;
+        case 1:
+            pict_helper->SetCodingEquationsMod(ITUR_BT709_CODING_EQ);
+            break;
+        case 5:
+        case 6:
+            pict_helper->SetCodingEquationsMod(ITUR_BT601_CODING_EQ);
+            break;
+        case 7:
+            pict_helper->SetCodingEquationsMod(SMPTE_240M_CODING_EQ);
+            break;
+        case 8:
+            pict_helper->SetCodingEquationsMod(Y_CG_CO_CODING_EQ);
+            break;
+        case 9:
+            pict_helper->SetCodingEquationsMod(ITU2020_NCL_CODING_EQ);
+            break;
+        default:
+            break;
+    }
+}
+
 AVCMXFDescriptorHelper::AVCMXFDescriptorHelper()
 : PictureMXFDescriptorHelper()
 {
@@ -294,93 +393,12 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
                 break;
         }
     }
-    if (!cdci_descriptor->haveColorPrimaries()) {
-        switch (essence_parser->GetColorPrimaries()) {
-            case 1:
-                cdci_descriptor->setColorPrimaries(ITU709_COLOR_PRIM);
-                break;
-            case 4:
-            case 5:
-                cdci_descriptor->setColorPrimaries(ITU470_PAL_COLOR_PRIM);
-                break;
-            case 6:
-            case 7:
-                cdci_descriptor->setColorPrimaries(SMPTE170M_COLOR_PRIM);
-                break;
-            case 9:
-                cdci_descriptor->setColorPrimaries(ITU2020_COLOR_PRIM);
-                break;
-            case 10:
-                cdci_descriptor->setColorPrimaries(SMPTE_DCDM_COLOR_PRIM);
-                break;
-            default:
-                break;
-        }
-    }
-    if (!cdci_descriptor->haveCaptureGamma()) {
-        switch (essence_parser->GetTransferCharacteristics()) {
-            case 1:
-            case 6:
-                cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
-                break;
-            case 4:
-            case 5:
-                cdci_descriptor->setCaptureGamma(ITUR_BT470_TRANSFER_CH);
-                break;
-            case 7:
-                cdci_descriptor->setCaptureGamma(SMPTE240M_TRANSFER_CH);
-                break;
-            case 8:
-                cdci_descriptor->setCaptureGamma(LINEAR_TRANSFER_CH);
-                break;
-            case 11:
-                cdci_descriptor->setCaptureGamma(IEC6196624_XVYCC_TRANSFER_CH);
-                break;
-            case 12:
-                cdci_descriptor->setCaptureGamma(ITU1361_TRANSFER_CH);
-                break;
-            case 14:
-            case 15:
-                cdci_descriptor->setCaptureGamma(ITU2020_TRANSFER_CH);
-                break;
-            case 16:
-                cdci_descriptor->setCaptureGamma(SMPTE_ST2084_TRANSFER_CH);
-                break;
-            case 17:
-                cdci_descriptor->setCaptureGamma(SMPTE_DCDM_TRANSFER_CH);
-                break;
-            case 18:
-                cdci_descriptor->setCaptureGamma(HLG_OETF_TRANSFER_CH);
-                break;
-            default:
-                break;
-        }
-    }
-    if (!cdci_descriptor->haveCodingEquations()) {
-        switch (essence_parser->GetMatrixCoefficients()) {
-            case 0:
-                SetCodingEquationsMod(GBR_CODING_EQ);
-                break;
-            case 1:
-                SetCodingEquationsMod(ITUR_BT709_CODING_EQ);
-                break;
-            case 5:
-            case 6:
-                SetCodingEquationsMod(ITUR_BT601_CODING_EQ);
-                break;
-            case 7:
-                SetCodingEquationsMod(SMPTE_240M_CODING_EQ);
-                break;
-            case 8:
-                SetCodingEquationsMod(Y_CG_CO_CODING_EQ);
-                break;
-            case 9:
-                SetCodingEquationsMod(ITU2020_NCL_CODING_EQ);
-                break;
-            default:
-                break;
-        }
-    }
+    if (!cdci_descriptor->haveColorPrimaries())
+        MapColorPrimaries(essence_parser->GetColorPrimaries(), this);
+    if (!cdci_descriptor->haveCaptureGamma())
+        MapTransferCharacteristic(essence_parser->GetTransferCharacteristics(), this);
+    if (!cdci_descriptor->haveCodingEquations())
+        MapMatrixCoefficients(essence_parser->GetMatrixCoefficients(), this);
 
     if (!cdci_descriptor->haveAspectRatio() && essence_parser->GetSampleAspectRatio().numerator > 0) {
         // TODO: this calculation will not always be correct because the "clean area" is unknown

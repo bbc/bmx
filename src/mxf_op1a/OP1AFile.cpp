@@ -236,6 +236,11 @@ void OP1AFile::SetAddSystemItem(bool enable)
     }
 }
 
+void OP1AFile::SetRepeatIndexTable(bool enable)
+{
+    mIndexTable->SetRepeatIndexTable(enable);
+}
+
 void OP1AFile::SetOutputStartOffset(int64_t offset)
 {
     BMX_CHECK(offset >= 0);
@@ -456,15 +461,10 @@ void OP1AFile::CompleteWrite()
 
     Partition &footer_partition = mMXFFile->createPartition();
     footer_partition.setKey(&MXF_PP_K(ClosedComplete, Footer)); // will be complete when memory flushed
-    if (((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) &&
-          mIndexTable->IsVBE() && mIndexTable->HaveSegments())
-    {
+    if (mIndexTable->HaveFooterSegments())
         footer_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
-    }
     else
-    {
         footer_partition.setIndexSID(0);
-    }
     footer_partition.setBodySID(0);
     footer_partition.setKagSize(mKAGSize);
     footer_partition.write(mMXFFile);
@@ -478,13 +478,10 @@ void OP1AFile::CompleteWrite()
     }
 
 
-    // minimal/body partitions flavour: write any remaining VBE index segments
+    // minimal/body partitions flavour: write any remaining index segments
 
-    if (((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) &&
-        mIndexTable->IsVBE() && mIndexTable->HaveSegments())
-    {
+    if (mIndexTable->HaveFooterSegments())
         mIndexTable->WriteSegments(mMXFFile, &footer_partition, true);
-    }
 
 
     // write the RIP

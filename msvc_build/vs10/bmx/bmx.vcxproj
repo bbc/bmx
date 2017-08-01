@@ -179,6 +179,7 @@
     <ClInclude Include="..\..\..\include\bmx\essence_parser\MPEG2EssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\RawEssenceReader.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\SoundConversion.h" />
+    <ClInclude Include="..\..\..\include\bmx\essence_parser\RDD36EssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\VC2EssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\VC3EssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\frame\DataBufferArray.h" />
@@ -198,6 +199,7 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MXFFileFactory.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MXFMCALabelHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\PictureMXFDescriptorHelper.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\RDD36MXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\SoundMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\UncCDCIMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\UncRGBAMXFDescriptorHelper.h" />
@@ -218,6 +220,7 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AMPEG2LGTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1APCMTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1APictureTrack.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1ARDD36Track.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1ATrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AUncTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AVBIDataTrack.h" />
@@ -364,6 +367,7 @@
     <ClCompile Include="..\..\..\src\essence_parser\MPEG2EssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\RawEssenceReader.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\SoundConversion.cpp" />
+    <ClCompile Include="..\..\..\src\essence_parser\RDD36EssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\VC2EssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\VC3EssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\frame\DataBufferArray.cpp" />
@@ -382,6 +386,7 @@
     <ClCompile Include="..\..\..\src\mxf_helper\MXFFileFactory.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\MXFMCALabelHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\PictureMXFDescriptorHelper.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_helper\RDD36MXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\SoundMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\UncCDCIMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\UncRGBAMXFDescriptorHelper.cpp" />
@@ -402,6 +407,7 @@
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AMPEG2LGTrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1APCMTrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1APictureTrack.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_op1a\OP1ARDD36Track.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1ATrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AUncTrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AVBIDataTrack.cpp" />

@@ -56,12 +56,14 @@
 #include <bmx/essence_parser/AVCEssenceParser.h>
 #include <bmx/essence_parser/AVCIRawEssenceReader.h>
 #include <bmx/essence_parser/MJPEGEssenceParser.h>
+#include <bmx/essence_parser/RDD36EssenceParser.h>
 #include <bmx/essence_parser/VC3EssenceParser.h>
 #include <bmx/essence_parser/VC2EssenceParser.h>
 #include <bmx/essence_parser/RawEssenceReader.h>
 #include <bmx/essence_parser/FileEssenceSource.h>
 #include <bmx/essence_parser/KLVEssenceSource.h>
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
+#include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/wave/WaveFileIO.h>
 #include <bmx/wave/WaveReader.h>
 #include <bmx/essence_parser/SoundConversion.h>
@@ -148,7 +150,7 @@ struct RawInput
     // picture
     BMX_OPT_PROP_DECL(Rational, aspect_ratio);
     BMX_OPT_PROP_DECL(uint8_t, afd);
-    uint32_t component_depth;
+    BMX_OPT_PROP_DECL(uint32_t, component_depth);
     uint32_t input_height;
     bool have_avci_header;
     bool d10_fixed_frame_size;
@@ -163,6 +165,7 @@ struct RawInput
     BMX_OPT_PROP_DECL(uint32_t, white_ref_level);
     BMX_OPT_PROP_DECL(uint32_t, color_range);
     int vc2_mode_flags;
+    BMX_OPT_PROP_DECL(bool, rdd36_opaque);
 
     // sound
     Rational sampling_rate;
@@ -301,8 +304,9 @@ static void init_input(RawInput *input)
     BMX_OPT_PROP_DEFAULT(input->white_ref_level, 0);
     BMX_OPT_PROP_DEFAULT(input->color_range, 0);
     parse_vc2_mode("1", &input->vc2_mode_flags);
+    BMX_OPT_PROP_DEFAULT(input->rdd36_opaque, false);
     input->sampling_rate = DEFAULT_SAMPLING_RATE;
-    input->component_depth = 8;
+    BMX_OPT_PROP_DEFAULT(input->component_depth, 8);
     input->bits_per_sample = 16;
     input->channel_count = 1;
 }
@@ -435,6 +439,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            separate partitions for header metadata, index tables, essence container data and footer\n");
     fprintf(stderr, "    --body-part             Create separate body partitions for essence data\n");
     fprintf(stderr, "                            and don't create separate body partitions for index table segments\n");
+    fprintf(stderr, "    --repeat-index          Repeat the index table segments in the footer partition\n");
     fprintf(stderr, "    --clip-wrap             Use clip wrapping for a single sound track\n");
     fprintf(stderr, "    --mp-track-num          Use the material package track number property to define a track order. By default the track number is set to 0\n");
     fprintf(stderr, "\n");
@@ -522,8 +527,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  -a <n:d>                Image aspect ratio. Default parsed from essence or 16:9\n");
     fprintf(stderr, "  --bsar                  Set image aspect ratio in video bitstream. Currently supports D-10 essence types only\n");
     fprintf(stderr, "  --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default not set\n");
-    fprintf(stderr, "  -c <depth>              Component depth for uncompressed/DV100 video. Either 8 or 10. Default parsed or 8\n");
-    fprintf(stderr, "  --height                Height of input uncompressed video data. Default is the production aperture height, except for PAL (592) and NTSC (496)\n");
+    fprintf(stderr, "  -c <depth>              Component depth for uncompressed/DV100/RDD-36 video. Either 8 or 10. Default parsed, 8 for uncompressed/DV100 and 10 for RDD-36\n");
+    fprintf(stderr, "  --height <value>        Height of input uncompressed video data. Default is the production aperture height, except for PAL (592) and NTSC (496)\n");
     fprintf(stderr, "  --signal-std  <value>   Set the video signal standard. The <value> is one of the following:\n");
     fprintf(stderr, "                              'none', 'bt601', 'bt1358', 'st347', 'st274', 'st296', 'st349', 'st428'\n");
     fprintf(stderr, "  --frame-layout <value>  Set the video frame layout. The <value> is one of the following:\n");
@@ -545,6 +550,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --black-level <value>   Set the black reference level\n");
     fprintf(stderr, "  --white-level <value>   Set the white reference level\n");
     fprintf(stderr, "  --color-range <value>   Set the color range\n");
+    fprintf(stderr, "  --rdd36-opaque          Treat RDD-36 4444 or 4444 XQ as opaque by omitting the Alpha Sample Depth property\n");
     fprintf(stderr, "  -s <bps>                Audio sampling rate numerator for raw pcm. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);
     fprintf(stderr, "  -q <bps>                Audio quantization bits per sample for raw pcm. Either 16 or 24. Default 16\n");
     fprintf(stderr, "  --audio-chan <count>    Audio channel count for raw pcm. Default 1\n");
@@ -638,6 +644,12 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --mjpeg41m <name>       Raw Avid MJPEG 4:1m video input file\n");
     fprintf(stderr, "  --mjpeg101m <name>      Raw Avid MJPEG 10:1m video input file\n");
     fprintf(stderr, "  --mjpeg151s <name>      Raw Avid MJPEG 15:1s video input file\n");
+    fprintf(stderr, "  --rdd36_422_proxy <name>   Raw SMPTE RDD-36 (ProRes) 4:2:2 Proxy profile input file\n");
+    fprintf(stderr, "  --rdd36_422_lt <name>      Raw SMPTE RDD-36 (ProRes) 4:2:2 LT profile input file\n");
+    fprintf(stderr, "  --rdd36_422 <name>         Raw SMPTE RDD-36 (ProRes) 4:2:2 profile input file\n");
+    fprintf(stderr, "  --rdd36_422_hq <name>      Raw SMPTE RDD-36 (ProRes) 4:2:2 HQ profile input file\n");
+    fprintf(stderr, "  --rdd36_4444 <name>        Raw SMPTE RDD-36 (ProRes) 4:4:4:4 profile input file\n");
+    fprintf(stderr, "  --rdd36_4444_xq <name>     Raw SMPTE RDD-36 (ProRes) 4:4:4:4 XQ profile input file\n");
     fprintf(stderr, "  --vc2 <name>            Raw VC2 input file\n");
     fprintf(stderr, "  --vc3 <name>            Raw VC3/DNxHD input file\n");
     fprintf(stderr, "  --vc3_1080p_1235 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps 10bit input file\n");
@@ -727,6 +739,7 @@ int main(int argc, const char** argv)
     bool psp_created_set = false;
     bool min_part = false;
     bool body_part = false;
+    bool repeat_index = false;
     bool clip_wrap = false;
     bool allow_no_avci_head = false;
     bool force_no_avci_head = false;
@@ -1236,6 +1249,10 @@ int main(int argc, const char** argv)
         {
             body_part = true;
         }
+        else if (strcmp(argv[cmdln_index], "--repeat-index") == 0)
+        {
+            repeat_index = true;
+        }
         else if (strcmp(argv[cmdln_index], "--mp-track-num") == 0)
         {
             mp_track_num = true;
@@ -1700,7 +1717,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
-            input.component_depth = value;
+            BMX_OPT_PROP_SET(input.component_depth, value);
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -1889,6 +1906,11 @@ int main(int argc, const char** argv)
             }
             BMX_OPT_PROP_SET(input.color_range, uvalue);
             cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--rdd36-opaque") == 0)
+        {
+            BMX_OPT_PROP_SET(input.rdd36_opaque, true);
             continue; // skip input reset at the end
         }
         else if (strcmp(argv[cmdln_index], "-s") == 0)
@@ -2939,6 +2961,84 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--rdd36_422_proxy") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = RDD36_422_PROXY;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--rdd36_422_lt") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = RDD36_422_LT;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--rdd36_422") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = RDD36_422;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--rdd36_422_hq") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = RDD36_422_HQ;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--rdd36_4444") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = RDD36_4444;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--rdd36_4444_hq") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = RDD36_4444_XQ;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--vc2") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -3344,8 +3444,24 @@ int main(int argc, const char** argv)
         }
 
 
-        // extract essence info
+        // change default component depth for RDD-36
         size_t i;
+        for (i = 0; i < inputs.size(); i++) {
+            RawInput *input = &inputs[i];
+            if ((input->essence_type == RDD36_422_PROXY ||
+                    input->essence_type == RDD36_422_LT ||
+                    input->essence_type == RDD36_422 ||
+                    input->essence_type == RDD36_422_HQ ||
+                    input->essence_type == RDD36_4444 ||
+                    input->essence_type == RDD36_4444_XQ) &&
+                !BMX_OPT_PROP_IS_SET(input->component_depth))
+            {
+                BMX_OPT_PROP_SET(input->component_depth, 10);
+            }
+        }
+
+
+        // extract essence info
         for (i = 0; i < inputs.size(); i++) {
             RawInput *input = &inputs[i];
             if (input->disabled)
@@ -3367,8 +3483,11 @@ int main(int argc, const char** argv)
             }
 
 
-            // TODO: require parse friendly essence data in regression test for all formats
-            if (BMX_REGRESSION_TEST) {
+            // TODO: more parse friendly regression test essence data
+            if (BMX_REGRESSION_TEST &&
+                input->essence_type != RDD36_422 &&
+                input->essence_type != RDD36_4444)
+            {
                 if (input->essence_type_group != NO_ESSENCE_GROUP) {
                     log_error("Regression test requires specific input format type, eg. --iecdv25 rather than --dv\n");
                     throw false;
@@ -3439,6 +3558,26 @@ int main(int argc, const char** argv)
 
                     if (!BMX_OPT_PROP_IS_SET(input->aspect_ratio))
                         BMX_OPT_PROP_SET(input->aspect_ratio, dv_parser->GetAspectRatio());
+                }
+            }
+            else if (input->essence_type == RDD36_422_PROXY ||
+                     input->essence_type == RDD36_422_LT ||
+                     input->essence_type == RDD36_422 ||
+                     input->essence_type == RDD36_422_HQ ||
+                     input->essence_type == RDD36_4444 ||
+                     input->essence_type == RDD36_4444_XQ)
+            {
+                RDD36EssenceParser *rdd36_parser = new RDD36EssenceParser();
+                input->raw_reader->SetEssenceParser(rdd36_parser);
+
+                input->raw_reader->ReadSamples(1);
+                if (input->raw_reader->GetNumSamples() != 0) {
+                    rdd36_parser->ParseFrameInfo(input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
+
+                    if (!frame_rate_set && rdd36_parser->HaveFrameRate())
+                        frame_rate = rdd36_parser->GetFrameRate();
+
+                    // other parameters derived from the bitstream metadata will be set in the RDD36MXFDescriptorHelper
                 }
             }
             else if (input->essence_type == VC2)
@@ -3955,6 +4094,9 @@ int main(int argc, const char** argv)
             if (BMX_OPT_PROP_IS_SET(head_fill))
                 op1a_clip->ReserveHeaderMetadataSpace(head_fill);
 
+            if (repeat_index)
+                op1a_clip->SetRepeatIndexTable(true);
+
             if (clip_sub_type != AS11_CLIP_SUB_TYPE)
                 op1a_clip->SetClipWrapped(clip_wrap);
             if (partition_interval_set)
@@ -4414,6 +4556,16 @@ int main(int argc, const char** argv)
                         clip_track->SetAFD(input->afd);
                     clip_track->SetAspectRatio(input->aspect_ratio);
                     break;
+                case RDD36_422_PROXY:
+                case RDD36_422_LT:
+                case RDD36_422:
+                case RDD36_422_HQ:
+                case RDD36_4444:
+                case RDD36_4444_XQ:
+                    if (BMX_OPT_PROP_IS_SET(input->afd))
+                        clip_track->SetAFD(input->afd);
+                    clip_track->SetComponentDepth(input->component_depth);
+                    break;
                 case VC2:
                     clip_track->SetAspectRatio(input->aspect_ratio);
                     if (BMX_OPT_PROP_IS_SET(input->afd))
@@ -4486,6 +4638,12 @@ int main(int argc, const char** argv)
                     pict_helper->SetWhiteRefLevel(input->white_ref_level);
                 if (BMX_OPT_PROP_IS_SET(input->color_range))
                     pict_helper->SetColorRange(input->color_range);
+
+                RDD36MXFDescriptorHelper *rdd36_helper = dynamic_cast<RDD36MXFDescriptorHelper*>(pict_helper);
+                if (rdd36_helper) {
+                    if (BMX_OPT_PROP_IS_SET(input->rdd36_opaque))
+                        rdd36_helper->SetIsOpaque(input->rdd36_opaque);
+                }
             }
         }
 
@@ -4592,11 +4750,22 @@ int main(int argc, const char** argv)
                     input->raw_reader->SetEssenceParser(new MPEG2EssenceParser());
                     input->raw_reader->SetCheckMaxSampleSize(50000000);
                     break;
+                case RDD36_422_PROXY:
+                case RDD36_422_LT:
+                case RDD36_422:
+                case RDD36_422_HQ:
+                case RDD36_4444:
+                case RDD36_4444_XQ:
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    input->raw_reader->SetEssenceParser(new RDD36EssenceParser());
+                    input->raw_reader->SetCheckMaxSampleSize(100000000);
+                    break;
                 case VC2:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
                     input->raw_reader->SetEssenceParser(new VC2EssenceParser());
-                    input->raw_reader->SetCheckMaxSampleSize(50000000);
+                    input->raw_reader->SetCheckMaxSampleSize(100000000);
                     break;
                 case MJPEG_2_1:
                 case MJPEG_3_1:

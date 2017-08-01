@@ -88,6 +88,7 @@ public:
     void SetInputDuration(int64_t duration);                            // single pass flavours only
     void SetClipWrapped(bool enable);                                   // default false (frame wrapped)
     void SetAddSystemItem(bool enable);                                 // default false, no system item
+    void SetRepeatIndexTable(bool enable);                              // default false. Repeat index table in Footer if true
 
 public:
     void SetOutputStartOffset(int64_t offset);

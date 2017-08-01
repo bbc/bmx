@@ -28,6 +28,8 @@ EXTRA_DIST = \
 	tools/h264dump/h264dump.vcxproj.filters \
 	tools/movdump/movdump.vcxproj \
 	tools/movdump/movdump.vcxproj.filters \
+	tools/rdd36dump/rdd36dump.vcxproj \
+	tools/rdd36dump/rdd36dump.vcxproj.filters \
 	tools/vc2dump/vc2dump.vcxproj \
 	tools/vc2dump/vc2dump.vcxproj.filters \
 	uriparser/uriparser.vcxproj \

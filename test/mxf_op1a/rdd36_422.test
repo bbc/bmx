@@ -1,0 +1,3 @@
+#!/bin/sh
+
+${srcdir}/check.sh 3 55 rdd36_422
