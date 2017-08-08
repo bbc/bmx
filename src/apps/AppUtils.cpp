@@ -395,13 +395,15 @@ bool bmx::parse_partition_interval(const char *partition_interval_str, Rational 
 {
     bool in_seconds = (strchr(partition_interval_str, 's') != 0);
 
-    if (sscanf(partition_interval_str, "%" PRId64, partition_interval) != 1)
-        return false;
-
-    if (in_seconds)
-        *partition_interval = (*partition_interval) * frame_rate.numerator / frame_rate.denominator;
-
-    return true;
+    if (in_seconds) {
+        float sec;
+        if (sscanf(partition_interval_str, "%f", &sec) != 1)
+            return false;
+        *partition_interval = (int64_t)(sec * frame_rate.numerator / frame_rate.denominator);
+        return true;
+    } else {
+        return sscanf(partition_interval_str, "%" PRId64, partition_interval) == 1;
+    }
 }
 
 bool bmx::parse_bool(const char *bool_str, bool *value)

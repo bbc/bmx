@@ -481,7 +481,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --shim-annot <str>      Set AnnotationText element value in shim.xml file to <str>. Default is '%s'\n", DEFAULT_SHIM_ANNOTATION);
     fprintf(stderr, "\n");
     fprintf(stderr, "  as02/as11op1a/op1a/rdd9/as10:\n");
-    fprintf(stderr, "    --part <interval>       Video essence partition interval in frames in input edit rate units, or seconds with 's' suffix. Default single partition\n");
+    fprintf(stderr, "    --part <interval>       Video essence partition interval in frames in input edit rate units, or (floating point) seconds with 's' suffix. Default single partition\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  as11op1a/as11d10/as11rdd9:\n");
     fprintf(stderr, "    --dm <fwork> <name> <value>    Set descriptive framework property. <fwork> is 'as11' or 'dpp'\n");
