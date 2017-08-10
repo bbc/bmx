@@ -272,11 +272,8 @@ void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
     else
         flags |= 3;
 
-    while (!mDecodedFrames.empty() &&
-           (mDecodedFrames.size() > MAX_DPB_FRAMES || mEssenceParser.IsIDRFrame()))
-    {
-        PopDecodedFrame();
-    }
+    if (mDecodedFrames.size() > MAX_DPB_FRAMES || mEssenceParser.IsIDRFrame())
+        PopAllDecodedFrames();
 
     IndexedFrame indexed_frame;
     indexed_frame.position      = mPosition;
@@ -299,8 +296,7 @@ void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
 
 void AVCWriterHelper::CompleteProcess()
 {
-    while (!mDecodedFrames.empty())
-        PopDecodedFrame();
+    PopAllDecodedFrames();
 
     if (!mUnlimitedGOPSize) {
         if (mPosition - mGOPStartPosition > UINT16_MAX) {
@@ -450,6 +446,21 @@ void AVCWriterHelper::SetIndexResult(const IndexedFrame &indexed_frame, int64_t 
     *frame_type = indexed_frame.frame_type;
 }
 
+void AVCWriterHelper::PopAllDecodedFrames()
+{
+    int64_t start_decode_pos = mPosition - mDecodedFrames.size();
+    size_t index;
+    map<int32_t, int64_t>::const_iterator iter;
+    for (iter = mDecodedFrames.begin(), index = 0; iter != mDecodedFrames.end(); iter++, index++) {
+        int64_t decoding_delay = (iter->second - start_decode_pos) - index;
+        if (decoding_delay > (int64_t)mDecodingDelay)
+          mDecodingDelay = (uint8_t)decoding_delay;
+    }
+
+    while (!mDecodedFrames.empty())
+        PopDecodedFrame();
+}
+
 void AVCWriterHelper::PopDecodedFrame()
 {
     int64_t decoded_pos = mPosition - mDecodedFrames.size();
@@ -475,9 +486,6 @@ void AVCWriterHelper::PopDecodedFrame()
             mIndexedDecodedFrames.begin()->first == mNextIndexedDecodedPos &&
             mIndexedDecodedFrames.begin()->second.is_decoded)
     {
-        if (mDecodingDelay < mIndexedDecodedFrames.size() - 1)
-            mDecodingDelay = (uint8_t)(mIndexedDecodedFrames.size() - 1);
-
         if (mIncompleteIndexedFrames.count(mNextIndexedDecodedPos)) {
             IndexedFrame &forward_frame = mIncompleteIndexedFrames[mNextIndexedDecodedPos];
             mIndexedDecodedFrames[mNextIndexedDecodedPos].temporal_offset = forward_frame.temporal_offset;

@@ -106,6 +106,7 @@ private:
     void SetIndexResult(const IndexedFrame &indexed_frame, int64_t *position, int8_t *temporal_offset,
                         int8_t *key_frame_offset, uint8_t *flags, MPEGFrameType *frame_type);
 
+    void PopAllDecodedFrames();
     void PopDecodedFrame();
 
     uint8_t GetSPSFlag() const;
