@@ -36,6 +36,7 @@
 #include <inttypes.h>
 #include <assert.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 
 #define READ_BLOCK_SIZE         (64 * 1024)
@@ -45,8 +46,8 @@
 
 #define CEIL_DIVISION(a, b)     (((a) + (b) - 1) / (b))
 
-#define PRINT_UINT(name)        printf("%*c " name ": %" PRIu64 "\n", context->indent * 4, ' ', context->value)
-#define PRINT_INT(name)         printf("%*c " name ": %" PRId64 "\n", context->indent * 4, ' ', context->svalue)
+#define DUMP_UINT(name)        dumpf(context, "%*c " name ": %" PRIu64 "\n", context->indent * 4, ' ', context->value)
+#define DUMP_INT(name)         dumpf(context, "%*c " name ": %" PRId64 "\n", context->indent * 4, ' ', context->svalue)
 
 #define ARRAY_SIZE(array)       (sizeof(array) / sizeof((array)[0]))
 
@@ -145,6 +146,8 @@ typedef struct
     uint64_t num_ref_idx_l1_default_active_minus1;
 } PPS;
 
+typedef struct PicTimingBuffer PicTimingBuffer;
+
 typedef struct
 {
     int indent;
@@ -187,11 +190,71 @@ typedef struct
     uint64_t num_ref_idx_l0_active_minus1;
     uint64_t num_ref_idx_l1_active_minus1;
 
-    // this is used to check whether the pic_timing parsing used the correct SPS
-    SPS *pic_timing_sps;
+    // delayed pic timing
+    PicTimingBuffer *pic_timing_buf;
+
+    // text dump is sent here if pic_timing_buf is non-null
+    char *dump_buf;
+    size_t dump_buf_alloc_size;
+    size_t dump_buf_size;
 } ParseContext;
 
+struct PicTimingBuffer
+{
+    ParseContext context;
+    uint64_t payload_type;
+    uint64_t payload_size;
 
+    unsigned char *buffer;
+    uint32_t buffer_size;
+};
+
+
+static int dump_buffered_pic_timing(ParseContext *context);
+
+
+static void dumpf(ParseContext *context, const char *format, ...)
+{
+    va_list ap;
+
+    if (context->pic_timing_buf) {
+        // buffer the text dump
+        int size;
+
+        va_start(ap, format);
+        size = vsnprintf(&context->dump_buf[context->dump_buf_size],
+                         context->dump_buf_alloc_size - context->dump_buf_size,
+                         format, ap);
+        va_end(ap);
+        if (size < 0)
+            return;
+
+        if (size + 1 <= (int)(context->dump_buf_alloc_size - context->dump_buf_size)) { // "+ 1" for null terminnator
+            context->dump_buf_size += size;
+        } else {
+            size_t new_alloc_size = context->dump_buf_size + size + 8192;
+            context->dump_buf = realloc(context->dump_buf, new_alloc_size);
+            if (!context->dump_buf) {
+                context->dump_buf_alloc_size = 0;
+                context->dump_buf_size = 0;
+                return;
+            }
+            context->dump_buf_alloc_size = new_alloc_size;
+
+            va_start(ap, format);
+            size = vsnprintf(&context->dump_buf[context->dump_buf_size],
+                             context->dump_buf_alloc_size - context->dump_buf_size,
+                             format, ap);
+            va_end(ap);
+            if (size > 0)
+                context->dump_buf_size += size;
+        }
+    } else {
+        va_start(ap, format);
+        vprintf(format, ap);
+        va_end(ap);
+    }
+}
 
 static int init_context(ParseContext *context, const char *filename)
 {
@@ -219,7 +282,11 @@ static void deinit_context(ParseContext *context)
 {
     if (context->file)
         fclose(context->file);
-
+    if (context->pic_timing_buf) {
+        free(context->pic_timing_buf->buffer);
+        free(context->pic_timing_buf);
+    }
+    free(context->dump_buf);
     free(context->buffer);
 }
 
@@ -357,7 +424,7 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
         nal_unit_type = byte & 0x1f;
         /* TODO: this is incomplete. Need to get the last VCL unit. See section 7.4.1.2.3  and B.1.2 */
         if (context->data_start_file_pos == 0 || nal_unit_type == 7 || nal_unit_type == 8)
-            printf("Warning: missing zero_byte before start_code_prefix_one_3bytes\n");
+            dumpf(context, "Warning: missing zero_byte before start_code_prefix_one_3bytes\n");
     }
     context->nal_start = context->data_pos;
     context->nal_size = 0;
@@ -391,7 +458,7 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
             if (!read_byte(context, &byte))
                 break;
             if (!state && !(byte == 0x00 || byte == 0x01))
-                printf("Warning: zero bytes not followed by start code prefix. Possibly missing emulation_prevention_three_byte\n");
+                dumpf(context, "Warning: zero bytes not followed by start code prefix. Possibly missing emulation_prevention_three_byte\n");
             state = (state << 8) | byte;
             context->nal_padding++;
         }
@@ -407,7 +474,7 @@ static int parse_byte_stream_nal_unit(ParseContext *context)
             /* TODO: this is incomplete. Need to get the last VCL unit. See section 7.4.1.2.3 and B.1.2 */
             if (nal_unit_type == 7 || nal_unit_type == 8 || nal_unit_type == 9) {
                 if (state != 0x00000001) {
-                    printf("Warning: missing zero_byte before start_code_prefix_one_3bytes\n");
+                    dumpf(context, "Warning: missing zero_byte before start_code_prefix_one_3bytes\n");
                 } else {
                     context->nal_size--;
                     context->nal_padding--;
@@ -515,6 +582,16 @@ static int skip_bits(ParseContext *context, uint64_t num_bits)
     return 1;
 }
 
+static int skip_bytes(ParseContext *context, uint64_t num_bytes)
+{
+    CHK(byte_aligned(context));
+    CHK(context->bit_pos + num_bytes * 8 <= context->end_bit_pos);
+
+    context->bit_pos += num_bytes * 8;
+
+    return 1;
+}
+
 static int exp_golumb(ParseContext *context)
 {
     int8_t leading_zero_bits = -1;
@@ -526,7 +603,7 @@ static int exp_golumb(ParseContext *context)
         b = (uint8_t)context->value;
     }
     if (!b) {
-        printf("Warning: Exp-Golumb size >= %d not supported\n", leading_zero_bits);
+        dumpf(context, "Warning: Exp-Golumb size >= %d not supported\n", leading_zero_bits);
         return 0;
     }
 
@@ -630,11 +707,11 @@ static int rbsp_trailing_bits(ParseContext *context)
     }
 
     if (valid) {
-        printf("%*c rbsp_stop_one_bit: 1\n", context->indent * 4, ' ');
+        dumpf(context, "%*c rbsp_stop_one_bit: 1\n", context->indent * 4, ' ');
         if (zero_bit_count > 0)
-            printf("%*c rbsp_alignment_zero_bit: 0 x %u\n", context->indent * 4, ' ', zero_bit_count);
+            dumpf(context, "%*c rbsp_alignment_zero_bit: 0 x %u\n", context->indent * 4, ' ', zero_bit_count);
     } else {
-        printf("Warning: invalid rbsp_trailing_bits\n");
+        dumpf(context, "Warning: invalid rbsp_trailing_bits\n");
     }
 
     return 1;
@@ -681,8 +758,8 @@ static void print_nal_unit_type(ParseContext *context)
 
     uint8_t nal_unit_type = (uint8_t)(context->value & 31);
 
-    printf("%*c nal_unit_type: %u (%s)\n", context->indent * 4, ' ', nal_unit_type,
-           NAL_UNIT_TYPE_STRINGS[nal_unit_type]);
+    dumpf(context, "%*c nal_unit_type: %u (%s)\n", context->indent * 4, ' ', nal_unit_type,
+          NAL_UNIT_TYPE_STRINGS[nal_unit_type]);
 }
 
 static void print_profile_and_flags(ParseContext *context, uint8_t profile_idc, uint8_t flags)
@@ -722,22 +799,22 @@ static void print_profile_and_flags(ParseContext *context, uint8_t profile_idc, 
         }
     }
 
-    printf("%*c profile_idc: %u (%s)\n", context->indent * 4, ' ', profile_idc, profile_str);
+    dumpf(context, "%*c profile_idc: %u (%s)\n", context->indent * 4, ' ', profile_idc, profile_str);
 
-    printf("%*c constraint_set0_flag: %u\n", context->indent * 4, ' ', flags & 1);
-    printf("%*c constraint_set1_flag: %u\n", context->indent * 4, ' ', (flags >> 1) & 1);
-    printf("%*c constraint_set2_flag: %u\n", context->indent * 4, ' ', (flags >> 2) & 1);
-    printf("%*c constraint_set3_flag: %u\n", context->indent * 4, ' ', (flags >> 3) & 1);
-    printf("%*c constraint_set4_flag: %u\n", context->indent * 4, ' ', (flags >> 4) & 1);
-    printf("%*c constraint_set5_flag: %u\n", context->indent * 4, ' ', (flags >> 5) & 1);
+    dumpf(context, "%*c constraint_set0_flag: %u\n", context->indent * 4, ' ', flags & 1);
+    dumpf(context, "%*c constraint_set1_flag: %u\n", context->indent * 4, ' ', (flags >> 1) & 1);
+    dumpf(context, "%*c constraint_set2_flag: %u\n", context->indent * 4, ' ', (flags >> 2) & 1);
+    dumpf(context, "%*c constraint_set3_flag: %u\n", context->indent * 4, ' ', (flags >> 3) & 1);
+    dumpf(context, "%*c constraint_set4_flag: %u\n", context->indent * 4, ' ', (flags >> 4) & 1);
+    dumpf(context, "%*c constraint_set5_flag: %u\n", context->indent * 4, ' ', (flags >> 5) & 1);
 }
 
 static void print_level(ParseContext *context, uint8_t level_idc, uint8_t flags)
 {
     if (level_idc == 11 && (flags & 0x08))
-        printf("%*c level_idc: %u (1b)\n", context->indent * 4, ' ', level_idc);
+        dumpf(context, "%*c level_idc: %u (1b)\n", context->indent * 4, ' ', level_idc);
     else
-        printf("%*c level_idc: %u (%.1f)\n", context->indent * 4, ' ', level_idc, level_idc / 10.0);
+        dumpf(context, "%*c level_idc: %u (%.1f)\n", context->indent * 4, ' ', level_idc, level_idc / 10.0);
 }
 
 static void print_chroma_format(ParseContext *context, uint8_t chroma_format_idc)
@@ -751,10 +828,10 @@ static void print_chroma_format(ParseContext *context, uint8_t chroma_format_idc
     };
 
     if (chroma_format_idc < ARRAY_SIZE(CHROMA_FORMAT_STRINGS)) {
-        printf("%*c chroma_format_idc: %u (%s)\n", context->indent * 4, ' ', chroma_format_idc,
-               CHROMA_FORMAT_STRINGS[chroma_format_idc]);
+        dumpf(context, "%*c chroma_format_idc: %u (%s)\n", context->indent * 4, ' ', chroma_format_idc,
+              CHROMA_FORMAT_STRINGS[chroma_format_idc]);
     } else {
-        printf("%*c chroma_format_idc: %u (unknown)\n", context->indent * 4, ' ', chroma_format_idc);
+        dumpf(context, "%*c chroma_format_idc: %u (unknown)\n", context->indent * 4, ' ', chroma_format_idc);
     }
 }
 
@@ -782,12 +859,12 @@ static void print_aspect_ratio(ParseContext *context, uint8_t aspect_ratio_idc)
     };
 
     if (aspect_ratio_idc < ARRAY_SIZE(SAMPLE_ASPECT_RATIO_STRINGS)) {
-        printf("%*c aspect_ratio_idc: %u (%s)\n", context->indent * 4, ' ', aspect_ratio_idc,
-               SAMPLE_ASPECT_RATIO_STRINGS[aspect_ratio_idc]);
+        dumpf(context, "%*c aspect_ratio_idc: %u (%s)\n", context->indent * 4, ' ', aspect_ratio_idc,
+              SAMPLE_ASPECT_RATIO_STRINGS[aspect_ratio_idc]);
     } else if (aspect_ratio_idc == EXTENDED_SAR) {
-        printf("%*c aspect_ratio_idc: %u (Extended_SAR)\n", context->indent * 4, ' ', aspect_ratio_idc);
+        dumpf(context, "%*c aspect_ratio_idc: %u (Extended_SAR)\n", context->indent * 4, ' ', aspect_ratio_idc);
     } else {
-        printf("%*c aspect_ratio_idc: %u (Reserved)\n", context->indent * 4, ' ', aspect_ratio_idc);
+        dumpf(context, "%*c aspect_ratio_idc: %u (Reserved)\n", context->indent * 4, ' ', aspect_ratio_idc);
     }
 }
 
@@ -805,8 +882,8 @@ static void print_video_format(ParseContext *context, uint8_t video_format)
         "Reserved",
     };
 
-    printf("%*c video_format: %u (%s)\n", context->indent * 4, ' ', video_format,
-           VIDEO_FORMAT_STRINGS[video_format & 0x07]);
+    dumpf(context, "%*c video_format: %u (%s)\n", context->indent * 4, ' ', video_format,
+          VIDEO_FORMAT_STRINGS[video_format & 0x07]);
 }
 
 static void print_pic_struct(ParseContext *context, uint8_t pic_struct)
@@ -825,10 +902,10 @@ static void print_pic_struct(ParseContext *context, uint8_t pic_struct)
     };
 
     if (pic_struct < ARRAY_SIZE(PIC_STRUCT_STRINGS)) {
-        printf("%*c pic_struct: %u (%s)\n", context->indent * 4, ' ', pic_struct,
-               PIC_STRUCT_STRINGS[pic_struct]);
+        dumpf(context, "%*c pic_struct: %u (%s)\n", context->indent * 4, ' ', pic_struct,
+              PIC_STRUCT_STRINGS[pic_struct]);
     } else {
-        printf("%*c pic_struct: %u (reserved)\n", context->indent * 4, ' ', pic_struct);
+        dumpf(context, "%*c pic_struct: %u (reserved)\n", context->indent * 4, ' ', pic_struct);
     }
 }
 
@@ -846,8 +923,8 @@ static void print_primary_pic_type(ParseContext *context, uint8_t type)
         "P, B, I, SP, SI"
     };
 
-    printf("%*c primary_pic_type: %u (%s)\n", context->indent * 4, ' ', type,
-           PRIMARY_PIC_TYPES[type]);
+    dumpf(context, "%*c primary_pic_type: %u (%s)\n", context->indent * 4, ' ', type,
+          PRIMARY_PIC_TYPES[type]);
 }
 
 static void print_slice_type(ParseContext *context, uint64_t type)
@@ -867,10 +944,10 @@ static void print_slice_type(ParseContext *context, uint64_t type)
     };
 
     if (type < ARRAY_SIZE(SLICE_TYPES)) {
-        printf("%*c slice_type: %" PRIu64 " (%s)\n", context->indent * 4, ' ', type,
-               SLICE_TYPES[type]);
+        dumpf(context, "%*c slice_type: %" PRIu64 " (%s)\n", context->indent * 4, ' ', type,
+              SLICE_TYPES[type]);
     } else {
-        printf("%*c slice_type: %" PRIu64 " (unknown)\n", context->indent * 4, ' ', type);
+        dumpf(context, "%*c slice_type: %" PRIu64 " (unknown)\n", context->indent * 4, ' ', type);
     }
 }
 
@@ -892,48 +969,48 @@ static void print_scaling_list_flag_and_index(ParseContext *context, const char 
         "SI_8x8_Inter_Cr",
     };
 
-    printf("%*c %s[%u]: %u (%s)\n", context->indent * 4, ' ', flag_name, index, flag, SCALING_LIST_NAMES[index]);
+    dumpf(context, "%*c %s[%u]: %u (%s)\n", context->indent * 4, ' ', flag_name, index, flag, SCALING_LIST_NAMES[index]);
 }
 
 static void print_uuid(ParseContext *context, uint64_t uuid_high, uint64_t uuid_low)
 {
     int i;
 
-    printf("%*c uuid_iso_iec11578: ", context->indent * 4, ' ');
+    dumpf(context, "%*c uuid_iso_iec11578: ", context->indent * 4, ' ');
     for (i = 0; i < 4; i++)
-        printf("%02x", (unsigned char)((uuid_high >> ((7 - i) * 8)) & 0xff));
-    printf("-");
+        dumpf(context, "%02x", (unsigned char)((uuid_high >> ((7 - i) * 8)) & 0xff));
+    dumpf(context, "-");
     for (; i < 6; i++)
-        printf("%02x", (unsigned char)((uuid_high >> ((7 - i) * 8)) & 0xff));
-    printf("-");
+        dumpf(context, "%02x", (unsigned char)((uuid_high >> ((7 - i) * 8)) & 0xff));
+    dumpf(context, "-");
     for (; i < 8; i++)
-        printf("%02x", (unsigned char)((uuid_high >> ((7 - i) * 8)) & 0xff));
-    printf("-");
+        dumpf(context, "%02x", (unsigned char)((uuid_high >> ((7 - i) * 8)) & 0xff));
+    dumpf(context, "-");
     for (i = 0; i < 2; i++)
-        printf("%02x", (unsigned char)((uuid_low >> ((7 - i) * 8)) & 0xff));
-    printf("-");
+        dumpf(context, "%02x", (unsigned char)((uuid_low >> ((7 - i) * 8)) & 0xff));
+    dumpf(context, "-");
     for (; i < 8; i++)
-        printf("%02x", (unsigned char)((uuid_low >> ((7 - i) * 8)) & 0xff));
-    printf("\n");
+        dumpf(context, "%02x", (unsigned char)((uuid_low >> ((7 - i) * 8)) & 0xff));
+    dumpf(context, "\n");
 }
 
 static void print_bytes_line(ParseContext *context, uint64_t index, uint8_t *line, size_t num_values, size_t line_size)
 {
     size_t i;
 
-    printf("%*c %06" PRIx64 " ", context->indent * 4, ' ', index);
+    dumpf(context, "%*c %06" PRIx64 " ", context->indent * 4, ' ', index);
     for (i = 0; i < num_values; i++)
-        printf(" %02x", line[i]);
+        dumpf(context, " %02x", line[i]);
     for (; i < line_size; i++)
-        printf("   ");
-    printf("  |");
+        dumpf(context, "   ");
+    dumpf(context, "  |");
     for (i = 0; i < num_values; i++) {
         if (isprint(line[i]))
-            printf("%c", line[i]);
+            dumpf(context, "%c", line[i]);
         else
-            printf(".");
+            dumpf(context, ".");
     }
-    printf("|\n");
+    dumpf(context, "|\n");
 }
 
 static int read_and_print_bytes(ParseContext *context, uint64_t num_bytes)
@@ -963,24 +1040,24 @@ static int hrd_parameters(ParseContext *context)
 
     CHK(context->sps);
 
-    ue(); PRINT_UINT("cpb_cnt_minus1");
+    ue(); DUMP_UINT("cpb_cnt_minus1");
     context->sps->cpb_cnt_minus1 = context->value;
-    u(4); PRINT_UINT("bit_rate_scale");
-    u(4); PRINT_UINT("cpb_size_scale");
+    u(4); DUMP_UINT("bit_rate_scale");
+    u(4); DUMP_UINT("cpb_size_scale");
     context->indent++;
     for (sched_sel_idx = 0; sched_sel_idx <= context->sps->cpb_cnt_minus1; sched_sel_idx++) {
-        ue(); PRINT_UINT("bit_rate_value_minus1");
-        ue(); PRINT_UINT("cpb_size_value_minus1");
-        u(1); PRINT_UINT("cbr_flag");
+        ue(); DUMP_UINT("bit_rate_value_minus1");
+        ue(); DUMP_UINT("cpb_size_value_minus1");
+        u(1); DUMP_UINT("cbr_flag");
     }
     context->indent--;
-    u(5); PRINT_UINT("initial_cpb_removal_delay_length_minus1");
+    u(5); DUMP_UINT("initial_cpb_removal_delay_length_minus1");
     context->sps->initial_cpb_removal_delay_length_minus1 = (uint8_t)context->value;
-    u(5); PRINT_UINT("cpb_removal_delay_length_minus1");
+    u(5); DUMP_UINT("cpb_removal_delay_length_minus1");
     context->sps->cpb_removal_delay_length_minus1 = (uint8_t)context->value;
-    u(5); PRINT_UINT("dpb_output_delay_length_minus1");
+    u(5); DUMP_UINT("dpb_output_delay_length_minus1");
     context->sps->dpb_output_delay_length_minus1 = (uint8_t)context->value;
-    u(5); PRINT_UINT("time_offset_length");
+    u(5); DUMP_UINT("time_offset_length");
     context->sps->time_offset_length = (uint8_t)context->value;
 
     return 1;
@@ -990,62 +1067,62 @@ static int vui_parameters(ParseContext *context)
 {
     CHK(context->sps);
 
-    u(1); PRINT_UINT("aspect_ratio_present_flag");
+    u(1); DUMP_UINT("aspect_ratio_present_flag");
     if (context->value) {
         context->indent++;
         u(8); print_aspect_ratio(context, (uint8_t)context->value);
         if (context->value == EXTENDED_SAR) {
             context->indent++;
-            u(16); PRINT_UINT("sar_width");
-            u(16); PRINT_UINT("sar_height");
+            u(16); DUMP_UINT("sar_width");
+            u(16); DUMP_UINT("sar_height");
             context->indent--;
         }
         context->indent--;
     }
-    u(1); PRINT_UINT("overscan_info_present_flag");
+    u(1); DUMP_UINT("overscan_info_present_flag");
     if (context->value) {
         context->indent++;
-        u(1); PRINT_UINT("overscan_appropriate_flag");
+        u(1); DUMP_UINT("overscan_appropriate_flag");
         context->indent--;
     }
-    u(1); PRINT_UINT("video_signal_type_present_flag");
+    u(1); DUMP_UINT("video_signal_type_present_flag");
     if (context->value) {
         context->indent++;
         u(3); print_video_format(context, (uint8_t)context->value);
-        u(1); PRINT_UINT("video_full_range_flag");
-        u(1); PRINT_UINT("colour_description_present_flag");
+        u(1); DUMP_UINT("video_full_range_flag");
+        u(1); DUMP_UINT("colour_description_present_flag");
         if (context->value) {
             context->indent++;
-            u(8); PRINT_UINT("colour_primaries");
-            u(8); PRINT_UINT("transfer_characteristics");
-            u(8); PRINT_UINT("matrix_coefficients");
+            u(8); DUMP_UINT("colour_primaries");
+            u(8); DUMP_UINT("transfer_characteristics");
+            u(8); DUMP_UINT("matrix_coefficients");
             context->indent--;
         }
         context->indent--;
     }
-    u(1); PRINT_UINT("chroma_loc_info_present_flag");
+    u(1); DUMP_UINT("chroma_loc_info_present_flag");
     if (context->value) {
         context->indent++;
-        ue_m(5); PRINT_UINT("chroma_sample_loc_type_top_field");
-        ue_m(5); PRINT_UINT("chroma_sample_loc_type_bottom_field");
+        ue_m(5); DUMP_UINT("chroma_sample_loc_type_top_field");
+        ue_m(5); DUMP_UINT("chroma_sample_loc_type_bottom_field");
         context->indent--;
     }
-    u(1); PRINT_UINT("timing_info_present_flag");
+    u(1); DUMP_UINT("timing_info_present_flag");
     if (context->value) {
         context->indent++;
-        u(32); PRINT_UINT("num_units_in_tick");
-        u(32); PRINT_UINT("time_scale");
-        u(1); PRINT_UINT("fixed_frame_rate_flag");
+        u(32); DUMP_UINT("num_units_in_tick");
+        u(32); DUMP_UINT("time_scale");
+        u(1); DUMP_UINT("fixed_frame_rate_flag");
         context->indent--;
     }
-    u(1); PRINT_UINT("nal_hrd_parameters_present_flag");
+    u(1); DUMP_UINT("nal_hrd_parameters_present_flag");
     context->sps->nal_hrd_parameters_present_flag = (uint8_t)context->value;
     if (context->value) {
         context->indent++;
         CHK(hrd_parameters(context));
         context->indent--;
     }
-    u(1); PRINT_UINT("vcl_hrd_parameters_present_flag");
+    u(1); DUMP_UINT("vcl_hrd_parameters_present_flag");
     context->sps->vcl_hrd_parameters_present_flag = (uint8_t)context->value;
     if (context->value) {
         context->indent++;
@@ -1053,21 +1130,21 @@ static int vui_parameters(ParseContext *context)
         context->indent--;
     }
     if (context->sps->nal_hrd_parameters_present_flag || context->sps->vcl_hrd_parameters_present_flag) {
-        u(1); PRINT_UINT("low_delay_hrd_flag");
+        u(1); DUMP_UINT("low_delay_hrd_flag");
     }
     context->sps->cpb_dpb_delays_present_flag = context->sps->nal_hrd_parameters_present_flag ||
                                                 context->sps->vcl_hrd_parameters_present_flag;
-    u(1); PRINT_UINT("pic_struct_present_flag");
+    u(1); DUMP_UINT("pic_struct_present_flag");
     context->sps->pic_struct_present_flag = (uint8_t)context->value;
-    u(1); PRINT_UINT("bitstream_restriction_flag");
+    u(1); DUMP_UINT("bitstream_restriction_flag");
     if (context->value) {
-        u(1); PRINT_UINT("motion_vectors_over_pic_boundaries_flag");
-        ue(); PRINT_UINT("max_bytes_per_pic_denom");
-        ue(); PRINT_UINT("max_bytes_per_mb_denom");
-        ue(); PRINT_UINT("log2_max_mv_length_horizontal");
-        ue(); PRINT_UINT("log2_max_mv_length_vertical");
-        ue(); PRINT_UINT("num_reorder_frames");
-        ue(); PRINT_UINT("max_dec_frame_buffering");
+        u(1); DUMP_UINT("motion_vectors_over_pic_boundaries_flag");
+        ue(); DUMP_UINT("max_bytes_per_pic_denom");
+        ue(); DUMP_UINT("max_bytes_per_mb_denom");
+        ue(); DUMP_UINT("log2_max_mv_length_horizontal");
+        ue(); DUMP_UINT("log2_max_mv_length_vertical");
+        ue(); DUMP_UINT("num_reorder_frames");
+        ue(); DUMP_UINT("max_dec_frame_buffering");
     }
 
     return 1;
@@ -1113,12 +1190,12 @@ static int scaling_list(ParseContext *context, int is_8x8)
     for (i = 0; i < size; i++) {
         if (i % dim == 0) {
             if (i != 0)
-                printf("\n");
-            printf("%*c", context->indent * 4, ' ');
+                dumpf(context, "\n");
+            dumpf(context, "%*c", context->indent * 4, ' ');
         }
-        printf(" %02x", matrix[i]);
+        dumpf(context, " %02x", matrix[i]);
     }
-    printf("\n");
+    dumpf(context, "\n");
 
     return 1;
 }
@@ -1127,37 +1204,37 @@ static int ref_pic_list_mvc_modification(ParseContext *context)
 {
     uint64_t modification_of_pic_nums_idc;
 
-    printf("%*c ref_pic_list_mvc_modification:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c ref_pic_list_mvc_modification:\n", context->indent * 4, ' ');
     context->indent++;
 
     if (context->slice_type % 5 != 2 && context->slice_type % 5 != 4) {
-        u(1); PRINT_UINT("ref_pic_list_modification_flag_l0");
+        u(1); DUMP_UINT("ref_pic_list_modification_flag_l0");
         if (context->value) {
             do {
-                ue(); PRINT_UINT("modification_of_pic_nums_idc");
+                ue(); DUMP_UINT("modification_of_pic_nums_idc");
                 modification_of_pic_nums_idc = context->value;
                 if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1) {
-                    ue(); PRINT_UINT("abs_diff_pic_num_minus1");
+                    ue(); DUMP_UINT("abs_diff_pic_num_minus1");
                 } else if (modification_of_pic_nums_idc == 2) {
-                    ue(); PRINT_UINT("long_term_pic_num");
+                    ue(); DUMP_UINT("long_term_pic_num");
                 } else if (modification_of_pic_nums_idc == 4 || modification_of_pic_nums_idc == 5) {
-                    ue(); PRINT_UINT("abs_diff_view_idx_minus1");
+                    ue(); DUMP_UINT("abs_diff_view_idx_minus1");
                 }
             } while (modification_of_pic_nums_idc != 3);
         }
     }
     if (context->slice_type % 5 == 1) {
-        u(1); PRINT_UINT("ref_pic_list_modification_flag_l1");
+        u(1); DUMP_UINT("ref_pic_list_modification_flag_l1");
         if (context->value) {
             do {
-                ue(); PRINT_UINT("modification_of_pic_nums_idc");
+                ue(); DUMP_UINT("modification_of_pic_nums_idc");
                 modification_of_pic_nums_idc = context->value;
                 if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1) {
-                    ue(); PRINT_UINT("abs_diff_pic_num_minus1");
+                    ue(); DUMP_UINT("abs_diff_pic_num_minus1");
                 } else if (modification_of_pic_nums_idc == 2) {
-                    ue(); PRINT_UINT("long_term_pic_num");
+                    ue(); DUMP_UINT("long_term_pic_num");
                 } else if (modification_of_pic_nums_idc == 4 || modification_of_pic_nums_idc == 5) {
-                    ue(); PRINT_UINT("abs_diff_view_idx_minus1");
+                    ue(); DUMP_UINT("abs_diff_view_idx_minus1");
                 }
             } while (modification_of_pic_nums_idc != 3);
         }
@@ -1171,33 +1248,33 @@ static int ref_pic_list_modification(ParseContext *context)
 {
     uint64_t modification_of_pic_nums_idc;
 
-    printf("%*c ref_pic_list_modification:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c ref_pic_list_modification:\n", context->indent * 4, ' ');
     context->indent++;
 
     if (context->slice_type % 5 != 2 && context->slice_type % 5 != 4) {
-        u(1); PRINT_UINT("ref_pic_list_modification_flag_l0");
+        u(1); DUMP_UINT("ref_pic_list_modification_flag_l0");
         if (context->value) {
             do {
-                ue(); PRINT_UINT("modification_of_pic_nums_idc");
+                ue(); DUMP_UINT("modification_of_pic_nums_idc");
                 modification_of_pic_nums_idc = context->value;
                 if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1) {
-                    ue(); PRINT_UINT("abs_diff_pic_num_minus1");
+                    ue(); DUMP_UINT("abs_diff_pic_num_minus1");
                 } else if (modification_of_pic_nums_idc == 2) {
-                    ue(); PRINT_UINT("long_term_pic_num");
+                    ue(); DUMP_UINT("long_term_pic_num");
                 }
             } while (modification_of_pic_nums_idc != 3);
         }
     }
     if (context->slice_type % 5 == 1) {
-        u(1); PRINT_UINT("ref_pic_list_modification_flag_l1");
+        u(1); DUMP_UINT("ref_pic_list_modification_flag_l1");
         if (context->value) {
             do {
-                ue(); PRINT_UINT("modification_of_pic_nums_idc");
+                ue(); DUMP_UINT("modification_of_pic_nums_idc");
                 modification_of_pic_nums_idc = context->value;
                 if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1) {
-                    ue(); PRINT_UINT("abs_diff_pic_num_minus1");
+                    ue(); DUMP_UINT("abs_diff_pic_num_minus1");
                 } else if (modification_of_pic_nums_idc == 2) {
-                    ue(); PRINT_UINT("long_term_pic_num");
+                    ue(); DUMP_UINT("long_term_pic_num");
                 }
             } while (modification_of_pic_nums_idc != 3);
         }
@@ -1211,31 +1288,31 @@ static int pred_weight_table(ParseContext *context)
 {
     uint64_t i;
 
-    printf("%*c pred_weight_table:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c pred_weight_table:\n", context->indent * 4, ' ');
     context->indent++;
 
     CHK(context->sps);
 
-    ue(); PRINT_UINT("luma_log2_weight_denom");
+    ue(); DUMP_UINT("luma_log2_weight_denom");
     if (context->sps->chroma_array_type != 0) {
-        ue(); PRINT_UINT("chroma_log2_weight_denom");
+        ue(); DUMP_UINT("chroma_log2_weight_denom");
     }
     for (i = 0; i <= context->num_ref_idx_l0_active_minus1; i++) {
-        u(1); PRINT_UINT("luma_weight_l0_flag");
+        u(1); DUMP_UINT("luma_weight_l0_flag");
         if (context->value) {
             context->indent++;
-            se(); printf("%*c luma_weight_l0[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
-            se(); printf("%*c luma_offset_l0[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
+            se(); dumpf(context, "%*c luma_weight_l0[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
+            se(); dumpf(context, "%*c luma_offset_l0[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
             context->indent--;
         }
         if (context->sps->chroma_array_type != 0) {
-            u(1); PRINT_UINT("chroma_weight_l0_flag");
+            u(1); DUMP_UINT("chroma_weight_l0_flag");
             if (context->value) {
                 int j;
                 context->indent++;
                 for (j = 0; j < 2; j++) {
-                    se(); printf("%*c chroma_weight_l0[%" PRIu64 "][%d]: %" PRId64 "\n", context->indent * 4, ' ', i, j, context->value);
-                    se(); printf("%*c chroma_offset_l0[%" PRIu64 "][%d]: %" PRId64 "\n", context->indent * 4, ' ', i, j, context->value);
+                    se(); dumpf(context, "%*c chroma_weight_l0[%" PRIu64 "][%d]: %" PRId64 "\n", context->indent * 4, ' ', i, j, context->value);
+                    se(); dumpf(context, "%*c chroma_offset_l0[%" PRIu64 "][%d]: %" PRId64 "\n", context->indent * 4, ' ', i, j, context->value);
                 }
                 context->indent--;
             }
@@ -1243,21 +1320,21 @@ static int pred_weight_table(ParseContext *context)
     }
     if (context->slice_type % 5 == 1) {
         for (i = 0; i <= context->num_ref_idx_l1_active_minus1; i++) {
-            u(1); PRINT_UINT("luma_weight_l1_flag");
+            u(1); DUMP_UINT("luma_weight_l1_flag");
             if (context->value) {
                 context->indent++;
-                se(); printf("%*c luma_weight_l1[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
-                se(); printf("%*c luma_offset_l1[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
+                se(); dumpf(context, "%*c luma_weight_l1[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
+                se(); dumpf(context, "%*c luma_offset_l1[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
                 context->indent--;
             }
             if (context->sps->chroma_array_type != 0) {
-                u(1); PRINT_UINT("chroma_weight_l1_flag");
+                u(1); DUMP_UINT("chroma_weight_l1_flag");
                 if (context->value) {
                     int j;
                     context->indent++;
                     for (j = 0; j < 2; j++) {
-                        se(); printf("%*c chroma_weight_l1[%" PRIu64 "][%d]: %" PRId64 "\n", context->indent * 4, ' ', i, j, context->value);
-                        se(); printf("%*c chroma_offset_l1[%" PRIu64 "][%d]: %" PRId64 "\n", context->indent * 4, ' ', i, j, context->value);
+                        se(); dumpf(context, "%*c chroma_weight_l1[%" PRIu64 "][%d]: %" PRId64 "\n", context->indent * 4, ' ', i, j, context->value);
+                        se(); dumpf(context, "%*c chroma_offset_l1[%" PRIu64 "][%d]: %" PRId64 "\n", context->indent * 4, ' ', i, j, context->value);
                     }
                     context->indent--;
                 }
@@ -1273,36 +1350,36 @@ static int dec_ref_pic_marking(ParseContext *context)
 {
     uint8_t idr_pic_flag = (context->nal_unit_type == 5 ? 1 : 0);
 
-    printf("%*c dec_ref_pic_marking:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c dec_ref_pic_marking:\n", context->indent * 4, ' ');
     context->indent++;
 
     if (idr_pic_flag) {
-        u(1); PRINT_UINT("no_output_of_prior_pics_flag");
-        u(1); PRINT_UINT("long_term_reference_flag");
+        u(1); DUMP_UINT("no_output_of_prior_pics_flag");
+        u(1); DUMP_UINT("long_term_reference_flag");
     } else {
-        u(1); PRINT_UINT("adaptive_ref_pic_marking_mode_flag");
+        u(1); DUMP_UINT("adaptive_ref_pic_marking_mode_flag");
         if (context->value) {
             uint64_t memory_management_control_operation;
             do {
-                ue(); PRINT_UINT("memory_management_control_operation");
+                ue(); DUMP_UINT("memory_management_control_operation");
                 memory_management_control_operation = context->value;
                 if (memory_management_control_operation == 1 ||
                     memory_management_control_operation == 3)
                 {
-                    ue(); PRINT_UINT("difference_of_pic_nums_minus1");
+                    ue(); DUMP_UINT("difference_of_pic_nums_minus1");
                 }
                 if (memory_management_control_operation == 2)
                 {
-                    ue(); PRINT_UINT("long_term_pic_num");
+                    ue(); DUMP_UINT("long_term_pic_num");
                 }
                 if (memory_management_control_operation == 3 ||
                     memory_management_control_operation == 6)
                 {
-                    ue(); PRINT_UINT("long_term_frame_idx");
+                    ue(); DUMP_UINT("long_term_frame_idx");
                 }
                 if (memory_management_control_operation == 4)
                 {
-                    ue(); PRINT_UINT("max_long_term_frame_idx_plus1");
+                    ue(); DUMP_UINT("max_long_term_frame_idx_plus1");
                 }
             } while (memory_management_control_operation != 0);
         }
@@ -1318,58 +1395,58 @@ static int slice_header(ParseContext *context)
     uint8_t idr_pic_flag = (context->nal_unit_type == 5 ? 1 : 0);
     uint64_t redundant_pic_cnt = 0;
 
-    printf("%*c slice_header:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c slice_header:\n", context->indent * 4, ' ');
     context->indent++;
 
-    ue(); PRINT_UINT("first_mb_in_slice");
+    ue(); DUMP_UINT("first_mb_in_slice");
     ue(); print_slice_type(context, context->value);
     context->slice_type = context->value;
-    ue_m(255); PRINT_UINT("pic_parameter_set_id");
+    ue_m(255); DUMP_UINT("pic_parameter_set_id");
     CHK(set_pps(context, (uint8_t)context->value));
 
     context->num_ref_idx_l0_active_minus1 = context->pps->num_ref_idx_l0_default_active_minus1;
     context->num_ref_idx_l1_active_minus1 = context->pps->num_ref_idx_l1_default_active_minus1;
 
     if (context->sps->separate_colour_plane_flag == 1) {
-        u(2); PRINT_UINT("colour_plane_id");
+        u(2); DUMP_UINT("colour_plane_id");
     }
-    u(context->sps->log2_max_frame_num_minus4 + 4); PRINT_UINT("frame_num");
+    u(context->sps->log2_max_frame_num_minus4 + 4); DUMP_UINT("frame_num");
     if (!context->sps->frame_mbs_only_flag) {
-        u(1); PRINT_UINT("field_pic_flag");
+        u(1); DUMP_UINT("field_pic_flag");
         field_pic_flag = (uint8_t)context->value;
         if (context->value) {
-            u(1); PRINT_UINT("bottom_field_flag");
+            u(1); DUMP_UINT("bottom_field_flag");
         }
     }
     if (idr_pic_flag) {
-        ue(); PRINT_UINT("idr_pic_id");
+        ue(); DUMP_UINT("idr_pic_id");
     }
     if (context->sps->pic_order_cnt_type == 0) {
-        u(context->sps->log2_max_pic_order_cnt_lsb_minus4 + 4); PRINT_UINT("pic_order_cnt_lsb");
+        u(context->sps->log2_max_pic_order_cnt_lsb_minus4 + 4); DUMP_UINT("pic_order_cnt_lsb");
         if (context->pps->bottom_field_pic_order_in_frame_present_flag && !field_pic_flag) {
-            se(); PRINT_INT("delta_pic_order_cnt_bottom");
+            se(); DUMP_INT("delta_pic_order_cnt_bottom");
         }
     }
     if (context->sps->pic_order_cnt_type == 1 && !context->sps->delta_pic_order_always_zero_flag) {
-        se(); PRINT_INT("delta_pic_order_cnt[0]");
+        se(); DUMP_INT("delta_pic_order_cnt[0]");
         if (context->pps->bottom_field_pic_order_in_frame_present_flag && !field_pic_flag) {
-            se(); PRINT_INT("delta_pic_order_cnt[1]");
+            se(); DUMP_INT("delta_pic_order_cnt[1]");
         }
     }
     if (context->pps->redundant_pic_cnt_present_flag) {
-        ue(); PRINT_UINT("redundant_pic_cnt");
+        ue(); DUMP_UINT("redundant_pic_cnt");
         redundant_pic_cnt = context->value;
     }
     if (IS_B(context->slice_type)) {
-        u(1); PRINT_UINT("direct_spatial_mv_pred_flag");
+        u(1); DUMP_UINT("direct_spatial_mv_pred_flag");
     }
     if (IS_P(context->slice_type) || IS_SP(context->slice_type) || IS_B(context->slice_type)) {
-        u(1); PRINT_UINT("num_ref_idx_active_override_flag");
+        u(1); DUMP_UINT("num_ref_idx_active_override_flag");
         if (context->value) {
-            ue(); PRINT_UINT("num_ref_idx_l0_active_minus1");
+            ue(); DUMP_UINT("num_ref_idx_l0_active_minus1");
             context->num_ref_idx_l0_active_minus1 = context->value;
             if (IS_B(context->slice_type)) {
-                ue(); PRINT_UINT("num_ref_idx_l1_active_minus1");
+                ue(); DUMP_UINT("num_ref_idx_l1_active_minus1");
                 context->num_ref_idx_l1_active_minus1 = context->value;
             }
         }
@@ -1388,20 +1465,20 @@ static int slice_header(ParseContext *context)
         CHK(dec_ref_pic_marking(context));
     }
     if (context->pps->entropy_coding_mode_flag && !IS_I(context->slice_type) && !IS_SI(context->slice_type)) {
-        ue(); PRINT_UINT("cabac_init_idc");
+        ue(); DUMP_UINT("cabac_init_idc");
     }
-    se(); PRINT_INT("slice_qp_delta");
+    se(); DUMP_INT("slice_qp_delta");
     if (IS_SP(context->slice_type) || IS_SI(context->slice_type)) {
         if (IS_SP(context->slice_type)) {
-            u(1); PRINT_UINT("sp_for_switch_flag");
+            u(1); DUMP_UINT("sp_for_switch_flag");
         }
-        se(); PRINT_INT("slice_qs_delta");
+        se(); DUMP_INT("slice_qs_delta");
     }
     if (context->pps->deblocking_filter_control_present_flag) {
-        ue(); PRINT_UINT("disable_deblocking_filter_idc");
+        ue(); DUMP_UINT("disable_deblocking_filter_idc");
         if (context->value != 1) {
-            se(); PRINT_INT("slice_alpha_c0_offset_div2");
-            se(); PRINT_INT("slice_beta_offset_div2");
+            se(); DUMP_INT("slice_alpha_c0_offset_div2");
+            se(); DUMP_INT("slice_beta_offset_div2");
         }
     }
     if (context->pps->num_slice_groups_minus1 > 0 &&
@@ -1410,28 +1487,24 @@ static int slice_header(ParseContext *context)
         uint64_t pic_size_in_map_units = (context->sps->pic_width_in_mbs_minus1 + 1) *
                                             (context->sps->pic_height_in_map_units_minus1 + 1);
         uint8_t bit_count = get_bits_required(pic_size_in_map_units / (context->pps->slice_group_change_rate_minus1 + 1) + 1);
-        u(bit_count); PRINT_UINT("slice_group_change_cycle");
-    }
-
-    // TODO: see pic_timing
-    if (context->pic_timing_sps && redundant_pic_cnt == 0) {
-      if (context->pic_timing_sps != context->sps) {
-        printf("Warning / TODO: SPS (id=%u) used to parse pic_timing does not equal the primary picture slice's SPS (id=%u)\n",
-               context->pic_timing_sps->seq_parameter_set_id, context->sps->seq_parameter_set_id);
-      }
-      context->pic_timing_sps = 0;
+        u(bit_count); DUMP_UINT("slice_group_change_cycle");
     }
 
     context->indent--;
+
+    // parse and dump buffered pic timing SEI and dump text data that followed that
+    if (context->pic_timing_buf && redundant_pic_cnt == 0)
+        CHK(dump_buffered_pic_timing(context));
+
     return 1;
 }
 
 static int slice_data(ParseContext *context)
 {
-    printf("%*c slice_data:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c slice_data:\n", context->indent * 4, ' ');
     context->indent++;
 
-    printf("%*c ...\n", context->indent * 4, ' ');
+    dumpf(context, "%*c ...\n", context->indent * 4, ' ');
 
     context->indent--;
     return 1;
@@ -1439,7 +1512,7 @@ static int slice_data(ParseContext *context)
 
 static int slice_layer_without_partitioning(ParseContext *context)
 {
-    printf("%*c slice_layer_without_partitioning:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c slice_layer_without_partitioning:\n", context->indent * 4, ' ');
     context->indent++;
 
     CHK(slice_header(context));
@@ -1454,11 +1527,11 @@ static int slice_layer_without_partitioning(ParseContext *context)
 
 static int slice_data_partition_a_layer(ParseContext *context)
 {
-    printf("%*c slice_data_partition_a_layer:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c slice_data_partition_a_layer:\n", context->indent * 4, ' ');
     context->indent++;
 
     CHK(slice_header(context));
-    ue(); PRINT_UINT("slice_id");
+    ue(); DUMP_UINT("slice_id");
     CHK(slice_data(context));
 
     // TODO: uncomment when slice_data implemented
@@ -1470,17 +1543,17 @@ static int slice_data_partition_a_layer(ParseContext *context)
 
 static int slice_data_partition_b_layer(ParseContext *context)
 {
-    printf("%*c slice_data_partition_b_layer:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c slice_data_partition_b_layer:\n", context->indent * 4, ' ');
     context->indent++;
 
     CHK(context->sps && context->pps);
 
-    ue(); PRINT_UINT("slice_id");
+    ue(); DUMP_UINT("slice_id");
     if (context->sps->separate_colour_plane_flag == 1) {
-        u(2); PRINT_UINT("colour_plane_id");
+        u(2); DUMP_UINT("colour_plane_id");
     }
     if (context->pps->redundant_pic_cnt_present_flag) {
-        ue(); PRINT_UINT("redundant_pic_cnt");
+        ue(); DUMP_UINT("redundant_pic_cnt");
     }
     CHK(slice_data(context));
 
@@ -1493,17 +1566,17 @@ static int slice_data_partition_b_layer(ParseContext *context)
 
 static int slice_data_partition_c_layer(ParseContext *context)
 {
-    printf("%*c slice_data_partition_c_layer:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c slice_data_partition_c_layer:\n", context->indent * 4, ' ');
     context->indent++;
 
     CHK(context->sps && context->pps);
 
-    ue(); PRINT_UINT("slice_id");
+    ue(); DUMP_UINT("slice_id");
     if (context->sps->separate_colour_plane_flag == 1) {
-        u(2); PRINT_UINT("colour_plane_id");
+        u(2); DUMP_UINT("colour_plane_id");
     }
     if (context->pps->redundant_pic_cnt_present_flag) {
-        ue(); PRINT_UINT("redundant_pic_cnt");
+        ue(); DUMP_UINT("redundant_pic_cnt");
     }
     CHK(slice_data(context));
 
@@ -1518,32 +1591,32 @@ static int buffering_period(ParseContext *context, uint64_t payload_type, uint64
 {
     uint64_t sched_sel_idx;
 
-    printf("%*c buffering_period (type=%" PRIu64 ", size=%" PRIu64 "):\n", context->indent * 4, ' ', payload_type, payload_size);
+    dumpf(context, "%*c buffering_period (type=%" PRIu64 ", size=%" PRIu64 "):\n", context->indent * 4, ' ', payload_type, payload_size);
     context->indent++;
 
-    ue_m(31); PRINT_UINT("seq_parameter_set_id");
+    ue_m(31); DUMP_UINT("seq_parameter_set_id");
     CHK(set_sps(context, (uint8_t)context->value));
 
     if (context->sps->nal_hrd_parameters_present_flag) {
-        printf("%*c nal:\n", context->indent * 4, ' ');
+        dumpf(context, "%*c nal:\n", context->indent * 4, ' ');
         context->indent++;
         for (sched_sel_idx = 0; sched_sel_idx <= context->sps->cpb_cnt_minus1; sched_sel_idx++) {
             u(context->sps->initial_cpb_removal_delay_length_minus1 + 1);
-            printf("%*c initial_cpb_removal_delay[%" PRIu64 "]        : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
+            dumpf(context, "%*c initial_cpb_removal_delay[%" PRIu64 "]        : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
             u(context->sps->initial_cpb_removal_delay_length_minus1 + 1);
-            printf("%*c initial_cpb_removal_delay_offset[%" PRIu64 "] : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
+            dumpf(context, "%*c initial_cpb_removal_delay_offset[%" PRIu64 "] : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
         }
         context->indent--;
     }
 
     if (context->sps->vcl_hrd_parameters_present_flag) {
-        printf("%*c vcl:\n", context->indent * 4, ' ');
+        dumpf(context, "%*c vcl:\n", context->indent * 4, ' ');
         context->indent++;
         for (sched_sel_idx = 0; sched_sel_idx <= context->sps->cpb_cnt_minus1; sched_sel_idx++) {
             u(context->sps->initial_cpb_removal_delay_length_minus1 + 1);
-            printf("%*c initial_cpb_removal_delay [%" PRIu64 "]       : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
+            dumpf(context, "%*c initial_cpb_removal_delay [%" PRIu64 "]       : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
             u(context->sps->initial_cpb_removal_delay_length_minus1 + 1);
-            printf("%*c initial_cpb_removal_delay_offset[%" PRIu64 "] : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
+            dumpf(context, "%*c initial_cpb_removal_delay_offset[%" PRIu64 "] : %" PRId64 "\n", context->indent * 4, ' ', sched_sel_idx, context->value);
         }
         context->indent--;
     }
@@ -1554,19 +1627,14 @@ static int buffering_period(ParseContext *context, uint64_t payload_type, uint64
 
 static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
 {
-    printf("%*c pic_timing (type=%" PRIu64 ", size=%" PRIu64 "):\n", context->indent * 4, ' ', payload_type, payload_size);
+    dumpf(context, "%*c pic_timing (type=%" PRIu64 ", size=%" PRIu64 "):\n", context->indent * 4, ' ', payload_type, payload_size);
     context->indent++;
-
-    // TODO: see Note 1 in section D.2.2: the SPS is activated by the first slice of primary coded picture and that will
-    // occur after the SEI. So it could be that this is the wrong SPS. slice_header uses pic_timing_sps to check the
-    // correct SPS was used
-    context->pic_timing_sps = context->sps;
 
     CHK(context->sps);
 
     if (context->sps->cpb_dpb_delays_present_flag) {
-        u(context->sps->cpb_removal_delay_length_minus1 + 1); PRINT_UINT("cpb_removal_delay");
-        u(context->sps->dpb_output_delay_length_minus1 + 1); PRINT_UINT("dpb_output_delay");
+        u(context->sps->cpb_removal_delay_length_minus1 + 1); DUMP_UINT("cpb_removal_delay");
+        u(context->sps->dpb_output_delay_length_minus1 + 1); DUMP_UINT("dpb_output_delay");
     }
     if (context->sps->pic_struct_present_flag) {
         uint64_t pic_struct;
@@ -1598,40 +1666,40 @@ static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t pay
         }
 
         for (i = 0; i < num_clock_ts; i++) {
-            u(1); PRINT_UINT("clock_timestamp_flag");
+            u(1); DUMP_UINT("clock_timestamp_flag");
             if (context->value) {
                 uint8_t full_timestamp_flag;
 
                 context->indent++;
 
-                u(2); PRINT_UINT("ct_type");
-                u(1); PRINT_UINT("nuit_field_based_flag");
-                u(5); PRINT_UINT("counting_type");
-                u(1); PRINT_UINT("full_timestamp_flag");
+                u(2); DUMP_UINT("ct_type");
+                u(1); DUMP_UINT("nuit_field_based_flag");
+                u(5); DUMP_UINT("counting_type");
+                u(1); DUMP_UINT("full_timestamp_flag");
                 full_timestamp_flag = (uint8_t)context->value;
-                u(1); PRINT_UINT("discontinuity_flag");
-                u(1); PRINT_UINT("cnt_dropped_flag");
-                u(8); PRINT_UINT("n_frames");
+                u(1); DUMP_UINT("discontinuity_flag");
+                u(1); DUMP_UINT("cnt_dropped_flag");
+                u(8); DUMP_UINT("n_frames");
                 if (full_timestamp_flag) {
-                    u(6); PRINT_UINT("seconds");
-                    u(6); PRINT_UINT("minutes");
-                    u(5); PRINT_UINT("hours");
+                    u(6); DUMP_UINT("seconds");
+                    u(6); DUMP_UINT("minutes");
+                    u(5); DUMP_UINT("hours");
                 } else {
-                    u(1); PRINT_UINT("seconds_flag");
+                    u(1); DUMP_UINT("seconds_flag");
                     if (context->value) {
-                        u(6); PRINT_UINT("seconds");
-                        u(1); PRINT_UINT("minutes_flag");
+                        u(6); DUMP_UINT("seconds");
+                        u(1); DUMP_UINT("minutes_flag");
                         if (context->value) {
-                            u(6); PRINT_UINT("minutes");
-                            u(1); PRINT_UINT("hours_flag");
+                            u(6); DUMP_UINT("minutes");
+                            u(1); DUMP_UINT("hours_flag");
                             if (context->value) {
-                                u(5); PRINT_UINT("hours");
+                                u(5); DUMP_UINT("hours");
                             }
                         }
                     }
                 }
                 if (context->sps->time_offset_length > 0) {
-                    ii(context->sps->time_offset_length); PRINT_INT("time_offset");
+                    ii(context->sps->time_offset_length); DUMP_INT("time_offset");
                 }
 
                 context->indent--;
@@ -1640,6 +1708,54 @@ static int pic_timing(ParseContext *context, uint64_t payload_type, uint64_t pay
     }
 
     context->indent--;
+    return 1;
+}
+
+static int buffer_pic_timing(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
+{
+    CHK(!context->pic_timing_buf && context->dump_buf_size == 0);
+
+    context->pic_timing_buf = malloc(sizeof(*context->pic_timing_buf));
+    if (!context->pic_timing_buf) {
+        fprintf(stderr, "Failed to allocate pic timing struct\n");
+        return 0;
+    }
+    memcpy(&context->pic_timing_buf->context, context, sizeof(*context));
+    context->pic_timing_buf->payload_type = payload_type;
+    context->pic_timing_buf->payload_size = payload_size;
+    context->pic_timing_buf->buffer = malloc(context->nal_size);
+    if (!context->pic_timing_buf->buffer) {
+        fprintf(stderr, "Failed to allocate pic timing buffer\n");
+        return 0;
+    }
+    context->pic_timing_buf->buffer_size = context->nal_size;
+    memcpy(context->pic_timing_buf->buffer, &context->buffer[context->nal_start], context->nal_size);
+
+    context->pic_timing_buf->context.bit_pos     -= context->pic_timing_buf->context.nal_start * 8;
+    context->pic_timing_buf->context.end_bit_pos -= context->pic_timing_buf->context.nal_start * 8;
+    context->pic_timing_buf->context.nal_start    = 0;
+
+    return 1;
+}
+
+static int dump_buffered_pic_timing(ParseContext *context)
+{
+    ParseContext *pic_timing_context = &context->pic_timing_buf->context;
+    pic_timing_context->pic_timing_buf = 0;
+    pic_timing_context->buffer         = context->pic_timing_buf->buffer;
+    pic_timing_context->buffer_size    = context->pic_timing_buf->buffer_size;
+    pic_timing_context->sps            = context->sps;
+    CHK(pic_timing(pic_timing_context, context->pic_timing_buf->payload_type, context->pic_timing_buf->payload_size));
+
+    free(context->pic_timing_buf->context.buffer);
+    free(context->pic_timing_buf);
+    context->pic_timing_buf = 0;
+
+    if (context->dump_buf_size > 0) {
+        dumpf(context, "%s", context->dump_buf);
+        context->dump_buf_size = 0;
+    }
+
     return 1;
 }
 
@@ -1653,12 +1769,12 @@ static int x264_sei_version(ParseContext *context, uint64_t data_size)
     /* payload data is ascii text. A " - " is used to separate parts of the text.
        The last part is "options:" which contains a set of name/value separated by a ' ' */
 
-    printf("%*c x264_sei_version:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c x264_sei_version:\n", context->indent * 4, ' ');
     context->indent++;
 
 #define PRINT_LINE(end_off)                                 \
     line[str_size - end_off] = 0;                           \
-    printf("%*c %s\n", context->indent * 4, ' ', line);     \
+    dumpf(context, "%*c %s\n", context->indent * 4, ' ', line);     \
     str_size = 0;
 
     for (i = 0; i < data_size; i++) {
@@ -1715,7 +1831,7 @@ static int user_data_unregistered(ParseContext *context, uint64_t payload_type, 
     static const uint64_t X264_USER_DATA_ID_LOW  = UINT64_C(0x962cd820d923eeef);
     uint64_t uuid_high, uuid_low;
 
-    printf("%*c user_data_unregistered (type=%" PRIu64 ", size=%" PRIu64 "):\n", context->indent * 4, ' ', payload_type, payload_size);
+    dumpf(context, "%*c user_data_unregistered (type=%" PRIu64 ", size=%" PRIu64 "):\n", context->indent * 4, ' ', payload_type, payload_size);
     context->indent++;
 
     u(64); uuid_high = context->value;
@@ -1725,7 +1841,7 @@ static int user_data_unregistered(ParseContext *context, uint64_t payload_type, 
     if (uuid_high == X264_USER_DATA_ID_HIGH && uuid_low == X264_USER_DATA_ID_LOW) {
         CHK(x264_sei_version(context, payload_size - 16));
     } else {
-        printf("%*c user_data:\n", context->indent * 4, ' ');
+        dumpf(context, "%*c user_data:\n", context->indent * 4, ' ');
         context->indent++;
         CHK(read_and_print_bytes(context, payload_size - 16));
         context->indent--;
@@ -1737,13 +1853,13 @@ static int user_data_unregistered(ParseContext *context, uint64_t payload_type, 
 
 static int recovery_point(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
 {
-    printf("%*c recovery_point (type=%" PRIu64 ", size=%" PRIu64 "):\n", context->indent * 4, ' ', payload_type, payload_size);
+    dumpf(context, "%*c recovery_point (type=%" PRIu64 ", size=%" PRIu64 "):\n", context->indent * 4, ' ', payload_type, payload_size);
     context->indent++;
 
-    ue(); PRINT_UINT("recovery_frame_count");
-    u(1); PRINT_UINT("exact_match_flag");
-    u(1); PRINT_UINT("broken_link_flag");
-    u(2); PRINT_UINT("changing_slice_group_idc");
+    ue(); DUMP_UINT("recovery_frame_count");
+    u(1); DUMP_UINT("exact_match_flag");
+    u(1); DUMP_UINT("broken_link_flag");
+    u(2); DUMP_UINT("changing_slice_group_idc");
 
     context->indent--;
     return 1;
@@ -1757,15 +1873,17 @@ static int sei_payload(ParseContext *context, uint64_t payload_type, uint64_t pa
     if (payload_type == 0) {
         CHK(buffering_period(context, payload_type, payload_size));
     } else if (payload_type == 1) {
-        CHK(pic_timing(context, payload_type, payload_size));
+        // delay dump until active SPS is known (TODO: could avoid delay if there is a buffering period SEI message)
+        CHK(buffer_pic_timing(context, payload_type, payload_size));
+        CHK(skip_bytes(context, payload_size));
     } else if (payload_type == 5) {
         CHK(user_data_unregistered(context, payload_type, payload_size));
     } else if (payload_type == 6) {
         CHK(recovery_point(context, payload_type, payload_size));
     } else {
-        printf("%*c payload (type=%" PRIu64 ", size=%" PRIu64 ")\n", context->indent * 4, ' ', payload_type, payload_size);
+        dumpf(context, "%*c payload (type=%" PRIu64 ", size=%" PRIu64 ")\n", context->indent * 4, ' ', payload_type, payload_size);
         context->indent++;
-        printf("%*c data:\n", context->indent * 4, ' ');
+        dumpf(context, "%*c data:\n", context->indent * 4, ' ');
         context->indent++;
         CHK(read_and_print_bytes(context, payload_size));
         context->indent--;
@@ -1811,7 +1929,7 @@ static int sei_message(ParseContext *context)
 
 static int sei(ParseContext *context)
 {
-    printf("%*c sei:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c sei:\n", context->indent * 4, ' ');
     context->indent++;
 
     do {
@@ -1829,7 +1947,7 @@ static int sequence_parameter_set_data(ParseContext *context)
     uint8_t constraint_flags;
     uint8_t profile_idc;
 
-    printf("%*c sequence_parameter_set:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c sequence_parameter_set:\n", context->indent * 4, ' ');
     context->indent++;
 
     u(8); profile_idc = (uint8_t)context->value;
@@ -1840,9 +1958,9 @@ static int sequence_parameter_set_data(ParseContext *context)
     u(1); constraint_flags |= (uint8_t)context->value << 4;
     u(1); constraint_flags |= (uint8_t)context->value << 5;
     print_profile_and_flags(context, profile_idc, constraint_flags);
-    u(2); PRINT_UINT("reserved_zero_2bits");
+    u(2); DUMP_UINT("reserved_zero_2bits");
     u(8); print_level(context, (uint8_t)context->value, constraint_flags);
-    ue_m(31); PRINT_UINT("seq_parameter_set_id");
+    ue_m(31); DUMP_UINT("seq_parameter_set_id");
     set_and_init_sps(context, (uint8_t)context->value);
     context->sps->profile_idc = profile_idc;
 
@@ -1854,17 +1972,17 @@ static int sequence_parameter_set_data(ParseContext *context)
         ue_m(3); print_chroma_format(context, (uint8_t)context->value);
         context->sps->chroma_format_idc = (uint8_t)context->value;
         if (context->sps->chroma_format_idc == 3) {
-            u(1); PRINT_UINT("separate_colour_plane_flag");
+            u(1); DUMP_UINT("separate_colour_plane_flag");
             context->sps->separate_colour_plane_flag = (uint8_t)context->value;
         }
         if (context->sps->separate_colour_plane_flag == 0)
             context->sps->chroma_array_type = context->sps->chroma_format_idc;
         else
             context->sps->chroma_array_type = 0;
-        ue_m(6); PRINT_UINT("bit_depth_luma_minus8");
-        ue_m(6); PRINT_UINT("bit_depth_chroma_minus8");
-        u(1); PRINT_UINT("qpprime_y_zero_transform_bypass_flag");
-        u(1); PRINT_UINT("seq_scaling_matrix_present_flag");
+        ue_m(6); DUMP_UINT("bit_depth_luma_minus8");
+        ue_m(6); DUMP_UINT("bit_depth_chroma_minus8");
+        u(1); DUMP_UINT("qpprime_y_zero_transform_bypass_flag");
+        u(1); DUMP_UINT("seq_scaling_matrix_present_flag");
         if (context->value) {
             uint8_t i;
 
@@ -1885,51 +2003,51 @@ static int sequence_parameter_set_data(ParseContext *context)
             context->indent--;
         }
     }
-    ue(); PRINT_UINT("log2_max_frame_num_minus4");
+    ue(); DUMP_UINT("log2_max_frame_num_minus4");
     context->sps->log2_max_frame_num_minus4 = (uint8_t)context->value;
-    ue(); PRINT_UINT("pic_order_cnt_type");
+    ue(); DUMP_UINT("pic_order_cnt_type");
     context->sps->pic_order_cnt_type = context->value;
     if (context->sps->pic_order_cnt_type == 0) {
-        ue(); PRINT_UINT("log2_max_pic_order_cnt_lsb_minus4");
+        ue(); DUMP_UINT("log2_max_pic_order_cnt_lsb_minus4");
         context->sps->log2_max_pic_order_cnt_lsb_minus4 = (uint8_t)context->value;
     } else if (context->sps->pic_order_cnt_type == 1) {
         uint8_t num_ref_frames_in_pic_order_cnt_cycle;
         uint8_t i;
 
-        u(1); PRINT_UINT("delta_pic_order_always_zero_flag");
+        u(1); DUMP_UINT("delta_pic_order_always_zero_flag");
         context->sps->delta_pic_order_always_zero_flag = (uint8_t)context->value;
-        se(); PRINT_INT("offset_for_non_ref_pic");
-        se(); PRINT_INT("offset_for_top_to_bottom_field");
-        ue_m(255); PRINT_UINT("num_ref_frames_in_pic_order_cnt_cycle");
+        se(); DUMP_INT("offset_for_non_ref_pic");
+        se(); DUMP_INT("offset_for_top_to_bottom_field");
+        ue_m(255); DUMP_UINT("num_ref_frames_in_pic_order_cnt_cycle");
         num_ref_frames_in_pic_order_cnt_cycle = (uint8_t)context->value;
         context->indent++;
         for (i = 0; i < num_ref_frames_in_pic_order_cnt_cycle; i++) {
-            se(); PRINT_INT("offset_for_ref_frame");
+            se(); DUMP_INT("offset_for_ref_frame");
         }
         context->indent--;
     }
-    ue(); PRINT_UINT("max_num_ref_frames");
-    u(1); PRINT_UINT("gaps_in_frame_num_value_allowed_flag");
-    ue(); PRINT_UINT("pic_width_in_mbs_minus1");
+    ue(); DUMP_UINT("max_num_ref_frames");
+    u(1); DUMP_UINT("gaps_in_frame_num_value_allowed_flag");
+    ue(); DUMP_UINT("pic_width_in_mbs_minus1");
     context->sps->pic_width_in_mbs_minus1 = context->value;
-    ue(); PRINT_UINT("pic_height_in_map_units_minus1");
+    ue(); DUMP_UINT("pic_height_in_map_units_minus1");
     context->sps->pic_height_in_map_units_minus1 = context->value;
-    u(1); PRINT_UINT("frame_mbs_only_flag");
+    u(1); DUMP_UINT("frame_mbs_only_flag");
     context->sps->frame_mbs_only_flag = (uint8_t)context->value;
     if (!context->value) {
-        u(1); PRINT_UINT("mb_adaptive_frame_field_flag");
+        u(1); DUMP_UINT("mb_adaptive_frame_field_flag");
     }
-    u(1); PRINT_UINT("direct_8x8_inference_flag");
-    u(1); PRINT_UINT("frame_cropping_flag");
+    u(1); DUMP_UINT("direct_8x8_inference_flag");
+    u(1); DUMP_UINT("frame_cropping_flag");
     if (context->value) {
         context->indent++;
-        ue(); PRINT_UINT("frame_crop_left_offset");
-        ue(); PRINT_UINT("frame_crop_right_offset");
-        ue(); PRINT_UINT("frame_crop_top_offset");
-        ue(); PRINT_UINT("frame_crop_bottom_offset");
+        ue(); DUMP_UINT("frame_crop_left_offset");
+        ue(); DUMP_UINT("frame_crop_right_offset");
+        ue(); DUMP_UINT("frame_crop_top_offset");
+        ue(); DUMP_UINT("frame_crop_bottom_offset");
         context->indent--;
     }
-    u(1); PRINT_UINT("vui_parameters_present_flag");
+    u(1); DUMP_UINT("vui_parameters_present_flag");
     if (context->value) {
         context->indent++;
         CHK(vui_parameters(context));
@@ -1950,86 +2068,86 @@ static int sequence_parameter_set(ParseContext *context)
 
 static int picture_parameter_set(ParseContext *context)
 {
-    printf("%*c picture_parameter_set:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c picture_parameter_set:\n", context->indent * 4, ' ');
     context->indent++;
 
-    ue_m(255); PRINT_UINT("pic_parameter_set_id");
+    ue_m(255); DUMP_UINT("pic_parameter_set_id");
     set_and_init_pps(context, (uint8_t)context->value);
-    ue_m(31); PRINT_UINT("seq_parameter_set_id");
+    ue_m(31); DUMP_UINT("seq_parameter_set_id");
     context->pps->seq_parameter_set_id = (uint8_t)context->value;
     CHK(set_sps(context, (uint8_t)context->value));
 
-    u(1); PRINT_UINT("entropy_coding_mode_flag");
+    u(1); DUMP_UINT("entropy_coding_mode_flag");
     context->pps->entropy_coding_mode_flag = (uint8_t)context->value;
-    u(1); PRINT_UINT("bottom_field_pic_order_in_frame_present_flag");
+    u(1); DUMP_UINT("bottom_field_pic_order_in_frame_present_flag");
     context->pps->bottom_field_pic_order_in_frame_present_flag = (uint8_t)context->value;
-    ue(); PRINT_UINT("num_slice_groups_minus1");
+    ue(); DUMP_UINT("num_slice_groups_minus1");
     context->pps->num_slice_groups_minus1 = context->value;
     if (context->value > 0) {
         uint64_t i;
 
-        ue(); PRINT_UINT("slice_group_map_type");
+        ue(); DUMP_UINT("slice_group_map_type");
         context->pps->slice_group_map_type = context->value;
 
         context->indent++;
         if (context->pps->slice_group_map_type == 0)
         {
             for (i = 0; i <= context->pps->num_slice_groups_minus1; i++) {
-                ue(); printf("%*c run_length_minus1[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
+                ue(); dumpf(context, "%*c run_length_minus1[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
             }
         }
         else if (context->pps->slice_group_map_type == 2)
         {
             for (i = 0; i < context->pps->num_slice_groups_minus1; i++) {
-                ue(); printf("%*c top_left[%" PRIu64 "]    : %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
-                ue(); printf("%*c bottom_right[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
+                ue(); dumpf(context, "%*c top_left[%" PRIu64 "]    : %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
+                ue(); dumpf(context, "%*c bottom_right[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
             }
         }
         else if (context->pps->slice_group_map_type == 3 ||
                  context->pps->slice_group_map_type == 4 ||
                  context->pps->slice_group_map_type == 5)
         {
-            u(1); PRINT_UINT("slice_group_change_direction_flag");
-            ue(); PRINT_UINT("slice_group_change_rate_minus1");
+            u(1); DUMP_UINT("slice_group_change_direction_flag");
+            ue(); DUMP_UINT("slice_group_change_rate_minus1");
             context->pps->slice_group_change_rate_minus1 = context->value;
         }
         else if (context->pps->slice_group_map_type == 6)
         {
             uint64_t pic_size_in_map_units_minus1;
 
-            ue(); PRINT_UINT("pic_size_in_map_units_minus1");
+            ue(); DUMP_UINT("pic_size_in_map_units_minus1");
             pic_size_in_map_units_minus1 = context->value;
             context->indent++;
             for (i = 0; i <= pic_size_in_map_units_minus1; i++) {
                 u(get_bits_required(context->pps->num_slice_groups_minus1 + 1));
-                printf("%*c slice_group_id[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
+                dumpf(context, "%*c slice_group_id[%" PRIu64 "]: %" PRId64 "\n", context->indent * 4, ' ', i, context->value);
             }
             context->indent--;
         }
         context->indent--;
     }
-    ue(); PRINT_UINT("num_ref_idx_l0_default_active_minus1");
+    ue(); DUMP_UINT("num_ref_idx_l0_default_active_minus1");
     context->pps->num_ref_idx_l0_default_active_minus1 = context->value;
-    ue(); PRINT_UINT("num_ref_idx_l1_default_active_minus1");
+    ue(); DUMP_UINT("num_ref_idx_l1_default_active_minus1");
     context->pps->num_ref_idx_l1_default_active_minus1 = context->value;
-    u(1); PRINT_UINT("weighted_pred_flag");
+    u(1); DUMP_UINT("weighted_pred_flag");
     context->pps->weighted_pred_flag = (uint8_t)context->value;
-    u(2); PRINT_UINT("weighted_bipred_idc");
+    u(2); DUMP_UINT("weighted_bipred_idc");
     context->pps->weighted_bipred_idc = (uint8_t)context->value;
-    se(); PRINT_INT("pic_init_qp_minus26");
-    se(); PRINT_INT("pic_init_qs_minus26");
-    se(); PRINT_INT("chroma_qp_index_offset");
-    u(1); PRINT_UINT("deblocking_filter_control_present_flag");
+    se(); DUMP_INT("pic_init_qp_minus26");
+    se(); DUMP_INT("pic_init_qs_minus26");
+    se(); DUMP_INT("chroma_qp_index_offset");
+    u(1); DUMP_UINT("deblocking_filter_control_present_flag");
     context->pps->deblocking_filter_control_present_flag = (uint8_t)context->value;
-    u(1); PRINT_UINT("constrained_intra_pred_flag");
-    u(1); PRINT_UINT("redundant_pic_cnt_present_flag");
+    u(1); DUMP_UINT("constrained_intra_pred_flag");
+    u(1); DUMP_UINT("redundant_pic_cnt_present_flag");
     context->pps->redundant_pic_cnt_present_flag = (uint8_t)context->value;
     if (more_rbsp_data(context)) {
         uint64_t transform_8x8_mode_flag;
 
-        u(1); PRINT_UINT("transform_8x8_mode_flag");
+        u(1); DUMP_UINT("transform_8x8_mode_flag");
         transform_8x8_mode_flag = context->value;
-        u(1); PRINT_UINT("pic_scaling_matrix_present_flag");
+        u(1); DUMP_UINT("pic_scaling_matrix_present_flag");
         if (context->value) {
             uint8_t i;
 
@@ -2049,7 +2167,7 @@ static int picture_parameter_set(ParseContext *context)
             }
             context->indent--;
         }
-        se(); PRINT_INT("second_chroma_qp_index_offset");
+        se(); DUMP_INT("second_chroma_qp_index_offset");
     }
 
     CHK(rbsp_trailing_bits(context));
@@ -2060,7 +2178,7 @@ static int picture_parameter_set(ParseContext *context)
 
 static int access_unit_delimiter(ParseContext *context)
 {
-    printf("%*c access_unit_delimiter:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c access_unit_delimiter:\n", context->indent * 4, ' ');
     context->indent++;
 
     u(3); print_primary_pic_type(context, (uint8_t)context->value);
@@ -2074,20 +2192,20 @@ static int access_unit_delimiter(ParseContext *context)
 static int sequence_parameter_set_extension(ParseContext *context)
 {
     uint8_t bit_depth_aux_minus8;
-    printf("%*c sequence_parameter_set_extension:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c sequence_parameter_set_extension:\n", context->indent * 4, ' ');
     context->indent++;
 
-    ue_m(31); PRINT_UINT("seq_parameter_set_id");
+    ue_m(31); DUMP_UINT("seq_parameter_set_id");
     CHK(set_sps(context, (uint8_t)context->value));
-    ue(); PRINT_UINT("aux_format_idc");
+    ue(); DUMP_UINT("aux_format_idc");
     if (context->value) {
-        ue(); PRINT_UINT("bit_depth_aux_minus8");
+        ue(); DUMP_UINT("bit_depth_aux_minus8");
         bit_depth_aux_minus8 = (uint8_t)context->value;
-        u(1); PRINT_UINT("alpha_incr_flag");
-        u(bit_depth_aux_minus8 + 9); PRINT_UINT("alpha_opaque_value");
-        u(bit_depth_aux_minus8 + 9); PRINT_UINT("alpha_transparent_value");
+        u(1); DUMP_UINT("alpha_incr_flag");
+        u(bit_depth_aux_minus8 + 9); DUMP_UINT("alpha_opaque_value");
+        u(bit_depth_aux_minus8 + 9); DUMP_UINT("alpha_transparent_value");
     }
-    u(1); PRINT_UINT("additional_extension_flag");
+    u(1); DUMP_UINT("additional_extension_flag");
     CHK(rbsp_trailing_bits(context));
 
     context->indent++;
@@ -2098,35 +2216,35 @@ static int sequence_parameter_set_svc_extension(ParseContext *context)
 {
     uint64_t extended_spatial_scalability_idc;
 
-    printf("%*c sequence_parameter_set_svc_extension:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c sequence_parameter_set_svc_extension:\n", context->indent * 4, ' ');
     context->indent++;
 
     CHK(context->sps);
 
-    u(1); PRINT_UINT("inter_layer_deblocking_filter_control_present_flag");
-    u(2); PRINT_UINT("extended_spatial_scalability_idc");
+    u(1); DUMP_UINT("inter_layer_deblocking_filter_control_present_flag");
+    u(2); DUMP_UINT("extended_spatial_scalability_idc");
     extended_spatial_scalability_idc = context->value;
     if (context->sps->chroma_array_type == 1 || context->sps->chroma_array_type == 2) {
-        u(1); PRINT_UINT("chroma_phase_x_plus1_flag");
+        u(1); DUMP_UINT("chroma_phase_x_plus1_flag");
     }
     if (context->sps->chroma_array_type == 1) {
-        u(2); PRINT_UINT("chroma_phase_y_plus1");
+        u(2); DUMP_UINT("chroma_phase_y_plus1");
     }
     if (extended_spatial_scalability_idc == 1) {
         if (context->sps->chroma_array_type > 0) {
-            u(1); PRINT_UINT("seq_ref_layer_chroma_phase_x_plus1_flag");
-            u(2); PRINT_UINT("seq_ref_layer_chroma_phase_y_plus1");
+            u(1); DUMP_UINT("seq_ref_layer_chroma_phase_x_plus1_flag");
+            u(2); DUMP_UINT("seq_ref_layer_chroma_phase_y_plus1");
         }
-        se(); PRINT_INT("seq_scaled_ref_layer_left_offset");
-        se(); PRINT_INT("seq_scaled_ref_layer_top_offset");
-        se(); PRINT_INT("seq_scaled_ref_layer_right_offset");
-        se(); PRINT_INT("seq_scaled_ref_layer_bottom_offset");
+        se(); DUMP_INT("seq_scaled_ref_layer_left_offset");
+        se(); DUMP_INT("seq_scaled_ref_layer_top_offset");
+        se(); DUMP_INT("seq_scaled_ref_layer_right_offset");
+        se(); DUMP_INT("seq_scaled_ref_layer_bottom_offset");
     }
-    u(1); PRINT_UINT("seq_tcoeff_level_prediction_flag");
+    u(1); DUMP_UINT("seq_tcoeff_level_prediction_flag");
     if (context->value) {
-        u(1); PRINT_UINT("adaptive_tcoeff_level_prediction_flag");
+        u(1); DUMP_UINT("adaptive_tcoeff_level_prediction_flag");
     }
-    u(1); PRINT_UINT("slice_header_restriction_flag");
+    u(1); DUMP_UINT("slice_header_restriction_flag");
 
     context->indent++;
     return 1;
@@ -2139,34 +2257,34 @@ static int svc_vui_parameters_extension(ParseContext *context)
     uint8_t vui_ext_vcl_hrd_parameters_present_flag;
     uint64_t i;
 
-    printf("%*c svc_vui_parameters_extension:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c svc_vui_parameters_extension:\n", context->indent * 4, ' ');
     context->indent++;
 
-    ue(); PRINT_UINT("vui_ext_num_entries_minus1");
+    ue(); DUMP_UINT("vui_ext_num_entries_minus1");
     vui_ext_num_entries_minus1 = context->value;
     for (i = 0; i <= vui_ext_num_entries_minus1; i++) {
-        printf("%*c entry %" PRIu64 ":\n", context->indent * 4, ' ', i);
+        dumpf(context, "%*c entry %" PRIu64 ":\n", context->indent * 4, ' ', i);
         context->indent++;
 
-        u(3); PRINT_UINT("vui_ext_dependency_id");
-        u(4); PRINT_UINT("vui_ext_quality_id");
-        u(3); PRINT_UINT("vui_ext_temporal_id");
-        u(1); PRINT_UINT("vui_ext_timing_info_present_flag");
+        u(3); DUMP_UINT("vui_ext_dependency_id");
+        u(4); DUMP_UINT("vui_ext_quality_id");
+        u(3); DUMP_UINT("vui_ext_temporal_id");
+        u(1); DUMP_UINT("vui_ext_timing_info_present_flag");
         if (context->value) {
             context->indent++;
-            u(32); PRINT_UINT("vui_ext_num_units_in_tick");
-            u(32); PRINT_UINT("vui_ext_time_scale");
-            u(1); PRINT_UINT("vui_ext_fixed_frame_rate_flag");
+            u(32); DUMP_UINT("vui_ext_num_units_in_tick");
+            u(32); DUMP_UINT("vui_ext_time_scale");
+            u(1); DUMP_UINT("vui_ext_fixed_frame_rate_flag");
             context->indent--;
         }
-        u(1); PRINT_UINT("vui_ext_nal_hrd_parameters_present_flag");
+        u(1); DUMP_UINT("vui_ext_nal_hrd_parameters_present_flag");
         vui_ext_nal_hrd_parameters_present_flag = (uint8_t)context->value;
         if (context->value) {
             context->indent++;
             CHK(hrd_parameters(context));
             context->indent--;
         }
-        u(1); PRINT_UINT("vui_ext_vcl_hrd_parameters_present_flag");
+        u(1); DUMP_UINT("vui_ext_vcl_hrd_parameters_present_flag");
         vui_ext_vcl_hrd_parameters_present_flag = (uint8_t)context->value;
         if (context->value) {
             context->indent++;
@@ -2174,9 +2292,9 @@ static int svc_vui_parameters_extension(ParseContext *context)
             context->indent--;
         }
         if (vui_ext_nal_hrd_parameters_present_flag || vui_ext_vcl_hrd_parameters_present_flag) {
-            u(1); PRINT_UINT("vui_ext_low_delay_hrd_flag");
+            u(1); DUMP_UINT("vui_ext_low_delay_hrd_flag");
         }
-        u(1); PRINT_UINT("vui_ext_pic_struct_present_flag");
+        u(1); DUMP_UINT("vui_ext_pic_struct_present_flag");
 
         context->indent--;
     }
@@ -2191,52 +2309,52 @@ static int sequence_parameter_set_mvc_extension(ParseContext *context)
              num_applicable_ops_minus1, applicable_op_num_target_views_minus1;
     uint64_t i, j, k;
 
-    printf("%*c sequence_parameter_set_mvc_extension:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c sequence_parameter_set_mvc_extension:\n", context->indent * 4, ' ');
     context->indent++;
 
-    ue(); PRINT_UINT("num_views_minus1");
+    ue(); DUMP_UINT("num_views_minus1");
     num_views_minus1 = context->value;
     for (i = 0; i <= num_views_minus1; i++) {
-        ue(); PRINT_UINT("view_id");
+        ue(); DUMP_UINT("view_id");
     }
     for (i = 1; i <= num_views_minus1; i++) {
-        ue(); PRINT_UINT("num_anchor_refs_I0");
+        ue(); DUMP_UINT("num_anchor_refs_I0");
         num_refs = context->value;
         for (j = 0; j < num_refs; j++) {
-            ue(); PRINT_UINT("anchor_ref_I0");
+            ue(); DUMP_UINT("anchor_ref_I0");
         }
-        ue(); PRINT_UINT("num_anchor_refs_I1");
+        ue(); DUMP_UINT("num_anchor_refs_I1");
         num_refs = context->value;
         for (j = 0; j < num_refs; j++) {
-            ue(); PRINT_UINT("anchor_ref_I1");
+            ue(); DUMP_UINT("anchor_ref_I1");
         }
     }
     for (i = 1; i <= num_views_minus1; i++) {
-        ue(); PRINT_UINT("num_non_anchor_refs_I0");
+        ue(); DUMP_UINT("num_non_anchor_refs_I0");
         num_refs = context->value;
         for (j = 0; j < num_refs; j++) {
-            ue(); PRINT_UINT("non_anchor_ref_I0");
+            ue(); DUMP_UINT("non_anchor_ref_I0");
         }
-        ue(); PRINT_UINT("num_non_anchor_refs_I1");
+        ue(); DUMP_UINT("num_non_anchor_refs_I1");
         num_refs = context->value;
         for (j = 0; j < num_refs; j++) {
-            ue(); PRINT_UINT("non_anchor_ref_I1");
+            ue(); DUMP_UINT("non_anchor_ref_I1");
         }
     }
-    ue(); PRINT_UINT("num_level_values_signalled_minus1");
+    ue(); DUMP_UINT("num_level_values_signalled_minus1");
     num_level_values_signalled_minus1 = context->value;
     for (i = 0; i <= num_level_values_signalled_minus1; i++) {
-        u(8); PRINT_UINT("level_idc");
-        ue(); PRINT_UINT("num_applicable_ops_minus1");
+        u(8); DUMP_UINT("level_idc");
+        ue(); DUMP_UINT("num_applicable_ops_minus1");
         num_applicable_ops_minus1 = context->value;
         for (j = 0; j <= num_applicable_ops_minus1; j++) {
-            u(3); PRINT_UINT("applicable_op_temporal_id");
-            ue(); PRINT_UINT("applicable_op_num_target_views_minus1");
+            u(3); DUMP_UINT("applicable_op_temporal_id");
+            ue(); DUMP_UINT("applicable_op_num_target_views_minus1");
             applicable_op_num_target_views_minus1 = context->value;
             for (k = 0; k <= applicable_op_num_target_views_minus1; k++) {
-                ue(); PRINT_UINT("applicable_op_target_view_id");
+                ue(); DUMP_UINT("applicable_op_target_view_id");
             }
-            ue(); PRINT_UINT("applicable_op_num_views_minus1");
+            ue(); DUMP_UINT("applicable_op_num_views_minus1");
         }
     }
 
@@ -2251,37 +2369,37 @@ static int mvc_vui_parameters_extension(ParseContext *context)
     uint8_t vui_mvc_vcl_hrd_parameters_present_flag;
     uint64_t i, j;
 
-    printf("%*c mvc_vui_parameters_extension:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c mvc_vui_parameters_extension:\n", context->indent * 4, ' ');
     context->indent++;
 
-    ue(); PRINT_UINT("vui_mvc_num_ops_minus1");
+    ue(); DUMP_UINT("vui_mvc_num_ops_minus1");
     vui_mvc_num_ops_minus1 = context->value;
     for (i = 0; i <= vui_mvc_num_ops_minus1; i++) {
-        printf("%*c entry %" PRIu64 ":\n", context->indent * 4, ' ', i);
+        dumpf(context, "%*c entry %" PRIu64 ":\n", context->indent * 4, ' ', i);
         context->indent++;
 
-        u(3); PRINT_UINT("vui_mvc_temporal_id");
-        ue(); PRINT_UINT("vui_mvc_num_target_output_views_minus1");
+        u(3); DUMP_UINT("vui_mvc_temporal_id");
+        ue(); DUMP_UINT("vui_mvc_num_target_output_views_minus1");
         vui_mvc_num_target_output_views_minus1 = context->value;
         for (j = 0; j <= vui_mvc_num_target_output_views_minus1; j++) {
-            ue(); PRINT_UINT("vui_mvc_view_id");
+            ue(); DUMP_UINT("vui_mvc_view_id");
         }
-        u(1); PRINT_UINT("vui_mvc_timing_info_present_flag");
+        u(1); DUMP_UINT("vui_mvc_timing_info_present_flag");
         if (context->value) {
             context->indent++;
-            u(32); PRINT_UINT("vui_mvc_num_units_in_tick");
-            u(32); PRINT_UINT("vui_mvc_time_scale");
-            u(1); PRINT_UINT("vui_mvc_fixed_frame_rate_flag");
+            u(32); DUMP_UINT("vui_mvc_num_units_in_tick");
+            u(32); DUMP_UINT("vui_mvc_time_scale");
+            u(1); DUMP_UINT("vui_mvc_fixed_frame_rate_flag");
             context->indent--;
         }
-        u(1); PRINT_UINT("vui_mvc_nal_hrd_parameters_present_flag");
+        u(1); DUMP_UINT("vui_mvc_nal_hrd_parameters_present_flag");
         vui_mvc_nal_hrd_parameters_present_flag = (uint8_t)context->value;
         if (context->value) {
             context->indent++;
             CHK(hrd_parameters(context));
             context->indent--;
         }
-        u(1); PRINT_UINT("vui_mvc_vcl_hrd_parameters_present_flag");
+        u(1); DUMP_UINT("vui_mvc_vcl_hrd_parameters_present_flag");
         vui_mvc_vcl_hrd_parameters_present_flag = (uint8_t)context->value;
         if (context->value) {
             context->indent++;
@@ -2289,9 +2407,9 @@ static int mvc_vui_parameters_extension(ParseContext *context)
             context->indent--;
         }
         if (vui_mvc_nal_hrd_parameters_present_flag || vui_mvc_vcl_hrd_parameters_present_flag) {
-            u(1); PRINT_UINT("vui_mvc_low_delay_hrd_flag");
+            u(1); DUMP_UINT("vui_mvc_low_delay_hrd_flag");
         }
-        u(1); PRINT_UINT("vui_mvc_pic_struct_present_flag");
+        u(1); DUMP_UINT("vui_mvc_pic_struct_present_flag");
 
         context->indent--;
     }
@@ -2302,28 +2420,28 @@ static int mvc_vui_parameters_extension(ParseContext *context)
 
 static int subset_sequence_parameter_set(ParseContext *context)
 {
-    printf("%*c subset_sequence_parameter_set:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c subset_sequence_parameter_set:\n", context->indent * 4, ' ');
     context->indent++;
 
     CHK(sequence_parameter_set_data(context));
     if (context->sps->profile_idc == 83 || context->sps->profile_idc == 86) {
         CHK(sequence_parameter_set_svc_extension(context));
-        u(1); PRINT_UINT("svc_vui_parameter_present_flag");
+        u(1); DUMP_UINT("svc_vui_parameter_present_flag");
         if (context->value) {
             CHK(svc_vui_parameters_extension(context));
         }
     } else if (context->sps->profile_idc == 118 || context->sps->profile_idc == 128) {
-        f(1); PRINT_UINT("bit_equal_to_one");
+        f(1); DUMP_UINT("bit_equal_to_one");
         CHK(sequence_parameter_set_mvc_extension(context));
-        u(1); PRINT_UINT("mvc_vui_parameter_present_flag");
+        u(1); DUMP_UINT("mvc_vui_parameter_present_flag");
         if (context->value) {
             CHK(mvc_vui_parameters_extension(context));
         }
     }
-    u(1); PRINT_UINT("additional_extension2_flag");
+    u(1); DUMP_UINT("additional_extension2_flag");
     if (context->value) {
         while (more_rbsp_data(context)) {
-            u(1); PRINT_UINT("additional_extension2_data_flag");
+            u(1); DUMP_UINT("additional_extension2_data_flag");
         }
     }
     CHK(rbsp_trailing_bits(context));
@@ -2334,19 +2452,19 @@ static int subset_sequence_parameter_set(ParseContext *context)
 
 static int nal_unit_header_svc_extension(ParseContext *context)
 {
-    printf("%*c nal_unit_header_svc_extension:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c nal_unit_header_svc_extension:\n", context->indent * 4, ' ');
     context->indent++;
 
-    u(1); PRINT_UINT("idr_flag");
-    u(6); PRINT_UINT("priority_id");
-    u(1); PRINT_UINT("no_inter_layer_pred_flag");
-    u(3); PRINT_UINT("dependency_id");
-    u(4); PRINT_UINT("quality_id");
-    u(3); PRINT_UINT("temporal_id");
-    u(1); PRINT_UINT("use_ref_base_pic_flag");
-    u(1); PRINT_UINT("discardable_flag");
-    u(1); PRINT_UINT("output_flag");
-    u(2); PRINT_UINT("reserved_three_2bits");
+    u(1); DUMP_UINT("idr_flag");
+    u(6); DUMP_UINT("priority_id");
+    u(1); DUMP_UINT("no_inter_layer_pred_flag");
+    u(3); DUMP_UINT("dependency_id");
+    u(4); DUMP_UINT("quality_id");
+    u(3); DUMP_UINT("temporal_id");
+    u(1); DUMP_UINT("use_ref_base_pic_flag");
+    u(1); DUMP_UINT("discardable_flag");
+    u(1); DUMP_UINT("output_flag");
+    u(2); DUMP_UINT("reserved_three_2bits");
 
     context->indent--;
     return 1;
@@ -2354,16 +2472,16 @@ static int nal_unit_header_svc_extension(ParseContext *context)
 
 static int nal_unit_header_mvc_extension(ParseContext *context)
 {
-    printf("%*c nal_unit_header_mvc_extension:\n", context->indent * 4, ' ');
+    dumpf(context, "%*c nal_unit_header_mvc_extension:\n", context->indent * 4, ' ');
     context->indent++;
 
-    u(1); PRINT_UINT("non_idr_flag");
-    u(6); PRINT_UINT("priority_id");
-    u(10); PRINT_UINT("view_id");
-    u(3); PRINT_UINT("temporal_id");
-    u(1); PRINT_UINT("anchor_pic_flag");
-    u(1); PRINT_UINT("inter_view_flag");
-    u(1); PRINT_UINT("reserved_one_bit");
+    u(1); DUMP_UINT("non_idr_flag");
+    u(6); DUMP_UINT("priority_id");
+    u(10); DUMP_UINT("view_id");
+    u(3); DUMP_UINT("temporal_id");
+    u(1); DUMP_UINT("anchor_pic_flag");
+    u(1); DUMP_UINT("inter_view_flag");
+    u(1); DUMP_UINT("reserved_one_bit");
 
     context->indent--;
     return 1;
@@ -2373,20 +2491,20 @@ static int parse_nal_unit(ParseContext *context)
 {
     uint64_t bit_pos;
 
-    printf("NAL: pos=%" PRId64 ", start=%u, size=%u, padding=%u\n",
-           context->data_start_file_pos, context->nal_start, context->nal_size, context->nal_padding);
+    dumpf(context, "NAL: pos=%" PRId64 ", start=%u, size=%u, padding=%u\n",
+          context->data_start_file_pos, context->nal_start, context->nal_size, context->nal_padding);
 
     context->indent++;
 
-    f(1); PRINT_UINT("forbidden_zero_bit");
-    u(2); PRINT_UINT("nal_ref_idc");
+    f(1); DUMP_UINT("forbidden_zero_bit");
+    u(2); DUMP_UINT("nal_ref_idc");
     context->nal_ref_idc = (uint8_t)context->value;
     u(5); print_nal_unit_type(context);
     context->nal_unit_type = (uint8_t)context->value;
 
     bit_pos = context->bit_pos;
     if (context->nal_unit_type == 14 || context->nal_unit_type == 20) {
-        u(1); PRINT_UINT("svc_extension_flag");
+        u(1); DUMP_UINT("svc_extension_flag");
         if (context->value) {
             CHK(nal_unit_header_svc_extension(context));
         } else {
