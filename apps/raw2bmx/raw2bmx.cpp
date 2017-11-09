@@ -4135,7 +4135,7 @@ int main(int argc, const char** argv)
                     RawInput *input = &inputs[i];
                     if (!input->disabled) {
                         if (input->essence_type == WAVE_PCM)
-                            num_sound_tracks++;
+                            num_sound_tracks += input->channel_count;
                         else
                             num_picture_tracks++;
                     }
