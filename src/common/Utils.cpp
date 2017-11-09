@@ -917,7 +917,7 @@ string bmx::get_duration_string(int64_t count, Rational rate)
     if (count < 0 || rate.numerator == 0 || rate.denominator == 0)
         return "00:00:00:00";
 
-    uint16_t rounded_rate = get_rounded_tc_base(rate);
+    uint32_t rounded_rate = (uint32_t)((rate.numerator + rate.denominator/2) / rate.denominator);
 
     int64_t frame = count % rounded_rate;
     int64_t sec = count / rounded_rate;
@@ -927,7 +927,7 @@ string bmx::get_duration_string(int64_t count, Rational rate)
     min %= 60;
 
     char buffer[64];
-    bmx_snprintf(buffer, sizeof(buffer), "%02" PRId64 ":%02d:%02d:%02d", hour, (int)min, (int)sec, (int)frame);
+    bmx_snprintf(buffer, sizeof(buffer), "%02" PRId64 ":%02d:%02d:%02" PRId64, hour, (int)min, (int)sec, frame);
 
     return buffer;
 }
@@ -957,7 +957,7 @@ string bmx::get_generic_duration_string_2(int64_t count, Rational rate)
     if (count < 0 || rate.numerator == 0 || rate.denominator == 0)
         return "00:00:00:00";
 
-    uint16_t rounded_rate = get_rounded_tc_base(rate);
+    uint32_t rounded_rate = (uint32_t)((rate.numerator + rate.denominator/2) / rate.denominator);
 
     int64_t frame = count % rounded_rate;
     int64_t sec = count / rounded_rate;
@@ -967,7 +967,8 @@ string bmx::get_generic_duration_string_2(int64_t count, Rational rate)
     min %= 60;
 
     char buffer[64];
-    bmx_snprintf(buffer, sizeof(buffer), "%02" PRId64 ":%02d:%02d:%02d @%ufps", hour, (int)min, (int)sec, (int)frame, rounded_rate);
+    bmx_snprintf(buffer, sizeof(buffer), "%02" PRId64 ":%02d:%02d:%02" PRId64 " @%ufps", hour, (int)min, (int)sec,
+                                         frame, rounded_rate);
 
     return buffer;
 }

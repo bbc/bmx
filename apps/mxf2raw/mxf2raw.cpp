@@ -1391,9 +1391,8 @@ static void write_timecodes(MXFReader *reader, Frame *frame, FILE *tc_file)
     }
 
     Timecode timecode;
-    // position timecode
-    timecode.Init(frame->edit_rate, false, frame->position);
-    fprintf(tc_file, "%s", get_timecode_string(timecode).c_str());
+    // position 'timecode'
+    fprintf(tc_file, "%s", get_duration_string(frame->position, frame->edit_rate).c_str());
     // material package timecode
     if (reader->HaveMaterialTimecode()) {
         timecode = reader->GetMaterialTimecode(frame->position);
