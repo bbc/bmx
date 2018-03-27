@@ -44,6 +44,7 @@
 #include <bmx/avid_mxf/AvidMJPEGTrack.h>
 #include <bmx/avid_mxf/AvidD10Track.h>
 #include <bmx/avid_mxf/AvidAVCITrack.h>
+#include <bmx/avid_mxf/AvidAVCTrack.h>
 #include <bmx/avid_mxf/AvidUncTrack.h>
 #include <bmx/avid_mxf/AvidVC3Track.h>
 #include <bmx/avid_mxf/AvidPCMTrack.h>
@@ -108,6 +109,18 @@ static const AvidSampleRateSupport AVID_SAMPLE_RATE_SUPPORT[] =
     {AVCI50_1080I,             {{25, 1}, {30000, 1001}, {0, 0}}},
     {AVCI50_1080P,             {{24000, 1001}, {25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
     {AVCI50_720P,              {{24000, 1001}, {25, 1}, {30000, 1001}, {50, 1}, {60000, 1001}, {0, 0}}},
+    {AVC_BASELINE,             {{-1, -1}, {0, 0}}},
+    {AVC_CONSTRAINED_BASELINE, {{-1, -1}, {0, 0}}},
+    {AVC_MAIN,                 {{-1, -1}, {0, 0}}},
+    {AVC_EXTENDED,             {{-1, -1}, {0, 0}}},
+    {AVC_HIGH,                 {{-1, -1}, {0, 0}}},
+    {AVC_HIGH_10,              {{-1, -1}, {0, 0}}},
+    {AVC_HIGH_422,             {{-1, -1}, {0, 0}}},
+    {AVC_HIGH_444,             {{-1, -1}, {0, 0}}},
+    {AVC_HIGH_10_INTRA,        {{-1, -1}, {0, 0}}},
+    {AVC_HIGH_422_INTRA,       {{-1, -1}, {0, 0}}},
+    {AVC_HIGH_444_INTRA,       {{-1, -1}, {0, 0}}},
+    {AVC_CAVLC_444_INTRA,      {{-1, -1}, {0, 0}}},
     {MJPEG_2_1,                {{25, 1}, {30000, 1001}, {0, 0}}},
     {MJPEG_3_1,                {{25, 1}, {30000, 1001}, {0, 0}}},
     {MJPEG_10_1,               {{25, 1}, {30000, 1001}, {0, 0}}},
@@ -213,6 +226,19 @@ AvidTrack* AvidTrack::OpenNew(AvidClip *clip, File *file, uint32_t track_index, 
         case AVCI50_1080P:
         case AVCI50_720P:
             return new AvidAVCITrack(clip, track_index, essence_type, file);
+        case AVC_BASELINE:
+        case AVC_CONSTRAINED_BASELINE:
+        case AVC_MAIN:
+        case AVC_EXTENDED:
+        case AVC_HIGH:
+        case AVC_HIGH_10:
+        case AVC_HIGH_422:
+        case AVC_HIGH_444:
+        case AVC_HIGH_10_INTRA:
+        case AVC_HIGH_422_INTRA:
+        case AVC_HIGH_444_INTRA:
+        case AVC_CAVLC_444_INTRA:
+            return new AvidAVCTrack(clip, track_index, essence_type, file);
         case VC3_1080P_1235:
         case VC3_1080P_1237:
         case VC3_1080P_1238:
@@ -320,11 +346,18 @@ void AvidTrack::SetOutputStartOffset(int64_t offset)
     mOutputStartOffset = offset;
 }
 
-void AvidTrack::PrepareWrite()
+void AvidTrack::PrepareHeaderMetadata()
 {
     mSampleSize = GetSampleSize();
 
     CreateHeaderMetadata();
+}
+
+void AvidTrack::PrepareWrite()
+{
+    if (!mHeaderMetadata)
+        PrepareHeaderMetadata();
+
     CreateFile();
 }
 

@@ -99,6 +99,7 @@ AvidClip::AvidClip(int flavour, mxfRational frame_rate, MXFFileFactory *file_fac
     mMaterialPackageCreationDateSet = false;
     mDataModel = 0;
     mHeaderMetadata = 0;
+    mHavePreparedHeaderMetadata = false;
     mContentStorage = 0;
     mMaterialPackage = 0;
     mPhysicalSourcePackage = 0;
@@ -543,15 +544,19 @@ AvidTrack* AvidClip::CreateTrack(EssenceType essence_type, string filename)
     return mTracks.back();
 }
 
-void AvidClip::PrepareWrite()
+void AvidClip::PrepareHeaderMetadata()
 {
+    if (mHavePreparedHeaderMetadata)
+        return;
+
+    BMX_CHECK(!mTracks.empty());
+
     // sort tracks, video followed by audio
     stable_sort(mTracks.begin(), mTracks.end(), compare_track);
 
     uint32_t last_picture_track_number = 0;
     uint32_t last_sound_track_number = 0;
-    size_t i;
-    for (i = 0; i < mTracks.size(); i++) {
+    for (size_t i = 0; i < mTracks.size(); i++) {
         if (mTracks[i]->IsPicture()) {
             if (!mTracks[i]->IsOutputTrackNumberSet())
                 mTracks[i]->SetOutputTrackNumber(last_picture_track_number + 1);
@@ -565,7 +570,18 @@ void AvidClip::PrepareWrite()
 
     CreateMaterialPackage();
 
-    for (i = 0; i < mTracks.size(); i++)
+    for (size_t i = 0; i < mTracks.size(); i++)
+        mTracks[i]->PrepareHeaderMetadata();
+
+    mHavePreparedHeaderMetadata = true;
+}
+
+void AvidClip::PrepareWrite()
+{
+    if (!mHavePreparedHeaderMetadata)
+        PrepareHeaderMetadata();
+
+    for (size_t i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite();
 }
 

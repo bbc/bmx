@@ -378,6 +378,9 @@ void ClipWriter::PrepareHeaderMetadata()
         case CW_OP1A_CLIP_TYPE:
             mOP1AClip->PrepareHeaderMetadata();
             break;
+        case CW_AVID_CLIP_TYPE:
+            mAvidClip->PrepareHeaderMetadata();
+            break;
         case CW_D10_CLIP_TYPE:
             mD10Clip->PrepareHeaderMetadata();
             break;
@@ -385,7 +388,6 @@ void ClipWriter::PrepareHeaderMetadata()
             mRDD9Clip->PrepareHeaderMetadata();
             break;
         case CW_AS02_CLIP_TYPE:
-        case CW_AVID_CLIP_TYPE:
         case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:

@@ -100,6 +100,7 @@ public:
     AvidTrack* CreateTrack(EssenceType essence_type, std::string filename);
 
 public:
+    void PrepareHeaderMetadata();
     void PrepareWrite();
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
     void CompleteWrite();
@@ -158,6 +159,7 @@ private:
 
     mxfpp::DataModel *mDataModel;
     mxfpp::AvidHeaderMetadata *mHeaderMetadata;
+    bool mHavePreparedHeaderMetadata;
     mxfpp::ContentStorage *mContentStorage;
     mxfpp::MaterialPackage *mMaterialPackage;
     mxfpp::SourcePackage* mPhysicalSourcePackage;
