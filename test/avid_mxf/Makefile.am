@@ -10,6 +10,7 @@ TESTS = \
 	mpeg2lg_422p_hl_1080i.test \
 	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test \
+	avc_high_422_intra.test \
 	avci100_1080i.test \
 	avci100_1080i_gf.test \
 	avci100_1080i_gfp.test \
@@ -49,6 +50,7 @@ EXTRA_DIST = \
 	mpeg2lg_422p_hl_1080i.test \
 	mpeg2lg_mp_hl_1920_1080i.test \
 	mpeg2lg_mp_h14_1080i.test \
+	avc_high_422_intra.test \
 	avci100_1080i.test \
 	avci100_1080i_gf.test \
 	avci100_1080i_gfp.test \
@@ -129,6 +131,7 @@ create-data:
 	${srcdir}/create.sh ${srcdir} 3 11 d10_50
 	${srcdir}/create.sh ${srcdir} 3 12 d10_40
 	${srcdir}/create.sh ${srcdir} 3 13 d10_30
+	${srcdir}/create.sh ${srcdir} 3 8 avc_high_422_intra
 	${srcdir}/create.sh ${srcdir} 3 7 avci100_1080i
 	${srcdir}/create.sh ${srcdir} 3 7 avci100_1080i gf
 	${srcdir}/create.sh ${srcdir} 3 7 avci100_1080i gfp 2
@@ -169,6 +172,7 @@ create-samples:
 	${srcdir}/samples.sh 3 11 d10_50
 	${srcdir}/samples.sh 3 12 d10_40
 	${srcdir}/samples.sh 3 13 d10_30
+	${srcdir}/samples.sh 3 8 avc_high_422_intra
 	${srcdir}/samples.sh 3 7 avci100_1080i
 	${srcdir}/samples.sh 3 7 avci100_1080i gf
 	${srcdir}/samples.sh 3 7 avci100_1080i gfp 2

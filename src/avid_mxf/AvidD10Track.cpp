@@ -63,13 +63,13 @@ AvidD10Track::~AvidD10Track()
 {
 }
 
-void AvidD10Track::PrepareWrite()
+void AvidD10Track::PrepareHeaderMetadata()
 {
     uint32_t max_sample_size = mD10DescriptorHelper->GetMaxSampleSize();
     mWriterHelper.SetMaxSampleSize(max_sample_size);
     mD10DescriptorHelper->SetSampleSize(max_sample_size);
 
-    AvidPictureTrack::PrepareWrite();
+    AvidPictureTrack::PrepareHeaderMetadata();
 }
 
 void AvidD10Track::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)

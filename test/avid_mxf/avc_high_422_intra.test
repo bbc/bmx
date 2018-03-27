@@ -1,0 +1,4 @@
+#!/bin/sh
+
+${srcdir}/check.sh 3 8 avc_high_422_intra
+
