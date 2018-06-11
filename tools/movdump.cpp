@@ -640,23 +640,8 @@ static void dump_bytes(unsigned char *bytes, uint64_t size, int extra_indent_amo
     }
 }
 
-static void dump_string(uint64_t size, int extra_indent_amount = 0)
+static void dump_string_bytes(unsigned char *buffer, uint32_t size, int extra_indent_amount)
 {
-    if (size == 0) {
-        printf("\n");
-        return;
-    }
-
-    if (size > 256) {
-        printf("\n");
-        indent(extra_indent_amount);
-        dump_bytes(size, extra_indent_amount);
-        return;
-    }
-
-    unsigned char buffer[256];
-    MOV_CHECK(read_bytes(buffer, (uint32_t)size));
-
     uint64_t i;
     for (i = 0; i < size; i++) {
         if (!isprint(buffer[i]))
@@ -688,6 +673,59 @@ static void dump_string(uint64_t size, int extra_indent_amount = 0)
             printf(" 0x00");
     }
     printf("\n");
+}
+
+static void dump_string(uint64_t size, int extra_indent_amount = 0)
+{
+    if (size == 0) {
+        printf("\n");
+        return;
+    }
+
+    if (size > 256) {
+        printf("\n");
+        indent(extra_indent_amount);
+        dump_bytes(size, extra_indent_amount);
+        return;
+    }
+
+    unsigned char buffer[256];
+    MOV_CHECK(read_bytes(buffer, (uint32_t)size));
+
+    dump_string_bytes(buffer, size, extra_indent_amount);
+}
+
+static void dump_counted_string(uint64_t size, int extra_indent_amount = 0)
+{
+    if (size == 0) {
+        printf("\n");
+        return;
+    }
+
+    if (size > 256) {
+        printf("\n");
+        indent(extra_indent_amount);
+        dump_bytes(size, extra_indent_amount);
+        return;
+    }
+
+    unsigned char buffer[256];
+    MOV_CHECK(read_bytes(buffer, (uint32_t)size));
+
+    // workaround files with major brand 'qt' but that do not write a "counted string" where the first
+    // byte is the length. Skip the first byte if the length equals the number of bytes - 1.
+    if ((uint8_t)buffer[0] == size - 1) {
+      if (size - 1 > 0) {
+        dump_string_bytes(&buffer[1], size - 1, extra_indent_amount);
+      } else {
+        printf("\n");
+        indent(extra_indent_amount);
+        dump_bytes(size, extra_indent_amount);
+        return;
+      }
+    } else {
+      dump_string_bytes(buffer, size, extra_indent_amount);
+    }
 }
 
 static void dump_type(const char *type)
@@ -1558,21 +1596,9 @@ static void dump_hdlr_atom()
     printf("component_flags_mask: 0x%08x\n", component_flags_mask);
 
     if (CURRENT_ATOM.rem_size > 0) {
-        uint64_t component_name_len;
-        if (g_qt_brand) {
-            uint8_t qt_component_name_len;
-            MOV_CHECK(read_uint8(&qt_component_name_len));
-            component_name_len = qt_component_name_len;
-        } else {
-            component_name_len = CURRENT_ATOM.rem_size;
-        }
         indent();
         printf("component_name: ");
-        if (component_name_len == 0) {
-            printf("\n");
-        } else {
-            dump_string(component_name_len, 2);
-        }
+        dump_counted_string(CURRENT_ATOM.rem_size, 2);
     }
 }
 
