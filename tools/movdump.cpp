@@ -704,7 +704,6 @@ static void dump_counted_string(uint64_t size, int extra_indent_amount = 0)
 
     if (size > 256) {
         printf("\n");
-        indent(extra_indent_amount);
         dump_bytes(size, extra_indent_amount);
         return;
     }
@@ -719,8 +718,7 @@ static void dump_counted_string(uint64_t size, int extra_indent_amount = 0)
         dump_string_bytes(&buffer[1], size - 1, extra_indent_amount);
       } else {
         printf("\n");
-        indent(extra_indent_amount);
-        dump_bytes(size, extra_indent_amount);
+        dump_bytes(buffer, size, extra_indent_amount);
         return;
       }
     } else {
@@ -3927,4 +3925,3 @@ int main(int argc, const char **argv)
 
     return 0;
 }
-
