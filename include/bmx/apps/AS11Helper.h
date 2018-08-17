@@ -57,6 +57,8 @@ public:
     AS11Helper();
     ~AS11Helper();
 
+    void SetNormaliseStrings(bool enable);
+
     void ReadSourceInfo(MXFFileReader *source_file);
 
     bool SupportFrameworkType(const char *type_str);
@@ -80,6 +82,8 @@ private:
     void SetFrameworkProperty(FrameworkType type, std::string name, std::string value);
 
 private:
+    bool mNormaliseStrings;
+
     std::vector<FrameworkProperty> mFrameworkProperties;
     std::vector<AS11TCSegment> mSegments;
     bool mFillerCompleteSegments;
@@ -103,4 +107,3 @@ private:
 
 
 #endif
-

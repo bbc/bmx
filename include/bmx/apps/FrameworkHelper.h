@@ -79,6 +79,8 @@ public:
                     Timecode start_tc, Rational frame_rate);
     ~FrameworkHelper();
 
+    void NormaliseStrings();
+
     bool SetProperty(const std::string &name, const std::string &value);
 
     mxfpp::DMFramework* GetFramework() const { return mFramework; }

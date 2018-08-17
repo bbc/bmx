@@ -488,6 +488,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --dm-file <fwork> <name>       Parse and set descriptive framework properties from text file <name>. <fwork> is 'as11' or 'dpp'\n");
     fprintf(stderr, "    --seg <name>                   Parse and set segmentation data from text file <name>\n");
     fprintf(stderr, "    --pass-dm                      Copy descriptive metadata from the input file. The metadata can be overidden by other options\n");
+    fprintf(stderr, "    --norm-pass-dm                 Same as --pass-dm, but also normalise strings to always have a null terminator. This is a workaround for products that fail to handle zero size string properties.\n");
     fprintf(stderr, "    --spec-id <id>                 Set the AS-11 specification identifier labels associated with <id>\n");
     fprintf(stderr, "                                   The <id> is one of the following:\n");
     fprintf(stderr, "                                       as11-x1 : AMWA AS-11 X1, delivery of finished UHD programs to Digital Production Partnership (DPP) broadcasters\n");
@@ -1640,6 +1641,11 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--pass-dm") == 0)
         {
             pass_dm = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--norm-pass-dm") == 0)
+        {
+            pass_dm = true;
+            as11_helper.SetNormaliseStrings(true);
         }
         else if (strcmp(argv[cmdln_index], "--spec-id") == 0)
         {
@@ -4091,4 +4097,3 @@ int main(int argc, const char** argv)
 
     return cmd_result;
 }
-

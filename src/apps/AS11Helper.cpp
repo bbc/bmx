@@ -192,6 +192,7 @@ bool AS11Helper::ParseAudioLayoutMode(const string &audio_mode_str, UL *label)
 
 AS11Helper::AS11Helper()
 {
+    mNormaliseStrings = false;
     mFillerCompleteSegments = false;
     mSourceInfo = 0;
     mWriterHelper = 0;
@@ -208,6 +209,11 @@ AS11Helper::~AS11Helper()
     delete mWriterHelper;
     delete mAS11FrameworkHelper;
     delete mUKDPPFrameworkHelper;
+}
+
+void AS11Helper::SetNormaliseStrings(bool enable)
+{
+    mNormaliseStrings = enable;
 }
 
 void AS11Helper::ReadSourceInfo(MXFFileReader *source_file)
@@ -519,12 +525,18 @@ void AS11Helper::AddMetadata(ClipWriter *clip)
             AS11CoreFramework *core_copy =
                 dynamic_cast<AS11CoreFramework*>(mSourceInfo->core->clone(clip->GetHeaderMetadata()));
             mAS11FrameworkHelper = new FrameworkHelper(core_copy, AS11_FRAMEWORK_INFO, start_tc, frame_rate);
+            if (mNormaliseStrings) {
+                mAS11FrameworkHelper->NormaliseStrings();
+            }
         }
         if (mSourceInfo->ukdpp) {
             UKDPPFramework::RegisterObjectFactory(clip->GetHeaderMetadata());
             UKDPPFramework *ukdpp_copy =
                 dynamic_cast<UKDPPFramework*>(mSourceInfo->ukdpp->clone(clip->GetHeaderMetadata()));
             mUKDPPFrameworkHelper = new FrameworkHelper(ukdpp_copy, AS11_FRAMEWORK_INFO, start_tc, frame_rate);
+            if (mNormaliseStrings) {
+                mUKDPPFrameworkHelper->NormaliseStrings();
+            }
         }
     }
 

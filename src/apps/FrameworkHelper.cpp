@@ -267,6 +267,20 @@ FrameworkHelper::~FrameworkHelper()
 {
 }
 
+void FrameworkHelper::NormaliseStrings()
+{
+    // ensure UTF-16 string items have a null terminator by setting them again
+    vector<MXFMetadataItem*> items = mFramework->getItems();
+    size_t i;
+    for (i = 0; i < items.size(); i++) {
+        ItemDef *item_def;
+        BMX_ASSERT(mSetDef->findItemDef(&items[i]->key, &item_def));
+        if (item_def->getCItemDef()->typeId == MXF_UTF16STRING_TYPE) {
+            mFramework->setStringItem(&items[i]->key, mFramework->getStringItem(&items[i]->key));
+        }
+    }
+}
+
 bool FrameworkHelper::SetProperty(const string &name, const string &value)
 {
     const PropertyInfo *property_info = mFrameworkInfo->property_info;
