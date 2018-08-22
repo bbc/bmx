@@ -74,7 +74,7 @@ OP1APCMTrack::OP1APCMTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
         mWaveDescriptorHelper->SetSampleRate(mEditRate);
     }
 
-    if ((file->GetFlavour() & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR) |
+    if ((file->GetFlavour() & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR) ||
         (file->GetFlavour() & OP1A_AES_FLAVOUR))
         SetAES3Mapping(true);
     else
