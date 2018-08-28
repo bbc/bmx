@@ -322,6 +322,12 @@ MXFDataTrackInfo::MXFDataTrackInfo()
 : MXFTrackInfo()
 {
     data_def = MXF_DATA_DDEF;
+    timed_text_manifest = 0;
+}
+
+MXFDataTrackInfo::~MXFDataTrackInfo()
+{
+    delete timed_text_manifest;
 }
 
 bool MXFDataTrackInfo::IsCompatible(const MXFTrackInfo *right) const
@@ -341,6 +347,9 @@ MXFTrackInfo* MXFDataTrackInfo::Clone() const
 
     clone->vbi_manifest.assign(vbi_manifest.begin(), vbi_manifest.end());
     clone->anc_manifest.assign(anc_manifest.begin(), anc_manifest.end());
+    if (timed_text_manifest) {
+        clone->timed_text_manifest = new TimedTextManifest(*timed_text_manifest);
+    }
 
     return clone;
 }
@@ -366,4 +375,3 @@ void MXFDataTrackInfo::AppendUniqueANCElement(const ANCManifestElement &element)
 
     anc_manifest.push_back(element);
 }
-

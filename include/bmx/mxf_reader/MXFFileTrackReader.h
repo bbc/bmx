@@ -97,7 +97,7 @@ public:
     virtual MXFFrameBuffer* GetMXFFrameBuffer() { return &mFrameBuffer; }
     virtual void SetNextFramePosition(Rational edit_rate, int64_t position);
 
-private:
+protected:
     MXFFileReader *mFileReader;
     size_t mTrackIndex;
     MXFTrackInfo *mTrackInfo;

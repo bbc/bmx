@@ -53,6 +53,7 @@
 #include <bmx/mxf_reader/MXFGroupReader.h>
 #include <bmx/mxf_reader/MXFSequenceReader.h>
 #include <bmx/mxf_reader/MXFFrameMetadata.h>
+#include <bmx/mxf_reader/MXFTimedTextTrackReader.h>
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/st436/ST436Element.h>
 #include <bmx/st436/RDD6Metadata.h>
@@ -71,6 +72,7 @@
 #include "AS10InfoOutput.h"
 #include "APPInfoOutput.h"
 #include "AvidInfoOutput.h"
+#include "OutputFileManager.h"
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -966,6 +968,31 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
             }
             info_writer->EndArrayItem();
             info_writer->EndSection();
+        } else if (data_info->timed_text_manifest) {
+            info_writer->StartSection("timed_text_descriptor");
+            info_writer->WriteStringItem("profile", data_info->timed_text_manifest->GetProfileDesignator());
+            info_writer->WriteStringItem("encoding", data_info->timed_text_manifest->GetEncoding());
+            if (data_info->timed_text_manifest->HaveResourceId()) {
+                info_writer->WriteIDAUItem("resource_id", data_info->timed_text_manifest->GetResourceId());
+            }
+            if (data_info->timed_text_manifest->HaveLanguages()) {
+                info_writer->WriteStringItem("languages", data_info->timed_text_manifest->GetLanguagesString());
+            }
+            if (!data_info->timed_text_manifest->GetAncillaryResources().empty()) {
+                const vector<TimedTextAncillaryResource> &anc_resources =
+                      data_info->timed_text_manifest->GetAncillaryResources();
+                info_writer->StartArrayItem("ancillary_resources", anc_resources.size());
+                size_t i;
+                for (i = 0; i < anc_resources.size(); i++) {
+                    info_writer->StartArrayElement("element", i);
+                    info_writer->WriteIDAUItem("resource_id", anc_resources[i].resource_id);
+                    info_writer->WriteStringItem("mime_type", anc_resources[i].mime_type);
+                    info_writer->WriteIntegerItem("stream_id", anc_resources[i].stream_id);
+                    info_writer->EndArrayElement();
+                }
+                info_writer->EndArrayItem();
+            }
+            info_writer->EndSection();
         }
         info_writer->EndSection();
     }
@@ -1447,32 +1474,6 @@ static void write_timecodes(MXFReader *reader, Frame *frame, FILE *tc_file)
     }
 
     fprintf(tc_file, "\n");
-}
-
-static string create_raw_filename(string ess_prefix, bool wrap_klv, MXFDataDefEnum data_def, uint32_t index,
-                                  int32_t child_index)
-{
-    const char *ddef_letter = "x";
-    switch (data_def)
-    {
-        case MXF_PICTURE_DDEF:  ddef_letter = "v"; break;
-        case MXF_SOUND_DDEF:    ddef_letter = "a"; break;
-        case MXF_DATA_DDEF:     ddef_letter = "d"; break;
-        case MXF_TIMECODE_DDEF: ddef_letter = "t"; break;
-        case MXF_DM_DDEF:       ddef_letter = "m"; break;
-        case MXF_UNKNOWN_DDEF:  ddef_letter = "x"; break;
-    }
-    const char *suffix = ".raw";
-    if (wrap_klv)
-        suffix = ".klv";
-
-    char buffer[64];
-    if (child_index >= 0)
-        bmx_snprintf(buffer, sizeof(buffer), "_%s%u_%d%s", ddef_letter, index, child_index, suffix);
-    else
-        bmx_snprintf(buffer, sizeof(buffer), "_%s%u%s", ddef_letter, index, suffix);
-
-    return ess_prefix + buffer;
 }
 
 static string create_text_object_filename(string prefix, bool is_xml, size_t index)
@@ -2531,6 +2532,7 @@ int main(int argc, const char** argv)
         vector<bool> rdd6_have_end;
         vector<vector<Checksum> > track_checksums;
         vector<CRC32Data> track_crc32_data;
+        OutputFileManager output_file_manager;
 
         if (do_ess_read) {
 
@@ -2596,55 +2598,21 @@ int main(int argc, const char** argv)
 
             // open raw files and check if have video
             bool have_video = false;
-            map<size_t, size_t> track_raw_file_map;
-            vector<FILE*> raw_files;
-            vector<string> raw_filenames;
             if (ess_output_prefix) {
-                map<MXFDataDefEnum, uint32_t> ddef_count;
+                output_file_manager.SetPrefix(ess_output_prefix);
+                output_file_manager.SetSoundDeinterleave(deinterleave);
+
                 size_t i;
                 for (i = 0; i < reader->GetNumTrackReaders(); i++) {
                     if (!reader->GetTrackReader(i)->IsEnabled())
                         continue;
 
                     const MXFTrackInfo *track_info = reader->GetTrackReader(i)->GetTrackInfo();
-                    const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
-                    track_raw_file_map[i] = raw_files.size();
-                    if (sound_info && deinterleave && sound_info->channel_count > 1) {
-                        uint32_t c;
-                        for (c = 0; c < sound_info->channel_count; c++) {
-                            string raw_filename =
-                                create_raw_filename(ess_output_prefix,
-                                                    (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
-                                                    track_info->data_def,
-                                                    ddef_count[track_info->data_def], c);
-                            FILE *raw_file = fopen(raw_filename.c_str(), "wb");
-                            if (!raw_file) {
-                                log_error("Failed to open raw file '%s': %s\n",
-                                          raw_filename.c_str(), bmx_strerror(errno).c_str());
-                                throw false;
-                            }
-                            raw_files.push_back(raw_file);
-                            raw_filenames.push_back(raw_filename);
-                        }
-                    } else {
-                        string raw_filename =
-                            create_raw_filename(ess_output_prefix,
-                                                (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
-                                                track_info->data_def,
-                                                ddef_count[track_info->data_def], -1);
-                        FILE *raw_file = fopen(raw_filename.c_str(), "wb");
-                        if (!raw_file) {
-                            log_error("Failed to open raw file '%s': %s\n",
-                                      raw_filename.c_str(), bmx_strerror(errno).c_str());
-                            throw false;
-                        }
-                        raw_files.push_back(raw_file);
-                        raw_filenames.push_back(raw_filename);
-                    }
+                    output_file_manager.AddTrackFile(i, track_info,
+                                                     (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()));
 
                     if (track_info->data_def == MXF_PICTURE_DDEF)
                         have_video = true;
-                    ddef_count[track_info->data_def]++;
                 }
             }
 
@@ -2780,7 +2748,8 @@ int main(int argc, const char** argv)
                         }
 
                         if (ess_output_prefix) {
-                            size_t file_index = track_raw_file_map[i];
+                            FILE *file;
+                            string filename;
                             const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
                             if (sound_info && deinterleave && sound_info->channel_count > 1) {
                                 sound_buffer.Allocate(frame->GetSize()); // more than enough
@@ -2798,14 +2767,15 @@ int main(int argc, const char** argv)
                                                            sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
                                         sound_buffer.SetSize(frame->GetSize() / sound_info->channel_count);
                                     }
-                                    write_data(raw_files[file_index], raw_filenames[file_index],
+                                    output_file_manager.GetTrackFile(i, c, &file, &filename);
+                                    write_data(file, filename,
                                                sound_buffer.GetBytes(), sound_buffer.GetSize(),
                                                (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
                                                &frame->element_key);
-                                    file_index++;
                                 }
-                            } else {
-                                write_data(raw_files[file_index], raw_filenames[file_index],
+                            } else if (track_info->essence_type != TIMED_TEXT) {  // timed text is written at the end
+                                output_file_manager.GetTrackFile(i, &file, &filename);
+                                write_data(file, filename,
                                            frame->GetBytes(), frame->GetSize(),
                                            (wrap_klv_mask.find(track_info->data_def) != wrap_klv_mask.end()),
                                            &frame->element_key);
@@ -2912,9 +2882,6 @@ int main(int argc, const char** argv)
 
 
             // clean-up
-            size_t i;
-            for (i = 0; i < raw_files.size(); i++)
-                fclose(raw_files[i]);
             if (app_tc_file)
                 fclose(app_tc_file);
             if (app_crc32_file)
@@ -3003,6 +2970,36 @@ int main(int argc, const char** argv)
                 }
                 text_object->Read(text_file);
                 fclose(text_file);
+            }
+        }
+
+        // extract timed text
+        if (ess_output_prefix) {
+            size_t i;
+            for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+                MXFTrackReader *track_reader = reader->GetTrackReader(i);
+                if (track_reader->GetTrackInfo()->essence_type != TIMED_TEXT) {
+                    continue;
+                }
+
+                MXFTimedTextTrackReader *tt_track_reader = dynamic_cast<MXFTimedTextTrackReader*>(track_reader);
+                if (!tt_track_reader) {
+                    log_warn("Extracting timed text from a sequence is not supported\n");
+                    continue;
+                }
+
+                FILE *file;
+                string filename;
+                output_file_manager.GetTrackFile(i, &file, &filename);
+                tt_track_reader->ReadTimedText(file, 0, 0);
+
+                TimedTextManifest *manifest = tt_track_reader->GetManifest();
+                vector<TimedTextAncillaryResource> &anc_resources = manifest->GetAncillaryResources();
+                size_t k;
+                for (k = 0; k < anc_resources.size(); k++) {
+                    output_file_manager.GetTrackFile(i, anc_resources[k].stream_id, &file, &filename);
+                    tt_track_reader->ReadAncillaryResourceByStreamId(anc_resources[k].stream_id, file, 0, 0);
+                }
             }
         }
 

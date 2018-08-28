@@ -484,6 +484,7 @@
     <xs:choice>
       <xs:element name="vbi_descriptor" type="vbi_descriptor_type"/>
       <xs:element name="anc_descriptor" type="anc_descriptor_type"/>
+      <xs:element name="timed_text_descriptor" type="timed_text_descriptor_type"/>
     </xs:choice>
   </xs:complexType>
 
@@ -558,6 +559,38 @@
       <xs:element name="sdid" type="hex_uint8_type"/>
       <xs:element name="description" type="xs:string" minOccurs="0"/>
     </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="timed_text_descriptor_type">
+    <xs:sequence>
+      <xs:element name="profile" type="xs:string"/>
+      <xs:element name="encoding" type="xs:string"/>
+      <xs:element name="resource_id" type="label_type" minOccurs="0"/>
+      <xs:element name="languages" type="xs:string" minOccurs="0"/>
+      <xs:element name="ancillary_resources" type="tt_anc_resources_type" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tt_anc_resources_type">
+    <xs:complexContent>
+      <xs:extension base="array_type">
+        <xs:sequence>
+          <xs:element name="element" type="tt_anc_resources_element_type" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="tt_anc_resources_element_type">
+    <xs:complexContent>
+      <xs:extension base="array_element_type">
+        <xs:sequence>
+          <xs:element name="resource_id" type="label_type"/>
+          <xs:element name="mime_type" type="xs:string"/>
+          <xs:element name="stream_id" type="uint32_type"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
   </xs:complexType>
 
   <xs:complexType name="crc32_check_type">
@@ -945,6 +978,7 @@
       <xs:enumeration value="D10_AES3_PCM"/>
       <xs:enumeration value="ANC_Data"/>
       <xs:enumeration value="VBI_Data"/>
+      <xs:enumeration value="Timed_Text"/>
     </xs:restriction>
   </xs:simpleType>
 

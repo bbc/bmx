@@ -52,6 +52,7 @@ typedef enum
     INDEX_STREAM_TYPE   = 1024,
     BODY_STREAM_TYPE    = 1025,
     GENERIC_STREAM_TYPE = 1026,
+    STREAM_TYPE         = 1027,
 } UniqueIdType;
 
 

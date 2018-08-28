@@ -16,6 +16,8 @@ libmxfhelper_la_SOURCES = \
 	PictureMXFDescriptorHelper.cpp \
 	RDD36MXFDescriptorHelper.cpp \
 	SoundMXFDescriptorHelper.cpp \
+	TimedTextManifest.cpp \
+	TimedTextMXFDescriptorHelper.cpp \
 	UncCDCIMXFDescriptorHelper.cpp \
 	UncRGBAMXFDescriptorHelper.cpp \
 	UniqueIdHelper.cpp \
@@ -25,4 +27,3 @@ libmxfhelper_la_SOURCES = \
 	WaveMXFDescriptorHelper.cpp
 
 libmxfhelper_la_CXXFLAGS = $(BMX_CFLAGS)
-

@@ -97,4 +97,17 @@
     <VC2EditUnitsAreCompleteSequences type="Boolean"    use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 07 07 00 00 00"/>
   </VC2SubDescriptor>
 
+  <DCTimedTextDescriptor base="GenericDataEssenceDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 64 00">
+    <ResourceID               type="UUID"         use="optional"  globalKey="06 0e 2b 34 01 01 01 0c 01 01 15 12 00 00 00 00"/>
+    <NamespaceURI             type="UTF16String"  use="required"  globalKey="06 0e 2b 34 01 01 01 08 01 02 01 05 01 00 00 00"/>
+    <RFC5646LanguageTagList   type="UTF16String"  use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 03 01 01 02 02 16 00 00"/>
+    <UCSEncoding              type="UTF16String"  use="required"  globalKey="06 0e 2b 34 01 01 01 0c 04 09 05 00 00 00 00 00"/>
+  </DCTimedTextDescriptor>
+
+  <DCTimedTextResourceSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 65 00">
+    <AncillaryResourceID    type="UUID"         use="required"  globalKey="06 0e 2b 34 01 01 01 0c 01 01 15 13 00 00 00 00"/>
+    <MIMEType               type="UTF16String"  use="required"  globalKey="06 0e 2b 34 01 01 01 07 04 09 02 01 00 00 00 00"/>
+    <EssenceStreamID        type="UInt32"       use="required"  globalKey="06 0e 2b 34 01 01 01 04 01 03 04 04 00 00 00 00"/>
+  </DCTimedTextResourceSubDescriptor>
+
 </MXFDictionary>

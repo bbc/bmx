@@ -28,6 +28,8 @@ nobase_library_include_HEADERS = \
 	bmx/apps/AS10Helper.h \
 	bmx/apps/AS11Helper.h \
 	bmx/apps/FrameworkHelper.h \
+	bmx/apps/PropertyFileParser.h \
+	bmx/apps/TimedTextManifestParser.h \
 	bmx/frame/DataBufferArray.h \
 	bmx/frame/Frame.h \
 	bmx/frame/FrameBuffer.h \
@@ -81,6 +83,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_op1a/OP1APCMTrack.h \
 	bmx/mxf_op1a/OP1APictureTrack.h \
 	bmx/mxf_op1a/OP1ARDD36Track.h \
+	bmx/mxf_op1a/OP1ATimedTextTrack.h \
 	bmx/mxf_op1a/OP1ATrack.h \
 	bmx/mxf_op1a/OP1AUncTrack.h \
 	bmx/mxf_op1a/OP1AVBIDataTrack.h \
@@ -153,6 +156,8 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_helper/PictureMXFDescriptorHelper.h \
 	bmx/mxf_helper/RDD36MXFDescriptorHelper.h \
 	bmx/mxf_helper/SoundMXFDescriptorHelper.h \
+	bmx/mxf_helper/TimedTextManifest.h \
+	bmx/mxf_helper/TimedTextMXFDescriptorHelper.h \
 	bmx/mxf_helper/UncCDCIMXFDescriptorHelper.h \
 	bmx/mxf_helper/UncRGBAMXFDescriptorHelper.h \
 	bmx/mxf_helper/UniqueIdHelper.h \
@@ -178,6 +183,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_reader/MXFSequenceReader.h \
 	bmx/mxf_reader/MXFSequenceTrackReader.h \
 	bmx/mxf_reader/MXFTextObject.h \
+	bmx/mxf_reader/MXFTimedTextTrackReader.h \
 	bmx/mxf_reader/MXFTrackInfo.h \
 	bmx/mxf_reader/MXFTrackReader.h \
 	bmx/st436/RDD6BitBuffer.h \
@@ -190,4 +196,3 @@ nobase_library_include_HEADERS = \
 	bmx/wave/WaveTrackReader.h \
 	bmx/wave/WaveTrackWriter.h \
 	bmx/wave/WaveWriter.h
-

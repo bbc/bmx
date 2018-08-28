@@ -1,0 +1,12 @@
+file: text_example.xml
+profile: image
+encoding: UTF-8
+languages: en
+
+resource_file: font.ttf
+mime_type: application/x-font-opentype
+resource_id: urn:uuid:3191755f-11c1-50ba-af03-ba1f7913491a  # == uuid.uuid5(uuid.NAMESPACE_URL, 'font.ttf')
+
+resource_file: image.png
+resource_id: urn:uuid:173efd37-3b1e-535c-917f-e126e25bd505  # == uuid.uuid5(uuid.NAMESPACE_URL, 'image.png')
+mime_type: image/png

@@ -72,6 +72,7 @@
 #include <bmx/Utils.h>
 #include <bmx/Version.h>
 #include <bmx/apps/AppUtils.h>
+#include <bmx/apps/TimedTextManifestParser.h>
 #include <bmx/as11/AS11Labels.h>
 #include <bmx/as10/AS10ShimNames.h>
 #include <bmx/as10/AS10MPEG2Validator.h>
@@ -137,6 +138,7 @@ struct RawInput
     RawEssenceReader *raw_reader;
     WaveReader *wave_reader;
     uint32_t channel_count;
+    TimedTextManifestParser timed_text_manifest;
 
     uint32_t sample_sequence[32];
     size_t sample_sequence_size;
@@ -197,7 +199,6 @@ namespace bmx
 {
 extern bool BMX_REGRESSION_TEST;
 };
-
 
 
 static bool regtest_output_track_map_comp(const TrackMapper::OutputTrackMap &left,
@@ -672,6 +673,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --wave <name>           Wave PCM audio input file\n");
     fprintf(stderr, "  --anc <name>            Raw ST 436 Ancillary data. Currently requires the --anc-const option\n");
     fprintf(stderr, "  --vbi <name>            Raw ST 436 Vertical Blanking Interval data. Currently requires the --vbi-const option\n");
+    fprintf(stderr, "  --tt <manifest>         Manifest file containing Timed Text metadata\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Notes:\n");
     fprintf(stderr, " - <umid> format is 64 hexadecimal characters and any '.' and '-' characters are ignored\n");
@@ -3338,6 +3340,19 @@ int main(int argc, const char** argv)
             have_vbi = true;
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--tt") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = TIMED_TEXT;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else
         {
             break;
@@ -3490,6 +3505,19 @@ int main(int argc, const char** argv)
                 } else {
                     if (!open_raw_reader(input))
                         throw false;
+                }
+                continue;
+            }
+
+            if (input->essence_type == TIMED_TEXT) {
+                if (!input->timed_text_manifest.Parse(input->filename)) {
+                    log_error("Failed to parse timed text manifest\n");
+                    throw false;
+                }
+                if (!input->timed_text_manifest.CheckCanReadTTFile()) {
+                    log_error("Timed text file '%s' referenced by manifest can't be opened for reading\n",
+                              input->timed_text_manifest.GetTTFilename().c_str());
+                    throw false;
                 }
                 continue;
             }
@@ -3987,6 +4015,22 @@ int main(int argc, const char** argv)
         }
 
 
+        // check whether all tracks are timed text and therefore that duration must be set
+
+        bool have_samples_to_write = false;
+        for (i = 0; i < inputs.size(); i++) {
+            RawInput *input = &inputs[i];
+            if (!input->disabled && input->essence_type != TIMED_TEXT) {
+                have_samples_to_write = true;
+                break;
+            }
+        }
+        if (!have_samples_to_write && duration < 0) {
+            log_error("--dur option is required if all tracks are timed text\n");
+            throw false;
+        }
+
+
         // create clip
 
         int flavour = 0;
@@ -4119,6 +4163,10 @@ int main(int argc, const char** argv)
                 op1a_clip->SetPartitionInterval(partition_interval);
             op1a_clip->SetOutputStartOffset(output_start_offset);
             op1a_clip->SetOutputEndOffset(- output_end_offset);
+
+            if (!have_samples_to_write) {
+                op1a_clip->SetInputDuration(duration);
+            }
         } else if (clip_type == CW_AVID_CLIP_TYPE) {
             AvidClip *avid_clip = clip->GetAvidClip();
 
@@ -4627,6 +4675,9 @@ int main(int argc, const char** argv)
                 case VBI_DATA:
                     clip_track->SetConstantDataSize(input->vbi_const_size);
                     break;
+                case TIMED_TEXT:
+                    clip_track->SetTimedTextSource(&input->timed_text_manifest);
+                    break;
                 default:
                     BMX_ASSERT(false);
             }
@@ -4818,6 +4869,8 @@ int main(int argc, const char** argv)
                     input->sample_sequence_size = 1;
                     input->raw_reader->SetFixedSampleSize(input->vbi_const_size);
                     break;
+                case TIMED_TEXT:
+                    break;
                 default:
                     BMX_ASSERT(false);
             }
@@ -4881,7 +4934,7 @@ int main(int argc, const char** argv)
         uint32_t max_samples_per_read = 1;
         for (i = 0; i < inputs.size(); i++) {
             RawInput *input = &inputs[i];
-            if (!input->disabled) {
+            if (!input->disabled && input->essence_type != TIMED_TEXT) {
                 if (input->essence_type == WAVE_PCM) {
                     if (input->sample_sequence_size == 1 && input->sample_sequence[0] == 1)
                         have_sound_sample_sequence = false;
@@ -4909,7 +4962,7 @@ int main(int argc, const char** argv)
         // write samples
         bmx::ByteArray pcm_buffer;
         int64_t total_read = 0;
-        while (duration < 0 || total_read < duration) {
+        while (have_samples_to_write && (duration < 0 || total_read < duration)) {
             // break if reached end of partial file regression test
             if (regtest_end >= 0 && total_read >= regtest_end)
                 break;
@@ -4919,7 +4972,7 @@ int main(int argc, const char** argv)
             uint32_t num_samples;
             for (i = 0; i < inputs.size(); i++) {
                 RawInput *input = &inputs[i];
-                if (!input->disabled) {
+                if (!input->disabled && input->essence_type != TIMED_TEXT) {
                     num_samples = read_samples(input, max_samples_per_read);
                     if (num_samples < min_num_samples) {
                         min_num_samples = num_samples;
@@ -4938,6 +4991,9 @@ int main(int argc, const char** argv)
             for (i = 0; i < input_tracks.size(); i++) {
                 RawInputTrack *input_track = input_tracks[i];
                 RawInput *input = input_track->GetRawInput();
+                if (input->essence_type == TIMED_TEXT) {
+                    continue;
+                }
 
                 size_t k;
                 for (k = 0; k < input_track->GetOutputTrackCount(); k++) {
@@ -5068,4 +5124,3 @@ int main(int argc, const char** argv)
 
     return cmd_result;
 }
-

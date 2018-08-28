@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copied from https://github.com/w3c/imsc/blob/master/imsc1/spec/examples/text-example.xml -->
+<tt xml:lang="en"
+    xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttm="http://www.w3.org/ns/ttml#metadata"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    ttp:displayAspectRatio="4 3"
+    ttp:contentProfiles="http://www.w3.org/ns/ttml/profile/imsc1.1/text">
+
+    <head>
+        <layout>
+            <region xml:id="area1" tts:origin="10% 10%" tts:extent="80% 10%" tts:backgroundColor="black" tts:displayAlign="center" tts:color="red"/>
+        </layout>
+    </head>
+    <body>
+        <div>
+            <p region="area1" begin="0s" end="6s">Lorem ipsum dolor.</p>
+        </div>
+    </body>
+</tt>

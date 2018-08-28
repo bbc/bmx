@@ -90,6 +90,7 @@
     <ClCompile Include="..\..\..\..\apps\mxf2raw\AS10InfoOutput.cpp" />
     <ClCompile Include="..\..\..\..\apps\mxf2raw\AS11InfoOutput.cpp" />
     <ClCompile Include="..\..\..\..\apps\mxf2raw\AvidInfoOutput.cpp" />
+    <ClCompile Include="..\..\..\..\apps\mxf2raw\OutputFileManager.cpp" />
     <ClCompile Include="..\..\..\..\apps\mxf2raw\mxf2raw.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -97,6 +98,7 @@
     <ClInclude Include="..\..\..\..\apps\mxf2raw\AS10InfoOutput.h" />
     <ClInclude Include="..\..\..\..\apps\mxf2raw\AS11InfoOutput.h" />
     <ClInclude Include="..\..\..\..\apps\mxf2raw\AvidInfoOutput.h" />
+    <ClInclude Include="..\..\..\..\apps\mxf2raw\OutputFileManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\bmx\bmx.vcxproj">

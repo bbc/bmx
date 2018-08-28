@@ -7,7 +7,7 @@
     <xs:complexType>
       <xs:sequence>
         <xs:element name="spec_identifiers" type="spec_identifiers_type" minOccurs="0"/>
-        <xs:element name="core" type="core_type" minOccurs="0"/>
+        <xs:element name="core" type="as11_core_type" minOccurs="0"/>
         <xs:element name="uk_dpp" type="uk_dpp_type" minOccurs="0"/>
         <xs:element name="segmentation" type="segmentation_type" minOccurs="0"/>
       </xs:sequence>
@@ -20,7 +20,7 @@
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="core_type">
+  <xs:complexType name="as11_core_type">
     <xs:sequence>
       <xs:element name="shim_name" type="xs:string"/>
       <xs:element name="shim_version" type="version_type" minOccurs="0">

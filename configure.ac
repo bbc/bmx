@@ -306,6 +306,7 @@ AC_CONFIG_FILES([
 	test/rdd6/Makefile
 	test/text_object/Makefile
 	test/bbcarchive/Makefile
+	test/timed_text/Makefile
 	apps/Makefile
 	apps/mxf2raw/Makefile
 	apps/writers/Makefile

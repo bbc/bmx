@@ -43,7 +43,9 @@
 #include <set>
 
 #include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/mxf_reader/MXFTimedTextTrackReader.h>
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/TimedTextMXFDescriptorHelper.h>
 #include <bmx/essence_parser/AVCEssenceParser.h>
 #include <bmx/st436/ST436Element.h>
 #include <bmx/MXFHTTPFile.h>
@@ -325,14 +327,16 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, co
         mOPLabel = *header_partition.getOperationalPattern();
 
 
-        // get or guess the essence wrapping type
+        // get or guess the essence wrapping type for non-timed text essence containers
 
         vector<mxfUL> essence_labels = header_partition.getEssenceContainers();
         size_t i;
         for (i = 0; i < essence_labels.size(); i++) {
-            mWrappingType = mxf_get_essence_wrapping_type(&essence_labels[i]);
-            if (mWrappingType != MXF_UNKNOWN_WRAPPING_TYPE)
-                break;
+            if (!mxf_equals_ul_mod_regver(&essence_labels[i], &MXF_EC_L(TimedText))) {
+                mWrappingType = mxf_get_essence_wrapping_type(&essence_labels[i]);
+                if (mWrappingType != MXF_UNKNOWN_WRAPPING_TYPE)
+                    break;
+            }
         }
         if (mWrappingType == MXF_UNKNOWN_WRAPPING_TYPE) {
             // guess the wrapping type based on the OP
@@ -384,7 +388,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, co
 
 
         // create internal essence reader
-        if (!mInternalTrackReaders.empty()) {
+        if (!mInternalTrackReaders.empty() && mBodySID != 0) {
             mEssenceReader = new EssenceReader(this, file_is_complete);
 
             CheckRequireFrameInfo();
@@ -549,7 +553,7 @@ void MXFFileReader::SetReadLimits(int64_t start_position, int64_t duration, bool
     mReadStartPosition = start_position;
     mReadDuration = duration;
 
-    if (InternalIsEnabled())
+    if (InternalIsEnabled() && mEssenceReader)
         mEssenceReader->SetReadLimits(TO_ESS_READER_POS(start_position), duration);
 
     size_t i;
@@ -595,7 +599,7 @@ uint32_t MXFFileReader::Read(uint32_t num_samples, bool is_top)
         }
 
         uint32_t max_num_read = 0;
-        if (InternalIsEnabled())
+        if (InternalIsEnabled() && mEssenceReader)
             max_num_read = mEssenceReader->Read(num_samples);
 
         size_t i;
@@ -655,7 +659,7 @@ uint32_t MXFFileReader::Read(uint32_t num_samples, bool is_top)
 
 void MXFFileReader::Seek(int64_t position)
 {
-    if (InternalIsEnabled())
+    if (InternalIsEnabled() && mEssenceReader)
         mEssenceReader->Seek(TO_ESS_READER_POS(position));
 
     size_t i;
@@ -670,7 +674,7 @@ void MXFFileReader::Seek(int64_t position)
 int64_t MXFFileReader::GetPosition() const
 {
     int64_t position = 0;
-    if (InternalIsEnabled()) {
+    if (InternalIsEnabled() && mEssenceReader) {
         position = FROM_ESS_READER_POS(mEssenceReader->GetPosition());
     } else {
         size_t i;
@@ -911,22 +915,8 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
     Preface *preface = mHeaderMetadata->getPreface();
     mMXFVersion = preface->getVersion();
 
-    // check there is <= 1 essence container data in the file
-    ContentStorage *content_storage = preface->getContentStorage();
-    vector<EssenceContainerData*> ess_container_data;
-    if (content_storage->haveEssenceContainerData()) {
-        ess_container_data = content_storage->getEssenceContainerData();
-        if (ess_container_data.size() > 1) {
-            if (mxf_is_op_1b(&mOPLabel))
-                log_error("OP-1B with multiple essence containers is not supported\n");
-            else
-                log_error("Multiple essence containers is not supported\n");
-            THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
-        }
-    }
-
-
     // index packages from this file
+
     mPackageResolver->ExtractPackages(this);
 
 
@@ -1125,34 +1115,72 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
     GetStartTimecodes(preface, infile_mp_track);
 
 
-    // get the body and index SIDs linked to (singular) internal essence file source package
+    // get the body and index SIDs linked to single (non-timed text) internal essence file source package
     if (!mInternalTrackReaders.empty()) {
+        ContentStorage *content_storage = preface->getContentStorage();
+        vector<EssenceContainerData*> ess_container_data;
+        if (content_storage->haveEssenceContainerData()) {
+            ess_container_data = content_storage->getEssenceContainerData();
+        }
         if (ess_container_data.empty()) {
             log_error("Missing EssenceContainerData set\n");
             THROW_RESULT(MXF_RESULT_NO_ESSENCE);
         }
-        BMX_ASSERT(ess_container_data.size() == 1);
-        EssenceContainerData *single_ess_data = ess_container_data[0];
 
-        mxfUMID linked_package_uid = single_ess_data->getLinkedPackageUID();
-        for (i = 0; i < mInternalTrackReaders.size(); i++) {
-            if (!mxf_equals_umid(&mInternalTrackReaders[i]->GetTrackInfo()->file_package_uid, &linked_package_uid)) {
+        mIndexSID = 0;
+        mBodySID = 0;
+        size_t i;
+        for (i = 0; i < ess_container_data.size(); i++) {
+            EssenceContainerData *ess_data = ess_container_data[i];
+
+            mxfUMID linked_package_uid = ess_data->getLinkedPackageUID();
+            bool is_tt_ec = false;
+            bool is_non_tt_ec = false;
+            size_t k;
+            for (k = 0; k < mInternalTrackReaders.size(); k++) {
+                if (mxf_equals_umid(&mInternalTrackReaders[k]->GetTrackInfo()->file_package_uid,
+                                    &linked_package_uid))
+                {
+                    if (mInternalTrackReaders[k]->GetTrackInfo()->essence_type == TIMED_TEXT) {
+                        is_tt_ec = true;
+                        MXFTimedTextTrackReader *tt_track_reader =
+                                dynamic_cast<MXFTimedTextTrackReader*>(mInternalTrackReaders[k]);
+                        tt_track_reader->SetBodySID(ess_data->getBodySID());
+                        break;
+                    } else {
+                        is_non_tt_ec = true;
+                    }
+                }
+            }
+            if (is_tt_ec) {
+                continue;
+            }
+
+            if (!is_non_tt_ec) {
                 log_error("Essence container data LinkedPackageUID does not link to internal file source package\n");
                 THROW_RESULT(MXF_RESULT_NO_ESSENCE);
             }
-        }
 
-        mBodySID = single_ess_data->getBodySID();
-        if (mBodySID == 0) {
-            log_error("BodySID is 0\n");
-            THROW_RESULT(MXF_RESULT_NO_ESSENCE);
-        }
+            // check that there is only one (non-timed text) essence container
+            if (mBodySID != 0) {
+                if (mxf_is_op_1b(&mOPLabel))
+                    log_error("OP-1B with multiple essence containers is not supported\n");
+                else
+                    log_error("Multiple essence containers is not supported\n");
+                THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
+            }
 
-        mIndexSID = 0;
-        if (single_ess_data->haveIndexSID())
-            mIndexSID = single_ess_data->getIndexSID();
-        if (mIndexSID == 0)
-            log_warn("Essence container has no index table (IndexSID is 0)\n");
+            mBodySID = ess_data->getBodySID();
+            if (mBodySID == 0) {
+                log_error("BodySID is 0\n");
+                THROW_RESULT(MXF_RESULT_NO_ESSENCE);
+            }
+
+            if (ess_data->haveIndexSID())
+                mIndexSID = ess_data->getIndexSID();
+            if (mIndexSID == 0)
+                log_warn("Essence container has no index table (IndexSID is 0)\n");
+        }
     }
 
     // disable unused external tracks, i.e. external tracks not contained in mExternalTrackReaders / mTrackReaders
@@ -1417,9 +1445,14 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
     else
         ProcessDataDescriptor(file_desc, data_track_info);
 
-
-    MXFFileTrackReader *track_reader = new MXFFileTrackReader(this, mInternalTrackReaders.size(), track_info.get(),
-                                                              file_desc, file_source_package);
+    MXFFileTrackReader *track_reader;
+    if (track_info.get()->essence_type == TIMED_TEXT) {
+        track_reader = new MXFTimedTextTrackReader(this, mInternalTrackReaders.size(), track_info.get(),
+                                                   file_desc, file_source_package);
+    } else {
+        track_reader = new MXFFileTrackReader(this, mInternalTrackReaders.size(), track_info.get(),
+                                              file_desc, file_source_package);
+    }
     mInternalTrackReaders.push_back(track_reader);
     track_info.release();
     mInternalTrackReaderNumberMap[mInternalTrackReaders.back()->GetTrackInfo()->file_track_number] = track_reader;
@@ -1870,6 +1903,11 @@ void MXFFileReader::ProcessSoundDescriptor(FileDescriptor *file_descriptor, MXFS
 void MXFFileReader::ProcessDataDescriptor(FileDescriptor *file_descriptor, MXFDataTrackInfo *data_track_info)
 {
     ProcessDescriptor(file_descriptor, data_track_info);
+
+    DCTimedTextDescriptor *tt_desc = dynamic_cast<DCTimedTextDescriptor*>(file_descriptor);
+    if (tt_desc) {
+        data_track_info->timed_text_manifest = TimedTextMXFDescriptorHelper::CreateManifest(tt_desc);
+    }
 }
 
 void MXFFileReader::IndexMCALabels(GenericDescriptor *descriptor)
@@ -1984,17 +2022,18 @@ void MXFFileReader::ForceDuration(int64_t duration)
 
 bool MXFFileReader::GetInternalIndexEntry(MXFIndexEntryExt *entry, int64_t position) const
 {
-    BMX_ASSERT(mEssenceReader);
-
-    return mEssenceReader->GetIndexEntry(entry, TO_ESS_READER_POS(position));
+    if (mEssenceReader) {
+        return mEssenceReader->GetIndexEntry(entry, TO_ESS_READER_POS(position));
+    } else {
+        return false;
+    }
 }
 
 int16_t MXFFileReader::GetInternalPrecharge(int64_t position, bool limit_to_available) const
 {
     CHECK_SUPPORT_PC_RO_INFO;
-    BMX_ASSERT(mEssenceReader);
 
-    if (!HaveInterFrameEncodingTrack())
+    if (!mEssenceReader || !HaveInterFrameEncodingTrack())
         return 0;
 
     int64_t target_position = position;
@@ -2030,9 +2069,8 @@ int16_t MXFFileReader::GetInternalPrecharge(int64_t position, bool limit_to_avai
 int16_t MXFFileReader::GetInternalRollout(int64_t position, bool limit_to_available) const
 {
     CHECK_SUPPORT_PC_RO_INFO;
-    BMX_ASSERT(mEssenceReader);
 
-    if (!HaveInterFrameEncodingTrack())
+    if (!mEssenceReader || !HaveInterFrameEncodingTrack())
         return 0;
 
     int64_t target_position = position;

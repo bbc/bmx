@@ -10,7 +10,8 @@ libapps_la_SOURCES = \
 	AS10Helper.cpp \
 	AS11Helper.cpp \
 	FrameworkHelper.cpp \
+	PropertyFileParser.cpp \
+	TimedTextManifestParser.cpp \
 	ps_avci_header_data.h
 
 libapps_la_CXXFLAGS = $(BMX_CFLAGS)
-

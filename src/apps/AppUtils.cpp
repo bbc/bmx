@@ -505,8 +505,12 @@ bool bmx::parse_umid(const char *umid_str, UMID *umid)
     return parse_hex_string(umid_str, (unsigned char*)&umid->octet0, 32);
 }
 
-bool bmx::parse_uuid(const char *uuid_str, UUID *uuid)
+bool bmx::parse_uuid(const char *uuid_str_in, UUID *uuid)
 {
+    const char *uuid_str = uuid_str_in;
+    if (strncmp(uuid_str, "urn:uuid:", 9) == 0)
+        uuid_str = &uuid_str[9];
+
     return parse_hex_string(uuid_str, (unsigned char*)&uuid->octet0, 16);
 }
 
@@ -775,10 +779,7 @@ bool bmx::parse_mxf_auid(const char *mxf_auid_str, UL *mxf_auid)
 
     // MXF AUID type has UL as-is and UUID half-swapped
     UUID uuid;
-    const char *uuid_str = mxf_auid_str;
-    if (strncmp(mxf_auid_str, "urn:uuid:", 9) == 0)
-        uuid_str = &mxf_auid_str[9];
-    if (!parse_uuid(uuid_str, &uuid))
+    if (!parse_uuid(mxf_auid_str, &uuid))
         return false;
     mxf_swap_uid(mxf_auid, (const mxfUID*)&uuid);
 

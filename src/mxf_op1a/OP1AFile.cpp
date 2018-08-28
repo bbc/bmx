@@ -41,6 +41,7 @@
 
 #include <bmx/mxf_op1a/OP1AFile.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
+#include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/MXFMCALabelHelper.h>
 #include <bmx/MXFUtils.h>
@@ -56,6 +57,8 @@ using namespace mxfpp;
 // some large number that is not expected to be exceeded and avoids memory allocation exceptions
 // maximum buffer requirement is expected to be the coding delay / maximum temporal offset
 #define MAX_BUFFERED_CONTENT_PACKAGES   200
+
+#define HAVE_PRIMARY_EC   (mIndexTable != 0)
 
 static const char TIMECODE_TRACK_NAME[]         = "TC1";
 static const uint8_t MIN_LLEN                   = 4;
@@ -93,6 +96,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mOutputEndOffset = 0;
     mHaveANCTrack = false;
     mHaveVBITrack = false;
+    mTimedTextTrackCount = 0;
     mDataModel = 0;
     mHeaderMetadata = 0;
     mHavePreparedHeaderMetadata = false;
@@ -118,7 +122,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
 
     mStreamIdHelper.SetId("IndexStream", 1);
     mStreamIdHelper.SetId("BodyStream",  2);
-    mStreamIdHelper.SetStartId(GENERIC_STREAM_TYPE, 10);
+    mStreamIdHelper.SetStartId(STREAM_TYPE, 10);
 
     mDataModel = new DataModel();
     mHeaderMetadata = new HeaderMetadata(mDataModel);
@@ -211,8 +215,7 @@ void OP1AFile::ReserveHeaderMetadataSpace(uint32_t min_bytes)
 
 void OP1AFile::SetInputDuration(int64_t duration)
 {
-    if (mFlavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)
-        mInputDuration = duration;
+    mInputDuration = duration;
 }
 
 void OP1AFile::SetPartitionInterval(int64_t frame_count)
@@ -267,6 +270,9 @@ OP1ATrack* OP1AFile::CreateTrack(EssenceType essence_type)
             BMX_EXCEPTION(("Only a single ST 436 VBI track is allowed"));
         mHaveVBITrack = true;
     }
+    if (essence_type == TIMED_TEXT) {
+        mTimedTextTrackCount++;
+    }
 
     MXFDataDefEnum data_def = convert_essence_type_to_data_def(essence_type);
     uint32_t track_id = mTrackIdHelper.GetNextId(data_def);
@@ -280,7 +286,7 @@ OP1ATrack* OP1AFile::CreateTrack(EssenceType essence_type)
                                         essence_type));
     mTrackMap[mTracks.back()->GetTrackIndex()] = mTracks.back();
 
-    if (!mFrameWrapped) {
+    if (essence_type != TIMED_TEXT && !mFrameWrapped) {
         mEditRate = mTracks.back()->GetEditRate();
         mIndexTable->SetEditRate(mEditRate);
     }
@@ -292,7 +298,7 @@ OP1AXMLTrack* OP1AFile::CreateXMLTrack()
 {
     uint32_t track_id    = mTrackIdHelper.GetNextId(XML_TRACK_TYPE);
     uint32_t track_index = (uint32_t)mTracks.size();
-    uint32_t stream_id   = mStreamIdHelper.GetNextId(GENERIC_STREAM_TYPE);
+    uint32_t stream_id   = mStreamIdHelper.GetNextId(STREAM_TYPE);
 
     mXMLTracks.push_back(new OP1AXMLTrack(this, track_index, track_id, stream_id));
     return mXMLTracks.back();
@@ -305,6 +311,16 @@ void OP1AFile::PrepareHeaderMetadata()
 
     BMX_CHECK(!mTracks.empty());
 
+    // if the file only contains timed text tracks then delete the common
+    // mIndexTable and mCPManager as they will not be used
+    // HAVE_PRIMARY_EC will now be false
+    if (mTimedTextTrackCount >= mTracks.size()) {
+        delete mIndexTable;
+        mIndexTable = 0;
+        delete mCPManager;
+        mCPManager = 0;
+    }
+
     // sort tracks, picture - sound - data
     stable_sort(mTracks.begin(), mTracks.end(), compare_track);
 
@@ -316,7 +332,9 @@ void OP1AFile::PrepareHeaderMetadata()
         last_track_number[mTracks[i]->GetDataDef()] = mTracks[i]->GetOutputTrackNumber();
     }
 
-    if ((mFlavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+    if (HAVE_PRIMARY_EC &&
+        (mFlavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR))
+    {
         if (mIndexTable->IsCBE())
             mIndexTable->SetExtensions(MXF_OPT_BOOL_TRUE, MXF_OPT_BOOL_TRUE, MXF_OPT_BOOL_TRUE);
         else
@@ -325,21 +343,25 @@ void OP1AFile::PrepareHeaderMetadata()
 
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite(mTrackCounts[mTracks[i]->GetDataDef()]);
-    mCPManager->SetStartTimecode(mStartTimecode);
-    mCPManager->PrepareWrite();
-    mIndexTable->PrepareWrite();
+    if (HAVE_PRIMARY_EC) {
+        mCPManager->SetStartTimecode(mStartTimecode);
+        mCPManager->PrepareWrite();
+        mIndexTable->PrepareWrite();
+    }
 
-    if (mTracks.size() > 1)
+    if (mTracks.size() - mTimedTextTrackCount > 1)
         mEssenceContainerULs.insert(MXF_EC_L(MultipleWrappings));
     for (i = 0; i < mTracks.size(); i++)
         mEssenceContainerULs.insert(mTracks[i]->GetEssenceContainerUL());
 
-    if ((mFlavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR) && mInputDuration >= 0) {
-        if (mPartitionInterval == 0 && mIndexTable->IsCBE()) {
+    if (HAVE_PRIMARY_EC &&
+        (mFlavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR) && mInputDuration >= 0)
+    {
+        if (mPartitionInterval == 0 && mIndexTable->IsCBE() && mTimedTextTrackCount == 0) {
             mSupportCompleteSinglePass = true;
             mIndexTable->SetInputDuration(mInputDuration);
         } else {
-            if (!mIndexTable->IsCBE()) {
+            if (mIndexTable && !mIndexTable->IsCBE()) {
                 log_warn("Closing and completing the header partition in a single pass write is not supported "
                          "because essence edit unit size is variable\n");
             }
@@ -347,7 +369,17 @@ void OP1AFile::PrepareHeaderMetadata()
                 log_warn("Closing and completing the header partition in a single pass write is not supported "
                          "because partition interval is non-zero\n");
             }
-            mSupportCompleteSinglePass = false;
+        }
+    } else if (!HAVE_PRIMARY_EC && mTimedTextTrackCount > 0) {
+        if (mInputDuration < 0) {
+            BMX_EXCEPTION(("Duration needs to be set for a file containing timed text tracks only"));
+        }
+        size_t i;
+        for (i = 0; i < mTracks.size(); i++) {
+            OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mTracks[i]);
+            if (tt_track) {
+                tt_track->SetDuration(mInputDuration);
+            }
         }
     }
 
@@ -368,9 +400,10 @@ void OP1AFile::PrepareWrite()
 
 void OP1AFile::WriteUserTimecode(Timecode user_timecode)
 {
-    mCPManager->WriteUserTimecode(user_timecode);
-
-    WriteContentPackages(false);
+    if (HAVE_PRIMARY_EC) {
+        mCPManager->WriteUserTimecode(user_timecode);
+        WriteContentPackages(false);
+    }
 }
 
 void OP1AFile::WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples)
@@ -396,29 +429,32 @@ void OP1AFile::CompleteWrite()
         mTracks[i]->CompleteWrite();
 
 
-    // warn if the index table requires updates (e.g. temporal offsets)
+    if (HAVE_PRIMARY_EC) {
+        // warn if the index table requires updates (e.g. temporal offsets)
 
-    if (mIndexTable->RequireUpdatesAtEnd(mOutputEndOffset))
-        log_warn("Ignoring incomplete index table information\n");
-    mIndexTable->IgnoreRequiredUpdates();
-
-
-    // write any remaining content packages (e.g. first AVCI cp if duration equals 1)
-
-    WriteContentPackages(true);
+        if (mIndexTable->RequireUpdatesAtEnd(mOutputEndOffset)) {
+            log_warn("Ignoring incomplete index table information\n");
+        }
+        mIndexTable->IgnoreRequiredUpdates();
 
 
-    // check that the duration is valid
+        // write any remaining content packages (e.g. first AVCI cp if duration equals 1)
 
-    BMX_CHECK_M(mIndexTable->GetDuration() - mOutputStartOffset + mOutputEndOffset >= 0,
-               ("Invalid output start %" PRId64 " / end %" PRId64 " offsets. Output duration %" PRId64 " is negative",
-                mOutputStartOffset, mOutputEndOffset, mIndexTable->GetDuration() - mOutputStartOffset + mOutputEndOffset));
+        WriteContentPackages(true);
 
-    if (mSupportCompleteSinglePass) {
-        BMX_CHECK_M(mIndexTable->GetDuration() == mInputDuration,
-                    ("Single pass write failed because OP-1A container duration %" PRId64 " "
-                     "does not equal set input duration %" PRId64,
-                     mIndexTable->GetDuration(), mInputDuration));
+
+        // check that the duration is valid
+
+        BMX_CHECK_M(mIndexTable->GetDuration() - mOutputStartOffset + mOutputEndOffset >= 0,
+                    ("Invalid output start %" PRId64 " / end %" PRId64 " offsets. Output duration %" PRId64 " is negative",
+                     mOutputStartOffset, mOutputEndOffset, mIndexTable->GetDuration() - mOutputStartOffset + mOutputEndOffset));
+
+        if (mSupportCompleteSinglePass) {
+            BMX_CHECK_M(mIndexTable->GetDuration() == mInputDuration,
+                        ("Single pass write failed because OP-1A container duration %" PRId64 " "
+                         "does not equal set input duration %" PRId64,
+                         mIndexTable->GetDuration(), mInputDuration));
+        }
     }
 
 
@@ -435,7 +471,8 @@ void OP1AFile::CompleteWrite()
 
     // non-minimal partition flavour: write any remaining VBE index segments
 
-    if (!(mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) &&
+    if (HAVE_PRIMARY_EC &&
+        !(mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) &&
         !(mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR) &&
         mIndexTable->IsVBE() && mIndexTable->HaveSegments())
     {
@@ -461,7 +498,7 @@ void OP1AFile::CompleteWrite()
 
     Partition &footer_partition = mMXFFile->createPartition();
     footer_partition.setKey(&MXF_PP_K(ClosedComplete, Footer)); // will be complete when memory flushed
-    if (mIndexTable->HaveFooterSegments())
+    if (HAVE_PRIMARY_EC && mIndexTable->HaveFooterSegments())
         footer_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
     else
         footer_partition.setIndexSID(0);
@@ -480,8 +517,9 @@ void OP1AFile::CompleteWrite()
 
     // minimal/body partitions flavour: write any remaining index segments
 
-    if (mIndexTable->HaveFooterSegments())
+    if (HAVE_PRIMARY_EC && mIndexTable->HaveFooterSegments()) {
         mIndexTable->WriteSegments(mMXFFile, &footer_partition, true);
+    }
 
 
     // write the RIP
@@ -522,7 +560,9 @@ void OP1AFile::CompleteWrite()
 
         // re-write the CBE index table segment(s) in the header partition
 
-        if (!mFirstWrite && mIndexTable->IsCBE() && mCBEIndexPartitionIndex == 0) {
+        if (HAVE_PRIMARY_EC &&
+            !mFirstWrite && mIndexTable->IsCBE() && mCBEIndexPartitionIndex == 0)
+        {
             Partition &index_partition = mMXFFile->getPartition(mCBEIndexPartitionIndex);
             mIndexTable->WriteSegments(mMXFFile, &index_partition, true);
         }
@@ -541,7 +581,9 @@ void OP1AFile::CompleteWrite()
 
         // re-write the CBE index table segment(s) that are not in the header metadata
 
-        if (!mFirstWrite && mIndexTable->IsCBE() && mCBEIndexPartitionIndex > 0) {
+        if (HAVE_PRIMARY_EC &&
+            !mFirstWrite && mIndexTable->IsCBE() && mCBEIndexPartitionIndex > 0)
+        {
             Partition &index_partition = mMXFFile->getPartition(mCBEIndexPartitionIndex);
             mMXFFile->seek(index_partition.getThisPartition(), SEEK_SET);
             index_partition.setKey(&MXF_PP_K(ClosedComplete, Body));
@@ -583,13 +625,21 @@ int64_t OP1AFile::GetDuration() const
 
 int64_t OP1AFile::GetContainerDuration() const
 {
-    return mIndexTable->GetDuration();
+    if (HAVE_PRIMARY_EC)
+        return mIndexTable->GetDuration();
+    else
+        return mInputDuration; // timed text tracks only file
 }
 
 OP1ATrack* OP1AFile::GetTrack(uint32_t track_index)
 {
     BMX_ASSERT(track_index < mTracks.size());
     return mTrackMap[track_index];
+}
+
+uint32_t OP1AFile::CreateStreamId()
+{
+    return mStreamIdHelper.GetNextId(STREAM_TYPE);
 }
 
 void OP1AFile::CreateHeaderMetadata()
@@ -612,10 +662,14 @@ void OP1AFile::CreateHeaderMetadata()
     Preface *preface = new Preface(mHeaderMetadata);
     preface->setLastModifiedDate(mCreationDate);
     preface->setVersion((mFlavour & OP1A_377_2004_FLAVOUR) ? MXF_PREFACE_VER(1, 2) : MXF_PREFACE_VER(1, 3));
-    if (mTracks.size() <= 1)
+    if (mTracks.size() <= 1) {
         preface->setOperationalPattern(MXF_OP_L(1a, UniTrack_Stream_Internal));
-    else
-        preface->setOperationalPattern(MXF_OP_L(1a, MultiTrack_Stream_Internal));
+    } else {
+        if (mTimedTextTrackCount > 0)
+            preface->setOperationalPattern(MXF_OP_L(1b, MultiTrack_Stream_Internal));
+        else
+            preface->setOperationalPattern(MXF_OP_L(1a, MultiTrack_Stream_Internal));
+    }
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         preface->appendEssenceContainers(*iter);
@@ -643,11 +697,13 @@ void OP1AFile::CreateHeaderMetadata()
     preface->setContentStorage(content_storage);
 
     // Preface - ContentStorage - EssenceContainerData
-    EssenceContainerData *ess_container_data = new EssenceContainerData(mHeaderMetadata);
-    content_storage->appendEssenceContainerData(ess_container_data);
-    ess_container_data->setLinkedPackageUID(mFileSourcePackageUID);
-    ess_container_data->setIndexSID(mStreamIdHelper.GetId("IndexStream"));
-    ess_container_data->setBodySID(mStreamIdHelper.GetId("BodyStream"));
+    if (mTimedTextTrackCount < mTracks.size()) {
+        EssenceContainerData *ess_container_data = new EssenceContainerData(mHeaderMetadata);
+        content_storage->appendEssenceContainerData(ess_container_data);
+        ess_container_data->setLinkedPackageUID(mFileSourcePackageUID);
+        ess_container_data->setIndexSID(mStreamIdHelper.GetId("IndexStream"));
+        ess_container_data->setBodySID(mStreamIdHelper.GetId("BodyStream"));
+    }
 
     // Preface - ContentStorage - MaterialPackage
     mMaterialPackage = new MaterialPackage(mHeaderMetadata);
@@ -682,55 +738,83 @@ void OP1AFile::CreateHeaderMetadata()
     timecode_component->setDropFrame(mStartTimecode.IsDropFrame());
     timecode_component->setStartTimecode(mStartTimecode.GetOffset());
 
+    if (mTimedTextTrackCount < mTracks.size()) {
+        mFileSourcePackage = CreateFileSourcePackage(mFileSourcePackageUID, source_track_duration, source_track_origin);
+
+        // Preface - ContentStorage - SourcePackage - (Multiple) File Descriptor
+        if (mTracks.size() - mTimedTextTrackCount > 1) {
+            MultipleDescriptor *mult_descriptor = new MultipleDescriptor(mHeaderMetadata);
+            mFileSourcePackage->setDescriptor(mult_descriptor);
+            mult_descriptor->setSampleRate(mEditRate);
+            mult_descriptor->setEssenceContainer(MXF_EC_L(MultipleWrappings));
+            if (mSupportCompleteSinglePass)
+                mult_descriptor->setContainerDuration(mInputDuration);
+        }
+    }
+
+    // MaterialPackage and file SourcePackage Tracks and FileDescriptor
+    size_t i;
+    for (i = 0; i < mTracks.size(); i++) {
+        OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mTracks[i]);
+        if (tt_track) {
+            UMID tt_package_uid;
+            if (HAVE_PRIMARY_EC) {
+                // multiple file source packages - create a new id
+                mxf_generate_umid(&tt_package_uid);
+            } else {
+                // only a single file source package - use id which can be set by the user
+                tt_package_uid = mFileSourcePackageUID;
+            }
+            SourcePackage *file_source_package = CreateFileSourcePackage(tt_package_uid, source_track_duration,
+                                                                         source_track_origin);
+            mTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage, file_source_package);
+        } else {
+            mTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage, mFileSourcePackage);
+        }
+    }
+    for (i = 0; i < mXMLTracks.size(); i++)
+        mXMLTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage);
+}
+
+SourcePackage* OP1AFile::CreateFileSourcePackage(UMID package_uid, int64_t track_duration, int64_t track_origin)
+{
+    // Preface - ContentStorage
+    ContentStorage *content_storage = mHeaderMetadata->getPreface()->getContentStorage();
+
     // Preface - ContentStorage - SourcePackage
-    mFileSourcePackage = new SourcePackage(mHeaderMetadata);
-    content_storage->appendPackages(mFileSourcePackage);
-    mFileSourcePackage->setPackageUID(mFileSourcePackageUID);
-    mFileSourcePackage->setPackageCreationDate(mCreationDate);
-    mFileSourcePackage->setPackageModifiedDate(mCreationDate);
+    SourcePackage *file_source_package = new SourcePackage(mHeaderMetadata);
+    content_storage->appendPackages(file_source_package);
+    file_source_package->setPackageUID(package_uid);
+    file_source_package->setPackageCreationDate(mCreationDate);
+    file_source_package->setPackageModifiedDate(mCreationDate);
 
     // Preface - ContentStorage - SourcePackage - Timecode Track
-    timecode_track = new Track(mHeaderMetadata);
-    mFileSourcePackage->appendTracks(timecode_track);
+    Track *timecode_track = new Track(mHeaderMetadata);
+    file_source_package->appendTracks(timecode_track);
     timecode_track->setTrackName(TIMECODE_TRACK_NAME);
     timecode_track->setTrackID(901);
     timecode_track->setTrackNumber(0);
     timecode_track->setEditRate(mEditRate);
-    timecode_track->setOrigin(source_track_origin);
+    timecode_track->setOrigin(track_origin);
 
     // Preface - ContentStorage - SourcePackage - Timecode Track - Sequence
-    sequence = new Sequence(mHeaderMetadata);
+    Sequence *sequence = new Sequence(mHeaderMetadata);
     timecode_track->setSequence(sequence);
     sequence->setDataDefinition(MXF_DDEF_L(Timecode));
-    sequence->setDuration(source_track_duration);
+    sequence->setDuration(track_duration);
 
     // Preface - ContentStorage - SourcePackage - Timecode Track - TimecodeComponent
-    timecode_component = new TimecodeComponent(mHeaderMetadata);
+    TimecodeComponent *timecode_component = new TimecodeComponent(mHeaderMetadata);
     sequence->appendStructuralComponents(timecode_component);
     timecode_component->setDataDefinition(MXF_DDEF_L(Timecode));
-    timecode_component->setDuration(source_track_duration);
+    timecode_component->setDuration(track_duration);
     Timecode sp_start_timecode = mStartTimecode;
     sp_start_timecode.AddOffset(- mOutputStartOffset, mFrameRate);
     timecode_component->setRoundedTimecodeBase(sp_start_timecode.GetRoundedTCBase());
     timecode_component->setDropFrame(sp_start_timecode.IsDropFrame());
     timecode_component->setStartTimecode(sp_start_timecode.GetOffset());
 
-    // Preface - ContentStorage - SourcePackage - (Multiple) File Descriptor
-    if (mTracks.size() > 1) {
-        MultipleDescriptor *mult_descriptor = new MultipleDescriptor(mHeaderMetadata);
-        mFileSourcePackage->setDescriptor(mult_descriptor);
-        mult_descriptor->setSampleRate(mEditRate);
-        mult_descriptor->setEssenceContainer(MXF_EC_L(MultipleWrappings));
-        if (mSupportCompleteSinglePass)
-            mult_descriptor->setContainerDuration(mInputDuration);
-    }
-
-    // MaterialPackage and file SourcePackage Tracks and FileDescriptor
-    size_t i;
-    for (i = 0; i < mTracks.size(); i++)
-        mTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage, mFileSourcePackage);
-    for (i = 0; i < mXMLTracks.size(); i++)
-        mXMLTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage);
+    return file_source_package;
 }
 
 void OP1AFile::CreateFile()
@@ -760,7 +844,8 @@ void OP1AFile::CreateFile()
     else
         header_partition.setKey(&MXF_PP_K(OpenIncomplete, Header));
     header_partition.setVersion(1, ((mFlavour & OP1A_377_2004_FLAVOUR) ? 2 : 3));
-    if (((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) &&
+    if (HAVE_PRIMARY_EC &&
+        ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) &&
         mIndexTable->IsCBE())
     {
         header_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
@@ -769,15 +854,19 @@ void OP1AFile::CreateFile()
     {
         header_partition.setIndexSID(0);
     }
-    if ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR))
+    if (HAVE_PRIMARY_EC && (mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR))
         header_partition.setBodySID(mStreamIdHelper.GetId("BodyStream"));
     else
         header_partition.setBodySID(0);
     header_partition.setKagSize(mKAGSize);
-    if (mTracks.size() <= 1)
+    if (mTracks.size() <= 1) {
         header_partition.setOperationalPattern(&MXF_OP_L(1a, UniTrack_Stream_Internal));
-    else
-        header_partition.setOperationalPattern(&MXF_OP_L(1a, MultiTrack_Stream_Internal));
+    } else {
+        if (mTimedTextTrackCount > 0)
+            header_partition.setOperationalPattern(&MXF_OP_L(1b, MultiTrack_Stream_Internal));
+        else
+            header_partition.setOperationalPattern(&MXF_OP_L(1a, MultiTrack_Stream_Internal));
+    }
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         header_partition.addEssenceContainer(&(*iter));
@@ -810,29 +899,107 @@ void OP1AFile::CreateFile()
             stream_partition.fillToKag(mMXFFile);
         }
     }
+
+
+    // write timed text track index and essence container
+
+    for (i = 0; i < mTracks.size(); i++) {
+        OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mTracks[i]);
+        if (!tt_track) {
+            continue;
+        }
+        if (header_partition.getIndexSID() || header_partition.getBodySID())
+            BMX_EXCEPTION(("Timed Text track's partitions are currently incompatible with minimal partitions flavour"));
+        if (mSupportCompleteSinglePass)
+            BMX_EXCEPTION(("Timed Text track's partitions are currently incompatible with single pass flavour"));
+
+        if (mMXFFile->isMemoryFileOpen())
+            mMXFFile->closeMemoryFile();
+
+        // write index table partition and segment
+        Partition &index_partition = mMXFFile->createPartition();
+        if (mSupportCompleteSinglePass)
+            index_partition.setKey(&MXF_PP_K(ClosedComplete, Body));
+        else
+            index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
+        index_partition.setIndexSID(tt_track->GetIndexSID());
+        index_partition.setBodySID(0);
+        index_partition.setKagSize(mKAGSize);
+        index_partition.write(mMXFFile);
+        tt_track->WriteIndexTable(mMXFFile, &index_partition);
+
+        // write essence partition and container data
+        Partition &ess_partition = mMXFFile->createPartition();
+        if (mSupportCompleteSinglePass)
+            ess_partition.setKey(&MXF_PP_K(ClosedComplete, Body));
+        else
+            ess_partition.setKey(&MXF_PP_K(OpenComplete, Body));
+        ess_partition.setKey(&MXF_PP_K(OpenComplete, Body));
+        ess_partition.setIndexSID(0);
+        ess_partition.setBodySID(tt_track->GetBodySID());
+        ess_partition.setKagSize(mEssencePartitionKAGSize);
+        ess_partition.setBodyOffset(0);
+        ess_partition.write(mMXFFile);
+        tt_track->WriteEssenceContainer(mMXFFile, &ess_partition);
+
+        size_t k;
+        for (k = 0; k < tt_track->GetNumAncillaryResources(); k++) {
+            Partition &stream_partition = mMXFFile->createPartition();
+            stream_partition.setKey(&MXF_GS_PP_K(GenericStream));
+            stream_partition.setBodySID(tt_track->GetAncillaryResourceStreamId(k));
+            // Note: ST 429-5 says no KLV Fill is permitted after the Partition Pack.
+            //       ST 429-3, which ST 429-5 conforms to with some exceptions, states
+            //       that the KAG size shall be 1. This requirement would result in no
+            //       KLV Fill in bmx and probably most other implementations.
+            //       However, a KLV Fill will be written here if KAG size != 1 because a
+            //       KAG size != 1 would make the file not compliant with ST 429-5 and
+            //       there is no reason to disallow a KLV Fill in a Generic Stream
+            //       Container - ST 410 allows it.
+            stream_partition.write(mMXFFile);
+            tt_track->WriteAncillaryResource(mMXFFile, &ess_partition, k);
+        }
+    }
 }
 
 void OP1AFile::UpdatePackageMetadata()
 {
     int64_t output_duration = GetDuration();
 
-    UpdateTrackMetadata(mMaterialPackage,   0,                  output_duration);
-    UpdateTrackMetadata(mFileSourcePackage, mOutputStartOffset, output_duration + mOutputStartOffset);
+    UpdateTrackMetadata(mMaterialPackage, 0, output_duration);
 
+    int64_t container_duration;
+    if (mFileSourcePackage) {
+        UpdateTrackMetadata(mFileSourcePackage, mOutputStartOffset, output_duration + mOutputStartOffset);
 
-    int64_t container_duration = GetContainerDuration();
+        container_duration = GetContainerDuration();
 
-    BMX_ASSERT(mFileSourcePackage->haveDescriptor());
-    FileDescriptor *file_descriptor = dynamic_cast<FileDescriptor*>(mFileSourcePackage->getDescriptor());
-    if (file_descriptor)
-        file_descriptor->setContainerDuration(container_duration);
+        BMX_ASSERT(mFileSourcePackage->haveDescriptor());
+        FileDescriptor *file_descriptor = dynamic_cast<FileDescriptor*>(mFileSourcePackage->getDescriptor());
+        if (file_descriptor)
+            file_descriptor->setContainerDuration(container_duration);
 
-    MultipleDescriptor *mult_descriptor = dynamic_cast<MultipleDescriptor*>(file_descriptor);
-    if (mult_descriptor) {
-        vector<GenericDescriptor*> sub_descriptors = mult_descriptor->getSubDescriptorUIDs();
-        size_t i;
-        for (i = 0; i < sub_descriptors.size(); i++) {
-            file_descriptor = dynamic_cast<FileDescriptor*>(sub_descriptors[i]);
+        MultipleDescriptor *mult_descriptor = dynamic_cast<MultipleDescriptor*>(file_descriptor);
+        if (mult_descriptor) {
+            vector<GenericDescriptor*> sub_descriptors = mult_descriptor->getSubDescriptorUIDs();
+            size_t i;
+            for (i = 0; i < sub_descriptors.size(); i++) {
+                file_descriptor = dynamic_cast<FileDescriptor*>(sub_descriptors[i]);
+                if (file_descriptor)
+                    file_descriptor->setContainerDuration(container_duration);
+            }
+        }
+    } else {
+        container_duration = output_duration;
+    }
+
+    size_t i;
+    for (i = 0; i < mTracks.size(); i++) {
+        OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mTracks[i]);
+        if (tt_track) {
+            SourcePackage *tt_source_package = tt_track->GetFileSourcePackage();
+            UpdateTrackMetadata(tt_source_package, mOutputStartOffset, output_duration + mOutputStartOffset);
+            BMX_ASSERT(tt_source_package->haveDescriptor());
+            FileDescriptor *file_descriptor = dynamic_cast<FileDescriptor*>(tt_source_package->getDescriptor());
             if (file_descriptor)
                 file_descriptor->setContainerDuration(container_duration);
         }
@@ -873,6 +1040,10 @@ void OP1AFile::UpdateTrackMetadata(GenericPackage *package, int64_t origin, int6
 
 void OP1AFile::WriteContentPackages(bool end_of_samples)
 {
+    if (!HAVE_PRIMARY_EC) {
+        return;
+    }
+
     // for dual segment index tables (eg. AVCI), wait for first 2 content packages before writing
     if (!end_of_samples && mIndexTable->RequireIndexTableSegmentPair() &&
         mCPManager->GetPosition() == 0 && !mCPManager->HaveContentPackages(2))
@@ -1010,7 +1181,7 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
 
 void OP1AFile::SetPartitionsFooterOffset()
 {
-    BMX_ASSERT(mSupportCompleteSinglePass);
+    BMX_ASSERT(mSupportCompleteSinglePass && HAVE_PRIMARY_EC);
 
     uint32_t first_size = 0, non_first_size = 0;
     mIndexTable->GetCBEEditUnitSize(&first_size, &non_first_size);

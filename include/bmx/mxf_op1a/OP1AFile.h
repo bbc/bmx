@@ -70,6 +70,7 @@ class OP1AFile
 public:
     friend class OP1ATrack;
     friend class OP1AMPEG2LGTrack;
+    friend class OP1ATimedTextTrack;
 
 public:
     OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate);
@@ -131,11 +132,14 @@ public:
     UniqueIdHelper* GetTrackIdHelper()  { return &mTrackIdHelper; }
     UniqueIdHelper* GetStreamIdHelper() { return &mStreamIdHelper; }
 
+    uint32_t CreateStreamId();
+
 private:
     OP1AIndexTable* GetIndexTable() const { return mIndexTable; }
     OP1AContentPackageManager* GetContentPackageManager() const { return mCPManager; }
 
     void CreateHeaderMetadata();
+    mxfpp::SourcePackage* CreateFileSourcePackage(UMID package_uid, int64_t track_duration, int64_t track_origin);
     void CreateFile();
 
     void UpdatePackageMetadata();
@@ -177,6 +181,7 @@ private:
     bool mHaveANCTrack;
     bool mHaveVBITrack;
     std::vector<OP1AXMLTrack*> mXMLTracks;
+    size_t mTimedTextTrackCount;
 
     mxfpp::DataModel *mDataModel;
     mxfpp::HeaderMetadata *mHeaderMetadata;

@@ -6,12 +6,12 @@
   <xs:element name="as10">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="core" type="core_type" minOccurs="0"/>
+        <xs:element name="core" type="as10_core_type" minOccurs="0"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
 
-  <xs:complexType name="core_type">
+  <xs:complexType name="as10_core_type">
     <xs:sequence>
       <xs:element name="shim_name" type="xs:string"/>
       <xs:element name="type" type="xs:string" minOccurs="0"/>

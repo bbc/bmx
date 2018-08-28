@@ -44,6 +44,7 @@
 #include <bmx/as11/AS11DMS.h>
 #include <bmx/as11/UKDPPDMS.h>
 #include <bmx/apps/AppUtils.h>
+#include <bmx/apps/PropertyFileParser.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -273,50 +274,21 @@ bool AS11Helper::ParseFrameworkFile(const char *type_str, const char *filename)
         return false;
     }
 
-    FILE *file = fopen(filename, "rb");
-    if (!file) {
-        fprintf(stderr, "Failed to open file '%s': %s\n", filename, bmx_strerror(errno).c_str());
+    PropertyFileParser property_parser;
+    if (!property_parser.Open(filename)) {
+        fprintf(stderr, "Failed to open framework file '%s'\n", filename);
         return false;
     }
 
-    int line_num = 0;
-    int c = '1';
-    while (c != EOF) {
-        // move file pointer past the newline characters
-        while ((c = fgetc(file)) != EOF && (c == '\r' || c == '\n')) {
-            if (c == '\n')
-                line_num++;
-        }
-
-        string name, value;
-        bool parse_name = true;
-        while (c != EOF && (c != '\r' && c != '\n')) {
-            if (c == ':' && parse_name) {
-                parse_name = false;
-            } else {
-                if (parse_name)
-                    name += c;
-                else
-                    value += c;
-            }
-
-            c = fgetc(file);
-        }
-        if (!name.empty()) {
-            if (parse_name) {
-                fprintf(stderr, "Failed to parse line %d\n", line_num);
-                fclose(file);
-                return false;
-            }
-
-            SetFrameworkProperty(type, trim_string(name), trim_string(value));
-        }
-
-        if (c == '\n')
-            line_num++;
+    string name;
+    string value;
+    while (property_parser.ParseNext(&name, &value)) {
+        SetFrameworkProperty(type, name, value);
     }
-
-    fclose(file);
+    if (property_parser.HaveError()) {
+        fprintf(stderr, "Failed to parse framework file '%s'\n", filename);
+        return false;
+    }
 
     return true;
 }

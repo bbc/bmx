@@ -61,6 +61,7 @@ public:
     friend class IndexTableHelper;
     friend class EssenceChunkHelper;
     friend class MXFFileTrackReader;
+    friend class MXFTimedTextTrackReader;
     friend class MXFTextObject;
     friend class FrameMetadataReader;
     friend class EssenceReaderBuffer;

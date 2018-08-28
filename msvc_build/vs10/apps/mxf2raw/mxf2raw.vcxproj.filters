@@ -23,6 +23,9 @@
     <ClCompile Include="..\..\..\..\apps\mxf2raw\AvidInfoOutput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\apps\mxf2raw\OutputFileManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\apps\mxf2raw\mxf2raw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -38,6 +41,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\apps\mxf2raw\AvidInfoOutput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\apps\mxf2raw\OutputFileManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

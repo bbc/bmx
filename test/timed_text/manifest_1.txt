@@ -1,0 +1,4 @@
+file: text_example.xml
+profile: text
+encoding: UTF-8
+languages: en,fr

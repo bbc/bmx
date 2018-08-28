@@ -37,6 +37,7 @@
 
 #include <bmx/BMXTypes.h>
 #include <bmx/EssenceType.h>
+#include <bmx/mxf_helper/TimedTextManifest.h>
 
 
 namespace mxfpp
@@ -176,7 +177,7 @@ class MXFDataTrackInfo : public MXFTrackInfo
 {
 public:
     MXFDataTrackInfo();
-    virtual ~MXFDataTrackInfo() {}
+    virtual ~MXFDataTrackInfo();
 
     virtual bool IsCompatible(const MXFTrackInfo *right) const;
 
@@ -188,6 +189,7 @@ public:
 public:
     std::vector<VBIManifestElement> vbi_manifest;
     std::vector<ANCManifestElement> anc_manifest;
+    TimedTextManifest *timed_text_manifest;
 };
 
 

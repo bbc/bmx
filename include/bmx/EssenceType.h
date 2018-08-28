@@ -141,6 +141,8 @@ typedef enum
     // ST 436 data
     ANC_DATA,
     VBI_DATA,
+    // Timed Text data
+    TIMED_TEXT,
 } EssenceType;
 
 

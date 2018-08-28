@@ -36,6 +36,7 @@
 #include <bmx/mxf_helper/DataMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/ANCDataMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/VBIDataMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/TimedTextMXFDescriptorHelper.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -57,6 +58,9 @@ EssenceType DataMXFDescriptorHelper::IsSupported(mxfpp::FileDescriptor *file_des
     essence_type = VBIDataMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)
         return essence_type;
+    essence_type = TimedTextMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+    if (essence_type)
+        return essence_type;
 
     return DATA_ESSENCE;
 }
@@ -69,6 +73,8 @@ DataMXFDescriptorHelper* DataMXFDescriptorHelper::Create(mxfpp::FileDescriptor *
         helper = new ANCDataMXFDescriptorHelper();
     else if (VBIDataMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
         helper = new VBIDataMXFDescriptorHelper();
+    else if (TimedTextMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
+        helper = new TimedTextMXFDescriptorHelper();
     else
         helper = new DataMXFDescriptorHelper();
 
@@ -80,7 +86,8 @@ DataMXFDescriptorHelper* DataMXFDescriptorHelper::Create(mxfpp::FileDescriptor *
 bool DataMXFDescriptorHelper::IsSupported(EssenceType essence_type)
 {
     return ANCDataMXFDescriptorHelper::IsSupported(essence_type) ||
-           VBIDataMXFDescriptorHelper::IsSupported(essence_type);
+           VBIDataMXFDescriptorHelper::IsSupported(essence_type) ||
+           TimedTextMXFDescriptorHelper::IsSupported(essence_type);
 }
 
 MXFDescriptorHelper* DataMXFDescriptorHelper::Create(EssenceType essence_type)
@@ -90,8 +97,10 @@ MXFDescriptorHelper* DataMXFDescriptorHelper::Create(EssenceType essence_type)
     DataMXFDescriptorHelper *helper;
     if (ANCDataMXFDescriptorHelper::IsSupported(essence_type))
         helper = new ANCDataMXFDescriptorHelper();
-    else
+    else if (VBIDataMXFDescriptorHelper::IsSupported(essence_type))
         helper = new VBIDataMXFDescriptorHelper();
+    else
+        helper = new TimedTextMXFDescriptorHelper();
 
     helper->SetEssenceType(essence_type);
 

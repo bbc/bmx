@@ -49,6 +49,7 @@
 #include <bmx/mxf_op1a/OP1ARDD36Track.h>
 #include <bmx/mxf_op1a/OP1AVC2Track.h>
 #include <bmx/mxf_op1a/OP1AXMLTrack.h>
+#include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
 #include <bmx/avid_mxf/AvidPictureTrack.h>
 #include <bmx/avid_mxf/AvidDVTrack.h>
 #include <bmx/avid_mxf/AvidD10Track.h>
@@ -1299,6 +1300,30 @@ void ClipWriterTrack::SetXMLLanguageCode(const string &code)
                 xml_track->SetLanguageCode(code);
             break;
         }
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
+void ClipWriterTrack::SetTimedTextSource(const TimedTextManifest *manifest)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mOP1ATrack);
+            if (tt_track) {
+                tt_track->SetSource(manifest);
+            }
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        case CW_D10_CLIP_TYPE:
         case CW_AS02_CLIP_TYPE:
         case CW_AVID_CLIP_TYPE:
         case CW_WAVE_CLIP_TYPE:

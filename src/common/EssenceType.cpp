@@ -139,6 +139,7 @@ static const EssenceTypeInfo ESSENCE_TYPE_INFO[] =
     {D10_AES3_PCM,              SOUND_ESSENCE,          "D10 AES3 PCM",                         "D10_AES3_PCM"},
     {ANC_DATA,                  DATA_ESSENCE,           "ANC data",                             "ANC_Data"},
     {VBI_DATA,                  DATA_ESSENCE,           "VBI data",                             "VBI_Data"},
+    {TIMED_TEXT,                DATA_ESSENCE,           "Timed Text",                           "Timed_Text"},
 };
 
 

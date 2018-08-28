@@ -3590,6 +3590,7 @@ int main(int argc, const char** argv)
                     else if (vbi_max_size)
                         clip_track->SetMaxDataSize(vbi_max_size);
                     break;
+                case TIMED_TEXT:
                 case D10_AES3_PCM:
                 case PICTURE_ESSENCE:
                 case SOUND_ESSENCE:
