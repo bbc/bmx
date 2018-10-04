@@ -443,6 +443,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --clip-wrap             Use clip wrapping for a single sound track\n");
     fprintf(stderr, "    --mp-track-num          Use the material package track number property to define a track order. By default the track number is set to 0\n");
     fprintf(stderr, "    --aes-3                 Use AES-3 audio mapping\n");
+    fprintf(stderr, "    --kag-size-512          Set KAG size to 512, instead of 1\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/rdd9/d10:\n");
     fprintf(stderr, "    --xml-scheme-id <id>    Set the XML payload scheme identifier associated with the following --embed-xml option.\n");
@@ -686,6 +687,7 @@ int main(int argc, const char** argv)
     ClipSubType clip_sub_type = NO_CLIP_SUB_TYPE;
     bool ard_zdf_hdf_profile = false;
     bool aes3 = false;
+    bool kag_size_512 = false;
     AS10Shim as10_shim = AS10_UNKNOWN_SHIM;
     const char *mpeg_descr_defaults_name = 0;
     bool mpeg_descr_frame_checks = true;
@@ -1262,6 +1264,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--aes-3") == 0)
         {
             aes3 = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--kag-size-512") == 0)
+        {
+            kag_size_512 = true;
         }
         else if (strcmp(argv[cmdln_index], "--xml-scheme-id") == 0)
         {
@@ -3997,6 +4003,8 @@ int main(int argc, const char** argv)
                     flavour |= OP1A_MP_TRACK_NUMBER_FLAVOUR;
                 if (aes3)
                     flavour |= OP1A_AES_FLAVOUR;
+                if (kag_size_512)
+                    flavour |= OP1A_512_KAG_FLAVOUR;
                 if (min_part)
                     flavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
                 else if (body_part)
