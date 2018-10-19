@@ -1952,6 +1952,17 @@ int main(int argc, const char** argv)
             }
             cmdln_index++;
         }
+        else
+        {
+            // break if/else here to workaround Visual C++ error
+            // C1061: compiler limit : blocks nested too deeply
+            msvc_block_limit = true;
+        }
+
+        if (!msvc_block_limit)
+        {
+            // do nothing - wasn't the Visual C++ C1061 workaround
+        }
         else if (strcmp(argv[cmdln_index], "--project") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -2200,58 +2211,47 @@ int main(int argc, const char** argv)
         {
             use_avc_subdesc = true;
         }
+        else if (strcmp(argv[cmdln_index], "--audio-layout") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!AS11Helper::ParseAudioLayoutMode(argv[cmdln_index + 1], &audio_layout_mode_label) &&
+                !parse_mxf_auid(argv[cmdln_index + 1], &audio_layout_mode_label))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--track-mca-labels") == 0)
+        {
+            if (cmdln_index + 3 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (strcmp(argv[cmdln_index + 1], "as11") != 0)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "MCA labels scheme '%s' is not supported\n", argv[cmdln_index + 1]);
+                return 1;
+            }
+            track_mca_labels.push_back(make_pair(argv[cmdln_index + 1], argv[cmdln_index + 2]));
+            cmdln_index += 2;
+        }
+        else if (strcmp(argv[cmdln_index], "--regtest") == 0)
+        {
+            BMX_REGRESSION_TEST = true;
+        }
         else
         {
-            // break if/else here to workaround Visual C++ error
-            // C1061: compiler limit : blocks nested too deeply
-            msvc_block_limit = true;
-        }
-
-        if (msvc_block_limit)
-        {
-            // ...continue if/else here
-            if (strcmp(argv[cmdln_index], "--audio-layout") == 0)
-            {
-                if (cmdln_index + 1 >= argc)
-                {
-                    usage(argv[0]);
-                    fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
-                    return 1;
-                }
-                if (!AS11Helper::ParseAudioLayoutMode(argv[cmdln_index + 1], &audio_layout_mode_label) &&
-                    !parse_mxf_auid(argv[cmdln_index + 1], &audio_layout_mode_label))
-                {
-                    usage(argv[0]);
-                    fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
-                    return 1;
-                }
-                cmdln_index++;
-            }
-            else if (strcmp(argv[cmdln_index], "--track-mca-labels") == 0)
-            {
-                if (cmdln_index + 3 >= argc)
-                {
-                    usage(argv[0]);
-                    fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
-                    return 1;
-                }
-                if (strcmp(argv[cmdln_index + 1], "as11") != 0)
-                {
-                    usage(argv[0]);
-                    fprintf(stderr, "MCA labels scheme '%s' is not supported\n", argv[cmdln_index + 1]);
-                    return 1;
-                }
-                track_mca_labels.push_back(make_pair(argv[cmdln_index + 1], argv[cmdln_index + 2]));
-                cmdln_index += 2;
-            }
-            else if (strcmp(argv[cmdln_index], "--regtest") == 0)
-            {
-                BMX_REGRESSION_TEST = true;
-            }
-            else
-            {
-                break;
-            }
+            break;
         }
     }
 
