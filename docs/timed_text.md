@@ -1,0 +1,112 @@
+# Timed Text
+
+The implementation in `bmx` supports embedding [TTML Profiles for Internet Media Subtitles and Captions 1.0.1 (IMSC1)](https://www.w3.org/TR/ttml-imsc1.0.1/) in MXF. The Timed Text is embedded according to SMPTE ST 2067-2:2016 and ST 2067-5:2013, which forms part of the Interoperable Master Format (IMF) set of SMPTE specifications. These specifications reference SMPTE ST 429-5:2017, which is part of the D-Cinema Packaging specifications.
+
+
+## Writing Support
+
+Timed Text is supported in the OP-1A writer classes. It can be used to create an MXF OP-1A file containing Timed Text only or an MXF OP-1B file containing Timed Text plus other audio, video or data tracks.
+
+The file is signalled as OP-1B if there are other tracks because the Timed Text uses clip wrapping as opposed to frame wrapping. This requires there to be a separate Essence Container and therefore a separate file Source Package.
+
+The Timed Text XML document is written to an Essence Container and ancillary resources are written to Generic Stream Containers. The Timed Text Index Table, Essence and Generic Stream Containers are written in seperate partitions after the Header Partition and after RP 2057 XML Generic Stream Container partitions. Placing the Timed Text data before the audio and video data allows applications to start playing the content, including subtitles or captions, before the file is available in its entirety.
+
+The `OP1ATimedTextTrack` class can be used to create a Timed Text track. It is configured using the `OP1ATimedTextTrack::SetSource()` method which is passed a `TimedTextManifest` object which specifies the source content and associated properties.
+
+
+### Commandline Utilities
+
+The `raw2bmx` utility can be used to embed Timed Text XML and ancillary font or image resources in MXF. It uses a manifest file to describe the source filenames and properties. The structure of the manifest file is described in the [Manifest File Format](#manifest-file-format) section.
+
+*Example 1*: Creates a file including a timed text track alongside video and audio tracks. The manifest file, `manifest.txt`, references the Timed Text XML file and ancillary resource files.
+```
+raw2bmx -t op1a -y 10:00:00:00 --avci video.h264 --wave audio.wav --tt manifest.txt
+```
+
+*Example 2*: Creates a timed text track only file. An edit rate (`-f`) and duration (`--dur`) are required in this case as they are not parsed from the Timed Text XML file (assuming they are specified in there).
+```
+raw2bmx -t op1a -y 10:00:00:00 -f 25 --dur 100 --tt manifest.txt
+```
+
+
+### Manifest File Format
+
+The manifest file is a text file containing properties related to a Timed Text XML document and any associated ancillary image or font resources.
+
+The manifest file consists of a set of name/value property pairs separated by a newline. The name/value pair uses a ':' character separator. A '#' character signals the start of a comment.
+
+The manifest file must start with properties associated with the Timed Text XML document and this can be followed by properties associated with each ancillary resource. Each ancillary resource must start with the `resource_file` property and this is used to detect when a new ancillary resource is being defined.
+
+The properties for the Timed Text XML document are as follows.
+* `file` (*required*): The filename of the Timed Text XML document. A relative filename is relative to the location of the manifest file.
+* `profile` (*required*): The IMSC1 profile name, either `text` or `image`.
+* `encoding` (*required*): The XML encoding, e.g. `UTF-8`.
+* `resource_id` (*optional*): The identifier associated with the Timed Text XML. The value is a UUID URN.
+* `languages` (*optional*): A list of RFC 5646 language tags separated by a ',' character.
+
+The properties for the ancillary resource are as follows.
+* `resource_file` (*required*): The filename of the resource. A relative filename is relative to the location of the manifest file.
+* `resource_id` (*required*): The identifier associated with the resource. The value is a UUID URN.
+* `mime_type` (*required*): The MIME type for the resource.
+
+An example manifest is shown below. It describes a Timed Text XML document `image_example.xml` that references a font resource contained in `font.ttf` and an image resource contained in `image.png`.
+
+```
+file: image_example.xml
+profile: image
+encoding: UTF-8
+languages: en,fr
+
+resource_file: font.ttf
+mime_type: application/x-font-opentype
+resource_id: urn:uuid:3191755f-11c1-50ba-af03-ba1f7913491a  # == uuid.uuid5(uuid.NAMESPACE_URL, 'font.ttf')
+
+resource_file: image.png
+resource_id: urn:uuid:173efd37-3b1e-535c-917f-e126e25bd505  # == uuid.uuid5(uuid.NAMESPACE_URL, 'image.png')
+mime_type: image/png
+```
+
+## Reading Support
+
+The `MXFTimedTextTrackReader` class is provided in the `mxf_reader` to read the Timed Text metadata and essence. This class is not quite the same as the other `MXFFileTrackReader` classes because it can't be used to read frame-by-frame. The breaks the original design of `bmx` to some degree.
+
+The inherited `MXFFileTrackReader` methods should not be used and instead the `MXFTimedTextTrackReader` class provides a `MXFTimedTextTrackReader::GetManifest()` method to get a manifest of the Timed Text XML and related ancillary resources. The Timed Text XML can be read using the `MXFTimedTextTrackReader::ReadTimedText()` method and the ancillary resources using either `MXFTimedTextTrackReader::ReadAncillaryResourceById()` or `MXFTimedTextTrackReader::ReadAncillaryResourceByStreamId()`.
+
+
+### Commandline Utilities
+
+The `mxf2raw` utility can be used to show metadata about the Timed Text tracks and used for extracting the essence data to files. The Timed Text tracks will have metadata shown similar to the extract below. It shows the properties in the Timed Text data file descriptor and sub-descriptors.
+
+```
+    Track #1:
+      essence_kind    : Data
+      essence_type    : Timed_Text
+      ec_label        : urn:smpte:ul:060e2b34.0401010a.0d010301.02130101
+      edit_rate       : 25/1
+      duration        : 00:00:10:00 (count='250')
+      Packages: (1)
+        Package #0:
+          Material:
+            package_uid     : urn:smpte:umid:060a2b34.01010105.01010f20.13000000.c5239c49.1a6d884f.ba77974a.708ebd1a
+            track_id        : 3001
+            track_number    : 0
+          FileSource:
+            package_uid     : urn:smpte:umid:060a2b34.01010105.01010f20.13000000.5c86a914.c37cec4e.a811a0e3.dfeade5a
+            track_id        : 3001
+            track_number    : 0x17010b01
+            file_uri        : file:///tmp/timed_text.mxf
+      DataDescriptor:
+        TimedTextDescriptor:
+          profile         : http://www.w3.org/ns/ttml/profile/imsc1/image
+          encoding        : UTF-8
+          languages       : en
+          AncillaryResources: (2)
+            Element #0:
+              resource_id     : urn:uuid:3191755f-11c1-50ba-af03-ba1f7913491a
+              mime_type       : application/x-font-opentype
+              stream_id       : 12
+            Element #1:
+              resource_id     : urn:uuid:173efd37-3b1e-535c-917f-e126e25bd505
+              mime_type       : image/png
+              stream_id       : 13
+```
