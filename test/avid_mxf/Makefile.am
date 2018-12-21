@@ -87,6 +87,7 @@ EXTRA_DIST = \
 	mpeg2lg_422p_hl_1080i.md5s \
 	mpeg2lg_mp_hl_1920_1080i.md5s \
 	mpeg2lg_mp_h14_1080i.md5s \
+	avc_high_422_intra.md5s \
 	avci100_1080i.md5s \
 	avci100_1080i_gf.md5s \
 	avci100_1080i_gfp.md5s \
