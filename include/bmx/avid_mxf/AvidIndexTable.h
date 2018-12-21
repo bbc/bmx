@@ -51,9 +51,6 @@ public:
     AvidIndexEntry(int8_t temporal_offset_, int8_t key_frame_offset_, uint8_t flags_,
                    int64_t stream_offset_, bool can_start_partition_);
 
-    bool IsDefault();
-    bool IsCompatible(const AvidIndexEntry &entry);
-
 public:
     int64_t stream_offset;
     int8_t temporal_offset;

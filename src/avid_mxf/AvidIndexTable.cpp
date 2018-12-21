@@ -72,19 +72,6 @@ AvidIndexEntry::AvidIndexEntry(int8_t temporal_offset_, int8_t key_frame_offset_
 
 }
 
-bool AvidIndexEntry::IsDefault()
-{
-    return stream_offset == 0 && temporal_offset == 0 && key_frame_offset == 0 && flags == 0;
-}
-
-bool AvidIndexEntry::IsCompatible(const AvidIndexEntry &entry)
-{
-    // compatible if current entry is the default entry or the new entry equals the current entry
-    return IsDefault() || (stream_offset == entry.stream_offset &&
-        temporal_offset == entry.temporal_offset &&
-        key_frame_offset == entry.key_frame_offset && flags == entry.flags);
-}
-
 
 AvidIndexTable::AvidIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRational edit_rate)
     : mIndexSID(index_sid)
