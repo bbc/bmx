@@ -146,9 +146,11 @@
     <ClInclude Include="..\..\..\include\bmx\as11\UKDPPFramework.h" />
     <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidAlphaTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidAVCITrack.h" />
+    <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidAVCTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidClip.h" />
     <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidD10Track.h" />
     <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidDVTrack.h" />
+    <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidIndexTable.h" />
     <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidInfo.h" />
     <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidMJPEGTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidMPEG2LGTrack.h" />
@@ -326,9 +328,11 @@
     <ClCompile Include="..\..\..\src\as11\UKDPPFramework.cpp" />
     <ClCompile Include="..\..\..\src\avid_mxf\AvidAlphaTrack.cpp" />
     <ClCompile Include="..\..\..\src\avid_mxf\AvidAVCITrack.cpp" />
+    <ClCompile Include="..\..\..\src\avid_mxf\AvidAVCTrack.cpp" />
     <ClCompile Include="..\..\..\src\avid_mxf\AvidClip.cpp" />
     <ClCompile Include="..\..\..\src\avid_mxf\AvidD10Track.cpp" />
     <ClCompile Include="..\..\..\src\avid_mxf\AvidDVTrack.cpp" />
+    <ClCompile Include="..\..\..\src\avid_mxf\AvidIndexTable.cpp" />
     <ClCompile Include="..\..\..\src\avid_mxf\AvidInfo.cpp" />
     <ClCompile Include="..\..\..\src\avid_mxf\AvidMJPEGTrack.cpp" />
     <ClCompile Include="..\..\..\src\avid_mxf\AvidMPEG2LGTrack.cpp" />

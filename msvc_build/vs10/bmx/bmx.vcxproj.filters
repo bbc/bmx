@@ -314,6 +314,9 @@
     <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidAVCITrack.h">
       <Filter>Header Files\avid_mxf</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidAVCTrack.h">
+      <Filter>Header Files\avid_mxf</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidClip.h">
       <Filter>Header Files\avid_mxf</Filter>
     </ClInclude>
@@ -321,6 +324,9 @@
       <Filter>Header Files\avid_mxf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidDVTrack.h">
+      <Filter>Header Files\avid_mxf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidIndexTable.h">
       <Filter>Header Files\avid_mxf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\avid_mxf\AvidInfo.h">
@@ -850,6 +856,9 @@
     <ClCompile Include="..\..\..\src\avid_mxf\AvidAVCITrack.cpp">
       <Filter>Source Files\avid_mxf</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\avid_mxf\AvidAVCTrack.cpp">
+      <Filter>Source Files\avid_mxf</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\avid_mxf\AvidClip.cpp">
       <Filter>Source Files\avid_mxf</Filter>
     </ClCompile>
@@ -860,6 +869,9 @@
       <Filter>Source Files\avid_mxf</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\avid_mxf\AvidInfo.cpp">
+      <Filter>Source Files\avid_mxf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\avid_mxf\AvidIndexTable.cpp">
       <Filter>Source Files\avid_mxf</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\avid_mxf\AvidMJPEGTrack.cpp">
