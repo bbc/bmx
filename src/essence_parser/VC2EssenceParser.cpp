@@ -510,7 +510,7 @@ uint32_t VC2EssenceParser::ParseSequenceHeader(VC2GetBitBuffer *buffer, Sequence
 
         uint64_t base_video_format = buffer->GetUInt();
         if (base_video_format >= BMX_ARRAY_SIZE(DEFAULT_SOURCE_PARAMETERS)) {
-            log_warn("Unknown base video format index %"PRIu64"\n", base_video_format);
+            log_warn("Unknown base video format index %" PRIu64 "\n", base_video_format);
             return 0;
         }
         sequence_header->base_video_format = (uint8_t)base_video_format;
@@ -519,7 +519,7 @@ uint32_t VC2EssenceParser::ParseSequenceHeader(VC2GetBitBuffer *buffer, Sequence
 
         uint64_t picture_coding_mode = buffer->GetUInt();
         if (picture_coding_mode > 1) {
-            log_warn("Unknown picture coding mode %"PRIu64"\n", picture_coding_mode);
+            log_warn("Unknown picture coding mode %" PRIu64 "\n", picture_coding_mode);
             return 0;
         }
         sequence_header->picture_coding_mode = (uint8_t)picture_coding_mode;
@@ -545,7 +545,7 @@ uint32_t VC2EssenceParser::ParsePictureHeader(VC2GetBitBuffer *buffer, PictureHe
         buffer->ByteAlign();
         uint64_t wavelet_index = buffer->GetUInt();
         if (wavelet_index > 6) {
-            log_warn("Unknown wavelet filter index %"PRIu64"\n", wavelet_index);
+            log_warn("Unknown wavelet filter index %" PRIu64 "\n", wavelet_index);
             return 0;
         }
         picture_header->wavelet_index = (uint8_t)wavelet_index;
@@ -572,7 +572,7 @@ bool VC2EssenceParser::ParseSourceParameters(VC2GetBitBuffer *buffer, SequenceHe
     if (buffer->GetBool()) {
         uint64_t index = buffer->GetUInt();
         if (index > 2) {
-            log_warn("Unknown color diff format index %"PRIu64"\n", index);
+            log_warn("Unknown color diff format index %" PRIu64 "\n", index);
             return false;
         }
         sequence_header->source_params.color_diff_format_index = (uint8_t)index;
@@ -581,7 +581,7 @@ bool VC2EssenceParser::ParseSourceParameters(VC2GetBitBuffer *buffer, SequenceHe
     if (buffer->GetBool()) {
         uint64_t index = buffer->GetUInt();
         if (index > 1) {
-            log_warn("Unknown source sampling index %"PRIu64"\n", index);
+            log_warn("Unknown source sampling index %" PRIu64 "\n", index);
             return false;
         }
         sequence_header->source_params.source_sampling = (uint8_t)index;
@@ -593,12 +593,12 @@ bool VC2EssenceParser::ParseSourceParameters(VC2GetBitBuffer *buffer, SequenceHe
             uint64_t num = buffer->GetUInt();
             uint64_t den = buffer->GetUInt();
             if (num > INT32_MAX || den > INT32_MAX)
-                BMX_EXCEPTION(("VC-2 frame rate %"PRIu64"/%"PRIu64" is too large for int32", num, den));
+                BMX_EXCEPTION(("VC-2 frame rate %" PRIu64 "/%" PRIu64 " is too large for int32", num, den));
             sequence_header->source_params.frame_rate_numer = (int32_t)num;
             sequence_header->source_params.frame_rate_denom = (int32_t)den;
         } else {
             if (index - 1 >= BMX_ARRAY_SIZE(PRESET_FRAME_RATE)) {
-                log_warn("Unknown frame rate index %"PRIu64"\n", index);
+                log_warn("Unknown frame rate index %" PRIu64 "\n", index);
                 return false;
             }
             sequence_header->source_params.frame_rate_numer = PRESET_FRAME_RATE[index - 1].numerator;
@@ -613,7 +613,7 @@ bool VC2EssenceParser::ParseSourceParameters(VC2GetBitBuffer *buffer, SequenceHe
             sequence_header->source_params.pixel_aspect_ratio_denom = buffer->GetUInt();
         } else {
             if (index - 1 >= BMX_ARRAY_SIZE(PRESET_PIXEL_ASPECT_RATIO)) {
-                log_warn("Unknown pixel aspect ratio index %"PRIu64"\n", index);
+                log_warn("Unknown pixel aspect ratio index %" PRIu64 "\n", index);
                 return false;
             }
             sequence_header->source_params.pixel_aspect_ratio_numer = PRESET_PIXEL_ASPECT_RATIO[index - 1].numerator;
@@ -637,7 +637,7 @@ bool VC2EssenceParser::ParseSourceParameters(VC2GetBitBuffer *buffer, SequenceHe
             sequence_header->source_params.color_diff_excursion = buffer->GetUInt();
         } else {
             if (index - 1 >= BMX_ARRAY_SIZE(PRESET_SIGNAL_RANGE)) {
-                log_warn("Unknown signal range index %"PRIu64"\n", index);
+                log_warn("Unknown signal range index %" PRIu64 "\n", index);
                 return false;
             }
             sequence_header->source_params.luma_offset = PRESET_SIGNAL_RANGE[index - 1].luma_offset;
@@ -650,7 +650,7 @@ bool VC2EssenceParser::ParseSourceParameters(VC2GetBitBuffer *buffer, SequenceHe
     if (buffer->GetBool()) {
         uint64_t index = buffer->GetUInt();
         if (index >= BMX_ARRAY_SIZE(PRESET_COLOR_SPEC)) {
-            log_warn("Unknown color spec index %"PRIu64"\n", index);
+            log_warn("Unknown color spec index %" PRIu64 "\n", index);
             return false;
         }
         sequence_header->source_params.color_primaries = PRESET_COLOR_SPEC[index].color_primaries;
@@ -660,7 +660,7 @@ bool VC2EssenceParser::ParseSourceParameters(VC2GetBitBuffer *buffer, SequenceHe
             if (buffer->GetBool()) {
                 index = buffer->GetUInt();
                 if (index > 3) {
-                    log_warn("Unknown color primaries index %"PRIu64"\n", index);
+                    log_warn("Unknown color primaries index %" PRIu64 "\n", index);
                     return false;
                 }
                 sequence_header->source_params.color_primaries = (uint8_t)index;
@@ -668,7 +668,7 @@ bool VC2EssenceParser::ParseSourceParameters(VC2GetBitBuffer *buffer, SequenceHe
             if (buffer->GetBool()) {
                 index = buffer->GetUInt();
                 if (index > 3) {
-                    log_warn("Unknown color matrix index %"PRIu64"\n", index);
+                    log_warn("Unknown color matrix index %" PRIu64 "\n", index);
                     return false;
                 }
                 sequence_header->source_params.color_matrix = (uint8_t)index;
@@ -676,7 +676,7 @@ bool VC2EssenceParser::ParseSourceParameters(VC2GetBitBuffer *buffer, SequenceHe
             if (buffer->GetBool()) {
                 index = buffer->GetUInt();
                 if (index > 3) {
-                    log_warn("Unknown transfer function index %"PRIu64"\n", index);
+                    log_warn("Unknown transfer function index %" PRIu64 "\n", index);
                     return false;
                 }
                 sequence_header->source_params.transfer_function = (uint8_t)index;
