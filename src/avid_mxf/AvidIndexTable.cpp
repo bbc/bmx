@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#include <algorithm>
+
 #include <bmx/MXFUtils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -92,28 +94,32 @@ void AvidIndexTable::AddIndexEntry(int64_t position, int8_t temporal_offset,
                                    int64_t stream_offset, bool can_start_partition,
                                    bool require_update)
 {
-    BMX_ASSERT(position >= (int64_t)mIndexEntries.size());
+    uint32_t index_pos = (uint32_t)position;
 
-    if (position >= (int64_t)mIndexEntries.size())
-        mIndexEntries.resize(position + 1);
-    mIndexEntries[position] = AvidIndexEntry(temporal_offset, key_frame_offset,
+    BMX_ASSERT(index_pos >= mIndexEntries.size());
+
+    if (index_pos >= mIndexEntries.size())
+        mIndexEntries.resize(index_pos + 1);
+    mIndexEntries[index_pos] = AvidIndexEntry(temporal_offset, key_frame_offset,
             flags, stream_offset, can_start_partition);
     if (require_update)
-        require_updates.insert(position);
+        require_updates.insert(index_pos);
 }
 
 void AvidIndexTable::UpdateIndexEntry(int64_t position, int8_t temporal_offset,
                                       int8_t key_frame_offset, uint8_t flags)
 {
     BMX_ASSERT(position >= 0);
+    uint32_t index_pos = (uint32_t)position;
+
     // must update an already existing entry
-    BMX_ASSERT(position < (int64_t)mIndexEntries.size());
+    BMX_ASSERT(index_pos < mIndexEntries.size());
 
-    mIndexEntries[position].temporal_offset = temporal_offset;
-    mIndexEntries[position].key_frame_offset = key_frame_offset;
-    mIndexEntries[position].flags = flags;
+    mIndexEntries[index_pos].temporal_offset = temporal_offset;
+    mIndexEntries[index_pos].key_frame_offset = key_frame_offset;
+    mIndexEntries[index_pos].flags = flags;
 
-    require_updates.erase(position);
+    require_updates.erase(index_pos);
 }
 
 
@@ -123,14 +129,14 @@ void AvidIndexTable::WriteVBEIndexTable(mxfpp::File *mxf_file, mxfpp::Partition 
 
     // separate index table into segments of (MAX_INDEX_SEGMENT_SIZE / INDEX_ENTRY_SIZE) entries;
     // each entry _should_ start with an I-frame (can_start_partition == true)
-    int64_t begin = 0;
-    int64_t end = mIndexEntries.size();
+    uint32_t begin = 0;
+    uint32_t end = mIndexEntries.size();
 
     while (begin != end) {
-        int64_t seg_end = min(begin + MAX_INDEX_SEGMENT_SIZE / INDEX_ENTRY_SIZE, end);
+        uint32_t seg_end = min(begin + MAX_INDEX_SEGMENT_SIZE / INDEX_ENTRY_SIZE, end);
 
         if (seg_end != end) {
-            for (int64_t pos = seg_end; pos > begin; pos--) {
+            for (uint32_t pos = seg_end; pos > begin; pos--) {
                  if (mIndexEntries[pos].can_start_partition) {
                      seg_end = pos;
                      break;
@@ -147,7 +153,7 @@ void AvidIndexTable::WriteVBEIndexTable(mxfpp::File *mxf_file, mxfpp::Partition 
     partition->markIndexEnd(mxf_file);
 }
 
-void AvidIndexTable::WriteIndexSegmentHeader(mxfpp::File *mxf_file, int64_t begin, int64_t end)
+void AvidIndexTable::WriteIndexSegmentHeader(mxfpp::File *mxf_file, uint32_t begin, uint32_t end)
 {
     const uint32_t num_index_entries = end - begin;
     BMX_ASSERT(num_index_entries >= 1);
@@ -167,17 +173,16 @@ void AvidIndexTable::WriteIndexSegmentHeader(mxfpp::File *mxf_file, int64_t begi
     segment.writeAvidIndexEntryArrayHeader(mxf_file, 0, 0, num_index_entries);
 }
 
-void AvidIndexTable::WriteIndexSegmentArray(mxfpp::File *mxf_file, int64_t begin, int64_t end)
+void AvidIndexTable::WriteIndexSegmentArray(mxfpp::File *mxf_file, uint32_t begin, uint32_t end)
 {
-    BMX_ASSERT(0 <= begin);
     BMX_ASSERT(begin < end);
-    BMX_ASSERT(end <= (int64_t)mIndexEntries.size());
+    BMX_ASSERT(end <= mIndexEntries.size());
 
     const uint32_t size = end - begin;
     ByteArray index_segment(size * INDEX_ENTRY_SIZE);
     index_segment.SetSize(size * INDEX_ENTRY_SIZE);
 
-    for (int64_t pos = 0; pos != size; pos++) {
+    for (uint32_t pos = 0; pos != size; pos++) {
         AvidIndexEntry const& entry = mIndexEntries[pos + begin];
         unsigned char* bytes = index_segment.GetBytes() + pos * INDEX_ENTRY_SIZE;
 

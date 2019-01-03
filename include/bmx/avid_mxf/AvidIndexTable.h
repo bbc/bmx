@@ -78,8 +78,8 @@ public:
     void WriteVBEIndexTable(mxfpp::File *mxf_file, mxfpp::Partition *partition);
 
 private:
-    void WriteIndexSegmentHeader(mxfpp::File *mxf_file, int64_t begin, int64_t end);
-    void WriteIndexSegmentArray(mxfpp::File *mxf_file, int64_t begin, int64_t end);
+    void WriteIndexSegmentHeader(mxfpp::File *mxf_file, uint32_t begin, uint32_t end);
+    void WriteIndexSegmentArray(mxfpp::File *mxf_file, uint32_t begin, uint32_t end);
 
 private:
     uint32_t mIndexSID;
@@ -87,7 +87,7 @@ private:
     mxfRational mEditRate;
 
     std::deque<AvidIndexEntry> mIndexEntries;
-    std::set<int64_t> require_updates;
+    std::set<uint32_t> require_updates;
 };
 
 
