@@ -9,7 +9,7 @@ Timed Text is supported in the OP-1A writer classes. It can be used to create an
 
 The file is signalled as OP-1B if there are other tracks because the Timed Text uses clip wrapping as opposed to frame wrapping. This requires there to be a separate Essence Container and therefore a separate file Source Package.
 
-The Timed Text XML document is written to an Essence Container and ancillary resources are written to Generic Stream Containers. The Timed Text Index Table, Essence and Generic Stream Containers are written in seperate partitions after the Header Partition and after RP 2057 XML Generic Stream Container partitions. Placing the Timed Text data before the audio and video data allows applications to start playing the content, including subtitles or captions, before the file is available in its entirety.
+The Timed Text XML document is written to an Essence Container and ancillary resources are written to Generic Stream Containers. The Timed Text Index Table, Essence and Generic Stream Containers are written in separate partitions after the Header Partition and after RP 2057 XML Generic Stream Container partitions. Placing the Timed Text data before the audio and video data allows applications to start playing the content, including subtitles or captions, before the file is available in its entirety.
 
 The `OP1ATimedTextTrack` class can be used to create a Timed Text track. It is configured using the `OP1ATimedTextTrack::SetSource()` method which is passed a `TimedTextManifest` object which specifies the source content and associated properties.
 
