@@ -40,8 +40,19 @@ using namespace std;
 using namespace bmx;
 
 
-static const char *TEXT_PROFILE_STRING = "http://www.w3.org/ns/ttml/profile/imsc1/text";
-static const char *IMAGE_PROFILE_STRING = "http://www.w3.org/ns/ttml/profile/imsc1/image";
+typedef struct
+{
+    TimedTextProfile profile;
+    const char *designator;
+} IMSCProfileMap;
+
+static IMSCProfileMap IMSC_PROFILE_MAP[] =
+{
+    {IMSC_1_TEXT_PROFILE,      "http://www.w3.org/ns/ttml/profile/imsc1/text"},
+    {IMSC_1_IMAGE_PROFILE,     "http://www.w3.org/ns/ttml/profile/imsc1/image"},
+    {IMSC_1_1_TEXT_PROFILE,    "http://www.w3.org/ns/ttml/profile/imsc1.1/text"},
+    {IMSC_1_1_IMAGE_PROFILE,   "http://www.w3.org/ns/ttml/profile/imsc1.1/image"},
+};
 
 
 TimedTextAncillaryResource::TimedTextAncillaryResource()
@@ -63,10 +74,14 @@ TimedTextManifest::~TimedTextManifest()
 
 string TimedTextManifest::GetProfileDesignator() const
 {
-    if (mProfile == TT_TEXT_PROFILE)
-        return TEXT_PROFILE_STRING;
-    else
-        return IMAGE_PROFILE_STRING;
+    for (size_t i = 0; i < BMX_ARRAY_SIZE(IMSC_PROFILE_MAP); i++) {
+        if (mProfile == IMSC_PROFILE_MAP[i].profile) {
+            return IMSC_PROFILE_MAP[i].designator;
+        }
+    }
+
+    BMX_ASSERT(false);
+    return "";
 }
 
 bool TimedTextManifest::HaveResourceId() const
@@ -89,13 +104,14 @@ string TimedTextManifest::GetLanguagesString() const
 
 void TimedTextManifest::SetProfileDesignator(const string &designator)
 {
-    if (designator == TEXT_PROFILE_STRING) {
-        mProfile = TT_TEXT_PROFILE;
-    } else if (designator == IMAGE_PROFILE_STRING) {
-        mProfile = TT_IMAGE_PROFILE;
-    } else {
-        BMX_EXCEPTION(("Unsupported timed text profile %s", designator.c_str()));
+    for (size_t i = 0; i < BMX_ARRAY_SIZE(IMSC_PROFILE_MAP); i++) {
+        if (designator == IMSC_PROFILE_MAP[i].designator) {
+            mProfile = IMSC_PROFILE_MAP[i].profile;
+            return;
+        }
     }
+
+    BMX_EXCEPTION(("Unsupported timed text profile %s", designator.c_str()));
 }
 
 void TimedTextManifest::SetLanguagesString(const string &languages_str)
@@ -114,7 +130,7 @@ void TimedTextManifest::SetLanguagesString(const string &languages_str)
 void TimedTextManifest::Reset()
 {
     mTTFilename.clear();
-    mProfile = TT_TEXT_PROFILE;
+    mProfile = IMSC_1_TEXT_PROFILE;
     mEncoding.clear();
     mResourceId = g_Null_UUID;
     mLanguages.clear();

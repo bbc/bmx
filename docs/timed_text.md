@@ -1,6 +1,6 @@
 # Timed Text
 
-The implementation in `bmx` supports embedding [TTML Profiles for Internet Media Subtitles and Captions 1.0.1 (IMSC1)](https://www.w3.org/TR/ttml-imsc1.0.1/) in MXF. The Timed Text is embedded according to SMPTE ST 2067-2:2016 and ST 2067-5:2013, which forms part of the Interoperable Master Format (IMF) set of SMPTE specifications. These specifications reference SMPTE ST 429-5:2017, which is part of the D-Cinema Packaging specifications.
+The `bmx` Timed Text implementation supports embedding TTML Profiles for Internet Media Subtitles and Captions [IMSC 1.0.1](https://www.w3.org/TR/ttml-imsc1.0.1/) and [IMSC 1.1](https://www.w3.org/TR/ttml-imsc1.1/). The Timed Text is embedded according to SMPTE ST 2067-2:2016 and ST 2067-5:2013, which forms part of the Interoperable Master Format (IMF) set of SMPTE specifications. These specifications reference SMPTE ST 429-5:2017, which is part of the D-Cinema Packaging specifications.
 
 
 ## Writing Support
@@ -39,7 +39,7 @@ The manifest file must start with properties associated with the Timed Text XML 
 
 The properties for the Timed Text XML document are as follows.
 * `file` (*required*): The filename of the Timed Text XML document. A relative filename is relative to the location of the manifest file.
-* `profile` (*required*): The IMSC1 profile name, either `text` or `image`.
+* `profile` (*required*): The IMSC profile designator suffix, one of `imsc1/text`, `imsc1/image`, `imsc1.1/text` or `imsc1.1/image`.
 * `encoding` (*required*): The XML encoding, e.g. `UTF-8`.
 * `resource_id` (*optional*): The identifier associated with the Timed Text XML. The value is a UUID URN.
 * `languages` (*optional*): A list of RFC 5646 language tags separated by a ',' character.
@@ -53,7 +53,7 @@ An example manifest is shown below. It describes a Timed Text XML document `imag
 
 ```
 file: image_example.xml
-profile: image
+profile: imsc1/image
 encoding: UTF-8
 languages: en,fr
 

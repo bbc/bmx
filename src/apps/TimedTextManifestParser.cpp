@@ -51,6 +51,22 @@ typedef enum
     PARSE_RESOURCE_FILE_STATE,
 } ParseState;
 
+typedef struct
+{
+    TimedTextProfile profile;
+    const char *suffix;
+} IMSCProfileSuffixMap;
+
+static IMSCProfileSuffixMap IMSC_PROFILE_SUFFIX_MAP[] =
+{
+    {IMSC_1_TEXT_PROFILE,      "imsc1/text"},
+    {IMSC_1_IMAGE_PROFILE,     "imsc1/image"},
+    {IMSC_1_1_TEXT_PROFILE,    "imsc1.1/text"},
+    {IMSC_1_1_IMAGE_PROFILE,   "imsc1.1/image"},
+};
+
+
+
 
 static bool create_abs_file_path(const string &manifest_filename, const string &item_filename,
                                  string *abs_item_file_path)
@@ -78,16 +94,16 @@ static bool create_abs_file_path(const string &manifest_filename, const string &
     return true;
 }
 
-static bool parse_profile(const string &profile_str, TimedTextProfile *profile)
+static bool parse_profile(const string &suffix, TimedTextProfile *profile)
 {
-    if (profile_str == "text")
-        *profile = TT_TEXT_PROFILE;
-    else if (profile_str == "image")
-        *profile = TT_IMAGE_PROFILE;
-    else
-        return false;
+    for (size_t i = 0; i < BMX_ARRAY_SIZE(IMSC_PROFILE_SUFFIX_MAP); i++) {
+        if (suffix == IMSC_PROFILE_SUFFIX_MAP[i].suffix) {
+            *profile = IMSC_PROFILE_SUFFIX_MAP[i].profile;
+            return true;
+        }
+    }
 
-    return true;
+    return false;
 }
 
 static bool parse_languages(const string &lang_str, vector<string> *languages_out)

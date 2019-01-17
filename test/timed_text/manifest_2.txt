@@ -1,5 +1,5 @@
 file: text_example.xml
-profile: image
+profile: imsc1/image
 encoding: UTF-8
 languages: en
 

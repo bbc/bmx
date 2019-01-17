@@ -42,8 +42,10 @@ namespace bmx
 
 typedef enum
 {
-    TT_TEXT_PROFILE,
-    TT_IMAGE_PROFILE,
+    IMSC_1_TEXT_PROFILE,
+    IMSC_1_IMAGE_PROFILE,
+    IMSC_1_1_TEXT_PROFILE,
+    IMSC_1_1_IMAGE_PROFILE,
 } TimedTextProfile;
 
 
