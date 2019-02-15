@@ -164,7 +164,6 @@ void AvidIndexTable::WriteIndexSegmentHeader(mxfpp::File *mxf_file, int64_t begi
     segment.setIndexStartPosition(begin);
     segment.setIndexDuration(num_index_entries);
     segment.writeHeader(mxf_file, 0, num_index_entries);
-    // Avid ignores the 16-bit llen and uses the number of index entries (uint32) instead
     segment.writeAvidIndexEntryArrayHeader(mxf_file, 0, 0, num_index_entries);
 }
 
