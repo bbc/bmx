@@ -102,7 +102,7 @@ The `mxf2raw` utility can be used to show metadata about the Timed Text tracks a
           languages       : en
           AncillaryResources: (2)
             Element #0:
-              resource_id     : urn:uuid:3191755f-11c1-50ba-af03-ba1f7913491a
+              resource_id     : urn:uuid:fe16f8e4-57a9-56b5-a93c-6c27d6f61619
               mime_type       : application/x-font-opentype
               stream_id       : 12
             Element #1:
