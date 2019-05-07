@@ -114,12 +114,17 @@ check()
             diff $tmpdir/test_d1.xml $base/text_example.xml &&
     create_test_file_4 manifest_2.txt $tmpdir/test.mxf &&
         $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
-        diff $tmpdir/test.md5 $base/test_4.md5
+        diff $tmpdir/test.md5 $base/test_4.md5 &&
         create_read_result $tmpdir/test.xml $tmpdir/test $tmpdir/test.mxf &&
             diff $tmpdir/test.xml $base/info_4.xml &&
             diff $tmpdir/test_d0.xml $base/text_example.xml &&
             diff $tmpdir/test_d0_12.raw $base/font.ttf &&
-            diff $tmpdir/test_d0_13.raw $base/image.png
+            diff $tmpdir/test_d0_13.raw $base/image.png &&
+    create_test_file_1 manifest_3.txt $tmpdir/test.mxf &&
+        $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
+        diff $tmpdir/test.md5 $base/test_5.md5 &&
+        create_read_result $tmpdir/test.xml $tmpdir/test $tmpdir/test.mxf &&
+            diff $tmpdir/test.xml $base/info_5.xml
 }
 
 create_data()
@@ -134,8 +139,11 @@ create_data()
         $md5tool < $tmpdir/test.mxf > $base/test_3.md5 &&
         create_read_result $base/info_3.xml $tmpdir/test $tmpdir/test.mxf &&
     create_test_file_4 manifest_2.txt $tmpdir/test.mxf &&
-        $md5tool < $tmpdir/test.mxf > $base/test_4.md5
-        create_read_result $base/info_4.xml $tmpdir/test $tmpdir/test.mxf
+        $md5tool < $tmpdir/test.mxf > $base/test_4.md5 &&
+        create_read_result $base/info_4.xml $tmpdir/test $tmpdir/test.mxf &&
+    create_test_file_1 manifest_3.txt $tmpdir/test.mxf &&
+        $md5tool < $tmpdir/test.mxf > $base/test_5.md5 &&
+        create_read_result $base/info_5.xml $tmpdir/test $tmpdir/test.mxf
 }
 
 create_samples()
@@ -146,8 +154,10 @@ create_samples()
         create_read_result $sampledir/test_2.xml $sampledir/timed_text_2 $sampledir/timed_text_2.mxf &&
     create_test_file_3 manifest_1.txt $sampledir/timed_text_3.mxf &&
         create_read_result $sampledir/test_3.xml $sampledir/timed_text_3 $sampledir/timed_text_3.mxf &&
-    create_test_file_4 manifest_2.txt $sampledir/timed_text_4.mxf
-        create_read_result $sampledir/test_4.xml $sampledir/timed_text_4 $sampledir/timed_text_4.mxf
+    create_test_file_4 manifest_2.txt $sampledir/timed_text_4.mxf &&
+        create_read_result $sampledir/test_4.xml $sampledir/timed_text_4 $sampledir/timed_text_4.mxf &&
+    create_test_file_1 manifest_3.txt $sampledir/timed_text_5.mxf &&
+        create_read_result $sampledir/test_5.xml $sampledir/timed_text_5 $sampledir/timed_text_5.mxf
 }
 
 
