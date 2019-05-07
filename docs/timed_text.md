@@ -1,13 +1,33 @@
 # Timed Text
 
-The `bmx` Timed Text implementation supports embedding TTML Profiles for Internet Media Subtitles and Captions [IMSC 1.0.1](https://www.w3.org/TR/ttml-imsc1.0.1/) and [IMSC 1.1](https://www.w3.org/TR/ttml-imsc1.1/). The Timed Text is embedded according to SMPTE ST 2067-2:2016 and ST 2067-5:2013, which forms part of the Interoperable Master Format (IMF) set of SMPTE specifications. These specifications reference SMPTE ST 429-5:2017, which is part of the D-Cinema Packaging specifications.
+The `bmx` Timed Text implementation supports embedding TTML Profiles for Internet Media Subtitles and Captions [IMSC 1.0.1](https://www.w3.org/TR/ttml-imsc1.0.1/) and [IMSC 1.1](https://www.w3.org/TR/ttml-imsc1.1/). The Timed Text is embedded based on SMPTE ST 2067-2:2016 and ST 2067-5:2013, which forms part of the Interoperable Master Format (IMF) set of SMPTE specifications. These specifications reference SMPTE ST 429-5:2017, which is part of the D-Cinema Packaging specifications.
+
+
+## Time Text Range
+
+The zero point assumed in the Timed Text may not correspond to the MXF file's zero point. E.g. the Timed Text refers to a media position 0 for the first subtitle but that actually refers to position 750 in the MXF file. Similarly, the duration covered by the Timed Text could be less than the other A/V Tracks.
+
+The Timed Text can be re-positioned by adding a Filler at the start of the Timed Text Track in the Material Package before the Source Clip referencing the Track in the Source Package. The Filler defines the offset of the Timed Text's zero point relative to the MXF file's zero point. E.g. if the MXF A/V content starts at 09:59:30:00 and the programme, including subtitles, start at 10:00:00:00 then a 30 second Filler is added to align the Timed Text to the start of the programme.
+
+The Timed Text, including any preceeding Filler, could have a duration less than the other A/V Tracks and this can be specified by appending a Filler at the end of the Timed Text Track to account for the difference.
+
+
+## Operational Patterns
+
+The MXF Operational Pattern signalled by the bmx implementation in the MXF file can be different from the baseline OP-1A based on 2 factors:
+* are there more than 1 track in the file
+* are Fillers used to align the Timed Text
+
+If there is more than 1 track then the Operational Pattern needs to be in the `B` row because the Timed Text uses clip wrapping as opposed to frame wrapping. This requires there to be a separate Essence Container and therefore a separate file Source Package for each Timed Text track.
+
+If Fillers are used in the Timed Text track then the Operational Pattern column moves to either `2` or `3`. It moves to `2` if there are no other audio, video or data tracks, or the other data tracks are Timed Text that have the exact same Filler usage. If those conditions are not met then it moves to `3`.
+
+The set of Operational Patterns that can result from including Timed Text in the bmx implementation is therefore OP-1A, OP-1B, OP-2A or OP-3B.
 
 
 ## Writing Support
 
-Timed Text is supported in the OP-1A writer classes. It can be used to create an MXF OP-1A file containing Timed Text only or an MXF OP-1B file containing Timed Text plus other audio, video or data tracks.
-
-The file is signalled as OP-1B if there are other tracks because the Timed Text uses clip wrapping as opposed to frame wrapping. This requires there to be a separate Essence Container and therefore a separate file Source Package.
+Timed Text is supported in the OP-1A writer classes. However, it will signal higher operational patterns depending on the contents of the file and the Timed Text timing relationship.
 
 The Timed Text XML document is written to an Essence Container and ancillary resources are written to Generic Stream Containers. The Timed Text Index Table, Essence and Generic Stream Containers are written in separate partitions after the Header Partition and after RP 2057 XML Generic Stream Container partitions. Placing the Timed Text data before the audio and video data allows applications to start playing the content, including subtitles or captions, before the file is available in its entirety.
 
@@ -33,7 +53,7 @@ raw2bmx -t op1a -y 10:00:00:00 -f 25 --dur 100 --tt manifest.txt
 
 The manifest file is a text file containing properties related to a Timed Text XML document and any associated ancillary image or font resources.
 
-The manifest file consists of a set of name/value property pairs separated by a newline. The name/value pair uses a ':' character separator. A '#' character signals the start of a comment.
+The manifest file consists of a set of name/value property pairs separated by a newline. The name/value pair uses the first ':' character as a separator. A '#' character signals the start of a comment.
 
 The manifest file must start with properties associated with the Timed Text XML document and this can be followed by properties associated with each ancillary resource. Each ancillary resource must start with the `resource_file` property and this is used to detect when a new ancillary resource is being defined.
 
@@ -43,19 +63,23 @@ The properties for the Timed Text XML document are as follows.
 * `encoding` (*required*): The XML encoding, e.g. `UTF-8`.
 * `resource_id` (*optional*): The identifier associated with the Timed Text XML. The value is a UUID URN.
 * `languages` (*optional*): A list of RFC 5646 language tags separated by a ',' character.
+* `start` (*optional*): Specifies the non-zero start position for the Timed Text. The value is either a timecode (HH:MM:SS:FF or HH:MM:SS;FF) or a position in media edit rate.
+* `end` (*optional*): Specifies the exclusive end position for the Timed Text. The equivalent alternative is `duration`. The value is either a timecode (HH:MM:SS:FF or HH:MM:SS;FF) or a position in media edit rate.
+* `duration` (*optional*): Specifies the duration for the Timed Text. The equivalent alternative is `end`. The value is a duration in media edit rate.
 
 The properties for the ancillary resource are as follows.
 * `resource_file` (*required*): The filename of the resource. A relative filename is relative to the location of the manifest file.
 * `resource_id` (*required*): The identifier associated with the resource. The value is a UUID URN.
 * `mime_type` (*required*): The MIME type for the resource.
 
-An example manifest is shown below. It describes a Timed Text XML document `image_example.xml` that references a font resource contained in `font.ttf` and an image resource contained in `image.png`.
+An example manifest is shown below. It describes a Timed Text XML document `image_example.xml` that references a font resource contained in `font.ttf` and an image resource contained in `image.png`. The Timed Text starts at timecode 10:00:00:00.
 
 ```
 file: image_example.xml
 profile: imsc1/image
 encoding: UTF-8
 languages: en,fr
+start: 10:00:00:00
 
 resource_file: font.ttf
 mime_type: application/x-font-opentype
@@ -84,6 +108,7 @@ The `mxf2raw` utility can be used to show metadata about the Timed Text tracks a
       ec_label        : urn:smpte:ul:060e2b34.0401010a.0d010301.02130101
       edit_rate       : 25/1
       duration        : 00:00:10:00 (count='250')
+      lead_filler_offset: 00:00:30:00 (count='750')
       Packages: (1)
         Package #0:
           Material:
