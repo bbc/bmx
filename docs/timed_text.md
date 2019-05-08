@@ -7,27 +7,27 @@ The `bmx` Timed Text implementation supports embedding TTML Profiles for Interne
 
 The zero point assumed in the Timed Text may not correspond to the MXF file's zero point. E.g. the Timed Text refers to a media position 0 for the first subtitle but that actually refers to position 750 in the MXF file. Similarly, the duration covered by the Timed Text could be less than the other A/V Tracks.
 
-The Timed Text can be re-positioned by adding a Filler at the start of the Timed Text Track in the Material Package before the Source Clip referencing the Track in the Source Package. The Filler defines the offset of the Timed Text's zero point relative to the MXF file's zero point. E.g. if the MXF A/V content starts at 09:59:30:00 and the programme, including subtitles, start at 10:00:00:00 then a 30 second Filler is added to align the Timed Text to the start of the programme.
+The Timed Text can be re-positioned by adding a Filler at the start of the Timed Text Track in the Material Package before the Source Clip referencing the Track in the File Package. The Filler defines the offset of the Timed Text's zero point relative to the MXF file's zero point. E.g. if the MXF A/V content starts at 09:59:30:00 and the programme, including subtitles, start at 10:00:00:00 then a 30 second Filler is added to align the Timed Text to the start of the programme.
 
 The Timed Text, including any preceeding Filler, could have a duration less than the other A/V Tracks and this can be specified by appending a Filler at the end of the Timed Text Track to account for the difference.
 
 
 ## Operational Patterns
 
-The MXF Operational Pattern signalled by the bmx implementation in the MXF file can be different from the baseline OP-1A based on 2 factors:
-* are there more than 1 track in the file
-* are Fillers used to align the Timed Text
+The MXF Operational Pattern signalled by the bmx implementation in the MXF file can be different from the baseline OP1a based on 2 factors:
+* are there more than 1 track in the file?
+* are Fillers used to align the Timed Text?
 
-If there is more than 1 track then the Operational Pattern needs to be in the `B` row because the Timed Text uses clip wrapping as opposed to frame wrapping. This requires there to be a separate Essence Container and therefore a separate file Source Package for each Timed Text track.
+If there is more than 1 track then the Operational Pattern needs to be in the `b` row because the Timed Text uses clip wrapping as opposed to frame wrapping. This requires there to be a separate Essence Container and therefore a separate File Package for each Timed Text track.
 
 If Fillers are used in the Timed Text track then the Operational Pattern column moves to either `2` or `3`. It moves to `2` if there are no other audio, video or data tracks, or the other data tracks are Timed Text that have the exact same Filler usage. If those conditions are not met then it moves to `3`.
 
-The set of Operational Patterns that can result from including Timed Text in the bmx implementation is therefore OP-1A, OP-1B, OP-2A or OP-3B.
+The set of Operational Patterns that can result from including Timed Text in the bmx implementation is therefore OP1a, OP1b, OP2a or OP3b.
 
 
 ## Writing Support
 
-Timed Text is supported in the OP-1A writer classes. However, it will signal higher operational patterns depending on the contents of the file and the Timed Text timing relationship.
+Timed Text is supported in the OP1a writer classes. However, it will signal higher operational patterns depending on the contents of the file and the Timed Text timing relationship.
 
 The Timed Text XML document is written to an Essence Container and ancillary resources are written to Generic Stream Containers. The Timed Text Index Table, Essence and Generic Stream Containers are written in separate partitions after the Header Partition and after RP 2057 XML Generic Stream Container partitions. Placing the Timed Text data before the audio and video data allows applications to start playing the content, including subtitles or captions, before the file is available in its entirety.
 
