@@ -3,7 +3,7 @@
 The `bmx` Timed Text implementation supports embedding TTML Profiles for Internet Media Subtitles and Captions [IMSC 1.0.1](https://www.w3.org/TR/ttml-imsc1.0.1/) and [IMSC 1.1](https://www.w3.org/TR/ttml-imsc1.1/). The Timed Text is embedded based on SMPTE ST 2067-2:2016 and ST 2067-5:2013, which forms part of the Interoperable Master Format (IMF) set of SMPTE specifications. These specifications reference SMPTE ST 429-5:2017, which is part of the D-Cinema Packaging specifications.
 
 
-## Time Text Range
+## Timed Text Range
 
 The zero point assumed in the Timed Text may not correspond to the MXF file's zero point. E.g. the Timed Text refers to a media position 0 for the first subtitle but that actually refers to position 750 in the MXF file. Similarly, the duration covered by the Timed Text could be less than the other A/V Tracks.
 
