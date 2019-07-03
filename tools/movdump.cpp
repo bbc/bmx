@@ -640,7 +640,7 @@ static void dump_bytes(unsigned char *bytes, uint64_t size, int extra_indent_amo
     }
 }
 
-static void dump_string_bytes(unsigned char *buffer, uint32_t size, int extra_indent_amount)
+static void dump_string_bytes(unsigned char *buffer, uint64_t size, int extra_indent_amount)
 {
     uint64_t i;
     for (i = 0; i < size; i++) {
