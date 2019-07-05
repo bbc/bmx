@@ -92,7 +92,7 @@ mime_type: image/png
 
 ## Reading Support
 
-The `MXFTimedTextTrackReader` class is provided in the `mxf_reader` to read the Timed Text metadata and essence. This class is not quite the same as the other `MXFFileTrackReader` classes because it can't be used to read frame-by-frame. The breaks the original design of `bmx` to some degree.
+The `MXFTimedTextTrackReader` class is provided in the `mxf_reader` to read the Timed Text metadata and essence. This class is not quite the same as the other `MXFFileTrackReader` classes because it can't be used to read frame-by-frame. This breaks the original design of `bmx` to some degree.
 
 The inherited `MXFFileTrackReader` methods should not be used and instead the `MXFTimedTextTrackReader` class provides a `MXFTimedTextTrackReader::GetManifest()` method to get a manifest of the Timed Text XML and related ancillary resources. The Timed Text XML can be read using the `MXFTimedTextTrackReader::ReadTimedText()` method and the ancillary resources using either `MXFTimedTextTrackReader::ReadAncillaryResourceById()` or `MXFTimedTextTrackReader::ReadAncillaryResourceByStreamId()`.
 
