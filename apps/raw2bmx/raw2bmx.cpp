@@ -3512,20 +3512,6 @@ int main(int argc, const char** argv)
                 continue;
             }
 
-            if (input->essence_type == TIMED_TEXT) {
-                if (!input->timed_text_manifest.Parse(input->filename)) {
-                    log_error("Failed to parse timed text manifest\n");
-                    throw false;
-                }
-                if (!input->timed_text_manifest.CheckCanReadTTFile()) {
-                    log_error("Timed text file '%s' referenced by manifest can't be opened for reading\n",
-                              input->timed_text_manifest.GetTTFilename().c_str());
-                    throw false;
-                }
-                continue;
-            }
-
-
             // TODO: more parse friendly regression test essence data
             if (BMX_REGRESSION_TEST &&
                 input->essence_type != RDD36_422 &&
@@ -3988,6 +3974,22 @@ int main(int argc, const char** argv)
             if (!parse_position(locators[i].position_str, start_timecode, frame_rate, &locators[i].locator.position)) {
                 usage(argv[0]);
                 log_error("Invalid value '%s' for option '--locator'\n", locators[i].position_str);
+                throw false;
+            }
+        }
+
+        for (i = 0; i < inputs.size(); i++) {
+            RawInput *input = &inputs[i];
+            if (input->disabled || input->essence_type != TIMED_TEXT)
+                continue;
+
+            if (!input->timed_text_manifest.Parse(input->filename, start_timecode, frame_rate)) {
+                log_error("Failed to parse timed text manifest\n");
+                throw false;
+            }
+            if (!input->timed_text_manifest.CheckCanReadTTFile()) {
+                log_error("Timed text file '%s' referenced by manifest can't be opened for reading\n",
+                          input->timed_text_manifest.GetTTFilename().c_str());
                 throw false;
             }
         }

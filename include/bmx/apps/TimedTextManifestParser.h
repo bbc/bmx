@@ -43,7 +43,7 @@ public:
     TimedTextManifestParser();
     virtual ~TimedTextManifestParser();
 
-    bool Parse(const std::string &filename);
+    bool Parse(const std::string &filename, Timecode start_tc, Rational frame_rate);
     bool CheckCanReadTTFile();
 };
 

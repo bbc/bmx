@@ -65,7 +65,9 @@ The properties for the Timed Text XML document are as follows.
 * `languages` (*optional*): A list of RFC 5646 language tags separated by a ',' character.
 * `start` (*optional*): Specifies the non-zero start position for the Timed Text. The value is either a timecode (HH:MM:SS:FF or HH:MM:SS;FF) or a position in media edit rate.
 * `end` (*optional*): Specifies the exclusive end position for the Timed Text. The equivalent alternative is `duration`. The value is either a timecode (HH:MM:SS:FF or HH:MM:SS;FF) or a position in media edit rate.
-* `duration` (*optional*): Specifies the duration for the Timed Text. The equivalent alternative is `end`. The value is a duration in media edit rate.
+* `duration` (*optional*): Specifies the duration for the Timed Text. The equivalent alternative is `end`. The value is either expressed as HH:MM:SS:FF or as a count in media edit rate.
+
+If `start` is not set then it is assumed to be 0. If `end` or `duration` are not set then the duration is calculated using the clip duration. It is recommended to not set `end` or `duration` if the timed text extends to the end of the clip.
 
 The properties for the ancillary resource are as follows.
 * `resource_file` (*required*): The filename of the resource. A relative filename is relative to the location of the manifest file.
