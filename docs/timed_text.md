@@ -22,7 +22,7 @@ If there is more than 1 track then the Operational Pattern needs to be in the `b
 
 If Fillers are used in the Timed Text track then the Operational Pattern column moves to either `2` or `3`. It moves to `2` if there are no other audio, video or data tracks, or the other data tracks are Timed Text that have the exact same Filler usage. If those conditions are not met then it moves to `3`.
 
-The set of Operational Patterns that can result from including Timed Text in the bmx implementation is therefore OP1a, OP1b, OP2a or OP3b.
+The set of Operational Patterns that can result from including Timed Text in the bmx implementation is therefore OP1a, OP1b, OP2a, OP2b or OP3b.
 
 
 ## Writing Support
