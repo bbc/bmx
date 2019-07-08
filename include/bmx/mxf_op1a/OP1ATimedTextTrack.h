@@ -59,6 +59,8 @@ public:
     uint32_t GetAncillaryResourceStreamId(size_t index) const;
     void WriteAncillaryResource(mxfpp::File *mxf_file, mxfpp::Partition *stream_partition, size_t index);
 
+    void UpdateTrackMetadata(mxfpp::HeaderMetadata *header_metadata, int64_t duration);
+
 public:
     mxfpp::SourcePackage* GetFileSourcePackage() const { return mFileSourcePackage; }
 
@@ -79,7 +81,11 @@ private:
     uint32_t mBodySID;
     uint32_t mIndexSID;
     int64_t mDuration;
+    int64_t mTTStart;
+    int64_t mTTDuration;
     mxfpp::SourcePackage *mFileSourcePackage;
+    mxfpp::Track *mMPTrack;
+    mxfpp::Track *mFPTrack;
     std::string mTTFilename;
     std::vector<TimedTextAncillaryResource> mAncillaryResources;
 };
