@@ -129,7 +129,12 @@ check()
         $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
         diff $tmpdir/test.md5 $base/test_6.md5 &&
         create_read_result $tmpdir/test.xml $tmpdir/test $tmpdir/test.mxf &&
-            diff $tmpdir/test.xml $base/info_6.xml
+            diff $tmpdir/test.xml $base/info_6.xml &&
+    create_test_file_2 manifest_4.txt $tmpdir/test.mxf &&
+        $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
+        diff $tmpdir/test.md5 $base/test_7.md5 &&
+        create_read_result $tmpdir/test.xml $tmpdir/test $tmpdir/test.mxf &&
+            diff $tmpdir/test.xml $base/info_7.xml
 }
 
 create_data()
@@ -151,7 +156,10 @@ create_data()
         create_read_result $base/info_5.xml $tmpdir/test $tmpdir/test.mxf &&
     create_test_file_1 manifest_4.txt $tmpdir/test.mxf &&
         $md5tool < $tmpdir/test.mxf > $base/test_6.md5 &&
-        create_read_result $base/info_6.xml $tmpdir/test $tmpdir/test.mxf
+        create_read_result $base/info_6.xml $tmpdir/test $tmpdir/test.mxf &&
+    create_test_file_2 manifest_4.txt $tmpdir/test.mxf &&
+        $md5tool < $tmpdir/test.mxf > $base/test_7.md5 &&
+        create_read_result $base/info_7.xml $tmpdir/test $tmpdir/test.mxf
 }
 
 create_samples()
@@ -167,7 +175,9 @@ create_samples()
     create_test_file_1 manifest_3.txt $sampledir/timed_text_5.mxf &&
         create_read_result $sampledir/test_5.xml $sampledir/timed_text_5 $sampledir/timed_text_5.mxf &&
     create_test_file_1 manifest_4.txt $sampledir/timed_text_6.mxf &&
-        create_read_result $sampledir/test_6.xml $sampledir/timed_text_6 $sampledir/timed_text_6.mxf
+        create_read_result $sampledir/test_6.xml $sampledir/timed_text_6 $sampledir/timed_text_6.mxf &&
+    create_test_file_2 manifest_4.txt $sampledir/timed_text_7.mxf &&
+        create_read_result $sampledir/test_7.xml $sampledir/timed_text_7 $sampledir/timed_text_7.mxf
 }
 
 
