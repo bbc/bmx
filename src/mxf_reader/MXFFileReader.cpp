@@ -319,11 +319,8 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, co
             !mxf_is_op_1a(header_partition.getOperationalPattern()) &&
             !mxf_is_op_1b(header_partition.getOperationalPattern()))
         {
-            log_error("Operational pattern is not supported\n");
-            THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
+            log_warn("Operational pattern possibly not supported\n");
         }
-
-
         mOPLabel = *header_partition.getOperationalPattern();
 
 

@@ -92,6 +92,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mxf_generate_umid(&mMaterialPackageUID);
     mxf_generate_umid(&mFileSourcePackageUID);
     mFrameWrapped = true;
+    mOPLabel = MXF_OP_L(1a, UniTrack_Stream_Internal);
     mOutputStartOffset = 0;
     mOutputEndOffset = 0;
     mHaveANCTrack = false;
@@ -657,19 +658,54 @@ void OP1AFile::CreateHeaderMetadata()
         source_track_duration = mInputDuration + mOutputEndOffset;
         source_track_origin = mOutputStartOffset;
     }
+    if (mTracks.size() <= 1) {
+        if (mTimedTextTrackCount > 0) {
+            OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mTracks[0]);
+            if (tt_track->GetStart() > 0) {
+                mOPLabel = MXF_OP_L(2a, UniTrack_Stream_Internal);
+            } else {
+                mOPLabel = MXF_OP_L(1a, UniTrack_Stream_Internal);
+            }
+        } else {
+            mOPLabel = MXF_OP_L(1a, UniTrack_Stream_Internal);
+        }
+    } else {
+        if (mTimedTextTrackCount > 0) {
+            int64_t start = -1;
+            int complexity = 1;
+            size_t i;
+            for (i = 0; i < mTracks.size() && complexity < 3; i++) {
+                OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mTracks[i]);
+                if (tt_track) {
+                    if (tt_track->GetStart() > 0) {
+                        if (start < 0 || tt_track->GetStart() == start) {
+                            complexity = 2;
+                        } else {
+                            complexity = 3;
+                        }
+                    } else if (start > 0) {
+                        complexity = 3;
+                    }
+                    start = tt_track->GetStart();
+                }
+            }
+            if (complexity == 1) {
+                mOPLabel = MXF_OP_L(1b, MultiTrack_Stream_Internal);
+            } else if (complexity == 2) {
+                mOPLabel = MXF_OP_L(2b, MultiTrack_Stream_Internal);
+            } else {
+                mOPLabel = MXF_OP_L(3b, MultiTrack_Stream_Internal);
+            }
+        } else {
+            mOPLabel = MXF_OP_L(1a, MultiTrack_Stream_Internal);
+        }
+    }
 
     // Preface
     Preface *preface = new Preface(mHeaderMetadata);
     preface->setLastModifiedDate(mCreationDate);
     preface->setVersion((mFlavour & OP1A_377_2004_FLAVOUR) ? MXF_PREFACE_VER(1, 2) : MXF_PREFACE_VER(1, 3));
-    if (mTracks.size() <= 1) {
-        preface->setOperationalPattern(MXF_OP_L(1a, UniTrack_Stream_Internal));
-    } else {
-        if (mTimedTextTrackCount > 0)
-            preface->setOperationalPattern(MXF_OP_L(1b, MultiTrack_Stream_Internal));
-        else
-            preface->setOperationalPattern(MXF_OP_L(1a, MultiTrack_Stream_Internal));
-    }
+    preface->setOperationalPattern(mOPLabel);
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         preface->appendEssenceContainers(*iter);
@@ -856,14 +892,7 @@ void OP1AFile::CreateFile()
     else
         header_partition.setBodySID(0);
     header_partition.setKagSize(mKAGSize);
-    if (mTracks.size() <= 1) {
-        header_partition.setOperationalPattern(&MXF_OP_L(1a, UniTrack_Stream_Internal));
-    } else {
-        if (mTimedTextTrackCount > 0)
-            header_partition.setOperationalPattern(&MXF_OP_L(1b, MultiTrack_Stream_Internal));
-        else
-            header_partition.setOperationalPattern(&MXF_OP_L(1a, MultiTrack_Stream_Internal));
-    }
+    header_partition.setOperationalPattern(&mOPLabel);
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         header_partition.addEssenceContainer(&(*iter));

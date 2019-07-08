@@ -171,6 +171,7 @@ private:
     mxfUMID mMaterialPackageUID;
     mxfUMID mFileSourcePackageUID;
     bool mFrameWrapped;
+    mxfUL mOPLabel;
 
     int64_t mOutputStartOffset;
     int64_t mOutputEndOffset;
