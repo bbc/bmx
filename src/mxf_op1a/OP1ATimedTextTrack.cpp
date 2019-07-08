@@ -153,12 +153,12 @@ void OP1ATimedTextTrack::WriteAncillaryResource(File *mxf_file, Partition *strea
 
 void OP1ATimedTextTrack::UpdateTrackMetadata(HeaderMetadata *header_metadata, int64_t duration)
 {
+    if (duration < mTTStart) {
+        BMX_EXCEPTION(("Timed text start %" PRId64 " > MP track duration %" PRId64,
+                       mTTStart, duration));
+    }
     if (mTTDuration < 0) {
         mTTDuration = duration - mTTStart;
-        if (mTTDuration < 0) {
-            BMX_EXCEPTION(("Timed text start %" PRId64 " > MP track duration %" PRId64,
-                           mTTStart, duration));
-        }
     }
 
     // update Material Package Track metadata
@@ -213,6 +213,10 @@ void OP1ATimedTextTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, Mate
 {
     mFileSourcePackage = file_source_package;
 
+    if (mDuration >= 0 && mDuration < mTTStart) {
+        BMX_EXCEPTION(("Timed text start %" PRId64 " > single pass MP track duration %" PRId64,
+                       mTTStart, mDuration));
+    }
     if (mTTDuration < 0 && mDuration >= 0) {
         mTTDuration = mDuration - mTTStart;
     }
