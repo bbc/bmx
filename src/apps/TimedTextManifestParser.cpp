@@ -290,6 +290,10 @@ bool TimedTextManifestParser::Parse(const string &filename, Timecode start_tc, R
         }
         mDuration = end - mStart;
     }
+    if (mStart <= 0 && mDuration >= 0) {
+        log_error("Timed Text `duration` or `end` can only be used for non-zero `start`\n");
+        return false;
+    }
 
     if (!create_abs_file_path(filename, mf_tt_filename, &mTTFilename)) {
         return false;

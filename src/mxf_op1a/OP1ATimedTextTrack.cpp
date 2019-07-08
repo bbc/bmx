@@ -94,6 +94,9 @@ void OP1ATimedTextTrack::SetSource(const TimedTextManifest *manifest)
     }
     mTTStart = modified_manifest.mStart;
     if (modified_manifest.mDuration >= 0) {
+        if (mTTStart <= 0) {
+            BMX_EXCEPTION(("Timed text duration can only be set if start > 0"));
+        }
         mTTDuration = modified_manifest.mDuration;
         SetDuration(mTTStart + mTTDuration);
     }
