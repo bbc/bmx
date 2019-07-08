@@ -98,14 +98,13 @@ void OP1ATimedTextTrack::SetSource(const TimedTextManifest *manifest)
             BMX_EXCEPTION(("Timed text duration can only be set if start > 0"));
         }
         mTTDuration = modified_manifest.mDuration;
-        SetDuration(mTTStart + mTTDuration);
     }
     mTimedTextDescriptorHelper->SetManifest(&modified_manifest);
 }
 
 void OP1ATimedTextTrack::SetDuration(int64_t duration)
 {
-    if (mDuration >= 0 && mTTStart + mTTDuration > duration) {
+    if (mTTDuration >= 0 && mTTStart + mTTDuration > duration) {
         BMX_EXCEPTION(("Timed text start + duration %" PRId64 " > MP track duration %" PRId64,
                        mTTStart + mTTDuration, duration));
     }
