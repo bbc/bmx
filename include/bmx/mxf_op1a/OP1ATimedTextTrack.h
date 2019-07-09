@@ -68,7 +68,7 @@ public:
     uint32_t GetIndexSID() const { return mIndexSID; }
     int64_t GetDuration() const  { return mDuration; }
 
-    bool GetStart() const { return mTTStart; }
+    int64_t GetStart() const { return mTTStart; }
 
 protected:
     virtual void AddHeaderMetadata(mxfpp::HeaderMetadata *header_metadata, mxfpp::MaterialPackage *material_package,
