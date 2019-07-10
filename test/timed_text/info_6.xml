@@ -44,10 +44,9 @@
   </files>
   <clip>
     <edit_rate>25/1</edit_rate>
-    <duration count="99">00:00:03:24</duration>
+    <duration count="100">00:00:04:00</duration>
     <start_timecodes>
-      <material>10:00:00:01</material>
-      <material_origin>10:00:00:00</material_origin>
+      <material>10:00:00:00</material>
       <file_source>10:00:00:01</file_source>
     </start_timecodes>
     <tracks size="1">
@@ -56,8 +55,7 @@
         <essence_type>Timed_Text</essence_type>
         <ec_label>urn:smpte:ul:060e2b34.0401010a.0d010301.02130101</ec_label>
         <edit_rate>25/1</edit_rate>
-        <duration count="99">00:00:03:24</duration>
-        <lead_filler_offset count="1">00:00:00:01</lead_filler_offset>
+        <duration count="100">00:00:04:00</duration>
         <packages size="1">
           <package index="0">
             <material>

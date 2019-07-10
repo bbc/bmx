@@ -1090,7 +1090,14 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
     }
 
     // check and post-process lead filler offset in Timed Text tracks
-    if (GetFixedLeadFillerOffset() == 0) {
+    bool all_timed_text = true;
+    for (i = 0; i < mTrackReaders.size(); i++) {
+        if (!dynamic_cast<MXFTimedTextTrackReader*>(mTrackReaders[i])) {
+            all_timed_text = false;
+            break;
+        }
+    }
+    if (GetFixedLeadFillerOffset() == 0 || all_timed_text) {
         for (i = 0; i < mTrackReaders.size(); i++) {
             MXFTrackReader *track_reader = dynamic_cast<MXFTrackReader*>(mTrackReaders[i]);
             MXFTrackInfo *track_info = track_reader->GetTrackInfo();
