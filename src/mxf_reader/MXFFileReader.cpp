@@ -952,7 +952,8 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
                     break;
                 } else {
                     if (mxf_equals_key(components[j]->getKey(), &MXF_SET_K(Filler))) {
-                        // lead Filler segments, e.g. used for P2 clips spanning multiple cards
+                        // lead Filler segments
+                        // e.g. used for P2 clips spanning multiple cards or Timed Text start offset
                         lead_filler_offset += components[j]->getDuration();
                     } else if (mxf_equals_key(components[j]->getKey(), &MXF_SET_K(EssenceGroup))) {
                         // Essence Group used in Avid files, e.g. alpha component tracks
@@ -1086,6 +1087,27 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         if (skipped_track_count > 0)
             log_warn("Skipped %u material package tracks whilst processing header metadata\n", skipped_track_count);
         THROW_RESULT(MXF_RESULT_NO_ESSENCE);
+    }
+
+    // check and post-process lead filler offset in Timed Text tracks
+    if (GetFixedLeadFillerOffset() == 0) {
+        for (i = 0; i < mTrackReaders.size(); i++) {
+            MXFTrackReader *track_reader = dynamic_cast<MXFTrackReader*>(mTrackReaders[i]);
+            MXFTrackInfo *track_info = track_reader->GetTrackInfo();
+            if (track_info->lead_filler_offset > 0) {
+                MXFTimedTextTrackReader *tt_track_reader = dynamic_cast<MXFTimedTextTrackReader*>(track_reader);
+                if (!tt_track_reader) {
+                    log_error("A non-timed text track has lead Filler that differs from other tracks\n");
+                    THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
+                }
+
+                // include the lead filler in the track duration and record it in the manifest instead
+                MXFDataTrackInfo *data_track_info = dynamic_cast<MXFDataTrackInfo*>(track_info);
+                data_track_info->timed_text_manifest->mStart = data_track_info->lead_filler_offset;
+                track_info->duration += track_info->lead_filler_offset;
+                track_info->lead_filler_offset = 0;
+            }
+        }
     }
 
     // order tracks by material track number / id

@@ -49,7 +49,7 @@
   </files>
   <clip>
     <edit_rate>25/1</edit_rate>
-    <duration count="1">00:00:00:01</duration>
+    <duration count="3">00:00:00:03</duration>
     <start_timecodes>
       <material>10:00:00:00</material>
       <file_source>10:00:00:00</file_source>
@@ -99,8 +99,7 @@
         <essence_type>Timed_Text</essence_type>
         <ec_label>urn:smpte:ul:060e2b34.0401010a.0d010301.02130101</ec_label>
         <edit_rate>25/1</edit_rate>
-        <duration count="1">00:00:00:01</duration>
-        <lead_filler_offset count="2">00:00:00:02</lead_filler_offset>
+        <duration count="3">00:00:00:03</duration>
         <packages size="1">
           <package index="0">
             <material>
@@ -127,6 +126,6 @@
     </tracks>
   </clip>
   <log_messages size="1">
-    <info>Read 1 samples (00:00:00:01 @25fps)</info>
+    <info>Read 3 samples (00:00:00:03 @25fps)</info>
   </log_messages>
 </bmx>
