@@ -103,7 +103,7 @@ The `mxf2raw` utility can be used to show metadata about the Timed Text tracks a
       essence_type    : Timed_Text
       ec_label        : urn:smpte:ul:060e2b34.0401010a.0d010301.02130101
       edit_rate       : 25/1
-      duration        : 00:00:10:00 (count='250')
+      duration        : 00:45:30:00 (count='68250')
       timed_text_offset: 00:00:30:00 (count='750')
       Packages: (1)
         Package #0:
