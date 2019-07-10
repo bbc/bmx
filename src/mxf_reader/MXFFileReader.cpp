@@ -1365,13 +1365,6 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
                                    ROUND_AUTO);
     }
 
-    if (!mInternalTrackReaders.empty() && origin != mFileOrigin) {
-        log_error("Tracks with different track origins, %" PRId64 " != %" PRId64 ", is not supported\n",
-                  origin, mFileOrigin);
-        THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
-    }
-    mFileOrigin = origin;
-
 
     // index MCA labels in the package
 
@@ -1454,6 +1447,26 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
         ProcessSoundDescriptor(file_desc, sound_track_info);
     else
         ProcessDataDescriptor(file_desc, data_track_info);
+
+
+    // check the File Package origins
+
+    if (track_info.get()->essence_type == TIMED_TEXT) {
+        if (origin != 0) {
+            log_error("Non-zero origin %" PRId64 " in Timed Text File Package Track\n", origin);
+            THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
+        }
+    } else {
+        if (!mInternalTrackReaders.empty() && origin != mFileOrigin) {
+            log_error("File Package Tracks with different origins, %" PRId64 " != %" PRId64 ", is not supported\n",
+                      origin, mFileOrigin);
+            THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
+        }
+        mFileOrigin = origin;
+    }
+
+
+    // create the track reader
 
     MXFFileTrackReader *track_reader;
     if (track_info.get()->essence_type == TIMED_TEXT) {
