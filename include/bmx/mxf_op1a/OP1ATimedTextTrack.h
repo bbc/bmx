@@ -84,7 +84,6 @@ private:
     uint32_t mIndexSID;
     int64_t mDuration;
     int64_t mTTStart;
-    int64_t mTTDuration;
     mxfpp::SourcePackage *mFileSourcePackage;
     mxfpp::Track *mMPTrack;
     mxfpp::Track *mFPTrack;

@@ -136,5 +136,4 @@ void TimedTextManifest::Reset()
     mLanguages.clear();
     mAncillaryResources.clear();
     mStart = 0;
-    mDuration = -1;
 }

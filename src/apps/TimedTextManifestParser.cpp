@@ -122,26 +122,6 @@ static bool parse_languages(const string &lang_str, vector<string> *languages_ou
     return true;
 }
 
-static bool parse_duration(const string &value, Rational frame_rate, int64_t *int64_value)
-{
-    if (value.find(":") == string::npos) {
-        if (sscanf(value.c_str(), "%" PRId64 "", int64_value) == 1)
-            return true;
-    } else {
-        int hour, min, sec, frame;
-        if (sscanf(value.c_str(), "%d:%d:%d:%d", &hour, &min, &sec, &frame) == 4) {
-            uint16_t rounded_rate = get_rounded_tc_base(frame_rate);
-            *int64_value = (int64_t)hour * 60 * 60 * rounded_rate +
-                           (int64_t)min * 60 * rounded_rate +
-                           (int64_t)sec * rounded_rate +
-                           (int64_t)frame;
-            return true;
-        }
-    }
-
-    return false;
-}
-
 static bool parse_position(const string &value, Timecode start_timecode, Rational frame_rate,
                            int64_t *int64_value)
 {
@@ -187,7 +167,6 @@ bool TimedTextManifestParser::Parse(const string &filename, Timecode start_tc, R
     string mf_tt_filename;
     string name;
     string value;
-    int64_t end = -1;
     while (property_parser.ParseNext(&name, &value)) {
         if (parse_state == PARSE_TT_FILE_STATE) {
             if (name == "file") {
@@ -212,16 +191,6 @@ bool TimedTextManifestParser::Parse(const string &filename, Timecode start_tc, R
             } else if (name == "start") {
                 if (!parse_position(value, start_tc, frame_rate, &mStart)) {
                     log_error("Failed to parse timed text start '%s'\n", value.c_str());
-                    return false;
-                }
-            } else if (name == "end") {
-                if (!parse_position(value, start_tc, frame_rate, &end)) {
-                    log_error("Failed to parse timed text end '%s'\n", value.c_str());
-                    return false;
-                }
-            } else if (name == "duration") {
-                if (!parse_duration(value, frame_rate, &mDuration)) {
-                    log_error("Failed to parse timed text duration '%s'\n", value.c_str());
                     return false;
                 }
             } else if (name == "resource_file") {
@@ -281,18 +250,6 @@ bool TimedTextManifestParser::Parse(const string &filename, Timecode start_tc, R
             log_error("Empty or missing 'mime_type' in timed text manifest resource section\n");
             return false;
         }
-    }
-
-    if (mDuration < 0 && end >= 0) {
-        if (end < mStart) {
-            log_error("'end' is before 'start' in timed text manifest\n");
-            return false;
-        }
-        mDuration = end - mStart;
-    }
-    if (mStart <= 0 && mDuration >= 0) {
-        log_error("Timed Text `duration` or `end` can only be used for non-zero `start`\n");
-        return false;
     }
 
     if (!create_abs_file_path(filename, mf_tt_filename, &mTTFilename)) {

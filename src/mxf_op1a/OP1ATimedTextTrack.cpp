@@ -73,7 +73,6 @@ OP1ATimedTextTrack::OP1ATimedTextTrack(OP1AFile *file, uint32_t track_index, uin
     mIndexSID = mOP1AFile->CreateStreamId();
     mDuration = -1;
     mTTStart = 0;
-    mTTDuration = -1;
 }
 
 OP1ATimedTextTrack::~OP1ATimedTextTrack()
@@ -93,22 +92,11 @@ void OP1ATimedTextTrack::SetSource(const TimedTextManifest *manifest)
         mAncillaryResources.push_back(resource);
     }
     mTTStart = modified_manifest.mStart;
-    if (modified_manifest.mDuration >= 0) {
-        if (mTTStart <= 0) {
-            BMX_EXCEPTION(("Timed text duration can only be set if start > 0"));
-        }
-        mTTDuration = modified_manifest.mDuration;
-    }
     mTimedTextDescriptorHelper->SetManifest(&modified_manifest);
 }
 
 void OP1ATimedTextTrack::SetDuration(int64_t duration)
 {
-    if (mTTDuration >= 0 && mTTStart + mTTDuration > duration) {
-        BMX_EXCEPTION(("Timed text start + duration %" PRId64 " > MP track duration %" PRId64,
-                       mTTStart + mTTDuration, duration));
-    }
-
     mDuration = duration;
 }
 
@@ -157,9 +145,7 @@ void OP1ATimedTextTrack::UpdateTrackMetadata(HeaderMetadata *header_metadata, in
         BMX_EXCEPTION(("Timed text start %" PRId64 " > MP track duration %" PRId64,
                        mTTStart, duration));
     }
-    if (mTTDuration < 0) {
-        mTTDuration = duration - mTTStart;
-    }
+    int64_t tt_duration = duration - mTTStart;
 
     // update Material Package Track metadata
 
@@ -168,7 +154,6 @@ void OP1ATimedTextTrack::UpdateTrackMetadata(HeaderMetadata *header_metadata, in
 
     vector<StructuralComponent*> components = sequence->getStructuralComponents();
     if (components.size() == 1) {
-        BMX_ASSERT(mTTDuration == duration);
         components[0]->setDuration(duration);
     } else {
         BMX_ASSERT(components.size() == 2);
@@ -177,16 +162,7 @@ void OP1ATimedTextTrack::UpdateTrackMetadata(HeaderMetadata *header_metadata, in
         SourceClip *source_clip = dynamic_cast<SourceClip*>(components[1]);
         BMX_ASSERT(source_clip);
 
-        source_clip->setDuration(mTTDuration);
-
-        if (duration > mTTStart + mTTDuration) {
-            // add a Filler to cover the remainder duration
-            StructuralComponent *filler = dynamic_cast<StructuralComponent*>(
-                header_metadata->createAndWrap(&MXF_SET_K(Filler)));
-            sequence->appendStructuralComponents(filler);
-            filler->setDataDefinition(MXF_DDEF_L(Data));
-            filler->setDuration(duration - (mTTStart + mTTDuration));
-        }
+        source_clip->setDuration(tt_duration);
     }
 
 
@@ -198,14 +174,14 @@ void OP1ATimedTextTrack::UpdateTrackMetadata(HeaderMetadata *header_metadata, in
         Track *track = dynamic_cast<Track*>(tracks[i]);
 
         Sequence *sequence = dynamic_cast<Sequence*>(track->getSequence());
-        sequence->setDuration(mTTDuration);
+        sequence->setDuration(tt_duration);
 
         vector<StructuralComponent*> components = sequence->getStructuralComponents();
-        components[0]->setDuration(mTTDuration);
+        components[0]->setDuration(tt_duration);
     }
 
     FileDescriptor *file_descriptor = mDescriptorHelper->GetFileDescriptor();
-    file_descriptor->setContainerDuration(mTTDuration);
+    file_descriptor->setContainerDuration(tt_duration);
 }
 
 void OP1ATimedTextTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPackage *material_package,
@@ -217,8 +193,9 @@ void OP1ATimedTextTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, Mate
         BMX_EXCEPTION(("Timed text start %" PRId64 " > single pass MP track duration %" PRId64,
                        mTTStart, mDuration));
     }
-    if (mTTDuration < 0 && mDuration >= 0) {
-        mTTDuration = mDuration - mTTStart;
+    int64_t tt_duration = -1;
+    if (mDuration >= 0) {
+        tt_duration = mDuration - mTTStart;
     }
 
     mxfUL data_def_ul;
@@ -262,20 +239,10 @@ void OP1ATimedTextTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, Mate
     SourceClip *source_clip = new SourceClip(header_metadata);
     sequence->appendStructuralComponents(source_clip);
     source_clip->setDataDefinition(data_def_ul);
-    source_clip->setDuration(mTTDuration);
+    source_clip->setDuration(tt_duration);
     source_clip->setStartPosition(0);
     source_clip->setSourcePackageID(mFileSourcePackage->getPackageUID());
     source_clip->setSourceTrackID(mTrackId);
-
-    // Preface - ContentStorage - MaterialPackage - Timeline Track - Filler
-    if (mTTDuration >= 0 && mDuration >= 0 && mTTStart + mTTDuration < mDuration) {
-        StructuralComponent *filler = dynamic_cast<StructuralComponent*>(
-            header_metadata->createAndWrap(&MXF_SET_K(Filler)));
-        sequence->appendStructuralComponents(filler);
-        filler->setDataDefinition(data_def_ul);
-        filler->setDuration(mDuration - (mTTStart + mTTDuration));
-    }
-
 
     // Preface - ContentStorage - SourcePackage - Timecode Track
     Track *timecode_track = new Track(header_metadata);
@@ -290,13 +257,13 @@ void OP1ATimedTextTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, Mate
     sequence = new Sequence(header_metadata);
     timecode_track->setSequence(sequence);
     sequence->setDataDefinition(MXF_DDEF_L(Timecode));
-    sequence->setDuration(mTTDuration);
+    sequence->setDuration(tt_duration);
 
     // Preface - ContentStorage - SourcePackage - Timecode Track - TimecodeComponent
     TimecodeComponent *timecode_component = new TimecodeComponent(header_metadata);
     sequence->appendStructuralComponents(timecode_component);
     timecode_component->setDataDefinition(MXF_DDEF_L(Timecode));
-    timecode_component->setDuration(mTTDuration);
+    timecode_component->setDuration(tt_duration);
     Timecode sp_start_timecode = mOP1AFile->mStartTimecode;
     sp_start_timecode.AddOffset(mTTStart, mFrameRate);
     timecode_component->setRoundedTimecodeBase(sp_start_timecode.GetRoundedTCBase());
@@ -316,13 +283,13 @@ void OP1ATimedTextTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, Mate
     sequence = new Sequence(header_metadata);
     mFPTrack->setSequence(sequence);
     sequence->setDataDefinition(data_def_ul);
-    sequence->setDuration(mTTDuration);
+    sequence->setDuration(tt_duration);
 
     // Preface - ContentStorage - SourcePackage - Timeline Track - Sequence - SourceClip
     source_clip = new SourceClip(header_metadata);
     sequence->appendStructuralComponents(source_clip);
     source_clip->setDataDefinition(data_def_ul);
-    source_clip->setDuration(mTTDuration);
+    source_clip->setDuration(tt_duration);
     source_clip->setStartPosition(0);
     source_clip->setSourceTrackID(0);
     source_clip->setSourcePackageID(g_Null_UMID);
@@ -331,8 +298,8 @@ void OP1ATimedTextTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, Mate
     FileDescriptor *descriptor = mDescriptorHelper->CreateFileDescriptor(header_metadata);
     mFileSourcePackage->setDescriptor(descriptor);
     descriptor->setLinkedTrackID(mTrackId);
-    if (mTTDuration >= 0)
-        descriptor->setContainerDuration(mTTDuration);
+    if (tt_duration >= 0)
+        descriptor->setContainerDuration(tt_duration);
 }
 
 void OP1ATimedTextTrack::WriteFileData(File *mxf_file, const mxfKey *key, const string &filename)
