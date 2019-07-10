@@ -788,25 +788,6 @@ int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available) 
     return rollout > 0 ? (int16_t)rollout : 0;
 }
 
-bool MXFFileReader::HaveFixedLeadFillerOffset() const
-{
-    int64_t fixed_offset = 0;
-    size_t i;
-    for (i = 0; i < mTrackReaders.size(); i++) {
-        // note that edit_rate and lead_filler_offset are from this MXF file's material package
-        int64_t offset = convert_position(mTrackReaders[i]->GetTrackInfo()->edit_rate,
-                                          mTrackReaders[i]->GetTrackInfo()->lead_filler_offset,
-                                          mEditRate,
-                                          ROUND_UP);
-        if (i == 0)
-            fixed_offset = offset;
-        else if (fixed_offset != offset)
-            return false;
-    }
-
-    return true;
-}
-
 int64_t MXFFileReader::GetFixedLeadFillerOffset() const
 {
     int64_t fixed_offset = 0;
@@ -820,7 +801,7 @@ int64_t MXFFileReader::GetFixedLeadFillerOffset() const
         if (i == 0)
             fixed_offset = offset;
         else if (fixed_offset != offset)
-            return 0; // default to 0 if HaveFixedLeadFillerOffset returns false
+            return 0; // not fixed for all tracks
     }
 
     return fixed_offset;

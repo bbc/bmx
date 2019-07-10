@@ -678,12 +678,6 @@ int16_t MXFSequenceReader::GetMaxRollout(int64_t position, bool limit_to_availab
     return segment->GetMaxRollout(segment_position, limit_to_available);
 }
 
-bool MXFSequenceReader::HaveFixedLeadFillerOffset() const
-{
-    BMX_CHECK(!mGroupSegments.empty());
-    return mGroupSegments[0]->HaveFixedLeadFillerOffset();
-}
-
 int64_t MXFSequenceReader::GetFixedLeadFillerOffset() const
 {
     BMX_CHECK(!mGroupSegments.empty());

@@ -126,8 +126,7 @@
       </track>
     </tracks>
   </clip>
-  <log_messages size="2">
+  <log_messages size="1">
     <info>Read 1 samples (00:00:00:01 @25fps)</info>
-    <warning>No fixed lead filler offset</warning>
   </log_messages>
 </bmx>

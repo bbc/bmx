@@ -1028,11 +1028,7 @@ static void write_clip_info(AppInfoWriter *info_writer, MXFReader *reader,
     info_writer->StartSection("start_timecodes");
     if (reader->HaveMaterialTimecode()) {
 
-        int64_t lead_filler_offset = 0;
-        if (!reader->HaveFixedLeadFillerOffset())
-            log_warn("No fixed lead filler offset\n");
-        else
-            lead_filler_offset = reader->GetFixedLeadFillerOffset();
+        int64_t lead_filler_offset = reader->GetFixedLeadFillerOffset();
         info_writer->WriteTimecodeItem("material", reader->GetMaterialTimecode(lead_filler_offset));
         if (lead_filler_offset != 0) {
             info_writer->WriteTimecodeItem("material_origin",

@@ -2769,10 +2769,7 @@ int main(int argc, const char** argv)
             if (!start_timecode.IsInvalid()) {
                 // adjust start timecode to be at the point after the leading filler segments
                 // this corresponds to the zero position in the MXF reader
-                if (!reader->HaveFixedLeadFillerOffset())
-                    log_warn("No fixed lead filler offset\n");
-                else
-                    start_timecode.AddOffset(reader->GetFixedLeadFillerOffset(), frame_rate);
+                start_timecode.AddOffset(reader->GetFixedLeadFillerOffset(), frame_rate);
             }
         }
 

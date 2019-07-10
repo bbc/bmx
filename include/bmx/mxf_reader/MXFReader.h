@@ -101,7 +101,6 @@ public:
     int64_t GetOrigin() const         { return mOrigin; }
 
 public:
-    virtual bool HaveFixedLeadFillerOffset() const = 0;
     virtual int64_t GetFixedLeadFillerOffset() const = 0;
 
     bool HaveMaterialTimecode() const { return mMaterialStartTimecode != 0; }
