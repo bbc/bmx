@@ -59,7 +59,7 @@ public:
     uint32_t GetAncillaryResourceStreamId(size_t index) const;
     void WriteAncillaryResource(mxfpp::File *mxf_file, mxfpp::Partition *stream_partition, size_t index);
 
-    void UpdateTrackMetadata(mxfpp::HeaderMetadata *header_metadata, int64_t duration);
+    void UpdateTrackMetadata(int64_t duration);
 
 public:
     mxfpp::SourcePackage* GetFileSourcePackage() const { return mFileSourcePackage; }

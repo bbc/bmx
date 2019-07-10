@@ -139,7 +139,7 @@ void OP1ATimedTextTrack::WriteAncillaryResource(File *mxf_file, Partition *strea
     stream_partition->fillToKag(mxf_file);
 }
 
-void OP1ATimedTextTrack::UpdateTrackMetadata(HeaderMetadata *header_metadata, int64_t duration)
+void OP1ATimedTextTrack::UpdateTrackMetadata(int64_t duration)
 {
     if (duration < mTTStart) {
         BMX_EXCEPTION(("Timed text start %" PRId64 " > MP track duration %" PRId64,

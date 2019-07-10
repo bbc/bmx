@@ -1022,7 +1022,7 @@ void OP1AFile::UpdatePackageMetadata()
     for (i = 0; i < mTracks.size(); i++) {
         OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mTracks[i]);
         if (tt_track) {
-            tt_track->UpdateTrackMetadata(mHeaderMetadata, output_duration);
+            tt_track->UpdateTrackMetadata(output_duration);
         }
     }
 }
