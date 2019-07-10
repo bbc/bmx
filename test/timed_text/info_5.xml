@@ -51,8 +51,8 @@
     <edit_rate>25/1</edit_rate>
     <duration count="3">00:00:00:03</duration>
     <start_timecodes>
-      <material>10:00:00:00</material>
-      <file_source>10:00:00:00</file_source>
+      <material>09:59:59:24</material>
+      <file_source>09:59:59:24</file_source>
     </start_timecodes>
     <tracks size="2">
       <track index="0">

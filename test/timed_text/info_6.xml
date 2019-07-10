@@ -46,8 +46,8 @@
     <edit_rate>25/1</edit_rate>
     <duration count="100">00:00:04:00</duration>
     <start_timecodes>
-      <material>10:00:00:00</material>
-      <file_source>10:00:00:01</file_source>
+      <material>09:59:59:00</material>
+      <file_source>10:00:00:00</file_source>
     </start_timecodes>
     <tracks size="1">
       <track index="0">
@@ -56,7 +56,7 @@
         <ec_label>urn:smpte:ul:060e2b34.0401010a.0d010301.02130101</ec_label>
         <edit_rate>25/1</edit_rate>
         <duration count="100">00:00:04:00</duration>
-        <timed_text_offset count="1">00:00:00:01</timed_text_offset>
+        <timed_text_offset count="25">00:00:01:00</timed_text_offset>
         <packages size="1">
           <package index="0">
             <material>
