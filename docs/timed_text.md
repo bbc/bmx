@@ -5,11 +5,9 @@ The `bmx` Timed Text implementation supports embedding TTML Profiles for Interne
 
 ## Timed Text Range
 
-The zero point assumed in the Timed Text may not correspond to the MXF file's zero point. E.g. the Timed Text refers to a media position 0 for the first subtitle but that actually refers to position 750 in the MXF file. Similarly, the duration covered by the Timed Text could be less than the other A/V Tracks.
+The zero point assumed in the Timed Text may not correspond to the MXF file's zero point. E.g. the Timed Text refers to a media position 0 for the first subtitle but that actually refers to position 750 in the MXF file.
 
 The Timed Text can be re-positioned by adding a Filler at the start of the Timed Text Track in the Material Package before the Source Clip referencing the Track in the File Package. The Filler defines the offset of the Timed Text's zero point relative to the MXF file's zero point. E.g. if the MXF A/V content starts at 09:59:30:00 and the programme, including subtitles, start at 10:00:00:00 then a 30 second Filler is added to align the Timed Text to the start of the programme.
-
-The Timed Text, including any preceeding Filler, could have a duration less than the other A/V Tracks and this can be specified by appending a Filler at the end of the Timed Text Track to account for the difference.
 
 
 ## Operational Patterns
