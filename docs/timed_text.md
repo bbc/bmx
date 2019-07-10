@@ -97,7 +97,7 @@ The inherited `MXFFileTrackReader` methods should not be used and instead the `M
 
 ### Commandline Utilities
 
-The `mxf2raw` utility can be used to show metadata about the Timed Text tracks and used for extracting the essence data to files. The Timed Text tracks will have metadata shown similar to the extract below. It shows the properties in the Timed Text data file descriptor and sub-descriptors.
+The `mxf2raw` utility can be used to show metadata about the Timed Text tracks and used for extracting the essence data to files. The Timed Text tracks will have metadata shown similar to the extract below. It shows the properties in the Timed Text data file descriptor and sub-descriptors. A non-zero Timed Text offset, which corresponds to the `start` field in the manifest, is shown in the `timed_text_offset` field in the Track information.
 
 ```
     Track #1:
@@ -106,7 +106,7 @@ The `mxf2raw` utility can be used to show metadata about the Timed Text tracks a
       ec_label        : urn:smpte:ul:060e2b34.0401010a.0d010301.02130101
       edit_rate       : 25/1
       duration        : 00:00:10:00 (count='250')
-      lead_filler_offset: 00:00:30:00 (count='750')
+      timed_text_offset: 00:00:30:00 (count='750')
       Packages: (1)
         Package #0:
           Material:

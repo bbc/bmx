@@ -244,6 +244,7 @@
           <xs:element name="edit_rate" type="rational_type"/>
           <xs:element name="duration" type="duration_type"/>
           <xs:element name="lead_filler_offset" type="position_type" minOccurs="0"/>
+          <xs:element name="timed_text_offset" type="position_type" minOccurs="0"/>
           <xs:element name="precharge" type="int16_type" minOccurs="0"/>
           <xs:element name="rollout" type="int16_type" minOccurs="0"/>
           <xs:element name="checksum" type="checksum_type" minOccurs="0" maxOccurs="unbounded"/>
