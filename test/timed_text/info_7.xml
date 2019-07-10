@@ -83,8 +83,7 @@
       </track>
     </tracks>
   </clip>
-  <log_messages size="2">
-    <warning>Operational pattern possibly not supported</warning>
+  <log_messages size="1">
     <info>Read 0 samples (00:00:00:00 @25fps)</info>
   </log_messages>
 </bmx>

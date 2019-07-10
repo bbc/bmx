@@ -315,12 +315,6 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, co
         }
         Partition &header_partition = file->getPartition(0);
 
-        if (!mxf_is_op_atom(header_partition.getOperationalPattern()) &&
-            !mxf_is_op_1a(header_partition.getOperationalPattern()) &&
-            !mxf_is_op_1b(header_partition.getOperationalPattern()))
-        {
-            log_warn("Operational pattern possibly not supported\n");
-        }
         mOPLabel = *header_partition.getOperationalPattern();
 
 
@@ -435,6 +429,15 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, co
     catch (...)
     {
         result = MXF_RESULT_FAIL;
+    }
+
+    if (result != MXF_RESULT_SUCCESS &&
+            mOPLabel != g_Null_UL &&
+            !mxf_is_op_atom(&mOPLabel) &&
+            !mxf_is_op_1a(&mOPLabel) &&
+            !mxf_is_op_1b(&mOPLabel))
+    {
+        log_warn("Operational pattern possibly not supported\n");
     }
 
     // clean up
