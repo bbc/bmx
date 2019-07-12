@@ -73,10 +73,12 @@ OP1ATimedTextTrack::OP1ATimedTextTrack(OP1AFile *file, uint32_t track_index, uin
     mIndexSID = mOP1AFile->CreateStreamId();
     mDuration = -1;
     mTTStart = 0;
+    mResourceProvider = 0;
 }
 
 OP1ATimedTextTrack::~OP1ATimedTextTrack()
 {
+    delete mResourceProvider;
 }
 
 void OP1ATimedTextTrack::SetSource(const TimedTextManifest *manifest)
@@ -88,11 +90,17 @@ void OP1ATimedTextTrack::SetSource(const TimedTextManifest *manifest)
     size_t i;
     for (i = 0; i < resources.size(); i++) {
         TimedTextAncillaryResource &resource = resources[i];
+        mInputAncStreamIds.push_back(resource.stream_id);
         resource.stream_id = mOP1AFile->CreateStreamId();
         mAncillaryResources.push_back(resource);
     }
     mTTStart = modified_manifest.mStart;
     mTimedTextDescriptorHelper->SetManifest(&modified_manifest);
+}
+
+void OP1ATimedTextTrack::SetResourceProvider(TimedTextMXFResourceProvider *provider)
+{
+    mResourceProvider = provider;
 }
 
 void OP1ATimedTextTrack::SetDuration(int64_t duration)
@@ -120,7 +128,13 @@ void OP1ATimedTextTrack::WriteIndexTable(File *mxf_file, Partition *index_partit
 
 void OP1ATimedTextTrack::WriteEssenceContainer(File *mxf_file, Partition *ess_partition)
 {
-    WriteFileData(mxf_file, &mEssenceElementKey, mTTFilename);
+    if (mResourceProvider) {
+        int64_t data_size = mResourceProvider->GetTimedTextResourceSize();
+        mResourceProvider->OpenTimedTextResource();
+        WriteResourceProviderData(mxf_file, &mEssenceElementKey, data_size);
+    } else {
+        WriteFileData(mxf_file, &mEssenceElementKey, mTTFilename);
+    }
     ess_partition->fillToKag(mxf_file);
 }
 
@@ -135,8 +149,18 @@ void OP1ATimedTextTrack::WriteAncillaryResource(File *mxf_file, Partition *strea
 {
     BMX_ASSERT(index < mAncillaryResources.size());
 
-    WriteFileData(mxf_file, &MXF_EE_K(TimedTextAnc), mAncillaryResources[index].filename);
-    stream_partition->fillToKag(mxf_file);
+    if (mResourceProvider) {
+        if (mInputAncStreamIds[index] == 0) {
+            BMX_EXCEPTION(("Timed Text manifest ancillary resource has zero stream ID"));
+        }
+
+        int64_t data_size = mResourceProvider->GetAncillaryResourceSize(mInputAncStreamIds[index]);
+        mResourceProvider->OpenAncillaryResource(mInputAncStreamIds[index]);
+        WriteResourceProviderData(mxf_file, &MXF_EE_K(TimedTextAnc), data_size);
+    } else {
+        WriteFileData(mxf_file, &MXF_EE_K(TimedTextAnc), mAncillaryResources[index].filename);
+        stream_partition->fillToKag(mxf_file);
+    }
 }
 
 void OP1ATimedTextTrack::UpdateTrackMetadata(int64_t duration)
@@ -359,5 +383,22 @@ void OP1ATimedTextTrack::WriteFileData(File *mxf_file, const mxfKey *key, const 
             fclose(file);
         }
         throw;
+    }
+}
+
+void OP1ATimedTextTrack::WriteResourceProviderData(mxfpp::File *mxf_file, const mxfKey *key, int64_t data_size)
+{
+    uint8_t llen = mxf_get_llen(mxf_file->getCFile(), data_size);
+    if (llen < 4) {
+        llen = 4;
+    }
+    mxf_file->writeFixedKL(key, llen, data_size);
+
+    int64_t total_written = 0;
+    unsigned char buffer[4096];
+    while (total_written < data_size) {
+        size_t num_read = mResourceProvider->Read(buffer, sizeof(buffer));
+        mxf_file->write(buffer, (uint32_t)num_read);
+        total_written += num_read;
     }
 }

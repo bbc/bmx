@@ -1334,6 +1334,36 @@ void ClipWriterTrack::SetTimedTextSource(const TimedTextManifest *manifest)
     }
 }
 
+void ClipWriterTrack::SetTimedTextResourceProvider(TimedTextMXFResourceProvider *provider)
+{
+    bool have_set = false;
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mOP1ATrack);
+            if (tt_track) {
+                tt_track->SetResourceProvider(provider);
+                have_set = true;
+            }
+            break;
+        }
+        case CW_RDD9_CLIP_TYPE:
+        case CW_D10_CLIP_TYPE:
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    if (!have_set) {
+        delete provider;
+    }
+}
+
 void ClipWriterTrack::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
     switch (mClipType)

@@ -494,6 +494,9 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\TimedTextMXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\TimedTextMXFResourceProvider.h">
+      <Filter>Header Files\mxf_helper</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\SoundMXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
@@ -1073,6 +1076,9 @@
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_helper\TimedTextMXFDescriptorHelper.cpp">
+      <Filter>Source Files\mxf_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_helper\TimedTextMXFResourceProvider.cpp">
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_helper\SoundMXFDescriptorHelper.cpp">

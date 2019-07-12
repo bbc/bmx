@@ -53,6 +53,7 @@
 #include <bmx/mxf_reader/MXFGroupReader.h>
 #include <bmx/mxf_reader/MXFSequenceReader.h>
 #include <bmx/mxf_reader/MXFFrameMetadata.h>
+#include <bmx/mxf_reader/MXFTimedTextTrackReader.h>
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
@@ -2840,6 +2841,19 @@ int main(int argc, const char** argv)
         }
 
 
+        // check if the file only contains timed text tracks as in that case the input duration
+        // needs to be copied to the output
+
+        bool timed_text_only = true;
+        for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+            MXFTrackReader *track_reader = reader->GetTrackReader(i);
+            if (track_reader->IsEnabled() && track_reader->GetTrackInfo()->essence_type != TIMED_TEXT) {
+                timed_text_only = false;
+                break;
+            }
+        }
+
+
         // create output clip and initialize
 
         int flavour = 0;
@@ -2959,7 +2973,7 @@ int main(int argc, const char** argv)
         } else if (clip_type == CW_OP1A_CLIP_TYPE) {
             OP1AFile *op1a_clip = clip->GetOP1AClip();
 
-            if (flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR)
+            if ((flavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR) || timed_text_only)
                 op1a_clip->SetInputDuration(reader->GetReadDuration());
 
             if (BMX_OPT_PROP_IS_SET(head_fill))
@@ -3268,7 +3282,7 @@ int main(int argc, const char** argv)
             MXFDataDefEnum output_data_def = convert_essence_type_to_data_def(output_essence_type);
 
             MXFInputTrack *input_track = 0;
-            const MXFTrackReader *input_track_reader = 0;
+            MXFTrackReader *input_track_reader = 0;
             const MXFTrackInfo *input_track_info = 0;
             const MXFPictureTrackInfo *input_picture_info = 0;
             if (output_track->HaveInputTrack()) {
@@ -3590,6 +3604,24 @@ int main(int argc, const char** argv)
                         clip_track->SetMaxDataSize(vbi_max_size);
                     break;
                 case TIMED_TEXT:
+                {
+                    const MXFDataTrackInfo *input_data_info = dynamic_cast<const MXFDataTrackInfo*>(input_track_info);
+                    MXFTimedTextTrackReader *tt_track_reader =
+                            dynamic_cast<MXFTimedTextTrackReader*>(input_track_reader);
+                    TimedTextManifest timed_text_manifest = *input_data_info->timed_text_manifest;
+                    if (read_start > 0) {
+                        // adjust the timed text offset with the sub-clip start offset
+                        if (read_start > timed_text_manifest.mStart) {
+                            log_error("Cannot start the sub-clip %" PRId64 " after the Timed Text zero point %" PRId64 "\n",
+                                      read_start, timed_text_manifest.mStart);
+                            throw false;
+                        }
+                        timed_text_manifest.mStart -= read_start;
+                    }
+                    clip_track->SetTimedTextSource(&timed_text_manifest);
+                    clip_track->SetTimedTextResourceProvider(tt_track_reader->CreateResourceProvider());
+                    break;
+                }
                 case D10_AES3_PCM:
                 case PICTURE_ESSENCE:
                 case SOUND_ESSENCE:
@@ -3801,8 +3833,14 @@ int main(int argc, const char** argv)
             // if the frame is empty then check zero PCM sample padding is possible
             for (i = 0; i < input_tracks.size(); i++) {
                 MXFInputTrack *input_track = input_tracks[i];
+                if (input_track->GetTrackInfo()->essence_type == TIMED_TEXT) {
+                    // timed text is handled elsewhere
+                    continue;
+                }
+
                 Frame *frame = input_track->GetFrameBuffer()->GetLastFrame(false);
                 BMX_ASSERT(frame);
+
                 if (!frame->IsComplete()) {
                     if (!frame->IsEmpty()) {
                         log_warn("Partially complete frames not yet supported\n");
@@ -3837,6 +3875,10 @@ int main(int argc, const char** argv)
             uint32_t first_sound_num_samples = 0;
             for (i = 0; i < input_tracks.size(); i++) {
                 MXFInputTrack *input_track = input_tracks[i];
+                if (input_track->GetTrackInfo()->essence_type == TIMED_TEXT) {
+                    // timed text is handled elsewhere
+                    continue;
+                }
 
                 Frame *frame = input_track->GetFrameBuffer()->GetLastFrame(true);
                 BMX_ASSERT(frame);
@@ -3989,6 +4031,10 @@ int main(int argc, const char** argv)
                 log_warn("Reached maximum growing file retries, %u\n", gf_retries);
             if (reader->IsComplete())
                 cmd_result = 1;
+        }
+
+        if (timed_text_only) {
+            total_read = read_duration;
         }
 
         if (show_progress)

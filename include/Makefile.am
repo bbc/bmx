@@ -160,6 +160,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_helper/SoundMXFDescriptorHelper.h \
 	bmx/mxf_helper/TimedTextManifest.h \
 	bmx/mxf_helper/TimedTextMXFDescriptorHelper.h \
+	bmx/mxf_helper/TimedTextMXFResourceProvider.h \
 	bmx/mxf_helper/UncCDCIMXFDescriptorHelper.h \
 	bmx/mxf_helper/UncRGBAMXFDescriptorHelper.h \
 	bmx/mxf_helper/UniqueIdHelper.h \

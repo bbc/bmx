@@ -45,6 +45,7 @@
 #include <bmx/writer_helper/AVCIWriterHelper.h>
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/TimedTextManifest.h>
+#include <bmx/mxf_helper/TimedTextMXFResourceProvider.h>
 
 
 
@@ -126,6 +127,7 @@ public:
 
     // Timed Text
     void SetTimedTextSource(const TimedTextManifest *manifest);
+    void SetTimedTextResourceProvider(TimedTextMXFResourceProvider *provider);
 
 public:
     void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);

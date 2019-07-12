@@ -33,6 +33,7 @@
 #include <bmx/mxf_op1a/OP1ATrack.h>
 #include <bmx/mxf_helper/TimedTextMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/TimedTextManifest.h>
+#include <bmx/mxf_helper/TimedTextMXFResourceProvider.h>
 
 
 namespace bmx
@@ -47,6 +48,7 @@ public:
     virtual ~OP1ATimedTextTrack();
 
     void SetSource(const TimedTextManifest *manifest);
+    void SetResourceProvider(TimedTextMXFResourceProvider *provider);
 
     void SetBodySID(uint32_t id);
     void SetIndexSID(uint32_t id);
@@ -77,6 +79,7 @@ protected:
 
 private:
     void WriteFileData(mxfpp::File *mxf_file, const mxfKey *key, const std::string &filename);
+    void WriteResourceProviderData(mxfpp::File *mxf_file, const mxfKey *key, int64_t data_size);
 
 private:
     TimedTextMXFDescriptorHelper *mTimedTextDescriptorHelper;
@@ -89,6 +92,8 @@ private:
     mxfpp::Track *mFPTrack;
     std::string mTTFilename;
     std::vector<TimedTextAncillaryResource> mAncillaryResources;
+    std::vector<uint32_t> mInputAncStreamIds;
+    TimedTextMXFResourceProvider *mResourceProvider;
 };
 
 
