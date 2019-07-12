@@ -95,6 +95,16 @@ create_test_file_5()
         >/dev/null
 }
 
+transwrap_test_file_1()
+{
+    $appsdir/bmxtranswrap/bmxtranswrap \
+        --regtest \
+        -t op1a \
+        -o $2 \
+        $1 \
+        >/dev/null
+}
+
 create_read_result()
 {
     $appsdir/mxf2raw/mxf2raw \
@@ -152,7 +162,23 @@ check()
         $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
         diff $tmpdir/test.md5 $base/test_7.md5 &&
         create_read_result $tmpdir/test.xml $tmpdir/test $tmpdir/test.mxf &&
-            diff $tmpdir/test.xml $base/info_7.xml
+            diff $tmpdir/test.xml $base/info_7.xml &&
+    create_test_file_4 10:00:00:00 manifest_2.txt $tmpdir/input.mxf &&
+        transwrap_test_file_1 $tmpdir/input.mxf $tmpdir/test.mxf &&
+        $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
+        diff $tmpdir/test.md5 $base/test_4.md5 &&
+        create_read_result $tmpdir/test.xml $tmpdir/test $tmpdir/test.mxf &&
+            diff $tmpdir/test.xml $base/info_4.xml &&
+            diff $tmpdir/test_d0.xml $base/text_example.xml &&
+            diff $tmpdir/test_d0_12.raw $base/font.ttf &&
+            diff $tmpdir/test_d0_13.raw $base/image.png &&
+    create_test_file_2 10:00:00:00 manifest_1.txt $tmpdir/input.mxf &&
+        transwrap_test_file_1 $tmpdir/input.mxf $tmpdir/test.mxf &&
+        $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
+        diff $tmpdir/test.md5 $base/test_9.md5 &&
+        create_read_result $tmpdir/test.xml $tmpdir/test $tmpdir/test.mxf &&
+            diff $tmpdir/test.xml $base/info_9.xml &&
+            diff $tmpdir/test_d0.xml $base/text_example.xml
 }
 
 create_data()
@@ -177,7 +203,15 @@ create_data()
         create_read_result $base/info_6.xml $tmpdir/test $tmpdir/test.mxf &&
     create_test_file_5 09:59:59:24 4 manifest_3.txt $tmpdir/test.mxf &&
         $md5tool < $tmpdir/test.mxf > $base/test_7.md5 &&
-        create_read_result $base/info_7.xml $tmpdir/test $tmpdir/test.mxf
+        create_read_result $base/info_7.xml $tmpdir/test $tmpdir/test.mxf &&
+    create_test_file_4 10:00:00:00 manifest_2.txt $tmpdir/input.mxf &&
+        transwrap_test_file_1 $tmpdir/input.mxf $tmpdir/test.mxf &&
+        $md5tool < $tmpdir/test.mxf > $base/test_8.md5 &&
+        create_read_result $base/info_8.xml $tmpdir/test $tmpdir/test.mxf &&
+    create_test_file_2 10:00:00:00 manifest_1.txt $tmpdir/input.mxf &&
+        transwrap_test_file_1 $tmpdir/input.mxf $tmpdir/test.mxf &&
+        $md5tool < $tmpdir/test.mxf > $base/test_9.md5 &&
+        create_read_result $base/info_9.xml $tmpdir/test $tmpdir/test.mxf
 }
 
 create_samples()
@@ -195,7 +229,13 @@ create_samples()
     create_test_file_2 09:59:59:00 manifest_3.txt $sampledir/timed_text_6.mxf &&
         create_read_result $sampledir/test_6.xml $sampledir/timed_text_6 $sampledir/timed_text_6.mxf &&
     create_test_file_5 09:59:59:24 4 manifest_3.txt $sampledir/timed_text_7.mxf &&
-        create_read_result $sampledir/test_7.xml $sampledir/timed_text_7 $sampledir/timed_text_7.mxf
+        create_read_result $sampledir/test_7.xml $sampledir/timed_text_7 $sampledir/timed_text_7.mxf &&
+    create_test_file_4 10:00:00:00 manifest_2.txt $tmpdir/input.mxf &&
+        transwrap_test_file_1 $tmpdir/input.mxf $sampledir/timed_text_8.mxf &&
+        create_read_result $sampledir/test_8.xml $sampledir/timed_text_8 $sampledir/timed_text_8.mxf &&
+    create_test_file_2 10:00:00:00 manifest_1.txt $tmpdir/input.mxf &&
+        transwrap_test_file_1 $tmpdir/input.mxf $sampledir/timed_text_9.mxf &&
+        create_read_result $sampledir/test_9.xml $sampledir/timed_text_9 $sampledir/timed_text_9.mxf
 }
 
 
