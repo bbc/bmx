@@ -1682,6 +1682,9 @@ bool MXFFileReader::GetPhysicalSourceStartTimecodes(GenericPackage *package, Tra
         int64_t filler;
         TimecodeComponent *tc_component;
         if (i == 0) {
+            if (!primary_tc_component) {
+                continue;
+            }
             filler = 0;
             tc_component = primary_tc_component;
         } else {
