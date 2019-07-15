@@ -51,7 +51,7 @@ OutputFileManager::OutputFileManager()
 
 OutputFileManager::~OutputFileManager()
 {
-    map<uint32_t, TrackFileInfo>::const_iterator iter1;
+    map<size_t, TrackFileInfo>::const_iterator iter1;
     for (iter1 = mTrackFiles.begin(); iter1 != mTrackFiles.end(); iter1++) {
         map<uint32_t, FileInfo>::const_iterator iter2;
         for (iter2 = iter1->second.children.begin(); iter2 != iter1->second.children.end(); iter2++) {
@@ -72,7 +72,7 @@ void OutputFileManager::SetSoundDeinterleave(bool enable)
     mSoundDeinterleave = enable;
 }
 
-void OutputFileManager::AddTrackFile(uint32_t track_index, const MXFTrackInfo *track_info, bool wrap_klv)
+void OutputFileManager::AddTrackFile(size_t track_index, const MXFTrackInfo *track_info, bool wrap_klv)
 {
     const char *ddef_letter = "x";
     switch (track_info->data_def)
@@ -159,7 +159,7 @@ void OutputFileManager::AddTrackFile(uint32_t track_index, const MXFTrackInfo *t
     mDDefCount[track_info->data_def]++;
 }
 
-void OutputFileManager::GetTrackFile(uint32_t track_index, uint32_t child_index,
+void OutputFileManager::GetTrackFile(size_t track_index, uint32_t child_index,
                                      FILE **file, string *filename)
 {
     FileInfo &file_info = mTrackFiles.at(track_index).children.at(child_index);
@@ -167,7 +167,7 @@ void OutputFileManager::GetTrackFile(uint32_t track_index, uint32_t child_index,
     *filename = file_info.filename;
 }
 
-void OutputFileManager::GetTrackFile(uint32_t track_index,
+void OutputFileManager::GetTrackFile(size_t track_index,
                                      FILE **file, string *filename)
 {
     return GetTrackFile(track_index, (uint32_t)(-1), file, filename);

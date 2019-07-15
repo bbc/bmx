@@ -145,7 +145,7 @@ size_t TimedTextMXFResourceProvider::Read(unsigned char *buffer, size_t size)
             to_read = (uint32_t)mRangeRemSize;
         }
         if (to_read > target_read - total_read) {
-            to_read = target_read - total_read;
+            to_read = (uint32_t)(target_read - total_read);
         }
         BMX_ASSERT(to_read <= mRemSize);
         BMX_ASSERT(to_read > 0);
