@@ -180,7 +180,7 @@ static bool parse_version_type(string value, mxfVersionType *vt_value)
 {
     unsigned int v1, v2;
     if (sscanf(value.c_str(), "%u.%u", &v1, &v2) == 2) {
-        if (v1 < 256 && v1 < 256) {
+        if (v1 < 256 && v2 < 256) {
             *vt_value = (mxfVersionType)((v1 & 0xff) << 8 | (v2 & 0xff));
             return true;
         }
