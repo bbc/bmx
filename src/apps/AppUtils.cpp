@@ -48,6 +48,9 @@
 #include <sys/time.h>
 #endif
 
+#include <mxf/mxf.h>
+#include <mxf/mxf_avid.h>
+
 #include <bmx/apps/AppUtils.h>
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/writer_helper/VC2WriterHelper.h>
@@ -970,6 +973,24 @@ bool bmx::parse_vc2_mode(const char *mode_str, int *vc2_mode_flags)
     return true;
 }
 
+bool bmx::parse_avid_umid_type(const char *str, AvidUMIDType *value)
+{
+    static const char* enum_strings[] =
+    {
+        "uuid", "aafsdk", "old-aafsdk"
+    };
+
+    size_t i;
+    for (i = 0; i < BMX_ARRAY_SIZE(enum_strings); i++) {
+        if (strcmp(str, enum_strings[i]) == 0) {
+            *value = (AvidUMIDType)i;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {
@@ -989,6 +1010,23 @@ string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number,
 
     string filename = prefix;
     return filename.append(buffer);
+}
+
+
+void bmx::set_avid_umid_type(AvidUMIDType type)
+{
+    switch (type)
+    {
+        case UUID_UMID_TYPE:
+            mxf_generate_aafsdk_umid = mxf_default_generate_umid;
+            break;
+        case AAFSDK_UMID_TYPE:
+            mxf_generate_aafsdk_umid = mxf_default_generate_aafsdk_umid;
+            break;
+        case OLD_AAFSDK_UMID_TYPE:
+            mxf_generate_aafsdk_umid = mxf_default_generate_old_aafsdk_umid;
+            break;
+    }
 }
 
 
