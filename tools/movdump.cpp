@@ -1547,6 +1547,98 @@ static void dump_co64_atom()
     }
 }
 
+static void dump_sgpd_atom()
+{
+    uint8_t version;
+    uint32_t flags;
+    dump_full_atom_header(&version, &flags);
+
+    if (version != 0x01) {
+        dump_unknown_version(version);
+        return;
+    }
+
+
+    uint32_t grouping_type;
+    MOV_CHECK(read_uint32(&grouping_type));
+    indent();
+    printf("grouping_type: ");
+    dump_uint32_tag(grouping_type);
+    printf("\n");
+
+    uint32_t default_length;
+    MOV_CHECK(read_uint32(&default_length));
+    indent();
+    printf("default_length: %u\n", default_length);
+
+    uint32_t entry_count;
+    MOV_CHECK(read_uint32(&entry_count));
+    indent();
+    printf("entry_count: %u\n", entry_count);
+
+    int16_t payload_data;
+    MOV_CHECK(read_int16(&payload_data));
+    indent();
+    printf("payload_data: %d\n", payload_data);
+}
+
+static void dump_sbgp_atom()
+{
+    uint8_t version;
+    uint32_t flags;
+    dump_full_atom_header(&version, &flags);
+
+    if (version != 0x00) {
+        dump_unknown_version(version);
+        return;
+    }
+
+
+    uint32_t grouping_type;
+    MOV_CHECK(read_uint32(&grouping_type));
+    indent();
+    printf("grouping_type: ");
+    dump_uint32_tag(grouping_type);
+    printf("\n");
+
+    uint32_t num_entries;
+    MOV_CHECK(read_uint32(&num_entries));
+    indent();
+    printf("entries (");
+    dump_uint32(num_entries, false);
+    printf("):\n");
+
+    if (num_entries > 0) {
+        indent(4);
+        if (num_entries < 0xffff)
+            printf("   i");
+        else if (num_entries < 0xffffff)
+            printf("     i");
+        else
+            printf("       i");
+        printf("       count      index\n");
+
+        uint32_t i;
+        for (i = 0; i < num_entries; i++) {
+            uint32_t count;
+            MOV_CHECK(read_uint32(&count));
+
+            uint32_t index;
+            MOV_CHECK(read_uint32(&index));
+
+            indent(4);
+            dump_uint32_index(num_entries, i);
+            printf("  ");
+
+            dump_uint32(count, false);
+            printf(" ");
+
+            dump_uint32(index, false);
+            printf("\n");
+        }
+    }
+}
+
 static void dump_hdlr_atom()
 {
     uint8_t version;
@@ -2384,6 +2476,8 @@ static void dump_stbl_atom()
         {{'s','t','s','z'}, dump_stsz_atom},
         {{'s','t','c','o'}, dump_stco_atom},
         {{'c','o','6','4'}, dump_co64_atom},
+        {{'s','g','p','d'}, dump_sgpd_atom},
+        {{'s','b','g','p'}, dump_sbgp_atom},
     };
 
     dump_container_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
