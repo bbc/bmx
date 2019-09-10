@@ -739,8 +739,12 @@ static void dump_counted_string(uint64_t size, int extra_indent_amount = 0)
 static void dump_type(const char *type)
 {
     size_t i;
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 4; i++) {
+        if (isprint(type[i]))
         printf("%c", type[i]);
+        else
+            printf("\\x%02x", type[i]);
+    }
 }
 
 static void dump_uint32_tag(uint32_t value)
@@ -2257,6 +2261,33 @@ static void dump_esds_atom()
         dump_mp4_object_descriptor((uint32_t)CURRENT_ATOM.rem_size);
 }
 
+static void dump_frma_atom()
+{
+    dump_atom_header();
+
+    uint32_t data_format;
+    MOV_CHECK(read_uint32(&data_format));
+    indent(2);
+    printf("data_format: ");
+    dump_uint32_chars(data_format);
+    printf("\n");
+}
+
+static void dump_wave_atom()
+{
+    // Note that the 'mp4a' atom and the terminator atom, both part of
+    // the 'wave' atom, do not have dedicated dump routines. Format of
+    // the 'mp4a' atom is unknown and is dumped as binary blob and the
+    // terminator atom has no fields.
+    static const DumpFuncMap dump_func_map[] =
+    {
+        {{'e','s','d','s'}, dump_esds_atom},
+        {{'f','r','m','a'}, dump_frma_atom},
+    };
+
+    dump_container_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
+}
+
 static void dump_stbl_soun_v0_v1(uint32_t version)
 {
     MOV_CHECK(version == 0 || version == 1);
@@ -2389,6 +2420,7 @@ static uint32_t dump_stbl_soun(uint32_t size)
     {
         {{'e','s','d','s'}, dump_esds_atom},
         {{'b','t','r','t'}, dump_btrt_atom},
+        {{'w','a','v','e'}, dump_wave_atom},
     };
 
     MOV_CHECK(size <= CURRENT_ATOM.rem_size);
