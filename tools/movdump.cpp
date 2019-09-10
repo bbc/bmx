@@ -338,6 +338,16 @@ static bool read_int8(int8_t *value)
     return true;
 }
 
+static bool read_float32(float *value)
+{
+    uint32_t uvalue;
+    if (!read_uint32(&uvalue))
+        return false;
+
+    *value = *(float*)&uvalue;
+    return true;
+}
+
 static bool read_float64(double *value)
 {
     uint64_t uvalue;
@@ -2288,6 +2298,80 @@ static void dump_wave_atom()
     dump_container_atom(dump_func_map, DUMP_FUNC_MAP_SIZE);
 }
 
+static void dump_audio_channel_layout_tag(uint32_t channel_layout_tag)
+{
+    dump_uint32(channel_layout_tag, true);
+    // CoreAudio declaration
+    printf(" ((%u<<16) | %u)", channel_layout_tag >> 16,
+                               channel_layout_tag & 0xffff);
+}
+
+static void dump_chan_atom()
+{
+    uint8_t version;
+    uint32_t flags;
+    dump_full_atom_header(&version, &flags);
+
+    uint32_t channel_layout_tag;
+    MOV_CHECK(read_uint32(&channel_layout_tag));
+    indent();
+    printf("channel_layout_tag: ");
+    dump_audio_channel_layout_tag(channel_layout_tag);
+    printf("\n");
+
+    uint32_t channel_bitmap;
+    MOV_CHECK(read_uint32(&channel_bitmap));
+    indent();
+    printf("channel_bitmap: ");
+    dump_uint32(channel_bitmap, true);
+    printf("\n");
+
+    uint32_t number_channel_descriptions;
+    MOV_CHECK(read_uint32(&number_channel_descriptions));
+    indent();
+    printf("channel_descriptions (");
+    dump_uint32(number_channel_descriptions, false);
+    printf("):\n");
+
+    if (number_channel_descriptions > 0) {
+        indent(4);
+        if (number_channel_descriptions < 0xffff)
+            printf("   i");
+        else if (number_channel_descriptions < 0xffffff)
+            printf("     i");
+        else
+            printf("       i");
+        printf("  channel_label  channel_flags          coordinates\n");
+
+        uint32_t i;
+        for (i = 0; i < number_channel_descriptions; i++) {
+
+            indent(4);
+            dump_uint32_index(number_channel_descriptions, i);
+            printf("     ");
+
+            uint32_t channel_label;
+            MOV_CHECK(read_uint32(&channel_label));
+            dump_uint32(channel_label, false);
+            printf("     ");
+
+            uint32_t channel_flags;
+            MOV_CHECK(read_uint32(&channel_flags));
+            dump_uint32(channel_flags, true);
+            printf("  ");
+
+            uint32_t c;
+            for (c = 0; c < 3; c++) {
+                float coordinate;
+                MOV_CHECK(read_float32(&coordinate));
+                printf("%5.2f%s", coordinate, (c < 2 ? ", " : ""));
+            }
+
+            printf("\n");
+        }
+    }
+}
+
 static void dump_stbl_soun_v0_v1(uint32_t version)
 {
     MOV_CHECK(version == 0 || version == 1);
@@ -2421,6 +2505,7 @@ static uint32_t dump_stbl_soun(uint32_t size)
         {{'e','s','d','s'}, dump_esds_atom},
         {{'b','t','r','t'}, dump_btrt_atom},
         {{'w','a','v','e'}, dump_wave_atom},
+        {{'c','h','a','n'}, dump_chan_atom},
     };
 
     MOV_CHECK(size <= CURRENT_ATOM.rem_size);
