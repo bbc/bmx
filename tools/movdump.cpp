@@ -338,6 +338,16 @@ static bool read_int8(int8_t *value)
     return true;
 }
 
+static bool read_float64(double *value)
+{
+    uint64_t uvalue;
+    if (!read_uint64(&uvalue))
+        return false;
+
+    *value = *(double*)&uvalue;
+    return true;
+}
+
 static void write_avcc_ps(unsigned char **buffer, size_t *buffer_size, uint8_t length_size, uint16_t ps_size)
 {
     if (!g_avcc_file) {
@@ -2247,21 +2257,9 @@ static void dump_esds_atom()
         dump_mp4_object_descriptor((uint32_t)CURRENT_ATOM.rem_size);
 }
 
-static uint32_t dump_stbl_soun(uint32_t size)
+static void dump_stbl_soun_v0_v1(uint32_t version)
 {
-    static const DumpFuncMap dump_func_map[] =
-    {
-        {{'e','s','d','s'}, dump_esds_atom},
-        {{'b','t','r','t'}, dump_btrt_atom},
-    };
-
-    MOV_CHECK(size <= CURRENT_ATOM.rem_size);
-    uint64_t end_atom_rem_size = CURRENT_ATOM.rem_size - size;
-
-    uint16_t version;
-    MOV_CHECK(read_uint16(&version));
-    indent(2);
-    printf("version: %u\n", version);
+    MOV_CHECK(version == 0 || version == 1);
 
     uint16_t revision;
     MOV_CHECK(read_uint16(&revision));
@@ -2323,9 +2321,92 @@ static uint32_t dump_stbl_soun(uint32_t size)
         indent(2);
         printf("bytes_per_sample: %u\n", bytes_per_sample);
     }
+}
+
+static void dump_stbl_soun_v2()
+{
+    uint16_t revision;
+    MOV_CHECK(read_uint16(&revision));
+    indent(2);
+    printf("revision: 0x%04x\n", revision);
+
+    uint32_t vendor;
+    MOV_CHECK(read_uint32(&vendor));
+    indent(2);
+    printf("vendor: ");
+    dump_uint32_chars(vendor);
+    printf("\n");
+
+    skip_bytes(sizeof(uint16_t) +   // always3
+               sizeof(uint16_t) +   // always16
+               sizeof(uint16_t) +   // alwaysMinus2
+               sizeof(uint16_t) +   // always0
+               sizeof(uint32_t));   // always65536
+
+    uint32_t size_of_struct_only;
+    MOV_CHECK(read_uint32(&size_of_struct_only));
+    indent(2);
+    printf("size_of_struct_only: %u\n", size_of_struct_only);
+
+    double audio_sample_rate;
+    MOV_CHECK(read_float64(&audio_sample_rate));
+    indent(2);
+    printf("audio_sample_rate: %.2f", audio_sample_rate);
+    printf("\n");
+
+    uint32_t num_audio_channels;
+    MOV_CHECK(read_uint32(&num_audio_channels));
+    indent(2);
+    printf("num_audio_channels: %u\n", num_audio_channels);
+
+    // always7F000000
+    skip_bytes(sizeof(uint32_t));
+
+    uint32_t const_bits_per_channel;
+    MOV_CHECK(read_uint32(&const_bits_per_channel));
+    indent(2);
+    printf("const_bits_per_channel: %u\n", const_bits_per_channel);
+
+    uint32_t format_specific_flags;
+    MOV_CHECK(read_uint32(&format_specific_flags));
+    indent(2);
+    printf("format_specific_flags: %u\n", format_specific_flags);
+
+    uint32_t const_bytes_per_audio_packet;
+    MOV_CHECK(read_uint32(&const_bytes_per_audio_packet));
+    indent(2);
+    printf("const_bytes_per_audio_packet: %u\n", const_bytes_per_audio_packet);
+
+    uint32_t const_LPCM_frames_per_audio_packet;
+    MOV_CHECK(read_uint32(&const_LPCM_frames_per_audio_packet));
+    indent(2);
+    printf("const_LPCM_frames_per_audio_packet: %u\n", const_LPCM_frames_per_audio_packet);
+}
+
+static uint32_t dump_stbl_soun(uint32_t size)
+{
+    static const DumpFuncMap dump_func_map[] =
+    {
+        {{'e','s','d','s'}, dump_esds_atom},
+        {{'b','t','r','t'}, dump_btrt_atom},
+    };
+
+    MOV_CHECK(size <= CURRENT_ATOM.rem_size);
+    uint64_t end_atom_rem_size = CURRENT_ATOM.rem_size - size;
+
+    uint16_t version;
+    MOV_CHECK(read_uint16(&version));
+    indent(2);
+    printf("version: %u\n", version);
+
+    if (version == 0 || version == 1) {
+        dump_stbl_soun_v0_v1(version);
+    } else if (version == 2) {
+        dump_stbl_soun_v2();
+    }
 
     // extensions
-    if (version == 0 || version == 1) { // size is known for these versions and can be sure what follows will be atoms
+    if (version == 0 || version == 1 || version == 2) { // size is known for these versions and can be sure what follows will be atoms
         while (CURRENT_ATOM.rem_size > end_atom_rem_size + 8) {
             push_atom();
 
