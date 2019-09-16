@@ -2452,11 +2452,40 @@ static void dump_stbl_soun_v2()
     dump_uint32_chars(vendor);
     printf("\n");
 
-    skip_bytes(sizeof(uint16_t) +   // always3
-               sizeof(uint16_t) +   // always16
-               sizeof(uint16_t) +   // alwaysMinus2
-               sizeof(uint16_t) +   // always0
-               sizeof(uint32_t));   // always65536
+    uint16_t always3;
+    MOV_CHECK(read_uint16(&always3));
+    indent(2);
+    printf("always3: ");
+    dump_uint16(always3, true);
+    printf("\n");
+
+    uint16_t always16;
+    MOV_CHECK(read_uint16(&always16));
+    indent(2);
+    printf("always16: ");
+    dump_uint16(always16, true);
+    printf("\n");
+
+    uint16_t alwaysMinus2;
+    MOV_CHECK(read_uint16(&alwaysMinus2));
+    indent(2);
+    printf("alwaysMinus2: ");
+    dump_uint16(alwaysMinus2, true);
+    printf("\n");
+
+    uint16_t always0;
+    MOV_CHECK(read_uint16(&always0));
+    indent(2);
+    printf("always0: ");
+    dump_uint16(always0, true);
+    printf("\n");
+
+    uint32_t always65536;
+    MOV_CHECK(read_uint32(&always65536));
+    indent(2);
+    printf("always65536: ");
+    dump_uint32(always65536, true);
+    printf("\n");
 
     uint32_t size_of_struct_only;
     MOV_CHECK(read_uint32(&size_of_struct_only));
@@ -2474,8 +2503,13 @@ static void dump_stbl_soun_v2()
     indent(2);
     printf("num_audio_channels: %u\n", num_audio_channels);
 
-    // always7F000000
-    skip_bytes(sizeof(uint32_t));
+    uint32_t always7F000000;
+    MOV_CHECK(read_uint32(&always7F000000));
+    indent(2);
+    printf("always7F000000: ");
+    dump_uint32(always7F000000, true);
+    printf("\n");
+
 
     uint32_t const_bits_per_channel;
     MOV_CHECK(read_uint32(&const_bits_per_channel));
