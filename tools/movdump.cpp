@@ -750,10 +750,10 @@ static void dump_type(const char *type)
 {
     size_t i;
     for (i = 0; i < 4; i++) {
-        if (isprint(type[i]))
-        printf("%c", type[i]);
+        if (isprint((unsigned char)type[i]))
+            printf("%c", type[i]);
         else
-            printf("\\x%02x", type[i]);
+            printf("\\x%02x", (unsigned char)type[i]);
     }
 }
 
