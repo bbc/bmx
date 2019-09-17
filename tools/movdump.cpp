@@ -2452,39 +2452,39 @@ static void dump_stbl_soun_v2()
     dump_uint32_chars(vendor);
     printf("\n");
 
-    uint16_t always3;
-    MOV_CHECK(read_uint16(&always3));
+    uint16_t always_3;
+    MOV_CHECK(read_uint16(&always_3));
     indent(2);
-    printf("always3: ");
-    dump_uint16(always3, true);
+    printf("always_3: ");
+    dump_uint16(always_3, true);
     printf("\n");
 
-    uint16_t always16;
-    MOV_CHECK(read_uint16(&always16));
+    uint16_t always_16;
+    MOV_CHECK(read_uint16(&always_16));
     indent(2);
-    printf("always16: ");
-    dump_uint16(always16, true);
+    printf("always_16: ");
+    dump_uint16(always_16, true);
     printf("\n");
 
-    uint16_t alwaysMinus2;
-    MOV_CHECK(read_uint16(&alwaysMinus2));
+    uint16_t always_minus2;
+    MOV_CHECK(read_uint16(&always_minus2));
     indent(2);
-    printf("alwaysMinus2: ");
-    dump_uint16(alwaysMinus2, true);
+    printf("always_minus2: ");
+    dump_uint16(always_minus2, true);
     printf("\n");
 
-    uint16_t always0;
-    MOV_CHECK(read_uint16(&always0));
+    uint16_t always_0;
+    MOV_CHECK(read_uint16(&always_0));
     indent(2);
-    printf("always0: ");
-    dump_uint16(always0, true);
+    printf("always_0: ");
+    dump_uint16(always_0, true);
     printf("\n");
 
-    uint32_t always65536;
-    MOV_CHECK(read_uint32(&always65536));
+    uint32_t always_65536;
+    MOV_CHECK(read_uint32(&always_65536));
     indent(2);
-    printf("always65536: ");
-    dump_uint32(always65536, true);
+    printf("always_65536: ");
+    dump_uint32(always_65536, true);
     printf("\n");
 
     uint32_t size_of_struct_only;
@@ -2503,11 +2503,11 @@ static void dump_stbl_soun_v2()
     indent(2);
     printf("num_audio_channels: %u\n", num_audio_channels);
 
-    uint32_t always7F000000;
-    MOV_CHECK(read_uint32(&always7F000000));
+    uint32_t always_7f000000;
+    MOV_CHECK(read_uint32(&always_7f000000));
     indent(2);
-    printf("always7F000000: ");
-    dump_uint32(always7F000000, true);
+    printf("always_7f000000: ");
+    dump_uint32(always_7f000000, true);
     printf("\n");
 
 
@@ -2526,10 +2526,10 @@ static void dump_stbl_soun_v2()
     indent(2);
     printf("const_bytes_per_audio_packet: %u\n", const_bytes_per_audio_packet);
 
-    uint32_t const_LPCM_frames_per_audio_packet;
-    MOV_CHECK(read_uint32(&const_LPCM_frames_per_audio_packet));
+    uint32_t const_lpcm_frames_per_audio_packet;
+    MOV_CHECK(read_uint32(&const_lpcm_frames_per_audio_packet));
     indent(2);
-    printf("const_LPCM_frames_per_audio_packet: %u\n", const_LPCM_frames_per_audio_packet);
+    printf("const_lpcm_frames_per_audio_packet: %u\n", const_lpcm_frames_per_audio_packet);
 }
 
 static uint32_t dump_stbl_soun(uint32_t size)
