@@ -344,7 +344,7 @@ static bool read_float32(float *value)
     if (!read_uint32(&uvalue))
         return false;
 
-    *value = *(float*)&uvalue;
+    memcpy(value, &uvalue, sizeof(float));
     return true;
 }
 
@@ -354,7 +354,7 @@ static bool read_float64(double *value)
     if (!read_uint64(&uvalue))
         return false;
 
-    *value = *(double*)&uvalue;
+    memcpy(value, &uvalue, sizeof(double));
     return true;
 }
 
