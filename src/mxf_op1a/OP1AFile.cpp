@@ -92,6 +92,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mxf_generate_umid(&mMaterialPackageUID);
     mxf_generate_umid(&mFileSourcePackageUID);
     mFrameWrapped = true;
+    mOPLabel = MXF_OP_L(1a, UniTrack_Stream_Internal);
     mOutputStartOffset = 0;
     mOutputEndOffset = 0;
     mHaveANCTrack = false;
@@ -657,19 +658,54 @@ void OP1AFile::CreateHeaderMetadata()
         source_track_duration = mInputDuration + mOutputEndOffset;
         source_track_origin = mOutputStartOffset;
     }
+    if (mTracks.size() <= 1) {
+        if (mTimedTextTrackCount > 0) {
+            OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mTracks[0]);
+            if (tt_track->GetStart() > 0) {
+                mOPLabel = MXF_OP_L(2a, UniTrack_Stream_Internal);
+            } else {
+                mOPLabel = MXF_OP_L(1a, UniTrack_Stream_Internal);
+            }
+        } else {
+            mOPLabel = MXF_OP_L(1a, UniTrack_Stream_Internal);
+        }
+    } else {
+        if (mTimedTextTrackCount > 0) {
+            int64_t start = -1;
+            int complexity = 1;
+            size_t i;
+            for (i = 0; i < mTracks.size() && complexity < 3; i++) {
+                OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mTracks[i]);
+                if (tt_track) {
+                    if (tt_track->GetStart() > 0) {
+                        if (start < 0 || tt_track->GetStart() == start) {
+                            complexity = 2;
+                        } else {
+                            complexity = 3;
+                        }
+                    } else if (start > 0) {
+                        complexity = 3;
+                    }
+                    start = tt_track->GetStart();
+                }
+            }
+            if (complexity == 1) {
+                mOPLabel = MXF_OP_L(1b, MultiTrack_Stream_Internal);
+            } else if (complexity == 2) {
+                mOPLabel = MXF_OP_L(2b, MultiTrack_Stream_Internal);
+            } else {
+                mOPLabel = MXF_OP_L(3b, MultiTrack_Stream_Internal);
+            }
+        } else {
+            mOPLabel = MXF_OP_L(1a, MultiTrack_Stream_Internal);
+        }
+    }
 
     // Preface
     Preface *preface = new Preface(mHeaderMetadata);
     preface->setLastModifiedDate(mCreationDate);
     preface->setVersion((mFlavour & OP1A_377_2004_FLAVOUR) ? MXF_PREFACE_VER(1, 2) : MXF_PREFACE_VER(1, 3));
-    if (mTracks.size() <= 1) {
-        preface->setOperationalPattern(MXF_OP_L(1a, UniTrack_Stream_Internal));
-    } else {
-        if (mTimedTextTrackCount > 0)
-            preface->setOperationalPattern(MXF_OP_L(1b, MultiTrack_Stream_Internal));
-        else
-            preface->setOperationalPattern(MXF_OP_L(1a, MultiTrack_Stream_Internal));
-    }
+    preface->setOperationalPattern(mOPLabel);
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         preface->appendEssenceContainers(*iter);
@@ -739,7 +775,40 @@ void OP1AFile::CreateHeaderMetadata()
     timecode_component->setStartTimecode(mStartTimecode.GetOffset());
 
     if (mTimedTextTrackCount < mTracks.size()) {
-        mFileSourcePackage = CreateFileSourcePackage(mFileSourcePackageUID, source_track_duration, source_track_origin);
+        // Source Package for non-Timed Text content
+
+        // Preface - ContentStorage - SourcePackage
+        mFileSourcePackage = new SourcePackage(mHeaderMetadata);
+        content_storage->appendPackages(mFileSourcePackage);
+        mFileSourcePackage->setPackageUID(mFileSourcePackageUID);
+        mFileSourcePackage->setPackageCreationDate(mCreationDate);
+        mFileSourcePackage->setPackageModifiedDate(mCreationDate);
+
+        // Preface - ContentStorage - SourcePackage - Timecode Track
+        Track *timecode_track = new Track(mHeaderMetadata);
+        mFileSourcePackage->appendTracks(timecode_track);
+        timecode_track->setTrackName(TIMECODE_TRACK_NAME);
+        timecode_track->setTrackID(901);
+        timecode_track->setTrackNumber(0);
+        timecode_track->setEditRate(mEditRate);
+        timecode_track->setOrigin(source_track_origin);
+
+        // Preface - ContentStorage - SourcePackage - Timecode Track - Sequence
+        Sequence *sequence = new Sequence(mHeaderMetadata);
+        timecode_track->setSequence(sequence);
+        sequence->setDataDefinition(MXF_DDEF_L(Timecode));
+        sequence->setDuration(source_track_duration);
+
+        // Preface - ContentStorage - SourcePackage - Timecode Track - TimecodeComponent
+        TimecodeComponent *timecode_component = new TimecodeComponent(mHeaderMetadata);
+        sequence->appendStructuralComponents(timecode_component);
+        timecode_component->setDataDefinition(MXF_DDEF_L(Timecode));
+        timecode_component->setDuration(source_track_duration);
+        Timecode sp_start_timecode = mStartTimecode;
+        sp_start_timecode.AddOffset(- source_track_origin, mFrameRate);
+        timecode_component->setRoundedTimecodeBase(sp_start_timecode.GetRoundedTCBase());
+        timecode_component->setDropFrame(sp_start_timecode.IsDropFrame());
+        timecode_component->setStartTimecode(sp_start_timecode.GetOffset());
 
         // Preface - ContentStorage - SourcePackage - (Multiple) File Descriptor
         if (mTracks.size() - mTimedTextTrackCount > 1) {
@@ -765,8 +834,13 @@ void OP1AFile::CreateHeaderMetadata()
                 // only a single file source package - use id which can be set by the user
                 tt_package_uid = mFileSourcePackageUID;
             }
-            SourcePackage *file_source_package = CreateFileSourcePackage(tt_package_uid, source_track_duration,
-                                                                         source_track_origin);
+
+            SourcePackage *file_source_package = new SourcePackage(mHeaderMetadata);
+            content_storage->appendPackages(file_source_package);
+            file_source_package->setPackageUID(tt_package_uid);
+            file_source_package->setPackageCreationDate(mCreationDate);
+            file_source_package->setPackageModifiedDate(mCreationDate);
+
             mTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage, file_source_package);
         } else {
             mTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage, mFileSourcePackage);
@@ -774,47 +848,6 @@ void OP1AFile::CreateHeaderMetadata()
     }
     for (i = 0; i < mXMLTracks.size(); i++)
         mXMLTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage);
-}
-
-SourcePackage* OP1AFile::CreateFileSourcePackage(UMID package_uid, int64_t track_duration, int64_t track_origin)
-{
-    // Preface - ContentStorage
-    ContentStorage *content_storage = mHeaderMetadata->getPreface()->getContentStorage();
-
-    // Preface - ContentStorage - SourcePackage
-    SourcePackage *file_source_package = new SourcePackage(mHeaderMetadata);
-    content_storage->appendPackages(file_source_package);
-    file_source_package->setPackageUID(package_uid);
-    file_source_package->setPackageCreationDate(mCreationDate);
-    file_source_package->setPackageModifiedDate(mCreationDate);
-
-    // Preface - ContentStorage - SourcePackage - Timecode Track
-    Track *timecode_track = new Track(mHeaderMetadata);
-    file_source_package->appendTracks(timecode_track);
-    timecode_track->setTrackName(TIMECODE_TRACK_NAME);
-    timecode_track->setTrackID(901);
-    timecode_track->setTrackNumber(0);
-    timecode_track->setEditRate(mEditRate);
-    timecode_track->setOrigin(track_origin);
-
-    // Preface - ContentStorage - SourcePackage - Timecode Track - Sequence
-    Sequence *sequence = new Sequence(mHeaderMetadata);
-    timecode_track->setSequence(sequence);
-    sequence->setDataDefinition(MXF_DDEF_L(Timecode));
-    sequence->setDuration(track_duration);
-
-    // Preface - ContentStorage - SourcePackage - Timecode Track - TimecodeComponent
-    TimecodeComponent *timecode_component = new TimecodeComponent(mHeaderMetadata);
-    sequence->appendStructuralComponents(timecode_component);
-    timecode_component->setDataDefinition(MXF_DDEF_L(Timecode));
-    timecode_component->setDuration(track_duration);
-    Timecode sp_start_timecode = mStartTimecode;
-    sp_start_timecode.AddOffset(- mOutputStartOffset, mFrameRate);
-    timecode_component->setRoundedTimecodeBase(sp_start_timecode.GetRoundedTCBase());
-    timecode_component->setDropFrame(sp_start_timecode.IsDropFrame());
-    timecode_component->setStartTimecode(sp_start_timecode.GetOffset());
-
-    return file_source_package;
 }
 
 void OP1AFile::CreateFile()
@@ -859,14 +892,7 @@ void OP1AFile::CreateFile()
     else
         header_partition.setBodySID(0);
     header_partition.setKagSize(mKAGSize);
-    if (mTracks.size() <= 1) {
-        header_partition.setOperationalPattern(&MXF_OP_L(1a, UniTrack_Stream_Internal));
-    } else {
-        if (mTimedTextTrackCount > 0)
-            header_partition.setOperationalPattern(&MXF_OP_L(1b, MultiTrack_Stream_Internal));
-        else
-            header_partition.setOperationalPattern(&MXF_OP_L(1a, MultiTrack_Stream_Internal));
-    }
+    header_partition.setOperationalPattern(&mOPLabel);
     set<mxfUL>::const_iterator iter;
     for (iter = mEssenceContainerULs.begin(); iter != mEssenceContainerULs.end(); iter++)
         header_partition.addEssenceContainer(&(*iter));
@@ -996,12 +1022,7 @@ void OP1AFile::UpdatePackageMetadata()
     for (i = 0; i < mTracks.size(); i++) {
         OP1ATimedTextTrack *tt_track = dynamic_cast<OP1ATimedTextTrack*>(mTracks[i]);
         if (tt_track) {
-            SourcePackage *tt_source_package = tt_track->GetFileSourcePackage();
-            UpdateTrackMetadata(tt_source_package, mOutputStartOffset, output_duration + mOutputStartOffset);
-            BMX_ASSERT(tt_source_package->haveDescriptor());
-            FileDescriptor *file_descriptor = dynamic_cast<FileDescriptor*>(tt_source_package->getDescriptor());
-            if (file_descriptor)
-                file_descriptor->setContainerDuration(container_duration);
+            tt_track->UpdateTrackMetadata(output_duration);
         }
     }
 }
@@ -1022,8 +1043,9 @@ void OP1AFile::UpdateTrackMetadata(GenericPackage *package, int64_t origin, int6
         vector<StructuralComponent*> components = sequence->getStructuralComponents();
         if (sequence->getDuration() < 0) {
             sequence->setDuration(duration);
-            BMX_ASSERT(components.size() == 1);
-            components[0]->setDuration(duration);
+            if (components.size() == 1) {
+                components[0]->setDuration(duration);
+            } // else it's a Timed Text track which is handled separately
         }
         if (components.size() == 1) {
             TimecodeComponent *timecode_component = dynamic_cast<TimecodeComponent*>(components[0]);

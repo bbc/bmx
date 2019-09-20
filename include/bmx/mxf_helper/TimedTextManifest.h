@@ -96,6 +96,7 @@ public:
     UUID mResourceId;
     std::vector<std::string> mLanguages;
     std::vector<TimedTextAncillaryResource> mAncillaryResources;
+    int64_t mStart;
 };
 
 

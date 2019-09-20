@@ -548,27 +548,6 @@ int16_t MXFGroupReader::GetMaxRollout(int64_t position, bool limit_to_available)
     return max_rollout > 0 ? (int16_t)max_rollout : 0;
 }
 
-bool MXFGroupReader::HaveFixedLeadFillerOffset() const
-{
-    int64_t fixed_offset = -1;
-    size_t i;
-    for (i = 0; i < mReaders.size(); i++) {
-        if (!mReaders[i]->IsEnabled())
-            continue;
-
-        if (!mReaders[i]->HaveFixedLeadFillerOffset())
-            return false;
-
-        int64_t reader_fixed_offset = CONVERT_MEMBER_POS(mReaders[i]->GetFixedLeadFillerOffset());
-        if (fixed_offset == -1)
-            fixed_offset = reader_fixed_offset;
-        else if (fixed_offset != reader_fixed_offset)
-            return false;
-    }
-
-    return true;
-}
-
 int64_t MXFGroupReader::GetFixedLeadFillerOffset() const
 {
     int64_t fixed_offset = -1;
@@ -576,9 +555,6 @@ int64_t MXFGroupReader::GetFixedLeadFillerOffset() const
     for (i = 0; i < mReaders.size(); i++) {
         if (!mReaders[i]->IsEnabled())
             continue;
-
-        if (!mReaders[i]->HaveFixedLeadFillerOffset())
-            return 0;
 
         int64_t reader_fixed_offset = CONVERT_MEMBER_POS(mReaders[i]->GetFixedLeadFillerOffset());
         if (fixed_offset == -1)

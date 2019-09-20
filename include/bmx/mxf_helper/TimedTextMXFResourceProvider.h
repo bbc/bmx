@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018, British Broadcasting Corporation
+ * Copyright (C) 2019, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,51 +27,49 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_MXF_TIMED_TEXT_TRACK_READER_H_
-#define BMX_MXF_TIMED_TEXT_TRACK_READER_H_
+#ifndef BMX_TIMED_TEXT_MXF_RESOURCE_PROVIDER_H_
+#define BMX_TIMED_TEXT_MXF_RESOURCE_PROVIDER_H_
 
-#include <stdio.h>
+#include <vector>
+#include <map>
+#include <utility>
 
-#include <bmx/mxf_reader/MXFFileTrackReader.h>
-#include <bmx/mxf_helper/TimedTextMXFResourceProvider.h>
-
+#include <libMXF++/MXF.h>
 
 
 namespace bmx
 {
 
 
-class MXFTimedTextTrackReader : public MXFFileTrackReader
+class TimedTextMXFResourceProvider
 {
 public:
-    MXFTimedTextTrackReader(MXFFileReader *file_reader, size_t track_index, MXFTrackInfo *track_info,
-                            mxfpp::FileDescriptor *file_descriptor, mxfpp::SourcePackage *file_source_package);
-    virtual ~MXFTimedTextTrackReader();
+    TimedTextMXFResourceProvider(mxfpp::File *file);
+    ~TimedTextMXFResourceProvider();
 
-    void SetBodySID(uint32_t body_sid);
+    void AddTimedTextResource(const std::vector<std::pair<int64_t, int64_t> > &ranges);
+    void AddAncillaryResource(uint32_t stream_id, const std::vector<std::pair<int64_t, int64_t> > &ranges);
 
-    TimedTextManifest* GetManifest();
+public:
+    int64_t GetTimedTextResourceSize();
+    int64_t GetAncillaryResourceSize(uint32_t stream_id);
 
-    void ReadTimedText(FILE *file_out, unsigned char **data_out, size_t *size_out);
-    void ReadAncillaryResourceById(mxfUUID resource_id, FILE *file_out, unsigned char **data_out, size_t *size_out);
-    void ReadAncillaryResourceByStreamId(uint32_t stream_id, FILE *file_out, unsigned char **data_out, size_t *size_out);
-
-    TimedTextMXFResourceProvider* CreateResourceProvider();
-
-private:
-    void ReadStream(uint32_t stream_id, const mxfKey *stream_key,
-                    FILE *file_out,
-                    unsigned char **data_out, size_t *data_out_size,
-                    std::vector<std::pair<int64_t, int64_t> > *ranges_out);
+    void OpenTimedTextResource();
+    void OpenAncillaryResource(uint32_t stream_id);
+    size_t Read(unsigned char *buffer, size_t size);
 
 private:
-    uint32_t mBodySID;
+    mxfpp::File *mFile;
+    std::map<uint32_t, std::vector<std::pair<int64_t, int64_t> > > mAncillaryResources;
+    std::vector<std::pair<int64_t, int64_t> > mTimedTextResource;
+    int64_t mRemSize;
+    size_t mRangeIndex;
+    int64_t mRangeRemSize;
+    std::vector<std::pair<int64_t, int64_t> > mOpenRanges;
 };
 
 
 };
-
 
 
 #endif
-

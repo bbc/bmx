@@ -135,4 +135,5 @@ void TimedTextManifest::Reset()
     mResourceId = g_Null_UUID;
     mLanguages.clear();
     mAncillaryResources.clear();
+    mStart = 0;
 }

@@ -315,15 +315,6 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, co
         }
         Partition &header_partition = file->getPartition(0);
 
-        if (!mxf_is_op_atom(header_partition.getOperationalPattern()) &&
-            !mxf_is_op_1a(header_partition.getOperationalPattern()) &&
-            !mxf_is_op_1b(header_partition.getOperationalPattern()))
-        {
-            log_error("Operational pattern is not supported\n");
-            THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
-        }
-
-
         mOPLabel = *header_partition.getOperationalPattern();
 
 
@@ -438,6 +429,15 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, co
     catch (...)
     {
         result = MXF_RESULT_FAIL;
+    }
+
+    if (result != MXF_RESULT_SUCCESS &&
+            mOPLabel != g_Null_UL &&
+            !mxf_is_op_atom(&mOPLabel) &&
+            !mxf_is_op_1a(&mOPLabel) &&
+            !mxf_is_op_1b(&mOPLabel))
+    {
+        log_warn("Operational pattern possibly not supported\n");
     }
 
     // clean up
@@ -788,25 +788,6 @@ int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available) 
     return rollout > 0 ? (int16_t)rollout : 0;
 }
 
-bool MXFFileReader::HaveFixedLeadFillerOffset() const
-{
-    int64_t fixed_offset = 0;
-    size_t i;
-    for (i = 0; i < mTrackReaders.size(); i++) {
-        // note that edit_rate and lead_filler_offset are from this MXF file's material package
-        int64_t offset = convert_position(mTrackReaders[i]->GetTrackInfo()->edit_rate,
-                                          mTrackReaders[i]->GetTrackInfo()->lead_filler_offset,
-                                          mEditRate,
-                                          ROUND_UP);
-        if (i == 0)
-            fixed_offset = offset;
-        else if (fixed_offset != offset)
-            return false;
-    }
-
-    return true;
-}
-
 int64_t MXFFileReader::GetFixedLeadFillerOffset() const
 {
     int64_t fixed_offset = 0;
@@ -820,7 +801,7 @@ int64_t MXFFileReader::GetFixedLeadFillerOffset() const
         if (i == 0)
             fixed_offset = offset;
         else if (fixed_offset != offset)
-            return 0; // default to 0 if HaveFixedLeadFillerOffset returns false
+            return 0; // not fixed for all tracks
     }
 
     return fixed_offset;
@@ -971,7 +952,8 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
                     break;
                 } else {
                     if (mxf_equals_key(components[j]->getKey(), &MXF_SET_K(Filler))) {
-                        // lead Filler segments, e.g. used for P2 clips spanning multiple cards
+                        // lead Filler segments
+                        // e.g. used for P2 clips spanning multiple cards or Timed Text start offset
                         lead_filler_offset += components[j]->getDuration();
                     } else if (mxf_equals_key(components[j]->getKey(), &MXF_SET_K(EssenceGroup))) {
                         // Essence Group used in Avid files, e.g. alpha component tracks
@@ -1105,6 +1087,34 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
         if (skipped_track_count > 0)
             log_warn("Skipped %u material package tracks whilst processing header metadata\n", skipped_track_count);
         THROW_RESULT(MXF_RESULT_NO_ESSENCE);
+    }
+
+    // check and post-process lead filler offset in Timed Text tracks
+    bool all_timed_text = true;
+    for (i = 0; i < mTrackReaders.size(); i++) {
+        if (!dynamic_cast<MXFTimedTextTrackReader*>(mTrackReaders[i])) {
+            all_timed_text = false;
+            break;
+        }
+    }
+    if (GetFixedLeadFillerOffset() == 0 || all_timed_text) {
+        for (i = 0; i < mTrackReaders.size(); i++) {
+            MXFTrackReader *track_reader = dynamic_cast<MXFTrackReader*>(mTrackReaders[i]);
+            MXFTrackInfo *track_info = track_reader->GetTrackInfo();
+            if (track_info->lead_filler_offset > 0) {
+                MXFTimedTextTrackReader *tt_track_reader = dynamic_cast<MXFTimedTextTrackReader*>(track_reader);
+                if (!tt_track_reader) {
+                    log_error("A non-timed text track has lead Filler that differs from other tracks\n");
+                    THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
+                }
+
+                // include the lead filler in the track duration and record it in the manifest instead
+                MXFDataTrackInfo *data_track_info = dynamic_cast<MXFDataTrackInfo*>(track_info);
+                data_track_info->timed_text_manifest->mStart = data_track_info->lead_filler_offset;
+                track_info->duration += track_info->lead_filler_offset;
+                track_info->lead_filler_offset = 0;
+            }
+        }
     }
 
     // order tracks by material track number / id
@@ -1355,13 +1365,6 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
                                    ROUND_AUTO);
     }
 
-    if (!mInternalTrackReaders.empty() && origin != mFileOrigin) {
-        log_error("Tracks with different track origins, %" PRId64 " != %" PRId64 ", is not supported\n",
-                  origin, mFileOrigin);
-        THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
-    }
-    mFileOrigin = origin;
-
 
     // index MCA labels in the package
 
@@ -1444,6 +1447,26 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
         ProcessSoundDescriptor(file_desc, sound_track_info);
     else
         ProcessDataDescriptor(file_desc, data_track_info);
+
+
+    // check the File Package origins
+
+    if (track_info.get()->essence_type == TIMED_TEXT) {
+        if (origin != 0) {
+            log_error("Non-zero origin %" PRId64 " in Timed Text File Package Track\n", origin);
+            THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
+        }
+    } else {
+        if (!mInternalTrackReaders.empty() && origin != mFileOrigin) {
+            log_error("File Package Tracks with different origins, %" PRId64 " != %" PRId64 ", is not supported\n",
+                      origin, mFileOrigin);
+            THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
+        }
+        mFileOrigin = origin;
+    }
+
+
+    // create the track reader
 
     MXFFileTrackReader *track_reader;
     if (track_info.get()->essence_type == TIMED_TEXT) {
@@ -1659,6 +1682,9 @@ bool MXFFileReader::GetPhysicalSourceStartTimecodes(GenericPackage *package, Tra
         int64_t filler;
         TimecodeComponent *tc_component;
         if (i == 0) {
+            if (!primary_tc_component) {
+                continue;
+            }
             filler = 0;
             tc_component = primary_tc_component;
         } else {

@@ -18,6 +18,7 @@ libmxfhelper_la_SOURCES = \
 	SoundMXFDescriptorHelper.cpp \
 	TimedTextManifest.cpp \
 	TimedTextMXFDescriptorHelper.cpp \
+	TimedTextMXFResourceProvider.cpp \
 	UncCDCIMXFDescriptorHelper.cpp \
 	UncRGBAMXFDescriptorHelper.cpp \
 	UniqueIdHelper.cpp \

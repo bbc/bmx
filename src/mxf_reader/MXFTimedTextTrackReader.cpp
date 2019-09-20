@@ -78,7 +78,7 @@ void MXFTimedTextTrackReader::ReadTimedText(FILE *file_out, unsigned char **data
 {
     BMX_ASSERT(mBodySID != 0);
 
-    ReadStream(mBodySID, &MXF_EE_K(TimedText), file_out, data_out, size_out);
+    ReadStream(mBodySID, &MXF_EE_K(TimedText), file_out, data_out, size_out, 0);
 }
 
 void MXFTimedTextTrackReader::ReadAncillaryResourceById(mxfUUID resource_id, FILE *file_out,
@@ -97,17 +97,50 @@ void MXFTimedTextTrackReader::ReadAncillaryResourceById(mxfUUID resource_id, FIL
         BMX_EXCEPTION(("Unknown timed text ancillary resource id"));
     }
 
-    ReadStream(stream_id, &MXF_EE_K(TimedTextAnc), file_out, data_out, size_out);
+    ReadStream(stream_id, &MXF_EE_K(TimedTextAnc), file_out, data_out, size_out, 0);
 }
 
 void MXFTimedTextTrackReader::ReadAncillaryResourceByStreamId(uint32_t stream_id, FILE *file_out,
                                                               unsigned char **data_out, size_t *size_out)
 {
-    ReadStream(stream_id, &MXF_EE_K(TimedTextAnc), file_out, data_out, size_out);
+    ReadStream(stream_id, &MXF_EE_K(TimedTextAnc), file_out, data_out, size_out, 0);
+}
+
+TimedTextMXFResourceProvider* MXFTimedTextTrackReader::CreateResourceProvider()
+{
+    mxfpp::File *file = 0;
+    TimedTextMXFResourceProvider *provider = 0;
+    try {
+        file = GetFileReader()->GetFileFactory()->OpenRead(GetFileReader()->GetFilename());
+        provider = new TimedTextMXFResourceProvider(file);
+
+        vector<pair<int64_t, int64_t> > ranges;
+        ReadStream(mBodySID, &MXF_EE_K(TimedText), 0, 0, 0, &ranges);
+        provider->AddTimedTextResource(ranges);
+
+        vector<TimedTextAncillaryResource> &anc_resources = GetManifest()->GetAncillaryResources();
+        size_t i;
+        for (i = 0; i < anc_resources.size(); i++) {
+            ranges.clear();
+            ReadStream(anc_resources[i].stream_id, &MXF_EE_K(TimedTextAnc), 0, 0, 0, &ranges);
+            provider->AddAncillaryResource(anc_resources[i].stream_id, ranges);
+        }
+    } catch (...) {
+      if (provider) {
+          delete provider;
+      } else {
+          delete file;
+      }
+      throw;
+    }
+
+    return provider;
 }
 
 void MXFTimedTextTrackReader::ReadStream(uint32_t stream_id, const mxfKey *stream_key,
-                                         FILE *file_out, unsigned char **data_out, size_t *data_out_size)
+                                         FILE *file_out,
+                                         unsigned char **data_out, size_t *data_out_size,
+                                         std::vector<std::pair<int64_t, int64_t> > *ranges_out)
 {
     mxfpp::File *mxf_file = GetFileReader()->mFile;
     int64_t original_file_pos = mxf_file->tell();
@@ -162,27 +195,34 @@ void MXFTimedTextTrackReader::ReadStream(uint32_t stream_id, const mxfKey *strea
                         if (len > UINT32_MAX || (uint64_t)buffer.GetAllocatedSize() + len > UINT32_MAX)
                             BMX_EXCEPTION(("Stream data size exceeds maximum supported in-memory size"));
                         buffer.Grow((uint32_t)len);
-                    } else {
+                    } else if (file_out) {
                         buffer.Allocate(8192);
                     }
-                    uint64_t rem_len = len;
-                    while (rem_len > 0) {
-                        uint32_t count = 8192;
-                        if (count > rem_len)
-                            count = (uint32_t)rem_len;
-                        uint32_t num_read = mxf_file->read(buffer.GetBytesAvailable(), count);
-                        if (num_read != count)
-                            BMX_EXCEPTION(("Failed to read text object data from generic stream"));
-                        if (file_out) {
-                            size_t num_write = fwrite(buffer.GetBytesAvailable(), 1, num_read, file_out);
-                            if (num_write != num_read) {
-                                BMX_EXCEPTION(("Failed to write text object to file: %s",
-                                               bmx_strerror(errno).c_str()));
+                    if (data_out || file_out) {
+                        uint64_t rem_len = len;
+                        while (rem_len > 0) {
+                            uint32_t count = 8192;
+                            if (count > rem_len)
+                                count = (uint32_t)rem_len;
+                            uint32_t num_read = mxf_file->read(buffer.GetBytesAvailable(), count);
+                            if (num_read != count)
+                                BMX_EXCEPTION(("Failed to read text object data from generic stream"));
+                            if (file_out) {
+                                size_t num_write = fwrite(buffer.GetBytesAvailable(), 1, num_read, file_out);
+                                if (num_write != num_read) {
+                                    BMX_EXCEPTION(("Failed to write text object to file: %s",
+                                                   bmx_strerror(errno).c_str()));
+                                }
+                            } else if (data_out) {
+                                buffer.IncrementSize(num_read);
                             }
-                        } else if (data_out) {
-                            buffer.IncrementSize(num_read);
+                            rem_len -= num_read;
                         }
-                        rem_len -= num_read;
+                    } else {
+                        if (len > 0) {
+                            ranges_out->push_back(make_pair(mxf_file->tell(), len));
+                            mxf_file->skip(len);
+                        }
                     }
 
                     have_stream_key = true;

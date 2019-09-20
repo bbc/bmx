@@ -33,6 +33,7 @@
 #include <bmx/mxf_op1a/OP1ATrack.h>
 #include <bmx/mxf_helper/TimedTextMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/TimedTextManifest.h>
+#include <bmx/mxf_helper/TimedTextMXFResourceProvider.h>
 
 
 namespace bmx
@@ -47,6 +48,7 @@ public:
     virtual ~OP1ATimedTextTrack();
 
     void SetSource(const TimedTextManifest *manifest);
+    void SetResourceProvider(TimedTextMXFResourceProvider *provider);
 
     void SetBodySID(uint32_t id);
     void SetIndexSID(uint32_t id);
@@ -59,12 +61,16 @@ public:
     uint32_t GetAncillaryResourceStreamId(size_t index) const;
     void WriteAncillaryResource(mxfpp::File *mxf_file, mxfpp::Partition *stream_partition, size_t index);
 
+    void UpdateTrackMetadata(int64_t duration);
+
 public:
     mxfpp::SourcePackage* GetFileSourcePackage() const { return mFileSourcePackage; }
 
     uint32_t GetBodySID() const  { return mBodySID; }
     uint32_t GetIndexSID() const { return mIndexSID; }
     int64_t GetDuration() const  { return mDuration; }
+
+    int64_t GetStart() const { return mTTStart; }
 
 protected:
     virtual void AddHeaderMetadata(mxfpp::HeaderMetadata *header_metadata, mxfpp::MaterialPackage *material_package,
@@ -73,15 +79,21 @@ protected:
 
 private:
     void WriteFileData(mxfpp::File *mxf_file, const mxfKey *key, const std::string &filename);
+    void WriteResourceProviderData(mxfpp::File *mxf_file, const mxfKey *key, int64_t data_size);
 
 private:
     TimedTextMXFDescriptorHelper *mTimedTextDescriptorHelper;
     uint32_t mBodySID;
     uint32_t mIndexSID;
     int64_t mDuration;
+    int64_t mTTStart;
     mxfpp::SourcePackage *mFileSourcePackage;
+    mxfpp::Track *mMPTrack;
+    mxfpp::Track *mFPTrack;
     std::string mTTFilename;
     std::vector<TimedTextAncillaryResource> mAncillaryResources;
+    std::vector<uint32_t> mInputAncStreamIds;
+    TimedTextMXFResourceProvider *mResourceProvider;
 };
 
 

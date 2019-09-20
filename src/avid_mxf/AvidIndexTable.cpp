@@ -130,7 +130,7 @@ void AvidIndexTable::WriteVBEIndexTable(mxfpp::File *mxf_file, mxfpp::Partition 
     // separate index table into segments of (MAX_INDEX_SEGMENT_SIZE / INDEX_ENTRY_SIZE) entries;
     // each entry _should_ start with an I-frame (can_start_partition == true)
     uint32_t begin = 0;
-    uint32_t end = mIndexEntries.size();
+    uint32_t end = (uint32_t)mIndexEntries.size();
 
     while (begin != end) {
         uint32_t seg_end = min(begin + MAX_INDEX_SEGMENT_SIZE / INDEX_ENTRY_SIZE, end);

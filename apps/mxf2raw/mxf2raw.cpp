@@ -825,6 +825,10 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
     info_writer->WriteDurationItem("duration", track_info->duration, track_info->edit_rate);
     if (track_info->lead_filler_offset != 0)
         info_writer->WritePositionItem("lead_filler_offset", track_info->lead_filler_offset, track_info->edit_rate);
+    if (data_info && data_info->timed_text_manifest && data_info->timed_text_manifest->mStart != 0) {
+        info_writer->WritePositionItem("timed_text_offset", data_info->timed_text_manifest->mStart,
+                                       track_info->edit_rate);
+    }
     if (precharge != 0)
         info_writer->WriteIntegerItem("precharge", precharge);
     if (rollout != 0)
@@ -1028,11 +1032,7 @@ static void write_clip_info(AppInfoWriter *info_writer, MXFReader *reader,
     info_writer->StartSection("start_timecodes");
     if (reader->HaveMaterialTimecode()) {
 
-        int64_t lead_filler_offset = 0;
-        if (!reader->HaveFixedLeadFillerOffset())
-            log_warn("No fixed lead filler offset\n");
-        else
-            lead_filler_offset = reader->GetFixedLeadFillerOffset();
+        int64_t lead_filler_offset = reader->GetFixedLeadFillerOffset();
         info_writer->WriteTimecodeItem("material", reader->GetMaterialTimecode(lead_filler_offset));
         if (lead_filler_offset != 0) {
             info_writer->WriteTimecodeItem("material_origin",

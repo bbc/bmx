@@ -79,7 +79,6 @@ public:
     virtual int16_t GetMaxRollout(int64_t position, bool limit_to_available) const;
 
 public:
-    virtual bool HaveFixedLeadFillerOffset() const;
     virtual int64_t GetFixedLeadFillerOffset() const;
 
 public:

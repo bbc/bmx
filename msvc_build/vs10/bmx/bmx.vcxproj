@@ -207,6 +207,7 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\SoundMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\TimedTextManifest.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\TimedTextMXFDescriptorHelper.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\TimedTextMXFResourceProvider.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\UncCDCIMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\UncRGBAMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\UniqueIdHelper.h" />
@@ -402,6 +403,7 @@
     <ClCompile Include="..\..\..\src\mxf_helper\SoundMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\TimedTextManifest.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\TimedTextMXFDescriptorHelper.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_helper\TimedTextMXFResourceProvider.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\UncCDCIMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\UncRGBAMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\UniqueIdHelper.cpp" />

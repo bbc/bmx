@@ -1,0 +1,5 @@
+file: text_example.xml
+profile: imsc1/text
+encoding: UTF-8
+languages: en,fr
+start: 10:00:00:00

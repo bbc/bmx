@@ -122,6 +122,24 @@ static bool parse_languages(const string &lang_str, vector<string> *languages_ou
     return true;
 }
 
+static bool parse_position(const string &value, Timecode start_timecode, Rational frame_rate,
+                           int64_t *int64_value)
+{
+    if (value.find(":") == string::npos) {
+        if (sscanf(value.c_str(), "%" PRId64 "", int64_value) == 1)
+            return true;
+    } else {
+        int hour, min, sec, frame;
+        char c;
+        if (sscanf(value.c_str(), "%d:%d:%d%c%d", &hour, &min, &sec, &c, &frame) == 5) {
+            Timecode tc(frame_rate, (c != ':'), hour, min, sec, frame);
+            *int64_value = tc.GetOffset() - start_timecode.GetOffset();
+            return true;
+        }
+    }
+
+    return false;
+}
 
 
 TimedTextManifestParser::TimedTextManifestParser()
@@ -134,7 +152,7 @@ TimedTextManifestParser::~TimedTextManifestParser()
 {
 }
 
-bool TimedTextManifestParser::Parse(const string &filename)
+bool TimedTextManifestParser::Parse(const string &filename, Timecode start_tc, Rational frame_rate)
 {
     Reset();
 
@@ -168,6 +186,11 @@ bool TimedTextManifestParser::Parse(const string &filename)
             } else if (name == "languages") {
                 if (!parse_languages(value, &mLanguages)) {
                     log_error("Failed to parse timed text languages '%s'\n", value.c_str());
+                    return false;
+                }
+            } else if (name == "start") {
+                if (!parse_position(value, start_tc, frame_rate, &mStart)) {
+                    log_error("Failed to parse timed text start '%s'\n", value.c_str());
                     return false;
                 }
             } else if (name == "resource_file") {
