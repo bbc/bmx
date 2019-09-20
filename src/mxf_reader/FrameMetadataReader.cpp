@@ -211,7 +211,7 @@ bool SDTICPSystemMetadataReader::ProcessFrameMetadata(const mxfKey *key, uint64_
     // b6 and b7 not defined; b1-b5, rate per second; b0, 1 or 1.001 factor flag
     static const int32_t rate_numerators[13] = {0, 24, 25, 30, 48, 50, 60, 72, 75, 90, 96, 100, 120};
     unsigned char numer_byte = (bytes[1] >> 1) & 0x0f;
-    if (numer_byte > 0 && numer_byte <= BMX_ARRAY_SIZE(rate_numerators)) {
+    if (numer_byte > 0 && numer_byte < BMX_ARRAY_SIZE(rate_numerators)) {
         mMetadata->mCPRate.numerator = rate_numerators[numer_byte];
         if (bytes[1] & 0x01) {
             mMetadata->mCPRate.numerator *= 1000;
