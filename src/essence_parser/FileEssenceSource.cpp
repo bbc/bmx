@@ -87,7 +87,7 @@ bool FileEssenceSource::Open(const string &filename, int64_t start_offset)
     }
 
     struct stat buf;
-    bzero(&buf, sizeof(buf));
+    memset(&buf, 0, sizeof(buf));
     int ret = stat(filename.c_str(), &buf);
     if (ret == 0 && S_ISFIFO(buf.st_mode)) {
         mIsFifo = true;
