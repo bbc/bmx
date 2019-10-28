@@ -89,8 +89,7 @@ bool FileEssenceSource::Open(const string &filename, int64_t start_offset)
     struct stat buf;
     bzero(&buf, sizeof(buf));
     int ret = stat(filename.c_str(), &buf);
-    if (ret == 0 && S_ISFIFO(buf.st_mode))
-    {
+    if (ret == 0 && S_ISFIFO(buf.st_mode)) {
         mIsFifo = true;
     }
 
@@ -101,17 +100,16 @@ uint32_t FileEssenceSource::Read(unsigned char *data, uint32_t size)
 {
     BMX_ASSERT(mFile);
     mErrno = 0;
-    if (mIsFifoSeek && mFifoBuffer.size() > 0) 
-    {
+
+    if (mIsFifoSeek && mFifoBuffer.size() > 0) {
        int len = min(int(size), int(mFifoBuffer.size()));
        memcpy(data, &mFifoBuffer[0], len);
-       mFifoBuffer = std::vector<unsigned char>(mFifoBuffer.begin()+len, mFifoBuffer.end());
-       
-       if (mFifoBuffer.size() > 0) 
-       {
+       mFifoBuffer = std::vector<unsigned char>(mFifoBuffer.begin() + len, mFifoBuffer.end());
+
+       if (mFifoBuffer.size() > 0) {
          return len;
        }
-       
+
        size -= len;
        data += len;
        size_t num_read = fread(data, 1, size, mFile);
@@ -121,15 +119,13 @@ uint32_t FileEssenceSource::Read(unsigned char *data, uint32_t size)
     }
 
     size_t num_read = fread(data, 1, size, mFile);
-    if (num_read < size && ferror(mFile))
+    if (num_read < size && ferror(mFile)) {
         mErrno = errno;
-    else
-    {
-       static const int MAX_FIFO_SIZE = 500000000; // 500MB
-       if (mIsFifo && !mIsFifoSeek && num_read > 0 && mFifoBuffer.size() < MAX_FIFO_SIZE) 
-       {
-           mFifoBuffer.insert(mFifoBuffer.end(), data, data + num_read);
-       }
+    } else {
+        static const int MAX_FIFO_SIZE = 500000000; // 500MB
+        if (mIsFifo && !mIsFifoSeek && num_read > 0 && mFifoBuffer.size() < MAX_FIFO_SIZE) {
+            mFifoBuffer.insert(mFifoBuffer.end(), data, data + num_read);
+        }
     }
 
     return (uint32_t)num_read;
@@ -139,8 +135,8 @@ bool FileEssenceSource::SeekStart()
 {
     BMX_ASSERT(mFile);
     mErrno = 0;
-    if (mIsFifo) 
-    {
+
+    if (mIsFifo) {
        mIsFifoSeek = true;
        return true;
     }
