@@ -34,10 +34,12 @@
 #endif
 
 #include <cerrno>
+#if !defined(_WIN32)
 #include <cstring>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#endif
 
 #include <bmx/essence_parser/FileEssenceSource.h>
 #include <bmx/Utils.h>
@@ -86,12 +88,16 @@ bool FileEssenceSource::Open(const string &filename, int64_t start_offset)
         return false;
     }
 
+#if !defined(_WIN32)
+    // Keep this after the SeekStart above to disable buffering at that stage
+    // Support for named pipes is not currently supported on Windows OS
     struct stat buf;
     memset(&buf, 0, sizeof(buf));
     int ret = stat(filename.c_str(), &buf);
     if (ret == 0 && S_ISFIFO(buf.st_mode)) {
         mIsFifo = true;
     }
+#endif
 
     return true;
 }
