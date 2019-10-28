@@ -34,6 +34,7 @@
 
 
 #include <cstdio>
+#include <vector>
 
 #include <bmx/essence_parser/EssenceSource.h>
 
@@ -63,6 +64,9 @@ private:
     FILE *mFile;
     int64_t mStartOffset;
     int mErrno;
+    bool mIsFifo;
+    bool mIsFifoSeek;
+    std::vector<unsigned char> mFifoBuffer;
 };
 
 
