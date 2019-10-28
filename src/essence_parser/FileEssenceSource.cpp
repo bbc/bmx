@@ -34,6 +34,7 @@
 #endif
 
 #include <cerrno>
+#include <algorithm>
 #if !defined(_WIN32)
 #include <cstring>
 #include <sys/types.h>
