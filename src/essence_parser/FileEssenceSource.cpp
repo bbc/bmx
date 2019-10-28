@@ -102,12 +102,12 @@ uint32_t FileEssenceSource::Read(unsigned char *data, uint32_t size)
     mErrno = 0;
 
     if (mIsFifoSeek && mFifoBuffer.size() > 0) {
-       int len = min(int(size), int(mFifoBuffer.size()));
+       size_t len = min((size_t)size, mFifoBuffer.size());
        memcpy(data, &mFifoBuffer[0], len);
        mFifoBuffer = std::vector<unsigned char>(mFifoBuffer.begin() + len, mFifoBuffer.end());
 
        if (mFifoBuffer.size() > 0) {
-         return len;
+         return (uint32_t)len;
        }
 
        size -= len;
@@ -115,7 +115,8 @@ uint32_t FileEssenceSource::Read(unsigned char *data, uint32_t size)
        size_t num_read = fread(data, 1, size, mFile);
        if (num_read < size && ferror(mFile))
           mErrno = errno;
-       return (uint32_t)num_read + len;
+
+       return (uint32_t)(num_read + len);
     }
 
     size_t num_read = fread(data, 1, size, mFile);
