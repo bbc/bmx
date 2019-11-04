@@ -51,7 +51,7 @@ using namespace bmx;
 using namespace std;
 
 
-static const int MAX_FIFO_SIZE = 500000000; // 500MB
+static const int MAX_FIFO_SIZE = 50000000; // 50MB
 
 
 FileEssenceSource::FileEssenceSource()
