@@ -51,6 +51,8 @@ using namespace bmx;
 using namespace std;
 
 
+static const int MAX_FIFO_SIZE = 500000000; // 500MB
+
 
 FileEssenceSource::FileEssenceSource()
 {
@@ -130,7 +132,6 @@ uint32_t FileEssenceSource::Read(unsigned char *data, uint32_t size)
     if (num_read < size && ferror(mFile)) {
         mErrno = errno;
     } else {
-        static const int MAX_FIFO_SIZE = 500000000; // 500MB
         if (mIsFifo && !mIsFifoSeek && num_read > 0 && mFifoBuffer.size() < MAX_FIFO_SIZE) {
             mFifoBuffer.insert(mFifoBuffer.end(), data, data + num_read);
         }
@@ -165,6 +166,24 @@ bool FileEssenceSource::Skip(int64_t offset)
 {
     BMX_ASSERT(mFile);
     mErrno = 0;
+
+    while (mIsFifo &&
+           !mIsFifoSeek &&
+           mErrno == 0 &&
+           offset > 0 &&
+           mFifoBuffer.size() < MAX_FIFO_SIZE)
+    {
+        unsigned char buffer[8192];
+        uint32_t next_read = sizeof(buffer);
+        if (next_read > offset) {
+            next_read = offset;
+        }
+        uint32_t num_read = Read(buffer, next_read);
+        offset -= num_read;
+        if (num_read < next_read) {
+            break;
+        }
+    }
 
     int res;
 #if defined(_WIN32)
