@@ -335,17 +335,7 @@ void OP1ATimedTextTrack::WriteFileData(File *mxf_file, const mxfKey *key, const 
         if (!file)
             BMX_EXCEPTION(("Failed to open file '%s': %s", filename.c_str(), bmx_strerror(errno).c_str()));
 
-#if defined(_WIN32)
-        struct _stati64 stat_buf;
-        if (_fstati64(_fileno(file), &stat_buf) != 0)
-#else
-        struct stat stat_buf;
-        if (fstat(fileno(file), &stat_buf) != 0)
-#endif
-        {
-            BMX_EXCEPTION(("Failed to stat file size '%s'", filename.c_str()));
-        }
-        int64_t data_size = (int64_t)stat_buf.st_size;
+        int64_t data_size = get_file_size(file);
 
         uint8_t llen = mxf_get_llen(mxf_file->getCFile(), data_size);
         if (llen < 4)

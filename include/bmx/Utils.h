@@ -98,6 +98,9 @@ bool check_is_dir(std::string name);
 bool check_is_abs_path(std::string name);
 bool check_ends_with_dir_separator(std::string name);
 
+int64_t get_file_size(const std::string &filename);
+int64_t get_file_size(FILE *file);
+
 std::string trim_string(std::string value);
 std::vector<std::string> split_string(std::string value, char separator, bool allow_empty);
 

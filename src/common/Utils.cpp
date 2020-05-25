@@ -690,6 +690,34 @@ bool bmx::check_ends_with_dir_separator(string name)
 #endif
 }
 
+int64_t bmx::get_file_size(const string &filename)
+{
+#if defined(_WIN32)
+    struct _stati64 stat_buf;
+    if (_stati64(filename.c_str(), &stat_buf) != 0)
+#else
+    struct stat stat_buf;
+    if (stat(filename.c_str(), &stat_buf) != 0)
+#endif
+        throw BMXIOException("Failed to get file size: %s", bmx_strerror(errno).c_str());
+
+    return (int64_t)stat_buf.st_size;
+}
+
+int64_t bmx::get_file_size(FILE *file)
+{
+#if defined(_WIN32)
+    struct _stati64 stat_buf;
+    if (_fstati64(_fileno(file), &stat_buf) != 0)
+#else
+    struct stat stat_buf;
+    if (fstat(fileno(file), &stat_buf) != 0)
+#endif
+        throw BMXIOException("Failed to get file size: %s", bmx_strerror(errno).c_str());
+
+    return (int64_t)stat_buf.st_size;
+}
+
 string bmx::trim_string(string value)
 {
     size_t start;

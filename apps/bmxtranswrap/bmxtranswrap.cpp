@@ -461,6 +461,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --black-level <value>   Override or set the black reference level\n");
     fprintf(stderr, "  --white-level <value>   Override or set the white reference level\n");
     fprintf(stderr, "  --color-range <value>   Override or set the color range\n");
+    fprintf(stderr, "  --comp-max-ref <value>  Override or set the RGBA component maximum reference level\n");
+    fprintf(stderr, "  --comp-min-ref <value>  Override or set the RGBA component minimum reference level\n");
+    fprintf(stderr, "  --scan-dir <value>      Override or set the RGBA scanning direction\n");
     fprintf(stderr, "  --rdd36-opaque          Override and treat RDD-36 4444 or 4444 XQ as opaque by omitting the Alpha Sample Depth property\n");
     fprintf(stderr, "  --rdd36-comp-depth <value>   Override of set component depth for RDD-36. Defaults to 10 if not present in input file\n");
     fprintf(stderr, "  --ignore-input-desc     Don't use input MXF file descriptor properties to fill in missing information\n");
@@ -750,6 +753,9 @@ int main(int argc, const char** argv)
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_black_ref_level, 0);
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_white_ref_level, 0);
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_color_range, 0);
+    BMX_OPT_PROP_DECL_DEF(uint32_t, user_comp_max_ref, 0);
+    BMX_OPT_PROP_DECL_DEF(uint32_t, user_comp_min_ref, 0);
+    BMX_OPT_PROP_DECL_DEF(uint8_t, user_scan_dir, 0);
     BMX_OPT_PROP_DECL_DEF(bool, user_rdd36_opaque, false);
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_rdd36_component_depth, 10);
     bool ignore_input_desc = false;
@@ -1461,6 +1467,54 @@ int main(int argc, const char** argv)
                 return 1;
             }
             BMX_OPT_PROP_SET(user_color_range, uvalue);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--comp-max-ref") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_comp_max_ref, uvalue);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--comp-min-ref") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_comp_min_ref, uvalue);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--scan-dir") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_scan_dir, uvalue);
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--rdd36-opaque") == 0)
@@ -3569,6 +3623,13 @@ int main(int argc, const char** argv)
                     else if (input_picture_info->component_depth > 0)
                         clip_track->SetComponentDepth(input_picture_info->component_depth);
                     break;
+                case JPEG2000_CDCI:
+                case JPEG2000_RGBA:
+                    if (afd)
+                        clip_track->SetAFD(afd);
+                    if (BMX_OPT_PROP_IS_SET(user_aspect_ratio))
+                        clip_track->SetAspectRatio(user_aspect_ratio);
+                    break;
                 case VC2:
                     if (afd)
                         clip_track->SetAFD(afd);
@@ -3682,6 +3743,12 @@ int main(int argc, const char** argv)
                     pict_helper->SetWhiteRefLevel(user_white_ref_level);
                 if (BMX_OPT_PROP_IS_SET(user_color_range))
                     pict_helper->SetColorRange(user_color_range);
+                if (BMX_OPT_PROP_IS_SET(user_comp_max_ref))
+                    pict_helper->SetComponentMaxRef(user_comp_max_ref);
+                if (BMX_OPT_PROP_IS_SET(user_comp_min_ref))
+                    pict_helper->SetComponentMinRef(user_comp_min_ref);
+                if (BMX_OPT_PROP_IS_SET(user_scan_dir))
+                    pict_helper->SetScanningDirection(user_scan_dir);
 
                 RDD36MXFDescriptorHelper *rdd36_helper = dynamic_cast<RDD36MXFDescriptorHelper*>(pict_helper);
                 if (rdd36_helper) {

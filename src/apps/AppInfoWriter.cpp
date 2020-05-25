@@ -37,6 +37,8 @@
 
 #include <cstring>
 #include <cstdarg>
+#include <sstream>
+#include <iomanip>
 
 #include <bmx/apps/AppInfoWriter.h>
 #include <bmx/Utils.h>
@@ -440,6 +442,21 @@ void AppInfoWriter::WriteEnumStringItem(const string &name, const EnumInfo *enum
         mAnnotations.push_back(make_pair(name, enum_name));
     else
         WriteItem(name, enum_name);
+}
+
+void AppInfoWriter::WriteByteArrayItem(const string &name, const unsigned char *data, size_t size, bool hex)
+{
+    stringstream buffer;
+    for (size_t i = 0; i < size; i++) {
+        if (i > 0)
+            buffer << ",";
+        if (hex)
+            buffer << "0x" << std::setfill('0') << std::setw(1) << std::hex << (int)data[i];
+        else
+            buffer << (int)data[i];
+    }
+
+    WriteItem(name, buffer.str());
 }
 
 void AppInfoWriter::WriteFormatItem(const string &name, const char *format, ...)

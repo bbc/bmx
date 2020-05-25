@@ -51,6 +51,7 @@
 #include <bmx/mxf_op1a/OP1AVBIDataTrack.h>
 #include <bmx/mxf_op1a/OP1AVC2Track.h>
 #include <bmx/mxf_op1a/OP1ARDD36Track.h>
+#include <bmx/mxf_op1a/OP1AJPEG2000Track.h>
 #include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
@@ -121,6 +122,8 @@ static const OP1ASampleRateSupport OP1A_SAMPLE_RATE_SUPPORT[] =
     {RDD36_422_HQ,             {{-1, -1}, {0, 0}}},
     {RDD36_4444,               {{-1, -1}, {0, 0}}},
     {RDD36_4444_XQ,            {{-1, -1}, {0, 0}}},
+    {JPEG2000_CDCI,            {{-1, -1}, {0, 0}}},
+    {JPEG2000_RGBA,            {{-1, -1}, {0, 0}}},
     {VC2,                      {{-1, -1}, {0, 0}}},
     {VC3_1080P_1235,           {{-1, -1}, {0, 0}}},
     {VC3_1080P_1237,           {{-1, -1}, {0, 0}}},
@@ -226,6 +229,9 @@ OP1ATrack* OP1ATrack::Create(OP1AFile *file, uint32_t track_index, uint32_t trac
         case RDD36_4444:
         case RDD36_4444_XQ:
             return new OP1ARDD36Track(file, track_index, track_id, track_type_number, frame_rate, essence_type);
+        case JPEG2000_CDCI:
+        case JPEG2000_RGBA:
+            return new OP1AJPEG2000Track(file, track_index, track_id, track_type_number, frame_rate, essence_type);
         case VC2:
             return new OP1AVC2Track(file, track_index, track_id, track_type_number, frame_rate);
         case VC3_1080P_1235:

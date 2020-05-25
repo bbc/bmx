@@ -210,6 +210,7 @@ AVCMXFDescriptorHelper::AVCMXFDescriptorHelper()
 {
     mEssenceIndex = 0;
     mEssenceType = SUPPORTED_ESSENCE[0].essence_type;
+    mAVCSubDescriptor = 0;
 }
 
 AVCMXFDescriptorHelper::~AVCMXFDescriptorHelper()

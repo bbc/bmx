@@ -46,6 +46,7 @@
 #include <bmx/essence_parser/RDD36EssenceParser.h>
 #include <bmx/essence_parser/VC3EssenceParser.h>
 #include <bmx/essence_parser/VC2EssenceParser.h>
+#include <bmx/essence_parser/J2CEssenceParser.h>
 #include <bmx/apps/AppTextInfoWriter.h>
 #include <bmx/apps/AppUtils.h>
 #include <bmx/Utils.h>
@@ -65,6 +66,7 @@ typedef enum
 {
     AVC_INPUT,
     DV_INPUT,
+    J2C_INPUT,
     MJPEG_INPUT,
     M2V_INPUT,
     RDD36_INPUT,
@@ -410,6 +412,63 @@ static void print_dv_frame_info(AppInfoWriter *info_writer, EssenceParser *parse
     info_writer->EndArrayElement();
 }
 
+static void print_j2c_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
+                                 Buffer *buffer, uint32_t frame_size, int64_t frame_num)
+{
+    (void)parser_data;
+    J2CEssenceParser *j2c_parser = dynamic_cast<J2CEssenceParser*>(parser);
+    j2c_parser->ParseFrameInfo(buffer->data, frame_size);
+
+    info_writer->StartArrayElement("frame", (size_t)frame_num);
+
+    info_writer->WriteIntegerItem("size", frame_size);
+    info_writer->WriteIntegerItem("r_siz", j2c_parser->GetRsiz(), true);
+    info_writer->WriteIntegerItem("x_siz", j2c_parser->GetXsiz());
+    info_writer->WriteIntegerItem("y_siz", j2c_parser->GetYsiz());
+    info_writer->WriteIntegerItem("xo_siz", j2c_parser->GetXOsiz());
+    info_writer->WriteIntegerItem("yo_siz", j2c_parser->GetYOsiz());
+    info_writer->WriteIntegerItem("xt_siz", j2c_parser->GetXTsiz());
+    info_writer->WriteIntegerItem("yt_siz", j2c_parser->GetYTsiz());
+    info_writer->WriteIntegerItem("xto_siz", j2c_parser->GetXTOsiz());
+    info_writer->WriteIntegerItem("yto_siz", j2c_parser->GetYTOsiz());
+    info_writer->WriteIntegerItem("c_siz", j2c_parser->GetCsiz());
+
+    for (size_t i = 0; i < j2c_parser->GetComponentSizings().size(); i++) {
+        const mxfJ2KComponentSizing &sizing = j2c_parser->GetComponentSizings()[i];
+        info_writer->StartArrayElement("component", i);
+        info_writer->WriteIntegerItem("s_siz", sizing.s_siz);
+        info_writer->WriteIntegerItem("xr_siz", sizing.xr_siz);
+        info_writer->WriteIntegerItem("yr_siz", sizing.yr_siz);
+        info_writer->EndArrayElement();
+    }
+
+    info_writer->WriteIntegerItem("s_cod", j2c_parser->GetScod(), true);
+    info_writer->WriteIntegerItem("sg_cod_prog_rorder", j2c_parser->GetSGcodProgOrder(), true);
+    info_writer->WriteIntegerItem("sg_cod_num_layers", j2c_parser->GetSGcodNumLayers());
+    info_writer->WriteIntegerItem("sg_cod_transform_usage", j2c_parser->GetSGcodTransformUsage(), true);
+    info_writer->WriteIntegerItem("sp_cod_num_levels", j2c_parser->GetSPcodNumLevels());
+    info_writer->WriteIntegerItem("sp_cod_width", j2c_parser->GetSPcodWidth(), true);
+    info_writer->WriteIntegerItem("sp_cod_height", j2c_parser->GetSPcodHeight(), true);
+    info_writer->WriteIntegerItem("sp_cod_style", j2c_parser->GetSPcodStyle(), true);
+    info_writer->WriteIntegerItem("sp_cod_transform_type", j2c_parser->GetSPcodTransformType(), true);
+    if (!j2c_parser->GetSPcodPrecintSizes().empty()) {
+        info_writer->WriteByteArrayItem("sp_cod_precint_sizes",
+                                        &j2c_parser->GetSPcodPrecintSizes()[0],
+                                        j2c_parser->GetSPcodPrecintSizes().size(),
+                                        true);
+    }
+
+    info_writer->WriteIntegerItem("s_qcd", j2c_parser->GetSqcd(), true);
+    if (!j2c_parser->GetSPqcd().empty()) {
+        info_writer->WriteByteArrayItem("sp_qcd",
+                                        &j2c_parser->GetSPqcd()[0],
+                                        j2c_parser->GetSPqcd().size(),
+                                        true);
+    }
+
+    info_writer->EndArrayElement();
+}
+
 static void print_mjpeg_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
                                    Buffer *buffer, uint32_t frame_size, int64_t frame_num)
 {
@@ -601,6 +660,8 @@ static bool parse_type_str(const char *type_str, InputType *input_type)
         *input_type = AVC_INPUT;
     else if (strcmp(type_str, "dv") == 0)
         *input_type = DV_INPUT;
+    else if (strcmp(type_str, "j2c") == 0)
+        *input_type = J2C_INPUT;
     else if (strcmp(type_str, "mjpeg") == 0)
         *input_type = MJPEG_INPUT;
     else if (strcmp(type_str, "m2v") == 0)
@@ -621,7 +682,7 @@ static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
     fprintf(stderr, "Usage: %s <<options>> <type> <filename>\n", cmd);
-    fprintf(stderr, "    <type> is 'avc', 'dv', 'mjpeg', 'm2v', 'rdd36', 'vc2' or 'vc3'\n");
+    fprintf(stderr, "    <type> is 'avc', 'dv', 'j2c', 'mjpeg', 'm2v', 'rdd36', 'vc2' or 'vc3'\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, " -h | --help           Show usage and exit\n");
     fprintf(stderr, " -v | --version        Print version info to stderr\n");
@@ -755,6 +816,12 @@ int main(int argc, const char **argv)
                 print_frame_info = print_dv_frame_info;
                 if (text_info_writer)
                     text_info_writer->PushItemValueIndent(strlen("aspect_ratio "));
+                break;
+            case J2C_INPUT:
+                parser = new J2CEssenceParser();
+                print_frame_info = print_j2c_frame_info;
+                if (text_info_writer)
+                    text_info_writer->PushItemValueIndent(strlen("sg_cod_transform_usage "));
                 break;
             case MJPEG_INPUT:
                 parser = new MJPEGEssenceParser(single_field);

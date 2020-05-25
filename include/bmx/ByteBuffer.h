@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2020, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,89 +29,63 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef BMX_BYTE_BUFFER_H_
+#define BMX_BYTE_BUFFER_H_
+
+#include <exception>
+#include <vector>
+
+#include <bmx/BMXTypes.h>
+
+
+namespace bmx
+{
+
+
+class InsufficientBytes : public std::exception
+{};
+
+
+class ByteBuffer
+{
+public:
+    ByteBuffer(const unsigned char *data, uint32_t size, bool big_endian);
+
+    uint8_t GetUInt8();
+    uint16_t GetUInt16();
+    uint32_t GetUInt32();
+    uint64_t GetUInt64();
+
+    std::vector<unsigned char> GetBytes(uint32_t size);
+
+    void Skip(uint32_t size);
+    void SetPos(uint32_t pos);
+
+    uint32_t GetSize() const  { return mSize; }
+    uint32_t GetPos() const   { return mPos; }
+
+protected:
+    const unsigned char *mData;
+    uint32_t mSize;
+    uint32_t mPos;
+    bool mBigEndian;
+};
+
+
+class ByteBufferLengthContext
+{
+public:
+    ByteBufferLengthContext(ByteBuffer &data, uint32_t length);
+    ~ByteBufferLengthContext();
+
+private:
+    ByteBuffer &mData;
+    uint32_t mEndPos;
+};
+
+
+};
+
+
 #endif
 
-#include <cstdarg>
-#include <cstdio>
-#include <cerrno>
-
-#include <bmx/BMXException.h>
-#include <bmx/Utils.h>
-
-using namespace std;
-using namespace bmx;
-
-
-
-BMXException::BMXException()
-: exception()
-{
-}
-
-BMXException::BMXException(const char *format, ...)
-: exception()
-{
-    char message[1024];
-
-    va_list varg;
-    va_start(varg, format);
-    bmx_vsnprintf(message, sizeof(message), format, varg);
-    va_end(varg);
-
-    mMessage = message;
-}
-
-BMXException::BMXException(const std::string &message)
-: exception()
-{
-    mMessage = message;
-}
-
-BMXException::~BMXException() throw()
-{
-}
-
-const char* BMXException::what() const throw()
-{
-    return mMessage.c_str();
-}
-
-
-BMXIOException::BMXIOException()
-: BMXException()
-{
-    mErrno = errno;
-}
-
-BMXIOException::BMXIOException(const char *format, ...)
-: BMXException()
-{
-    mErrno = errno;
-
-    char message[1024];
-
-    va_list varg;
-    va_start(varg, format);
-    bmx_vsnprintf(message, sizeof(message), format, varg);
-    va_end(varg);
-
-    mMessage = message;
-}
-
-BMXIOException::BMXIOException(const std::string &message)
-: BMXException()
-{
-    mErrno = errno;
-    mMessage = message;
-}
-
-BMXIOException::~BMXIOException() throw()
-{
-}
-
-string BMXIOException::GetStrError() const
-{
-    return bmx_strerror(mErrno);
-}

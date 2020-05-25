@@ -110,6 +110,9 @@ typedef enum
     RDD36_422_HQ,
     RDD36_4444,
     RDD36_4444_XQ,
+    // JPEG 2000
+    JPEG2000_CDCI,
+    JPEG2000_RGBA,
     // VC-2
     VC2,
     // VC-3

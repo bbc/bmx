@@ -113,6 +113,8 @@ static const EssenceTypeInfo ESSENCE_TYPE_INFO[] =
     {RDD36_422_HQ,              PICTURE_ESSENCE,        "RDD36 4:2:2 HQ",                       "RDD36_422_HQ"},
     {RDD36_4444,                PICTURE_ESSENCE,        "RDD36 4:4:4:4",                        "RDD36_4444"},
     {RDD36_4444_XQ,             PICTURE_ESSENCE,        "RDD36 4:4:4:4 XQ",                     "RDD36_4444_XQ"},
+    {JPEG2000_CDCI,             PICTURE_ESSENCE,        "JPEG 2000 CDCI",                       "JPEG2000_CDCI"},
+    {JPEG2000_RGBA,             PICTURE_ESSENCE,        "JPEG 2000 RGBA",                       "JPEG2000_RGBA"},
     {VC2,                       PICTURE_ESSENCE,        "VC2",                                  "VC2"},
     {VC3_1080P_1235,            PICTURE_ESSENCE,        "VC3 1080p 1235",                       "VC3_1080p_1235"},
     {VC3_1080P_1237,            PICTURE_ESSENCE,        "VC3 1080p 1237",                       "VC3_1080p_1237"},

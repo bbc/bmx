@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2020, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,89 +29,55 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef BMX_JPEG2000_MXF_DESCRIPTOR_HELPER_H_
+#define BMX_JPEG2000_MXF_DESCRIPTOR_HELPER_H_
+
+
+#include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
+#include <bmx/essence_parser/J2CEssenceParser.h>
+
+
+
+namespace bmx
+{
+
+
+class JPEG2000MXFDescriptorHelper : public PictureMXFDescriptorHelper
+{
+public:
+    static EssenceType IsSupported(mxfpp::FileDescriptor *file_descriptor, mxfUL alternative_ec_label);
+    static bool IsSupported(EssenceType essence_type);
+
+public:
+    JPEG2000MXFDescriptorHelper();
+    virtual ~JPEG2000MXFDescriptorHelper();
+
+public:
+    // initialize from existing descriptor
+    virtual void Initialize(mxfpp::FileDescriptor *file_descriptor, uint16_t mxf_version, mxfUL alternative_ec_label);
+
+public:
+    // configure and create new descriptor
+    virtual void SetEssenceType(EssenceType essence_type);
+
+    virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
+    virtual void UpdateFileDescriptor();
+    virtual void UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc_in);
+
+    void UpdateFileDescriptor(J2CEssenceParser *essence_parser);
+
+    mxfpp::JPEG2000SubDescriptor* GetJPEG2000SubDescriptor() const { return mJPEG2000SubDescriptor; }
+
+protected:
+    virtual mxfUL ChooseEssenceContainerUL() const;
+
+private:
+    mxfpp::JPEG2000SubDescriptor *mJPEG2000SubDescriptor;
+};
+
+
+};
+
+
+
 #endif
-
-#include <cstdarg>
-#include <cstdio>
-#include <cerrno>
-
-#include <bmx/BMXException.h>
-#include <bmx/Utils.h>
-
-using namespace std;
-using namespace bmx;
-
-
-
-BMXException::BMXException()
-: exception()
-{
-}
-
-BMXException::BMXException(const char *format, ...)
-: exception()
-{
-    char message[1024];
-
-    va_list varg;
-    va_start(varg, format);
-    bmx_vsnprintf(message, sizeof(message), format, varg);
-    va_end(varg);
-
-    mMessage = message;
-}
-
-BMXException::BMXException(const std::string &message)
-: exception()
-{
-    mMessage = message;
-}
-
-BMXException::~BMXException() throw()
-{
-}
-
-const char* BMXException::what() const throw()
-{
-    return mMessage.c_str();
-}
-
-
-BMXIOException::BMXIOException()
-: BMXException()
-{
-    mErrno = errno;
-}
-
-BMXIOException::BMXIOException(const char *format, ...)
-: BMXException()
-{
-    mErrno = errno;
-
-    char message[1024];
-
-    va_list varg;
-    va_start(varg, format);
-    bmx_vsnprintf(message, sizeof(message), format, varg);
-    va_end(varg);
-
-    mMessage = message;
-}
-
-BMXIOException::BMXIOException(const std::string &message)
-: BMXException()
-{
-    mErrno = errno;
-    mMessage = message;
-}
-
-BMXIOException::~BMXIOException() throw()
-{
-}
-
-string BMXIOException::GetStrError() const
-{
-    return bmx_strerror(mErrno);
-}

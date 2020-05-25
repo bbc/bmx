@@ -7,6 +7,8 @@ libessenceparser_la_SOURCES = \
 	EssenceParserUtils.cpp \
 	EssenceParserUtils.h \
 	FileEssenceSource.cpp \
+	FilePatternEssenceSource.cpp \
+	J2CEssenceParser.cpp \
 	KLVEssenceSource.cpp \
 	MJPEGEssenceParser.cpp \
 	MPEG2AspectRatioFilter.cpp \

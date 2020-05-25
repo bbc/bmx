@@ -953,6 +953,8 @@
       <xs:enumeration value="RDD36_422_HQ"/>
       <xs:enumeration value="RDD36_4444"/>
       <xs:enumeration value="RDD36_4444_XQ"/>
+      <xs:enumeration value="JPEG2000_CDCI"/>
+      <xs:enumeration value="JPEG2000_RGBA"/>
       <xs:enumeration value="VC2"/>
       <xs:enumeration value="VC3_1080p_1235"/>
       <xs:enumeration value="VC3_1080p_1237"/>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2020, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,89 +29,43 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef BMX_JPEG2000_WRITER_HELPER_H_
+#define BMX_JPEG2000_WRITER_HELPER_H_
+
+#include <bmx/ByteArray.h>
+#include <bmx/essence_parser/J2CEssenceParser.h>
+#include <bmx/mxf_helper/JPEG2000MXFDescriptorHelper.h>
+
+
+namespace bmx
+{
+
+
+class JPEG2000WriterHelper
+{
+public:
+    JPEG2000WriterHelper();
+    ~JPEG2000WriterHelper();
+
+    void SetDescriptorHelper(JPEG2000MXFDescriptorHelper *descriptor_helper);
+
+    void ProcessFrame(const unsigned char *data, uint32_t size);
+    void CompleteProcess();
+
+public:
+    int64_t GetFramePosition() const { return mPosition - 1; }
+
+private:
+    int64_t mPosition;
+    JPEG2000MXFDescriptorHelper *mDescriptorHelper;
+    J2CEssenceParser mEssenceParser;
+    ByteArray *mCodingStyleDefault;
+    ByteArray *mQuantizationDefault;
+};
+
+
+
+};
+
+
 #endif
-
-#include <cstdarg>
-#include <cstdio>
-#include <cerrno>
-
-#include <bmx/BMXException.h>
-#include <bmx/Utils.h>
-
-using namespace std;
-using namespace bmx;
-
-
-
-BMXException::BMXException()
-: exception()
-{
-}
-
-BMXException::BMXException(const char *format, ...)
-: exception()
-{
-    char message[1024];
-
-    va_list varg;
-    va_start(varg, format);
-    bmx_vsnprintf(message, sizeof(message), format, varg);
-    va_end(varg);
-
-    mMessage = message;
-}
-
-BMXException::BMXException(const std::string &message)
-: exception()
-{
-    mMessage = message;
-}
-
-BMXException::~BMXException() throw()
-{
-}
-
-const char* BMXException::what() const throw()
-{
-    return mMessage.c_str();
-}
-
-
-BMXIOException::BMXIOException()
-: BMXException()
-{
-    mErrno = errno;
-}
-
-BMXIOException::BMXIOException(const char *format, ...)
-: BMXException()
-{
-    mErrno = errno;
-
-    char message[1024];
-
-    va_list varg;
-    va_start(varg, format);
-    bmx_vsnprintf(message, sizeof(message), format, varg);
-    va_end(varg);
-
-    mMessage = message;
-}
-
-BMXIOException::BMXIOException(const std::string &message)
-: BMXException()
-{
-    mErrno = errno;
-    mMessage = message;
-}
-
-BMXIOException::~BMXIOException() throw()
-{
-}
-
-string BMXIOException::GetStrError() const
-{
-    return bmx_strerror(mErrno);
-}

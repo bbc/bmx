@@ -36,10 +36,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #include <errno.h>
 
 #include <expat.h>
@@ -102,17 +98,7 @@ void XMLWriterHelper::ExtractInfo(const string &filename)
         size_t num_read = fread(buffer, 1, sizeof(buffer), file);
         ExtractInfo(buffer, (uint32_t)num_read);
 
-#if defined(_WIN32)
-        struct _stati64 stat_buf;
-        if (_fstati64(_fileno(file), &stat_buf) != 0)
-#else
-        struct stat stat_buf;
-        if (fstat(fileno(file), &stat_buf) != 0)
-#endif
-        {
-            BMX_EXCEPTION(("Failed to stat file size of '%s'", filename.c_str()));
-        }
-        mSize = stat_buf.st_size;
+        mSize = get_file_size(file);
 
         fclose(file);
     }

@@ -101,6 +101,8 @@ public:
     virtual void WriteEnumStringItem(const std::string &name, const EnumInfo *enum_info, int enum_value,
                                      const std::string &default_name = "");
 
+    virtual void WriteByteArrayItem(const std::string &name, const unsigned char *data, size_t size, bool hex = false);
+
     virtual void WriteFormatItem(const std::string &name, const char *format, ...);
 
 protected:

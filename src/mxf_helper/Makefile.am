@@ -7,6 +7,7 @@ libmxfhelper_la_SOURCES = \
 	D10MXFDescriptorHelper.cpp \
 	DataMXFDescriptorHelper.cpp \
 	DVMXFDescriptorHelper.cpp \
+	JPEG2000MXFDescriptorHelper.cpp \
 	MJPEGMXFDescriptorHelper.cpp \
 	MPEG2LGMXFDescriptorHelper.cpp \
 	MPEG2Validator.cpp \

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010, British Broadcasting Corporation
+ * Copyright (C) 2020, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -33,85 +33,53 @@
 #include "config.h"
 #endif
 
-#include <cstdarg>
-#include <cstdio>
-#include <cerrno>
-
+#include <bmx/mxf_op1a/OP1AJPEG2000Track.h>
+#include <bmx/mxf_op1a/OP1AFile.h>
+#include <bmx/essence_parser/J2CEssenceParser.h>
 #include <bmx/BMXException.h>
-#include <bmx/Utils.h>
+#include <bmx/Logging.h>
 
 using namespace std;
 using namespace bmx;
+using namespace mxfpp;
 
 
+static const mxfKey VIDEO_ELEMENT_KEY = MXF_JPEG2000_EE_K(0x01, MXF_JPEG2000_NOT_CLIP_WRAPPED_EE_TYPE, 0x00);
 
-BMXException::BMXException()
-: exception()
+
+OP1AJPEG2000Track::OP1AJPEG2000Track(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+                                     mxfRational frame_rate, EssenceType essence_type)
+: OP1APictureTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
+{
+    mWriterHelper.SetDescriptorHelper(dynamic_cast<JPEG2000MXFDescriptorHelper*>(mDescriptorHelper));
+
+    mTrackNumber = MXF_JPEG2000_TRACK_NUM(0x01, MXF_JPEG2000_NOT_CLIP_WRAPPED_EE_TYPE, 0x00);
+    mEssenceElementKey = VIDEO_ELEMENT_KEY;
+}
+
+OP1AJPEG2000Track::~OP1AJPEG2000Track()
 {
 }
 
-BMXException::BMXException(const char *format, ...)
-: exception()
+void OP1AJPEG2000Track::PrepareWrite(uint8_t track_count)
 {
-    char message[1024];
+    CompleteEssenceKeyAndTrackNum(track_count);
 
-    va_list varg;
-    va_start(varg, format);
-    bmx_vsnprintf(message, sizeof(message), format, varg);
-    va_end(varg);
-
-    mMessage = message;
+    mCPManager->RegisterPictureTrackElement(mTrackIndex, mEssenceElementKey, false);
+    mIndexTable->RegisterPictureTrackElement(mTrackIndex, false, false);
 }
 
-BMXException::BMXException(const std::string &message)
-: exception()
+void OP1AJPEG2000Track::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-    mMessage = message;
+    mWriterHelper.ProcessFrame(data, size);
+
+    mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
+    mIndexTable->AddIndexEntry(mTrackIndex, mWriterHelper.GetFramePosition(), 0, 0, 0x80, true, false);
 }
 
-BMXException::~BMXException() throw()
+void OP1AJPEG2000Track::CompleteWrite()
 {
-}
+    mWriterHelper.CompleteProcess();
 
-const char* BMXException::what() const throw()
-{
-    return mMessage.c_str();
-}
-
-
-BMXIOException::BMXIOException()
-: BMXException()
-{
-    mErrno = errno;
-}
-
-BMXIOException::BMXIOException(const char *format, ...)
-: BMXException()
-{
-    mErrno = errno;
-
-    char message[1024];
-
-    va_list varg;
-    va_start(varg, format);
-    bmx_vsnprintf(message, sizeof(message), format, varg);
-    va_end(varg);
-
-    mMessage = message;
-}
-
-BMXIOException::BMXIOException(const std::string &message)
-: BMXException()
-{
-    mErrno = errno;
-    mMessage = message;
-}
-
-BMXIOException::~BMXIOException() throw()
-{
-}
-
-string BMXIOException::GetStrError() const
-{
-    return bmx_strerror(mErrno);
+    OP1APictureTrack::CompleteWrite();
 }

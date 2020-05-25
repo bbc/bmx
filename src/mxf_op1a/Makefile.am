@@ -9,6 +9,7 @@ libmxfop1a_la_SOURCES = \
 	OP1ADataTrack.cpp \
 	OP1ADVTrack.cpp \
 	OP1AFile.cpp \
+	OP1AJPEG2000Track.cpp \
 	OP1AIndexTable.cpp \
 	OP1AMPEG2LGTrack.cpp \
 	OP1APCMTrack.cpp \

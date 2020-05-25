@@ -35,10 +35,6 @@
 
 #include <cstring>
 #include <sys/types.h>
-#include <sys/stat.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #include <cerrno>
 
 #include <bmx/wave/WaveFileIO.h>
@@ -138,17 +134,10 @@ int64_t WaveFileIO::Size()
     if (!mReadOnly)
         fflush(mFile);
 
-#if defined(_WIN32)
-    struct _stati64 stat_buf;
-    if (_fstati64(_fileno(mFile), &stat_buf) != 0)
-#else
-    struct stat stat_buf;
-    if (fstat(fileno(mFile), &stat_buf) != 0)
-#endif
-    {
+    try {
+        return get_file_size(mFile);
+    } catch (const BMXIOException &ex) {
+        errno = ex.GetErrno();
         return -1;
     }
-
-    return stat_buf.st_size;
 }
-

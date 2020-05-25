@@ -88,6 +88,22 @@ protected:
 };
 
 
+class BMXIOException : public BMXException
+{
+public:
+    BMXIOException();
+    BMXIOException(const char *format, ...);
+    BMXIOException(const std::string &message);
+    virtual ~BMXIOException() throw();
+
+    int GetErrno() const { return mErrno; }
+    std::string GetStrError() const;
+
+protected:
+    int mErrno;
+};
+
+
 
 };
 

@@ -5,6 +5,7 @@ libcommon_la_SOURCES = \
 	BMXException.cpp \
 	BMXTypes.cpp \
 	ByteArray.cpp \
+	ByteBuffer.cpp \
 	Checksum.cpp \
 	CRC32.cpp \
 	EssenceType.cpp \

@@ -57,11 +57,13 @@
 #include <bmx/essence_parser/AVCIRawEssenceReader.h>
 #include <bmx/essence_parser/MJPEGEssenceParser.h>
 #include <bmx/essence_parser/RDD36EssenceParser.h>
+#include <bmx/essence_parser/J2CEssenceParser.h>
 #include <bmx/essence_parser/VC3EssenceParser.h>
 #include <bmx/essence_parser/VC2EssenceParser.h>
 #include <bmx/essence_parser/RawEssenceReader.h>
 #include <bmx/essence_parser/FileEssenceSource.h>
 #include <bmx/essence_parser/KLVEssenceSource.h>
+#include <bmx/essence_parser/FilePatternEssenceSource.h>
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/wave/WaveFileIO.h>
@@ -131,6 +133,8 @@ struct RawInput
     bool parse_klv;
     mxfKey klv_key;
     uint32_t klv_track_num;
+    const char *file_pattern;
+    bool fill_pattern_gaps;
 
     int64_t output_start_offset;
     int64_t output_end_offset;
@@ -166,6 +170,9 @@ struct RawInput
     BMX_OPT_PROP_DECL(uint32_t, black_ref_level);
     BMX_OPT_PROP_DECL(uint32_t, white_ref_level);
     BMX_OPT_PROP_DECL(uint32_t, color_range);
+    BMX_OPT_PROP_DECL(uint32_t, comp_max_ref);
+    BMX_OPT_PROP_DECL(uint32_t, comp_min_ref);
+    BMX_OPT_PROP_DECL(uint8_t, scan_dir);
     int vc2_mode_flags;
     BMX_OPT_PROP_DECL(bool, rdd36_opaque);
 
@@ -240,15 +247,29 @@ static bool open_raw_reader(RawInput *input)
         return true;
     }
 
-    FileEssenceSource *file_source = new FileEssenceSource();
-    if (!file_source->Open(input->filename, input->file_start_offset)) {
-        log_error("Failed to open input file '%s' at start offset %" PRId64 ": %s\n",
-                  input->filename, input->file_start_offset, file_source->GetStrError().c_str());
-        delete file_source;
-        return false;
+    EssenceSource *essence_source;
+
+    BMX_ASSERT(input->filename || input->file_pattern);
+    if (input->filename) {
+        FileEssenceSource *file_source = new FileEssenceSource();
+        if (!file_source->Open(input->filename, input->file_start_offset)) {
+            log_error("Failed to open input file '%s' at start offset %" PRId64 ": %s\n",
+                    input->filename, input->file_start_offset, file_source->GetStrError().c_str());
+            delete file_source;
+            return false;
+        }
+        essence_source = file_source;
+    } else {
+        FilePatternEssenceSource *file_pattern_source = new FilePatternEssenceSource(input->fill_pattern_gaps);
+        if (!file_pattern_source->Open(input->file_pattern, input->file_start_offset)) {
+            log_error("Failed to open file pattern '%s' at start offset %" PRId64 ": %s\n",
+                    input->file_pattern, input->file_start_offset, file_pattern_source->GetStrError().c_str());
+            delete file_pattern_source;
+            return false;
+        }
+        essence_source = file_pattern_source;
     }
 
-    EssenceSource *essence_source = file_source;
     if (input->parse_klv) {
         KLVEssenceSource *klv_source;
         if (input->klv_track_num)
@@ -304,6 +325,9 @@ static void init_input(RawInput *input)
     BMX_OPT_PROP_DEFAULT(input->black_ref_level, 0);
     BMX_OPT_PROP_DEFAULT(input->white_ref_level, 0);
     BMX_OPT_PROP_DEFAULT(input->color_range, 0);
+    BMX_OPT_PROP_DEFAULT(input->comp_max_ref, 0);
+    BMX_OPT_PROP_DEFAULT(input->comp_min_ref, 0);
+    BMX_OPT_PROP_DEFAULT(input->scan_dir, 0);
     parse_vc2_mode("1", &input->vc2_mode_flags);
     BMX_OPT_PROP_DEFAULT(input->rdd36_opaque, false);
     input->sampling_rate = DEFAULT_SAMPLING_RATE;
@@ -563,9 +587,12 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --color-siting <value>  Set the color siting. The <value> is one of the following:\n");
     fprintf(stderr, "                              'cositing', 'horizmp', '3tap', 'quincunx', 'bt601', 'linealt', 'vertmp', 'unknown'\n");
     fprintf(stderr, "                              (Note that 'bt601' is deprecated in SMPTE ST 377-1. Use 'cositing' instead)\n");
-    fprintf(stderr, "  --black-level <value>   Set the black reference level\n");
-    fprintf(stderr, "  --white-level <value>   Set the white reference level\n");
-    fprintf(stderr, "  --color-range <value>   Set the color range\n");
+    fprintf(stderr, "  --black-level <value>   Set the CDCI black reference level\n");
+    fprintf(stderr, "  --white-level <value>   Set the CDCI white reference level\n");
+    fprintf(stderr, "  --color-range <value>   Set the CDCI color range\n");
+    fprintf(stderr, "  --comp-max-ref <value>  Set the RGBA component maximum reference level\n");
+    fprintf(stderr, "  --comp-min-ref <value>  Set the RGBA component minimum reference level\n");
+    fprintf(stderr, "  --scan-dir <value>      Set the RGBA scanning direction\n");
     fprintf(stderr, "  --rdd36-opaque          Treat RDD-36 4444 or 4444 XQ as opaque by omitting the Alpha Sample Depth property\n");
     fprintf(stderr, "  -s <bps>                Audio sampling rate numerator for raw pcm. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);
     fprintf(stderr, "  -q <bps>                Audio quantization bits per sample for raw pcm. Either 16 or 24. Default 16\n");
@@ -582,6 +609,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            - 's', which means the first 16 bytes, at file position 0 or --off byte offset, are taken to be the Key\n");
     fprintf(stderr, "                            - optional '0x' followed by 8 hexadecimal characters which represents the 4-byte track number part of a generic container essence Key\n");
     fprintf(stderr, "                            - 32 hexadecimal characters representing a 16-byte Key\n");
+    fprintf(stderr, "  --fill-pattern-gaps     Fill gaps in a numbered sequence pattern of raw files by repeating the contents of the file at the start of a gap\n");
     fprintf(stderr, "  --track-num <num>       Set the output track number. Default track number equals last track number of same picture/sound type + 1\n");
     fprintf(stderr, "                          For as11d10/d10 the track number must be > 0 and <= 8 because the AES-3 channel index equals track number - 1\n");
     fprintf(stderr, "  --avci-guess <i/p>      Guess interlaced ('i') or progressive ('p') AVC-Intra when using the --avci option with 1080p25/i50 or 1080p30/i60\n");
@@ -666,6 +694,12 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --rdd36_422_hq <name>      Raw SMPTE RDD-36 (ProRes) 4:2:2 HQ profile input file\n");
     fprintf(stderr, "  --rdd36_4444 <name>        Raw SMPTE RDD-36 (ProRes) 4:4:4:4 profile input file\n");
     fprintf(stderr, "  --rdd36_4444_xq <name>     Raw SMPTE RDD-36 (ProRes) 4:4:4:4 XQ profile input file\n");
+    fprintf(stderr, "  --j2c_cdci <name|j2cpattern>  Raw JPEG 2000 (ISO/IEC 15444-1) codestream representing components (e.g. YCbCr) described by a MXF CDCI descriptor\n");
+    fprintf(stderr, "                                If a '%%' is in the value then it is assumed to be a <j2cpattern> for a sequence of files, each containing a single frame\n");
+    fprintf(stderr, "                                See Notes below for a detailed description of <j2cpattern>\n");
+    fprintf(stderr, "  --j2c_rgba <name|j2cpattern>  Raw JPEG 2000 (ISO/IEC 15444-1) codestream representing components (e.g. RGB) described by a MXF RGBA descriptor\n");
+    fprintf(stderr, "                                If a '%%' is in the value then it is assumed to be a <j2cpattern> for a sequence of files, each containing a single frame\n");
+    fprintf(stderr, "                                See Notes below for a detailed description of <j2cpattern>\n");
     fprintf(stderr, "  --vc2 <name>            Raw VC2 input file\n");
     fprintf(stderr, "  --vc3 <name>            Raw VC3/DNxHD input file\n");
     fprintf(stderr, "  --vc3_1080p_1235 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps 10bit input file\n");
@@ -692,6 +726,11 @@ static void usage(const char *cmd)
     fprintf(stderr, " - <umid> format is 64 hexadecimal characters and any '.' and '-' characters are ignored\n");
     fprintf(stderr, " - <uuid> format is 32 hexadecimal characters and any '.' and '-' characters are ignored\n");
     fprintf(stderr, " - <tstamp> format is YYYY-MM-DDThh:mm:ss:qm where qm is in units of 1/250th second\n");
+    fprintf(stderr, " - <j2cpattern>: Each file name must include an integer frame number in the sequence.\n");
+    fprintf(stderr, "                 <j2cpattern> is a file path that must contain a single '%%d' where the frame number appears in the name.\n");
+    fprintf(stderr, "                 <j2cpattern> must not contain any other '%%' characters.\n");
+    fprintf(stderr, "                 If --fill-pattern-gaps option is used then gaps in frame numbers are filled by repeating the previous frame.\n");
+    fprintf(stderr, "                 Example: 'inputs/frame_%%d.j2c' for input files `inputs/frame_00001.j2c' etc..\n");
 }
 
 int main(int argc, const char** argv)
@@ -1952,6 +1991,57 @@ int main(int argc, const char** argv)
             cmdln_index++;
             continue; // skip input reset at the end
         }
+        else if (strcmp(argv[cmdln_index], "--comp-max-ref") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.comp_max_ref, uvalue);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--comp-min-ref") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.comp_min_ref, uvalue);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--scan-dir") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.scan_dir, uvalue);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
         else if (strcmp(argv[cmdln_index], "--rdd36-opaque") == 0)
         {
             BMX_OPT_PROP_SET(input.rdd36_opaque, true);
@@ -2158,6 +2248,11 @@ int main(int argc, const char** argv)
             }
             input.parse_klv = true;
             cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--fill-pattern-gaps") == 0)
+        {
+            input.fill_pattern_gaps = true;
             continue; // skip input reset at the end
         }
         else if (strcmp(argv[cmdln_index], "--track-num") == 0)
@@ -3080,6 +3175,38 @@ int main(int argc, const char** argv)
             }
             input.essence_type = RDD36_4444_XQ;
             input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--j2c_cdci") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = JPEG2000_CDCI;
+            if (strchr(argv[cmdln_index + 1], '%') != 0)
+                input.file_pattern = argv[cmdln_index + 1];
+            else
+                input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--j2c_rgba") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = JPEG2000_RGBA;
+            if (strchr(argv[cmdln_index + 1], '%') != 0)
+                input.file_pattern = argv[cmdln_index + 1];
+            else
+                input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
         }
@@ -4664,6 +4791,12 @@ int main(int argc, const char** argv)
                         clip_track->SetAFD(input->afd);
                     clip_track->SetComponentDepth(input->component_depth);
                     break;
+                case JPEG2000_CDCI:
+                case JPEG2000_RGBA:
+                    clip_track->SetAspectRatio(input->aspect_ratio);
+                    if (BMX_OPT_PROP_IS_SET(input->afd))
+                        clip_track->SetAFD(input->afd);
+                    break;
                 case VC2:
                     clip_track->SetAspectRatio(input->aspect_ratio);
                     if (BMX_OPT_PROP_IS_SET(input->afd))
@@ -4739,6 +4872,12 @@ int main(int argc, const char** argv)
                     pict_helper->SetWhiteRefLevel(input->white_ref_level);
                 if (BMX_OPT_PROP_IS_SET(input->color_range))
                     pict_helper->SetColorRange(input->color_range);
+                if (BMX_OPT_PROP_IS_SET(input->comp_max_ref))
+                    pict_helper->SetComponentMaxRef(input->comp_max_ref);
+                if (BMX_OPT_PROP_IS_SET(input->comp_min_ref))
+                    pict_helper->SetComponentMinRef(input->comp_min_ref);
+                if (BMX_OPT_PROP_IS_SET(input->scan_dir))
+                    pict_helper->SetScanningDirection(input->scan_dir);
 
                 RDD36MXFDescriptorHelper *rdd36_helper = dynamic_cast<RDD36MXFDescriptorHelper*>(pict_helper);
                 if (rdd36_helper) {
@@ -4860,6 +4999,13 @@ int main(int argc, const char** argv)
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
                     input->raw_reader->SetEssenceParser(new RDD36EssenceParser());
+                    input->raw_reader->SetCheckMaxSampleSize(100000000);
+                    break;
+                case JPEG2000_CDCI:
+                case JPEG2000_RGBA:
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    input->raw_reader->SetEssenceParser(new J2CEssenceParser());
                     input->raw_reader->SetCheckMaxSampleSize(100000000);
                     break;
                 case VC2:

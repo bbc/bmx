@@ -2,6 +2,7 @@ library_includedir = $(includedir)/bmx-@BMX_MAJORMINOR@
 nobase_library_include_HEADERS = \
 	bmx/BitBuffer.h \
 	bmx/ByteArray.h \
+	bmx/ByteBuffer.h \
 	bmx/Checksum.h \
 	bmx/CRC32.h \
 	bmx/EssenceType.h \
@@ -36,6 +37,7 @@ nobase_library_include_HEADERS = \
 	bmx/writer_helper/AVCWriterHelper.h \
 	bmx/writer_helper/AVCIWriterHelper.h \
 	bmx/writer_helper/D10WriterHelper.h \
+	bmx/writer_helper/JPEG2000WriterHelper.h \
 	bmx/writer_helper/MPEG2LGWriterHelper.h \
 	bmx/writer_helper/VC2WriterHelper.h \
 	bmx/writer_helper/XMLWriterHelper.h \
@@ -79,6 +81,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_op1a/OP1ADVTrack.h \
 	bmx/mxf_op1a/OP1AFile.h \
 	bmx/mxf_op1a/OP1AIndexTable.h \
+	bmx/mxf_op1a/OP1AJPEG2000Track.h \
 	bmx/mxf_op1a/OP1AMPEG2LGTrack.h \
 	bmx/mxf_op1a/OP1APCMTrack.h \
 	bmx/mxf_op1a/OP1APictureTrack.h \
@@ -134,6 +137,8 @@ nobase_library_include_HEADERS = \
 	bmx/essence_parser/EssenceParser.h \
 	bmx/essence_parser/EssenceSource.h \
 	bmx/essence_parser/FileEssenceSource.h \
+	bmx/essence_parser/FilePatternEssenceSource.h \
+	bmx/essence_parser/J2CEssenceParser.h \
 	bmx/essence_parser/KLVEssenceSource.h \
 	bmx/essence_parser/MJPEGEssenceParser.h \
 	bmx/essence_parser/MPEG2AspectRatioFilter.h \
@@ -148,6 +153,7 @@ nobase_library_include_HEADERS = \
 	bmx/mxf_helper/D10MXFDescriptorHelper.h \
 	bmx/mxf_helper/DataMXFDescriptorHelper.h \
 	bmx/mxf_helper/DVMXFDescriptorHelper.h \
+	bmx/mxf_helper/JPEG2000MXFDescriptorHelper.h \
 	bmx/mxf_helper/EssenceValidator.h \
 	bmx/mxf_helper/MJPEGMXFDescriptorHelper.h \
 	bmx/mxf_helper/MPEG2LGMXFDescriptorHelper.h \
