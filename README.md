@@ -156,6 +156,42 @@ The [tools.sln](./msvc_build/vs10/tools.sln) build solution file is used to
 build the text dumper tools.
 
 
+## Docker
+
+A [Dockerfile](./Dockerfile) is provided for building a Docker image containing a set of tools from bmx, libMXF and AAF SDK.
+
+The Dockerfile contains a `build` and `runtime` layer:
+* `build`: builds and checks the libMXF, libMXF++ and bmx code.
+* `runtime`: provides the commandline tool executables built in the `build` layer.
+
+### Build
+
+The runtime Docker image can be built using docker build,
+
+`DOCKER_BUILDKIT=1 docker build -t bmxtools .`
+
+The `LIBMXF_GIT` and `LIBMXFPP_GIT` ARGS default to the Sourceforge git URLs. These can be changed
+by using the `--build-arg` commandline argument.
+
+If you are behind a proxy then remember to use the `--build-arg` commandline arguments to set the Docker proxy ARGS.
+
+### Run
+
+The [docker/bmx_docker.sh](./docker/bmx_docker.sh) shell script is provided to make it easier to run the Docker container. Run
+
+`./docker/bmx_docker.sh`
+
+to see the usage and list of available tools.
+
+The script bind mounts input and output directories on the host to `/input` and `/output` directories on the container. The default is to bind mount the current directory to both.
+
+The example below runs `bmxtranswrap` from input `./in.mxf` to output `/tmp/out.mxf` on the host.
+
+`./docker/bmx_docker.sh --output /tmp bmxtranswrap -o /output/out.mxf /input/in.mxf`
+
+The script maps the user and group ID so that files written by the tool to the output directory on the host have the user's identity.
+
+
 ## Source and Binary Distributions
 
 Source distributions, including dependencies for the Windows build, and Windows binaries are made [available on SourceForge](https://sourceforge.net/projects/bmxlib/files/).
