@@ -220,6 +220,10 @@ PictureMXFDescriptorHelper::PictureMXFDescriptorHelper()
     BMX_OPT_PROP_DEFAULT(mTransferCh, g_Null_UL);
     BMX_OPT_PROP_DEFAULT(mCodingEquations, g_Null_UL);
     BMX_OPT_PROP_DEFAULT(mColorPrimaries, g_Null_UL);
+    BMX_OPT_PROP_DEFAULT(mMasteringDisplayPrimaries, g_Null_Three_Color_Primaries);
+    BMX_OPT_PROP_DEFAULT(mMasteringDisplayWhitePointChromaticity, g_Null_Color_Primary);
+    BMX_OPT_PROP_DEFAULT(mMasteringDisplayMaximumLuminance, 0);
+    BMX_OPT_PROP_DEFAULT(mMasteringDisplayMinimumLuminance, 0);
 }
 
 PictureMXFDescriptorHelper::~PictureMXFDescriptorHelper()
@@ -264,6 +268,16 @@ void PictureMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uin
         BMX_OPT_PROP_SET(mCodingEquations, picture_descriptor->getCodingEquations());
     if (picture_descriptor->haveColorPrimaries())
         BMX_OPT_PROP_SET(mColorPrimaries, picture_descriptor->getColorPrimaries());
+
+    if (picture_descriptor->haveMasteringDisplayPrimaries())
+        BMX_OPT_PROP_SET(mMasteringDisplayPrimaries, picture_descriptor->getMasteringDisplayPrimaries());
+    if (picture_descriptor->haveMasteringDisplayWhitePointChromaticity())
+        BMX_OPT_PROP_SET(mMasteringDisplayWhitePointChromaticity, picture_descriptor->getMasteringDisplayWhitePointChromaticity());
+    if (picture_descriptor->haveMasteringDisplayMaximumLuminance())
+        BMX_OPT_PROP_SET(mMasteringDisplayMaximumLuminance, picture_descriptor->getMasteringDisplayMaximumLuminance());
+    if (picture_descriptor->haveMasteringDisplayMinimumLuminance())
+        BMX_OPT_PROP_SET(mMasteringDisplayMinimumLuminance, picture_descriptor->getMasteringDisplayMinimumLuminance());
+
     if (cdci_descriptor) {
         if (cdci_descriptor->haveColorSiting())
             BMX_OPT_PROP_SET(mColorSiting, cdci_descriptor->getColorSiting());
@@ -359,6 +373,26 @@ void PictureMXFDescriptorHelper::SetScanningDirection(uint8_t direction)
     BMX_OPT_PROP_SET(mScanningDirection, direction);
 }
 
+void PictureMXFDescriptorHelper::SetMasteringDisplayPrimaries(mxfThreeColorPrimaries primaries)
+{
+    BMX_OPT_PROP_SET(mMasteringDisplayPrimaries, primaries);
+}
+
+void PictureMXFDescriptorHelper::SetMasteringDisplayWhitePointChromaticity(mxfColorPrimary chroma)
+{
+    BMX_OPT_PROP_SET(mMasteringDisplayWhitePointChromaticity, chroma);
+}
+
+void PictureMXFDescriptorHelper::SetMasteringDisplayMaximumLuminance(uint32_t max_lum)
+{
+    BMX_OPT_PROP_SET(mMasteringDisplayMaximumLuminance, max_lum);
+}
+
+void PictureMXFDescriptorHelper::SetMasteringDisplayMinimumLuminance(uint32_t min_lum)
+{
+    BMX_OPT_PROP_SET(mMasteringDisplayMinimumLuminance, min_lum);
+}
+
 FileDescriptor* PictureMXFDescriptorHelper::CreateFileDescriptor(HeaderMetadata *header_metadata)
 {
     (void)header_metadata;
@@ -393,6 +427,16 @@ void PictureMXFDescriptorHelper::UpdateFileDescriptor()
         SetCodingEquationsMod(mCodingEquations);
     if (BMX_OPT_PROP_IS_SET(mColorPrimaries))
         picture_descriptor->setColorPrimaries(mColorPrimaries);
+
+    if (BMX_OPT_PROP_IS_SET(mMasteringDisplayPrimaries))
+        picture_descriptor->setMasteringDisplayPrimaries(mMasteringDisplayPrimaries);
+    if (BMX_OPT_PROP_IS_SET(mMasteringDisplayWhitePointChromaticity))
+        picture_descriptor->setMasteringDisplayWhitePointChromaticity(mMasteringDisplayWhitePointChromaticity);
+    if (BMX_OPT_PROP_IS_SET(mMasteringDisplayMaximumLuminance))
+        picture_descriptor->setMasteringDisplayMaximumLuminance(mMasteringDisplayMaximumLuminance);
+    if (BMX_OPT_PROP_IS_SET(mMasteringDisplayMinimumLuminance))
+        picture_descriptor->setMasteringDisplayMinimumLuminance(mMasteringDisplayMinimumLuminance);
+
     if (cdci_descriptor) {
         if (BMX_OPT_PROP_IS_SET(mColorSiting))
             SetColorSitingMod(mColorSiting);

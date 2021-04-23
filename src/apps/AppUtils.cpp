@@ -991,6 +991,34 @@ bool bmx::parse_avid_umid_type(const char *str, AvidUMIDType *value)
     return false;
 }
 
+int bmx::parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *three_color_primaries)
+{
+    unsigned int value[6];
+    if (sscanf(str, "%d,%d,%d,%d,%d,%d", &value[0], &value[1], &value[2], &value[3], &value[4], &value[5]) != 6)
+        return false;
+
+    three_color_primaries->primaries[0].x = value[0];
+    three_color_primaries->primaries[0].y = value[1];
+    three_color_primaries->primaries[1].x = value[2];
+    three_color_primaries->primaries[1].y = value[3];
+    three_color_primaries->primaries[2].x = value[4];
+    three_color_primaries->primaries[2].y = value[5];
+
+    return true;
+}
+
+int bmx::parse_color_primary(const char *str, mxfColorPrimary *color_primary)
+{
+    unsigned int value[2];
+    if (sscanf(str, "%d,%d", &value[0], &value[1]) != 2)
+        return false;
+
+    color_primary->x = value[0];
+    color_primary->y = value[1];
+
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {

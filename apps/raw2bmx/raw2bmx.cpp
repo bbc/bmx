@@ -173,6 +173,10 @@ struct RawInput
     BMX_OPT_PROP_DECL(uint32_t, comp_max_ref);
     BMX_OPT_PROP_DECL(uint32_t, comp_min_ref);
     BMX_OPT_PROP_DECL(uint8_t, scan_dir);
+    BMX_OPT_PROP_DECL(mxfThreeColorPrimaries, display_primaries);
+    BMX_OPT_PROP_DECL(mxfColorPrimary, display_chroma);
+    BMX_OPT_PROP_DECL(uint32_t, display_max_luma);
+    BMX_OPT_PROP_DECL(uint32_t, display_min_luma);
     int vc2_mode_flags;
     BMX_OPT_PROP_DECL(bool, rdd36_opaque);
 
@@ -328,6 +332,10 @@ static void init_input(RawInput *input)
     BMX_OPT_PROP_DEFAULT(input->comp_max_ref, 0);
     BMX_OPT_PROP_DEFAULT(input->comp_min_ref, 0);
     BMX_OPT_PROP_DEFAULT(input->scan_dir, 0);
+    BMX_OPT_PROP_DEFAULT(input->display_primaries, g_Null_Three_Color_Primaries);
+    BMX_OPT_PROP_DEFAULT(input->display_chroma, g_Null_Color_Primary);
+    BMX_OPT_PROP_DEFAULT(input->display_max_luma, 0);
+    BMX_OPT_PROP_DEFAULT(input->display_min_luma, 0);
     parse_vc2_mode("1", &input->vc2_mode_flags);
     BMX_OPT_PROP_DEFAULT(input->rdd36_opaque, false);
     input->sampling_rate = DEFAULT_SAMPLING_RATE;
@@ -593,6 +601,12 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --comp-max-ref <value>  Set the RGBA component maximum reference level\n");
     fprintf(stderr, "  --comp-min-ref <value>  Set the RGBA component minimum reference level\n");
     fprintf(stderr, "  --scan-dir <value>      Set the RGBA scanning direction\n");
+    fprintf(stderr, "  --display-primaries <value>  Set the mastering display primaries.\n");
+    fprintf(stderr, "                               The <value> is an array of 6 unsigned integers separated by a ','.\n");
+    fprintf(stderr, "  --display-chroma <value>     Set the mastering display white point chromaticity.\n");
+    fprintf(stderr, "                               The <value> is an array of 2 unsigned integers separated by a ','.\n");
+    fprintf(stderr, "  --display-max-luma <value>   Set the mastering display maximum luminance.\n");
+    fprintf(stderr, "  --display-min-luma <value>   Set the mastering display minimum luminance.\n");
     fprintf(stderr, "  --rdd36-opaque          Treat RDD-36 4444 or 4444 XQ as opaque by omitting the Alpha Sample Depth property\n");
     fprintf(stderr, "  -s <bps>                Audio sampling rate numerator for raw pcm. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);
     fprintf(stderr, "  -q <bps>                Audio quantization bits per sample for raw pcm. Either 16 or 24. Default 16\n");
@@ -828,6 +842,8 @@ int main(int argc, const char** argv)
     bool use_avc_subdesc = false;
     UL audio_layout_mode_label = g_Null_UL;
     BMX_OPT_PROP_DECL_DEF(uint32_t, head_fill, 0);
+    mxfThreeColorPrimaries three_color_primaries;
+    mxfColorPrimary color_primary;
     int value, num, den;
     unsigned int uvalue;
     int64_t i64value;
@@ -2039,6 +2055,74 @@ int main(int argc, const char** argv)
                 return 1;
             }
             BMX_OPT_PROP_SET(input.scan_dir, uvalue);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--display-primaries") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_three_color_primaries(argv[cmdln_index + 1], &three_color_primaries)) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.display_primaries, three_color_primaries);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--display-chroma") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_color_primary(argv[cmdln_index + 1], &color_primary)) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.display_chroma, color_primary);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--display-max-luma") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.display_max_luma, uvalue);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--display-min-luma") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.display_min_luma, uvalue);
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -4878,6 +4962,14 @@ int main(int argc, const char** argv)
                     pict_helper->SetComponentMinRef(input->comp_min_ref);
                 if (BMX_OPT_PROP_IS_SET(input->scan_dir))
                     pict_helper->SetScanningDirection(input->scan_dir);
+                if (BMX_OPT_PROP_IS_SET(input->display_primaries))
+                    pict_helper->SetMasteringDisplayPrimaries(input->display_primaries);
+                if (BMX_OPT_PROP_IS_SET(input->display_chroma))
+                    pict_helper->SetMasteringDisplayWhitePointChromaticity(input->display_chroma);
+                if (BMX_OPT_PROP_IS_SET(input->display_max_luma))
+                    pict_helper->SetMasteringDisplayMaximumLuminance(input->display_max_luma);
+                if (BMX_OPT_PROP_IS_SET(input->display_min_luma))
+                    pict_helper->SetMasteringDisplayMinimumLuminance(input->display_min_luma);
 
                 RDD36MXFDescriptorHelper *rdd36_helper = dynamic_cast<RDD36MXFDescriptorHelper*>(pict_helper);
                 if (rdd36_helper) {

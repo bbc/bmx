@@ -151,6 +151,11 @@ void JPEG2000MXFDescriptorHelper::UpdateFileDescriptor(FileDescriptor *file_desc
     SET_PROPERTY(CodingEquations)
     SET_PROPERTY(ColorPrimaries)
 
+    SET_PROPERTY(MasteringDisplayPrimaries)
+    SET_PROPERTY(MasteringDisplayWhitePointChromaticity)
+    SET_PROPERTY(MasteringDisplayMaximumLuminance)
+    SET_PROPERTY(MasteringDisplayMinimumLuminance)
+
     if (dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor)) {
         CDCIEssenceDescriptor *comp_desc = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
         CDCIEssenceDescriptor *comp_desc_in = dynamic_cast<CDCIEssenceDescriptor*>(file_desc_in);
