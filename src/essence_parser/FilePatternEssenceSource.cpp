@@ -36,6 +36,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
+#include <limits.h>
 
 #include <bmx/essence_parser/FilePatternEssenceSource.h>
 #include <bmx/Utils.h>
@@ -167,7 +168,7 @@ int64_t FilePatternEssenceSource::ReadOrSkip(unsigned char *data, uint32_t size,
             // Copy or skip from the file buffer
             uint32_t copy_size = mFileBuffer.GetSize() - mFileBufferOffset;
             if (copy_size > rem_size)
-                copy_size = rem_size;
+                copy_size = (uint32_t)rem_size;
 
             if (do_read)
                 memcpy(&data[size - rem_size], &mFileBuffer.GetBytes()[mFileBufferOffset], copy_size);
@@ -234,13 +235,14 @@ bool FilePatternEssenceSource::BufferFile()
         return false;
     }
 
-    mFileBuffer.Allocate(file_size);
+    BMX_CHECK(file_size <= UINT32_MAX);
+    mFileBuffer.Allocate((uint32_t)file_size);
 
     int64_t rem_read = file_size;
     while (rem_read > 0) {
         size_t next_read = 8192;
         if ((int64_t)next_read > rem_read)
-            next_read = rem_read;
+            next_read = (size_t)rem_read;
 
         size_t num_read = fread(mFileBuffer.GetBytesAvailable(), 1, next_read, file);
         if (num_read != next_read && ferror(file) != 0)

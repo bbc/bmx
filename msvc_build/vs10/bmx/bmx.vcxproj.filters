@@ -128,6 +128,9 @@
     <ClInclude Include="..\..\..\include\bmx\ByteArray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\ByteBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\Checksum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -138,6 +141,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\inttypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dirent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\KLVParser.h">
@@ -404,6 +410,12 @@
     <ClInclude Include="..\..\..\include\bmx\essence_parser\FileEssenceSource.h">
       <Filter>Header Files\essence_parser</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\essence_parser\FilePatternEssenceSource.h">
+      <Filter>Header Files\essence_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\essence_parser\J2CEssenceParser.h">
+      <Filter>Header Files\essence_parser</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\essence_parser\KLVEssenceSource.h">
       <Filter>Header Files\essence_parser</Filter>
     </ClInclude>
@@ -465,6 +477,9 @@
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MJPEGMXFDescriptorHelper.h">
+      <Filter>Header Files\mxf_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\JPEG2000MXFDescriptorHelper.h">
       <Filter>Header Files\mxf_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MPEG2LGMXFDescriptorHelper.h">
@@ -546,6 +561,9 @@
       <Filter>Header Files\mxf_op1a</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AIndexTable.h">
+      <Filter>Header Files\mxf_op1a</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AJPEG2000Track.h">
       <Filter>Header Files\mxf_op1a</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AMPEG2LGTrack.h">
@@ -720,6 +738,9 @@
       <Filter>Header Files\writer_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\writer_helper\D10WriterHelper.h">
+      <Filter>Header Files\writer_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\writer_helper\JPEG2000WriterHelper.h">
       <Filter>Header Files\writer_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\writer_helper\MPEG2LGWriterHelper.h">
@@ -916,6 +937,9 @@
     <ClCompile Include="..\..\..\src\common\ByteArray.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\common\ByteBuffer.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\common\Checksum.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
@@ -994,6 +1018,12 @@
     <ClCompile Include="..\..\..\src\essence_parser\FileEssenceSource.cpp">
       <Filter>Source Files\essence_parser</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\essence_parser\FilePatternEssenceSource.cpp">
+      <Filter>Source Files\essence_parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\essence_parser\J2CEssenceParser.cpp">
+      <Filter>Source Files\essence_parser</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\essence_parser\KLVEssenceSource.cpp">
       <Filter>Source Files\essence_parser</Filter>
     </ClCompile>
@@ -1049,6 +1079,9 @@
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_helper\MJPEGMXFDescriptorHelper.cpp">
+      <Filter>Source Files\mxf_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_helper\JPEG2000MXFDescriptorHelper.cpp">
       <Filter>Source Files\mxf_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_helper\MPEG2LGMXFDescriptorHelper.cpp">
@@ -1130,6 +1163,9 @@
       <Filter>Source Files\mxf_op1a</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AIndexTable.cpp">
+      <Filter>Source Files\mxf_op1a</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\mxf_op1a\OP1AJPEG2000Track.cpp">
       <Filter>Source Files\mxf_op1a</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AMPEG2LGTrack.cpp">
@@ -1298,6 +1334,9 @@
       <Filter>Source Files\writer_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\writer_helper\D10WriterHelper.cpp">
+      <Filter>Source Files\writer_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\writer_helper\JPEG2000WriterHelper.cpp">
       <Filter>Source Files\writer_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\writer_helper\MPEG2LGWriterHelper.cpp">

@@ -93,7 +93,7 @@ uint32_t J2CEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t d
         if (marker != SOC)
             return ESSENCE_PARSER_NULL_FRAME_SIZE;
     }
-    catch (const InsufficientBytes &ex)
+    catch (const InsufficientBytes&)
     {
         return ESSENCE_PARSER_NULL_OFFSET;
     }

@@ -9,6 +9,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rdd36dump", "tools\rdd36dum
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vc2dump", "tools\vc2dump\vc2dump.vcxproj", "{97060AE3-9DC7-40A2-A75A-457FEC523E1A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "j2cdump", "tools\j2cdump\j2cdump.vcxproj", "{6FFDFAF2-0FD8-445E-BFD2-49CF6FE8D982}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jp2extract", "tools\jp2extract\jp2extract.vcxproj", "{4DD13745-A543-4AE3-8008-DB11180C85B5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32

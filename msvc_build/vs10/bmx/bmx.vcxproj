@@ -52,7 +52,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <DisableSpecificWarnings>4800;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -69,7 +69,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>4800;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -84,10 +84,12 @@
     <ClInclude Include="..\..\..\include\bmx\BMXException.h" />
     <ClInclude Include="..\..\..\include\bmx\BMXTypes.h" />
     <ClInclude Include="..\..\..\include\bmx\ByteArray.h" />
+    <ClInclude Include="..\..\..\include\bmx\ByteBuffer.h" />
     <ClInclude Include="..\..\..\include\bmx\Checksum.h" />
     <ClInclude Include="..\..\..\include\bmx\CRC32.h" />
     <ClInclude Include="..\..\..\include\bmx\EssenceType.h" />
     <ClInclude Include="..\inttypes.h" />
+    <ClInclude Include="..\dirent.h" />
     <ClInclude Include="..\..\..\include\bmx\KLVParser.h" />
     <ClInclude Include="..\..\..\include\bmx\Logging.h" />
     <ClInclude Include="..\..\..\include\bmx\MD5.h" />
@@ -176,6 +178,8 @@
     <ClInclude Include="..\..\..\include\bmx\essence_parser\EssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\EssenceSource.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\FileEssenceSource.h" />
+    <ClInclude Include="..\..\..\include\bmx\essence_parser\FilePatternEssenceSource.h" />
+    <ClInclude Include="..\..\..\include\bmx\essence_parser\J2CEssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\KLVEssenceSource.h" />
     <ClInclude Include="..\..\..\src\essence_parser\EssenceParserUtils.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\MJPEGEssenceParser.h" />
@@ -196,6 +200,7 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\DataMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\DVMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\EssenceValidator.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_helper\JPEG2000MXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MJPEGMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MPEG2LGMXFDescriptorHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_helper\MPEG2Validator.h" />
@@ -224,6 +229,7 @@
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1ADVTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AFile.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AIndexTable.h" />
+    <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AJPEG2000Track.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1AMPEG2LGTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1APCMTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\mxf_op1a\OP1APictureTrack.h" />
@@ -282,6 +288,7 @@
     <ClInclude Include="..\..\..\include\bmx\writer_helper\AVCWriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\AVCIWriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\D10WriterHelper.h" />
+    <ClInclude Include="..\..\..\include\bmx\writer_helper\JPEG2000WriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\MPEG2LGWriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\VC2WriterHelper.h" />
     <ClInclude Include="..\..\..\include\bmx\writer_helper\XMLWriterHelper.h" />
@@ -348,6 +355,7 @@
     <ClCompile Include="..\..\..\src\common\BMXException.cpp" />
     <ClCompile Include="..\..\..\src\common\BMXTypes.cpp" />
     <ClCompile Include="..\..\..\src\common\ByteArray.cpp" />
+    <ClCompile Include="..\..\..\src\common\ByteBuffer.cpp" />
     <ClCompile Include="..\..\..\src\common\Checksum.cpp" />
     <ClCompile Include="..\..\..\src\common\CRC32.cpp" />
     <ClCompile Include="..\..\..\src\common\EssenceType.cpp" />
@@ -374,6 +382,8 @@
     <ClCompile Include="..\..\..\src\essence_parser\DVEssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\EssenceParserUtils.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\FileEssenceSource.cpp" />
+    <ClCompile Include="..\..\..\src\essence_parser\FilePatternEssenceSource.cpp" />
+    <ClCompile Include="..\..\..\src\essence_parser\J2CEssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\KLVEssenceSource.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\MJPEGEssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\MPEG2AspectRatioFilter.cpp" />
@@ -392,6 +402,7 @@
     <ClCompile Include="..\..\..\src\mxf_helper\D10MXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\DataMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\DVMXFDescriptorHelper.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_helper\JPEG2000MXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\MJPEGMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\MPEG2LGMXFDescriptorHelper.cpp" />
     <ClCompile Include="..\..\..\src\mxf_helper\MPEG2Validator.cpp" />
@@ -420,6 +431,7 @@
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1ADVTrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AFile.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AIndexTable.cpp" />
+    <ClCompile Include="..\..\..\src\mxf_op1a\OP1AJPEG2000Track.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1AMPEG2LGTrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1APCMTrack.cpp" />
     <ClCompile Include="..\..\..\src\mxf_op1a\OP1APictureTrack.cpp" />
@@ -476,6 +488,7 @@
     <ClCompile Include="..\..\..\src\writer_helper\AVCWriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\writer_helper\AVCIWriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\writer_helper\D10WriterHelper.cpp" />
+    <ClCompile Include="..\..\..\src\writer_helper\JPEG2000WriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\writer_helper\MPEG2LGWriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\writer_helper\VC2WriterHelper.cpp" />
     <ClCompile Include="..\..\..\src\writer_helper\XMLWriterHelper.cpp" />

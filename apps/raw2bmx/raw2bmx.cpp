@@ -859,6 +859,7 @@ int main(int argc, const char** argv)
     int value, num, den;
     unsigned int uvalue;
     int64_t i64value;
+    bool msvc_block_limit;
     int cmdln_index;
 
     memset(&next_embed_xml, 0, sizeof(next_embed_xml));
@@ -1769,6 +1770,8 @@ int main(int argc, const char** argv)
     init_input(&input);
     for (; cmdln_index < argc; cmdln_index++)
     {
+        msvc_block_limit = false;
+
         if (strcmp(argv[cmdln_index], "-a") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -2513,6 +2516,17 @@ int main(int argc, const char** argv)
             }
             cmdln_index++;
             continue; // skip input reset at the end
+        }
+        else
+        {
+            // break if/else here to workaround Visual C++ error
+            // C1061: compiler limit : blocks nested too deeply
+            msvc_block_limit = true;
+        }
+
+        if (!msvc_block_limit)
+        {
+            // do nothing - wasn't the Visual C++ C1061 workaround
         }
         else if (strcmp(argv[cmdln_index], "--dv") == 0)
         {

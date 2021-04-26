@@ -176,7 +176,7 @@ bool FileEssenceSource::Skip(int64_t offset)
         unsigned char buffer[8192];
         uint32_t next_read = sizeof(buffer);
         if (next_read > offset) {
-            next_read = offset;
+            next_read = (uint32_t)offset;
         }
         uint32_t num_read = Read(buffer, next_read);
         offset -= num_read;

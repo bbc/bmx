@@ -75,7 +75,7 @@ private:
     int64_t mCurrentNumber;
     std::string mCurrentFilename;
     bmx::ByteArray mFileBuffer;
-    int64_t mFileBufferOffset;
+    uint32_t mFileBufferOffset;
 };
 
 

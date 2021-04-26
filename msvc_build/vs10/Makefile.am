@@ -1,5 +1,6 @@
 EXTRA_DIST = \
 	inttypes.h \
+	dirent.h \
 	bmx.sln \
 	test.sln \
 	tools.sln \
@@ -24,6 +25,10 @@ EXTRA_DIST = \
 	test/file_md5/file_md5.vcxproj.filters \
 	test/file_truncate/file_truncate.vcxproj \
 	test/file_truncate/file_truncate.vcxproj.filters \
+	tools/j2cdump/j2cdump.vcxproj \
+	tools/j2cdump/j2cdump.vcxproj.filters \
+	tools/jp2extract/jp2extract.vcxproj \
+	tools/jp2extract/jp2extract.vcxproj.filters \
 	tools/h264dump/h264dump.vcxproj \
 	tools/h264dump/h264dump.vcxproj.filters \
 	tools/movdump/movdump.vcxproj \

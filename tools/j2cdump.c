@@ -34,7 +34,9 @@
 #include <inttypes.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <ctype.h>
 
 
@@ -196,7 +198,7 @@ static int insert_tile_part_index(ParseContext *context, TLMIndex *tlm_index)
     return 1;
 }
 
-static int get_tile_part_index_entry(ParseContext *context, size_t jth_tile_part,
+static int get_tile_part_index_entry(ParseContext *context, uint16_t jth_tile_part,
                                      uint16_t *tile_index_out, uint32_t *tile_part_length_out)
 {
     TLMIndex *tlm_index = context->tlm_index;
@@ -875,9 +877,9 @@ static int parse_tile_part_data(ParseContext *context, uint16_t tile_part_index)
     }
 
     if (context->sot_offset + tile_part_length >= context->file_pos) {
-        size_t skip_size = tile_part_length - (context->file_pos - context->sot_offset);
+        int64_t skip_size = tile_part_length - (context->file_pos - context->sot_offset);
         if (skip_size > 0) {
-            printf("%*ctile part data: size=%" PRIu64 ", offset=%" PRId64 "\n", context->indent * 4, ' ',
+            printf("%*ctile part data: size=%" PRId64 ", offset=%" PRId64 "\n", context->indent * 4, ' ',
                 skip_size, context->file_pos);
 
             context->indent++;
