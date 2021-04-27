@@ -1,0 +1,21 @@
+Welcome to the bmx Docker container!
+
+Tools provided by this container are listed below. Run "<tool> -h" for help.
+
+Tools from bmx:
+  bmxparse:         text dump raw essence files using the parser class
+  bmxtranswrap:     re-wrap from one MXF file to another MXF file
+  mxf2raw:          output MXF file metadata and raw essence
+  raw2bmx:          create MXF files from raw essence files
+  h264dump:         text dump raw H.264 essence files
+  movdump:          text dump Quicktime / MP4 container files
+  rdd36dump:        text dump raw SMPTE RDD 36 (Apple ProRes) essence files
+  vc2dump:          text dump raw SMPTE ST 2042 (VC-2) essence files
+
+Tools from libMXF:
+  archive_mxf_info: output BBC Archive Preservation Project MXF file metadata
+  avidmxfinfo:      (legacy) text dump Avid MXF OP-Atom file metadata
+  writeavidmxf:     (legacy) create Avid MXF OP-Atom files
+
+Tools from AAF SDK:
+  MXFDump:          text dump detailed MXF file structure
