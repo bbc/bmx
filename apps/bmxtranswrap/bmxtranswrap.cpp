@@ -472,6 +472,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --display-min-luma <value>   Override or set the mastering display minimum luminance.\n");
     fprintf(stderr, "  --rdd36-opaque          Override and treat RDD-36 4444 or 4444 XQ as opaque by omitting the Alpha Sample Depth property\n");
     fprintf(stderr, "  --rdd36-comp-depth <value>   Override of set component depth for RDD-36. Defaults to 10 if not present in input file\n");
+    fprintf(stderr, "  --active-width          Override or set the Active Width of the active area rectangle\n");
+    fprintf(stderr, "  --active-height         Override or set the Active Height of the active area rectangle\n");
+    fprintf(stderr, "  --active-x-offset       Override or set the Active X Offset of the active area rectangle\n");
+    fprintf(stderr, "  --active-y-offset       Override or set the Active Y Offset of the active area rectangle\n");
     fprintf(stderr, "  --ignore-input-desc     Don't use input MXF file descriptor properties to fill in missing information\n");
     fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks. See below for details of the <expr> format\n");
     fprintf(stderr, "  --dump-track-map        Dump the output audio track map to stderr.\n");
@@ -768,6 +772,10 @@ int main(int argc, const char** argv)
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_display_min_luma, 0);
     BMX_OPT_PROP_DECL_DEF(bool, user_rdd36_opaque, false);
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_rdd36_component_depth, 10);
+    BMX_OPT_PROP_DECL_DEF(uint32_t, user_active_width, 0);
+    BMX_OPT_PROP_DECL_DEF(uint32_t, user_active_height, 0);
+    BMX_OPT_PROP_DECL_DEF(uint32_t, user_active_x_offset, 0);
+    BMX_OPT_PROP_DECL_DEF(uint32_t, user_active_y_offset, 0);
     bool ignore_input_desc = false;
     bool input_file_md5 = false;
     int input_file_flags = 0;
@@ -1613,6 +1621,70 @@ int main(int argc, const char** argv)
                 return 1;
             }
             BMX_OPT_PROP_SET(user_rdd36_component_depth, value);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--active-width") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_active_width, uvalue);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--active-height") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_active_height, uvalue);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--active-x-offset") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_active_x_offset, uvalue);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--active-y-offset") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_active_y_offset, uvalue);
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--ignore-input-desc") == 0)
@@ -3833,6 +3905,14 @@ int main(int argc, const char** argv)
                     pict_helper->SetMasteringDisplayMaximumLuminance(user_display_max_luma);
                 if (BMX_OPT_PROP_IS_SET(user_display_min_luma))
                     pict_helper->SetMasteringDisplayMinimumLuminance(user_display_min_luma);
+                if (BMX_OPT_PROP_IS_SET(user_active_width))
+                    pict_helper->SetActiveWidth(user_active_width);
+                if (BMX_OPT_PROP_IS_SET(user_active_height))
+                    pict_helper->SetActiveHeight(user_active_height);
+                if (BMX_OPT_PROP_IS_SET(user_active_x_offset))
+                    pict_helper->SetActiveXOffset(user_active_x_offset);
+                if (BMX_OPT_PROP_IS_SET(user_active_y_offset))
+                    pict_helper->SetActiveYOffset(user_active_y_offset);
 
                 RDD36MXFDescriptorHelper *rdd36_helper = dynamic_cast<RDD36MXFDescriptorHelper*>(pict_helper);
                 if (rdd36_helper) {

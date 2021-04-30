@@ -224,6 +224,10 @@ PictureMXFDescriptorHelper::PictureMXFDescriptorHelper()
     BMX_OPT_PROP_DEFAULT(mMasteringDisplayWhitePointChromaticity, g_Null_Color_Primary);
     BMX_OPT_PROP_DEFAULT(mMasteringDisplayMaximumLuminance, 0);
     BMX_OPT_PROP_DEFAULT(mMasteringDisplayMinimumLuminance, 0);
+    BMX_OPT_PROP_DEFAULT(mActiveWidth, 0);
+    BMX_OPT_PROP_DEFAULT(mActiveHeight, 0);
+    BMX_OPT_PROP_DEFAULT(mActiveXOffset, 0);
+    BMX_OPT_PROP_DEFAULT(mActiveYOffset, 0);
 }
 
 PictureMXFDescriptorHelper::~PictureMXFDescriptorHelper()
@@ -277,6 +281,15 @@ void PictureMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uin
         BMX_OPT_PROP_SET(mMasteringDisplayMaximumLuminance, picture_descriptor->getMasteringDisplayMaximumLuminance());
     if (picture_descriptor->haveMasteringDisplayMinimumLuminance())
         BMX_OPT_PROP_SET(mMasteringDisplayMinimumLuminance, picture_descriptor->getMasteringDisplayMinimumLuminance());
+
+    if (picture_descriptor->haveActiveWidth())
+        BMX_OPT_PROP_SET(mActiveWidth, picture_descriptor->getActiveWidth());
+    if (picture_descriptor->haveActiveHeight())
+        BMX_OPT_PROP_SET(mActiveHeight, picture_descriptor->getActiveHeight());
+    if (picture_descriptor->haveActiveXOffset())
+        BMX_OPT_PROP_SET(mActiveXOffset, picture_descriptor->getActiveXOffset());
+    if (picture_descriptor->haveActiveYOffset())
+        BMX_OPT_PROP_SET(mActiveYOffset, picture_descriptor->getActiveYOffset());
 
     if (cdci_descriptor) {
         if (cdci_descriptor->haveColorSiting())
@@ -393,6 +406,26 @@ void PictureMXFDescriptorHelper::SetMasteringDisplayMinimumLuminance(uint32_t mi
     BMX_OPT_PROP_SET(mMasteringDisplayMinimumLuminance, min_lum);
 }
 
+void PictureMXFDescriptorHelper::SetActiveWidth(uint32_t width)
+{
+    BMX_OPT_PROP_SET(mActiveWidth, width);
+}
+
+void PictureMXFDescriptorHelper::SetActiveHeight(uint32_t height)
+{
+    BMX_OPT_PROP_SET(mActiveHeight, height);
+}
+
+void PictureMXFDescriptorHelper::SetActiveXOffset(uint32_t offset)
+{
+    BMX_OPT_PROP_SET(mActiveXOffset, offset);
+}
+
+void PictureMXFDescriptorHelper::SetActiveYOffset(uint32_t offset)
+{
+    BMX_OPT_PROP_SET(mActiveYOffset, offset);
+}
+
 FileDescriptor* PictureMXFDescriptorHelper::CreateFileDescriptor(HeaderMetadata *header_metadata)
 {
     (void)header_metadata;
@@ -436,6 +469,15 @@ void PictureMXFDescriptorHelper::UpdateFileDescriptor()
         picture_descriptor->setMasteringDisplayMaximumLuminance(mMasteringDisplayMaximumLuminance);
     if (BMX_OPT_PROP_IS_SET(mMasteringDisplayMinimumLuminance))
         picture_descriptor->setMasteringDisplayMinimumLuminance(mMasteringDisplayMinimumLuminance);
+
+    if (BMX_OPT_PROP_IS_SET(mActiveWidth))
+        picture_descriptor->setActiveWidth(mActiveWidth);
+    if (BMX_OPT_PROP_IS_SET(mActiveHeight))
+        picture_descriptor->setActiveHeight(mActiveHeight);
+    if (BMX_OPT_PROP_IS_SET(mActiveXOffset))
+        picture_descriptor->setActiveXOffset(mActiveXOffset);
+    if (BMX_OPT_PROP_IS_SET(mActiveYOffset))
+        picture_descriptor->setActiveYOffset(mActiveYOffset);
 
     if (cdci_descriptor) {
         if (BMX_OPT_PROP_IS_SET(mColorSiting))

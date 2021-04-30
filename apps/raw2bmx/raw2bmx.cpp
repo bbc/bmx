@@ -179,6 +179,10 @@ struct RawInput
     BMX_OPT_PROP_DECL(uint32_t, display_min_luma);
     int vc2_mode_flags;
     BMX_OPT_PROP_DECL(bool, rdd36_opaque);
+    BMX_OPT_PROP_DECL(uint32_t, active_width);
+    BMX_OPT_PROP_DECL(uint32_t, active_height);
+    BMX_OPT_PROP_DECL(uint32_t, active_x_offset);
+    BMX_OPT_PROP_DECL(uint32_t, active_y_offset);
 
     // sound
     Rational sampling_rate;
@@ -338,6 +342,10 @@ static void init_input(RawInput *input)
     BMX_OPT_PROP_DEFAULT(input->display_min_luma, 0);
     parse_vc2_mode("1", &input->vc2_mode_flags);
     BMX_OPT_PROP_DEFAULT(input->rdd36_opaque, false);
+    BMX_OPT_PROP_DEFAULT(input->active_width, 0);
+    BMX_OPT_PROP_DEFAULT(input->active_height, 0);
+    BMX_OPT_PROP_DEFAULT(input->active_x_offset, 0);
+    BMX_OPT_PROP_DEFAULT(input->active_y_offset, 0);
     input->sampling_rate = DEFAULT_SAMPLING_RATE;
     BMX_OPT_PROP_DEFAULT(input->component_depth, 8);
     input->bits_per_sample = 16;
@@ -608,6 +616,10 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --display-max-luma <value>   Set the mastering display maximum luminance.\n");
     fprintf(stderr, "  --display-min-luma <value>   Set the mastering display minimum luminance.\n");
     fprintf(stderr, "  --rdd36-opaque          Treat RDD-36 4444 or 4444 XQ as opaque by omitting the Alpha Sample Depth property\n");
+    fprintf(stderr, "  --active-width          Set the Active Width of the active area rectangle\n");
+    fprintf(stderr, "  --active-height         Set the Active Height of the active area rectangle\n");
+    fprintf(stderr, "  --active-x-offset       Set the Active X Offset of the active area rectangle\n");
+    fprintf(stderr, "  --active-y-offset       Set the Active Y Offset of the active area rectangle\n");
     fprintf(stderr, "  -s <bps>                Audio sampling rate numerator for raw pcm. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);
     fprintf(stderr, "  -q <bps>                Audio quantization bits per sample for raw pcm. Either 16 or 24. Default 16\n");
     fprintf(stderr, "  --audio-chan <count>    Audio channel count for raw pcm. Default 1\n");
@@ -2129,6 +2141,74 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--rdd36-opaque") == 0)
         {
             BMX_OPT_PROP_SET(input.rdd36_opaque, true);
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--active-width") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.active_width, uvalue);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--active-height") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.active_height, uvalue);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--active-x-offset") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.active_x_offset, uvalue);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--active-y-offset") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.active_y_offset, uvalue);
+            cmdln_index++;
             continue; // skip input reset at the end
         }
         else if (strcmp(argv[cmdln_index], "-s") == 0)
@@ -4970,6 +5050,14 @@ int main(int argc, const char** argv)
                     pict_helper->SetMasteringDisplayMaximumLuminance(input->display_max_luma);
                 if (BMX_OPT_PROP_IS_SET(input->display_min_luma))
                     pict_helper->SetMasteringDisplayMinimumLuminance(input->display_min_luma);
+                if (BMX_OPT_PROP_IS_SET(input->active_width))
+                    pict_helper->SetActiveWidth(input->active_width);
+                if (BMX_OPT_PROP_IS_SET(input->active_height))
+                    pict_helper->SetActiveHeight(input->active_height);
+                if (BMX_OPT_PROP_IS_SET(input->active_x_offset))
+                    pict_helper->SetActiveXOffset(input->active_x_offset);
+                if (BMX_OPT_PROP_IS_SET(input->active_y_offset))
+                    pict_helper->SetActiveYOffset(input->active_y_offset);
 
                 RDD36MXFDescriptorHelper *rdd36_helper = dynamic_cast<RDD36MXFDescriptorHelper*>(pict_helper);
                 if (rdd36_helper) {
