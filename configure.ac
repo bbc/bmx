@@ -303,6 +303,7 @@ AC_CONFIG_FILES([
 	test/rdd9_mxf/Makefile
 	test/wave/Makefile
 	test/growing_file/Makefile
+	test/jpeg2000/Makefile
 	test/rdd6/Makefile
 	test/text_object/Makefile
 	test/bbcarchive/Makefile
