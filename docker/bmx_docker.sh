@@ -25,7 +25,14 @@ usage()
     echo "  --input <value>      Set the input directory to map to /input. Default ${DEFAULT_INPUT}"
     echo "  --output <value>     Set the output directory to map to /output. Default ${DEFAULT_OUTPUT}"
     echo ""
-    echo "Example: ${SCRIPT} --output /tmp bmxtranswrap -o /output/out.mxf /input/in.mxf"
+    echo "If input and output directories are equal then they also bind mounted to the"
+    echo "container's working directory. If the input or output directories are the current"
+    echo "directory then they are also bind mounted to the container's working directory."
+    echo ""
+    echo "Examples:"
+    echo "  $ ${SCRIPT} bmxtranswrap -o out.mxf in.mxf"
+    echo "  $ ${SCRIPT} --output /tmp bmxtranswrap -o /output/out.mxf in.mxf"
+    echo "  $ ${SCRIPT} --input ./sources --output ./dests bmxtranswrap -o /output/out.mxf /input/in.mxf"
 }
 
 missing_arg()
@@ -65,8 +72,20 @@ while (( "$#" )); do
 done
 
 
-MAP_USER="--user $(id -u):$(id -g)"
-INPUT_BIND_MOUNT="-v $(realpath ${INPUT}):/input:ro"
-OUTPUT_BIND_MOUNT="-v $(realpath ${OUTPUT}):/output"
+CONTAINER_WORKDIR="/inout"
 
-docker run --rm -ti ${MAP_USER} ${INPUT_BIND_MOUNT} ${OUTPUT_BIND_MOUNT} ${DOCKER_IMAGE} $@
+MAP_USER_OPT="--user $(id -u):$(id -g)"
+WORKDIR_OPT="-w ${CONTAINER_WORKDIR}"
+BIND_MOUNT_OPT="-v $(realpath ${INPUT}):/input:ro -v $(realpath ${OUTPUT}):/output"
+if [ "$(realpath ${INPUT})" = "$(realpath ${OUTPUT})" ]
+then
+    BIND_MOUNT_OPT+=" -v $(realpath ${INPUT}):/${CONTAINER_WORKDIR}"
+elif [ "$(realpath ${INPUT})" = "$(realpath ./)" ]
+then
+    BIND_MOUNT_OPT+=" -v $(realpath ${INPUT}):/${CONTAINER_WORKDIR}:ro"
+elif [ "$(realpath ${OUTPUT})" = "$(realpath ./)" ]
+then
+    BIND_MOUNT_OPT+=" -v $(realpath ${OUTPUT}):/${CONTAINER_WORKDIR}"
+fi
+
+docker run --rm -ti ${MAP_USER_OPT} ${BIND_MOUNT_OPT} ${WORKDIR_OPT} ${DOCKER_IMAGE} $@

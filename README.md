@@ -183,13 +183,23 @@ The [docker/bmx_docker.sh](./docker/bmx_docker.sh) shell script is provided to m
 
 to see the usage and list of available tools.
 
-The script bind mounts input and output directories on the host to `/input` and `/output` directories on the container. The default is to bind mount the current directory to both.
+The script maps the file user and group ID so that files have the user's identity when written to the output directory on the host. This is needed if Docker runs the container as the root user.
 
-The example below runs `bmxtranswrap` from input `./in.mxf` to output `/tmp/out.mxf` on the host.
+The script bind mounts input and output directories on the host to `/input` and `/output` directories on the container. The default is to set input and output directories to the current host directory.
 
-`./docker/bmx_docker.sh --output /tmp bmxtranswrap -o /output/out.mxf /input/in.mxf`
+If the input and output directories are the same then that directory is also bind mounted to the container's working directory. If the input or output directory is the current directory then it is also bind mounted to the container's working directory.
 
-The script maps the user and group ID so that files written by the tool to the output directory on the host have the user's identity.
+This example runs `bmxtranswrap` from input `./in.mxf` to output `./out.mxf`.
+
+`./docker/bmx_docker.sh bmxtranswrap -o out.mxf in.mxf`
+
+This example runs `bmxtranswrap` from input `./in.mxf` to output `/tmp/out.mxf`.
+
+`./docker/bmx_docker.sh --output /tmp bmxtranswrap -o /output/out.mxf in.mxf`
+
+This example runs `bmxtranswrap` from input `./sources/in.mxf` to output `./dests/out.mxf`.
+
+`./docker/bmx_docker.sh --input ./sources --output ./dests bmxtranswrap -o /output/out.mxf /input/in.mxf`
 
 
 ## Source and Binary Distributions
