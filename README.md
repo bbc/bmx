@@ -173,6 +173,13 @@ This example runs `bmxtranswrap` from input `./sources/in.mxf` to output `./dest
 Source distributions, including dependencies for the Windows build, and Windows binaries are made [available on SourceForge](https://sourceforge.net/projects/bmxlib/files/).
 
 
+## Development Process
+
+Software development of new features and bug fixes is done using repositories on GitHub. Once a feature or a bug fix is complete it is copied over to the repository on Sourceforge.
+
+Source and binary distributions are generally only created when a new feature is required for creating standard compliant sample files for example, or when a release hasn't been made for a long time.
+
+
 ## License
 
 The bmx library is provided under the BSD 3-clause license. See the [COPYING](./COPYING) file provided with this library for more details.
