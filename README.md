@@ -1,59 +1,49 @@
 # bmx Library and Utilities
 
-bmx is a library and set of utilities to read and write the [SMPTE ST 377-1 MXF
-file format](https://ieeexplore.ieee.org/document/7292073).
+bmx is a library and set of utilities to read and write the [SMPTE ST 377-1 MXF file format](https://ieeexplore.ieee.org/document/7292073).
 
-bmx is used to support standardisation efforts in the broadcast industry. It
-provides utilities for creating standard compliant sample files. It serves as an
-example implementation for MXF file format standards.
+bmx is used to support standardisation efforts in the broadcast industry. It provides utilities for creating standard compliant sample files. It serves as an example implementation for MXF file format standards.
 
 bmx provides a set of commandline applications:
+
 * `raw2bmx`: create MXF files from raw (unwrapped) essence files
 * `bmxtranswrap`: re-wrap from one MXF file to another MXF file
 * `mxf2raw`: output MXF file metadata, extract raw essence, calculate MD5 etc.
 * `bmxparse`: text dumper for raw essence files that uses the bmx library's parser class
 
 bmx provides a set of file format text dumper tools:
+
 * `h264dump`: text dumper for raw H.264 bitstream files
 * `movdump`: text dumper for Quicktime / MP4 files
 * `rdd36dump`: text dumper for SMPTE RDD 36 (Apple ProRes) bitstream files
 * `vc2dump`:  text dumper for SMPTE ST 2042 VC-2 bitstream files
-* `MXFDump`: text dumper for MXF files from the
-[AAF SDK](https://sourceforge.net/projects/aaf/). This utility is made available
-and built as part of libMXF.
+* `MXFDump`: text dumper for MXF files from the [AAF SDK](https://sourceforge.net/projects/aaf/). This utility is made available and built as part of libMXF.
 
 The following input and output wrapper formats and flavours are supported:
+
 * [AMWA AS-02](https://www.amwa.tv/specifications) MXF Versioning
 * [AMWA AS-10](https://www.amwa.tv/specifications) MXF for Production
-* [AMWA AS-11](https://www.amwa.tv/specifications) Media Contribution File
-Formats (MXF)
+* [AMWA AS-11](https://www.amwa.tv/specifications) Media Contribution File Formats (MXF)
 * [SMPTE ST 378](https://ieeexplore.ieee.org/document/7291764) MXF OP-1A
-* [SMPTE RDD 9](https://ieeexplore.ieee.org/document/7290714) MXF MPEG Long GOP
-(Sony XDCAM)
-* [SMPTE ST 386](https://ieeexplore.ieee.org/document/7291350) MXF D-10 (Sony
-MPEG IMX)
-* [Avid native MXF
-OP-Atom](https://www.avid.com/static/resources/common/documents/mxf.pdf)
+* [SMPTE RDD 9](https://ieeexplore.ieee.org/document/7290714) MXF MPEG Long GOP (Sony XDCAM)
+* [SMPTE ST 386](https://ieeexplore.ieee.org/document/7291350) MXF D-10 (Sony MPEG IMX)
+* [Avid native MXF OP-Atom](https://www.avid.com/static/resources/common/documents/mxf.pdf)
 * [WAV](https://en.wikipedia.org/wiki/WAV)
 
 The following essence formats are supported:
-* [SMPTE RP 2027](https://ieeexplore.ieee.org/document/7290936) AVC-Intra video,
-class 50 / 100 / 200
-* [SMPTE ST 356](https://ieeexplore.ieee.org/document/7290684) D-10 video, 30 /
-40 / 50 MBit/s
+
+* [SMPTE RP 2027](https://ieeexplore.ieee.org/document/7290936) AVC-Intra video, class 50 / 100 / 200
+* [SMPTE ST 356](https://ieeexplore.ieee.org/document/7290684) D-10 video, 30 / 40 / 50 MBit/s
 * [DV](https://en.wikipedia.org/wiki/DV) video, 25 / 50 / 100 MBit/s
-* [MPEG-2](https://www.itu.int/rec/T-REC-H.262) Long GOP video, 422P@HL, MP@HL
-(1920 and 1440) and MP@H14
+* [MPEG-2](https://www.itu.int/rec/T-REC-H.262) Long GOP video, 422P@HL, MP@HL (1920 and 1440) and MP@H14
 * [H.264](https://www.itu.int/rec/T-REC-H.264) video
-* [SMPTE ST 2019](https://ieeexplore.ieee.org/document/7291983) VC-3 video (Avid
-DNxHD)
+* [SMPTE ST 2019](https://ieeexplore.ieee.org/document/7291983) VC-3 video (Avid DNxHD)
 * [SMPTE ST 2042](https://ieeexplore.ieee.org/document/7967896) VC-2 video
 * [SMPTE RDD 36](https://ieeexplore.ieee.org/document/7438722) video (Apple ProRes)
 * Uncompressed video, UYVY / v210
 * Avid [MJPEG](https://en.wikipedia.org/wiki/Motion_JPEG) video
 * [WAV](https://en.wikipedia.org/wiki/WAV) PCM audio
-* [SMPTE ST 436](https://ieeexplore.ieee.org/document/7290051) encapsulated ANC
-and VBI data
+* [SMPTE ST 436](https://ieeexplore.ieee.org/document/7290051) encapsulated ANC and VBI data
 * [IMSC 1 Timed Text](https://www.w3.org/TR/ttml-imsc1.0.1/)
 
 
@@ -68,31 +58,25 @@ including the following:
 
 ## Build and Installation
 
-bmx is developed on Ubuntu Linux but is supported on other Unix-like systems
-using the autotools build system. A set of Microsoft Visual C++ project files
-are provided for Windows.
+bmx is developed on Ubuntu Linux but is supported on other Unix-like systems using the autotools build system. A set of Microsoft Visual C++ project files are provided for Windows.
 
 
 ### Dependencies
 
-The following libraries must be installed to build bmx. The (Ubuntu) debian
-package names and versions are shown in brackets.
-* libMXF (libmxf >= 1.0.3)
-* libMXF++ (libmxf++ >= 1.0.3)
-* [uriparser](https://github.com/uriparser/uriparser) (liburiparser-dev >=
-0.7.2, <= 0.8).
+The following libraries must be installed to build bmx. The (Ubuntu) debian package names and versions are shown in brackets.
+
+* libMXF (libmxf >= 1.0.4)
+* libMXF++ (libmxf++ >= 1.0.4)
+* [uriparser](https://github.com/uriparser/uriparser) (liburiparser-dev >= 0.7.2, <= 0.8).
 * [expat](https://github.com/libexpat/libexpat) (libexpat1-dev >= 2.1)
 * uuid, Unix-like systems only (uuid-dev)
 
-The [libcurl](https://curl.haxx.se/libcurl/) (libcurl4-openssl-dev >= 7.22.0)
-library is optional for Unix-like systems and provides support for reading MXF
-files over HTTP(S).
+The [libcurl](https://curl.haxx.se/libcurl/) (libcurl4-openssl-dev >= 7.22.0) library is optional for Unix-like systems and provides support for reading MXF files over HTTP(S).
 
 
 ### Unix-like Systems Build
 
-Install the development versions of the dependency libraries. The bmx library
-can then be built from source using autotools as follows,
+Install the development versions of the dependency libraries. The bmx library can then be built from source using autotools as follows,
 ```bash
 ./autogen.sh
 ./configure
@@ -104,16 +88,13 @@ Run configure as shown below to see a list of build configuration options,
 ./configure -h
 ```
 
-Add the `--with-curl` option to the configure line to include libcurl and
-therefore support reading MXF files over HTTP(S).
+Add the `--with-curl` option to the configure line to include libcurl and therefore support reading MXF files over HTTP(S).
 
-If you get library link errors similar to "error while loading shared
-libraries" then run
+If you get library link errors similar to "error while loading shared libraries" then run
 ```
 sudo /sbin/ldconfig
 ```
-to update the runtime linker cache. E.g. the libMXF library was built and
-installed previously and the linker cache needs to be updated with the result.
+to update the runtime linker cache. E.g. the libMXF library was built and installed previously and the linker cache needs to be updated with the result.
 
 There are a number of regression tests that can be run using
 ```bash
@@ -128,32 +109,17 @@ sudo make install
 
 ### Microsoft Visual Studio C++ Build
 
-The Visual Studio 2010 build solution and project files can be found in the
-[msvc_build/vs10](./msvc_build/vs10) directory. These files can be upgraded to
-any more
-recent version when importing into the IDE.
+The Visual Studio 2010 build solution and project files can be found in the [msvc_build/vs10](./msvc_build/vs10) directory. These files can be upgraded to any more recent version when importing into the IDE.
 
-The main build solution file is [bmx.sln](./msvc_build/vs10/bmx.sln). It is used
-to build the library and MXF applications. The build solution assumes the
-following directories are present at the same directory level as bmx: `libMXF/`,
-`libMXF++/`, `uriparser/` and `expat/`.
+The main build solution file is [bmx.sln](./msvc_build/vs10/bmx.sln). It is used to build the library and MXF applications. The build solution assumes the following directories are present at the same directory level as bmx: `libMXF/`, `libMXF++/`, `uriparser/` and `expat/`.
 
-The source distributions will contain a copy of the expat and uriparser libraries.
-See [Source and Binary Distributions](#source-and-binary-distributions) below.
+The source distributions will contain a copy of the expat and uriparser libraries. See [Source and Binary Distributions](#source-and-binary-distributions) below.
 
-A local copy of the expat and uriparser project files are included in the bmx
-build directory, i.e. the project files in the external repository are not used.
-The build solution file will build the dependency libraries.
+A local copy of the expat and uriparser project files are included in the bmx build directory, i.e. the project files in the external repository are not used. The build solution file will build the dependency libraries.
 
-The build depends on the `bmx_scm_version.h` header file in the root directory
-to provide the most recent git commit identifier. This file is generated
-automatically using the [gen_scm_version.sh](./gen_scm_version.sh) script when
-building using autotools and is included in the source distribution package.
-You are likely missing this file if you are using the source code directly from
-the git repository then and will need to create it manually.
+The build depends on the `bmx_scm_version.h` header file in the root directory to provide the most recent git commit identifier. This file is generated automatically using the [gen_scm_version.sh](./gen_scm_version.sh) script when building using autotools and is included in the source distribution package. You are likely missing this file if you are using the source code directly from the git repository then and will need to create it manually.
 
-The [tools.sln](./msvc_build/vs10/tools.sln) build solution file is used to
-build the text dumper tools.
+The [tools.sln](./msvc_build/vs10/tools.sln) build solution file is used to build the text dumper tools.
 
 
 ## Docker
@@ -161,6 +127,7 @@ build the text dumper tools.
 A [Dockerfile](./Dockerfile) is provided for building a Docker image containing a set of tools from bmx, libMXF and AAF SDK.
 
 The Dockerfile contains a `build` and `runtime` layer:
+
 * `build`: builds and checks the libMXF, libMXF++ and bmx code.
 * `runtime`: provides the commandline tool executables built in the `build` layer.
 
@@ -170,8 +137,7 @@ The runtime Docker image can be built using docker build,
 
 `DOCKER_BUILDKIT=1 docker build -t bmxtools .`
 
-The `LIBMXF_GIT` and `LIBMXFPP_GIT` ARGS default to the Sourceforge git URLs. These can be changed
-by using the `--build-arg` commandline argument.
+The `LIBMXF_GIT` and `LIBMXFPP_GIT` ARGS default to the Sourceforge git URLs. These can be changed by using the `--build-arg` commandline argument.
 
 If you are behind a proxy then remember to use the `--build-arg` commandline arguments to set the Docker proxy ARGS.
 
@@ -209,5 +175,4 @@ Source distributions, including dependencies for the Windows build, and Windows 
 
 ## License
 
-The bmx library is provided under the BSD 3-clause license. See the
-[COPYING](./COPYING) file provided with this library for more details.
+The bmx library is provided under the BSD 3-clause license. See the [COPYING](./COPYING) file provided with this library for more details.

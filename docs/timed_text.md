@@ -13,6 +13,7 @@ The Timed Text can be re-positioned by adding a Filler at the start of the Timed
 ## Operational Patterns
 
 The MXF Operational Pattern signalled by the bmx implementation in the MXF file can be different from the baseline OP1a based on 2 factors:
+
 * are there more than 1 track in the file?
 * are Fillers used to align the Timed Text?
 
@@ -56,6 +57,7 @@ The manifest file consists of a set of name/value property pairs separated by a 
 The manifest file must start with properties associated with the Timed Text XML document and this can be followed by properties associated with each ancillary resource. Each ancillary resource must start with the `resource_file` property and this is used to detect when a new ancillary resource is being defined.
 
 The properties for the Timed Text XML document are as follows.
+
 * `file` (*required*): The filename of the Timed Text XML document. A relative filename is relative to the location of the manifest file.
 * `profile` (*required*): The IMSC profile designator suffix, one of `imsc1/text`, `imsc1/image`, `imsc1.1/text` or `imsc1.1/image`.
 * `encoding` (*required*): The XML encoding, e.g. `UTF-8`.
@@ -64,6 +66,7 @@ The properties for the Timed Text XML document are as follows.
 * `start` (*optional*): Specifies the non-zero start position for the Timed Text. The value is either a timecode (HH:MM:SS:FF or HH:MM:SS;FF) or a position in media edit rate. It is assumed to be 0 if not set.
 
 The properties for the ancillary resource are as follows.
+
 * `resource_file` (*required*): The filename of the resource. A relative filename is relative to the location of the manifest file.
 * `resource_id` (*required*): The identifier associated with the resource. The value is a UUID URN.
 * `mime_type` (*required*): The MIME type for the resource.
