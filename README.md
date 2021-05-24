@@ -6,18 +6,20 @@ bmx is used to support standardisation efforts in the broadcast industry. It pro
 
 bmx provides a set of commandline applications:
 
-* `raw2bmx`: create MXF files from raw (unwrapped) essence files
-* `bmxtranswrap`: re-wrap from one MXF file to another MXF file
-* `mxf2raw`: output MXF file metadata, extract raw essence, calculate MD5 etc.
-* `bmxparse`: text dumper for raw essence files that uses the bmx library's parser class
+* **raw2bmx**: create MXF files from raw essence files
+* **bmxtranswrap**: re-wrap from one MXF file to another MXF file
+* **mxf2raw**: output MXF file metadata and raw essence
+* **bmxparse**: text dump raw essence files using the bmx library's parser class
 
-bmx provides a set of file format text dumper tools:
+bmx provides a set of file format text dumper and essence extraction tools:
 
-* `h264dump`: text dumper for raw H.264 bitstream files
-* `movdump`: text dumper for Quicktime / MP4 files
-* `rdd36dump`: text dumper for SMPTE RDD 36 (Apple ProRes) bitstream files
-* `vc2dump`:  text dumper for SMPTE ST 2042 VC-2 bitstream files
-* `MXFDump`: text dumper for MXF files from the [AAF SDK](https://sourceforge.net/projects/aaf/). This utility is made available and built as part of libMXF.
+* **h264dump**: text dump raw H.264 bitstream files
+* **j2cdump**: text dump raw JPEG 2000 codestreams
+* **jp2extract**: extract JPEG 2000 codestream from a JP2 file (ISO/IEC 15444-1 / ITU T.800 Annex I)
+* **movdump**: text dump Quicktime / MP4 files
+* **rdd36dump**: text dump SMPTE RDD 36 (Apple ProRes) bitstream files
+* **vc2dump**:  text dump SMPTE ST 2042 VC-2 bitstream files
+* **MXFDump**: text dumper for MXF files from the [AAF SDK](https://sourceforge.net/projects/aaf/). This utility is made available and built as part of libMXF.
 
 The following input and output wrapper formats and flavours are supported:
 
@@ -36,6 +38,7 @@ The following essence formats are supported:
 * [SMPTE ST 356](https://ieeexplore.ieee.org/document/7290684) D-10 video, 30 / 40 / 50 MBit/s
 * [DV](https://en.wikipedia.org/wiki/DV) video, 25 / 50 / 100 MBit/s
 * [MPEG-2](https://www.itu.int/rec/T-REC-H.262) Long GOP video, 422P@HL, MP@HL (1920 and 1440) and MP@H14
+* [JPEG 2000](https://www.itu.int/rec/T-REC-T.800) video
 * [H.264](https://www.itu.int/rec/T-REC-H.264) video
 * [SMPTE ST 2019](https://ieeexplore.ieee.org/document/7291983) VC-3 video (Avid DNxHD)
 * [SMPTE ST 2042](https://ieeexplore.ieee.org/document/7967896) VC-2 video
@@ -52,8 +55,8 @@ The following essence formats are supported:
 A number of topics are described in more detail in the [docs/](docs/) directory,
 including the following:
 
-* Timed Text: [docs/timed_text.md](./docs/timed_text.md)
-* ... todo
+* [Timed Text](./docs/timed_text.md)
+* [JPEG 2000](./docs/jpeg_2000.md)
 
 
 ## Build and Installation
@@ -126,10 +129,10 @@ The [tools.sln](./msvc_build/vs10/tools.sln) build solution file is used to buil
 
 A [Dockerfile](./Dockerfile) is provided for building a Docker image containing a set of tools from bmx, libMXF and AAF SDK.
 
-The Dockerfile contains a `build` and `runtime` layer:
+The Dockerfile contains a **build** and **runtime** layer:
 
-* `build`: builds and checks the libMXF, libMXF++ and bmx code.
-* `runtime`: provides the commandline tool executables built in the `build` layer.
+* **build**: builds and checks the libMXF, libMXF++ and bmx code.
+* **runtime**: provides the commandline tool executables built in the `build` layer.
 
 ### Build
 
