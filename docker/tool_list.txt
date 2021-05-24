@@ -7,6 +7,8 @@ Tools from bmx:
   bmxtranswrap:     re-wrap from one MXF file to another MXF file
   mxf2raw:          output MXF file metadata and raw essence
   raw2bmx:          create MXF files from raw essence files
+  j2cdump:          text dump raw JPEG 2000 codestreams
+  jp2extract:       extract JPEG 2000 codestream from a JP2 file (Annex I)
   h264dump:         text dump raw H.264 essence files
   movdump:          text dump Quicktime / MP4 container files
   rdd36dump:        text dump raw SMPTE RDD 36 (Apple ProRes) essence files
