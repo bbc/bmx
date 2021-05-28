@@ -248,3 +248,21 @@ void RawEssenceReader::ShiftSampleData(uint32_t to_offset, uint32_t from_offset)
     mSampleBuffer.SetSize(to_offset + size);
 }
 
+uint32_t RawEssenceReader::AppendBytes(const unsigned char *bytes, uint32_t size)
+{
+    BMX_ASSERT(mMaxReadLength == 0 || mTotalReadLength <= mMaxReadLength);
+
+    uint32_t actual_size = size;
+    if (mMaxReadLength > 0 && mTotalReadLength + size > mMaxReadLength)
+        actual_size = (uint32_t)(mMaxReadLength - mTotalReadLength);
+    if (actual_size == 0)
+        return 0;
+
+    mSampleBuffer.Grow(actual_size);
+    memcpy(mSampleBuffer.GetBytesAvailable(), bytes, actual_size);
+
+    mTotalReadLength += actual_size;
+    mSampleBuffer.IncrementSize(actual_size);
+
+    return actual_size;
+}

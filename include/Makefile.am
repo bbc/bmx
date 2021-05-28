@@ -132,6 +132,7 @@ nobase_library_include_HEADERS = \
 	bmx/essence_parser/SoundConversion.h \
 	bmx/essence_parser/AVCEssenceParser.h \
 	bmx/essence_parser/AVCIRawEssenceReader.h \
+	bmx/essence_parser/D10RawEssenceReader.h \
 	bmx/essence_parser/DVEssenceParser.h \
 	bmx/essence_parser/EssenceFilter.h \
 	bmx/essence_parser/EssenceParser.h \

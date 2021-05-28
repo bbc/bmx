@@ -71,6 +71,15 @@ KLVEssenceSource::KLVEssenceSource(EssenceSource *child_source, const mxfKey *ke
     mValueLen = 0;
 }
 
+KLVEssenceSource::KLVEssenceSource(EssenceSource *child_source, const mxfKey *key, uint64_t start_value_len)
+{
+    mChildSource = child_source;
+    mKey = *key;
+    mTrackNum = 0;
+    mState = READ_V_STATE;
+    mValueLen = start_value_len;
+}
+
 KLVEssenceSource::KLVEssenceSource(EssenceSource *child_source, uint32_t track_num)
 {
     mChildSource = child_source;

@@ -75,6 +75,8 @@ protected:
     uint32_t ReadBytes(uint32_t size);
     void ShiftSampleData(uint32_t to_offset, uint32_t from_offset);
 
+    uint32_t AppendBytes(const unsigned char *bytes, uint32_t size);
+
 protected:
     EssenceSource *mEssenceSource;
 

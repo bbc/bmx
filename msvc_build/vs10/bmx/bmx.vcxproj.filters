@@ -395,6 +395,9 @@
     <ClInclude Include="..\..\..\include\bmx\essence_parser\AVCIRawEssenceReader.h">
       <Filter>Header Files\essence_parser</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\bmx\essence_parser\D10RawEssenceReader.h">
+      <Filter>Header Files\essence_parser</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\bmx\essence_parser\DVEssenceParser.h">
       <Filter>Header Files\essence_parser</Filter>
     </ClInclude>
@@ -1007,6 +1010,9 @@
       <Filter>Source Files\essence_parser</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\essence_parser\AVCIRawEssenceReader.cpp">
+      <Filter>Source Files\essence_parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\essence_parser\D10RawEssenceReader.cpp">
       <Filter>Source Files\essence_parser</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\essence_parser\DVEssenceParser.cpp">

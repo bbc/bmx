@@ -173,6 +173,7 @@
     <ClInclude Include="..\..\..\include\bmx\d10_mxf\D10XMLTrack.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\AVCEssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\AVCIRawEssenceReader.h" />
+    <ClInclude Include="..\..\..\include\bmx\essence_parser\D10RawEssenceReader.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\DVEssenceParser.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\EssenceFilter.h" />
     <ClInclude Include="..\..\..\include\bmx\essence_parser\EssenceParser.h" />
@@ -379,6 +380,7 @@
     <ClCompile Include="..\..\..\src\d10_mxf\D10XMLTrack.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\AVCEssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\AVCIRawEssenceReader.cpp" />
+    <ClCompile Include="..\..\..\src\essence_parser\D10RawEssenceReader.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\DVEssenceParser.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\EssenceParserUtils.cpp" />
     <ClCompile Include="..\..\..\src\essence_parser\FileEssenceSource.cpp" />

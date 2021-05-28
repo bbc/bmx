@@ -64,6 +64,7 @@
 #include <bmx/essence_parser/FileEssenceSource.h>
 #include <bmx/essence_parser/KLVEssenceSource.h>
 #include <bmx/essence_parser/FilePatternEssenceSource.h>
+#include <bmx/essence_parser/D10RawEssenceReader.h>
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/wave/WaveFileIO.h>
@@ -298,6 +299,13 @@ static bool open_raw_reader(RawInput *input)
         input->essence_type == AVCI50_720P)
     {
         input->raw_reader = new AVCIRawEssenceReader(essence_source);
+    }
+    else if (input->essence_type_group == D10_ESSENCE_GROUP ||
+             input->essence_type == D10_30 ||
+             input->essence_type == D10_40 ||
+             input->essence_type == D10_50)
+    {
+        input->raw_reader = new D10RawEssenceReader(essence_source);
     }
     else
     {
