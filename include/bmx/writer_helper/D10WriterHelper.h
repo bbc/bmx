@@ -55,12 +55,16 @@ public:
                       const CDataBuffer **data_array, uint32_t *array_size);
 
 private:
+    uint32_t CheckForD10KL(const unsigned char *data, uint32_t size);
+
+private:
     ByteArray mZeroBuffer;
     CDataBuffer mDataArray[2];
     uint32_t mMaxSampleSize;
     bool mOutputMaxSampleSize;
     bool mHaveInfoRemovePadding;
     bool mHaveInfoAddPadding;
+    bool mHaveWarnKLPrefixRemoved;
 };
 
 

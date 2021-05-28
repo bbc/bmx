@@ -35,6 +35,8 @@
 
 #include <cstring>
 
+#include <libMXF++/MXF.h>
+
 #include <bmx/writer_helper/D10WriterHelper.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -43,6 +45,8 @@
 using namespace std;
 using namespace bmx;
 
+
+static const mxfKey BASE_D10_ELEMENT_KEY = MXF_D10_PICTURE_EE_K(0x00);
 
 
 D10WriterHelper::D10WriterHelper()
@@ -53,6 +57,7 @@ D10WriterHelper::D10WriterHelper()
     mOutputMaxSampleSize = false;
     mHaveInfoRemovePadding = false;
     mHaveInfoAddPadding = false;
+    mHaveWarnKLPrefixRemoved = false;
 }
 
 D10WriterHelper::~D10WriterHelper()
@@ -78,24 +83,37 @@ void D10WriterHelper::ProcessFrame(const unsigned char *data, uint32_t size,
     mDataArray[0].size = size;
     array_size = 1;
 
-    if (mOutputMaxSampleSize && size < mMaxSampleSize) {
+    // Remove D-10 MXF KL from the start of the video frame essence.
+    // Quicktime files sometimes include the D-10 MXF KL prefix in the video frame essence.
+    uint32_t d10_kl_prefix_len = CheckForD10KL(mDataArray[0].data, mDataArray[0].size);
+    if (d10_kl_prefix_len > 0) {
+        mDataArray[0].data += d10_kl_prefix_len;
+        mDataArray[0].size -= d10_kl_prefix_len;
+
+        if (!mHaveWarnKLPrefixRemoved) {
+            log_warn("Removing D-10 MXF KL prefix from the start of the D-10 frame essence\n");
+            mHaveWarnKLPrefixRemoved = true;
+        }
+    }
+
+    if (mOutputMaxSampleSize && mDataArray[0].size < mMaxSampleSize) {
         if (!mHaveInfoAddPadding) {
             log_info("Adding padding bytes to D-10 frame\n");
             mHaveInfoAddPadding = true;
         }
 
         uint32_t zero_size = mZeroBuffer.GetSizeAvailable();
-        if (zero_size < mMaxSampleSize - size) {
-            mZeroBuffer.Reallocate(mMaxSampleSize - size);
+        if (zero_size < mMaxSampleSize - mDataArray[0].size) {
+            mZeroBuffer.Reallocate(mMaxSampleSize - mDataArray[0].size);
             memset(&mZeroBuffer.GetBytesAvailable()[zero_size], 0,
                    mZeroBuffer.GetSizeAvailable() - zero_size);
         }
 
         mDataArray[1].data = mZeroBuffer.GetBytesAvailable();
-        mDataArray[1].size = mMaxSampleSize - size;
+        mDataArray[1].size = mMaxSampleSize - mDataArray[0].size;
         array_size++;
-    } else if (size > mMaxSampleSize) {
-        BMX_CHECK_M(check_excess_d10_padding(data, size, mMaxSampleSize),
+    } else if (mDataArray[0].size > mMaxSampleSize) {
+        BMX_CHECK_M(check_excess_d10_padding(mDataArray[0].data, mDataArray[0].size, mMaxSampleSize),
                     ("Failed to remove D-10 frame padding bytes; found non-zero bytes"));
         if (!mHaveInfoRemovePadding) {
             log_info("Removing padding bytes from D-10 frame\n");
@@ -109,3 +127,21 @@ void D10WriterHelper::ProcessFrame(const unsigned char *data, uint32_t size,
     *data_array = mDataArray;
 }
 
+uint32_t D10WriterHelper::CheckForD10KL(const unsigned char *data, uint32_t size)
+{
+    // Check whether the data starts with a D-10 MXF KL and if it does return the KL length
+    if (size >= 17) {
+        mxfKey prefix;
+        mxf_get_ul(data, static_cast<mxfUL*>(&prefix));
+        if (mxf_equals_key_prefix(&prefix, &BASE_D10_ELEMENT_KEY, 15)) {
+            uint32_t llen = 1;
+            if ((data[16] & 0x80))
+                llen += (data[16] & 0x7f);
+
+            if (llen <= 9 && size >= 16 + llen)
+                return 16 + llen;
+        }
+    }
+
+    return 0;
+}
