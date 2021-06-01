@@ -864,6 +864,7 @@ int main(int argc, const char** argv)
     BMX_OPT_PROP_DECL_DEF(uint32_t, head_fill, 0);
     mxfThreeColorPrimaries three_color_primaries;
     mxfColorPrimary color_primary;
+    bool real_essence_regtest = false;
     int value, num, den;
     unsigned int uvalue;
     int64_t i64value;
@@ -1768,6 +1769,11 @@ int main(int argc, const char** argv)
                 return 1;
             }
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--regtest-real") == 0)
+        {
+            BMX_REGRESSION_TEST = true;
+            real_essence_regtest = true;
         }
         else
         {
@@ -3856,6 +3862,7 @@ int main(int argc, const char** argv)
 
             // TODO: more parse friendly regression test essence data
             if (BMX_REGRESSION_TEST &&
+                !real_essence_regtest &&
                 input->essence_type != RDD36_422 &&
                 input->essence_type != RDD36_4444)
             {

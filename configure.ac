@@ -300,6 +300,7 @@ AC_CONFIG_FILES([
 	test/avid_mxf/Makefile
 	test/mxf_reader/Makefile
 	test/d10_mxf/Makefile
+	test/d10_qt_klv/Makefile
 	test/rdd9_mxf/Makefile
 	test/wave/Makefile
 	test/growing_file/Makefile
