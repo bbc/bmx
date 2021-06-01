@@ -29,7 +29,7 @@ create_mxf_cdci()
         --white-level 940 \
         --color-range 897 \
         --display-primaries 35400,14600,8500,39850,6550,2300 \
-        --display-chroma 15635,16450 \
+        --display-white-point 15635,16450 \
         --display-max-luma 10000000 \
         --display-min-luma 50 \
         --fill-pattern-gaps \
@@ -55,7 +55,7 @@ create_mxf_rgba()
         --comp-min-ref 64 \
         --scan-dir 0 \
         --display-primaries 35400,14600,8500,39850,6550,2300 \
-        --display-chroma 15635,16450 \
+        --display-white-point 15635,16450 \
         --display-max-luma 10000000 \
         --display-min-luma 50 \
         --fill-pattern-gaps \
