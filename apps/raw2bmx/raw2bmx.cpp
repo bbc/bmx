@@ -769,6 +769,35 @@ static void usage(const char *cmd)
     fprintf(stderr, "                 <j2cpattern> must not contain any other '%%' characters.\n");
     fprintf(stderr, "                 If --fill-pattern-gaps option is used then gaps in frame numbers are filled by repeating the previous frame.\n");
     fprintf(stderr, "                 Example: 'inputs/frame_%%d.j2c' for input files `inputs/frame_00001.j2c' etc..\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, " The track mapping <expr> format is one of the following:\n");
+    fprintf(stderr, "     'mono'     : each input audio channel is mapped to a single-channel output track\n");
+    fprintf(stderr, "     'stereo'   : input audio channels are paired to stereo-channel output tracks\n");
+    fprintf(stderr, "                  A silence channel is added to the last output track if the channel count is odd\n");
+    fprintf(stderr, "     'singlemca': all input audio channels are mapped to a single multi-channel output track\n");
+    fprintf(stderr, "     <pattern>  : a pattern defining how input channels map to output track channels - see below\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, " The track mapping <pattern> specifies how input audio channels are mapped to output track channels\n");
+    fprintf(stderr, " A <pattern> consists of a list of <group>s separated by a ';'.\n");
+    fprintf(stderr, " A <group> starts with an optional 'm', followed by a list of <element> separated by a ','.\n");
+    fprintf(stderr, "   An 'm' indicates that each channel in the <group> is mapped to separate single-channel output track.\n");
+    fprintf(stderr, "   If an 'm' is not present then the channels are mapped to a single output track.\n");
+    fprintf(stderr, " A <element> is either a <channel>, <range>, <silence> or <remainder>.\n");
+    fprintf(stderr, " A <channel> is an input channel number starting from 0.\n");
+    fprintf(stderr, "   The input channel number is the number derived from the input track order reported by mxf2raw for the\n");
+    fprintf(stderr, "   input files in the same order and including any --disable input options. Each channel in a track\n");
+    fprintf(stderr, "   contributes 1 to the overall channel number.\n");
+    fprintf(stderr, " A <range> is 2 <channel>s separated by a '-' and includes all channels starting with the first number\n");
+    fprintf(stderr, "   and ending with the last number.\n");
+    fprintf(stderr, " A <silence> is 's' followed by a <count> and results in <count> silence channels added to the output track.\n");
+    fprintf(stderr, " A <remainder> is 'x', and results in all remaining channels being added to the output track.\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Here are some <pattern> examples:\n");
+    fprintf(stderr, "    'mx'     : equivalent to 'mono'\n");
+    fprintf(stderr, "    '0,1;x'  : the first 2 channels mapped to a stereo output track and all remaining channels mapped\n");
+    fprintf(stderr, "               to a single multi-channel track\n");
+    fprintf(stderr, "    '2-7;0,1': 6 channel output track followed by a 2 channel output track\n");
+    fprintf(stderr, "    '0,1,s2' : 2 input channels plus 2 silence channels mapped to a single output track\n");
 }
 
 int main(int argc, const char** argv)
