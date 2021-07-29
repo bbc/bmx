@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+    <title>RDD-6 XML Creator</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/custom.css" rel="stylesheet">
+
+  </head>
+  <body>
+
+    <div class="container">
+
+     <div class="page-header">
+      <h1>RDD-6 XML Creator</h1>
+     </div>
+
+     <div class="row">
+      <div class="col-md-12">
+
+        <form id="audiometadata" class="form-horizontal">
+          <div class="form-group">
+            <label for="description" class="col-sm-3">Description</label>
+            <div class="col-sm-9">
+              <input id="description" class="form-control" type="text" value="" size="30" maxlength="30"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="dialogueLevel" class="col-sm-3 control-label">Dialogue Level</label>
+            <div class="col-sm-9">
+              <select id="dialogueLevel" class="form-control">
+                <option>-1</option>
+                <option>-2</option>
+                <option>-3</option>
+                <option>-4</option>
+                <option>-5</option>
+                <option>-6</option>
+                <option>-7</option>
+                <option>-8</option>
+                <option>-9</option>
+                <option>-10</option>
+                <option>-11</option>
+                <option>-12</option>
+                <option>-13</option>
+                <option>-14</option>
+                <option>-15</option>
+                <option>-16</option>
+                <option>-17</option>
+                <option>-18</option>
+                <option>-19</option>
+                <option>-20</option>
+                <option>-21</option>
+                <option>-22</option>
+                <option selected>-23</option>
+                <option>-24</option>
+                <option>-25</option>
+                <option>-26</option>
+                <option>-27</option>
+                <option>-28</option>
+                <option>-29</option>
+                <option>-30</option>
+                <option>-31</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="lineModeCompression" class="col-sm-3">Line Mode Compression</label>
+            <div class="col-sm-9">
+              <select id="lineModeCompression" class="form-control">
+                <option value="film_light" selected>Film Light</option>
+                <option value="film_standard">Film Standard</option>
+                <option value="music_light">Music Light</option>
+                <option value="music_standard">Music Standard</option>
+                <option value="speech">Speech</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="rfModeCompression" class="col-sm-3">RF Mode Compression</label>
+            <div class="col-sm-9">
+              <select id="rfModeCompression" class="form-control">
+                <option value="film_light" selected>Film Light</option>
+                <option value="film_standard">Film Standard</option>
+                <option value="music_light">Music Light</option>
+                <option value="music_standard">Music Standard</option>
+                <option value="speech">Speech</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="centreDownMixLevel" class="col-sm-3">Centre Down Mix Level</label>
+            <div class="col-sm-9">
+              <select id="centreDownMixLevel" class="form-control">
+                <option selected>-3.0</option>
+                <option>-4.5</option>
+                <option>-6.0</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="surroundDownMixLevel" class="col-sm-3">Surround Down Mix Level</label>
+            <div class="col-sm-9">
+              <select id="surroundDownMixLevel" class="form-control">
+                <option selected>-3.0</option>
+                <option>-6.0</option>
+                <option>-inf</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="surround3DBAttn" class="col-sm-3">Surround 3dB Attn.</label>
+            <div class="col-sm-9">
+              <select id="surround3DBAttn" class="form-control">
+                <option value="true">Enabled</option>
+                <option value="false" selected>Disabled</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="dolbySurroundMode" class="col-sm-3">Dolby Surround Mode</label>
+            <div class="col-sm-9">
+              <select id="dolbySurroundMode" class="form-control">
+                <option value="true">Enabled</option>
+                <option value="false" selected>Disabled</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="prefStereoDownMix" class="col-sm-3">Preferred Stereo Down Mix</label>
+            <div class="col-sm-9">
+              <select id="prefStereoDownMix" class="form-control">
+                <option value="lo_ro" selected>LoRo</option>
+                <option value="lt_rt">LtRt</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="surroundPhaseShift" class="col-sm-3">Surround Phase Shift</label>
+            <div class="col-sm-9">
+              <select id="surroundPhaseShift" class="form-control">
+                <option value="true">Enabled</option>
+                <option value="false" selected>Disabled</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="col-sm-offset-3 col-sm-3">
+              <button type="submit" class="btn btn-primary">Save XML</button>
+            </div>
+            <div class="col-sm-3">
+              <button type="reset" class="btn btn-warning">Reset</button>
+            </div>
+          </div>
+        </form>
+
+      </div>
+     </div>
+    </div>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/FileSaver.min.js"></script>
+
+    <script src="js/dpp-rdd6-xml.js"></script>
+  </body>
+</html>

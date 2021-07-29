@@ -1,0 +1,8 @@
+.form-horizontal .control-label {
+  text-align:left !important;
+}
+
+.form-horizontal .form-control {
+  width:auto;
+}
+
