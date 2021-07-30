@@ -57,7 +57,7 @@ including the following:
 
 * [Timed Text](./docs/timed_text.md)
 * [JPEG 2000](./docs/jpeg_2000.md)
-* [RDD-6 XML Creator](./meta/rdd6_xml_creator/README.md)
+* [RDD 6 XML Creator](./meta/rdd6_xml_creator/README.md)
 
 
 ## Build and Installation
