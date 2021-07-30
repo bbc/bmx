@@ -126,7 +126,7 @@ void RDD6DolbyEComplete::GetProgramConfigInfo(const unsigned char *payload, uint
 
 void RDD6DolbyEComplete::UpdateStatic(unsigned char *payload, uint32_t size, const vector<uint8_t> &description_text_chars)
 {
-    BMX_CHECK(description_text_chars.size() < 8);
+    BMX_CHECK(description_text_chars.size() <= 8);
 
     PutBitBuffer buffer(payload, size);
 
@@ -1990,7 +1990,7 @@ void RDD6MetadataSequence::Clear()
 
 void RDD6MetadataSequence::AppendDescriptionText(const string &text)
 {
-    BMX_ASSERT(description_text.size() < 8);
+    BMX_ASSERT(description_text.size() < 8);  // one less than the max 8 as one is added here
     description_text.push_back(make_pair(text, -1));
 }
 
