@@ -3952,8 +3952,15 @@ int main(int argc, const char** argv)
                 if (input->raw_reader->GetNumSamples() != 0) {
                     rdd36_parser->ParseFrameInfo(input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize());
 
-                    if (!frame_rate_set && rdd36_parser->HaveFrameRate())
-                        frame_rate = rdd36_parser->GetFrameRate();
+                    if (!frame_rate_set) {
+                        if (rdd36_parser->HaveFrameRate()) {
+                            frame_rate = rdd36_parser->GetFrameRate();
+                        } else {
+                            log_warn("No frame rate set for '%s'; using default frame rate %d/%d\n",
+                                     essence_type_to_string(input->essence_type),
+                                     frame_rate.numerator, frame_rate.denominator);
+                        }
+                    }
 
                     // other parameters derived from the bitstream metadata will be set in the RDD36MXFDescriptorHelper
                 }
@@ -4226,8 +4233,15 @@ int main(int argc, const char** argv)
                     throw false;
                 }
 
-                if (!frame_rate_set && avc_parser->HaveFrameRate())
-                    frame_rate = avc_parser->GetFrameRate();
+                if (!frame_rate_set) {
+                    if (avc_parser->HaveFrameRate()) {
+                        frame_rate = avc_parser->GetFrameRate();
+                    } else {
+                        log_warn("No frame rate set for '%s'; using default frame rate %d/%d\n",
+                                 essence_type_to_string(input->essence_type),
+                                 frame_rate.numerator, frame_rate.denominator);
+                    }
+                }
 
                 // re-open the raw reader to use the special AVCI reader
                 delete input->raw_reader;
@@ -4268,8 +4282,15 @@ int main(int argc, const char** argv)
                     }
                     input->essence_type = avc_parser->GetEssenceType();
 
-                    if (!frame_rate_set && avc_parser->HaveFrameRate())
-                        frame_rate = avc_parser->GetFrameRate();
+                    if (!frame_rate_set) {
+                        if (avc_parser->HaveFrameRate()) {
+                            frame_rate = avc_parser->GetFrameRate();
+                        } else {
+                            log_warn("No frame rate set for '%s'; using default frame rate %d/%d\n",
+                                    essence_type_to_string(input->essence_type),
+                                    frame_rate.numerator, frame_rate.denominator);
+                        }
+                    }
 
                     // TODO: other parameters?
                 }
