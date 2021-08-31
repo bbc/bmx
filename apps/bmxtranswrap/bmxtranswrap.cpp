@@ -361,6 +361,8 @@ EssenceType process_assumed_essence_type(const MXFTrackInfo *input_track_info, E
 static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
+    fprintf(stderr, "Re-wrap from one MXF file to another MXF file\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "Usage: %s <<options>> [<<input options>> <mxf input>]+\n", cmd);
     fprintf(stderr, "   Use <mxf input> '-' for standard input\n");
     fprintf(stderr, "Options (* means option is required):\n");

@@ -385,6 +385,8 @@ static bool parse_avci_guess(const char *str, bool *interlaced, bool *progressiv
 static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
+    fprintf(stderr, "Create MXF files from raw essence files\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "Usage: %s <<options>> [<<input options>> <input>]+\n", cmd);
     fprintf(stderr, "Options (* means option is required):\n");
     fprintf(stderr, "  -h | --help             Show usage and exit\n");

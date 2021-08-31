@@ -515,6 +515,8 @@ static int read_next_frame_offset(FILE *offsets_file, int64_t *offset_out)
 
 static void print_usage(const char *cmd)
 {
+    fprintf(stderr, "Text dump SMPTE RDD 36 (Apple ProRes) bitstream files\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "Usage: %s [options] <filename>\n", cmd);
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "  -h | --help        Show help and exit\n");

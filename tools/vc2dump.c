@@ -1295,6 +1295,8 @@ static int parse_vc2()
 
 static void print_usage(const char *cmd)
 {
+    fprintf(stderr, "Text dump SMPTE ST 2042 VC-2 bitstream files\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "Usage: %s [options] [<filename>]\n", cmd);
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "  -h | --help      Show help and exit\n");

@@ -2566,6 +2566,8 @@ static int parse_nal_unit(ParseContext *context)
 
 static void print_usage(const char *cmd)
 {
+    fprintf(stderr, "Text dump raw H.264 bitstream files\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "Usage: %s [options] <filename>\n", cmd);
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "  -h | --help      Show help and exit\n");

@@ -4162,6 +4162,8 @@ static void dump_file()
 
 static void usage(const char *cmd)
 {
+    fprintf(stderr, "Text dump Quicktime / MP4 files\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "Usage: %s [options] <quicktime filename>\n", cmd);
     fprintf(stderr, "Options:\n");
     fprintf(stderr, " -h | --help       Print this usage message and exit\n");

@@ -681,6 +681,8 @@ static bool parse_type_str(const char *type_str, InputType *input_type)
 static void usage(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
+    fprintf(stderr, "Text dump raw essence files using the bmx library's parser class\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "Usage: %s <<options>> <type> <filename>\n", cmd);
     fprintf(stderr, "    <type> is 'avc', 'dv', 'j2c', 'mjpeg', 'm2v', 'rdd36', 'vc2' or 'vc3'\n");
     fprintf(stderr, "Options:\n");
