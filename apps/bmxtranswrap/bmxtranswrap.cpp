@@ -590,6 +590,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --mp-track-num          Use the material package track number property to define a track order. By default the track number is set to 0\n");
     fprintf(stderr, "    --aes-3                 Use AES-3 audio mapping\n");
     fprintf(stderr, "    --kag-size-512          Set KAG size to 512, instead of 1\n");
+    fprintf(stderr, "    --system-item           Add system item\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/rdd9:\n");
     fprintf(stderr, "    --ard-zdf-hdf           Use the ARD ZDF HDF profile\n");
@@ -724,6 +725,7 @@ int main(int argc, const char** argv)
     bool ard_zdf_hdf_profile = false;
     bool aes3 = false;
     bool kag_size_512 = false;
+    bool op1a_system_item = false;
     AS10Shim as10_shim = AS10_UNKNOWN_SHIM;
     const char *output_name = "";
     Timecode start_timecode;
@@ -2152,6 +2154,10 @@ int main(int argc, const char** argv)
         {
             kag_size_512 = true;
         }
+        else if (strcmp(argv[cmdln_index], "--system-item") == 0)
+        {
+            op1a_system_item = true;
+        }
         else if (strcmp(argv[cmdln_index], "--ard-zdf-hdf") == 0)
         {
             ard_zdf_hdf_profile = true;
@@ -3143,6 +3149,8 @@ int main(int argc, const char** argv)
                     flavour |= OP1A_AES_FLAVOUR;
                 if (kag_size_512)
                     flavour |= OP1A_512_KAG_FLAVOUR;
+                if (op1a_system_item)
+                    flavour |= OP1A_SYSTEM_FLAVOUR;
                 if (min_part)
                     flavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
                 else if (body_part)
