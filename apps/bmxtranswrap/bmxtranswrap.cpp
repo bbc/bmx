@@ -595,6 +595,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  op1a/rdd9:\n");
     fprintf(stderr, "    --ard-zdf-hdf           Use the ARD ZDF HDF profile\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "  op1a/d10:\n");
+    fprintf(stderr, "    --cbe-index-duration-0  Use duration=0 if index table is CBE\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "  as10:\n");
     fprintf(stderr, "    --shim-name <name>      Shim name for AS10 (used for setting 'ShimName' metadata and setting video/sound parameters' checks)\n");
     fprintf(stderr, "                            list of known shims: %s\n", get_as10_shim_names().c_str());
@@ -823,6 +826,7 @@ int main(int argc, const char** argv)
     bool min_part = false;
     bool body_part = false;
     bool repeat_index = false;
+    bool cbe_index_duration_0 = false;
     bool clip_wrap = false;
     bool realtime = false;
     float rt_factor = 1.0;
@@ -2138,6 +2142,10 @@ int main(int argc, const char** argv)
         {
             repeat_index = true;
         }
+        else if (strcmp(argv[cmdln_index], "--cbe-index-duration-0") == 0)
+        {
+            cbe_index_duration_0 = true;
+        }
         else if (strcmp(argv[cmdln_index], "--clip-wrap") == 0)
         {
             clip_wrap = true;
@@ -3226,6 +3234,8 @@ int main(int argc, const char** argv)
         clip->SetProductInfo(company_name, product_name, product_version, version_string, product_uid);
         if (creation_date_set)
             clip->SetCreationDate(creation_date);
+        if (cbe_index_duration_0)
+            clip->ForceWriteCBEDuration0(true);
 
         if (clip_type == CW_AS02_CLIP_TYPE) {
             AS02Clip *as02_clip = clip->GetAS02Clip();
