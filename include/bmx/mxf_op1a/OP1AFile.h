@@ -58,6 +58,7 @@
 #define OP1A_MP_TRACK_NUMBER_FLAVOUR        0x0100      // set the Material Package Track Number
 #define OP1A_AS11_FLAVOUR                   0x0200
 #define OP1A_AES_FLAVOUR                    0x0400
+#define OP1A_SYSTEM_ITEM_FLAVOUR            0x0800      // add system item
 
 
 

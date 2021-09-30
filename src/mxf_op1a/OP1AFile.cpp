@@ -143,7 +143,8 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
         SetAddSystemItem(true);
     } else if ((flavour & OP1A_AS11_FLAVOUR)) {
         ReserveHeaderMetadataSpace(4 * 1024 * 1024 + 8192);
-    }
+    } else if (flavour & OP1A_SYSTEM_ITEM_FLAVOUR)
+        SetAddSystemItem(true);
 
     // use fill key with correct version number
     g_KLVFill_key = g_CompliantKLVFill_key;
