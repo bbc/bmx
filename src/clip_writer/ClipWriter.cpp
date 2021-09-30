@@ -309,6 +309,26 @@ void ClipWriter::ReserveHeaderMetadataSpace(uint32_t min_bytes)
     }
 }
 
+void ClipWriter::ForceWriteCBEDuration0(bool enable)
+{
+    switch (mType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+            mOP1AClip->ForceWriteCBEDuration0(enable);
+            break;
+        case CW_D10_CLIP_TYPE:
+            mD10Clip->ForceWriteCBEDuration0(enable);
+            break;
+        case CW_RDD9_CLIP_TYPE:
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
 ClipWriterTrack* ClipWriter::CreateTrack(EssenceType essence_type, string track_filename)
 {
     ClipWriterTrack *track = 0;

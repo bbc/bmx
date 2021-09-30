@@ -108,6 +108,7 @@ D10File::D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mVersionString = get_bmx_mxf_version_string();
     mProductUID = get_bmx_product_uid();
     mReserveMinBytes = 8192;
+    mForceWriteCBEDuration0 = false;
     mInputDuration = -1;
     mxf_get_timestamp_now(&mCreationDate);
     mxf_generate_uuid(&mGenerationUID);
@@ -222,6 +223,10 @@ void D10File::SetFileSourcePackageUID(mxfUMID package_uid)
 void D10File::ReserveHeaderMetadataSpace(uint32_t min_bytes)
 {
     mReserveMinBytes = min_bytes;
+}
+void D10File::ForceWriteCBEDuration0(bool enable)
+{
+    mForceWriteCBEDuration0 = enable;
 }
 
 void D10File::SetInputDuration(int64_t duration)
@@ -393,7 +398,7 @@ void D10File::CompleteWrite()
 
         // update and re-write the index table segment
 
-        mIndexSegment->setIndexDuration(GetDuration());
+        mIndexSegment->setIndexDuration(mForceWriteCBEDuration0 ? 0 : GetDuration());
         mIndexSegment->write(mMXFFile, &header_partition, 0);
 
 

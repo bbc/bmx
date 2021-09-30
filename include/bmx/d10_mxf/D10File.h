@@ -80,6 +80,7 @@ public:
     void SetFileSourcePackageUID(mxfUMID package_uid);                  // default generated
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);                // default 8192
     void SetInputDuration(int64_t duration);                            // required for single pass flavours only
+    void ForceWriteCBEDuration0(bool enable);                           // force duration=0 for CBE index table
 
 public:
     D10Track* CreateTrack(EssenceType essence_type);
@@ -160,6 +161,7 @@ private:
 
     bool mFirstWrite;
     bool mRequireBodyPartition;
+    bool mForceWriteCBEDuration0;
 
     MXFChecksumFile *mMXFChecksumFile;
     std::string mMD5DigestStr;

@@ -246,6 +246,11 @@ void OP1AFile::SetRepeatIndexTable(bool enable)
     mIndexTable->SetRepeatIndexTable(enable);
 }
 
+void OP1AFile::ForceWriteCBEDuration0(bool enable)
+{
+    mIndexTable->ForceWriteCBEDuration0(enable);
+}
+
 void OP1AFile::SetOutputStartOffset(int64_t offset)
 {
     BMX_CHECK(offset >= 0);

@@ -75,6 +75,7 @@ public:
                         std::string version, mxfUUID product_uid);
     void SetCreationDate(mxfTimestamp creation_date);
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);
+    void ForceWriteCBEDuration0(bool enable);
 
 public:
     ClipWriterTrack* CreateTrack(EssenceType essence_type, std::string track_filename = "");

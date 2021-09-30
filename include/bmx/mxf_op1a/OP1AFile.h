@@ -92,6 +92,7 @@ public:
     void SetClipWrapped(bool enable);                                   // default false (frame wrapped)
     void SetAddSystemItem(bool enable);                                 // default false, no system item
     void SetRepeatIndexTable(bool enable);                              // default false. Repeat index table in Footer if true
+    void ForceWriteCBEDuration0(bool enable);                           // force duration=0 for CBE index table
 
 public:
     void SetOutputStartOffset(int64_t offset);
