@@ -279,7 +279,8 @@ void IndexTableHelperSegment::UpdateStartPosition(int64_t position)
     BMX_ASSERT(position >= getIndexStartPosition());
     BMX_ASSERT(position - getIndexStartPosition() < getIndexDuration());
 
-    uint32_t diff_entries = (uint32_t)(getIndexStartPosition() - position);
+    uint32_t diff_entries = (uint32_t)(position - getIndexStartPosition());
+    setIndexDuration(getIndexDuration() - diff_entries);
     if (mHavePairedIndexEntries)
         diff_entries *= 2;
     mEntriesStart += diff_entries;
