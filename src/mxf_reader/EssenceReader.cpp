@@ -232,12 +232,13 @@ void EssenceReaderBuffer::ClearFromFrame(size_t offset)
 
 
 
-EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete)
+EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete, bool parse_only)
 : mEssenceChunkHelper(file_reader), mIndexTableHelper(file_reader), mReadFrameBuffer(file_reader)
 {
     mFileReader = file_reader;
     mFile = file_reader->mFile;
     mFileIsComplete = file_is_complete;
+    mParseOnly = parse_only;
     mFrameMetadataReader = new FrameMetadataReader(file_reader);
     mReadStartPosition = 0;
     mReadDuration = 0;
@@ -633,10 +634,14 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
 
                 if (frame) {
                     BMX_CHECK(len <= UINT32_MAX);
-
                     frame->Grow((uint32_t)len);
-                    uint32_t num_read = mFile->read(frame->GetBytesAvailable(), (uint32_t)len);
-                    BMX_CHECK(num_read == len);
+                    if (!mParseOnly)
+                    {
+                        uint32_t num_read = mFile->read(frame->GetBytesAvailable(), (uint32_t)len);
+                        BMX_CHECK(num_read == len);
+                    } else {
+                        mFile->skip(len);
+                    }
                     frame->IncrementSize((uint32_t)len);
                     frame->num_samples++;
                 } else {

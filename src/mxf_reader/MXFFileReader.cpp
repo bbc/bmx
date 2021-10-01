@@ -149,6 +149,7 @@ MXFFileReader::MXFFileReader()
 
     mFileId = (size_t)(-1);
     mFile = 0;
+    mOpenModeFlags = 0;
     mEmptyFrames = false;
     mEmptyFramesSet = false;
     mHeaderMetadata = 0;
@@ -249,7 +250,7 @@ void MXFFileReader::SetMCALabelIndex(MXFMCALabelIndex *label_index, bool take_ow
         mExternalReaders[i]->SetMCALabelIndex(label_index, false);
 }
 
-MXFFileReader::OpenResult MXFFileReader::Open(string filename)
+MXFFileReader::OpenResult MXFFileReader::Open(string filename, int mode_flags)
 {
     File *file = 0;
     try
@@ -260,7 +261,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(string filename)
         if (filename.empty())
             result = Open(file, URI("stdin:"), URI(), "");
         else
-            result = Open(file, filename);
+            result = Open(file, filename, mode_flags);
         if (result != MXF_RESULT_SUCCESS)
             delete file;
 
@@ -273,7 +274,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(string filename)
     }
 }
 
-MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
+MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename, int mode_flags)
 {
     try
     {
@@ -291,7 +292,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
             }
         }
 
-        return Open(file, abs_uri, rel_uri, filename);
+        return Open(file, abs_uri, rel_uri, filename, mode_flags);
     }
     catch (...)
     {
@@ -299,13 +300,14 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, string filename)
     }
 }
 
-MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, const URI &rel_uri, const string &filename)
+MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, const URI &rel_uri, const string &filename, int mode_flags)
 {
     OpenResult result;
 
     try
     {
         mFile = file;
+        mOpenModeFlags = mode_flags;
         mFileId = mFileIndex->RegisterFile(abs_uri, rel_uri, filename);
 
         // read the header partition pack and check the operational pattern
@@ -380,7 +382,7 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, co
 
         // create internal essence reader
         if (!mInternalTrackReaders.empty() && mBodySID != 0) {
-            mEssenceReader = new EssenceReader(this, file_is_complete);
+            mEssenceReader = new EssenceReader(this, file_is_complete, mOpenModeFlags & MXF_MODE_PARSE_ONLY);
 
             CheckRequireFrameInfo();
             if (mRequireFrameInfoCount > 0)
