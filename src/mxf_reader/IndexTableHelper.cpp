@@ -724,6 +724,9 @@ void IndexTableHelper::InsertVBEIndexSegment(auto_ptr<IndexTableHelperSegment> &
             } else {
                 // existing segment ends after new segment
                 segment->UpdateStartPosition(SEG_END(new_segment));
+                iter = mSegments.insert(iter, new_segment);
+                new_segment_ap.release();
+                break;
             }
         } else if (SEG_START(segment) >= SEG_END(new_segment)) {
             // existing (shortened) segment is after new segment
