@@ -279,7 +279,8 @@ void IndexTableHelperSegment::UpdateStartPosition(int64_t position)
     BMX_ASSERT(position >= getIndexStartPosition());
     BMX_ASSERT(position - getIndexStartPosition() < getIndexDuration());
 
-    uint32_t diff_entries = (uint32_t)(getIndexStartPosition() - position);
+    uint32_t diff_entries = (uint32_t)(position - getIndexStartPosition());
+    setIndexDuration(getIndexDuration() - diff_entries);
     if (mHavePairedIndexEntries)
         diff_entries *= 2;
     mEntriesStart += diff_entries;
@@ -724,6 +725,9 @@ void IndexTableHelper::InsertVBEIndexSegment(auto_ptr<IndexTableHelperSegment> &
             } else {
                 // existing segment ends after new segment
                 segment->UpdateStartPosition(SEG_END(new_segment));
+                iter = mSegments.insert(iter, new_segment);
+                new_segment_ap.release();
+                break;
             }
         } else if (SEG_START(segment) >= SEG_END(new_segment)) {
             // existing (shortened) segment is after new segment
