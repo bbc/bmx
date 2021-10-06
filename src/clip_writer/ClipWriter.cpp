@@ -323,6 +323,7 @@ void ClipWriter::ForceWriteCBEDuration0(bool enable)
         case CW_AS02_CLIP_TYPE:
         case CW_AVID_CLIP_TYPE:
         case CW_WAVE_CLIP_TYPE:
+            break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;

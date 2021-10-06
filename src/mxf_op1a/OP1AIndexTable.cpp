@@ -287,6 +287,7 @@ OP1AIndexTable::OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRationa
     mBodySID = body_sid;
     mEditRate = edit_rate;
     mForceWriteSliceCount = force_write_slice_count;
+    mForceWriteCBEDuration0 = false;
     mSingleIndexLocation = MXF_OPT_BOOL_NOT_PRESENT;
     mSingleEssenceLocation = MXF_OPT_BOOL_NOT_PRESENT;
     mForwardIndexDirection = MXF_OPT_BOOL_NOT_PRESENT;

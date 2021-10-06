@@ -3158,7 +3158,7 @@ int main(int argc, const char** argv)
                 if (kag_size_512)
                     flavour |= OP1A_512_KAG_FLAVOUR;
                 if (op1a_system_item)
-                    flavour |= OP1A_SYSTEM_FLAVOUR;
+                    flavour |= OP1A_SYSTEM_ITEM_FLAVOUR;
                 if (min_part)
                     flavour |= OP1A_MIN_PARTITIONS_FLAVOUR;
                 else if (body_part)
