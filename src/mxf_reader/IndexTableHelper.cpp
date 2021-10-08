@@ -453,7 +453,7 @@ int64_t IndexTableHelper::ReadIndexTableSegment(uint64_t len)
 
     if (new_segment->HaveConstantEditUnitSize())
         InsertCBEIndexSegment(new_segment);
-    else
+    else if (new_segment->getIndexDuration() > 0)
         InsertVBEIndexSegment(new_segment);
     // don't use new_segment from here onwards
 
