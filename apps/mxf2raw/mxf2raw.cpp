@@ -1982,6 +1982,7 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--index") == 0)
         {
             do_index_info = true;
+            do_write_info = true;
             do_parse_read = true;
         }
         else if (strcmp(argv[cmdln_index], "--avid") == 0)
