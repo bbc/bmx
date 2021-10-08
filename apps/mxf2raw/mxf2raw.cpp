@@ -2559,7 +2559,7 @@ int main(int argc, const char** argv)
         vector<CRC32Data> track_crc32_data;
         OutputFileManager output_file_manager;
 
-        AppInfoWriter *info_writer;
+        AppInfoWriter *info_writer = 0;
         if (do_write_info) {
             if (info_format == XML_INFO_FORMAT) {
                 AppXMLInfoWriter *xml_info_writer = new AppXMLInfoWriter(info_file);
