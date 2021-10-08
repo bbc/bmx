@@ -69,6 +69,11 @@ public:
 public:
     typedef enum
     {
+        MXF_MODE_PARSE_ONLY = 1,
+    } OpenMode;
+
+    typedef enum
+    {
         MXF_RESULT_SUCCESS = 0,
         MXF_RESULT_OPEN_FAIL,
         MXF_RESULT_INVALID_FILE,
@@ -95,9 +100,9 @@ public:
     virtual void SetFileIndex(MXFFileIndex *file_index, bool take_ownership);
     virtual void SetMCALabelIndex(MXFMCALabelIndex *label_index, bool take_ownership);
 
-    OpenResult Open(std::string filename);
-    OpenResult Open(mxfpp::File *file, std::string filename);
-    OpenResult Open(mxfpp::File *file, const URI &abs_uri, const URI &rel_uri, const std::string &filename);
+    OpenResult Open(std::string filename, int mode_flags=0);
+    OpenResult Open(mxfpp::File *file, std::string filename, int mode_flags=0);
+    OpenResult Open(mxfpp::File *file, const URI &abs_uri, const URI &rel_uri, const std::string &filename, int mode_flags=0);
 
     mxfpp::DataModel* GetDataModel() const            { return mDataModel; }
     mxfpp::HeaderMetadata* GetHeaderMetadata() const  { return mHeaderMetadata; }
@@ -218,6 +223,7 @@ private:
 private:
     size_t mFileId;
     mxfpp::File *mFile;
+    int mOpenModeFlags; // see OpenMode enum
 
     MXFPackageResolver *mPackageResolver;
     bool mOwnPackageResolver;

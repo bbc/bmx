@@ -1476,6 +1476,23 @@ static void write_timecodes(MXFReader *reader, Frame *frame, FILE *tc_file)
     fprintf(tc_file, "\n");
 }
 
+static void write_index(AppInfoWriter *index_writer, int64_t frame_nr, size_t track_nr, Frame *frame)
+{
+    index_writer->StartAnnotations();
+    index_writer->WriteIntegerItem("frame",     frame_nr);
+    index_writer->WriteIntegerItem("track",     track_nr);
+    index_writer->WriteIntegerItem("position",  frame->file_position+frame->kl_size);
+    index_writer->WriteIntegerItem("size",      frame->GetSize());
+    if (frame->temporal_reordering) {
+        index_writer->WriteIntegerItem("flags",     frame->flags, true);
+        index_writer->WriteIntegerItem("key",       frame->key_frame_offset);
+        index_writer->WriteIntegerItem("temporal",  frame->temporal_offset);
+    }
+    index_writer->EndAnnotations();
+    index_writer->StartSection("index");
+    index_writer->EndSection();
+}
+
 static string create_text_object_filename(string prefix, bool is_xml, size_t index)
 {
     const char *suffix = ".txt";
@@ -1605,6 +1622,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                         4 x system scheme 1 timecode array\n");
     fprintf(stderr, "                       The header metadata timecodes are limited to the set extracted by bmx and what bmx accepts\n");
     fprintf(stderr, "                       If the timecode property is not present then __:__:__:__ is printed\n");
+    fprintf(stderr, " --index               Extract index tables\n");
     fprintf(stderr, " --avid                Extract Avid metadata\n");
     fprintf(stderr, " --st436-mf <count>    Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
     fprintf(stderr, " --rdd6 <frames> <filename>\n");
@@ -1683,12 +1701,14 @@ int main(int argc, const char** argv)
     const char *app_crc32_filename = 0;
     const char *app_tc_filename = 0;
     const char *all_tc_filename = 0;
+    bool do_index_info = false;
     bool do_avid_info = false;
     uint32_t st436_manifest_count = DEFAULT_ST436_MANIFEST_COUNT;
     const char *rdd6_filename = 0;
     int64_t rdd6_frame_min = 0;
     int64_t rdd6_frame_max = 0;
     bool do_ess_read = false;
+    bool do_parse_read = false;
     const char *ess_output_prefix = 0;
     set<MXFDataDefEnum> wrap_klv_mask;
     map<size_t, set<size_t> > disable_track_indexes;
@@ -1958,6 +1978,11 @@ int main(int argc, const char** argv)
             all_tc_filename = argv[cmdln_index + 1];
             do_ess_read = true;
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--index") == 0)
+        {
+            do_index_info = true;
+            do_parse_read = true;
         }
         else if (strcmp(argv[cmdln_index], "--avid") == 0)
         {
@@ -2358,6 +2383,7 @@ int main(int argc, const char** argv)
         file_factory.SetUseMMapFile(use_mmap_file);
 #endif
 
+        int input_open_flags = do_parse_read && !do_ess_read ? MXFFileReader::MXF_MODE_PARSE_ONLY : 0;
         if (use_group_reader && input_filenames.size() > 1) {
             MXFGroupReader *group_reader = new MXFGroupReader();
             MXFFileReader::OpenResult result;
@@ -2367,7 +2393,7 @@ int main(int argc, const char** argv)
                 grp_file_reader->SetFileFactory(&file_factory, false);
                 grp_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
                 grp_file_reader->SetST436ManifestFrameCount(st436_manifest_count);
-                result = grp_file_reader->Open(input_filenames[i]);
+                result = grp_file_reader->Open(input_filenames[i], input_open_flags);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", get_input_filename(input_filenames[i]),
                               MXFFileReader::ResultToString(result).c_str());
@@ -2390,7 +2416,7 @@ int main(int argc, const char** argv)
                 seq_file_reader->SetFileFactory(&file_factory, false);
                 seq_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
                 seq_file_reader->SetST436ManifestFrameCount(st436_manifest_count);
-                result = seq_file_reader->Open(input_filenames[i]);
+                result = seq_file_reader->Open(input_filenames[i], input_open_flags);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", get_input_filename(input_filenames[i]),
                               MXFFileReader::ResultToString(result).c_str());
@@ -2417,7 +2443,7 @@ int main(int argc, const char** argv)
             if (do_app_info || check_app_issues)
                 app_output.RegisterExtensions(file_reader);
             // avid extensions are already registered by the MXFReader
-            result = file_reader->Open(input_filenames[0]);
+            result = file_reader->Open(input_filenames[0], input_open_flags);
             if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                 log_error("Failed to open MXF file '%s': %s\n", get_input_filename(input_filenames[0]),
                           MXFFileReader::ResultToString(result).c_str());
@@ -2494,7 +2520,6 @@ int main(int argc, const char** argv)
                 max_precharge = reader->GetMaxPrecharge(start, false);
             if (!no_rollout)
                 max_rollout = reader->GetMaxRollout(start + output_duration - 1, false);
-
             reader->SetReadLimits(start + max_precharge, - max_precharge + output_duration + max_rollout, true);
 
             if (check_end && !reader->CheckReadLastFrame()) {
@@ -2534,7 +2559,35 @@ int main(int argc, const char** argv)
         vector<CRC32Data> track_crc32_data;
         OutputFileManager output_file_manager;
 
-        if (do_ess_read) {
+        AppInfoWriter *info_writer;
+        if (do_write_info) {
+            if (info_format == XML_INFO_FORMAT) {
+                AppXMLInfoWriter *xml_info_writer = new AppXMLInfoWriter(info_file);
+                xml_info_writer->SetNamespace(XML_INFO_WRITER_NAMESPACE, "");
+                xml_info_writer->SetVersion(XML_INFO_WRITER_VERSION);
+                info_writer = xml_info_writer;
+            }
+            else {
+                info_writer = new AppTextInfoWriter(info_file);
+            }
+
+            info_writer->RegisterCCName("cdci_descriptor",  "CDCIDescriptor");
+            info_writer->RegisterCCName("anc_descriptor",   "ANCDescriptor");
+            info_writer->RegisterCCName("vbi_descriptor",   "VBIDescriptor");
+            info_writer->RegisterCCName("crc32_check",      "CRC32Check");
+            info_writer->RegisterCCName("did_type_1",       "DIDType1");
+            info_writer->RegisterCCName("did_type_2",       "DIDType2");
+            info_writer->SetClipEditRate(edit_rate);
+
+            info_writer->StartAnnotations();
+            info_writer->WriteTimestampItem("created", generate_timestamp_now());
+            info_writer->EndAnnotations();
+            info_writer->Start("bmx");
+        }
+
+        if (do_ess_read || do_parse_read) {
+            if (do_index_info)
+                info_writer->StartSection("index_tables");
 
             // track checksum calculation initialization
             if (!track_checksum_types.empty()) {
@@ -2747,6 +2800,10 @@ int main(int argc, const char** argv)
                             written_timecodes = true;
                         }
 
+                        if (do_index_info) {
+                            write_index(info_writer, total_num_read - num_read, i, frame);
+                        }
+
                         if (ess_output_prefix) {
                             FILE *file;
                             string filename;
@@ -2888,6 +2945,8 @@ int main(int argc, const char** argv)
                 fclose(app_crc32_file);
             if (all_tc_file)
                 fclose(all_tc_file);
+            if (do_index_info)
+                info_writer->EndSection();
         }
 
         if (have_anc_track && rdd6_filename && !rdd6_failed && last_rdd6_frame != rdd6_frame_max && !rdd6_done) {
@@ -3008,29 +3067,6 @@ int main(int argc, const char** argv)
 
 
         if (do_write_info) {
-            AppInfoWriter *info_writer;
-            if (info_format == XML_INFO_FORMAT) {
-                AppXMLInfoWriter *xml_info_writer = new AppXMLInfoWriter(info_file);
-                xml_info_writer->SetNamespace(XML_INFO_WRITER_NAMESPACE, "");
-                xml_info_writer->SetVersion(XML_INFO_WRITER_VERSION);
-                info_writer = xml_info_writer;
-            } else {
-                info_writer = new AppTextInfoWriter(info_file);
-            }
-
-            info_writer->RegisterCCName("cdci_descriptor",  "CDCIDescriptor");
-            info_writer->RegisterCCName("anc_descriptor",   "ANCDescriptor");
-            info_writer->RegisterCCName("vbi_descriptor",   "VBIDescriptor");
-            info_writer->RegisterCCName("crc32_check",      "CRC32Check");
-            info_writer->RegisterCCName("did_type_1",       "DIDType1");
-            info_writer->RegisterCCName("did_type_2",       "DIDType2");
-            info_writer->SetClipEditRate(edit_rate);
-
-            info_writer->StartAnnotations();
-            info_writer->WriteTimestampItem("created", generate_timestamp_now());
-            info_writer->EndAnnotations();
-            info_writer->Start("bmx");
-
             info_writer->StartSection("application");
             write_application_info(info_writer);
             info_writer->EndSection();

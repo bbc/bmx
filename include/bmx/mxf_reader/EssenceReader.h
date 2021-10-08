@@ -89,7 +89,7 @@ private:
 class EssenceReader
 {
 public:
-    EssenceReader(MXFFileReader *file_reader, bool file_is_complete);
+    EssenceReader(MXFFileReader *file_reader, bool file_is_complete, bool parse_only);
     ~EssenceReader();
 
     void SetReadLimits(int64_t start_position, int64_t duration);
@@ -144,6 +144,7 @@ private:
     MXFFileReader *mFileReader;
     mxfpp::File *mFile;
     bool mFileIsComplete;
+    bool mParseOnly;    // KLV parsing only, no essence reading
 
     EssenceChunkHelper mEssenceChunkHelper;
     IndexTableHelper mIndexTableHelper;
