@@ -13,6 +13,7 @@
   <xs:element name="bmx">
     <xs:complexType>
       <xs:sequence>
+        <xs:element name="index_tables" type="index_tables_type" minOccurs="0"/>
         <xs:element name="application" type="application_type"/>
         <xs:element name="files" type="files_type"/>
         <xs:element name="clip" type="clip_type"/>
@@ -23,6 +24,22 @@
       <xs:attribute name="created" type="xs:dateTime" use="required"/>
     </xs:complexType>
   </xs:element>
+
+  <xs:complexType name="index_tables_type">
+    <xs:sequence>
+      <xs:element name="index" type="index_table_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="index_table_type">
+    <xs:attribute name="frame" type="int64_type" use="required"/>
+    <xs:attribute name="track" type="uint32_type" use="required"/>
+    <xs:attribute name="position" type="int64_type" use="required"/>
+    <xs:attribute name="size" type="uint32_type" use="required"/>
+    <xs:attribute name="flags" type="hex_uint8_type"/>
+    <xs:attribute name="key" type="int8_type"/>
+    <xs:attribute name="temporal" type="int8_type"/>
+  </xs:complexType>
 
   <xs:complexType name="application_type">
     <xs:sequence>
@@ -1102,6 +1119,13 @@
     <xs:restriction base="xs:integer">
       <xs:minInclusive value="0"/>
       <xs:maxInclusive value="4294967295"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="int64_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="9223372036854775807"/>
     </xs:restriction>
   </xs:simpleType>
 
