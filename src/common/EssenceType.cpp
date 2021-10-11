@@ -97,6 +97,8 @@ static const EssenceTypeInfo ESSENCE_TYPE_INFO[] =
     {AVID_ALPHA_HD_1080I,       PICTURE_ESSENCE,        "Avid uncompressed Alpha HD 1080i",     "Avid_Unc_Alpha_HD_1080i"},
     {AVID_ALPHA_HD_1080P,       PICTURE_ESSENCE,        "Avid uncompressed Alpha HD 1080p",     "Avid_Unc_Alpha_HD_1080p"},
     {AVID_ALPHA_HD_720P,        PICTURE_ESSENCE,        "Avid uncompressed Alpha HD 720p",      "Avid_Unc_Alpha_HD_720p"},
+    {MPEG2LG_422P_ML_576I,      PICTURE_ESSENCE,        "MPEG-2 Long GOP 422P@ML 576i",         "MPEG_2_Long_GOP_422P_ML_576i"},
+    {MPEG2LG_MP_ML_576I,        PICTURE_ESSENCE,        "MPEG-2 Long GOP MP@ML 576i",           "MPEG_2_Long_GOP_MP_ML_576i"},
     {MPEG2LG_422P_HL_1080I,     PICTURE_ESSENCE,        "MPEG-2 Long GOP 422P@HL 1080i",        "MPEG_2_Long_GOP_422P_HL_1080i"},
     {MPEG2LG_422P_HL_1080P,     PICTURE_ESSENCE,        "MPEG-2 Long GOP 422P@HL 1080p",        "MPEG_2_Long_GOP_422P_HL_1080p"},
     {MPEG2LG_422P_HL_720P,      PICTURE_ESSENCE,        "MPEG-2 Long GOP 422P@HL 720p",         "MPEG_2_Long_GOP_422P_HL_720p"},

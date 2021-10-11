@@ -705,6 +705,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --avid_alpha_1080p <name>         Raw Avid alpha component HD 1080p video input file\n");
     fprintf(stderr, "  --avid_alpha_720p <name>          Raw Avid alpha component HD 720p video input file\n");
     fprintf(stderr, "  --mpeg2lg <name>                  Raw MPEG-2 Long GOP video input file\n");
+    fprintf(stderr, "  --mpeg2lg_422p_ml_576i <name>     Raw MPEG-2 Long GOP 422P@ML 576i video input file\n");
+    fprintf(stderr, "  --mpeg2lg_mp_ml_576i <name>       Raw MPEG-2 Long GOP MP@ML 576i video input file\n");
     fprintf(stderr, "  --mpeg2lg_422p_hl_1080i <name>    Raw MPEG-2 Long GOP 422P@HL 1080i video input file\n");
     fprintf(stderr, "  --mpeg2lg_422p_hl_1080p <name>    Raw MPEG-2 Long GOP 422P@HL 1080p video input file\n");
     fprintf(stderr, "  --mpeg2lg_422p_hl_720p <name>     Raw MPEG-2 Long GOP 422P@HL 720p video input file\n");
@@ -3071,6 +3073,32 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--mpeg2lg_422p_ml_576i") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = MPEG2LG_422P_ML_576I;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--mpeg2lg_mp_ml_576i") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = MPEG2LG_MP_ML_576I;
+            input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--mpeg2lg_422p_hl_1080i") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -4086,6 +4114,8 @@ int main(int argc, const char** argv)
                 }
             }
             else if (input->essence_type_group == MPEG2LG_ESSENCE_GROUP ||
+                     input->essence_type == MPEG2LG_422P_ML_576I ||
+                     input->essence_type == MPEG2LG_MP_ML_576I ||
                      input->essence_type == MPEG2LG_422P_HL_1080I ||
                      input->essence_type == MPEG2LG_422P_HL_1080P ||
                      input->essence_type == MPEG2LG_422P_HL_720P ||
@@ -4164,8 +4194,9 @@ int main(int argc, const char** argv)
                                 throw false;
                             }
                         } else {
-                            if (mpeg2_parser->GetVerticalSize() != 1080) {
-                                log_error("Unexpected MPEG-2 Long GOP vertical size %u; expecting 1080 \n",
+                            if (mpeg2_parser->GetVerticalSize() != 1080
+                                && mpeg2_parser->GetVerticalSize() != 576) {
+                                log_error("Unexpected MPEG-2 Long GOP vertical size %u; expecting 1080 or 576 \n",
                                           mpeg2_parser->GetVerticalSize());
                                 throw false;
                             }
@@ -4194,6 +4225,20 @@ int main(int argc, const char** argv)
                                         break;
                                     default:
                                         log_error("Unknown MPEG-2 Long GOP profile and level %u\n",
+                                                  mpeg2_parser->GetProfileAndLevel());
+                                        throw false;
+                                }
+                            } else if (mpeg2_parser->GetHorizontalSize() == 720) {
+                                switch (mpeg2_parser->GetProfileAndLevel())
+                                {
+                                    case 0x85:
+                                        input->essence_type = MPEG2LG_422P_ML_576I;
+                                        break;
+                                    case 0x48:
+                                        input->essence_type = MPEG2LG_MP_ML_576I;
+                                        break;
+                                    default:
+                                        log_error("Unexpected MPEG-2 Long GOP profile and level %u\n",
                                                   mpeg2_parser->GetProfileAndLevel());
                                         throw false;
                                 }
@@ -4962,6 +5007,8 @@ int main(int argc, const char** argv)
                     if (input->input_height > 0)
                         clip_track->SetInputHeight(input->input_height);
                     break;
+                case MPEG2LG_422P_ML_576I:
+                case MPEG2LG_MP_ML_576I:
                 case MPEG2LG_422P_HL_1080I:
                 case MPEG2LG_422P_HL_1080P:
                 case MPEG2LG_422P_HL_720P:
@@ -5205,6 +5252,8 @@ int main(int argc, const char** argv)
                         input->raw_reader->SetFixedSampleSize(clip_track->GetInputSampleSize());
                     }
                     break;
+                case MPEG2LG_422P_ML_576I:
+                case MPEG2LG_MP_ML_576I:
                 case MPEG2LG_422P_HL_1080I:
                 case MPEG2LG_422P_HL_1080P:
                 case MPEG2LG_422P_HL_720P:

@@ -345,7 +345,8 @@ EssenceType process_assumed_essence_type(const MXFTrackInfo *input_track_info, E
 {
     // Map the essence type if generic MPEG video is assumed to be D-10
     if (assume_d10_essence_type != UNKNOWN_ESSENCE_TYPE &&
-            input_track_info->essence_type == PICTURE_ESSENCE &&
+            (input_track_info->essence_type == PICTURE_ESSENCE ||
+                input_track_info->essence_type == MPEG2LG_422P_ML_576I) &&
             (mxf_is_mpeg_video_ec(&input_track_info->essence_container_label, 1) ||
                 mxf_is_mpeg_video_ec(&input_track_info->essence_container_label, 0)))
     {
@@ -3781,6 +3782,8 @@ int main(int argc, const char** argv)
                         clip_track->SetAFD(afd);
                     clip_track->SetInputHeight(input_picture_info->stored_height);
                     break;
+                case MPEG2LG_422P_ML_576I:
+                case MPEG2LG_MP_ML_576I:
                 case MPEG2LG_422P_HL_1080I:
                 case MPEG2LG_422P_HL_1080P:
                 case MPEG2LG_422P_HL_720P:

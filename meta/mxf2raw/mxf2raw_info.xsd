@@ -937,6 +937,8 @@
       <xs:enumeration value="Avid_Unc_Alpha_HD_1080i"/>
       <xs:enumeration value="Avid_Unc_Alpha_HD_1080p"/>
       <xs:enumeration value="Avid_Unc_Alpha_HD_720p"/>
+      <xs:enumeration value="MPEG_2_Long_GOP_422P_ML_576i"/>
+      <xs:enumeration value="MPEG_2_Long_GOP_MP_ML_576i"/>
       <xs:enumeration value="MPEG_2_Long_GOP_422P_HL_1080i"/>
       <xs:enumeration value="MPEG_2_Long_GOP_422P_HL_1080p"/>
       <xs:enumeration value="MPEG_2_Long_GOP_422P_HL_720p"/>

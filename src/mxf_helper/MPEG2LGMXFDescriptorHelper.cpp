@@ -59,6 +59,8 @@ typedef struct
 
 static const SupportedEssence SUPPORTED_ESSENCE[] =
 {
+    {MXF_CMDEF_L(MPEG2_422P_ML_LONGGOP),  MPEG2LG_422P_ML_576I,      {25, 1},        720,      0,  MXF_SEPARATE_FIELDS},
+    {MXF_CMDEF_L(MPEG2_MP_ML_LONGGOP),    MPEG2LG_MP_ML_576I,        {25, 1},        720,      0,  MXF_SEPARATE_FIELDS},
     {MXF_CMDEF_L(MPEG2_422P_HL_LONGGOP),  MPEG2LG_422P_HL_1080I,     {25, 1},        1920,  4074,  MXF_SEPARATE_FIELDS},
     {MXF_CMDEF_L(MPEG2_422P_HL_LONGGOP),  MPEG2LG_422P_HL_1080I,     {30000, 1001},  1920,  4073,  MXF_SEPARATE_FIELDS},
     {MXF_CMDEF_L(MPEG2_422P_HL_LONGGOP),  MPEG2LG_422P_HL_1080P,     {24000, 1001},  1920,  4077,  MXF_FULL_FRAME},
@@ -249,7 +251,8 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
         }
     }
     cdci_descriptor->setFrameLayout(SUPPORTED_ESSENCE[mEssenceIndex].frame_layout);
-    if (mEssenceType == MPEG2LG_422P_HL_1080I ||
+    if (mEssenceType == MPEG2LG_422P_ML_576I  ||
+        mEssenceType == MPEG2LG_422P_HL_1080I ||
         mEssenceType == MPEG2LG_422P_HL_1080P ||
         mEssenceType == MPEG2LG_422P_HL_720P)
     {
@@ -266,6 +269,17 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     }
     switch (mEssenceType)
     {
+        case MPEG2LG_422P_ML_576I:
+        case MPEG2LG_MP_ML_576I:
+            cdci_descriptor->setSampledWidth(720);
+            cdci_descriptor->setSampledHeight(288);
+            cdci_descriptor->setStoredWidth(720);
+            cdci_descriptor->setStoredHeight(288);
+            cdci_descriptor->setDisplayWidth(720);
+            cdci_descriptor->setDisplayHeight(288);
+            cdci_descriptor->appendVideoLineMap(23);
+            cdci_descriptor->appendVideoLineMap(336);
+            break;
         case MPEG2LG_422P_HL_1080I:
         case MPEG2LG_MP_HL_1920_1080I:
             cdci_descriptor->setSampledWidth(1920);
@@ -328,7 +342,8 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     if (!(mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
     cdci_descriptor->setComponentDepth(8);
-    if (mEssenceType == MPEG2LG_422P_HL_1080I ||
+    if (mEssenceType == MPEG2LG_422P_ML_576I ||
+        mEssenceType == MPEG2LG_422P_HL_1080I ||
         mEssenceType == MPEG2LG_422P_HL_1080P ||
         mEssenceType == MPEG2LG_422P_HL_720P)
     {
@@ -377,6 +392,12 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
         mpeg_descriptor->setMaxBPictureCount(2);
         switch (mEssenceType)
         {
+            case MPEG2LG_422P_ML_576I:
+                mpeg_descriptor->setProfileAndLevel(0x85); // 4:2:2 Profile @ Main level
+                break;
+            case MPEG2LG_MP_ML_576I:
+                mpeg_descriptor->setProfileAndLevel(0x48); // Main Profile @ Main level
+                break;
             case MPEG2LG_422P_HL_1080I:
             case MPEG2LG_422P_HL_1080P:
             case MPEG2LG_422P_HL_720P:
@@ -406,6 +427,8 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
                 case MPEG2LG_MP_HL_720P:
                     mpeg_descriptor->setMaxGOP(12);
                     break;
+                case MPEG2LG_422P_ML_576I:
+                case MPEG2LG_MP_ML_576I:
                 case MPEG2LG_422P_HL_1080I:
                 case MPEG2LG_422P_HL_1080P:
                 case MPEG2LG_MP_HL_1920_1080I:

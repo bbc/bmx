@@ -2152,7 +2152,9 @@ bool MXFFileReader::HaveInterFrameEncodingTrack() const
     for (i = 0; i < mInternalTrackReaders.size(); i++) {
         if (mInternalTrackReaders[i]->IsEnabled()) {
             EssenceType essence_type = mInternalTrackReaders[i]->GetTrackInfo()->essence_type;
-            if (essence_type == MPEG2LG_422P_HL_1080I ||
+            if (essence_type == MPEG2LG_422P_ML_576I ||
+                essence_type == MPEG2LG_MP_ML_576I ||
+                essence_type == MPEG2LG_422P_HL_1080I ||
                 essence_type == MPEG2LG_422P_HL_1080P ||
                 essence_type == MPEG2LG_422P_HL_720P ||
                 essence_type == MPEG2LG_MP_HL_1920_1080I ||
