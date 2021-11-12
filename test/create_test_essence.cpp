@@ -110,7 +110,8 @@ typedef enum
     TYPE_VC2                            = 54,
     TYPE_RDD36_422                      = 55,
     TYPE_RDD36_4444                     = 56,
-    TYPE_END                            = 57,
+    TYPE_16BIT_PCM_SAMPLES              = 57,
+    TYPE_END                            = 58,
 } EssenceType;
 
 typedef struct
@@ -283,10 +284,15 @@ static void write_data(FILE *file, int64_t size)
         write_buffer(file, DATA, (size_t)partial_data_size);
 }
 
+static void write_pcm_samples(FILE *file, uint16_t block_align, unsigned int samples)
+{
+    write_data(file, samples * block_align);
+}
+
 static void write_pcm(FILE *file, uint16_t block_align, unsigned int duration)
 {
-    // 1920 samples per 25Hz frame, block_align bytes per sample
-    write_data(file, duration * 1920 * block_align);
+    // 25 Hz, 1920 samples per frame
+    write_pcm_samples(file, block_align, 1920 * duration);
 }
 
 static void write_dv25(FILE *file, unsigned int duration)
@@ -954,6 +960,7 @@ static void print_usage(const char *cmd)
     fprintf(stderr, " 54: VC2\n");
     fprintf(stderr, " 55: RDD-36 422 Profile\n");
     fprintf(stderr, " 56: RDD-36 4444 Profile\n");
+    fprintf(stderr, " 57: 16-bit PCM with duration in samples\n");
 }
 
 int main(int argc, const char **argv)
@@ -1153,6 +1160,9 @@ int main(int argc, const char **argv)
             break;
         case TYPE_VBI_DATA:
             write_vbi_data(file, duration);
+            break;
+        case TYPE_16BIT_PCM_SAMPLES:
+            write_pcm_samples(file, 2, duration);
             break;
         case TYPE_UNKNOWN:
         case TYPE_END:

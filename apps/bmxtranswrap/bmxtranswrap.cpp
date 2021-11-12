@@ -4179,8 +4179,8 @@ int main(int argc, const char** argv)
                 gf_retry_count      = 0;
             }
 
-            // check whether sufficient frame data is available
-            // if the frame is empty then check zero PCM sample padding is possible
+            // check whether any incomplete frames (where requested samples < read samples) are supported
+            bool add_pcm_padding = false;
             for (i = 0; i < input_tracks.size(); i++) {
                 MXFInputTrack *input_track = input_tracks[i];
                 if (input_track->GetTrackInfo()->essence_type == TIMED_TEXT) {
@@ -4192,19 +4192,26 @@ int main(int argc, const char** argv)
                 BMX_ASSERT(frame);
 
                 if (!frame->IsComplete()) {
-                    if (!frame->IsEmpty()) {
-                        log_warn("Partially complete frames not yet supported\n");
-                        break;
-                    }
                     const MXFTrackInfo *input_track_info = input_track->GetTrackInfo();
+                    // only support padding with PCM samples and where the input edit rate equals audio sampling rate
                     if (input_track_info->essence_type != WAVE_PCM ||
                         input_track_info->edit_rate != ((MXFSoundTrackInfo*)input_track_info)->sampling_rate)
                     {
-                        log_warn("Failed to provide padding data for empty frame\n");
+                        log_warn("Unable to provide PCM padding data for incomplete frame\n");
                         break;
                     }
+
+                    // transferring partial frame data is only supported for the WAVE clip type
+                    if (!frame->IsEmpty() && clip_type != CW_WAVE_CLIP_TYPE) {
+                        log_warn("Transferring partial PCM frame data is only supported for %s\n",
+                                 clip_type_to_string(CW_WAVE_CLIP_TYPE, NO_CLIP_SUB_TYPE));
+                        break;
+                    }
+
+                    // only pad partial frames if not outputting to WAVE
+                    if (clip_type != CW_WAVE_CLIP_TYPE)
+                        add_pcm_padding = true;
                 }
-                BMX_ASSERT(frame->IsEmpty() || frame->IsComplete());
             }
             if (i < input_tracks.size())
                 break;
@@ -4272,49 +4279,52 @@ int main(int argc, const char** argv)
                     {
                         output_track->SkipPrecharge(num_read);
                     }
-                    else if (!frame->IsComplete())
+                    else if (!frame->IsEmpty())
                     {
+                        if ((input_sound_info && input_sound_info->channel_count > 1) ||
+                                input_track_info->essence_type == D10_AES3_PCM)
+                        {
+                            sound_buffer.Allocate(frame->GetSize()); // more than enough
+                            if (input_track_info->essence_type == D10_AES3_PCM) {
+                                convert_aes3_to_pcm(frame->GetBytes(), frame->GetSize(), ignore_d10_aes3_flags,
+                                                    bits_per_sample, input_channel_index,
+                                                    sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
+                                num_samples = get_aes3_sample_count(frame->GetBytes(), frame->GetSize());
+                            } else {
+                                deinterleave_audio(frame->GetBytes(), frame->GetSize(),
+                                                   bits_per_sample,
+                                                   input_sound_info->channel_count, input_channel_index,
+                                                   sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
+                                num_samples = frame->GetSize() / (input_sound_info->channel_count * channel_block_align);
+                            }
+
+                            output_track->WriteSamples(output_channel_index,
+                                                       sound_buffer.GetBytes(),
+                                                       num_samples * channel_block_align,
+                                                       num_samples);
+                        }
+                        else if (input_track_info->essence_type == ANC_DATA)
+                        {
+                            write_anc_samples(output_track, frame, pass_anc, anc_buffer);
+                        }
+                        else
+                        {
+                            if (input_sound_info)
+                                num_samples = frame->GetSize() / channel_block_align;
+                            else
+                                num_samples = frame->num_samples;
+                            output_track->WriteSamples(output_channel_index,
+                                                       (unsigned char*)frame->GetBytes(),
+                                                       frame->GetSize(),
+                                                       num_samples);
+                        }
+                    }
+
+                    if (add_pcm_padding && !frame->IsComplete()) {
                         BMX_ASSERT(input_track_info->essence_type == WAVE_PCM);
                         BMX_ASSERT(input_sound_info->edit_rate == input_sound_info->sampling_rate);
-                        num_samples = frame->request_num_samples;
+                        num_samples = frame->request_num_samples - frame->num_samples;
                         output_track->WritePaddingSamples(output_channel_index, num_samples);
-                    }
-                    else if ((input_sound_info && input_sound_info->channel_count > 1) ||
-                             input_track_info->essence_type == D10_AES3_PCM)
-                    {
-                        sound_buffer.Allocate(frame->GetSize()); // more than enough
-                        if (input_track_info->essence_type == D10_AES3_PCM) {
-                            convert_aes3_to_pcm(frame->GetBytes(), frame->GetSize(), ignore_d10_aes3_flags,
-                                                bits_per_sample, input_channel_index,
-                                                sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
-                            num_samples = get_aes3_sample_count(frame->GetBytes(), frame->GetSize());
-                        } else {
-                            deinterleave_audio(frame->GetBytes(), frame->GetSize(),
-                                               bits_per_sample,
-                                               input_sound_info->channel_count, input_channel_index,
-                                               sound_buffer.GetBytes(), sound_buffer.GetAllocatedSize());
-                            num_samples = frame->GetSize() / (input_sound_info->channel_count * channel_block_align);
-                        }
-
-                        output_track->WriteSamples(output_channel_index,
-                                                   sound_buffer.GetBytes(),
-                                                   num_samples * channel_block_align,
-                                                   num_samples);
-                    }
-                    else if (input_track_info->essence_type == ANC_DATA)
-                    {
-                        write_anc_samples(output_track, frame, pass_anc, anc_buffer);
-                    }
-                    else
-                    {
-                        if (input_sound_info)
-                            num_samples = frame->GetSize() / channel_block_align;
-                        else
-                            num_samples = frame->num_samples;
-                        output_track->WriteSamples(output_channel_index,
-                                                   (unsigned char*)frame->GetBytes(),
-                                                   frame->GetSize(),
-                                                   num_samples);
                     }
 
                     if (input_sound_info && first_sound_num_samples == 0 && num_samples > 0)
