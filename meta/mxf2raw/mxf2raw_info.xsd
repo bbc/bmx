@@ -1101,6 +1101,13 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="int64_type">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="-9223372036854775808"/>
+      <xs:maxInclusive value="9223372036854775807"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="uint8_type">
     <xs:restriction base="xs:integer">
       <xs:minInclusive value="0"/>
@@ -1119,13 +1126,6 @@
     <xs:restriction base="xs:integer">
       <xs:minInclusive value="0"/>
       <xs:maxInclusive value="4294967295"/>
-    </xs:restriction>
-  </xs:simpleType>
-
-  <xs:simpleType name="int64_type">
-    <xs:restriction base="xs:integer">
-      <xs:minInclusive value="0"/>
-      <xs:maxInclusive value="9223372036854775807"/>
     </xs:restriction>
   </xs:simpleType>
 
