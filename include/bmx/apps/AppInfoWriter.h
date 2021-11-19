@@ -100,6 +100,7 @@ public:
                                const std::string &default_name = "");
     virtual void WriteEnumStringItem(const std::string &name, const EnumInfo *enum_info, int enum_value,
                                      const std::string &default_name = "");
+    virtual void WriteSizeItem(const std::string &name, size_t value);
 
     virtual void WriteByteArrayItem(const std::string &name, const unsigned char *data, size_t size, bool hex = false);
 

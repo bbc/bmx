@@ -444,6 +444,18 @@ void AppInfoWriter::WriteEnumStringItem(const string &name, const EnumInfo *enum
         WriteItem(name, enum_name);
 }
 
+void AppInfoWriter::WriteSizeItem(const string &name, size_t value)
+{
+    char buffer[32];
+
+    bmx_snprintf(buffer, sizeof(buffer), "%" PRIszt, value);
+
+    if (mIsAnnotation)
+        mAnnotations.push_back(make_pair(name, buffer));
+    else
+        WriteItem(name, buffer);
+}
+
 void AppInfoWriter::WriteByteArrayItem(const string &name, const unsigned char *data, size_t size, bool hex)
 {
     stringstream buffer;

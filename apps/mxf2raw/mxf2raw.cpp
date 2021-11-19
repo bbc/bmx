@@ -1480,7 +1480,7 @@ static void write_index(AppInfoWriter *index_writer, int64_t frame_nr, size_t tr
 {
     index_writer->StartAnnotations();
     index_writer->WriteIntegerItem("frame",     frame_nr);
-    index_writer->WriteIntegerItem("track",     track_nr);
+    index_writer->WriteSizeItem("track",        track_nr);
     index_writer->WriteIntegerItem("position",  frame->file_position+frame->kl_size);
     index_writer->WriteIntegerItem("size",      frame->GetSize());
     if (frame->temporal_reordering) {
