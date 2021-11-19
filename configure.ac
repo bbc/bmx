@@ -22,7 +22,7 @@ dnl-----------------------------------------------------------------------------
 
 AC_INIT(m4_defn([m4_BMX_LIBRARY_NAME]), m4_defn([m4_BMX_VERSION]))
 AC_CONFIG_SRCDIR([src/common/BMXException.cpp])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([1.11 -Wall parallel-tests])
@@ -53,7 +53,7 @@ dnl-----------------------------------------------------------------------------
 dnl -- Checks for programs.
 dnl-----------------------------------------------------------------------------
 
-AC_PROG_LIBTOOL
+LT_INIT
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
@@ -152,8 +152,7 @@ AC_SUBST(LIBMXFPP_CFLAGS)
 AC_SUBST(LIBMXFPP_LIBS)
 
 AC_ARG_WITH(curl,
-	AC_HELP_STRING([--with-curl],
-		[support HTTP file access using libcurl [default=check]]),
+	AS_HELP_STRING([--with-curl],[support HTTP file access using libcurl [default=check]]),
 	with_curl=no,
 	with_curl=check)
 if test x"$with_curl" == xcheck; then
@@ -167,8 +166,7 @@ if test x"$with_curl" == xcheck; then
 fi
 
 AC_ARG_ENABLE(bbcarch_check,
-	AC_HELP_STRING([--enable-bbcarch-check],
-		[enable checking BBC archive MXF [[default=no]]]),
+	AS_HELP_STRING([--enable-bbcarch-check],[enable checking BBC archive MXF [[default=no]]]),
 	enable_bbcarch_check=$enableval,
 	enable_bbcarch_check="no")
 if test x"$enable_bbcarch_check" = xyes; then
