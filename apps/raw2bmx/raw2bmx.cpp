@@ -143,7 +143,7 @@ struct RawInput
     RawEssenceReader *raw_reader;
     WaveReader *wave_reader;
     uint32_t channel_count;
-    TimedTextManifestParser timed_text_manifest;
+    TimedTextManifestParser *timed_text_manifest;
 
     uint32_t sample_sequence[32];
     size_t sample_sequence_size;
@@ -329,6 +329,7 @@ static void open_wave_reader(RawInput *input)
 static void init_input(RawInput *input)
 {
     memset(input, 0, sizeof(*input));
+    input->timed_text_manifest = new TimedTextManifestParser();
     BMX_OPT_PROP_DEFAULT(input->aspect_ratio, ASPECT_RATIO_16_9);
     BMX_OPT_PROP_DEFAULT(input->afd, 0);
     BMX_OPT_PROP_DEFAULT(input->signal_standard, MXF_SIGNAL_STANDARD_NONE);
@@ -365,6 +366,7 @@ static void clear_input(RawInput *input)
     delete input->raw_reader;
     delete input->wave_reader;
     delete input->filter;
+    delete input->timed_text_manifest;
 }
 
 static bool parse_avci_guess(const char *str, bool *interlaced, bool *progressive)
@@ -4429,13 +4431,13 @@ int main(int argc, const char** argv)
             if (input->disabled || input->essence_type != TIMED_TEXT)
                 continue;
 
-            if (!input->timed_text_manifest.Parse(input->filename, start_timecode, frame_rate)) {
+            if (!input->timed_text_manifest->Parse(input->filename, start_timecode, frame_rate)) {
                 log_error("Failed to parse timed text manifest\n");
                 throw false;
             }
-            if (!input->timed_text_manifest.CheckCanReadTTFile()) {
+            if (!input->timed_text_manifest->CheckCanReadTTFile()) {
                 log_error("Timed text file '%s' referenced by manifest can't be opened for reading\n",
-                          input->timed_text_manifest.GetTTFilename().c_str());
+                          input->timed_text_manifest->GetTTFilename().c_str());
                 throw false;
             }
         }
@@ -5135,7 +5137,7 @@ int main(int argc, const char** argv)
                     clip_track->SetConstantDataSize(input->vbi_const_size);
                     break;
                 case TIMED_TEXT:
-                    clip_track->SetTimedTextSource(&input->timed_text_manifest);
+                    clip_track->SetTimedTextSource(input->timed_text_manifest);
                     break;
                 default:
                     BMX_ASSERT(false);
