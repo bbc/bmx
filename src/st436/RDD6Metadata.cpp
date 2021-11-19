@@ -1402,7 +1402,7 @@ void RDD6DataSegment::Parse8BitPayload(RDD6ParsedPayload *data) const
 
 void RDD6DataSegment::UnparseXML(XMLWriter *writer) const
 {
-    auto_ptr<RDD6ParsedPayload> data;
+    unique_ptr<RDD6ParsedPayload> data;
     switch (id)
     {
         case DS_NONE:                            return;
@@ -1578,7 +1578,7 @@ void RDD6MetadataSubFrame::Parse8Bit(RDD6GetBitBuffer *buffer)
         if (id == 0)
             break;
 
-        auto_ptr<RDD6DataSegment> data_segment(new RDD6DataSegment());
+        unique_ptr<RDD6DataSegment> data_segment(new RDD6DataSegment());
         data_segment->id = id;
         data_segment->Parse8Bit(buffer);
         data_segments.push_back(data_segment.release());

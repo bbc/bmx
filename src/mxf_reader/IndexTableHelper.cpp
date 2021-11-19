@@ -435,7 +435,7 @@ void IndexTableHelper::SetConstantEditUnitSize(Rational edit_rate, uint32_t size
 
 int64_t IndexTableHelper::ReadIndexTableSegment(uint64_t len)
 {
-    auto_ptr<IndexTableHelperSegment> new_segment(new IndexTableHelperSegment());
+    unique_ptr<IndexTableHelperSegment> new_segment(new IndexTableHelperSegment());
     new_segment->ReadIndexTableSegment(mFileReader->mFile, len);
     try
     {
@@ -489,7 +489,7 @@ void IndexTableHelper::UpdateIndex(int64_t position, int64_t essence_offset, int
     }
     else
     {
-        auto_ptr<IndexTableHelperSegment> segment(new IndexTableHelperSegment());
+        unique_ptr<IndexTableHelperSegment> segment(new IndexTableHelperSegment());
         segment->setIndexEditRate(mEditRate);
         segment->setIndexStartPosition(position);
         segment->setIndexDuration(1);
@@ -638,9 +638,9 @@ bool IndexTableHelper::GetIndexEntry(MXFIndexEntryExt *entry, int64_t position)
     return true;
 }
 
-void IndexTableHelper::InsertCBEIndexSegment(auto_ptr<IndexTableHelperSegment> &new_segment_ap)
+void IndexTableHelper::InsertCBEIndexSegment(unique_ptr<IndexTableHelperSegment> &new_segment_up)
 {
-    IndexTableHelperSegment *new_segment = new_segment_ap.get();
+    IndexTableHelperSegment *new_segment = new_segment_up.get();
 
     if (!mSegments.empty()) {
         if (!mSegments.back()->HaveConstantEditUnitSize()) {
@@ -651,7 +651,7 @@ void IndexTableHelper::InsertCBEIndexSegment(auto_ptr<IndexTableHelperSegment> &
 
             if (SEG_DUR(new_segment) > 0 && SEG_DUR(new_segment) < SEG_DUR(mSegments.front())) {
                 // ignore new segment if it covers less edit units than the runtime generated index segment
-                new_segment_ap.reset(0);
+                new_segment_up.reset(0);
                 return;
             }
 
@@ -663,7 +663,7 @@ void IndexTableHelper::InsertCBEIndexSegment(auto_ptr<IndexTableHelperSegment> &
 
             if (SEG_DUR(mSegments.back()) == 0 || SEG_START(new_segment) < SEG_END(mSegments.back())) {
                 // ignore new segment that overlaps with existing segments
-                new_segment_ap.reset(0);
+                new_segment_up.reset(0);
                 return;
             }
 
@@ -680,7 +680,7 @@ void IndexTableHelper::InsertCBEIndexSegment(auto_ptr<IndexTableHelperSegment> &
     }
 
     mSegments.push_back(new_segment);
-    new_segment_ap.release();
+    new_segment_up.release();
 
     if (mSegments.size() == 1) {
         mEditUnitSize = new_segment->GetEditUnitSize();
@@ -692,9 +692,9 @@ void IndexTableHelper::InsertCBEIndexSegment(auto_ptr<IndexTableHelperSegment> &
     }
 }
 
-void IndexTableHelper::InsertVBEIndexSegment(auto_ptr<IndexTableHelperSegment> &new_segment_ap)
+void IndexTableHelper::InsertVBEIndexSegment(unique_ptr<IndexTableHelperSegment> &new_segment_up)
 {
-    IndexTableHelperSegment *new_segment = new_segment_ap.get();
+    IndexTableHelperSegment *new_segment = new_segment_up.get();
 
     if (mEditUnitSize > 0)
         BMX_EXCEPTION(("Can't mix VBE and CBE index table segments"));
@@ -726,13 +726,13 @@ void IndexTableHelper::InsertVBEIndexSegment(auto_ptr<IndexTableHelperSegment> &
                 // existing segment ends after new segment
                 segment->UpdateStartPosition(SEG_END(new_segment));
                 iter = mSegments.insert(iter, new_segment);
-                new_segment_ap.release();
+                new_segment_up.release();
                 break;
             }
         } else if (SEG_START(segment) >= SEG_END(new_segment)) {
             // existing (shortened) segment is after new segment
             iter = mSegments.insert(iter, new_segment);
-            new_segment_ap.release();
+            new_segment_up.release();
             break;
         }
 
@@ -749,7 +749,7 @@ void IndexTableHelper::InsertVBEIndexSegment(auto_ptr<IndexTableHelperSegment> &
             BMX_EXCEPTION(("Sparse index table is not supported"));
         }
         mSegments.push_back(new_segment);
-        new_segment_ap.release();
+        new_segment_up.release();
         new_duration += new_segment->getIndexDuration();
     } else {
         while (iter != mSegments.end()) {
@@ -763,7 +763,7 @@ void IndexTableHelper::InsertVBEIndexSegment(auto_ptr<IndexTableHelperSegment> &
 
 IndexTableHelperSegment* IndexTableHelper::CreateStartSegment(IndexTableHelperSegment *segment, uint32_t duration)
 {
-    auto_ptr<IndexTableHelperSegment> new_segment(new IndexTableHelperSegment());
+    unique_ptr<IndexTableHelperSegment> new_segment(new IndexTableHelperSegment());
     new_segment->setIndexEditRate(segment->getIndexEditRate());
     new_segment->setIndexStartPosition(segment->getIndexStartPosition());
     new_segment->setIndexDuration(duration);

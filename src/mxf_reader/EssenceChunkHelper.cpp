@@ -76,7 +76,7 @@ EssenceChunkHelper::EssenceChunkHelper(MXFFileReader *file_reader)
     mIsComplete = false;
 
     if (mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->data_def == MXF_PICTURE_DDEF) {
-        auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
+        unique_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
             mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),
             mFileReader->GetMXFVersion(),
             mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->essence_container_label));

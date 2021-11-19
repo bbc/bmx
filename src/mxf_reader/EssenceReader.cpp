@@ -260,7 +260,7 @@ EssenceReader::EssenceReader(MXFFileReader *file_reader, bool file_is_complete, 
 
     // get ImageStartOffset and ImageEndOffset properties which are used in Avid uncompressed files
     if (mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->data_def == MXF_PICTURE_DDEF) {
-        auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
+        unique_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
             mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),
             mFileReader->GetMXFVersion(),
             mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->essence_container_label));
@@ -730,7 +730,7 @@ void EssenceReader::GetEditUnitGroup(int64_t position, uint32_t max_samples, mxf
 uint32_t EssenceReader::GetConstantEditUnitSize()
 {
     BMX_ASSERT(mFileReader->GetNumInternalTrackReaders() == 1);
-    auto_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
+    unique_ptr<MXFDescriptorHelper> helper(MXFDescriptorHelper::Create(
         mFileReader->GetInternalTrackReader(0)->GetFileDescriptor(),
         mFileReader->GetMXFVersion(),
         mFileReader->GetInternalTrackReader(0)->GetTrackInfo()->essence_container_label));

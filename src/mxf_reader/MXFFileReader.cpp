@@ -959,7 +959,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
                         lead_filler_offset += components[j]->getDuration();
                     } else if (mxf_equals_key(components[j]->getKey(), &MXF_SET_K(EssenceGroup))) {
                         // Essence Group used in Avid files, e.g. alpha component tracks
-                        auto_ptr<ObjectIterator> choices(components[j]->getStrongRefArrayItem(
+                        unique_ptr<ObjectIterator> choices(components[j]->getStrongRefArrayItem(
                             &MXF_ITEM_K(EssenceGroup, Choices)));
                         if (!choices->next())
                             BMX_EXCEPTION(("0 Choices found in EssenceGroup"));
@@ -1387,7 +1387,7 @@ MXFTrackReader* MXFFileReader::CreateInternalTrackReader(Partition *partition,
 
     // fill in track info
 
-    auto_ptr<MXFTrackInfo> track_info;
+    unique_ptr<MXFTrackInfo> track_info;
     MXFPictureTrackInfo *picture_track_info = 0;
     MXFSoundTrackInfo *sound_track_info = 0;
     MXFDataTrackInfo *data_track_info = 0;

@@ -139,8 +139,8 @@ public:
     bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position);
 
 private:
-    void InsertCBEIndexSegment(std::auto_ptr<IndexTableHelperSegment> &new_segment_ap);
-    void InsertVBEIndexSegment(std::auto_ptr<IndexTableHelperSegment> &new_segment_ap);
+    void InsertCBEIndexSegment(std::unique_ptr<IndexTableHelperSegment> &new_segment_up);
+    void InsertVBEIndexSegment(std::unique_ptr<IndexTableHelperSegment> &new_segment_up);
 
     IndexTableHelperSegment* CreateStartSegment(IndexTableHelperSegment *segment, uint32_t duration);
 
