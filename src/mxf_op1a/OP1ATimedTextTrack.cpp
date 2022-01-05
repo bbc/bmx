@@ -268,31 +268,33 @@ void OP1ATimedTextTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, Mate
     source_clip->setSourcePackageID(mFileSourcePackage->getPackageUID());
     source_clip->setSourceTrackID(mTrackId);
 
-    // Preface - ContentStorage - SourcePackage - Timecode Track
-    Track *timecode_track = new Track(header_metadata);
-    mFileSourcePackage->appendTracks(timecode_track);
-    timecode_track->setTrackName(TIMECODE_TRACK_NAME);
-    timecode_track->setTrackID(901);
-    timecode_track->setTrackNumber(0);
-    timecode_track->setEditRate(mEditRate);
-    timecode_track->setOrigin(0);
+    if (mOP1AFile->mAddTimecodeTrack) {
+        // Preface - ContentStorage - SourcePackage - Timecode Track
+        Track *timecode_track = new Track(header_metadata);
+        mFileSourcePackage->appendTracks(timecode_track);
+        timecode_track->setTrackName(TIMECODE_TRACK_NAME);
+        timecode_track->setTrackID(901);
+        timecode_track->setTrackNumber(0);
+        timecode_track->setEditRate(mEditRate);
+        timecode_track->setOrigin(0);
 
-    // Preface - ContentStorage - SourcePackage - Timecode Track - Sequence
-    sequence = new Sequence(header_metadata);
-    timecode_track->setSequence(sequence);
-    sequence->setDataDefinition(MXF_DDEF_L(Timecode));
-    sequence->setDuration(tt_duration);
+        // Preface - ContentStorage - SourcePackage - Timecode Track - Sequence
+        sequence = new Sequence(header_metadata);
+        timecode_track->setSequence(sequence);
+        sequence->setDataDefinition(MXF_DDEF_L(Timecode));
+        sequence->setDuration(tt_duration);
 
-    // Preface - ContentStorage - SourcePackage - Timecode Track - TimecodeComponent
-    TimecodeComponent *timecode_component = new TimecodeComponent(header_metadata);
-    sequence->appendStructuralComponents(timecode_component);
-    timecode_component->setDataDefinition(MXF_DDEF_L(Timecode));
-    timecode_component->setDuration(tt_duration);
-    Timecode sp_start_timecode = mOP1AFile->mStartTimecode;
-    sp_start_timecode.AddOffset(mTTStart, mFrameRate);
-    timecode_component->setRoundedTimecodeBase(sp_start_timecode.GetRoundedTCBase());
-    timecode_component->setDropFrame(sp_start_timecode.IsDropFrame());
-    timecode_component->setStartTimecode(sp_start_timecode.GetOffset());
+        // Preface - ContentStorage - SourcePackage - Timecode Track - TimecodeComponent
+        TimecodeComponent *timecode_component = new TimecodeComponent(header_metadata);
+        sequence->appendStructuralComponents(timecode_component);
+        timecode_component->setDataDefinition(MXF_DDEF_L(Timecode));
+        timecode_component->setDuration(tt_duration);
+        Timecode sp_start_timecode = mOP1AFile->mStartTimecode;
+        sp_start_timecode.AddOffset(mTTStart, mFrameRate);
+        timecode_component->setRoundedTimecodeBase(sp_start_timecode.GetRoundedTCBase());
+        timecode_component->setDropFrame(sp_start_timecode.IsDropFrame());
+        timecode_component->setStartTimecode(sp_start_timecode.GetOffset());
+    }
 
     // Preface - ContentStorage - SourcePackage - Timeline Track
     mFPTrack = new Track(header_metadata);

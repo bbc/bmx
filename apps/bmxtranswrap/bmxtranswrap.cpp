@@ -585,6 +585,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                            a Generic Stream partition is used to hold the XML data.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a:\n");
+    fprintf(stderr, "    --no-tc-track           Don't create a timecode track in either the material or file source package\n");
     fprintf(stderr, "    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support\n");
     fprintf(stderr, "                            separate partitions for header metadata, index tables, essence container data and footer\n");
     fprintf(stderr, "    --body-part             Create separate body partitions for essence data\n");
@@ -828,6 +829,7 @@ int main(int argc, const char** argv)
     bool convert_ess_marks = false;
     bool allow_no_avci_head = false;
     bool force_no_avci_head = false;
+    bool no_tc_track = false;
     bool min_part = false;
     bool body_part = false;
     bool repeat_index = false;
@@ -2153,6 +2155,10 @@ int main(int argc, const char** argv)
             memset(&next_embed_xml, 0, sizeof(next_embed_xml));
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--no-tc-track") == 0)
+        {
+            no_tc_track = true;
+        }
         else if (strcmp(argv[cmdln_index], "--min-part") == 0)
         {
             min_part = true;
@@ -3304,6 +3310,7 @@ int main(int argc, const char** argv)
                 op1a_clip->SetPartitionInterval(partition_interval);
             op1a_clip->SetOutputStartOffset(- precharge);
             op1a_clip->SetOutputEndOffset(- rollout);
+            op1a_clip->SetAddTimecodeTrack(!no_tc_track);
         } else if (clip_type == CW_AVID_CLIP_TYPE) {
             AvidClip *avid_clip = clip->GetAvidClip();
 

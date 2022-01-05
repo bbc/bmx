@@ -492,6 +492,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is assumed)\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a:\n");
+    fprintf(stderr, "    --no-tc-track           Don't create a timecode track in either the material or file source package\n");
     fprintf(stderr, "    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support\n");
     fprintf(stderr, "                            separate partitions for header metadata, index tables, essence container data and footer\n");
     fprintf(stderr, "    --body-part             Create separate body partitions for essence data\n");
@@ -865,6 +866,7 @@ int main(int argc, const char** argv)
     bool psp_uid_set = false;
     Timestamp psp_created;
     bool psp_created_set = false;
+    bool no_tc_track = false;
     bool min_part = false;
     bool body_part = false;
     bool repeat_index = false;
@@ -1372,6 +1374,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--file-md5") == 0)
         {
             file_md5 = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--no-tc-track") == 0)
+        {
+            no_tc_track = true;
         }
         else if (strcmp(argv[cmdln_index], "--min-part") == 0)
         {
@@ -4616,6 +4622,7 @@ int main(int argc, const char** argv)
                 op1a_clip->SetPartitionInterval(partition_interval);
             op1a_clip->SetOutputStartOffset(output_start_offset);
             op1a_clip->SetOutputEndOffset(- output_end_offset);
+            op1a_clip->SetAddTimecodeTrack(!no_tc_track);
 
             if (!have_samples_to_write) {
                 op1a_clip->SetInputDuration(duration);

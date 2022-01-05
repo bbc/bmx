@@ -80,6 +80,7 @@ public:
     void SetClipName(std::string name);                                 // default ""
     void SetStartTimecode(Timecode start_timecode);                     // default 00:00:00:00, non-drop frame
     void SetHaveInputUserTimecode(bool enable);                         // default false (generated)
+    void SetAddTimecodeTrack(bool enable);                              // default true
     void SetProductInfo(std::string company_name, std::string product_name, mxfProductVersion product_version,
                         std::string version, mxfUUID product_uid);
     void SetCreationDate(mxfTimestamp creation_date);                   // default generated ('now')
@@ -161,6 +162,7 @@ private:
     mxfRational mFrameRate;
     mxfRational mEditRate;
     Timecode mStartTimecode;
+    bool mAddTimecodeTrack;
     std::string mCompanyName;
     std::string mProductName;
     mxfProductVersion mProductVersion;
