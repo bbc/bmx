@@ -115,6 +115,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mFooterPartitionOffset = 0;
     mMXFChecksumFile = 0;
     mCBEIndexPartitionIndex = 0;
+    mSetPrimaryPackage = false;
 
     mTrackIdHelper.SetId("TimecodeTrack", 901);
     mTrackIdHelper.SetStartId(MXF_PICTURE_DDEF, 1001);
@@ -255,6 +256,11 @@ void OP1AFile::SetRepeatIndexTable(bool enable)
 void OP1AFile::ForceWriteCBEDuration0(bool enable)
 {
     mIndexTable->ForceWriteCBEDuration0(enable);
+}
+
+void OP1AFile::SetPrimaryPackage(bool enable)
+{
+    mSetPrimaryPackage = enable;
 }
 
 void OP1AFile::SetOutputStartOffset(int64_t offset)
@@ -797,6 +803,10 @@ void OP1AFile::CreateHeaderMetadata()
         mFileSourcePackage->setPackageUID(mFileSourcePackageUID);
         mFileSourcePackage->setPackageCreationDate(mCreationDate);
         mFileSourcePackage->setPackageModifiedDate(mCreationDate);
+        if (mSetPrimaryPackage && mTimedTextTrackCount == 0) {
+            // Only set Primary Package if there is a single file source package
+            preface->setPrimaryPackage(mFileSourcePackage);
+        }
 
         if (mAddTimecodeTrack) {
             // Preface - ContentStorage - SourcePackage - Timecode Track
@@ -856,6 +866,10 @@ void OP1AFile::CreateHeaderMetadata()
             file_source_package->setPackageUID(tt_package_uid);
             file_source_package->setPackageCreationDate(mCreationDate);
             file_source_package->setPackageModifiedDate(mCreationDate);
+            if (mSetPrimaryPackage && !mFileSourcePackage) {
+                // Only set Primary Package if there is a single file source package
+                preface->setPrimaryPackage(file_source_package);
+            }
 
             mTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage, file_source_package);
         } else {

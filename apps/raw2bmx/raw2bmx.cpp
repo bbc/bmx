@@ -502,6 +502,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --mp-track-num          Use the material package track number property to define a track order. By default the track number is set to 0\n");
     fprintf(stderr, "    --aes-3                 Use AES-3 audio mapping\n");
     fprintf(stderr, "    --kag-size-512          Set KAG size to 512, instead of 1\n");
+    fprintf(stderr, "    --primary-package       Set the header metadata set primary package property to the top-level file source package\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/rdd9/d10:\n");
     fprintf(stderr, "    --xml-scheme-id <id>    Set the XML payload scheme identifier associated with the following --embed-xml option.\n");
@@ -812,6 +813,7 @@ int main(int argc, const char** argv)
     bool ard_zdf_hdf_profile = false;
     bool aes3 = false;
     bool kag_size_512 = false;
+    bool op1a_primary_package = false;
     AS10Shim as10_shim = AS10_UNKNOWN_SHIM;
     const char *mpeg_descr_defaults_name = 0;
     bool mpeg_descr_frame_checks = true;
@@ -1402,6 +1404,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--kag-size-512") == 0)
         {
             kag_size_512 = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--primary-package") == 0)
+        {
+            op1a_primary_package = true;
         }
         else if (strcmp(argv[cmdln_index], "--xml-scheme-id") == 0)
         {
@@ -4623,6 +4629,7 @@ int main(int argc, const char** argv)
             op1a_clip->SetOutputStartOffset(output_start_offset);
             op1a_clip->SetOutputEndOffset(- output_end_offset);
             op1a_clip->SetAddTimecodeTrack(!no_tc_track);
+            op1a_clip->SetPrimaryPackage(op1a_primary_package);
 
             if (!have_samples_to_write) {
                 op1a_clip->SetInputDuration(duration);

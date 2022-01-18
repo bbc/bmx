@@ -596,6 +596,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --aes-3                 Use AES-3 audio mapping\n");
     fprintf(stderr, "    --kag-size-512          Set KAG size to 512, instead of 1\n");
     fprintf(stderr, "    --system-item           Add system item\n");
+    fprintf(stderr, "    --primary-package       Set the header metadata set primary package property to the top-level file source package\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/rdd9:\n");
     fprintf(stderr, "    --ard-zdf-hdf           Use the ARD ZDF HDF profile\n");
@@ -734,6 +735,7 @@ int main(int argc, const char** argv)
     bool aes3 = false;
     bool kag_size_512 = false;
     bool op1a_system_item = false;
+    bool op1a_primary_package = false;
     AS10Shim as10_shim = AS10_UNKNOWN_SHIM;
     const char *output_name = "";
     Timecode start_timecode;
@@ -2195,6 +2197,10 @@ int main(int argc, const char** argv)
         {
             op1a_system_item = true;
         }
+        else if (strcmp(argv[cmdln_index], "--primary-package") == 0)
+        {
+            op1a_primary_package = true;
+        }
         else if (strcmp(argv[cmdln_index], "--ard-zdf-hdf") == 0)
         {
             ard_zdf_hdf_profile = true;
@@ -3311,6 +3317,7 @@ int main(int argc, const char** argv)
             op1a_clip->SetOutputStartOffset(- precharge);
             op1a_clip->SetOutputEndOffset(- rollout);
             op1a_clip->SetAddTimecodeTrack(!no_tc_track);
+            op1a_clip->SetPrimaryPackage(op1a_primary_package);
         } else if (clip_type == CW_AVID_CLIP_TYPE) {
             AvidClip *avid_clip = clip->GetAvidClip();
 

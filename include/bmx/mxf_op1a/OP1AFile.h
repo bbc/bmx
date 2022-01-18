@@ -94,6 +94,7 @@ public:
     void SetAddSystemItem(bool enable);                                 // default false, no system item
     void SetRepeatIndexTable(bool enable);                              // default false. Repeat index table in Footer if true
     void ForceWriteCBEDuration0(bool enable);                           // force duration=0 for CBE index table
+    void SetPrimaryPackage(bool enable);                                // default false
 
 public:
     void SetOutputStartOffset(int64_t offset);
@@ -163,6 +164,7 @@ private:
     mxfRational mEditRate;
     Timecode mStartTimecode;
     bool mAddTimecodeTrack;
+    bool mSetPrimaryPackage;
     std::string mCompanyName;
     std::string mProductName;
     mxfProductVersion mProductVersion;
