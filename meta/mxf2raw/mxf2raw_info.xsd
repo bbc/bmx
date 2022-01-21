@@ -124,6 +124,7 @@
               <xs:documentation>Only present when there is essence data held internally in the file</xs:documentation>
             </xs:annotation>
           </xs:element>
+          <xs:element name="primary_package" type="primary_package_type" minOccurs="0"/>
           <xs:element name="identifications" type="identifications_type">
             <xs:annotation>
               <xs:documentation>List of Identification sets contained within the MXF file, identifying which applications created and modified the file</xs:documentation>
@@ -215,6 +216,7 @@
       <xs:element name="duration" type="duration_type"/>
       <xs:element name="max_precharge" type="int16_type" minOccurs="0"/>
       <xs:element name="max_rollout" type="int16_type" minOccurs="0"/>
+      <xs:element name="primary_package" type="primary_package_type" minOccurs="0"/>
       <xs:element name="start_timecodes" type="start_timecodes_type"/>
       <xs:element name="tracks" type="tracks_type"/>
       <xs:element name="text_objects" type="text_objects_type" minOccurs="0"/>
@@ -1004,6 +1006,14 @@
     </xs:restriction>
   </xs:simpleType>
 
+
+  <xs:complexType name="primary_package_type">
+    <xs:simpleContent>
+      <xs:extension base="umid_type">
+        <xs:attribute name="idau" type="label_type" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
 
   <xs:simpleType name="checksum_value_type">
     <xs:restriction base="xs:string">

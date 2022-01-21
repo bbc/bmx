@@ -1002,6 +1002,26 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
     }
 }
 
+static void write_primary_package_property(AppInfoWriter *info_writer, MXFFileReader *file_reader)
+{
+    Preface *preface = file_reader->GetHeaderMetadata()->getPreface();
+    if (!preface->havePrimaryPackage())
+        return;
+
+    mxfUMID primary_package_umid = preface->getPrimaryPackage()->getPackageUID();
+    if (mxf_is_simple_idau_umid(&primary_package_umid)) {
+        // Annotate if the UMID contains a UUID or half-swapped UL (MXF IDAU type)
+        UUID primary_package_idau;
+        mxf_extract_umid_material_number((mxfUID*)&primary_package_idau, &primary_package_umid);
+
+        info_writer->StartAnnotations();
+        info_writer->WriteIDAUItem("idau", primary_package_idau);
+        info_writer->EndAnnotations();
+    }
+
+    info_writer->WriteUMIDItem("primary_package", primary_package_umid);
+}
+
 static void write_clip_info(AppInfoWriter *info_writer, MXFReader *reader,
                             const vector<vector<Checksum> > &track_checksums,
                             const vector<CRC32Data> &track_crc32_data,
@@ -1028,6 +1048,11 @@ static void write_clip_info(AppInfoWriter *info_writer, MXFReader *reader,
         info_writer->WriteIntegerItem("max_precharge", max_precharge);
     if (max_rollout != 0)
         info_writer->WriteIntegerItem("max_rollout", max_rollout);
+
+    // Write Primary Package if it's a single (main) file only
+    MXFFileReader *file_reader = dynamic_cast<MXFFileReader*>(reader);
+    if (file_reader)
+        write_primary_package_property(info_writer, file_reader);
 
     info_writer->StartSection("start_timecodes");
     if (reader->HaveMaterialTimecode()) {
@@ -1126,6 +1151,8 @@ static void write_file_info(AppInfoWriter *info_writer, MXFFileReader *file_read
     write_op_label(info_writer, "op_label", file_reader->GetOPLabel());
     if (file_reader->HaveInternalEssence())
         info_writer->WriteBoolItem("frame_wrapped", file_reader->IsFrameWrapped());
+
+    write_primary_package_property(info_writer, file_reader);
 
     vector<Identification*> identifications = file_reader->GetHeaderMetadata()->getPreface()->getIdentifications();
     info_writer->StartArrayItem("identifications", identifications.size());
