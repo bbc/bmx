@@ -184,6 +184,7 @@ struct RawInput
     BMX_OPT_PROP_DECL(uint32_t, active_height);
     BMX_OPT_PROP_DECL(uint32_t, active_x_offset);
     BMX_OPT_PROP_DECL(uint32_t, active_y_offset);
+    BMX_OPT_PROP_DECL(int32_t, display_f2_offset);
 
     // sound
     Rational sampling_rate;
@@ -355,6 +356,7 @@ static void init_input(RawInput *input)
     BMX_OPT_PROP_DEFAULT(input->active_height, 0);
     BMX_OPT_PROP_DEFAULT(input->active_x_offset, 0);
     BMX_OPT_PROP_DEFAULT(input->active_y_offset, 0);
+    BMX_OPT_PROP_DEFAULT(input->display_f2_offset, 0);
     input->sampling_rate = DEFAULT_SAMPLING_RATE;
     BMX_OPT_PROP_DEFAULT(input->component_depth, 8);
     input->bits_per_sample = 16;
@@ -634,6 +636,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --active-height         Set the Active Height of the active area rectangle\n");
     fprintf(stderr, "  --active-x-offset       Set the Active X Offset of the active area rectangle\n");
     fprintf(stderr, "  --active-y-offset       Set the Active Y Offset of the active area rectangle\n");
+    fprintf(stderr, "  --display-f2-offset     Set the default Display F2 Offset if none is extracted from the essence\n");
     fprintf(stderr, "  -s <bps>                Audio sampling rate numerator for raw pcm. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);
     fprintf(stderr, "  -q <bps>                Audio quantization bits per sample for raw pcm. Either 16 or 24. Default 16\n");
     fprintf(stderr, "  --audio-chan <count>    Audio channel count for raw pcm. Default 1\n");
@@ -2272,6 +2275,23 @@ int main(int argc, const char** argv)
                 return 1;
             }
             BMX_OPT_PROP_SET(input.active_y_offset, uvalue);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--display-f2-offset") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.display_f2_offset, value);
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -5202,6 +5222,8 @@ int main(int argc, const char** argv)
                     pict_helper->SetActiveXOffset(input->active_x_offset);
                 if (BMX_OPT_PROP_IS_SET(input->active_y_offset))
                     pict_helper->SetActiveYOffset(input->active_y_offset);
+                if (BMX_OPT_PROP_IS_SET(input->display_f2_offset))
+                    pict_helper->SetDisplayF2Offset(input->display_f2_offset);
 
                 RDD36MXFDescriptorHelper *rdd36_helper = dynamic_cast<RDD36MXFDescriptorHelper*>(pict_helper);
                 if (rdd36_helper) {

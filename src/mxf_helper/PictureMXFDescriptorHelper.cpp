@@ -291,6 +291,14 @@ void PictureMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uin
     if (picture_descriptor->haveActiveYOffset())
         BMX_OPT_PROP_SET(mActiveYOffset, picture_descriptor->getActiveYOffset());
 
+    if (picture_descriptor->haveDisplayF2Offset() &&
+            picture_descriptor->haveFrameLayout() &&
+            (picture_descriptor->getFrameLayout() == MXF_SEPARATE_FIELDS ||
+             picture_descriptor->getFrameLayout() == MXF_MIXED_FIELDS))
+    {
+        BMX_OPT_PROP_SET(mDisplayF2Offset, picture_descriptor->getDisplayF2Offset());
+    }
+
     if (cdci_descriptor) {
         if (cdci_descriptor->haveColorSiting())
             BMX_OPT_PROP_SET(mColorSiting, cdci_descriptor->getColorSiting());
@@ -426,6 +434,11 @@ void PictureMXFDescriptorHelper::SetActiveYOffset(uint32_t offset)
     BMX_OPT_PROP_SET(mActiveYOffset, offset);
 }
 
+void PictureMXFDescriptorHelper::SetDisplayF2Offset(int32_t offset)
+{
+    BMX_OPT_PROP_SET(mDisplayF2Offset, offset);
+}
+
 FileDescriptor* PictureMXFDescriptorHelper::CreateFileDescriptor(HeaderMetadata *header_metadata)
 {
     (void)header_metadata;
@@ -478,6 +491,9 @@ void PictureMXFDescriptorHelper::UpdateFileDescriptor()
         picture_descriptor->setActiveXOffset(mActiveXOffset);
     if (BMX_OPT_PROP_IS_SET(mActiveYOffset))
         picture_descriptor->setActiveYOffset(mActiveYOffset);
+
+    if (BMX_OPT_PROP_IS_SET(mDisplayF2Offset))
+        picture_descriptor->setDisplayF2Offset(mDisplayF2Offset);
 
     if (cdci_descriptor) {
         if (BMX_OPT_PROP_IS_SET(mColorSiting))

@@ -218,6 +218,12 @@ FileDescriptor* D10MXFDescriptorHelper::CreateFileDescriptor(mxfpp::HeaderMetada
 
 void D10MXFDescriptorHelper::UpdateFileDescriptor()
 {
+    // Workaround for the d10_qt_klv test to ensure descriptor properties are in the same order
+    // and therefore that the file MD5 checksums match. This will cause
+    // PictureMXFDescriptorHelper::UpdateFileDescriptor() not to set DisplayF2Offset. The value
+    // will be set here anyway.
+    BMX_OPT_PROP_MARK(mDisplayF2Offset, false);
+
     PictureMXFDescriptorHelper::UpdateFileDescriptor();
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
@@ -238,7 +244,7 @@ void D10MXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setStoredF2Offset(0);
     cdci_descriptor->setSampledXOffset(0);
     cdci_descriptor->setSampledYOffset(0);
-    cdci_descriptor->setDisplayF2Offset(0);
+    cdci_descriptor->setDisplayF2Offset(0);  // Note workaround at the top of this method
     cdci_descriptor->setAlphaTransparency(false);
     cdci_descriptor->setCaptureGamma(ITUR_BT470_TRANSFER_CH);
     cdci_descriptor->setImageAlignmentOffset(0);

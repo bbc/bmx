@@ -496,6 +496,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --active-height         Override or set the Active Height of the active area rectangle\n");
     fprintf(stderr, "  --active-x-offset       Override or set the Active X Offset of the active area rectangle\n");
     fprintf(stderr, "  --active-y-offset       Override or set the Active Y Offset of the active area rectangle\n");
+    fprintf(stderr, "  --display-f2-offset     Override or set the default Display F2 Offset if it is not extracted from the essence\n");
     fprintf(stderr, "  --ignore-input-desc     Don't use input MXF file descriptor properties to fill in missing information\n");
     fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks. See below for details of the <expr> format\n");
     fprintf(stderr, "  --dump-track-map        Dump the output audio track map to stderr.\n");
@@ -808,6 +809,7 @@ int main(int argc, const char** argv)
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_active_height, 0);
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_active_x_offset, 0);
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_active_y_offset, 0);
+    BMX_OPT_PROP_DECL_DEF(int32_t, user_display_f2_offset, 0);
     bool ignore_input_desc = false;
     bool input_file_md5 = false;
     int input_file_flags = 0;
@@ -1738,6 +1740,22 @@ int main(int argc, const char** argv)
                 return 1;
             }
             BMX_OPT_PROP_SET(user_active_y_offset, uvalue);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--display-f2-offset") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_display_f2_offset, value);
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--ignore-input-desc") == 0)
@@ -4017,6 +4035,8 @@ int main(int argc, const char** argv)
                     pict_helper->SetActiveXOffset(user_active_x_offset);
                 if (BMX_OPT_PROP_IS_SET(user_active_y_offset))
                     pict_helper->SetActiveYOffset(user_active_y_offset);
+                if (BMX_OPT_PROP_IS_SET(user_display_f2_offset))
+                    pict_helper->SetDisplayF2Offset(user_display_f2_offset);
 
                 RDD36MXFDescriptorHelper *rdd36_helper = dynamic_cast<RDD36MXFDescriptorHelper*>(pict_helper);
                 if (rdd36_helper) {
