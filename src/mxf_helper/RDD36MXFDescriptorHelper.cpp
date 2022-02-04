@@ -274,10 +274,13 @@ void RDD36MXFDescriptorHelper::UpdateFileDescriptor(RDD36EssenceParser *essence_
     else
         cdci_descriptor->setDisplayHeight(essence_parser->GetHeight());
     if (cdci_descriptor->getFrameLayout() == MXF_SEPARATE_FIELDS) {
-        if (essence_parser->GetInterlaceMode() == RDD36_INTERLACED_BFF)
+        if (essence_parser->GetInterlaceMode() == RDD36_INTERLACED_BFF) {
             cdci_descriptor->setFieldDominance(2);
-        else // RDD36_INTERLACED_TFF
+            cdci_descriptor->setDisplayF2Offset(-1);
+        } else { // RDD36_INTERLACED_TFF
             cdci_descriptor->setFieldDominance(1);
+            cdci_descriptor->setDisplayF2Offset(0);
+        }
     }
     // stored dimensions are a multiple of 16, the macro block size
     cdci_descriptor->setStoredWidth((cdci_descriptor->getDisplayWidth() + 15) / 16 * 16);
