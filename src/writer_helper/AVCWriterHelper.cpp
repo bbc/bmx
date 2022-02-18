@@ -272,8 +272,12 @@ void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
     else
         flags |= 3;
 
-    if (mDecodedFrames.size() > MAX_DPB_FRAMES || mEssenceParser.IsIDRFrame())
+    if (mEssenceParser.IsIDRFrame()) {
         PopAllDecodedFrames();
+    } else {
+        while (mDecodedFrames.size() > MAX_DPB_FRAMES)
+            PopDecodedFrame();
+    }
 
     IndexedFrame indexed_frame;
     indexed_frame.position      = mPosition;
@@ -448,15 +452,6 @@ void AVCWriterHelper::SetIndexResult(const IndexedFrame &indexed_frame, int64_t 
 
 void AVCWriterHelper::PopAllDecodedFrames()
 {
-    int64_t start_decode_pos = mPosition - mDecodedFrames.size();
-    size_t index;
-    map<int32_t, int64_t>::const_iterator iter;
-    for (iter = mDecodedFrames.begin(), index = 0; iter != mDecodedFrames.end(); iter++, index++) {
-        int64_t decoding_delay = (iter->second - start_decode_pos) - index;
-        if (decoding_delay > (int64_t)mDecodingDelay)
-          mDecodingDelay = (uint8_t)decoding_delay;
-    }
-
     while (!mDecodedFrames.empty())
         PopDecodedFrame();
 }
@@ -465,6 +460,10 @@ void AVCWriterHelper::PopDecodedFrame()
 {
     int64_t decoded_pos = mPosition - mDecodedFrames.size();
     int64_t coded_pos   = mDecodedFrames.begin()->second;
+
+    int64_t decoding_delay = coded_pos - decoded_pos;
+    if (decoding_delay > (int64_t)mDecodingDelay)
+        mDecodingDelay = (uint8_t)decoding_delay;
 
     mIndexedDecodedFrames[coded_pos] = mIndexedCodedFrames[coded_pos];
     mIndexedCodedFrames.erase(coded_pos);
