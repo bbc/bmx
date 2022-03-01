@@ -228,6 +228,7 @@ PictureMXFDescriptorHelper::PictureMXFDescriptorHelper()
     BMX_OPT_PROP_DEFAULT(mActiveHeight, 0);
     BMX_OPT_PROP_DEFAULT(mActiveXOffset, 0);
     BMX_OPT_PROP_DEFAULT(mActiveYOffset, 0);
+    BMX_OPT_PROP_DEFAULT(mDisplayF2Offset, 0);
 }
 
 PictureMXFDescriptorHelper::~PictureMXFDescriptorHelper()
