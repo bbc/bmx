@@ -1,0 +1,15 @@
+0
+chL, chan=0
+chR, chan=1
+sgST
+ggAPg, lang=en
+
+1
+L, chan=0
+C, chan=1
+R, chan=2
+Ls, chan=3
+Rs, chan=4
+Cs, chan=5
+60
+MPg, lang=en

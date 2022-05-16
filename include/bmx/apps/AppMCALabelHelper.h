@@ -58,6 +58,13 @@ typedef struct
     UL dict_id;
 } MCALabelEntry;
 
+typedef struct
+{
+    MCALabelEntry entry;
+    std::string gen_tag_symbol;
+    std::string gen_tag_name;
+} GeneratedMCALabelEntry;
+
 
 class ClipWriter;
 
@@ -67,7 +74,10 @@ public:
     AppMCALabelHelper();
     ~AppMCALabelHelper();
 
-    bool IndexLabels(const MCALabelEntry *entries, size_t num_entries);
+    bool IndexLabels(const MCALabelEntry *entries, size_t num_entries, bool override_duplicates);
+
+    // Takes ownership of generated_entry if returns true
+    bool IndexGeneratedLabel(GeneratedMCALabelEntry *generated_entry, bool override_duplicates);
 
 public:
     bool ParseTrackLabels(const std::string &filename);
@@ -115,6 +125,7 @@ private:
 
 private:
     std::map<std::string, const MCALabelEntry*> mEntries;
+    std::vector<GeneratedMCALabelEntry*> mGeneratedEntries;
     std::vector<TrackLabels*> mTrackLabels;
     std::map<uint32_t, TrackLabels*> mTrackLabelsByTrackIndex;
 };

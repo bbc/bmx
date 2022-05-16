@@ -76,6 +76,7 @@
 #include <bmx/apps/AppUtils.h>
 #include <bmx/apps/AS11Helper.h>
 #include <bmx/apps/AS10Helper.h>
+#include <bmx/apps/IMFMCALabels.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -673,8 +674,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "                                * 'as11-mode-0', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02010000,\n");
     fprintf(stderr, "                                * 'as11-mode-1', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02020000,\n");
     fprintf(stderr, "                                * 'as11-mode-2', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02030000\n");
-    fprintf(stderr, "    --track-mca-labels <scheme> <file>   Insert audio labels defined in <file> using the symbol <scheme>\n");
-    fprintf(stderr, "                                         The available <scheme>s are: 'as11'\n");
+    fprintf(stderr, "    --track-mca-labels <schemes> <file>  Insert audio labels defined in <file> using one or more symbol <schemes>\n");
+    fprintf(stderr, "                                         The <schemes> are separated by a ',' and can be 'as11' or 'imf'\n");
     fprintf(stderr, "                                         The format of <file> is described in bmx/docs/mca_labels_format.md\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Input options:\n");
@@ -880,7 +881,7 @@ int main(int argc, const char** argv)
     TrackMapper track_mapper;
     bool dump_track_map = false;
     bool dump_track_map_exit = false;
-    vector<pair<string, string> > track_mca_labels;
+    vector<pair<vector<string>, string> > track_mca_labels;
     bool use_avc_subdesc = false;
     UL audio_layout_mode_label = g_Null_UL;
     BMX_OPT_PROP_DECL_DEF(uint32_t, head_fill, 0);
@@ -2568,13 +2569,23 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument(s) for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (strcmp(argv[cmdln_index + 1], "as11") != 0)
+            vector<string> schemes = split_string(argv[cmdln_index + 1], ',', false, true);
+            if (schemes.empty())
             {
                 usage(argv[0]);
-                fprintf(stderr, "MCA labels scheme '%s' is not supported\n", argv[cmdln_index + 1]);
+                fprintf(stderr, "MCA labels scheme list '%s' is empty\n", argv[cmdln_index + 1]);
                 return 1;
             }
-            track_mca_labels.push_back(make_pair(argv[cmdln_index + 1], argv[cmdln_index + 2]));
+            size_t k;
+            for (k = 0; k < schemes.size(); k++) {
+                if (schemes[k] != "as11" && schemes[k] != "imf")
+                {
+                    usage(argv[0]);
+                    fprintf(stderr, "MCA labels scheme '%s' is not supported\n", schemes[k].c_str());
+                    return 1;
+                }
+            }
+            track_mca_labels.push_back(make_pair(schemes, argv[cmdln_index + 2]));
             cmdln_index += 2;
         }
         else if (strcmp(argv[cmdln_index], "--regtest") == 0)
@@ -4122,19 +4133,24 @@ int main(int argc, const char** argv)
 
         // insert MCA labels
 
-        if (!track_mca_labels.empty()) {
-            AppMCALabelHelper label_helper;
-            AS11Helper::IndexAS11MCALabels(&label_helper);
+        for (i = 0; i < track_mca_labels.size(); i++) {
+            const vector<string> &schemes = track_mca_labels[i].first;
+            const string &labels_filename = track_mca_labels[i].second;
 
-            size_t i;
-            for (i = 0; i < track_mca_labels.size(); i++) {
-                BMX_ASSERT(track_mca_labels[i].first == "as11");
-                if (!label_helper.ParseTrackLabels(track_mca_labels[i].second)) {
-                    log_error("Failed to parse audio labels file '%s'\n", track_mca_labels[i].second.c_str());
-                    throw false;
-                }
-                label_helper.InsertTrackLabels(clip);
+            AppMCALabelHelper label_helper;
+            size_t k;
+            for (k = 0; k < schemes.size(); k++) {
+                if (schemes[k] == "as11")
+                    AS11Helper::IndexAS11MCALabels(&label_helper);
+                else
+                    index_imf_mca_labels(&label_helper);
             }
+
+            if (!label_helper.ParseTrackLabels(labels_filename)) {
+                log_error("Failed to parse audio labels file '%s'\n", labels_filename.c_str());
+                throw false;
+            }
+            label_helper.InsertTrackLabels(clip);
         }
 
 

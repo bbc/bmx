@@ -83,19 +83,36 @@ AppMCALabelHelper::AppMCALabelHelper()
 AppMCALabelHelper::~AppMCALabelHelper()
 {
     ClearTrackLabels();
+
+    size_t i;
+    for (i = 0; i < mGeneratedEntries.size(); i++)
+        delete mGeneratedEntries[i];
 }
 
-bool AppMCALabelHelper::IndexLabels(const MCALabelEntry *entries, size_t num_entries)
+bool AppMCALabelHelper::IndexLabels(const MCALabelEntry *entries, size_t num_entries, bool override_duplicates)
 {
     size_t i;
     for (i = 0; i < num_entries; i++) {
         const MCALabelEntry &entry = entries[i];
-        if (mEntries.count(entry.tag_symbol)) {
+        if (!override_duplicates && mEntries.count(entry.tag_symbol)) {
             log_error("Duplicate audio label entry tag symbol '%s'\n", entry.tag_symbol);
             return false;
         }
         mEntries[entry.tag_symbol] = &entry;
     }
+
+    return true;
+}
+
+bool AppMCALabelHelper::IndexGeneratedLabel(GeneratedMCALabelEntry *generated_entry, bool override_duplicates)
+{
+    if (!override_duplicates && mEntries.count(generated_entry->entry.tag_symbol)) {
+        log_error("Duplicate audio label entry tag symbol '%s'\n", generated_entry->entry.tag_symbol);
+        return false;
+    }
+
+    mEntries[generated_entry->entry.tag_symbol] = &generated_entry->entry;
+    mGeneratedEntries.push_back(generated_entry);
 
     return true;
 }
@@ -382,23 +399,21 @@ AppMCALabelHelper::LabelLine AppMCALabelHelper::ParseLabelLine(const string &lin
 {
     LabelLine label_line;
 
-    vector<string> elements = split_string(line, ',', false);
+    vector<string> elements = split_string(line, ',', false, true);
     BMX_ASSERT(!elements.empty());
 
-    string label_str = trim_string(elements[0]);
+    string label_str = elements[0];
     label_line.label = Find(label_str);
     if (!label_line.label)
         throw BMXException("Unknown audio label '%s'", label_str.c_str());
 
     size_t i;
     for (i = 1; i < elements.size(); i++) {
-        vector<string> nv_pair = split_string(elements[i], '=', false);
+        vector<string> nv_pair = split_string(elements[i], '=', false, true);
         if (nv_pair.size() != 2)
             throw BMXException("Invalid audio label <name>=<value> attribute string '%s'", elements[i].c_str());
-        string name  = trim_string(nv_pair[0]);
-        string value = trim_string(nv_pair[1]);
-        if (name.empty() || value.empty())
-            throw BMXException("Invalid audio label attribute '%s'", elements[i].c_str());
+        string name  = nv_pair[0];
+        string value = nv_pair[1];
         if (name == "id") {
             label_line.id = value;
         } else if (name == "chan") {

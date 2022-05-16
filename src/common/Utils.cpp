@@ -738,22 +738,30 @@ string bmx::trim_string(string value)
     return value.substr(start, len);
 }
 
-vector<string> bmx::split_string(string value, char separator, bool allow_empty)
+vector<string> bmx::split_string(string value, char separator, bool allow_empty, bool trim)
 {
     vector<string> result;
     size_t start = 0;
     size_t end = 0;
     while (end < value.size()) {
         if (value[end] == separator) {
-            if (allow_empty || end != start)
-                result.push_back(value.substr(start, end - start));
+            string element = value.substr(start, end - start);
+            if (trim)
+                element = trim_string(element);
+            if (!element.empty() || allow_empty)
+                result.push_back(element);
+
             start = end + 1;
             end = start;
         }
         end++;
     }
-    if (end != start)
-        result.push_back(value.substr(start, end - start));
+
+    string element = value.substr(start, end - start);
+    if (trim)
+        element = trim_string(element);
+    if (!element.empty() || allow_empty)
+        result.push_back(element);
 
     return result;
 }

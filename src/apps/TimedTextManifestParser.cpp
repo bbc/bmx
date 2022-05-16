@@ -108,10 +108,9 @@ static bool parse_profile(const string &suffix, TimedTextProfile *profile)
 
 static bool parse_languages(const string &lang_str, vector<string> *languages_out)
 {
-    vector<string> languages = split_string(lang_str, ',', true);
+    vector<string> languages = split_string(lang_str, ',', true, true);
     size_t i;
     for (i = 0; i < languages.size(); i++) {
-        languages[i] = trim_string(languages[i]);
         if (languages[i].empty()) {
             log_error("Empty language element\n");
             return false;

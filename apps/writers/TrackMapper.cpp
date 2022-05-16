@@ -158,25 +158,22 @@ TrackMapper::ParsedGroup* TrackMapper::ParsedGroup::Parse(ParsedDefinition *def,
         if (group_str[0] == 'x') {
             group->elements.push_back(ParsedRemainderRange::Parse(def, group_str));
         } else {
-            vector<string> items = split_string(group_str, ',', false);
+            vector<string> items = split_string(group_str, ',', false, true);
             size_t i;
             for (i = 0; i < items.size(); i++) {
-                string item_str = trim_string(items[i]);
-                if (item_str.empty())
-                    continue;
+                const string &item_str = items[i];
 
-                vector<string> range = split_string(item_str, '-', true);
-                BMX_CHECK(range.size() <= 2);
+                vector<string> range = split_string(item_str, '-', false, true);
+                BMX_CHECK(range.size() == 1 || range.size() == 2);
                 if (range.size() == 1) {
-                    string input_str = trim_string(range[0]);
+                    const string &input_str = range[0];
                     if (input_str[0] == 's')
                         element = ParsedSilenceChannels::Parse(def, input_str);
                     else
                         element = ParsedInput::Parse(def, input_str);
                 } else {
-                    string from_str = trim_string(range[0]);
-                    string to_str   = trim_string(range[1]);
-                    BMX_CHECK(!from_str.empty() && !to_str.empty());
+                    const string &from_str = range[0];
+                    const string &to_str   = range[1];
                     element = ParsedInputRange::Parse(def, from_str, to_str);
                 }
 
@@ -212,13 +209,10 @@ TrackMapper::ParsedDefinition* TrackMapper::ParsedDefinition::Parse(const string
     {
         def = new ParsedDefinition();
 
-        vector<string> groups = split_string(def_str, ';', false);
+        vector<string> groups = split_string(def_str, ';', false, true);
         size_t g;
-        for (g = 0; g < groups.size(); g++) {
-            string group_str = trim_string(groups[g]);
-            if (!group_str.empty())
-                def->groups.push_back(ParsedGroup::Parse(def, group_str));
-        }
+        for (g = 0; g < groups.size(); g++)
+            def->groups.push_back(ParsedGroup::Parse(def, groups[g]));
 
         return def;
     }

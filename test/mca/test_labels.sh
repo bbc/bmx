@@ -46,9 +46,9 @@ create_file_bmxtranswrap()
     $appsdir/bmxtranswrap/bmxtranswrap \
         --regtest \
         -t op1a \
-        -o $3 \
+        -o $4 \
         --track-map $1 \
-        --track-mca-labels as11 $2 \
+        --track-mca-labels $2 $3 \
         --audio-layout as11-mode-0 \
         $tmpdir/input.mxf \
         >/dev/null
@@ -57,9 +57,9 @@ create_file_bmxtranswrap()
         --regtest \
         --info \
         --info-format xml \
-        --info-file $4 \
+        --info-file $5 \
         --mca-detail \
-        $3
+        $4
 }
 
 create_file_raw2bmx()
@@ -82,9 +82,9 @@ create_file_raw2bmx()
         --regtest \
         -t op1a \
         -f 25 \
-        -o $3 \
+        -o $4 \
         --track-map $1 \
-        --track-mca-labels as11 $2 \
+        --track-mca-labels $2 $3 \
         --audio-layout as11-mode-0 \
         --avci100_1080i $tmpdir/video \
         --locked true --wave $tmpdir/input.wav \
@@ -96,61 +96,67 @@ create_file_raw2bmx()
         --regtest \
         --info \
         --info-format xml \
-        --info-file $4 \
+        --info-file $5 \
         --mca-detail \
-        $3
+        $4
 }
 
 
 check()
 {
-    create_file_bmxtranswrap $1 $2 $tmpdir/test1.mxf $tmpdir/test1.xml &&
+    create_file_bmxtranswrap $1 $2 $3 $tmpdir/test1.mxf $tmpdir/test1.xml &&
         $md5tool < $tmpdir/test1.mxf > $tmpdir/test1.md5 &&
-        diff $tmpdir/test1.md5 $base/mcalabels_$3.md5 &&
-        diff $tmpdir/test1.xml $base/mcalabels_$3.xml &&
-    create_file_raw2bmx $1 $2 $tmpdir/test2.mxf $tmpdir/test2.xml &&
+        diff $tmpdir/test1.md5 $base/mcalabels_$4.md5 &&
+        diff $tmpdir/test1.xml $base/mcalabels_$4.xml &&
+    create_file_raw2bmx $1 $2 $3 $tmpdir/test2.mxf $tmpdir/test2.xml &&
         $md5tool < $tmpdir/test2.mxf > $tmpdir/test2.md5 &&
-        diff $tmpdir/test2.md5 $base/mcalabels_$3.md5 &&
-        diff $tmpdir/test2.xml $base/mcalabels_$3.xml
+        diff $tmpdir/test2.md5 $base/mcalabels_$4.md5 &&
+        diff $tmpdir/test2.xml $base/mcalabels_$4.xml
 }
 
 create_data()
 {
-    create_file_bmxtranswrap $1 $2 $tmpdir/test.mxf $base/mcalabels_$3.xml &&
-        $md5tool < $tmpdir/test.mxf > $base/mcalabels_$3.md5
+    create_file_bmxtranswrap $1 $2 $3 $tmpdir/test.mxf $base/mcalabels_$4.xml &&
+        $md5tool < $tmpdir/test.mxf > $base/mcalabels_$4.md5
 }
 
 create_samples()
 {
-    create_file_bmxtranswrap $1 $2 $sampledir/mca_labels_$3.mxf $sampledir/mca_labels_$3.xml
+    create_file_bmxtranswrap $1 $2 $3 $sampledir/mca_labels_$4.mxf $sampledir/mca_labels_$4.xml
 }
 
 
 check_all()
 {
-    check stereo $base/stereo.txt stereo &&
-        check mono $base/mono.txt mono &&
-        check "0,1;2-7" $base/stereop51.txt stereop51 &&
-        check "0,1;2-7" $base/mess.txt mess &&
-        check mono $base/mononochan.txt mononochan
+    check stereo as11 $base/stereo.txt stereo &&
+        check mono as11 $base/mono.txt mono &&
+        check "0,1;2-7" as11 $base/stereop51.txt stereop51 &&
+        check "0,1;2-7" as11 $base/mess.txt mess &&
+        check mono as11 $base/mononochan.txt mononochan &&
+        check "0,1;2-7" imf $base/imf.txt imf &&
+        check "0,1;2-7" as11,imf $base/mixed.txt mixed
 }
 
 create_data_all()
 {
-    create_data stereo $base/stereo.txt stereo &&
-        create_data mono $base/mono.txt mono &&
-        create_data "0,1;2-7" $base/stereop51.txt stereop51 &&
-        create_data "0,1;2-7" $base/mess.txt mess &&
-        create_data mono $base/mononochan.txt mononochan
+    create_data stereo as11 $base/stereo.txt stereo &&
+        create_data mono as11 $base/mono.txt mono &&
+        create_data "0,1;2-7" as11 $base/stereop51.txt stereop51 &&
+        create_data "0,1;2-7" as11 $base/mess.txt mess &&
+        create_data mono as11 $base/mononochan.txt mononochan &&
+        create_data "0,1;2-7" imf $base/imf.txt imf &&
+        create_data "0,1;2-7" as11,imf $base/mixed.txt mixed
 }
 
 create_samples_all()
 {
-    create_samples stereo $base/stereo.txt stereo &&
-        create_samples mono $base/mono.txt mono &&
-        create_samples "0,1;2-7" $base/stereop51.txt stereop51 &&
-        create_samples "0,1;2-7" $base/mess.txt mess &&
-        create_samples mono $base/mononochan.txt mononochan
+    create_samples stereo as11 $base/stereo.txt stereo &&
+        create_samples mono as11 $base/mono.txt mono &&
+        create_samples "0,1;2-7" as11 $base/stereop51.txt stereop51 &&
+        create_samples "0,1;2-7" as11 $base/mess.txt mess &&
+        create_samples mono as11 $base/mononochan.txt mononochan &&
+        create_samples "0,1;2-7" imf $base/imf.txt imf &&
+        create_samples "0,1;2-7" as11,imf $base/mixed.txt mixed
 }
 
 

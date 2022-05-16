@@ -1,0 +1,14 @@
+0
+NSC001, chan=0
+NSC002, chan=1
+DNS
+
+1
+L, chan=0
+C, chan=1
+R, chan=2
+Ls, chan=3
+Rs, chan=4
+Cs, chan=5
+60
+MPg, lang=en

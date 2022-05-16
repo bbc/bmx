@@ -116,15 +116,7 @@ void TimedTextManifest::SetProfileDesignator(const string &designator)
 
 void TimedTextManifest::SetLanguagesString(const string &languages_str)
 {
-    mLanguages.clear();
-    vector<string> languages = split_string(languages_str, ',', true);
-    size_t i;
-    for (i = 0; i < languages.size(); i++) {
-        languages[i] = trim_string(languages[i]);
-        if (!languages[i].empty()) {
-            mLanguages.push_back(languages[i]);
-        }
-    }
+    mLanguages = split_string(languages_str, ',', false, true);
 }
 
 void TimedTextManifest::Reset()

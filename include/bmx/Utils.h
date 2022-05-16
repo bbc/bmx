@@ -102,7 +102,7 @@ int64_t get_file_size(const std::string &filename);
 int64_t get_file_size(FILE *file);
 
 std::string trim_string(std::string value);
-std::vector<std::string> split_string(std::string value, char separator, bool allow_empty);
+std::vector<std::string> split_string(std::string value, char separator, bool allow_empty, bool trim);
 
 void get_xml_encoding(const unsigned char *data, size_t size, TextEncoding *encoding, ByteOrder *byte_order);
 
