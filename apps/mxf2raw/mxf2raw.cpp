@@ -1670,7 +1670,7 @@ static void usage(const char *cmd)
     fprintf(stderr, " --read-ess            Read the essence data, even when no other option requires it\n");
     fprintf(stderr, " --deint               De-interleave multi-channel / AES-3 sound\n");
     fprintf(stderr, " --start <frame>       Set the start frame to read. Default is 0\n");
-    fprintf(stderr, " --dur <frame>         Set the duration in frames. Default is minimum avaliable duration\n");
+    fprintf(stderr, " --dur <frame>         Set the duration in frames. Default is minimum available duration\n");
     fprintf(stderr, " --nopc                Don't include pre-charge frames\n");
     fprintf(stderr, " --noro                Don't include roll-out frames\n");
     fprintf(stderr, " --rt <factor>         Read at realtime rate x <factor>, where <factor> is a floating point value\n");
