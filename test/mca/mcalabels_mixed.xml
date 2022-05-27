@@ -203,9 +203,9 @@
           <locked>true</locked>
           <channel_assignment>urn:smpte:ul:060e2b34.04010101.0d010801.02010000</channel_assignment>
           <mca_labels>
-            <channel_summary>L; C; R; Ls; Rs; Cs</channel_summary>
-            <sg_summary>60</sg_summary>
-            <gosg_summary>MPg</gosg_summary>
+            <channel_summary>chL; chC; chR; chLs; chRs; chCs</channel_summary>
+            <sg_summary>sg60</sg_summary>
+            <gosg_summary>ggDVS</gosg_summary>
             <channels size="6">
               <channel index="0">
                 <index>0</index>
@@ -214,9 +214,9 @@
                   <channel_label index="0">
                     <link_id>urn:uuid:00000000-0000-0000-0000-000000010007</link_id>
                     <dict_id>urn:smpte:ul:060e2b34.0401010d.03020101.00000000</dict_id>
-                    <tag_symbol>L</tag_symbol>
+                    <tag_symbol>chL</tag_symbol>
                     <tag_name>Left</tag_name>
-                    <sg_link_id tag_symbol="60">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
+                    <sg_link_id tag_symbol="sg60">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
                   </channel_label>
                 </labels>
               </channel>
@@ -227,9 +227,9 @@
                   <channel_label index="0">
                     <link_id>urn:uuid:00000000-0000-0000-0000-000000010008</link_id>
                     <dict_id>urn:smpte:ul:060e2b34.0401010d.03020103.00000000</dict_id>
-                    <tag_symbol>C</tag_symbol>
+                    <tag_symbol>chC</tag_symbol>
                     <tag_name>Center</tag_name>
-                    <sg_link_id tag_symbol="60">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
+                    <sg_link_id tag_symbol="sg60">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
                   </channel_label>
                 </labels>
               </channel>
@@ -240,9 +240,9 @@
                   <channel_label index="0">
                     <link_id>urn:uuid:00000000-0000-0000-0000-000000010009</link_id>
                     <dict_id>urn:smpte:ul:060e2b34.0401010d.03020102.00000000</dict_id>
-                    <tag_symbol>R</tag_symbol>
+                    <tag_symbol>chR</tag_symbol>
                     <tag_name>Right</tag_name>
-                    <sg_link_id tag_symbol="60">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
+                    <sg_link_id tag_symbol="sg60">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
                   </channel_label>
                 </labels>
               </channel>
@@ -253,9 +253,9 @@
                   <channel_label index="0">
                     <link_id>urn:uuid:00000000-0000-0000-0000-00000001000a</link_id>
                     <dict_id>urn:smpte:ul:060e2b34.0401010d.03020105.00000000</dict_id>
-                    <tag_symbol>Ls</tag_symbol>
+                    <tag_symbol>chLs</tag_symbol>
                     <tag_name>Left Surround</tag_name>
-                    <sg_link_id tag_symbol="60">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
+                    <sg_link_id tag_symbol="sg60">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
                   </channel_label>
                 </labels>
               </channel>
@@ -266,9 +266,9 @@
                   <channel_label index="0">
                     <link_id>urn:uuid:00000000-0000-0000-0000-00000001000b</link_id>
                     <dict_id>urn:smpte:ul:060e2b34.0401010d.03020106.00000000</dict_id>
-                    <tag_symbol>Rs</tag_symbol>
+                    <tag_symbol>chRs</tag_symbol>
                     <tag_name>Right Surround</tag_name>
-                    <sg_link_id tag_symbol="60">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
+                    <sg_link_id tag_symbol="sg60">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
                   </channel_label>
                 </labels>
               </channel>
@@ -279,9 +279,9 @@
                   <channel_label index="0">
                     <link_id>urn:uuid:00000000-0000-0000-0000-00000001000c</link_id>
                     <dict_id>urn:smpte:ul:060e2b34.0401010d.0302010d.00000000</dict_id>
-                    <tag_symbol>Cs</tag_symbol>
+                    <tag_symbol>chCs</tag_symbol>
                     <tag_name>Center Surround</tag_name>
-                    <sg_link_id tag_symbol="60">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
+                    <sg_link_id tag_symbol="sg60">urn:uuid:00000000-0000-0000-0000-000000010006</sg_link_id>
                   </channel_label>
                 </labels>
               </channel>
@@ -290,11 +290,11 @@
               <soundfield_group index="0">
                 <link_id>urn:uuid:00000000-0000-0000-0000-000000010006</link_id>
                 <dict_id>urn:smpte:ul:060e2b34.0401010d.03020220.07000000</dict_id>
-                <tag_symbol>60</tag_symbol>
+                <tag_symbol>sg60</tag_symbol>
                 <tag_name>6.0</tag_name>
                 <gosg_link_ids size="1">
                   <gosg_link_id index="0">
-                    <link_id tag_symbol="MPg">urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
+                    <link_id tag_symbol="ggDVS">urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
                   </gosg_link_id>
                 </gosg_link_ids>
               </soundfield_group>
@@ -302,9 +302,9 @@
             <group_of_soundfield_groups size="1">
               <group_of_soundfield_group index="0">
                 <link_id>urn:uuid:00000000-0000-0000-0000-000000010005</link_id>
-                <dict_id>urn:smpte:ul:060e2b34.0401010d.03020320.01000000</dict_id>
-                <tag_symbol>MPg</tag_symbol>
-                <tag_name>Main Program</tag_name>
+                <dict_id>urn:smpte:ul:060e2b34.0401010d.03020320.02000000</dict_id>
+                <tag_symbol>ggDVS</tag_symbol>
+                <tag_name>Descriptive Video Service</tag_name>
                 <language>en</language>
               </group_of_soundfield_group>
             </group_of_soundfield_groups>

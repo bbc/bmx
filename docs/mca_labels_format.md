@@ -20,7 +20,7 @@ An empty line is used to signal the start of a new audio track.
 
 ## Label Line
 
-A label line starts with the value of the Tag Symbol label property, followed by a comma separated list of name/value pairs of properties for that label. The list of supported symbols can be found in the [AS11WriterHelper.cpp](../src/as11/AS11WriterHelper.cpp) source code file. The symbol identifies ether a CH (e.g. `chL` for Left), SG (e.g. `sg51` for 5.1) or GOSG (e.g. `ggMPg` for Main Program).
+A label line starts with the value of the Tag Symbol label property, followed by a comma separated list of name/value pairs of properties for that label. The list of supported symbols can be found in the [AppMCALabelHelper.cpp](../src/apps/AppMCALabelHelper.cpp) source code file. The symbol identifies ether a CH (e.g. `chL` for Left), SG (e.g. `sg51` for 5.1) or GOSG (e.g. `ggMPg` for Main Program).
 
 ### Label Line Properties
 

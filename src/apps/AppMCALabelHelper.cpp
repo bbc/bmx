@@ -52,6 +52,119 @@ using namespace mxfpp;
 using namespace bmx;
 
 
+// Multi-channel audio labels from D-Cinema, SMPTE ST 428-12:2013
+
+#define DC_MCA_LABEL(type, octet11) \
+    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x03, 0x02, type, octet11, 0x00, 0x00, 0x00, 0x00}
+
+#define DC_CHANNEL_LABEL(octet11)  DC_MCA_LABEL(0x01, octet11)
+#define DC_SOUNDFIELD_GROUP_LABEL(octet11)  DC_MCA_LABEL(0x02, octet11)
+
+
+static const MCALabelEntry DC_MCA_LABELS[] =
+{
+    // Channels
+    {AUDIO_CHANNEL_LABEL, "chL", "Left", DC_CHANNEL_LABEL(0x01)},
+    {AUDIO_CHANNEL_LABEL, "chR", "Right", DC_CHANNEL_LABEL(0x02)},
+    {AUDIO_CHANNEL_LABEL, "chC", "Center", DC_CHANNEL_LABEL(0x03)},
+    {AUDIO_CHANNEL_LABEL, "chLFE", "LFE", DC_CHANNEL_LABEL(0x04)},
+    {AUDIO_CHANNEL_LABEL, "chLs", "Left Surround", DC_CHANNEL_LABEL(0x05)},
+    {AUDIO_CHANNEL_LABEL, "chRs", "Right Surround", DC_CHANNEL_LABEL(0x06)},
+    {AUDIO_CHANNEL_LABEL, "chLss", "Left Side Surround", DC_CHANNEL_LABEL(0x07)},
+    {AUDIO_CHANNEL_LABEL, "chRss", "Right Side Surround", DC_CHANNEL_LABEL(0x08)},
+    {AUDIO_CHANNEL_LABEL, "chLrs", "Left Rear Surround", DC_CHANNEL_LABEL(0x09)},
+    {AUDIO_CHANNEL_LABEL, "chRrs", "Right Rear Surround", DC_CHANNEL_LABEL(0x0a)},
+    {AUDIO_CHANNEL_LABEL, "chLc", "Left Center", DC_CHANNEL_LABEL(0x0b)},
+    {AUDIO_CHANNEL_LABEL, "chRc", "Right Center", DC_CHANNEL_LABEL(0x0c)},
+    {AUDIO_CHANNEL_LABEL, "chCs", "Center Surround", DC_CHANNEL_LABEL(0x0d)},
+    {AUDIO_CHANNEL_LABEL, "chHI", "Hearing Impaired", DC_CHANNEL_LABEL(0x0e)},
+    {AUDIO_CHANNEL_LABEL, "chVIN", "Visually Impaired Narrative", DC_CHANNEL_LABEL(0x0f)},
+
+    // Soundfield Groups
+    {SOUNDFIELD_GROUP_LABEL, "sg51", "5.1", DC_SOUNDFIELD_GROUP_LABEL(0x01)},
+    {SOUNDFIELD_GROUP_LABEL, "sg71", "7.1DS", DC_SOUNDFIELD_GROUP_LABEL(0x02)},
+    {SOUNDFIELD_GROUP_LABEL, "sgSDS", "7.1SDS", DC_SOUNDFIELD_GROUP_LABEL(0x03)},
+    {SOUNDFIELD_GROUP_LABEL, "sg61", "6.1", DC_SOUNDFIELD_GROUP_LABEL(0x04)},
+    {SOUNDFIELD_GROUP_LABEL, "sgM", "Monoaural", DC_SOUNDFIELD_GROUP_LABEL(0x05)},
+};
+
+
+// Multi-channel audio labels from IMF, SMPTE ST 2067-8:2013
+
+#define IMF_MCA_LABEL(type, octet12, octet13) \
+    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x03, 0x02, type, 0x20, octet12, octet13, 0x00, 0x00}
+
+#define IMF_CHANNEL_LABEL(octet12, octet13)  IMF_MCA_LABEL(0x01, octet12, octet13)
+#define IMF_SOUNDFIELD_GROUP_LABEL(octet12)  IMF_MCA_LABEL(0x02, octet12, 0x00)
+#define IMF_GROUP_OF_SOUNDFIELD_GROUP_LABEL(octet12)  IMF_MCA_LABEL(0x03, octet12, 0x00)
+
+
+static const MCALabelEntry IMF_MCA_LABELS[] =
+{
+    //  Channels
+    {AUDIO_CHANNEL_LABEL, "chM1", "Mono One", IMF_CHANNEL_LABEL(0x01, 0x00)},
+    {AUDIO_CHANNEL_LABEL, "chM2", "Mono Two", IMF_CHANNEL_LABEL(0x02, 0x00)},
+    {AUDIO_CHANNEL_LABEL, "chLt", "Left Total", IMF_CHANNEL_LABEL(0x03, 0x00)},
+    {AUDIO_CHANNEL_LABEL, "chRt", "Right Total", IMF_CHANNEL_LABEL(0x04, 0x00)},
+    {AUDIO_CHANNEL_LABEL, "chLst", "Left Surround Total", IMF_CHANNEL_LABEL(0x05, 0x00)},
+    {AUDIO_CHANNEL_LABEL, "chRst", "Right Surround Total", IMF_CHANNEL_LABEL(0x06, 0x00)},
+    {AUDIO_CHANNEL_LABEL, "chS", "Surround", IMF_CHANNEL_LABEL(0x07, 0x00)},
+
+    // Soundfield Groups
+    {SOUNDFIELD_GROUP_LABEL, "sgST", "Standard Stereo", IMF_SOUNDFIELD_GROUP_LABEL(0x01)},
+    {SOUNDFIELD_GROUP_LABEL, "sgDM", "Dual Mono", IMF_SOUNDFIELD_GROUP_LABEL(0x02)},
+    {SOUNDFIELD_GROUP_LABEL, "sgDNS", "Discrete Numbered Sources", IMF_SOUNDFIELD_GROUP_LABEL(0x03)},
+    {SOUNDFIELD_GROUP_LABEL, "sg30", "3.0", IMF_SOUNDFIELD_GROUP_LABEL(0x04)},
+    {SOUNDFIELD_GROUP_LABEL, "sg40", "4.0", IMF_SOUNDFIELD_GROUP_LABEL(0x05)},
+    {SOUNDFIELD_GROUP_LABEL, "sg50", "5.0", IMF_SOUNDFIELD_GROUP_LABEL(0x06)},
+    {SOUNDFIELD_GROUP_LABEL, "sg60", "6.0", IMF_SOUNDFIELD_GROUP_LABEL(0x07)},
+    {SOUNDFIELD_GROUP_LABEL, "sg70", "7.0DS", IMF_SOUNDFIELD_GROUP_LABEL(0x08)},
+    {SOUNDFIELD_GROUP_LABEL, "sgLtRt", "Lt-Rt", IMF_SOUNDFIELD_GROUP_LABEL(0x09)},
+    {SOUNDFIELD_GROUP_LABEL, "sg51EX", "5.1EX", IMF_SOUNDFIELD_GROUP_LABEL(0x0a)},
+    {SOUNDFIELD_GROUP_LABEL, "sgHA", "Hearing Accessibility", IMF_SOUNDFIELD_GROUP_LABEL(0x0b)},
+    {SOUNDFIELD_GROUP_LABEL, "sgVA", "Visual Accessibility", IMF_SOUNDFIELD_GROUP_LABEL(0x0c)},
+
+    // Group of Soundfield Groups
+    {GROUP_OF_SOUNDFIELD_GROUP_LABEL, "ggMPg", "Main Program", IMF_GROUP_OF_SOUNDFIELD_GROUP_LABEL(0x01)},
+    {GROUP_OF_SOUNDFIELD_GROUP_LABEL, "ggDVS", "Descriptive Video Service", IMF_GROUP_OF_SOUNDFIELD_GROUP_LABEL(0x02)},
+    {GROUP_OF_SOUNDFIELD_GROUP_LABEL, "ggDcm", "Dialog Centric Mix", IMF_GROUP_OF_SOUNDFIELD_GROUP_LABEL(0x03)},
+};
+
+
+// Multi-channel audio labels from AMWA AS-11
+
+#define AS11_MCA_LABEL(type, octet14) \
+    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x0d, 0x01, 0x08, 0x01, 0x01, type, octet14, 0x00}
+
+#define AS11_CHANNEL_LABEL(octet14)  AS11_MCA_LABEL(0x01, octet14)
+#define AS11_SOUNDFIELD_GROUP_LABEL(octet14)  AS11_MCA_LABEL(0x02, octet14)
+#define AS11_GROUP_OF_SOUNDFIELD_GROUP_LABEL(octet14)  AS11_MCA_LABEL(0x03, octet14)
+
+
+static const MCALabelEntry AS11_MCA_LABELS[] =
+{
+    //  Channels
+    {AUDIO_CHANNEL_LABEL, "chADSSdc", "AD Studio Signal Data Channel", AS11_CHANNEL_LABEL(0x01)},
+
+    // Soundfield Groups
+    {SOUNDFIELD_GROUP_LABEL, "sgADSS", "AD Studio Signal", AS11_SOUNDFIELD_GROUP_LABEL(0x01)},
+
+    // Group of Soundfield Groups
+    {GROUP_OF_SOUNDFIELD_GROUP_LABEL, "ggAPg", "Alternative Program", AS11_GROUP_OF_SOUNDFIELD_GROUP_LABEL(0x01)},
+    {GROUP_OF_SOUNDFIELD_GROUP_LABEL, "ggADPgMx", "Audio Description Program Mix", AS11_GROUP_OF_SOUNDFIELD_GROUP_LABEL(0x02)},
+    {GROUP_OF_SOUNDFIELD_GROUP_LABEL, "ggAD", "Audio Description", AS11_GROUP_OF_SOUNDFIELD_GROUP_LABEL(0x03)},
+    {GROUP_OF_SOUNDFIELD_GROUP_LABEL, "ggME", "Music and Effects", AS11_GROUP_OF_SOUNDFIELD_GROUP_LABEL(0x04)},
+    {GROUP_OF_SOUNDFIELD_GROUP_LABEL, "ggUnAu", "Unused Audio", AS11_GROUP_OF_SOUNDFIELD_GROUP_LABEL(0x05)},
+};
+
+static const MCALabelEntry AS11_OVERRIDE_MCA_LABELS[] =
+{
+    // The label below is named "Visually Impaired-Narrative" in DC/IMF, i.e. with a "-"
+    {AUDIO_CHANNEL_LABEL, "chVIN", "Visually Impaired Narrative", DC_CHANNEL_LABEL(0x0f)}
+};
+
+
+
 AppMCALabelHelper::LabelLine::LabelLine()
 {
     Reset();
@@ -76,8 +189,34 @@ void AppMCALabelHelper::SoundfieldGroup::Reset()
 
 
 
-AppMCALabelHelper::AppMCALabelHelper()
+AppMCALabelHelper::AppMCALabelHelper(bool is_as11)
 {
+    // Register D-Cinema, IMF and AS-11 labels
+    IndexLabels(DC_MCA_LABELS, BMX_ARRAY_SIZE(DC_MCA_LABELS), true);
+    IndexLabels(IMF_MCA_LABELS, BMX_ARRAY_SIZE(IMF_MCA_LABELS), true);
+    IndexLabels(AS11_MCA_LABELS, BMX_ARRAY_SIZE(AS11_MCA_LABELS), true);
+    if (is_as11)
+        IndexLabels(AS11_OVERRIDE_MCA_LABELS, BMX_ARRAY_SIZE(AS11_OVERRIDE_MCA_LABELS), true);
+
+    // Generate numbered source audio labels
+    char buffer[32];
+    uint8_t i;
+    for (i = 1; i < 128; i++) {
+        GeneratedMCALabelEntry *generated_entry = new GeneratedMCALabelEntry();
+
+        bmx_snprintf(buffer, sizeof(buffer), "chNSC%03d", i);
+        generated_entry->gen_tag_symbol = buffer;
+
+        bmx_snprintf(buffer, sizeof(buffer), "Numbered Source Channel %03d", i);
+        generated_entry->gen_tag_name = buffer;
+
+        generated_entry->entry.type = AUDIO_CHANNEL_LABEL;
+        generated_entry->entry.tag_symbol = generated_entry->gen_tag_symbol.c_str();
+        generated_entry->entry.tag_name = generated_entry->gen_tag_name.c_str();
+        generated_entry->entry.dict_id = IMF_CHANNEL_LABEL(0x08, i);
+
+        IndexGeneratedLabel(generated_entry, true);
+    }
 }
 
 AppMCALabelHelper::~AppMCALabelHelper()

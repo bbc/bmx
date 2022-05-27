@@ -65,9 +65,6 @@ typedef struct
 class AS11WriterHelper
 {
 public:
-    static bool IndexAS11MCALabels(AppMCALabelHelper *labels_helper);
-
-public:
     AS11WriterHelper(ClipWriter *clip);
     ~AS11WriterHelper();
 

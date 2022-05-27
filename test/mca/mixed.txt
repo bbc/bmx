@@ -5,11 +5,11 @@ sgST
 ggAPg, lang=en
 
 1
-L, chan=0
-C, chan=1
-R, chan=2
-Ls, chan=3
-Rs, chan=4
-Cs, chan=5
-60
-MPg, lang=en
+chL, chan=0
+chC, chan=1
+chR, chan=2
+chLs, chan=3
+chRs, chan=4
+chCs, chan=5
+sg60
+ggDVS, lang=en

@@ -29,7 +29,6 @@ nobase_library_include_HEADERS = \
 	bmx/apps/AS10Helper.h \
 	bmx/apps/AS11Helper.h \
 	bmx/apps/FrameworkHelper.h \
-	bmx/apps/IMFMCALabels.h \
 	bmx/apps/PropertyFileParser.h \
 	bmx/apps/TimedTextManifestParser.h \
 	bmx/frame/DataBufferArray.h \

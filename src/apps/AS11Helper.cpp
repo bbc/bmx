@@ -165,11 +165,6 @@ static string get_short_name(string name)
 
 
 
-bool AS11Helper::IndexAS11MCALabels(AppMCALabelHelper *labels_helper)
-{
-    return AS11WriterHelper::IndexAS11MCALabels(labels_helper);
-}
-
 bool AS11Helper::ParseXMLSchemeId(const string &scheme_id_str, UL *label)
 {
     if (scheme_id_str == "as11")

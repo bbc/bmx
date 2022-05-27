@@ -48,8 +48,6 @@ namespace bmx
 class AS11Helper
 {
 public:
-    static bool IndexAS11MCALabels(AppMCALabelHelper *labels_helper);
-
     static bool ParseXMLSchemeId(const std::string &scheme_id_str, UL *label);
     static bool ParseAudioLayoutMode(const std::string &audio_mode_str, UL *label);
 

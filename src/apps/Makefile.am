@@ -10,7 +10,6 @@ libapps_la_SOURCES = \
 	AS10Helper.cpp \
 	AS11Helper.cpp \
 	FrameworkHelper.cpp \
-	IMFMCALabels.cpp \
 	PropertyFileParser.cpp \
 	TimedTextManifestParser.cpp \
 	ps_avci_header_data.h

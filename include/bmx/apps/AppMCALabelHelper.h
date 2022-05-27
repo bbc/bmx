@@ -71,7 +71,7 @@ class ClipWriter;
 class AppMCALabelHelper
 {
 public:
-    AppMCALabelHelper();
+    AppMCALabelHelper(bool is_as11);
     ~AppMCALabelHelper();
 
     bool IndexLabels(const MCALabelEntry *entries, size_t num_entries, bool override_duplicates);
