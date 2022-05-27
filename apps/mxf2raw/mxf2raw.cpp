@@ -1605,7 +1605,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
     fprintf(stderr, "Output MXF file metadata and raw essence\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "Usage: %s <<options>> [<<input options>> <filename>]+\n", cmd);
+    fprintf(stderr, "Usage: %s <<Options>> [<<Input Options>> <filename>]+\n", cmd);
     fprintf(stderr, "   Use <filename> '-' for standard input\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, " -h | --help           Show usage and exit\n");

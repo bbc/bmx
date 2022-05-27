@@ -391,7 +391,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
     fprintf(stderr, "Create MXF files from raw essence files\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "Usage: %s <<options>> [<<input options>> <input>]+\n", cmd);
+    fprintf(stderr, "Usage: %s <<Options>> [<<Input Options>> <Input>]+\n", cmd);
     fprintf(stderr, "Options (* means option is required):\n");
     fprintf(stderr, "  -h | --help             Show usage and exit\n");
     fprintf(stderr, "  -v | --version          Print version info\n");
@@ -942,7 +942,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             log_filename = argv[cmdln_index + 1];
@@ -953,13 +953,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_log_level(argv[cmdln_index + 1], &log_level))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -969,13 +969,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_clip_type(argv[cmdln_index + 1], &clip_type, &clip_sub_type))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -985,7 +985,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             output_name = argv[cmdln_index + 1];
@@ -996,14 +996,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 5 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing arguments for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing arguments for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_product_info(&argv[cmdln_index + 1], 5, &company_name, &product_name, &product_version,
                                     &version_string, &product_uid))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid values '%s' etc. for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid values '%s' etc. for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             product_info_set = true;
@@ -1014,13 +1014,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_timestamp(argv[cmdln_index + 1], &creation_date))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             creation_date_set = true;
@@ -1031,13 +1031,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_frame_rate(argv[cmdln_index + 1], &frame_rate))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             frame_rate_set = true;
@@ -1048,13 +1048,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_frame_rate(argv[cmdln_index + 1], &default_frame_rate))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1064,7 +1064,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             start_timecode_str = argv[cmdln_index + 1];
@@ -1075,7 +1075,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             clip_name = argv[cmdln_index + 1];
@@ -1086,13 +1086,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &duration) != 1 || duration < 0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1102,13 +1102,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%f", &rt_factor) != 1 || rt_factor <= 0.0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             realtime = true;
@@ -1119,14 +1119,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 3 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_avci_header(argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3],
                                    &avci_header_inputs))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid values '%s', '%s', '%s' for option '%s'\n",
+                fprintf(stderr, "Invalid values '%s', '%s', '%s' for Option '%s'\n",
                         argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3], argv[cmdln_index]);
                 return 1;
             }
@@ -1141,13 +1141,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_mic_type(argv[cmdln_index + 1], &mic_type))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1181,14 +1181,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &max_mpeg_check_same_warn_messages) != 1 ||
                 max_mpeg_check_same_warn_messages < 0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1198,7 +1198,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             shim_name = argv[cmdln_index + 1];
@@ -1212,7 +1212,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             shim_id = argv[cmdln_index + 1];
@@ -1223,7 +1223,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             shim_annot = argv[cmdln_index + 1];
@@ -1234,7 +1234,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             partition_interval_str = argv[cmdln_index + 1];
@@ -1245,7 +1245,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 3 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument(s) for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (as10_helper.SupportFrameworkType(argv[cmdln_index + 1]) &&
@@ -1271,7 +1271,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 2 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument(s) for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (as10_helper.SupportFrameworkType(argv[cmdln_index + 1]) &&
@@ -1297,7 +1297,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             segmentation_filename = argv[cmdln_index + 1];
@@ -1308,13 +1308,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!as11_helper.ParseSpecificationId(argv[cmdln_index + 1]))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1324,14 +1324,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &output_start_offset) != 1 ||
                 output_start_offset < 0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1341,14 +1341,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &output_end_offset) != 1 ||
                 output_end_offset < 0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1358,14 +1358,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
                 value < 0 || value > 255)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             sequence_offset = (uint8_t)value;
@@ -1417,14 +1417,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!AS11Helper::ParseXMLSchemeId(argv[cmdln_index + 1], &next_embed_xml.scheme_id) &&
                 !parse_mxf_auid(argv[cmdln_index + 1], &next_embed_xml.scheme_id))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1434,7 +1434,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             next_embed_xml.lang = argv[cmdln_index + 1];
@@ -1445,7 +1445,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             next_embed_xml.filename = argv[cmdln_index + 1];
@@ -1466,13 +1466,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_d10_sound_flags(argv[cmdln_index + 1], &d10_mute_sound_flags))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1482,13 +1482,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_d10_sound_flags(argv[cmdln_index + 1], &d10_invalid_sound_flags))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1498,7 +1498,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             project_name = argv[cmdln_index + 1];
@@ -1509,7 +1509,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             tape_name = argv[cmdln_index + 1];
@@ -1520,7 +1520,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             import_name = argv[cmdln_index + 1];
@@ -1531,7 +1531,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             istringstream aux_ss(argv[cmdln_index + 1]);
@@ -1547,7 +1547,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             user_comments["Comments"] = argv[cmdln_index + 1];
@@ -1600,13 +1600,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_avid_umid_type(argv[cmdln_index + 1], &avid_umid_type))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1616,13 +1616,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_umid(argv[cmdln_index + 1], &mp_uid))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             mp_uid_set = true;
@@ -1633,13 +1633,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_timestamp(argv[cmdln_index + 1], &mp_created))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             mp_created_set = true;
@@ -1650,13 +1650,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_umid(argv[cmdln_index + 1], &psp_uid))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             psp_uid_set = true;
@@ -1667,13 +1667,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_timestamp(argv[cmdln_index + 1], &psp_created))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             psp_created_set = true;
@@ -1692,13 +1692,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &avid_gf_duration) != 1 || avid_gf_duration < 0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             avid_gf = true;
@@ -1713,7 +1713,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             originator = argv[cmdln_index + 1];
@@ -1724,13 +1724,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!track_mapper.ParseMapDef(argv[cmdln_index + 1]))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1749,13 +1749,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_bytes_size(argv[cmdln_index + 1], &i64value) || i64value > UINT32_MAX)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(head_fill, (uint32_t)i64value);
@@ -1766,7 +1766,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 3 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument(s) for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (strcmp(argv[cmdln_index + 1], "as11") != 0)
@@ -1787,14 +1787,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!AS11Helper::ParseAudioLayoutMode(argv[cmdln_index + 1], &audio_layout_mode_label) &&
                 !parse_mxf_auid(argv[cmdln_index + 1], &audio_layout_mode_label))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1809,13 +1809,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &regtest_end) != 1 || regtest_end < 0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -1841,13 +1841,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d:%d", &num, &den) != 2 || num <= 0 || den <= 0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             input.aspect_ratio.numerator   = num;
@@ -1866,14 +1866,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
                 value <= 0 || value > 255)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.afd, value);
@@ -1885,14 +1885,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
                 (value != 8 && value != 10))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.component_depth, value);
@@ -1904,12 +1904,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 || value == 0) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             input.input_height = value;
@@ -1921,12 +1921,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_signal_standard(argv[cmdln_index + 1], &input.signal_standard)) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_MARK(input.signal_standard, true);
@@ -1938,12 +1938,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_frame_layout(argv[cmdln_index + 1], &input.frame_layout)) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_MARK(input.frame_layout, true);
@@ -1955,12 +1955,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_field_dominance(argv[cmdln_index + 1], &input.field_dominance)) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_MARK(input.field_dominance, true);
@@ -1972,12 +1972,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_transfer_ch(argv[cmdln_index + 1], &input.transfer_ch)) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_MARK(input.transfer_ch, true);
@@ -1989,12 +1989,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_coding_equations(argv[cmdln_index + 1], &input.coding_equations)) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_MARK(input.coding_equations, true);
@@ -2006,12 +2006,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_color_primaries(argv[cmdln_index + 1], &input.color_primaries)) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_MARK(input.color_primaries, true);
@@ -2023,12 +2023,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_color_siting(argv[cmdln_index + 1], &input.color_siting)) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_MARK(input.color_siting, true);
@@ -2040,12 +2040,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.black_ref_level, uvalue);
@@ -2057,12 +2057,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.white_ref_level, uvalue);
@@ -2074,12 +2074,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.color_range, uvalue);
@@ -2091,12 +2091,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.comp_max_ref, uvalue);
@@ -2108,12 +2108,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.comp_min_ref, uvalue);
@@ -2125,12 +2125,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.scan_dir, uvalue);
@@ -2142,12 +2142,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_three_color_primaries(argv[cmdln_index + 1], &three_color_primaries)) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.display_primaries, three_color_primaries);
@@ -2159,12 +2159,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_color_primary(argv[cmdln_index + 1], &color_primary)) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.display_white_point, color_primary);
@@ -2176,12 +2176,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.display_max_luma, uvalue);
@@ -2193,12 +2193,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.display_min_luma, uvalue);
@@ -2215,12 +2215,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.active_width, uvalue);
@@ -2232,12 +2232,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.active_height, uvalue);
@@ -2249,12 +2249,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.active_x_offset, uvalue);
@@ -2266,12 +2266,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.active_y_offset, uvalue);
@@ -2283,12 +2283,12 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.display_f2_offset, value);
@@ -2300,13 +2300,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1 && uvalue > 0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             input.sampling_rate.numerator = uvalue;
@@ -2319,14 +2319,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
                 (value != 16 && value != 24))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             input.bits_per_sample = value;
@@ -2338,14 +2338,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
                 value == 0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             input.channel_count = value;
@@ -2357,13 +2357,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_bool(argv[cmdln_index + 1], &input.locked))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_MARK(input.locked, true);
@@ -2375,14 +2375,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
                 value < -128 || value > 127)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.audio_ref_level, value);
@@ -2394,14 +2394,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
                 value < -128 || value > 127)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.dial_norm, value);
@@ -2413,13 +2413,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             input.anc_const_size = (uint32_t)(uvalue);
@@ -2431,13 +2431,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             input.vbi_const_size = (uint32_t)(uvalue);
@@ -2449,14 +2449,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.file_start_offset) != 1 ||
                 input.file_start_offset < 0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -2467,14 +2467,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.ess_max_length) != 1 ||
                 input.ess_max_length <= 0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -2485,13 +2485,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_klv_opt(argv[cmdln_index + 1], &input.klv_key, &input.klv_track_num))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             input.parse_klv = true;
@@ -2508,13 +2508,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             BMX_OPT_PROP_SET(input.track_number, uvalue);
@@ -2526,7 +2526,7 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_avci_guess(argv[cmdln_index + 1],
@@ -2534,7 +2534,7 @@ int main(int argc, const char** argv)
                                   &input.avci_guess_progressive))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -2550,13 +2550,13 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_vc2_mode(argv[cmdln_index + 1], &input.vc2_mode_flags))
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -2567,14 +2567,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.output_start_offset) != 1 ||
                 input.output_start_offset < 0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -2585,14 +2585,14 @@ int main(int argc, const char** argv)
             if (cmdln_index + 1 >= argc)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.output_end_offset) != 1 ||
                 input.output_end_offset < 0)
             {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
             cmdln_index++;
@@ -3805,7 +3805,7 @@ int main(int argc, const char** argv)
 
     if (cmdln_index != argc) {
         usage(argv[0]);
-        fprintf(stderr, "Unknown option '%s'\n", argv[cmdln_index]);
+        fprintf(stderr, "Unknown Input Option '%s'\n", argv[cmdln_index]);
         return 1;
     }
 
@@ -4413,7 +4413,7 @@ int main(int argc, const char** argv)
         start_timecode.Init(frame_rate, false);
         if (start_timecode_str && !parse_timecode(start_timecode_str, frame_rate, &start_timecode)) {
             usage(argv[0]);
-            log_error("Invalid value '%s' for option '-t'\n", start_timecode_str);
+            log_error("Invalid value '%s' for Option '-t'\n", start_timecode_str);
             throw false;
         }
 
@@ -4427,7 +4427,7 @@ int main(int argc, const char** argv)
             Timecode auxiliary_timecode;
             if (!parse_timecode(auxiliary_timecode_strings[i].c_str(), frame_rate, &auxiliary_timecode)) {
                 usage(argv[0]);
-                log_error("Invalid value '%s' for option '--aux'\n", auxiliary_timecode_strings[i].c_str());
+                log_error("Invalid value '%s' for Option '--aux'\n", auxiliary_timecode_strings[i].c_str());
                 throw false;
             }
             auxiliary_timecodes.push_back(auxiliary_timecode);
@@ -4437,7 +4437,7 @@ int main(int argc, const char** argv)
             if (!parse_partition_interval(partition_interval_str, frame_rate, &partition_interval))
             {
                 usage(argv[0]);
-                log_error("Invalid value '%s' for option '--part'\n", partition_interval_str);
+                log_error("Invalid value '%s' for Option '--part'\n", partition_interval_str);
                 throw false;
             }
             partition_interval_set = true;
@@ -4453,7 +4453,7 @@ int main(int argc, const char** argv)
         for (i = 0; i < locators.size(); i++) {
             if (!parse_position(locators[i].position_str, start_timecode, frame_rate, &locators[i].locator.position)) {
                 usage(argv[0]);
-                log_error("Invalid value '%s' for option '--locator'\n", locators[i].position_str);
+                log_error("Invalid value '%s' for Option '--locator'\n", locators[i].position_str);
                 throw false;
             }
         }
