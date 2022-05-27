@@ -14,7 +14,7 @@ A `#` character can be used to add a comment.
 
 The file defines the set of audio labels to include for each MXF audio track. The audio tracks are identified by an integer index starting from 0 and incrementing by 1 in the order that the audio tracks are written (the Track ID order).
 
-A set of labels for an audio track starts with a line containing the index and is followed by lines defining audio labels. There can be multiple channel (CH) label lines, 0 or 1 soundfield group (SG) label line and 0 or more group of soundfield group (GOSG) label lines.
+A set of labels for an audio track starts with a line containing the index and is followed by lines defining audio labels. There can be multiple channel (CH) label lines, 0 or 1 soundfield group (SG) label lines and 0 or more group of soundfield groups (GOSG) label lines.
 
 An empty line is used to signal the start of a new audio track.
 
@@ -30,9 +30,9 @@ The `lang` property is used to set the RFC 5646 Spoken Language label property.
 
 The `id` property is used to identify a SG or GOSG label in the file. It has an alpha-numeric value. It is used to set the link from a CH to a SG and from a SG to GOSGs.
 
-If multiple labels have the same `id` then they will be copies of the same label. The first one that appears in the file should have the properties set and all others with the same `id` should have no properties set, i.e. the properties will be the same as the first one.
+If multiple labels have the same `id` then they will be copies of the same label. As a result, the first one that appears in the file should have all its properties set and all others with the same `id` should have no other properties set, apart from possibly `repeat` (see below). This results in the properties being the same as those of the first one.
 
-The `id` property is only needed if links are made to audio labels, with the same `id`, in other tracks. Links will be automatically created for labels that appear in the same track.
+The `id` property is only needed if links are made to audio labels in other tracks, which is done by assigning them the same `id` value. Links will be automatically created for labels that appear in the same track.
 
 The `repeat` property is used to decide whether to repeat a SG or GOSG label that is already defined in another track with the same `id`. It is a boolean property that defaults to True and can be set to False using the value `false`, `0` or `no`.
 
@@ -58,7 +58,7 @@ ggMPg, lang=en
 
 The example below is for a French language Alternative Program stereo pair.
 
-The 1st audio track contains the left channel and the 2nd audio track the right channel. The SG and GOSG labels are not repeated in the 2nd track.
+The 1st audio track contains the left channel and the 2nd audio track the right channel. The SG and GOSG labels are not repeated in the 2nd track, but the `id` properties link them to the labels in the 1st track.
 
 ```text
 0
