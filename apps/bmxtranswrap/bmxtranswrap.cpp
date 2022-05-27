@@ -498,7 +498,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --active-y-offset       Override or set the Active Y Offset of the active area rectangle\n");
     fprintf(stderr, "  --display-f2-offset     Override or set the default Display F2 Offset if it is not extracted from the essence\n");
     fprintf(stderr, "  --ignore-input-desc     Don't use input MXF file descriptor properties to fill in missing information\n");
-    fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks. See below for details of the <expr> format\n");
+    fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks. The default is 'mono'. See below for details of the <expr> format\n");
     fprintf(stderr, "  --dump-track-map        Dump the output audio track map to stderr.\n");
     fprintf(stderr, "                          The dumps consists of a list output tracks, where each output track channel\n");
     fprintf(stderr, "                          is shown as '<output track channel> <- <input channel>\n");

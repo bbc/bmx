@@ -445,7 +445,7 @@ static void usage(const char *cmd)
         fprintf(stderr, "%s", get_ps_avci_header_format_string(i));
     }
     fprintf(stderr, "\n");
-    fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks. See below for details of the <expr> format\n");
+    fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks. The default is 'mono'. See below for details of the <expr> format\n");
     fprintf(stderr, "  --dump-track-map        Dump the output audio track map to stderr.\n");
     fprintf(stderr, "                          The dumps consists of a list output tracks, where each output track channel\n");
     fprintf(stderr, "                          is shown as '<output track channel> <- <input channel>\n");
