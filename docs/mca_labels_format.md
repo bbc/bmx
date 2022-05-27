@@ -2,10 +2,10 @@
 
 The `--track-mca-labels` option in raw2bmx and bmxtranswrap can be used to add Multi-channel Audio Labels as specified in SMPTE ST 377-4:2021. The format for the text file that is passed to that option is described in this document.
 
-
 ## General Layout
 
 The text file contains one of the following line types:
+
 - audio track index
 - audio label
 - empty
@@ -18,11 +18,9 @@ A set of labels for an audio track starts with a line containing the index and i
 
 An empty line is used to signal the start of a new audio track.
 
-
 ## Label Line
 
 A label line starts with the value of the Tag Symbol label property, followed by a comma separated list of name/value pairs of properties for that label. The list of supported symbols can be found in the [AS11WriterHelper.cpp](../src/as11/AS11WriterHelper.cpp) source code file. The symbol identifies ether a CH (e.g. `chL` for Left), SG (e.g. `sg51` for 5.1) or GOSG (e.g. `ggMPg` for Main Program).
-
 
 ### Label Line Properties
 
@@ -40,14 +38,13 @@ The `repeat` property is used to decide whether to repeat a SG or GOSG label tha
 
 The first instance of a SG or GOSG label with a given `id` will always be stored in the MXF track's file descriptor. Subsequent SG or GOSG labels with the same `id` will be stored as a copy of the earlier label if `repeat` is True.
 
-
 ## Example Files
 
 This example below is an English language Main Program 5.1.
 
 Each CH is labelled for the placement in the 5.1 SG. The SG is linked to a Main Program GOSG.
 
-```
+```text
 0
 chL, chan=0
 chC, chan=1
@@ -63,7 +60,7 @@ The example below is for a French language Alternative Program stereo pair.
 
 The 1st audio track contains the left channel and the 2nd audio track the right channel. The SG and GOSG labels are not repeated in the 2nd track.
 
-```
+```text
 0
 chL
 sgST, id=sg1
@@ -74,4 +71,3 @@ chR
 sgST, id=sg1, repeat=false
 ggAPg, id=gosg1, repeat=false
 ```
-
