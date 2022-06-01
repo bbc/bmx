@@ -189,6 +189,7 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
 
                 GroupOfSoundfieldGroupsLabelSubDescriptor *gosg_desc;
                 if (!gosg_label_line.id.empty() && package_gosg_desc_byid.count(gosg_label_line.id)) {
+                    // Check that the properties, if present, are the same as the GOSG label with the same id
                     gosg_desc = package_gosg_desc_byid[gosg_label_line.id];
                     if (gosg_desc->getMCALabelDictionaryID() != gosg_label_line.label->dict_id) {
                         BMX_EXCEPTION(("Different group of soundfield group labels are using the same label id '%s'",
@@ -234,6 +235,7 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                 LabelLine &sg_label_line = sg.sg_label_line;
 
                 if (!sg_label_line.id.empty() && package_sg_desc_byid.count(sg_label_line.id)) {
+                    // Check that the properties, if present, are the same as the SG label with the same id
                     sg_desc = package_sg_desc_byid[sg_label_line.id];
                     if (sg_desc->getMCALabelDictionaryID() != sg_label_line.label->dict_id) {
                         BMX_EXCEPTION(("Different soundfield group labels are using the same label id '%s'",
@@ -246,16 +248,19 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                         BMX_EXCEPTION(("Soundfield group labels with id '%s' are using different languages",
                                        sg_label_line.id.c_str()));
                     }
-                    vector<UUID> first_link_ids = sg_desc->getGroupOfSoundfieldGroupsLinkID();
-                    if (first_link_ids.size() != gosg_link_ids.size()) {
-                        BMX_EXCEPTION(("Different link id counts for same soundfield group labels with id '%s'",
-                                       sg_label_line.id.c_str()));
-                    }
-                    size_t y;
-                    for (y = 0; y < first_link_ids.size(); y++) {
-                        if (!gosg_link_ids.count(first_link_ids[y])) {
-                            BMX_EXCEPTION(("Different link ids for same soundfield group labels with id '%s'",
-                                           sg_label_line.id.c_str()));
+                    if (!gosg_link_ids.empty()) {
+                        // Check that the GOSG are the same
+                        vector<UUID> first_link_ids = sg_desc->getGroupOfSoundfieldGroupsLinkID();
+                        if (first_link_ids.size() != gosg_link_ids.size()) {
+                            BMX_EXCEPTION(("Different link id counts for same soundfield group labels with id '%s'",
+                                        sg_label_line.id.c_str()));
+                        }
+                        size_t y;
+                        for (y = 0; y < first_link_ids.size(); y++) {
+                            if (!gosg_link_ids.count(first_link_ids[y])) {
+                                BMX_EXCEPTION(("Different link ids for same soundfield group labels with id '%s'",
+                                            sg_label_line.id.c_str()));
+                            }
                         }
                     }
 

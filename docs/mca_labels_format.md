@@ -30,7 +30,7 @@ The `lang` property is used to set the RFC 5646 Spoken Language label property.
 
 The `id` property is used to identify a SG or GOSG label in the file. It has an alpha-numeric value. It is used to set the link from a CH to a SG and from a SG to GOSGs.
 
-If multiple labels have the same `id` then they will be copies of the same label. As a result, the first one that appears in the file should have all its properties set and all others with the same `id` should have no other properties set, apart from possibly `repeat` (see below). This results in the properties being the same as those of the first one.
+If multiple labels have the same `id` then they will be copies of the same label. As a result, the first one that appears in the file should have all its properties set and all others with the same `id` need have no other properties set, apart from possibly `repeat` (see below). This results in the properties being the same as those of the first one.
 
 The `id` property is only needed if links are made to audio labels in other tracks, which is done by assigning them the same `id` value. Links will be automatically created for labels that appear in the same track.
 
@@ -59,6 +59,8 @@ ggMPg, lang=en
 The example below is for a French language Alternative Program stereo pair.
 
 The 1st audio track contains the left channel and the 2nd audio track the right channel. The SG and GOSG labels are not repeated in the 2nd track, but the `id` properties link them to the labels in the 1st track.
+
+The GOSG label shown in the 2nd track is not required because the link is already provided in the 1st track. It is nice to have it in the 2nd track for clarity.
 
 ```text
 0
