@@ -37,6 +37,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #include <fstream>
 
@@ -164,6 +165,61 @@ static const MCALabelEntry AS11_OVERRIDE_MCA_LABELS[] =
 };
 
 
+#define PROPERTY_FUNCTIONS(name) \
+   static void Set##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
+       descriptor->set##name (value);  \
+   }  \
+   static bool Check##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
+       return descriptor->have##name () && descriptor->get##name () == value;  \
+   }
+
+class MCAPropertyFunctions
+{
+public:
+   PROPERTY_FUNCTIONS(MCAPartitionKind);
+   PROPERTY_FUNCTIONS(MCAPartitionNumber);
+   PROPERTY_FUNCTIONS(MCATitle);
+   PROPERTY_FUNCTIONS(MCATitleVersion);
+   PROPERTY_FUNCTIONS(MCATitleSubVersion);
+   PROPERTY_FUNCTIONS(MCAEpisode);
+   PROPERTY_FUNCTIONS(RFC5646SpokenLanguage);
+   PROPERTY_FUNCTIONS(MCAAudioContentKind);
+   PROPERTY_FUNCTIONS(MCAAudioElementKind);
+   PROPERTY_FUNCTIONS(MCAContent);
+   PROPERTY_FUNCTIONS(MCAUseClass);
+   PROPERTY_FUNCTIONS(MCAContentSubtype);
+   PROPERTY_FUNCTIONS(MCAContentDifferentiator);
+   PROPERTY_FUNCTIONS(MCASpokenLanguageAttribute);
+   PROPERTY_FUNCTIONS(RFC5646AdditionalSpokenLanguages);
+   PROPERTY_FUNCTIONS(MCAAdditionalLanguageAttributes);
+};
+
+#define PROPERTY_FUNCTION_REFS(name)  MCAPropertyFunctions::Set##name, MCAPropertyFunctions::Check##name
+
+struct MCAPropertyMapEntry {
+    const char *name;
+    property_setter_func setter;
+    property_checker_func checker;
+} MCAPropertyMap[] = {
+   {"lang", PROPERTY_FUNCTION_REFS(RFC5646SpokenLanguage)},  // legacy / alternate name for "rfc5646spokenlanguage"
+   {"mcapartitionkind", PROPERTY_FUNCTION_REFS(MCAPartitionKind)},
+   {"mcapartitionnumber", PROPERTY_FUNCTION_REFS(MCAPartitionNumber)},
+   {"mcatitle", PROPERTY_FUNCTION_REFS(MCATitle)},
+   {"mcatitleversion", PROPERTY_FUNCTION_REFS(MCATitleVersion)},
+   {"mcatitlesubversion", PROPERTY_FUNCTION_REFS(MCATitleSubVersion)},
+   {"mcaepisode", PROPERTY_FUNCTION_REFS(MCAEpisode)},
+   {"rfc5646spokenlanguage", PROPERTY_FUNCTION_REFS(RFC5646SpokenLanguage)},
+   {"mcaaudiocontentkind", PROPERTY_FUNCTION_REFS(MCAAudioContentKind)},
+   {"mcaaudioelementkind", PROPERTY_FUNCTION_REFS(MCAAudioElementKind)},
+   {"mcacontent", PROPERTY_FUNCTION_REFS(MCAContent)},
+   {"mcauseclass", PROPERTY_FUNCTION_REFS(MCAUseClass)},
+   {"mcacontentsubtype", PROPERTY_FUNCTION_REFS(MCAContentSubtype)},
+   {"mcacontentdifferentiator", PROPERTY_FUNCTION_REFS(MCAContentDifferentiator)},
+   {"mcaspokenlanguageattribute", PROPERTY_FUNCTION_REFS(MCASpokenLanguageAttribute)},
+   {"rfc5646additionalspokenlanguages", PROPERTY_FUNCTION_REFS(RFC5646AdditionalSpokenLanguages)},
+   {"mcaadditionallanguageattributes", PROPERTY_FUNCTION_REFS(MCAAdditionalLanguageAttributes)},
+};
+
 
 AppMCALabelHelper::LabelLine::LabelLine()
 {
@@ -175,8 +231,8 @@ void AppMCALabelHelper::LabelLine::Reset()
     label = 0;
     id.clear();
     channel_index = (uint32_t)(-1);
-    language.clear();
     repeat = true;
+    string_properties.clear();
 }
 
 
@@ -216,6 +272,14 @@ AppMCALabelHelper::AppMCALabelHelper(bool is_as11)
         generated_entry->entry.dict_id = IMF_CHANNEL_LABEL(0x08, i);
 
         IndexGeneratedLabel(generated_entry, true);
+    }
+
+    // Register setters and checkers for label sub-descriptor properties
+    size_t k;
+    for (k = 0; k < BMX_ARRAY_SIZE(MCAPropertyMap); k++) {
+        const MCAPropertyMapEntry &entry = MCAPropertyMap[k];
+        mMCAPropertySetterMap[entry.name] = entry.setter;
+        mMCAPropertyCheckerMap[entry.name] = entry.checker;
     }
 }
 
@@ -272,10 +336,15 @@ bool AppMCALabelHelper::ParseTrackLabels(const string &filename)
         vector<string> track_lines;
         string line;
         while (std::getline(input, line)) {
+            // The separator is a line with only whitespace or whitespace until the comment starts with a '#'
             size_t comment_hash = line.rfind("#");
-            if (comment_hash != string::npos)
-                line = line.substr(0, comment_hash);
-            line = trim_string(line);
+            if (comment_hash != string::npos) {
+                if (trim_string(line.substr(0, comment_hash)).empty())
+                    line = "";
+            } else {
+                line = trim_string(line);
+            }
+
             if (line.empty()) {
                 if (!track_lines.empty() && comment_hash == string::npos) {
                     ParseTrackLines(track_lines);
@@ -351,12 +420,12 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                         BMX_EXCEPTION(("Different group of soundfield group labels are using the same label id '%s'",
                                        gosg_label_line.id.c_str()));
                     }
-                    if (!gosg_label_line.language.empty() && // allow non-first occurrence to not repeat language
-                        (!gosg_desc->haveRFC5646SpokenLanguage() ||
-                            gosg_label_line.language != gosg_desc->getRFC5646SpokenLanguage()))
-                    {
-                        BMX_EXCEPTION(("Group of soundfield group labels with id '%s' are using different languages",
-                                       gosg_label_line.id.c_str()));
+
+                    try {
+                        CheckPropertiesEqual(gosg_desc, &gosg_label_line);
+                    } catch (const BMXException &ex) {
+                        BMX_EXCEPTION(("Group of soundfield group label with id '%s' has different property value: %s",
+                                       gosg_label_line.id.c_str(), ex.what()));
                     }
 
                     if (gosg_label_line.repeat && !track_gosg_desc_byid.count(gosg_label_line.id)) {
@@ -374,8 +443,7 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                     gosg_desc->setMCATagSymbol(gosg_label_line.label->tag_symbol);
                     if (gosg_label_line.label->tag_name && gosg_label_line.label->tag_name[0])
                         gosg_desc->setMCATagName(gosg_label_line.label->tag_name);
-                    if (!gosg_label_line.language.empty())
-                        gosg_desc->setRFC5646SpokenLanguage(gosg_label_line.language);
+                    SetLabelProperties(gosg_desc, &gosg_label_line);
 
                     if (!gosg_label_line.id.empty()) {
                         package_gosg_desc_byid[gosg_label_line.id] = gosg_desc;
@@ -397,13 +465,14 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                         BMX_EXCEPTION(("Different soundfield group labels are using the same label id '%s'",
                                        sg_label_line.id.c_str()));
                     }
-                    if (!sg_label_line.language.empty() &&  // allow non-first occurrence to not repeat language
-                        (!sg_desc->haveRFC5646SpokenLanguage() ||
-                            sg_label_line.language != sg_desc->getRFC5646SpokenLanguage()))
-                    {
-                        BMX_EXCEPTION(("Soundfield group labels with id '%s' are using different languages",
-                                       sg_label_line.id.c_str()));
+
+                    try {
+                        CheckPropertiesEqual(sg_desc, &sg_label_line);
+                    } catch (const BMXException &ex) {
+                        BMX_EXCEPTION(("Soundfield group label with id '%s' has different property value: %s",
+                                       sg_label_line.id.c_str(), ex.what()));
                     }
+
                     if (!gosg_link_ids.empty()) {
                         // Check that the GOSG are the same
                         vector<UUID> first_link_ids = sg_desc->getGroupOfSoundfieldGroupsLinkID();
@@ -435,8 +504,7 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                     sg_desc->setMCATagSymbol(sg_label_line.label->tag_symbol);
                     if (sg_label_line.label->tag_name && sg_label_line.label->tag_name[0])
                         sg_desc->setMCATagName(sg_label_line.label->tag_name);
-                    if (!sg_label_line.language.empty())
-                        sg_desc->setRFC5646SpokenLanguage(sg_label_line.language);
+                    SetLabelProperties(sg_desc, &sg_label_line);
 
                     set<UUID>::const_iterator iter;
                     for (iter = gosg_link_ids.begin(); iter != gosg_link_ids.end(); iter++)
@@ -470,13 +538,35 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                 a_desc->setMCATagSymbol(c_label_line.label->tag_symbol);
                 if (c_label_line.label->tag_name && c_label_line.label->tag_name[0])
                     a_desc->setMCATagName(c_label_line.label->tag_name);
-                if (!c_label_line.language.empty())
-                    a_desc->setRFC5646SpokenLanguage(c_label_line.language);
+                SetLabelProperties(a_desc, &c_label_line);
 
                 if (sg_desc)
                     a_desc->setSoundfieldGroupLinkID(sg_desc->getMCALinkID());
             }
         }
+    }
+}
+
+void AppMCALabelHelper::SetLabelProperties(MCALabelSubDescriptor *descriptor, LabelLine *label_line)
+{
+    size_t i;
+    for (i = 0; i < label_line->string_properties.size(); i++) {
+        const string &map_name = label_line->string_properties[i].first;
+        const string &value = label_line->string_properties[i].second;
+
+        mMCAPropertySetterMap[map_name](descriptor, value);
+    }
+}
+
+void AppMCALabelHelper::CheckPropertiesEqual(MCALabelSubDescriptor *descriptor, LabelLine *label_line)
+{
+    size_t i;
+    for (i = 0; i < label_line->string_properties.size(); i++) {
+        const string &map_name = label_line->string_properties[i].first;
+        const string &value = label_line->string_properties[i].second;
+
+        if (!mMCAPropertyCheckerMap[map_name](descriptor, value))
+            throw BMXException("MCA label property with map entry name '%s' differs", map_name.c_str());
     }
 }
 
@@ -500,6 +590,8 @@ void AppMCALabelHelper::ParseTrackLines(const vector<string> &lines)
         size_t i;
         for (i = 1; i < lines.size(); i++) {
             LabelLine label_line = ParseLabelLine(lines[i]);
+            if (!label_line.label)
+                continue;
 
             if (label_line.label->type == AUDIO_CHANNEL_LABEL) {
                 if (!sg.gosg_label_lines.empty() || sg.sg_label_line.label) {
@@ -538,38 +630,248 @@ AppMCALabelHelper::LabelLine AppMCALabelHelper::ParseLabelLine(const string &lin
 {
     LabelLine label_line;
 
-    vector<string> elements = split_string(line, ',', false, true);
-    BMX_ASSERT(!elements.empty());
+    typedef enum {
+        PARSE_LABEL,
+        PARSE_PROPERTY_NAME,
+        PARSE_PROPERTY_VALUE,
+        PARSE_PROPERTY_SEPARATOR,
+        PARSE_END,
+    } ParseState;
 
-    string label_str = elements[0];
-    label_line.label = Find(label_str);
-    if (!label_line.label)
-        throw BMXException("Unknown audio label '%s'", label_str.c_str());
+    ParseState previous_state = PARSE_LABEL;
+    ParseState state = PARSE_LABEL;
 
-    size_t i;
-    for (i = 1; i < elements.size(); i++) {
-        vector<string> nv_pair = split_string(elements[i], '=', false, true);
-        if (nv_pair.size() != 2)
-            throw BMXException("Invalid audio label <name>=<value> attribute string '%s'", elements[i].c_str());
-        string name  = nv_pair[0];
-        string value = nv_pair[1];
-        if (name == "id") {
-            label_line.id = value;
-        } else if (name == "chan") {
-            unsigned int channel_index;
-            if (sscanf(value.c_str(), "%u", &channel_index) != 1)
-                throw BMXException("Failed to parse channel index from line '%s'", elements[i].c_str());
-            label_line.channel_index = channel_index;
-        } else if (name == "lang") {
-            label_line.language = value;
-        } else if (name == "repeat") {
-            if (value == "0" || value == "false" || value == "no")
-                label_line.repeat = false;
-            else
-                label_line.repeat = true;
-        } else {
-            log_warn("Ignoring unknown audio label attribute '%s'\n", elements[i].c_str());
+    const char *ptr = line.c_str();
+    string label_str;
+    string name;
+    string value;
+    char start_quote = 0;
+    bool escape = false;
+
+    while (state != PARSE_END) {
+        // Inits at start of new state
+        if (state != previous_state) {
+            if (state == PARSE_LABEL) {
+                label_str.clear();
+            } else if (state == PARSE_PROPERTY_NAME) {
+                name.clear();
+            } else if (state == PARSE_PROPERTY_VALUE) {
+                value.clear();
+                escape = false;
+                start_quote = 0;
+            }
         }
+
+        if ((*ptr) == 0)
+            state = PARSE_END;
+        else
+            previous_state = state;
+
+        // State updates and transitions
+        switch (state) {
+            case PARSE_LABEL: {
+                switch ((*ptr)) {
+                    case '#': {
+                        state = PARSE_END;
+                        break;
+                    }
+                    case ',': {
+                        state = PARSE_PROPERTY_NAME;
+                        break;
+                    }
+                    default: {
+                        label_str += *ptr;
+                        break;
+                    }
+                }
+                break;
+            }
+            case PARSE_PROPERTY_NAME: {
+                switch ((*ptr)) {
+                    case '#': {
+                        state = PARSE_END;
+                        break;
+                    }
+                    case '=': {
+                        state = PARSE_PROPERTY_VALUE;
+                        break;
+                    }
+                    default: {
+                        name += *ptr;
+                        break;
+                    }
+                }
+                break;
+            }
+            case PARSE_PROPERTY_VALUE: {
+                switch ((*ptr)) {
+                    case '#': {
+                        if (start_quote || escape) {
+                            value += *ptr;
+                            escape = false;
+                        } else {
+                            state = PARSE_END;
+                        }
+                        break;
+                    }
+                    case '\'':
+                    case '\"': {
+                        if (escape)
+                            value += *ptr;
+                        else if (start_quote == (*ptr))
+                            state = PARSE_PROPERTY_SEPARATOR;
+                        else if (start_quote == 0)
+                            start_quote = *ptr;
+                        else
+                            value += *ptr;
+                        break;
+                    }
+                    case '\\': {
+                        if (escape) {
+                            value += *ptr;
+                            escape = false;
+                        } else {
+                            escape = true;
+                        }
+                        break;
+                    }
+                    case 't': {
+                        if (escape) {
+                            value += '\x09';
+                            escape = false;
+                        } else {
+                            value += *ptr;
+                        }
+                        break;
+                    }
+                    case 'n': {
+                        if (escape) {
+                            value += '\x0a';
+                            escape = false;
+                        } else {
+                            value += *ptr;
+                        }
+                        break;
+                    }
+                    case 'r': {
+                        if (escape) {
+                            value += '\x0d';
+                            escape = false;
+                        } else {
+                            value += *ptr;
+                        }
+                        break;
+                    }
+                    case ',': {
+                        if (start_quote || escape) {
+                            value += *ptr;
+                            escape = false;
+                        } else {
+                            state = PARSE_PROPERTY_NAME;
+                        }
+                        break;
+                    }
+                    default: {
+                        value += *ptr;
+                        escape = false;
+                        break;
+                    }
+                }
+                break;
+            }
+            case PARSE_PROPERTY_SEPARATOR: {
+                switch ((*ptr)) {
+                    case '#': {
+                        state = PARSE_END;
+                        break;
+                    }
+                    case ',': {
+                        state = PARSE_PROPERTY_NAME;
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+                break;
+            }
+            case PARSE_END: {
+                break;
+            }
+        }
+
+        // State checks and completions
+        if (state != previous_state) {
+            if (previous_state == PARSE_LABEL) {
+                label_str = trim_string(label_str);
+                if (label_str.empty())
+                    throw BMXException("Empty audio label name");
+
+                label_line.label = Find(label_str);
+                if (!label_line.label)
+                    throw BMXException("Unknown audio label '%s'", label_str.c_str());
+
+            } else if (previous_state == PARSE_PROPERTY_NAME) {
+                name = trim_string(name);
+                if (name.empty()) {
+                    if (state == PARSE_PROPERTY_VALUE)
+                        throw BMXException("Empty audio label property name");
+                } else if (state != PARSE_PROPERTY_VALUE) {
+                    throw BMXException("Missing audio label property value");
+                }
+
+            } else if (previous_state == PARSE_PROPERTY_VALUE) {
+                value = trim_string(value);
+
+                if (name == "id") {
+                    if (value.empty())
+                        throw BMXException("Empty audio label property value for '%s'\n", name.c_str());
+
+                    label_line.id = value;
+
+                } else if (name == "chan") {
+                    if (value.empty())
+                        throw BMXException("Empty audio label property value for '%s'\n", name.c_str());
+
+                    unsigned int channel_index;
+                    if (sscanf(value.c_str(), "%u", &channel_index) != 1)
+                        throw BMXException("Failed to parse 'chan' value");
+                    label_line.channel_index = channel_index;
+
+                } else if (name == "repeat") {
+                    if (value.empty())
+                        throw BMXException("Empty audio label property value for '%s'\n", name.c_str());
+
+                    if (value == "0" || value == "false" || value == "no")
+                        label_line.repeat = false;
+                    else
+                        label_line.repeat = true;
+
+                } else {
+                    if (value.empty())
+                        log_warn("Empty audio label property value for '%s'\n", name.c_str());
+
+                    // Get map name. Convert to lowercase and remove '_' chars. Prepend "mca" if required
+                    string map_name;
+                    size_t i;
+                    for (i = 0; i < name.size(); i++) {
+                        if (name[i] != '_')
+                            map_name += tolower(name[i]);
+                    }
+
+                    if (!mMCAPropertySetterMap.count(map_name)) {
+                        map_name = "mca" + map_name;
+                        if (!mMCAPropertySetterMap.count(map_name))
+                            throw BMXException("Unknown MCA label property '%s', %s", name.c_str());
+                    }
+
+                    label_line.string_properties.push_back(make_pair(map_name, value));
+                }
+            }
+        }
+
+        if ((*ptr) != 0)
+            ptr++;
     }
 
     return label_line;

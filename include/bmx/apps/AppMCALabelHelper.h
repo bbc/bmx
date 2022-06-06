@@ -36,12 +36,17 @@
 #include <vector>
 #include <map>
 
+#include <libMXF++/MXF.h>
+
 #include <bmx/BMXTypes.h>
 
 
 namespace bmx
 {
 
+
+typedef void (*property_setter_func)(mxfpp::MCALabelSubDescriptor *descriptor, const std::string &value);
+typedef bool (*property_checker_func)(mxfpp::MCALabelSubDescriptor *descriptor, const std::string &value);
 
 typedef enum
 {
@@ -95,8 +100,8 @@ private:
         const MCALabelEntry *label;
         std::string id;
         uint32_t channel_index; // starts from 0. Note that the descriptor ChannelID starts from 1!
-        std::string language;
         bool repeat;
+        std::vector<std::pair<std::string, std::string> > string_properties;
     };
 
     class SoundfieldGroup
@@ -117,6 +122,9 @@ private:
     };
 
 private:
+    void SetLabelProperties(mxfpp::MCALabelSubDescriptor *descriptor, LabelLine *label_line);
+    void CheckPropertiesEqual(mxfpp::MCALabelSubDescriptor *descriptor, LabelLine *label_line);
+
     void ParseTrackLines(const std::vector<std::string> &lines);
     LabelLine ParseLabelLine(const std::string &line);
     const MCALabelEntry* Find(const std::string &id_str);
@@ -128,6 +136,8 @@ private:
     std::vector<GeneratedMCALabelEntry*> mGeneratedEntries;
     std::vector<TrackLabels*> mTrackLabels;
     std::map<uint32_t, TrackLabels*> mTrackLabelsByTrackIndex;
+    std::map<std::string, property_setter_func> mMCAPropertySetterMap;
+    std::map<std::string, property_checker_func> mMCAPropertyCheckerMap;
 };
 
 
