@@ -7,26 +7,24 @@ The `--track-mca-labels` option in raw2bmx and bmxtranswrap can be used to add M
 The text file contains one of the following line types:
 
 - audio track index
-- audio label
+- audio channel (CH), soundfield group (SG) or group of soundfield group (GOSG) label
 - empty
 
 A `#` character can be used to add a comment.
 
 The file defines the set of audio labels to include for each MXF audio track. The audio tracks are identified by an integer index starting from 0 and incrementing by 1 in the order that the audio tracks are written (the Track ID order).
 
-A set of labels for an audio track starts with a line containing the index and is followed by lines defining audio labels. There can be multiple channel (CH) label lines, 0 or 1 soundfield group (SG) label lines and 0 or more group of soundfield groups (GOSG) label lines.
+A set of labels for an audio track starts with a line containing the index and is followed by lines defining audio labels. There can be multiple channel CH label lines, 0 or 1 SG label lines and 0 or more group of GOSG label lines.
 
 An empty line is used to signal the start of a new audio track.
 
 ## Label Line
 
-A label line starts with the value of the Tag Symbol label property, followed by a comma separated list of name/value pairs of properties for that label. The list of supported symbols can be found in the [AppMCALabelHelper.cpp](../src/apps/AppMCALabelHelper.cpp) source code file. The symbol identifies ether a CH (e.g. `chL` for Left), SG (e.g. `sg51` for 5.1) or GOSG (e.g. `ggMPg` for Main Program).
+A label line starts with the value of the MCA Tag Symbol label property, followed by a comma separated list of name/value pairs of properties for that label. The list of supported symbols can be found in the [AppMCALabelHelper.cpp](../src/apps/AppMCALabelHelper.cpp) source code file. The symbol identifies ether a CH (e.g. `chL` for Left), SG (e.g. `sg51` for 5.1) or GOSG (e.g. `ggMPg` for Main Program).
 
 ### Label Line Properties
 
 A CH must have a `chan` property that is the channel number, starting from 0, if the track contains multiple audio channels (labelled or not).
-
-The `lang` property is used to set the RFC 5646 Spoken Language label property.
 
 The `id` property is used to identify a SG or GOSG label in the file. It has an alpha-numeric value. It is used to set the link from a CH to a SG and from a SG to GOSGs.
 
@@ -38,11 +36,40 @@ The `repeat` property is used to decide whether to repeat a SG or GOSG label tha
 
 The first instance of a SG or GOSG label with a given `id` will always be stored in the MXF track's file descriptor. Subsequent SG or GOSG labels with the same `id` will be stored as a copy of the earlier label if `repeat` is True.
 
+The following string value properties are available of use in the label line:
+
+- RFC5646SpokenLanguage
+- MCATitle
+- MCATitleVersion
+- MCATitleSubVersion
+- MCAEpisode
+- MCAPartitionKind
+- MCAPartitionNumber
+- MCAAudioContentKind
+- MCAAudioElementKind
+- MCAContent
+- MCAUseClass
+- MCAContentSubtype
+- MCAContentDifferentiator
+- MCASpokenLanguageAttribute
+- RFC5646AdditionalSpokenLanguages
+- MCAAdditionalLanguageAttributes
+
+The "lang" name can be used instead of "RFC5646SpokenLanguage".
+
+The name may omit the "MCA" prefix, e.g. "TitleVersion" is accepted. The name matching is case-insenstive, e.g. "titleversion" is accepted. Underscores are ignored, e.g. "title_version" is accepted.
+
+The property value may use single or double quotes.
+
+Some special characters (e.g. used in RFC5646AdditionalSpokenLanguages and MCAAdditionalLanguageAttributes) can be  set by using the '\\' escape character. They are tab '\\t' (0x09), line feed '\\n (0x0a) and carriage return '\\r' (0x0d).
+
+The escape character can be used before special characters, e.g. characters such as ',' and '#' when not using quotes, and '"' when using double quotes. A '\\' character is achieved using a double escape "\\\\".
+
 ## Example Files
 
 This example below is an English language Main Program 5.1.
 
-Each CH is labelled for the placement in the 5.1 SG. The SG is linked to a Main Program GOSG.
+Each CH is labelled for the placement in the 5.1 SG. The SG is linked to a Main Program GOSG. The GOSG has a title (MCATitle) and title version (MCATitleVersion).
 
 ```text
 0
@@ -53,7 +80,7 @@ chLs, chan=3
 chRs, chan=4
 chLFE, chan=5
 sg51
-ggMPg, lang=en
+ggMPg, lang=en, title="Examples", title_version="The final cut example"
 ```
 
 The example below is for a French language Alternative Program stereo pair.
