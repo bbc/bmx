@@ -133,8 +133,9 @@ check_all()
         check "0,1;2-7" as11 $base/stereop51.txt stereop51 &&
         check "0,1;2-7" as11 $base/mess.txt mess &&
         check mono as11 $base/mononochan.txt mononochan &&
-        check "0,1;2-7" imf $base/imf.txt imf &&
-        check "0,1;2-7" as11,imf $base/mixed.txt mixed
+        check "0,1;2-7" any $base/imf.txt imf &&
+        check "0,1;2-7" any $base/mixed.txt mixed &&
+        check "0,1;2-7" any $base/properties.txt properties
 }
 
 create_data_all()
@@ -144,8 +145,9 @@ create_data_all()
         create_data "0,1;2-7" as11 $base/stereop51.txt stereop51 &&
         create_data "0,1;2-7" as11 $base/mess.txt mess &&
         create_data mono as11 $base/mononochan.txt mononochan &&
-        create_data "0,1;2-7" imf $base/imf.txt imf &&
-        create_data "0,1;2-7" as11,imf $base/mixed.txt mixed
+        create_data "0,1;2-7" any $base/imf.txt imf &&
+        create_data "0,1;2-7" any $base/mixed.txt mixed &&
+        create_data "0,1;2-7" any $base/properties.txt properties
 }
 
 create_samples_all()
@@ -155,8 +157,9 @@ create_samples_all()
         create_samples "0,1;2-7" as11 $base/stereop51.txt stereop51 &&
         create_samples "0,1;2-7" as11 $base/mess.txt mess &&
         create_samples mono as11 $base/mononochan.txt mononochan &&
-        create_samples "0,1;2-7" imf $base/imf.txt imf &&
-        create_samples "0,1;2-7" as11,imf $base/mixed.txt mixed
+        create_samples "0,1;2-7" any $base/imf.txt imf &&
+        create_samples "0,1;2-7" any $base/mixed.txt mixed &&
+        create_samples "0,1;2-7" any $base/properties.txt properties
 }
 
 

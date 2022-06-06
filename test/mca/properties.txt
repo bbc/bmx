@@ -1,0 +1,13 @@
+0
+chL, chan=0
+chR, chan=1
+sgST, MCATitle="Top BMX", MCATitleVersion="International", MCATitleSubVersion="Germany", MCAEpisode="EP102", RFC5646SpokenLanguage="en", MCAPartitionKind="Part", MCAPartitionNumber=3, MCAAudioContentKind="Dialog" ,MCAAudioElementKind="Composite Mix", MCAContent="Content", MCAUseClass="Use Class", MCAContentSubtype="Content Subtype", MCAContentDifferentiator="different", MCASpokenLanguageAttribute="dubbed", RFC5646AdditionalSpokenLanguages="es\tfr", MCAAdditionalLanguageAttributes="notdubbed\tdubbed"
+
+1
+chL, chan=0
+chC, chan=1
+chR, chan=2
+chLs, chan=3
+chRs, chan=4
+chLFE, chan=5
+sg51, title="no mca", title_version="underscore", title_sub_version=escape \t\r\nwhitespace\\\#\ space, episode='quoted "" escape \t\r\nwhitespace\\\#' #, partion_kind="commented out"

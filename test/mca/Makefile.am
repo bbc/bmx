@@ -20,6 +20,7 @@ EXTRA_DIST = \
 	mcalabels_mononochan.md5 \
 	mcalabels_imf.md5 \
 	mcalabels_mixed.md5 \
+	mcalabels_properties.md5 \
 	mca_mono.xml \
 	mca_stereo.xml \
 	mca_singlemca.xml \
@@ -38,6 +39,7 @@ EXTRA_DIST = \
 	mcalabels_mononochan.xml \
 	mcalabels_imf.xml \
 	mcalabels_mixed.xml \
+	mcalabels_properties.xml \
 	stereo.txt \
 	stereop51.txt \
 	mess.txt \
@@ -45,6 +47,7 @@ EXTRA_DIST = \
 	mononochan.txt \
 	imf.txt \
 	mixed.txt \
+	properties.txt \
 	test_mca.sh \
 	test_labels.sh
 
