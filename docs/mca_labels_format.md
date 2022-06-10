@@ -65,9 +65,9 @@ The name may omit the "MCA" prefix, e.g. "TitleVersion" is accepted. The name ma
 
 The property value may be between quotation marks, either single or double quotes.
 
-Some special characters (e.g. used in RFC5646AdditionalSpokenLanguages and MCAAdditionalLanguageAttributes) can be set by using the '\\' escape character. They are tab '\\t' (0x09), line feed '\\n (0x0a) and carriage return '\\r' (0x0d).
+Some special characters (e.g. used in RFC5646AdditionalSpokenLanguages and MCAAdditionalLanguageAttributes) can be set by using the `\` escape character. They are tab `\t` (0x09), line feed `\n` (0x0a) and carriage return `\r` (0x0d).
 
-The '\\' escape character can be used before special characters, e.g. characters such as ',' and '#' when not using quotation marks or '"' when using double quotes. A '\\' character can be inserted using a double backslash "\\\\".
+The `\` escape character can be used before special characters, e.g. characters such as `,` and `#` when not using quotation marks or `"` when using double quotes. A `\` character can be inserted using a double backslash `\\`.
 
 ## Example Files
 
