@@ -2968,13 +2968,20 @@ int main(int argc, const char** argv)
                      get_generic_duration_string_2(total_num_read, edit_rate).c_str());
 
 
-            // clean-up
-            if (app_tc_file)
+            // close stuff
+            if (app_tc_file) {
                 fclose(app_tc_file);
-            if (app_crc32_file)
+                log_info("Extracted APP timecodes to '%s'\n", app_tc_filename);
+            }
+            if (app_crc32_file) {
                 fclose(app_crc32_file);
-            if (all_tc_file)
+                log_info("Extracted CRC-32 codes to '%s'\n", app_crc32_filename);
+            }
+            if (all_tc_file) {
                 fclose(all_tc_file);
+                log_info("Extracted all timecodes to '%s'\n", all_tc_filename);
+            }
+
             if (do_index_info)
                 info_writer->EndSection();
         }
@@ -3027,6 +3034,8 @@ int main(int argc, const char** argv)
                 if (!rdd6_failed && last_rdd6_frame > rdd6_frame_min)
                     rdd6_frame.SetCumulativeDescriptionTextChars(rdd6_desc_chars);
                 rdd6_frame.UnparseXML(rdd6_filename);
+
+                log_info("Extracted RDD-6 frame data to '%s'\n", rdd6_filename);
             }
         }
 
@@ -3059,6 +3068,8 @@ int main(int argc, const char** argv)
                 }
                 text_object->Read(text_file);
                 fclose(text_file);
+
+                log_info("Extracted text object to '%s'\n", text_filename.c_str());
             }
         }
 
@@ -3089,6 +3100,8 @@ int main(int argc, const char** argv)
                     output_file_manager.GetTrackFile(i, anc_resources[k].stream_id, &file, &filename);
                     tt_track_reader->ReadAncillaryResourceByStreamId(anc_resources[k].stream_id, file, 0, 0);
                 }
+
+                log_info("Extracted timed text to '%s'\n", filename.c_str());
             }
         }
 
@@ -3202,4 +3215,3 @@ int main(int argc, const char** argv)
 
     return cmd_result;
 }
-
