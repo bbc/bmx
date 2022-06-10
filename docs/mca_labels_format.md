@@ -14,13 +14,17 @@ A `#` character can be used to add a comment.
 
 The file defines the set of audio labels to include for each MXF audio track. The audio tracks are identified by an integer index starting from 0 and incrementing by 1 in the order that the audio tracks are written (the Track ID order).
 
-A set of labels for an audio track starts with a line containing the index and is followed by lines defining audio labels. There can be multiple channel CH label lines, 0 or 1 SG label lines and 0 or more group of GOSG label lines.
+A set of labels for an audio track starts with a line containing the index and is followed by lines defining audio labels. There can be multiple channel CH label lines, 0 or 1 SG label lines and 0 or more GOSG label lines.
 
 An empty line is used to signal the start of a new audio track.
 
 ## Label Line
 
- A label line consists of the value of the MCA Tag Symbol label property, followed by a comma and a comma-separated list of name`=`value pairs of properties for that label. The label identifies either a CH (e.g. `chL` for Left), SG (e.g. `sg51` for 5.1) or GOSG (e.g. `ggMPg` for Main Program). The list of supported labels can be found in the [AppMCALabelHelper.cpp](../src/apps/AppMCALabelHelper.cpp) source code file. The supported names are listed below. Commas and backslashes can be inserted into values by using a leading backslash.
+ A label line consists of the value of the MCA Tag Symbol label property, followed by a comma and a comma-separated list of name`=`value pairs of properties for that label.
+
+ The label identifies either a CH (e.g. `chL` for Left), SG (e.g. `sg51` for 5.1) or GOSG (e.g. `ggMPg` for Main Program). The list of supported labels can be found in the [AppMCALabelHelper.cpp](../src/apps/AppMCALabelHelper.cpp) source code file. The supported names are listed below.
+
+ The label properties are described in the next section, including how to insert characters such as commas into values.
 
 ### Label Line Properties
 
@@ -28,17 +32,17 @@ A CH must have a `chan` property that is the channel number, starting from 0, if
 
 The `id` property is used to identify a SG or GOSG label in the file. It has an alpha-numeric value. It is used to set the link from a CH to a SG and from a SG to GOSGs.
 
-If multiple labels have the same `id` then they will be copies of the same label. As a result, the first one that appears in the file should have all its properties set and all others with the same `id` need have no other properties set, apart from possibly `repeat` (see below). This results in the properties being the same as those of the first one.
+If multiple labels have the same `id` then they are instances of the same label. As a result, the first one that appears in the file should have all its properties set and all others with the same `id` need have no other properties set, apart from possibly `repeat` (see below). This results in the properties being the same as those of the first one.
 
-The `id` property is only needed if links are made to audio labels in other tracks, which is done by assigning them the same `id` value. Links will be automatically created for labels that appear in the same track.
+The `id` property is only needed if they are referenced by or reference audio labels in other tracks. This is done by assigning them the same `id` value.
 
 The `repeat` property is used to decide whether to repeat a SG or GOSG label that is already defined in another track with the same `id`. It is a boolean property that defaults to True and can be set to False using the value `false`, `0` or `no`.
 
 The first instance of a SG or GOSG label with a given `id` will always be stored in the MXF track's file descriptor. Subsequent SG or GOSG labels with the same `id` will be stored as a copy of the earlier label if `repeat` is True.
 
-The following string value properties are available of use in the label line:
+The following string value properties are can be used:
 
-- RFC5646SpokenLanguage
+- RFC5646SpokenLanguage (alternative is "lang")
 - MCATitle
 - MCATitleVersion
 - MCATitleSubVersion
@@ -59,11 +63,11 @@ The "lang" name can be used instead of "RFC5646SpokenLanguage".
 
 The name may omit the "MCA" prefix, e.g. "TitleVersion" is accepted. The name matching is case-insenstive, e.g. "titleversion" is accepted. Underscores are ignored, e.g. "title_version" is accepted.
 
-The property value may use single or double quotes.
+The property value may be between quotation marks, either single or double quotes.
 
-Some special characters (e.g. used in RFC5646AdditionalSpokenLanguages and MCAAdditionalLanguageAttributes) can be  set by using the '\\' escape character. They are tab '\\t' (0x09), line feed '\\n (0x0a) and carriage return '\\r' (0x0d).
+Some special characters (e.g. used in RFC5646AdditionalSpokenLanguages and MCAAdditionalLanguageAttributes) can be set by using the '\\' escape character. They are tab '\\t' (0x09), line feed '\\n (0x0a) and carriage return '\\r' (0x0d).
 
-The escape character can be used before special characters, e.g. characters such as ',' and '#' when not using quotes, and '"' when using double quotes. A '\\' character is achieved using a double escape "\\\\".
+The '\\' escape character can be used before special characters, e.g. characters such as ',' and '#' when not using quotation marks or '"' when using double quotes. A '\\' character can be inserted using a double backslash "\\\\".
 
 ## Example Files
 
