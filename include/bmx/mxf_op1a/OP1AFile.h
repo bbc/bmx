@@ -41,6 +41,7 @@
 #include <bmx/mxf_op1a/OP1ATrack.h>
 #include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
 #include <bmx/mxf_op1a/OP1AXMLTrack.h>
+#include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
 #include <bmx/mxf_helper/UniqueIdHelper.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFChecksumFile.h>
@@ -95,6 +96,7 @@ public:
     void SetRepeatIndexTable(bool enable);                              // default false. Repeat index table in Footer if true
     void ForceWriteCBEDuration0(bool enable);                           // force duration=0 for CBE index table
     void SetPrimaryPackage(bool enable);                                // default false
+    void SetIndexFollowsEssence(bool enable);                           // default false. If true then place index partition after the essence it indexes, even for CBE
 
 public:
     void SetOutputStartOffset(int64_t offset);
@@ -145,6 +147,7 @@ private:
     void CreateHeaderMetadata();
     mxfpp::SourcePackage* CreateFileSourcePackage(UMID package_uid, int64_t track_duration, int64_t track_origin);
     void CreateFile();
+    void WriteTimedTextIndexTable(OP1ATimedTextTrack *tt_track);
 
     void UpdatePackageMetadata();
     void UpdateTrackMetadata(mxfpp::GenericPackage *package, int64_t origin, int64_t duration);
@@ -178,6 +181,7 @@ private:
     mxfUMID mFileSourcePackageUID;
     bool mFrameWrapped;
     mxfUL mOPLabel;
+    bool mIndexFollowsEssence;
 
     int64_t mOutputStartOffset;
     int64_t mOutputEndOffset;

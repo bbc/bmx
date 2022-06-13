@@ -505,6 +505,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "    --aes-3                 Use AES-3 audio mapping\n");
     fprintf(stderr, "    --kag-size-512          Set KAG size to 512, instead of 1\n");
     fprintf(stderr, "    --primary-package       Set the header metadata set primary package property to the top-level file source package\n");
+    fprintf(stderr, "    --index-follows         The index partition follows the essence partition, even when it is CBE essence\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "  op1a/rdd9/d10:\n");
     fprintf(stderr, "    --xml-scheme-id <id>    Set the XML payload scheme identifier associated with the following --embed-xml option.\n");
@@ -819,6 +820,7 @@ int main(int argc, const char** argv)
     bool aes3 = false;
     bool kag_size_512 = false;
     bool op1a_primary_package = false;
+    bool op1a_index_follows = false;
     AS10Shim as10_shim = AS10_UNKNOWN_SHIM;
     const char *mpeg_descr_defaults_name = 0;
     bool mpeg_descr_frame_checks = true;
@@ -1413,6 +1415,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--primary-package") == 0)
         {
             op1a_primary_package = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--index-follows") == 0)
+        {
+            op1a_index_follows = true;
         }
         else if (strcmp(argv[cmdln_index], "--xml-scheme-id") == 0)
         {
@@ -4637,6 +4643,8 @@ int main(int argc, const char** argv)
 
             if (repeat_index)
                 op1a_clip->SetRepeatIndexTable(true);
+            if (op1a_index_follows)
+                op1a_clip->SetIndexFollowsEssence(true);
 
             if (clip_sub_type != AS11_CLIP_SUB_TYPE)
                 op1a_clip->SetClipWrapped(clip_wrap);

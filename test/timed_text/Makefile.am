@@ -17,6 +17,7 @@ EXTRA_DIST = \
 	info_7.xml \
 	info_8.xml \
 	info_9.xml \
+	info_10.xml \
 	test_1.md5 \
 	test_2.md5 \
 	test_3.md5 \
@@ -25,7 +26,8 @@ EXTRA_DIST = \
 	test_6.md5 \
 	test_7.md5 \
 	test_8.md5 \
-	test_9.md5
+	test_9.md5 \
+	test_10.md5
 
 .PHONY: create-data
 create-data:

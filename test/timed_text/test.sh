@@ -95,6 +95,24 @@ create_test_file_5()
         >/dev/null
 }
 
+create_test_file_6()
+{
+    # AVCI and timed text, index follows
+
+    $testdir/create_test_essence -t 7 -d 3 $tmpdir/video
+
+    $appsdir/raw2bmx/raw2bmx \
+        --regtest \
+        -t op1a \
+        -f 25 \
+        -y $1 \
+        -o $3 \
+        --index-follows \
+        --tt $base/$2 \
+        --avci100_1080i $tmpdir/video \
+        >/dev/null
+}
+
 transwrap_test_file_1()
 {
     $appsdir/bmxtranswrap/bmxtranswrap \
@@ -179,6 +197,12 @@ check()
         diff $tmpdir/test.md5 $base/test_9.md5 &&
         create_read_result $tmpdir/test.xml $tmpdir/test $tmpdir/test.mxf &&
             diff $tmpdir/test.xml $base/info_9.xml &&
+            diff $tmpdir/test_d0.xml $base/text_example.xml &&
+    create_test_file_6 10:00:00:00 manifest_1.txt $tmpdir/test.mxf &&
+        $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
+        diff $tmpdir/test.md5 $base/test_10.md5 &&
+        create_read_result $tmpdir/test.xml $tmpdir/test $tmpdir/test.mxf &&
+            diff $tmpdir/test.xml $base/info_10.xml &&
             diff $tmpdir/test_d0.xml $base/text_example.xml
 }
 
@@ -212,7 +236,10 @@ create_data()
     create_test_file_2 10:00:00:00 manifest_1.txt $tmpdir/input.mxf &&
         transwrap_test_file_1 $tmpdir/input.mxf $tmpdir/test.mxf &&
         $md5tool < $tmpdir/test.mxf > $base/test_9.md5 &&
-        create_read_result $base/info_9.xml $tmpdir/test $tmpdir/test.mxf
+        create_read_result $base/info_9.xml $tmpdir/test $tmpdir/test.mxf &&
+    create_test_file_6 10:00:00:00 manifest_1.txt $tmpdir/test.mxf &&
+        $md5tool < $tmpdir/test.mxf > $base/test_10.md5 &&
+        create_read_result $base/info_10.xml $tmpdir/test $tmpdir/test.mxf
 }
 
 create_samples()
@@ -236,7 +263,9 @@ create_samples()
         create_read_result $sampledir/test_8.xml $sampledir/timed_text_8 $sampledir/timed_text_8.mxf &&
     create_test_file_2 10:00:00:00 manifest_1.txt $tmpdir/input.mxf &&
         transwrap_test_file_1 $tmpdir/input.mxf $sampledir/timed_text_9.mxf &&
-        create_read_result $sampledir/test_9.xml $sampledir/timed_text_9 $sampledir/timed_text_9.mxf
+        create_read_result $sampledir/test_9.xml $sampledir/timed_text_9 $sampledir/timed_text_9.mxf &&
+    create_test_file_6 10:00:00:00 manifest_1.txt $sampledir/timed_text_10.mxf &&
+        create_read_result $sampledir/test_10.xml $sampledir/timed_text_10 $sampledir/timed_text_10.mxf
 }
 
 

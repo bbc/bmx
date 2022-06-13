@@ -1,5 +1,4 @@
 TESTS = \
-	anc.sh \
 	avci50_1080i.test \
 	avci50_1080p25.test \
 	avci50_1080p50.test \
@@ -23,17 +22,16 @@ TESTS = \
 	dv100_720p50.test \
 	dvbased25.test \
 	iecdv25.test \
+	mpeg2lg_422p_hl_1080i.test \
+	mpeg2lg_mp_hl_1920_1080i.test \
+	mpeg2lg_mp_h14_1080i.test \
+	rdd36_422.test \
+	rdd36_4444.test \
 	unc.test \
 	unc_720p.test \
 	unc_1080i.test \
 	unc_1080p.test \
 	unc_3840.test \
-	mpeg2lg_422p_hl_1080i.test \
-	mpeg2lg_mp_hl_1920_1080i.test \
-	mpeg2lg_mp_h14_1080i.test \
-	vbi.sh \
-	rdd36_422.test \
-	rdd36_4444.test \
 	vc2.test \
 	vc3_1080p_1235.test \
 	vc3_1080p_1237.test \
@@ -44,12 +42,13 @@ TESTS = \
 	vc3_720p_1250.test \
 	vc3_720p_1251.test \
 	vc3_720p_1252.test \
-	vc3_1080p_1253.test
-
+	vc3_1080p_1253.test \
+	anc.sh \
+	vbi.sh \
+	index_follows.sh
 
 
 EXTRA_DIST = \
-	anc.sh \
 	avci200_1080i.test \
 	avci200_1080p50.test \
 	avci200_720p50.test \
@@ -73,17 +72,16 @@ EXTRA_DIST = \
 	dv50.test \
 	dvbased25.test \
 	iecdv25.test \
+	mpeg2lg_422p_hl_1080i.test \
+	mpeg2lg_mp_hl_1920_1080i.test \
+	mpeg2lg_mp_h14_1080i.test \
+	rdd36_422.test \
+	rdd36_4444.test \
 	unc_1080i.test \
 	unc_1080p.test \
 	unc_720p.test \
 	unc.test \
 	unc_3840.test \
-	mpeg2lg_422p_hl_1080i.test \
-	mpeg2lg_mp_hl_1920_1080i.test \
-	mpeg2lg_mp_h14_1080i.test \
-	vbi.sh \
-	rdd36_422.test \
-	rdd36_4444.test \
 	vc2.test \
 	vc3_1080p_1235.test \
 	vc3_1080p_1237.test \
@@ -119,17 +117,17 @@ EXTRA_DIST = \
 	dv50.md5 \
 	dvbased25.md5 \
 	iecdv25.md5 \
+	mpeg2lg_422p_hl_1080i.md5 \
+	mpeg2lg_mp_hl_1920_1080i.md5 \
+	mpeg2lg_mp_h14_1080i.md5 \
+	rdd36_422.md5 \
+	rdd36_4444.md5 \
 	unc_1080i.md5 \
 	unc_1080p.md5 \
 	unc_720p.md5 \
 	unc.md5 \
 	unc_3840.md5 \
-	mpeg2lg_422p_hl_1080i.md5 \
-	mpeg2lg_mp_hl_1920_1080i.md5 \
-	mpeg2lg_mp_h14_1080i.md5 \
 	vbi.md5 \
-	rdd36_422.md5 \
-	rdd36_4444.md5 \
 	vc2.md5 \
 	vc3_1080p_1235.md5 \
 	vc3_1080p_1237.md5 \
@@ -141,9 +139,16 @@ EXTRA_DIST = \
 	vc3_720p_1251.md5 \
 	vc3_720p_1252.md5 \
 	vc3_1080p_1253.md5 \
+	index_follows_1.md5 \
+	index_follows_2.md5 \
+	index_follows_3.md5 \
+	index_follows_4.md5 \
 	check.sh \
 	create.sh \
-	samples.sh
+	samples.sh \
+	anc.sh \
+	vbi.sh \
+	index_follows.sh
 
 
 
@@ -195,6 +200,7 @@ create-data:
 	${srcdir}/create.sh ${srcdir} 3 40 vc3_1080p_1253
 	${srcdir}/anc.sh create_data
 	${srcdir}/vbi.sh create_data
+	${srcdir}/index_follows.sh create-data
 
 
 .PHONY: create-samples
@@ -245,4 +251,5 @@ create-samples:
 	${srcdir}/samples.sh 3 40 vc3_1080p_1253
 	${srcdir}/anc.sh create_samples
 	${srcdir}/vbi.sh create_samples
+	${srcdir}/index_follows.sh create-samples
 

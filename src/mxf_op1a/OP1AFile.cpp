@@ -116,6 +116,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mMXFChecksumFile = 0;
     mCBEIndexPartitionIndex = 0;
     mSetPrimaryPackage = false;
+    mIndexFollowsEssence = false;
 
     mTrackIdHelper.SetId("TimecodeTrack", 901);
     mTrackIdHelper.SetStartId(MXF_PICTURE_DDEF, 1001);
@@ -263,6 +264,11 @@ void OP1AFile::SetPrimaryPackage(bool enable)
     mSetPrimaryPackage = enable;
 }
 
+void OP1AFile::SetIndexFollowsEssence(bool enable)
+{
+    mIndexFollowsEssence = enable;
+}
+
 void OP1AFile::SetOutputStartOffset(int64_t offset)
 {
     BMX_CHECK(offset >= 0);
@@ -376,10 +382,16 @@ void OP1AFile::PrepareHeaderMetadata()
     if (HAVE_PRIMARY_EC &&
         (mFlavour & OP1A_SINGLE_PASS_WRITE_FLAVOUR) && mInputDuration >= 0)
     {
-        if (mPartitionInterval == 0 && mIndexTable->IsCBE() && mTimedTextTrackCount == 0) {
+        if (mPartitionInterval == 0 &&
+                mIndexTable->IsCBE() &&
+                !mIndexFollowsEssence &&
+                mTimedTextTrackCount == 0)
+        {
             mSupportCompleteSinglePass = true;
             mIndexTable->SetInputDuration(mInputDuration);
-        } else {
+        }
+        else
+        {
             if (mIndexTable && !mIndexTable->IsCBE()) {
                 log_warn("Closing and completing the header partition in a single pass write is not supported "
                          "because essence edit unit size is variable\n");
@@ -387,6 +399,9 @@ void OP1AFile::PrepareHeaderMetadata()
             if (mPartitionInterval != 0) {
                 log_warn("Closing and completing the header partition in a single pass write is not supported "
                          "because partition interval is non-zero\n");
+            }
+            if (mIndexTable->IsCBE() && mIndexFollowsEssence) {
+                log_warn("Index that follows essence in a single pass write is not supported\n");
             }
         }
     } else if (!HAVE_PRIMARY_EC && mTimedTextTrackCount > 0) {
@@ -488,12 +503,13 @@ void OP1AFile::CompleteWrite()
     mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
 
 
-    // non-minimal partition flavour: write any remaining VBE index segments
+    // non-minimal partition flavour: write any remaining VBE index segments or follow CBE index segments
 
     if (HAVE_PRIMARY_EC &&
         !(mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) &&
         !(mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR) &&
-        mIndexTable->IsVBE() && mIndexTable->HaveSegments())
+        ((mIndexTable->IsVBE() && mIndexTable->HaveSegments()) ||
+            (mIndexTable->IsCBE() && !mIndexTable->HaveWrittenCBE())))
     {
         Partition &index_partition = mMXFFile->createPartition();
         index_partition.setKey(&MXF_PP_K(ClosedComplete, Body)); // will be complete when memory flushed
@@ -501,6 +517,10 @@ void OP1AFile::CompleteWrite()
         index_partition.setBodySID(0);
         index_partition.setKagSize(mKAGSize);
         index_partition.write(mMXFFile);
+
+        // CBE index table is written at the end for the index follows essence case
+        if (mIndexTable->IsCBE())
+            mCBEIndexPartitionIndex = mMXFFile->getPartitions().size() - 1;
 
         mIndexTable->WriteSegments(mMXFFile, &index_partition, true);
     }
@@ -537,6 +557,11 @@ void OP1AFile::CompleteWrite()
     // minimal/body partitions flavour: write any remaining index segments
 
     if (HAVE_PRIMARY_EC && mIndexTable->HaveFooterSegments()) {
+        if (mIndexTable->IsCBE() && !mIndexTable->HaveWrittenCBE()) {
+            // CBE index table that is not a repeat
+            mCBEIndexPartitionIndex = mMXFFile->getPartitions().size() - 1;
+        }
+
         mIndexTable->WriteSegments(mMXFFile, &footer_partition, true);
     }
 
@@ -598,10 +623,13 @@ void OP1AFile::CompleteWrite()
         mMXFFile->updateGenericStreamPartitions();
 
 
-        // re-write the CBE index table segment(s) that are not in the header metadata
+        // re-write the CBE index table segment(s) that are not in the header or footer partition
 
         if (HAVE_PRIMARY_EC &&
-            !mFirstWrite && mIndexTable->IsCBE() && mCBEIndexPartitionIndex > 0)
+                !mFirstWrite &&
+                mIndexTable->IsCBE() &&
+                mCBEIndexPartitionIndex > 0 &&
+                mCBEIndexPartitionIndex < mMXFFile->getPartitions().size() - 1)
         {
             Partition &index_partition = mMXFFile->getPartition(mCBEIndexPartitionIndex);
             mMXFFile->seek(index_partition.getThisPartition(), SEEK_SET);
@@ -909,7 +937,7 @@ void OP1AFile::CreateFile()
     header_partition.setVersion(1, ((mFlavour & OP1A_377_2004_FLAVOUR) ? 2 : 3));
     if (HAVE_PRIMARY_EC &&
         ((mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) &&
-        mIndexTable->IsCBE())
+        (mIndexTable->IsCBE() && !mIndexFollowsEssence))
     {
         header_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
     }
@@ -972,17 +1000,9 @@ void OP1AFile::CreateFile()
         if (mMXFFile->isMemoryFileOpen())
             mMXFFile->closeMemoryFile();
 
-        // write index table partition and segment
-        Partition &index_partition = mMXFFile->createPartition();
-        if (mSupportCompleteSinglePass)
-            index_partition.setKey(&MXF_PP_K(ClosedComplete, Body));
-        else
-            index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
-        index_partition.setIndexSID(tt_track->GetIndexSID());
-        index_partition.setBodySID(0);
-        index_partition.setKagSize(mKAGSize);
-        index_partition.write(mMXFFile);
-        tt_track->WriteIndexTable(mMXFFile, &index_partition);
+        // index is before timed text essence
+        if (!mIndexFollowsEssence)
+            WriteTimedTextIndexTable(tt_track);
 
         // write essence partition and container data
         Partition &ess_partition = mMXFFile->createPartition();
@@ -997,6 +1017,10 @@ void OP1AFile::CreateFile()
         ess_partition.setBodyOffset(0);
         ess_partition.write(mMXFFile);
         tt_track->WriteEssenceContainer(mMXFFile, &ess_partition);
+
+        // index follows timed text essence
+        if (mIndexFollowsEssence)
+            WriteTimedTextIndexTable(tt_track);
 
         size_t k;
         for (k = 0; k < tt_track->GetNumAncillaryResources(); k++) {
@@ -1015,6 +1039,21 @@ void OP1AFile::CreateFile()
             tt_track->WriteAncillaryResource(mMXFFile, &ess_partition, k);
         }
     }
+}
+
+void OP1AFile::WriteTimedTextIndexTable(OP1ATimedTextTrack *tt_track)
+{
+    Partition &index_partition = mMXFFile->createPartition();
+    if (mSupportCompleteSinglePass)
+        index_partition.setKey(&MXF_PP_K(ClosedComplete, Body));
+    else
+        index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
+    index_partition.setIndexSID(tt_track->GetIndexSID());
+    index_partition.setBodySID(0);
+    index_partition.setKagSize(mKAGSize);
+    index_partition.write(mMXFFile);
+
+    tt_track->WriteIndexTable(mMXFFile, &index_partition);
 }
 
 void OP1AFile::UpdatePackageMetadata()
@@ -1110,9 +1149,9 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
 
         if (mFirstWrite)
         {
-            // write CBE index table segments and ensure new essence partition is started
+            // write CBE index table segments (if it doesn't follow essence) and ensure new essence partition is started
 
-            if (mIndexTable->IsCBE()) {
+            if (mIndexTable->IsCBE() && !mIndexFollowsEssence) {
                 // make sure edit unit byte count and delta entries are known
                 mCPManager->UpdateIndexTable(mCPManager->HaveContentPackages(2) ? 2 : 1);
 

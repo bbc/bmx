@@ -193,6 +193,8 @@ public:
     void UpdateIndex(uint32_t size, uint32_t num_samples);
 
 public:
+    bool HaveWrittenCBE() const { return mHaveWrittenCBE; }
+
     bool HaveSegments();
     bool HaveFooterSegments();
     void WriteSegments(mxfpp::File *mxf_file, mxfpp::Partition *partition, bool final_write);
