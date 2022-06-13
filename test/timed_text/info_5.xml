@@ -126,7 +126,4 @@
       </track>
     </tracks>
   </clip>
-  <log_messages size="1">
-    <info>Read 3 samples (00:00:00:03 @25fps)</info>
-  </log_messages>
 </bmx>

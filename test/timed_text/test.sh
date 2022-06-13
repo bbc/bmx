@@ -109,6 +109,7 @@ create_read_result()
 {
     $appsdir/mxf2raw/mxf2raw \
         --regtest \
+        --log-level 2 \
         --info \
         --info-format xml \
         --info-file $1 \
