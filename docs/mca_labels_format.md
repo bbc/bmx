@@ -40,7 +40,7 @@ The `repeat` property is used to decide whether to repeat a SG or GOSG label tha
 
 The first instance of a SG or GOSG label with a given `id` will always be stored in the MXF track's file descriptor. Subsequent SG or GOSG labels with the same `id` will be stored as a copy of the earlier label if `repeat` is True.
 
-The following string value properties are can be used:
+The following string value properties can be used:
 
 - RFC5646SpokenLanguage (alternative is "lang")
 - MCATitle
