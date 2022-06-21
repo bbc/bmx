@@ -23,7 +23,8 @@ TESTS = \
 	unc_3840.test \
 	mpeg2lg_422p_hl_1080i.test \
 	mpeg2lg_mp_hl_1920_1080i.test \
-	mpeg2lg_mp_h14_1080i.test
+	mpeg2lg_mp_h14_1080i.test \
+	sound_only.sh
 
 
 
@@ -78,9 +79,12 @@ EXTRA_DIST = \
 	mpeg2lg_422p_hl_1080i.md5s \
 	mpeg2lg_mp_hl_1920_1080i.md5s \
 	mpeg2lg_mp_h14_1080i.md5s \
+	sound_only_from_raw.md5s \
+	sound_only_transwrap.md5s \
 	check.sh \
 	create.sh \
-	samples.sh
+	samples.sh \
+	sound_only.sh
 
 
 
@@ -111,6 +115,7 @@ create-data:
 	${srcdir}/create.sh ${srcdir} 3 19 unc_1080p
 	${srcdir}/create.sh ${srcdir} 3 20 unc_720p
 	${srcdir}/create.sh ${srcdir} 3 45 unc_3840
+	${srcdir}/sound_only.sh create-data
 
 
 
@@ -141,5 +146,6 @@ create-samples:
 	${srcdir}/samples.sh 3 19 unc_1080p
 	${srcdir}/samples.sh 3 20 unc_720p
 	${srcdir}/samples.sh 3 45 unc_3840
+	${srcdir}/sound_only.sh create-samples
 
 

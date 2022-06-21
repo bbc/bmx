@@ -45,7 +45,8 @@ TESTS = \
 	vc3_1080p_1253.test \
 	anc.sh \
 	vbi.sh \
-	index_follows.sh
+	index_follows.sh \
+	sound_only.sh
 
 
 EXTRA_DIST = \
@@ -143,12 +144,15 @@ EXTRA_DIST = \
 	index_follows_2.md5 \
 	index_follows_3.md5 \
 	index_follows_4.md5 \
+	sound_only_from_raw.md5 \
+	sound_only_transwrap.md5 \
 	check.sh \
 	create.sh \
 	samples.sh \
 	anc.sh \
 	vbi.sh \
-	index_follows.sh
+	index_follows.sh \
+	sound_only.sh
 
 
 
@@ -201,6 +205,7 @@ create-data:
 	${srcdir}/anc.sh create_data
 	${srcdir}/vbi.sh create_data
 	${srcdir}/index_follows.sh create-data
+	${srcdir}/sound_only.sh create-data
 
 
 .PHONY: create-samples
@@ -252,4 +257,5 @@ create-samples:
 	${srcdir}/anc.sh create_samples
 	${srcdir}/vbi.sh create_samples
 	${srcdir}/index_follows.sh create-samples
+	${srcdir}/sound_only.sh create-samples
 

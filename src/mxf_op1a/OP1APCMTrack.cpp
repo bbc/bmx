@@ -116,7 +116,7 @@ void OP1APCMTrack::SetSamplingRate(mxfRational sampling_rate)
 
     mWaveDescriptorHelper->SetSamplingRate(sampling_rate);
 
-    if (!mOP1AFile->IsFrameWrapped()) {
+    if (mOP1AFile->IsClipWrapped()) {
         mEditRate = sampling_rate;
         mDescriptorHelper->SetSampleRate(sampling_rate);
     }

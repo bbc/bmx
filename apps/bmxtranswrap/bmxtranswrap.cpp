@@ -2860,14 +2860,14 @@ int main(int argc, const char** argv)
         // a frame rate that is a sound sampling rate will result in the timecode rate being used as
         // the clip frame rate and the timecode rate defaulting to 25fps if not set by the user
 
-        bool is_sound_frame_rate = false;
+        bool input_edit_rate_is_sampling_rate = false;
         size_t i;
         for (i = 0; i < reader->GetNumTrackReaders(); i++) {
             const MXFSoundTrackInfo *input_sound_info =
                 dynamic_cast<const MXFSoundTrackInfo*>(reader->GetTrackReader(i)->GetTrackInfo());
 
             if (input_sound_info && frame_rate == input_sound_info->sampling_rate) {
-                is_sound_frame_rate = true;
+                input_edit_rate_is_sampling_rate = true;
                 break;
             }
         }
@@ -3121,7 +3121,7 @@ int main(int argc, const char** argv)
 
         // complete commandline parsing
 
-        if (!timecode_rate_set && !is_sound_frame_rate)
+        if (!timecode_rate_set && !input_edit_rate_is_sampling_rate)
             timecode_rate = frame_rate;
         if (start_timecode_str && !parse_timecode(start_timecode_str, timecode_rate, &start_timecode)) {
             usage(argv[0]);
@@ -3252,7 +3252,7 @@ int main(int argc, const char** argv)
                 flavour |= AVID_GROWING_FILE_FLAVOUR;
         }
         ClipWriter *clip = 0;
-        Rational clip_frame_rate = (is_sound_frame_rate ? timecode_rate : frame_rate);
+        Rational clip_frame_rate = (input_edit_rate_is_sampling_rate ? timecode_rate : frame_rate);
         switch (clip_type)
         {
             case CW_AS02_CLIP_TYPE:
@@ -4149,15 +4149,29 @@ int main(int argc, const char** argv)
         // doesn't require a sample sequence
 
         BMX_ASSERT(!output_tracks.empty());
-        BMX_CHECK(!is_sound_frame_rate || output_tracks[0]->GetClipTrack()->GetEssenceType() == WAVE_PCM);
+        BMX_CHECK(!input_edit_rate_is_sampling_rate || output_tracks[0]->GetClipTrack()->GetEssenceType() == WAVE_PCM);
         vector<uint32_t> sample_sequence;
         uint32_t sample_sequence_offset = 0;
         uint32_t max_samples_per_read = 1;
-        if (is_sound_frame_rate) {
-            // read sample sequence required for output frame rate
-            sample_sequence = output_tracks[0]->GetClipTrack()->GetShiftedSampleSequence();
+        if (input_edit_rate_is_sampling_rate) {
+            // the input edit rate is the sound sampling rate, which means the output is sound only as well
+            if ((clip_type == CW_OP1A_CLIP_TYPE && clip->GetOP1AClip()->IsClipWrapped()) ||
+                 clip_type == CW_AS02_CLIP_TYPE ||
+                 clip_type == CW_WAVE_CLIP_TYPE)
+            {
+                // Don't restrict the output sound to frames if it's clip wrapped
+                sample_sequence.push_back(1);
+            }
+            else
+            {
+                // set the sample sequence required for frame-wrapped output
+                sample_sequence = output_tracks[0]->GetClipTrack()->GetShiftedSampleSequence();
+            }
+
+            // set max_samples_per_read > 1 if no sample sequence is needed for the output
+            // reading multiple samples is more efficient in that case
             if (sample_sequence.size() == 1 && sample_sequence[0] == 1)
-                max_samples_per_read = 1920; // improve efficiency and read multiple samples
+                max_samples_per_read = 1920;
         } else {
             // read 1 input frame
             sample_sequence.push_back(1);
@@ -4226,7 +4240,9 @@ int main(int argc, const char** argv)
                 Frame *frame = input_track->GetFrameBuffer()->GetLastFrame(false);
                 BMX_ASSERT(frame);
 
-                if (!frame->IsComplete()) {
+                // If a single output sample (edit unit) is read from the input and it is incomplete then
+                // check if padding can be added
+                if (max_samples_per_read == 1 && !frame->IsComplete()) {
                     const MXFTrackInfo *input_track_info = input_track->GetTrackInfo();
                     // only support padding with PCM samples and where the input edit rate equals audio sampling rate
                     if (input_track_info->essence_type != WAVE_PCM ||

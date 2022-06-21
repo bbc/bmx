@@ -118,6 +118,7 @@ public:
     mxfpp::DataModel* GetDataModel() const           { return mDataModel; }
 
     bool IsFrameWrapped() const { return mFrameWrapped; }
+    bool IsClipWrapped() const  { return !mFrameWrapped; }
 
     mxfRational GetFrameRate() const { return mEditRate; }
 

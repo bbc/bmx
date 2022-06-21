@@ -4518,6 +4518,26 @@ int main(int argc, const char** argv)
         }
 
 
+        // check if clip is sound only
+
+        bool have_sound = false;
+        bool sound_only = true;
+        for (i = 0; i < inputs.size(); i++) {
+            RawInput *input = &inputs[i];
+            if (input->disabled)
+                continue;
+
+            if (input->essence_type == WAVE_PCM) {
+                have_sound = true;
+            } else if (input->essence_type != TIMED_TEXT) {
+                sound_only = false;
+                break;
+            }
+        }
+        if (sound_only && !have_sound)
+            sound_only = false;
+
+
         // create clip
 
         int flavour = 0;
@@ -5380,11 +5400,25 @@ int main(int argc, const char** argv)
                     break;
                 case WAVE_PCM:
                 {
-                    vector<uint32_t> shifted_sample_sequence = clip_track->GetShiftedSampleSequence();
-                    BMX_ASSERT(shifted_sample_sequence.size() < BMX_ARRAY_SIZE(input->sample_sequence));
-                    memcpy(input->sample_sequence, &shifted_sample_sequence[0],
-                           shifted_sample_sequence.size() * sizeof(uint32_t));
-                    input->sample_sequence_size = shifted_sample_sequence.size();
+                    if (sound_only &&
+                        (
+                            (clip_type == CW_OP1A_CLIP_TYPE && clip->GetOP1AClip()->IsClipWrapped()) ||
+                             clip_type == CW_AS02_CLIP_TYPE ||
+                             clip_type == CW_WAVE_CLIP_TYPE
+                        ))
+                    {
+                        // Don't restrict the sound to frames if it's sound only and clip wrapped
+                        input->sample_sequence[0] = 1;
+                        input->sample_sequence_size = 1;
+                    }
+                    else
+                    {
+                        vector<uint32_t> shifted_sample_sequence = clip_track->GetShiftedSampleSequence();
+                        BMX_ASSERT(shifted_sample_sequence.size() < BMX_ARRAY_SIZE(input->sample_sequence));
+                        memcpy(input->sample_sequence, &shifted_sample_sequence[0],
+                            shifted_sample_sequence.size() * sizeof(uint32_t));
+                        input->sample_sequence_size = shifted_sample_sequence.size();
+                    }
                     if (input->raw_reader) {
                         uint32_t sample_size = ((input->bits_per_sample + 7) / 8) * input->channel_count;
                         input->raw_reader->SetFixedSampleSize(sample_size);
@@ -5458,23 +5492,25 @@ int main(int argc, const char** argv)
         // read more than 1 sample to improve efficiency if the input is sound only and the output
         // doesn't require a sample sequence
 
-        bool have_sound_sample_sequence = true;
-        bool sound_only = true;
         uint32_t max_samples_per_read = 1;
-        for (i = 0; i < inputs.size(); i++) {
-            RawInput *input = &inputs[i];
-            if (!input->disabled && input->essence_type != TIMED_TEXT) {
-                if (input->essence_type == WAVE_PCM) {
-                    if (input->sample_sequence_size == 1 && input->sample_sequence[0] == 1)
-                        have_sound_sample_sequence = false;
-                } else {
-                    sound_only = false;
+        if (sound_only) {
+            bool all_have_sound_sample_sequence = true;
+            for (i = 0; i < inputs.size(); i++) {
+                RawInput *input = &inputs[i];
+                if (input->disabled)
+                    continue;
+
+                if (input->essence_type == WAVE_PCM &&
+                    input->sample_sequence_size == 1 &&
+                    input->sample_sequence[0] == 1)
+                {
+                    all_have_sound_sample_sequence = false;
+                    break;
                 }
             }
+            if (!all_have_sound_sample_sequence)
+                max_samples_per_read = 1920;
         }
-        BMX_ASSERT(sound_only || have_sound_sample_sequence);
-        if (sound_only && !have_sound_sample_sequence)
-            max_samples_per_read = 1920;
 
 
         // realtime wrapping

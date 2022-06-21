@@ -57,7 +57,7 @@ create_repeat_index_op1a()
 
 check_can_read()
 {
-    $appsdir/mxf2raw/mxf2raw --read-ess $1
+    $appsdir/mxf2raw/mxf2raw --read-ess $1 >/dev/null
 }
 
 
