@@ -541,7 +541,7 @@ bool OP1AIndexTable::HaveSegments()
 bool OP1AIndexTable::HaveFooterSegments()
 {
     if (mIsCBE)
-        return !mHaveWrittenCBE || mRepeatIndexTable;
+        return mDuration > 0 && (!mHaveWrittenCBE || mRepeatIndexTable);
     else
         return HaveSegments() || (!mWrittenVBEIndexSegments.empty() && mRepeatIndexTable);
 }

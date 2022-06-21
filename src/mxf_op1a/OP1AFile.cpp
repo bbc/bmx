@@ -509,7 +509,7 @@ void OP1AFile::CompleteWrite()
         !(mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) &&
         !(mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR) &&
         ((mIndexTable->IsVBE() && mIndexTable->HaveSegments()) ||
-            (mIndexTable->IsCBE() && !mIndexTable->HaveWrittenCBE())))
+            (mIndexTable->IsCBE() && !mIndexTable->HaveWrittenCBE() && mIndexTable->GetDuration() > 0)))
     {
         Partition &index_partition = mMXFFile->createPartition();
         index_partition.setKey(&MXF_PP_K(ClosedComplete, Body)); // will be complete when memory flushed
