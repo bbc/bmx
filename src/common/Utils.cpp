@@ -995,16 +995,21 @@ string bmx::get_generic_duration_string_2(int64_t count, Rational rate)
 
     uint32_t rounded_rate = (uint32_t)((rate.numerator + rate.denominator/2) / rate.denominator);
 
-    int64_t frame = count % rounded_rate;
+    int64_t edit_unit = count % rounded_rate;
     int64_t sec = count / rounded_rate;
     int64_t min = sec / 60;
     sec %= 60;
     int64_t hour = min / 60;
     min %= 60;
 
+    const char *format;
+    if (rounded_rate <= 99)
+        format = "%02" PRId64 ":%02d:%02d:%02" PRId64 " @%uHz";
+    else
+        format = "%02" PRId64 ":%02d:%02d:%" PRId64 " @%uHz";
+
     char buffer[64];
-    bmx_snprintf(buffer, sizeof(buffer), "%02" PRId64 ":%02d:%02d:%02" PRId64 " @%uHz", hour, (int)min, (int)sec,
-                                         frame, rounded_rate);
+    bmx_snprintf(buffer, sizeof(buffer), format, hour, (int)min, (int)sec, edit_unit, rounded_rate);
 
     return buffer;
 }
