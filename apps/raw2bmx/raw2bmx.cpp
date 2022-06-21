@@ -4492,7 +4492,7 @@ int main(int argc, const char** argv)
                 }
             } else {
                 if (!ClipWriterTrack::IsSupported(clip_type, input->essence_type, frame_rate)) {
-                    log_error("Essence type '%s' @%d/%d fps not supported for clip type '%s'\n",
+                    log_error("Essence type '%s' @%d/%d Hz not supported for clip type '%s'\n",
                               essence_type_to_string(input->essence_type),
                               frame_rate.numerator, frame_rate.denominator,
                               clip_type_to_string(clip_type, clip_sub_type));

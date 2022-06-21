@@ -1003,7 +1003,7 @@ string bmx::get_generic_duration_string_2(int64_t count, Rational rate)
     min %= 60;
 
     char buffer[64];
-    bmx_snprintf(buffer, sizeof(buffer), "%02" PRId64 ":%02d:%02d:%02" PRId64 " @%ufps", hour, (int)min, (int)sec,
+    bmx_snprintf(buffer, sizeof(buffer), "%02" PRId64 ":%02d:%02d:%02" PRId64 " @%uHz", hour, (int)min, (int)sec,
                                          frame, rounded_rate);
 
     return buffer;

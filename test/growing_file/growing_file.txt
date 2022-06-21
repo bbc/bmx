@@ -96,7 +96,7 @@ Clip
         block_align          : 2
         channel_count        : 1
 LogMessages: (1)
-  info    : Read 24 samples (00:00:00:24 @25fps)
+  info    : Read 24 samples (00:00:00:24 @25Hz)
 5941464
  (created='1970-01-01 00:00:00.000')
 Application
@@ -196,7 +196,7 @@ Clip
         channel_count        : 1
 LogMessages: (2)
   warning : File is missing both a RIP and a footer partition offset 
-  info    : Read 24 samples (00:00:00:24 @25fps)
+  info    : Read 24 samples (00:00:00:24 @25Hz)
 5927832
  (created='1970-01-01 00:00:00.000')
 Application
@@ -301,7 +301,7 @@ LogMessages: (7)
   error   : 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
   error   : 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
   warning : A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
-  info    : Read 24 samples (00:00:00:24 @25fps)
+  info    : Read 24 samples (00:00:00:24 @25Hz)
 5927350
  (created='1970-01-01 00:00:00.000')
 Application
@@ -405,7 +405,7 @@ LogMessages: (6)
   error   : 'mxf_read_k(mxfFile, key)' failed, 
   error   : 'mxf_read_kl(_cFile, key, llen, len)' failed, 
   warning : A read error occurred: 'mxf_read_kl(_cFile, key, llen, len)' failed, 
-  info    : Read 23 samples (00:00:00:23 @25fps)
+  info    : Read 23 samples (00:00:00:23 @25Hz)
 5683470
  (created='1970-01-01 00:00:00.000')
 Application
@@ -509,7 +509,7 @@ LogMessages: (6)
   error   : 'mxf_read_k(mxfFile, key)' failed, 
   error   : 'mxf_read_kl(_cFile, key, llen, len)' failed, 
   warning : A read error occurred: 'mxf_read_kl(_cFile, key, llen, len)' failed, 
-  info    : Read 22 samples (00:00:00:22 @25fps)
+  info    : Read 22 samples (00:00:00:22 @25Hz)
 5679610
  (created='1970-01-01 00:00:00.000')
 Application
@@ -613,7 +613,7 @@ LogMessages: (6)
   error   : 'mxf_read_k(mxfFile, key)' failed, 
   error   : 'mxf_read_kl(_cFile, key, llen, len)' failed, 
   warning : A read error occurred: 'mxf_read_kl(_cFile, key, llen, len)' failed, 
-  info    : Read 22 samples (00:00:00:22 @25fps)
+  info    : Read 22 samples (00:00:00:22 @25Hz)
 2970790
  (created='1970-01-01 00:00:00.000')
 Application
@@ -718,7 +718,7 @@ LogMessages: (7)
   error   : 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
   error   : 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
   warning : A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
-  info    : Read 12 samples (00:00:00:12 @25fps)
+  info    : Read 12 samples (00:00:00:12 @25Hz)
 2970328
 
  (created='1970-01-01 00:00:00.000')
@@ -825,7 +825,7 @@ LogMessages: (8)
   error   : 'mxf_avid_read_index_table_segment_2(file->getCFile(), segment_len, mxf_default_add_delta_entry, 0, add_frame_offset_index_entry, this, &_cSegment)' check failed
   error   :     
   warning : A read error occurred: 'mxf_avid_read_index_table_segment_2(file->getCFile(), segment_len, mxf_default_add_delta_entry, 0, add_frame_offset_index_entry, this, &_cSegment)' check failed
-  info    : Read 12 samples (00:00:00:12 @25fps)
+  info    : Read 12 samples (00:00:00:12 @25Hz)
 2970308
  (created='1970-01-01 00:00:00.000')
 Application
@@ -930,7 +930,7 @@ LogMessages: (7)
   error   : 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
   error   : 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
   warning : A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
-  info    : Read 12 samples (00:00:00:12 @25fps)
+  info    : Read 12 samples (00:00:00:12 @25Hz)
 13592
  (created='1970-01-01 00:00:00.000')
 Application
@@ -1035,7 +1035,7 @@ LogMessages: (7)
   error   : 'mxf_read_kl(mxfFile, &tkey, &tllen, &tlen)' failed, 
   error   : 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
   warning : A read error occurred: 'mxf_read_next_nonfiller_kl(_cFile, key, llen, len)' failed, 
-  info    : Read 0 samples (00:00:00:00 @25fps)
+  info    : Read 0 samples (00:00:00:00 @25Hz)
 4866
 ERROR (libMXF): 'mxf_file_read(mxfFile, (uint8_t*)key, 16) == 16' failed, 
 ERROR (libMXF): 'mxf_read_k(mxfFile, key)' failed, 

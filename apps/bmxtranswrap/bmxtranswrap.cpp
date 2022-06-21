@@ -2858,7 +2858,7 @@ int main(int argc, const char** argv)
 
         // check whether the frame rate is a sound sampling rate
         // a frame rate that is a sound sampling rate will result in the timecode rate being used as
-        // the clip frame rate and the timecode rate defaulting to 25fps if not set by the user
+        // the clip frame rate and the timecode rate defaulting to 25Hz if not set by the user
 
         bool input_edit_rate_is_sampling_rate = false;
         size_t i;
@@ -2953,7 +2953,7 @@ int main(int argc, const char** argv)
                              frame_rate.numerator, frame_rate.denominator);
                     is_enabled = false;
                 } else if (!ClipWriterTrack::IsSupported(clip_type, input_essence_type, frame_rate)) {
-                    log_warn("Track %" PRIszt " essence type '%s' @%d/%d fps not supported by clip type '%s'\n",
+                    log_warn("Track %" PRIszt " essence type '%s' @%d/%d Hz not supported by clip type '%s'\n",
                              i,
                              essence_type_to_string(input_essence_type),
                              frame_rate.numerator, frame_rate.denominator,
