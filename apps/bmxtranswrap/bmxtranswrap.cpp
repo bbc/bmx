@@ -396,9 +396,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --tc-rate <rate>        Start timecode rate to use when input is audio only\n");
     fprintf(stderr, "                          The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)\n");
     fprintf(stderr, "  --clip <name>           Set the clip name\n");
-    fprintf(stderr, "  --start <frame>         Set the start frame in input edit rate units. Default is 0\n");
-    fprintf(stderr, "  --dur <frame>           Set the duration in frames in input edit rate units. Default is minimum input duration\n");
-    fprintf(stderr, "  --check-end             Check at the start that the last (start + duration - 1) frame can be read\n");
+    fprintf(stderr, "  --start <count>         Set the start in input edit rate units. Default is 0\n");
+    fprintf(stderr, "  --dur <count>           Set the duration in input edit rate units. Default is minimum input duration\n");
+    fprintf(stderr, "  --check-end             Check at the start that the last (start + duration - 1) edit unit can be read\n");
     fprintf(stderr, "  --check-end-tolerance <frame> Allow output duration shorter than input declared duration\n");
     fprintf(stderr, "  --check-complete        Check that the input file is complete\n");
     fprintf(stderr, "  --group                 Use the group reader instead of the sequence reader\n");

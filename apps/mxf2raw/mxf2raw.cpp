@@ -1623,7 +1623,7 @@ static void usage(const char *cmd)
     fprintf(stderr, " --no-reorder          Don't attempt to re-order the inputs, based on timecode, when constructing a sequence\n");
     fprintf(stderr, "                       Use this option for files with broken timecode\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, " --check-end           Check that the last frame (start + duration - 1) can be read when opening the files\n");
+    fprintf(stderr, " --check-end           Check that the last edit unit (start + duration - 1) can be read when opening the files\n");
     fprintf(stderr, " --check-complete      Check that the input files are complete\n");
     fprintf(stderr, " --check-app-issues    Check that there are no known issues with the APP (Archive Preservation Project) file\n");
     fprintf(stderr, " --check-app-crc32     Check APP essence CRC-32 data\n");
@@ -1669,8 +1669,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "                           v=video, a=audio, d=data\n");
     fprintf(stderr, " --read-ess            Read the essence data, even when no other option requires it\n");
     fprintf(stderr, " --deint               De-interleave multi-channel / AES-3 sound\n");
-    fprintf(stderr, " --start <frame>       Set the start frame to read. Default is 0\n");
-    fprintf(stderr, " --dur <frame>         Set the duration in frames. Default is minimum available duration\n");
+    fprintf(stderr, " --start <count>       Set the start edit unit to read from. Default is 0\n");
+    fprintf(stderr, " --dur <count>         Set the duration in edit units. Default is minimum available duration\n");
     fprintf(stderr, " --nopc                Don't include pre-charge frames\n");
     fprintf(stderr, " --noro                Don't include roll-out frames\n");
     fprintf(stderr, " --rt <factor>         Read at realtime rate x <factor>, where <factor> is a floating point value\n");
@@ -2525,7 +2525,7 @@ int main(int argc, const char** argv)
                 throw false;
             }
             if (check_end) {
-                log_error("Checking last frame is present (--check-end) is not supported for incomplete files\n");
+                log_error("Checking last edit unit is present (--check-end) is not supported for incomplete files\n");
                 last_frame_result = false;
                 cmd_result = 1;
             }
