@@ -175,20 +175,6 @@ bool AS11Helper::ParseXMLSchemeId(const string &scheme_id_str, UL *label)
     return true;
 }
 
-bool AS11Helper::ParseAudioLayoutMode(const string &audio_mode_str, UL *label)
-{
-    if (audio_mode_str == "as11-mode-0")
-        *label = CONSTRAINED_MCA_LABEL_FRAMEWORK;
-    else if (audio_mode_str == "as11-mode-1")
-        *label = CONSTRAINED_MCA_LABEL_WITH_DEFAULT_LAYOUT_A;
-    else if (audio_mode_str == "as11-mode-2")
-        *label = DEFAULT_LAYOUT_A_WITHOUT_MCA_LABEL;
-    else
-        return false;
-
-    return true;
-}
-
 AS11Helper::AS11Helper()
 {
     mNormaliseStrings = false;

@@ -594,6 +594,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                                * 'as11-mode-0', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02010000,\n");
     fprintf(stderr, "                                * 'as11-mode-1', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02020000,\n");
     fprintf(stderr, "                                * 'as11-mode-2', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02030000\n");
+    fprintf(stderr, "                                * 'imf', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020210.04010000\n");
     fprintf(stderr, "    --track-mca-labels <scheme> <file>  Insert audio labels defined in <file>. The 'as11' <scheme> will add an override and otherwise <scheme> is ignored\n");
     fprintf(stderr, "                                        The format of <file> is described in bmx/docs/mca_labels_format.md\n");
     fprintf(stderr, "                                        All tag symbols registered in the bmx code are available for use\n");
@@ -1796,7 +1797,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (!AS11Helper::ParseAudioLayoutMode(argv[cmdln_index + 1], &audio_layout_mode_label) &&
+            if (!AppMCALabelHelper::ParseAudioLayoutMode(argv[cmdln_index + 1], &audio_layout_mode_label) &&
                 !parse_mxf_auid(argv[cmdln_index + 1], &audio_layout_mode_label))
             {
                 usage(argv[0]);

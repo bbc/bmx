@@ -71,10 +71,19 @@ typedef struct
 } GeneratedMCALabelEntry;
 
 
+// IMF SMPTE ST 2067-2 Channel Assignment Label
+
+static const UL IMF_MCA_LABEL =
+    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x02, 0x02, 0x10, 0x04, 0x01, 0x00, 0x00};
+
+
 class ClipWriter;
 
 class AppMCALabelHelper
 {
+public:
+    static bool ParseAudioLayoutMode(const std::string &audio_mode_str, UL *label);
+
 public:
     AppMCALabelHelper(bool is_as11);
     ~AppMCALabelHelper();

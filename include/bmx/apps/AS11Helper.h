@@ -49,7 +49,6 @@ class AS11Helper
 {
 public:
     static bool ParseXMLSchemeId(const std::string &scheme_id_str, UL *label);
-    static bool ParseAudioLayoutMode(const std::string &audio_mode_str, UL *label);
 
 public:
     AS11Helper();

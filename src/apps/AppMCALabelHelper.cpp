@@ -44,6 +44,7 @@
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/rdd9_mxf/RDD9PCMTrack.h>
+#include <bmx/as11/AS11Labels.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -244,6 +245,22 @@ void AppMCALabelHelper::SoundfieldGroup::Reset()
 }
 
 
+
+bool AppMCALabelHelper::ParseAudioLayoutMode(const string &audio_mode_str, UL *label)
+{
+    if (audio_mode_str == "as11-mode-0")
+        *label = CONSTRAINED_MCA_LABEL_FRAMEWORK;
+    else if (audio_mode_str == "as11-mode-1")
+        *label = CONSTRAINED_MCA_LABEL_WITH_DEFAULT_LAYOUT_A;
+    else if (audio_mode_str == "as11-mode-2")
+        *label = DEFAULT_LAYOUT_A_WITHOUT_MCA_LABEL;
+    else if (audio_mode_str == "imf")
+        *label = IMF_MCA_LABEL;
+    else
+        return false;
+
+    return true;
+}
 
 AppMCALabelHelper::AppMCALabelHelper(bool is_as11)
 {
