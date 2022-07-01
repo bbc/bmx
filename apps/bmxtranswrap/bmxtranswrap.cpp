@@ -4508,8 +4508,19 @@ int main(int argc, const char** argv)
 
         if (read_duration >= 0 && total_read != read_duration) {
             bool isError = reader->IsComplete() && total_read < read_duration - check_end_tolerance;
+
             bmx::log(isError ? ERROR_LOG : WARN_LOG,
-                        "Read less (%" PRId64 ") samples than expected (%" PRId64 ")\n", total_read, read_duration);
+                     "Read fewer samples (%" PRId64 ") than expected (%" PRId64 ")\n", total_read, read_duration);
+
+            if (!op1a_clip_wrap &&
+                input_edit_rate_is_sampling_rate &&  // reading sound samples rather than frames
+                clip_type == CW_OP1A_CLIP_TYPE &&
+                clip->GetOP1AClip()->IsFrameWrapped())
+            {
+                bmx::log(isError ? ERROR_LOG : WARN_LOG,
+                         "Use the --clip-wrap option to transfer all audio samples\n");
+            }
+
             if (isError)
                 cmd_result = 1;
         }
