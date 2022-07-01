@@ -34,6 +34,7 @@
 
 
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
+#include <bmx/BMXTypes.h>
 
 
 
@@ -70,9 +71,12 @@ public:
     void SetLocked(bool locked);                        // default not set
     void SetAudioRefLevel(int8_t level);                // default not set
     void SetDialNorm(int8_t dial_norm);                 // default not set
+    void SetReferenceImageEditRate(mxfRational edit_rate);  // default not set
+    void SetReferenceAudioAlignmentLevel(int8_t level);     // default not set
 
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
     virtual void UpdateFileDescriptor();
+    virtual void UpdateFileDescriptor(mxfpp::FileDescriptor *file_desc_in);
 
 public:
     mxfRational GetSamplingRate() const     { return mSamplingRate; }
@@ -100,6 +104,8 @@ protected:
     bool mAudioRefLevelSet;
     int8_t mDialNorm;
     bool mDialNormSet;
+    BMX_OPT_PROP_DECL(mxfRational, mRefImageEditRate);
+    BMX_OPT_PROP_DECL(int8_t, mRefAudioAlignLevel);
 };
 
 

@@ -140,6 +140,8 @@ SoundMXFDescriptorHelper::SoundMXFDescriptorHelper()
     mAudioRefLevelSet = false;
     mDialNorm = 0;
     mDialNormSet = false;
+    BMX_OPT_PROP_DEFAULT(mRefImageEditRate, g_Null_Rational);
+    BMX_OPT_PROP_DEFAULT(mRefAudioAlignLevel, 0);
 }
 
 SoundMXFDescriptorHelper::~SoundMXFDescriptorHelper()
@@ -202,6 +204,11 @@ void SoundMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uint1
     } else {
         mDialNormSet = false;
     }
+
+    if (sound_descriptor->haveReferenceImageEditRate())
+        BMX_OPT_PROP_SET(mRefImageEditRate, sound_descriptor->getReferenceImageEditRate());
+    if (sound_descriptor->haveReferenceAudioAlignmentLevel())
+        BMX_OPT_PROP_SET(mRefAudioAlignLevel, sound_descriptor->getReferenceAudioAlignmentLevel());
 }
 
 void SoundMXFDescriptorHelper::SetSamplingRate(mxfRational sampling_rate)
@@ -250,6 +257,16 @@ void SoundMXFDescriptorHelper::SetDialNorm(int8_t dial_norm)
     mDialNormSet = true;
 }
 
+void SoundMXFDescriptorHelper::SetReferenceImageEditRate(mxfRational edit_rate)
+{
+    BMX_OPT_PROP_SET(mRefImageEditRate, edit_rate);
+}
+
+void SoundMXFDescriptorHelper::SetReferenceAudioAlignmentLevel(int8_t level)
+{
+    BMX_OPT_PROP_SET(mRefAudioAlignLevel, level);
+}
+
 FileDescriptor* SoundMXFDescriptorHelper::CreateFileDescriptor(HeaderMetadata *header_metadata)
 {
     (void)header_metadata;
@@ -280,6 +297,26 @@ void SoundMXFDescriptorHelper::UpdateFileDescriptor()
         sound_descriptor->setAudioRefLevel(0);
     if (mDialNormSet)
         sound_descriptor->setDialNorm(mDialNorm);
+    if (BMX_OPT_PROP_IS_SET(mRefImageEditRate))
+        sound_descriptor->setReferenceImageEditRate(mRefImageEditRate);
+    if (BMX_OPT_PROP_IS_SET(mRefAudioAlignLevel))
+        sound_descriptor->setReferenceAudioAlignmentLevel(mRefAudioAlignLevel);
+}
+
+void SoundMXFDescriptorHelper::UpdateFileDescriptor(FileDescriptor *file_desc_in)
+{
+    GenericSoundEssenceDescriptor *sound_descriptor = dynamic_cast<GenericSoundEssenceDescriptor*>(mFileDescriptor);
+    BMX_ASSERT(sound_descriptor);
+
+    GenericSoundEssenceDescriptor *sound_desc_in = dynamic_cast<GenericSoundEssenceDescriptor*>(file_desc_in);
+    BMX_ASSERT(sound_desc_in);
+
+#define SET_PROPERTY(name)                                                  \
+    if (sound_desc_in->have##name() && !sound_descriptor->have##name())     \
+        sound_descriptor->set##name(sound_desc_in->get##name());
+
+    SET_PROPERTY(ReferenceImageEditRate);
+    SET_PROPERTY(ReferenceAudioAlignmentLevel);
 }
 
 uint32_t SoundMXFDescriptorHelper::GetSampleSize()
@@ -295,4 +332,3 @@ mxfUL SoundMXFDescriptorHelper::ChooseEssenceContainerUL() const
     BMX_ASSERT(false);
     return g_Null_UL;
 }
-

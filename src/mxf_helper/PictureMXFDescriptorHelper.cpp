@@ -229,6 +229,7 @@ PictureMXFDescriptorHelper::PictureMXFDescriptorHelper()
     BMX_OPT_PROP_DEFAULT(mActiveXOffset, 0);
     BMX_OPT_PROP_DEFAULT(mActiveYOffset, 0);
     BMX_OPT_PROP_DEFAULT(mDisplayF2Offset, 0);
+    BMX_OPT_PROP_DEFAULT(mAlternativeCenterCuts, vector<mxfUL>());
 }
 
 PictureMXFDescriptorHelper::~PictureMXFDescriptorHelper()
@@ -299,6 +300,9 @@ void PictureMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uin
     {
         BMX_OPT_PROP_SET(mDisplayF2Offset, picture_descriptor->getDisplayF2Offset());
     }
+
+    if (picture_descriptor->haveAlternativeCenterCuts())
+        BMX_OPT_PROP_SET(mAlternativeCenterCuts, picture_descriptor->getAlternativeCenterCuts());
 
     if (cdci_descriptor) {
         if (cdci_descriptor->haveColorSiting())
@@ -440,6 +444,11 @@ void PictureMXFDescriptorHelper::SetDisplayF2Offset(int32_t offset)
     BMX_OPT_PROP_SET(mDisplayF2Offset, offset);
 }
 
+void PictureMXFDescriptorHelper::SetAlternativeCenterCuts(vector<mxfUL> &cuts)
+{
+    BMX_OPT_PROP_SET(mAlternativeCenterCuts, cuts);
+}
+
 FileDescriptor* PictureMXFDescriptorHelper::CreateFileDescriptor(HeaderMetadata *header_metadata)
 {
     (void)header_metadata;
@@ -495,6 +504,9 @@ void PictureMXFDescriptorHelper::UpdateFileDescriptor()
 
     if (BMX_OPT_PROP_IS_SET(mDisplayF2Offset))
         picture_descriptor->setDisplayF2Offset(mDisplayF2Offset);
+
+    if (BMX_OPT_PROP_IS_SET(mAlternativeCenterCuts))
+        picture_descriptor->setAlternativeCenterCuts(mAlternativeCenterCuts);
 
     if (cdci_descriptor) {
         if (BMX_OPT_PROP_IS_SET(mColorSiting))

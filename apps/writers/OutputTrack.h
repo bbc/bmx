@@ -62,6 +62,8 @@ public:
     BMX_OPT_PROP_DECL(bool, locked);
     BMX_OPT_PROP_DECL(int8_t, audio_ref_level);
     BMX_OPT_PROP_DECL(int8_t, dial_norm);
+    BMX_OPT_PROP_DECL(mxfRational, ref_image_edit_rate);
+    BMX_OPT_PROP_DECL(int8_t, ref_audio_align_level);
 };
 
 

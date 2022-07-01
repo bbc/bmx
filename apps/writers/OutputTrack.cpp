@@ -55,6 +55,8 @@ OutputTrackSoundInfo::OutputTrackSoundInfo()
     BMX_OPT_PROP_DEFAULT(locked, false);
     BMX_OPT_PROP_DEFAULT(audio_ref_level, 0);
     BMX_OPT_PROP_DEFAULT(dial_norm, 0);
+    BMX_OPT_PROP_DEFAULT(ref_image_edit_rate, g_Null_Rational);
+    BMX_OPT_PROP_DEFAULT(ref_audio_align_level, 0);
 }
 
 void OutputTrackSoundInfo::Copy(const OutputTrackSoundInfo &from)
@@ -62,9 +64,11 @@ void OutputTrackSoundInfo::Copy(const OutputTrackSoundInfo &from)
     sampling_rate   = from.sampling_rate;
     bits_per_sample = from.bits_per_sample;
     sequence_offset = from.sequence_offset;
-    BMX_OPT_PROP_COPY(locked,          from.locked);
-    BMX_OPT_PROP_COPY(audio_ref_level, from.audio_ref_level);
-    BMX_OPT_PROP_COPY(dial_norm,       from.dial_norm);
+    BMX_OPT_PROP_COPY(locked,                from.locked);
+    BMX_OPT_PROP_COPY(audio_ref_level,       from.audio_ref_level);
+    BMX_OPT_PROP_COPY(dial_norm,             from.dial_norm);
+    BMX_OPT_PROP_COPY(ref_image_edit_rate,   from.ref_image_edit_rate);
+    BMX_OPT_PROP_COPY(ref_audio_align_level, from.ref_audio_align_level);
 }
 
 

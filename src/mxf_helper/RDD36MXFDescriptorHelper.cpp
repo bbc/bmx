@@ -222,7 +222,7 @@ void RDD36MXFDescriptorHelper::UpdateFileDescriptor(FileDescriptor *file_desc_in
     BMX_ASSERT(cdci_descriptor);
 
     CDCIEssenceDescriptor *cdci_desc_in = dynamic_cast<CDCIEssenceDescriptor*>(file_desc_in);
-    BMX_CHECK(cdci_descriptor);
+    BMX_CHECK(cdci_desc_in);
 
     if (!BMX_OPT_PROP_IS_SET(mIsOpaque))
         BMX_OPT_PROP_SET(mIsOpaque, !cdci_descriptor->haveAlphaSampleDepth());
@@ -243,6 +243,18 @@ void RDD36MXFDescriptorHelper::UpdateFileDescriptor(FileDescriptor *file_desc_in
     SET_PROPERTY(ColorRange)
     if (!cdci_descriptor->haveColorSiting() && cdci_desc_in->haveColorSiting())
         SetColorSitingMod(cdci_desc_in->getColorSiting());
+
+    SET_PROPERTY(MasteringDisplayPrimaries)
+    SET_PROPERTY(MasteringDisplayWhitePointChromaticity)
+    SET_PROPERTY(MasteringDisplayMaximumLuminance)
+    SET_PROPERTY(MasteringDisplayMinimumLuminance)
+
+    SET_PROPERTY(ActiveWidth)
+    SET_PROPERTY(ActiveHeight)
+    SET_PROPERTY(ActiveXOffset)
+    SET_PROPERTY(ActiveYOffset)
+
+    SET_PROPERTY(AlternativeCenterCuts);
 }
 
 void RDD36MXFDescriptorHelper::UpdateFileDescriptor(RDD36EssenceParser *essence_parser)

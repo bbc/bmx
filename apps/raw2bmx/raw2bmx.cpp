@@ -185,6 +185,8 @@ struct RawInput
     BMX_OPT_PROP_DECL(uint32_t, active_x_offset);
     BMX_OPT_PROP_DECL(uint32_t, active_y_offset);
     BMX_OPT_PROP_DECL(int32_t, display_f2_offset);
+    BMX_OPT_PROP_DECL(bool, center_cut_4_3);
+    BMX_OPT_PROP_DECL(bool, center_cut_14_9);
 
     // sound
     Rational sampling_rate;
@@ -192,6 +194,8 @@ struct RawInput
     BMX_OPT_PROP_DECL(bool, locked);
     BMX_OPT_PROP_DECL(int8_t, audio_ref_level);
     BMX_OPT_PROP_DECL(int8_t, dial_norm);
+    BMX_OPT_PROP_DECL(mxfRational, ref_image_edit_rate);
+    BMX_OPT_PROP_DECL(int8_t, ref_audio_align_level);
 
     // ANC/VBI
     uint32_t anc_const_size;
@@ -357,10 +361,14 @@ static void init_input(RawInput *input)
     BMX_OPT_PROP_DEFAULT(input->active_x_offset, 0);
     BMX_OPT_PROP_DEFAULT(input->active_y_offset, 0);
     BMX_OPT_PROP_DEFAULT(input->display_f2_offset, 0);
+    BMX_OPT_PROP_DEFAULT(input->center_cut_4_3, false);
+    BMX_OPT_PROP_DEFAULT(input->center_cut_14_9, false);
     input->sampling_rate = DEFAULT_SAMPLING_RATE;
     BMX_OPT_PROP_DEFAULT(input->component_depth, 8);
     input->bits_per_sample = 16;
     input->channel_count = 1;
+    BMX_OPT_PROP_DEFAULT(input->ref_image_edit_rate, g_Null_Rational);
+    BMX_OPT_PROP_DEFAULT(input->ref_audio_align_level, 0);
 }
 
 static void clear_input(RawInput *input)
@@ -643,12 +651,17 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --active-x-offset       Set the Active X Offset of the active area rectangle\n");
     fprintf(stderr, "  --active-y-offset       Set the Active Y Offset of the active area rectangle\n");
     fprintf(stderr, "  --display-f2-offset     Set the default Display F2 Offset if none is extracted from the essence\n");
+    fprintf(stderr, "  --center-cut-4-3        Add the Alternative Center Cut 4:3\n");
+    fprintf(stderr, "  --center-cut-14-9       Add the Alternative Center Cut 14:9\n");
     fprintf(stderr, "  -s <bps>                Audio sampling rate numerator for raw pcm. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);
     fprintf(stderr, "  -q <bps>                Audio quantization bits per sample for raw pcm. Either 16 or 24. Default 16\n");
     fprintf(stderr, "  --audio-chan <count>    Audio channel count for raw pcm. Default 1\n");
     fprintf(stderr, "  --locked <bool>         Indicate whether the number of audio samples is locked to the video. Either true or false. Default not set\n");
     fprintf(stderr, "  --audio-ref <level>     Audio reference level, number of dBm for 0VU. Default not set\n");
     fprintf(stderr, "  --dial-norm <value>     Gain to be applied to normalize perceived loudness of the clip. Default not set\n");
+    fprintf(stderr, "  --ref-image-edit-rate <rate>     Override or set the Reference Image Edit Rate\n");
+    fprintf(stderr, "                                   The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)\n");
+    fprintf(stderr, "  --ref-audio-align-level <value>  Override or set the Reference Audio Alignment Level\n");
     fprintf(stderr, "  --anc-const <size>      Set the constant ANC data frame <size>\n");
     fprintf(stderr, "  --vbi-const <size>      Set the constant VBI data frame <size>\n");
     fprintf(stderr, "  --off <bytes>           Skip <bytes> at the start of the next input/track's file\n");
@@ -918,6 +931,7 @@ int main(int argc, const char** argv)
     int value, num, den;
     unsigned int uvalue;
     int64_t i64value;
+    mxfRational rate;
     bool msvc_block_limit;
     int cmdln_index;
 
@@ -2302,6 +2316,16 @@ int main(int argc, const char** argv)
             cmdln_index++;
             continue; // skip input reset at the end
         }
+        else if (strcmp(argv[cmdln_index], "--center-cut-4-3") == 0)
+        {
+            BMX_OPT_PROP_SET(input.center_cut_4_3, true);
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--center-cut-14-9") == 0)
+        {
+            BMX_OPT_PROP_SET(input.center_cut_14_9, true);
+            continue; // skip input reset at the end
+        }
         else if (strcmp(argv[cmdln_index], "-s") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -2412,6 +2436,41 @@ int main(int argc, const char** argv)
                 return 1;
             }
             BMX_OPT_PROP_SET(input.dial_norm, value);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--ref-image-edit-rate") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_frame_rate(argv[cmdln_index + 1], &rate))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.ref_image_edit_rate, rate);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--ref-audio-align-level") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(input.ref_audio_align_level, value);
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -4924,9 +4983,11 @@ int main(int argc, const char** argv)
                         output_sound_info->sampling_rate   = input->sampling_rate;
                         output_sound_info->bits_per_sample = input->bits_per_sample;
                         output_sound_info->sequence_offset = 0;
-                        BMX_OPT_PROP_COPY(output_sound_info->locked,          input->locked);
-                        BMX_OPT_PROP_COPY(output_sound_info->audio_ref_level, input->audio_ref_level);
-                        BMX_OPT_PROP_COPY(output_sound_info->dial_norm,       input->dial_norm);
+                        BMX_OPT_PROP_COPY(output_sound_info->locked,                input->locked);
+                        BMX_OPT_PROP_COPY(output_sound_info->audio_ref_level,       input->audio_ref_level);
+                        BMX_OPT_PROP_COPY(output_sound_info->dial_norm,             input->dial_norm);
+                        BMX_OPT_PROP_COPY(output_sound_info->ref_image_edit_rate,   input->ref_image_edit_rate);
+                        BMX_OPT_PROP_COPY(output_sound_info->ref_audio_align_level, input->ref_audio_align_level);
                     }
 
                     output_track->AddInput(input_track, channel_map.input_channel_index, channel_map.output_channel_index);
@@ -5226,6 +5287,9 @@ int main(int argc, const char** argv)
 
             PictureMXFDescriptorHelper *pict_helper =
                     dynamic_cast<PictureMXFDescriptorHelper*>(clip_track->GetMXFDescriptorHelper());
+            SoundMXFDescriptorHelper *sound_helper =
+                    dynamic_cast<SoundMXFDescriptorHelper*>(clip_track->GetMXFDescriptorHelper());
+
             if (pict_helper) {
                 if (BMX_OPT_PROP_IS_SET(input->signal_standard))
                     pict_helper->SetSignalStandard(input->signal_standard);
@@ -5271,12 +5335,28 @@ int main(int argc, const char** argv)
                     pict_helper->SetActiveYOffset(input->active_y_offset);
                 if (BMX_OPT_PROP_IS_SET(input->display_f2_offset))
                     pict_helper->SetDisplayF2Offset(input->display_f2_offset);
+                if ((BMX_OPT_PROP_IS_SET(input->center_cut_4_3) && input->center_cut_4_3) ||
+                    (BMX_OPT_PROP_IS_SET(input->center_cut_14_9) && input->center_cut_14_9))
+                {
+                    vector<mxfUL> cuts;
+                    if (BMX_OPT_PROP_IS_SET(input->center_cut_4_3) && input->center_cut_4_3)
+                        cuts.push_back(CENTER_CUT_4_3);
+                    if (BMX_OPT_PROP_IS_SET(input->center_cut_14_9) && input->center_cut_14_9)
+                        cuts.push_back(CENTER_CUT_14_9);
+
+                    pict_helper->SetAlternativeCenterCuts(cuts);
+                }
 
                 RDD36MXFDescriptorHelper *rdd36_helper = dynamic_cast<RDD36MXFDescriptorHelper*>(pict_helper);
                 if (rdd36_helper) {
                     if (BMX_OPT_PROP_IS_SET(input->rdd36_opaque))
                         rdd36_helper->SetIsOpaque(input->rdd36_opaque);
                 }
+            } else if (sound_helper) {
+                if (BMX_OPT_PROP_IS_SET(output_sound_info->ref_image_edit_rate))
+                    sound_helper->SetReferenceImageEditRate(output_sound_info->ref_image_edit_rate);
+                if (BMX_OPT_PROP_IS_SET(output_sound_info->ref_audio_align_level))
+                    sound_helper->SetReferenceAudioAlignmentLevel(output_sound_info->ref_audio_align_level);
             }
         }
 

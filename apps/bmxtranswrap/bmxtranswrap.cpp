@@ -460,6 +460,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --locked <bool>         Override or set flag indicating whether the number of audio samples is locked to the video. Either true or false\n");
     fprintf(stderr, "  --audio-ref <level>     Override or set audio reference level, number of dBm for 0VU\n");
     fprintf(stderr, "  --dial-norm <value>     Override or set gain to be applied to normalize perceived loudness of the clip\n");
+    fprintf(stderr, "  --ref-image-edit-rate <rate>     Override or set the Reference Image Edit Rate\n");
+    fprintf(stderr, "                                   The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)\n");
+    fprintf(stderr, "  --ref-audio-align-level <value>  Override or set the Reference Audio Alignment Level\n");
     fprintf(stderr, "  --signal-std  <value>   Override or set the video signal standard. The <value> is one of the following:\n");
     fprintf(stderr, "                              'none', 'bt601', 'bt1358', 'st347', 'st274', 'st296', 'st349', 'st428'\n");
     fprintf(stderr, "  --frame-layout <value>  Override or set the video frame layout. The <value> is one of the following:\n");
@@ -497,6 +500,8 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --active-x-offset       Override or set the Active X Offset of the active area rectangle\n");
     fprintf(stderr, "  --active-y-offset       Override or set the Active Y Offset of the active area rectangle\n");
     fprintf(stderr, "  --display-f2-offset     Override or set the default Display F2 Offset if it is not extracted from the essence\n");
+    fprintf(stderr, "  --center-cut-4-3        Override or add the Alternative Center Cut 4:3\n");
+    fprintf(stderr, "  --center-cut-14-9       Override or add the Alternative Center Cut 14:9\n");
     fprintf(stderr, "  --ignore-input-desc     Don't use input MXF file descriptor properties to fill in missing information\n");
     fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks\n");
     fprintf(stderr, "                          The default is 'mono', except if --clip-wrap option is set for op1a it is 'singlemca'\n");
@@ -817,6 +822,10 @@ int main(int argc, const char** argv)
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_active_x_offset, 0);
     BMX_OPT_PROP_DECL_DEF(uint32_t, user_active_y_offset, 0);
     BMX_OPT_PROP_DECL_DEF(int32_t, user_display_f2_offset, 0);
+    BMX_OPT_PROP_DECL_DEF(bool, user_center_cut_4_3, false);
+    BMX_OPT_PROP_DECL_DEF(bool, user_center_cut_14_9, false);
+    BMX_OPT_PROP_DECL_DEF(mxfRational, user_ref_image_edit_rate, g_Null_Rational);
+    BMX_OPT_PROP_DECL_DEF(int8_t, user_ref_audio_align_level, 0);
     bool ignore_input_desc = false;
     bool input_file_md5 = false;
     int input_file_flags = 0;
@@ -898,6 +907,7 @@ int main(int argc, const char** argv)
     int value, num, den;
     unsigned int uvalue;
     int64_t i64value;
+    Rational rate;
     bool msvc_block_limit;
     int cmdln_index;
 
@@ -1392,6 +1402,39 @@ int main(int argc, const char** argv)
             BMX_OPT_PROP_SET(user_dial_norm, value);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--ref-image-edit-rate") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_frame_rate(argv[cmdln_index + 1], &rate))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_ref_image_edit_rate, rate);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--ref-audio-align-level") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_SET(user_ref_audio_align_level, value);
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--signal-std") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -1765,6 +1808,14 @@ int main(int argc, const char** argv)
             }
             BMX_OPT_PROP_SET(user_display_f2_offset, value);
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--center-cut-4-3") == 0)
+        {
+            BMX_OPT_PROP_SET(user_center_cut_4_3, true);
+        }
+        else if (strcmp(argv[cmdln_index], "--center-cut-14-9") == 0)
+        {
+            BMX_OPT_PROP_SET(user_center_cut_14_9, true);
         }
         else if (strcmp(argv[cmdln_index], "--ignore-input-desc") == 0)
         {
@@ -4037,6 +4088,9 @@ int main(int argc, const char** argv)
 
             PictureMXFDescriptorHelper *pict_helper =
                     dynamic_cast<PictureMXFDescriptorHelper*>(clip_track->GetMXFDescriptorHelper());
+            SoundMXFDescriptorHelper *sound_helper =
+                    dynamic_cast<SoundMXFDescriptorHelper*>(clip_track->GetMXFDescriptorHelper());
+
             if (pict_helper) {
                 if (BMX_OPT_PROP_IS_SET(user_signal_standard))
                     pict_helper->SetSignalStandard(user_signal_standard);
@@ -4082,12 +4136,28 @@ int main(int argc, const char** argv)
                     pict_helper->SetActiveYOffset(user_active_y_offset);
                 if (BMX_OPT_PROP_IS_SET(user_display_f2_offset))
                     pict_helper->SetDisplayF2Offset(user_display_f2_offset);
+                if ((BMX_OPT_PROP_IS_SET(user_center_cut_4_3) && user_center_cut_4_3) ||
+                    (BMX_OPT_PROP_IS_SET(user_center_cut_14_9) && user_center_cut_14_9))
+                {
+                    vector<mxfUL> cuts;
+                    if (BMX_OPT_PROP_IS_SET(user_center_cut_4_3) && user_center_cut_4_3)
+                        cuts.push_back(CENTER_CUT_4_3);
+                    if (BMX_OPT_PROP_IS_SET(user_center_cut_14_9) && user_center_cut_14_9)
+                        cuts.push_back(CENTER_CUT_14_9);
+
+                    pict_helper->SetAlternativeCenterCuts(cuts);
+                }
 
                 RDD36MXFDescriptorHelper *rdd36_helper = dynamic_cast<RDD36MXFDescriptorHelper*>(pict_helper);
                 if (rdd36_helper) {
                     if (BMX_OPT_PROP_IS_SET(user_rdd36_opaque))
                         rdd36_helper->SetIsOpaque(user_rdd36_opaque);
                 }
+            } else if (sound_helper) {
+                if (BMX_OPT_PROP_IS_SET(user_ref_image_edit_rate))
+                    sound_helper->SetReferenceImageEditRate(user_ref_image_edit_rate);
+                if (BMX_OPT_PROP_IS_SET(user_ref_audio_align_level))
+                    sound_helper->SetReferenceAudioAlignmentLevel(user_ref_audio_align_level);
             }
         }
 

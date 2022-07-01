@@ -89,6 +89,7 @@ public:
     void SetActiveXOffset(uint32_t offset);
     void SetActiveYOffset(uint32_t offset);
     void SetDisplayF2Offset(int32_t offset);
+    void SetAlternativeCenterCuts(std::vector<mxfUL> &cuts);
 
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
     virtual void UpdateFileDescriptor();
@@ -158,6 +159,7 @@ protected:
     BMX_OPT_PROP_DECL(uint32_t, mActiveXOffset);
     BMX_OPT_PROP_DECL(uint32_t, mActiveYOffset);
     BMX_OPT_PROP_DECL(int32_t, mDisplayF2Offset);
+    BMX_OPT_PROP_DECL(std::vector<mxfUL>, mAlternativeCenterCuts);
 };
 
 

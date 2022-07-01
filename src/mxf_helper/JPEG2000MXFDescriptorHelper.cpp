@@ -171,6 +171,8 @@ void JPEG2000MXFDescriptorHelper::UpdateFileDescriptor(FileDescriptor *file_desc
     SET_PROPERTY(ActiveXOffset)
     SET_PROPERTY(ActiveYOffset)
 
+    SET_PROPERTY(AlternativeCenterCuts);
+
     if (dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor)) {
         CDCIEssenceDescriptor *comp_desc = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
         CDCIEssenceDescriptor *comp_desc_in = dynamic_cast<CDCIEssenceDescriptor*>(file_desc_in);
