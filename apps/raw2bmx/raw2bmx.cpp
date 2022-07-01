@@ -3859,9 +3859,6 @@ int main(int argc, const char** argv)
         op1a_clip_wrap = false;
     }
 
-    if (!track_map_set && op1a_clip_wrap)
-        track_mapper.ParseMapDef("singlemca");
-
     LOG_LEVEL = log_level;
     if (log_filename) {
         if (!open_log_file(log_filename))
@@ -4489,6 +4486,36 @@ int main(int argc, const char** argv)
             }
         }
 
+        // Determine if the input is sound only
+        bool have_sound = false;
+        bool sound_only_container = true;
+        for (i = 0; i < inputs.size(); i++) {
+            RawInput *input = &inputs[i];
+            if (input->disabled)
+                continue;
+
+            if (input->essence_type == WAVE_PCM) {
+                have_sound = true;
+            } else if (input->essence_type != TIMED_TEXT) {  // timed text is in a separate container
+                sound_only_container = false;
+                break;
+            }
+        }
+        if (sound_only_container && !have_sound)
+            sound_only_container = false;
+
+        // Set --clip-wrap if output is IMF with sound only
+        if (clip_type == CW_OP1A_CLIP_TYPE &&
+            clip_sub_type == IMF_CLIP_SUB_TYPE &&
+            sound_only_container)
+        {
+            op1a_clip_wrap = true;
+        }
+
+        // Default --track-map to "singlemca" if clip wrapping
+        if (!track_map_set && op1a_clip_wrap)
+            track_mapper.ParseMapDef("singlemca");
+
 
         // check support for essence type and frame/sampling rates
 
@@ -4531,26 +4558,6 @@ int main(int argc, const char** argv)
         }
 
 
-        // check if clip is sound only
-
-        bool have_sound = false;
-        bool sound_only = true;
-        for (i = 0; i < inputs.size(); i++) {
-            RawInput *input = &inputs[i];
-            if (input->disabled)
-                continue;
-
-            if (input->essence_type == WAVE_PCM) {
-                have_sound = true;
-            } else if (input->essence_type != TIMED_TEXT) {
-                sound_only = false;
-                break;
-            }
-        }
-        if (sound_only && !have_sound)
-            sound_only = false;
-
-
         // create clip
 
         int flavour = 0;
@@ -4562,6 +4569,8 @@ int main(int argc, const char** argv)
                 if (as11_helper.HaveAS11CoreFramework()) // AS11 Core Framework has the Audio Track Layout property
                     flavour |= OP1A_MP_TRACK_NUMBER_FLAVOUR;
                 flavour |= OP1A_AS11_FLAVOUR;
+            } else if (clip_sub_type == IMF_CLIP_SUB_TYPE) {
+                flavour |= OP1A_IMF_FLAVOUR;
             } else {
                 if (mp_track_num)
                     flavour |= OP1A_MP_TRACK_NUMBER_FLAVOUR;
@@ -4679,17 +4688,19 @@ int main(int argc, const char** argv)
             if (op1a_index_follows)
                 op1a_clip->SetIndexFollowsEssence(true);
 
-            op1a_clip->SetClipWrapped(op1a_clip_wrap);
+            if (op1a_clip_wrap)
+                op1a_clip->SetClipWrapped(true);
             if (partition_interval_set)
                 op1a_clip->SetPartitionInterval(partition_interval);
             op1a_clip->SetOutputStartOffset(output_start_offset);
             op1a_clip->SetOutputEndOffset(- output_end_offset);
-            op1a_clip->SetAddTimecodeTrack(!no_tc_track);
-            op1a_clip->SetPrimaryPackage(op1a_primary_package);
+            if (no_tc_track)
+                op1a_clip->SetAddTimecodeTrack(false);
+            if (op1a_primary_package)
+                op1a_clip->SetPrimaryPackage(true);
 
-            if (!have_samples_to_write) {
+            if (!have_samples_to_write)
                 op1a_clip->SetInputDuration(duration);
-            }
         } else if (clip_type == CW_AVID_CLIP_TYPE) {
             AvidClip *avid_clip = clip->GetAvidClip();
 
@@ -5412,7 +5423,7 @@ int main(int argc, const char** argv)
                     break;
                 case WAVE_PCM:
                 {
-                    if (sound_only &&
+                    if (sound_only_container &&
                         (
                             (clip_type == CW_OP1A_CLIP_TYPE && clip->GetOP1AClip()->IsClipWrapped()) ||
                              clip_type == CW_AS02_CLIP_TYPE ||
@@ -5505,7 +5516,7 @@ int main(int argc, const char** argv)
         // doesn't require a sample sequence
 
         uint32_t max_samples_per_read = 1;
-        if (sound_only) {
+        if (sound_only_container) {
             bool all_have_sound_sample_sequence = true;
             for (i = 0; i < inputs.size(); i++) {
                 RawInput *input = &inputs[i];

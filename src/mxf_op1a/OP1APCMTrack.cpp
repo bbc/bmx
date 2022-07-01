@@ -35,6 +35,7 @@
 
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_op1a/OP1AFile.h>
+#include <bmx/apps/AppMCALabelHelper.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -79,6 +80,9 @@ OP1APCMTrack::OP1APCMTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
         SetAES3Mapping(true);
     else
         SetAES3Mapping(false);
+
+    if ((file->GetFlavour() & OP1A_IMF_FLAVOUR))
+        mWaveDescriptorHelper->SetChannelAssignment(IMF_MCA_LABEL);
 
     SetSampleSequence();
 }
@@ -225,6 +229,11 @@ vector<uint32_t> OP1APCMTrack::GetShiftedSampleSequence() const
 uint32_t OP1APCMTrack::GetChannelCount() const
 {
     return mWaveDescriptorHelper->GetChannelCount();
+}
+
+mxfRational OP1APCMTrack::GetSamplingRate() const
+{
+    return mWaveDescriptorHelper->GetSamplingRate();
 }
 
 void OP1APCMTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPackage *material_package,

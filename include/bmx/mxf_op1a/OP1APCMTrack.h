@@ -73,6 +73,7 @@ public:
     const std::vector<mxfpp::MCALabelSubDescriptor*>& GetMCALabels() const { return mMCALabels; }
 
     uint32_t GetChannelCount() const;
+    mxfRational GetSamplingRate() const;
 
 protected:
     virtual void AddHeaderMetadata(mxfpp::HeaderMetadata *header_metadata, mxfpp::MaterialPackage *material_package,

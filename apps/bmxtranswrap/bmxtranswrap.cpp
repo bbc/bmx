@@ -2687,9 +2687,6 @@ int main(int argc, const char** argv)
         op1a_clip_wrap = false;
     }
 
-    if (!track_map_set && op1a_clip_wrap)
-        track_mapper.ParseMapDef("singlemca");
-
     LOG_LEVEL = log_level;
     if (log_filename) {
         if (!open_log_file(log_filename))
@@ -2839,9 +2836,7 @@ int main(int argc, const char** argv)
         bool rdd6_pair_in_frame = true;
         if (rdd6_filename) {
             if (clip_type != CW_OP1A_CLIP_TYPE) {
-                log_error("RDD-6 file input only supported for '%s' and '%s' clip types\n",
-                          clip_type_to_string(CW_OP1A_CLIP_TYPE, NO_CLIP_SUB_TYPE),
-                          clip_type_to_string(CW_OP1A_CLIP_TYPE, AS11_CLIP_SUB_TYPE));
+                log_error("RDD-6 file input only supported for op1a clip types and sub-types\n");
                 throw false;
             }
 
@@ -3173,6 +3168,35 @@ int main(int argc, const char** argv)
             }
         }
 
+        bool have_sound = false;
+        bool sound_only_container = true;
+        for (i = 0; i < reader->GetNumTrackReaders(); i++) {
+            MXFTrackReader *track_reader = reader->GetTrackReader(i);
+            if (!track_reader->IsEnabled())
+                continue;
+
+            if (track_reader->GetTrackInfo()->essence_type == WAVE_PCM) {
+                have_sound = true;
+            } else if (track_reader->GetTrackInfo()->essence_type != TIMED_TEXT) {  // timed text is in a separate container
+                sound_only_container = false;
+                break;
+            }
+        }
+        if (sound_only_container && !have_sound)
+            sound_only_container = false;
+
+        // Set --clip-wrap if the output is IMF with sound only
+        if (clip_type == CW_OP1A_CLIP_TYPE &&
+            clip_sub_type == IMF_CLIP_SUB_TYPE &&
+            sound_only_container)
+        {
+            op1a_clip_wrap = true;
+        }
+
+        // Default --track-map to "singlemca" if clip wrapping
+        if (!track_map_set && op1a_clip_wrap)
+            track_mapper.ParseMapDef("singlemca");
+
 
         // copy across input file descriptive metadata
 
@@ -3222,6 +3246,8 @@ int main(int argc, const char** argv)
                 if (as11_helper.HaveAS11CoreFramework()) // AS11 Core Framework has the Audio Track Layout property
                     flavour |= OP1A_MP_TRACK_NUMBER_FLAVOUR;
                 flavour |= OP1A_AS11_FLAVOUR;
+            } else if (clip_sub_type == IMF_CLIP_SUB_TYPE) {
+                flavour |= OP1A_IMF_FLAVOUR;
             } else {
                 if (mp_track_num)
                     flavour |= OP1A_MP_TRACK_NUMBER_FLAVOUR;
@@ -3345,13 +3371,16 @@ int main(int argc, const char** argv)
             if (op1a_index_follows)
                 op1a_clip->SetIndexFollowsEssence(true);
 
-            op1a_clip->SetClipWrapped(op1a_clip_wrap);
+            if (op1a_clip_wrap)
+                op1a_clip->SetClipWrapped(true);
             if (partition_interval_set)
                 op1a_clip->SetPartitionInterval(partition_interval);
             op1a_clip->SetOutputStartOffset(- precharge);
             op1a_clip->SetOutputEndOffset(- rollout);
-            op1a_clip->SetAddTimecodeTrack(!no_tc_track);
-            op1a_clip->SetPrimaryPackage(op1a_primary_package);
+            if (no_tc_track)
+                op1a_clip->SetAddTimecodeTrack(false);
+            if (op1a_primary_package)
+                op1a_clip->SetPrimaryPackage(true);
         } else if (clip_type == CW_AVID_CLIP_TYPE) {
             AvidClip *avid_clip = clip->GetAvidClip();
 

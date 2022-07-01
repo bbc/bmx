@@ -60,6 +60,7 @@
 #define OP1A_AS11_FLAVOUR                   0x0200
 #define OP1A_AES_FLAVOUR                    0x0400
 #define OP1A_SYSTEM_ITEM_FLAVOUR            0x0800      // add system item
+#define OP1A_IMF_FLAVOUR                    0x1000
 
 
 

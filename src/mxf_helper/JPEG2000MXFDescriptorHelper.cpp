@@ -126,6 +126,11 @@ void JPEG2000MXFDescriptorHelper::UpdateFileDescriptor()
     // Currently only support progressive video frame layout
     GenericPictureEssenceDescriptor *pict_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(mFileDescriptor);
     pict_descriptor->setFrameLayout(MXF_FULL_FRAME);
+
+    if ((mFlavour & MXFDESC_IMF_FLAVOUR)) {
+        BMX_ASSERT(pict_descriptor->getFrameLayout() == MXF_FULL_FRAME);
+        pict_descriptor->setDisplayF2Offset(0);
+    }
 }
 
 void JPEG2000MXFDescriptorHelper::UpdateFileDescriptor(FileDescriptor *file_desc_in)
@@ -140,13 +145,18 @@ void JPEG2000MXFDescriptorHelper::UpdateFileDescriptor(FileDescriptor *file_desc
     if (comp_desc_in->haveFrameLayout() && comp_desc_in->getFrameLayout() != MXF_FULL_FRAME)
         BMX_EXCEPTION(("Only progressive video frame layout is currently supported"));
 
-    SET_PROPERTY(SignalStandard)
     SET_PROPERTY(FrameLayout)
+    SET_PROPERTY(SignalStandard)
     SET_PROPERTY(AspectRatio)
     SET_PROPERTY(ActiveFormatDescriptor)
     SET_PROPERTY(VideoLineMap)
-    SET_PROPERTY(FieldDominance)
-    SET_PROPERTY(DisplayF2Offset)
+    if ((mFlavour & MXFDESC_IMF_FLAVOUR)) {
+        BMX_ASSERT(comp_desc->getFrameLayout() == MXF_FULL_FRAME);
+        comp_desc->setDisplayF2Offset(0);
+    } else {
+        SET_PROPERTY(FieldDominance)
+        SET_PROPERTY(DisplayF2Offset)
+    }
     SET_PROPERTY(CaptureGamma)
     SET_PROPERTY(CodingEquations)
     SET_PROPERTY(ColorPrimaries)

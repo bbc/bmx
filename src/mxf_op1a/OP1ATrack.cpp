@@ -298,8 +298,11 @@ OP1ATrack::OP1ATrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, ui
         descriptor_flavour |= MXFDESC_SMPTE_377_2004_FLAVOUR;
     else
         descriptor_flavour |= MXFDESC_SMPTE_377_1_FLAVOUR;
+
     if ((file->mFlavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR))
         descriptor_flavour |= MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR;
+    else if ((file->mFlavour & OP1A_IMF_FLAVOUR))
+        descriptor_flavour |= MXFDESC_IMF_FLAVOUR;
 
     mEssenceType = essence_type;
     mDescriptorHelper = MXFDescriptorHelper::Create(essence_type);

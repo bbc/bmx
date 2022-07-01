@@ -147,8 +147,9 @@ static const ClipWriterTypeStringMap CLIP_WRITER_TYPE_STRING_MAP[] =
 {
     {CW_UNKNOWN_CLIP_TYPE,   NO_CLIP_SUB_TYPE,    "unknown"},
     {CW_AS02_CLIP_TYPE,      NO_CLIP_SUB_TYPE,    "AS-02"},
-    {CW_OP1A_CLIP_TYPE,      AS11_CLIP_SUB_TYPE,  "AS-11 MXF OP-1A"},
     {CW_OP1A_CLIP_TYPE,      NO_CLIP_SUB_TYPE,    "MXF OP-1A"},
+    {CW_OP1A_CLIP_TYPE,      AS11_CLIP_SUB_TYPE,  "AS-11 MXF OP-1A"},
+    {CW_OP1A_CLIP_TYPE,      IMF_CLIP_SUB_TYPE,   "IMF MXF"},
     {CW_AVID_CLIP_TYPE,      NO_CLIP_SUB_TYPE,    "Avid MXF"},
     {CW_D10_CLIP_TYPE,       AS11_CLIP_SUB_TYPE,  "AS-11 D-10 MXF"},
     {CW_D10_CLIP_TYPE,       NO_CLIP_SUB_TYPE,    "D-10 MXF"},
@@ -615,6 +616,9 @@ bool bmx::parse_clip_type(const char *clip_type_str, ClipWriterType *clip_type, 
     } else if (strcmp(clip_type_str, "op1a") == 0) {
         *clip_type     = CW_OP1A_CLIP_TYPE;
         *clip_sub_type = NO_CLIP_SUB_TYPE;
+    } else if (strcmp(clip_type_str, "imf") == 0) {
+        *clip_type     = CW_OP1A_CLIP_TYPE;
+        *clip_sub_type = IMF_CLIP_SUB_TYPE;
     } else if (strcmp(clip_type_str, "avid") == 0) {
         *clip_type     = CW_AVID_CLIP_TYPE;
         *clip_sub_type = NO_CLIP_SUB_TYPE;
