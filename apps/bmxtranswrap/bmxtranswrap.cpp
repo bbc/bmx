@@ -498,7 +498,9 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --active-y-offset       Override or set the Active Y Offset of the active area rectangle\n");
     fprintf(stderr, "  --display-f2-offset     Override or set the default Display F2 Offset if it is not extracted from the essence\n");
     fprintf(stderr, "  --ignore-input-desc     Don't use input MXF file descriptor properties to fill in missing information\n");
-    fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks. The default is 'mono'. See below for details of the <expr> format\n");
+    fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks\n");
+    fprintf(stderr, "                          The default is 'mono', except if --clip-wrap option is set for op1a it is 'singlemca'\n");
+    fprintf(stderr, "                          See below for details of the <expr> format\n");
     fprintf(stderr, "  --dump-track-map        Dump the output audio track map to stderr.\n");
     fprintf(stderr, "                          The dumps consists of a list output tracks, where each output track channel\n");
     fprintf(stderr, "                          is shown as '<output track channel> <- <input channel>\n");
@@ -842,7 +844,7 @@ int main(int argc, const char** argv)
     bool body_part = false;
     bool repeat_index = false;
     bool cbe_index_duration_0 = false;
-    bool clip_wrap = false;
+    bool op1a_clip_wrap = false;
     bool realtime = false;
     float rt_factor = 1.0;
     bool growing_file = false;
@@ -881,6 +883,7 @@ int main(int argc, const char** argv)
     EmbedXMLInfo next_embed_xml;
     bool ignore_d10_aes3_flags = false;
     TrackMapper track_mapper;
+    bool track_map_set = false;
     bool dump_track_map = false;
     bool dump_track_map_exit = false;
     vector<pair<string, string> > track_mca_labels;
@@ -2201,7 +2204,7 @@ int main(int argc, const char** argv)
         }
         else if (strcmp(argv[cmdln_index], "--clip-wrap") == 0)
         {
-            clip_wrap = true;
+            op1a_clip_wrap = true;
         }
         else if (strcmp(argv[cmdln_index], "--mp-track-num") == 0)
         {
@@ -2506,6 +2509,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
+            track_map_set = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--dump-track-map") == 0)
@@ -2676,6 +2680,14 @@ int main(int argc, const char** argv)
         }
         as10_shim = get_as10_shim(as10_shim_name);
     }
+
+    if (op1a_clip_wrap && (clip_type != CW_OP1A_CLIP_TYPE || clip_sub_type == AS11_CLIP_SUB_TYPE)) {
+        fprintf(stderr, "Ignoring unsupported --clip-wrap option\n");
+        op1a_clip_wrap = false;
+    }
+
+    if (!track_map_set && op1a_clip_wrap)
+        track_mapper.ParseMapDef("singlemca");
 
     LOG_LEVEL = log_level;
     if (log_filename) {
@@ -3332,8 +3344,7 @@ int main(int argc, const char** argv)
             if (op1a_index_follows)
                 op1a_clip->SetIndexFollowsEssence(true);
 
-            if (clip_sub_type != AS11_CLIP_SUB_TYPE)
-                op1a_clip->SetClipWrapped(clip_wrap);
+            op1a_clip->SetClipWrapped(op1a_clip_wrap);
             if (partition_interval_set)
                 op1a_clip->SetPartitionInterval(partition_interval);
             op1a_clip->SetOutputStartOffset(- precharge);
