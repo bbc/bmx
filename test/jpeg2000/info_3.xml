@@ -13,6 +13,7 @@
       <mxf_version>1.3</mxf_version>
       <op_label external_essence="false" non_stream="false" multi_track="false" label="urn:smpte:ul:060e2b34.04010101.0d010201.01010100">OP1A</op_label>
       <frame_wrapped>true</frame_wrapped>
+      <primary_package>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</primary_package>
       <identifications size="1">
         <identification index="0">
           <generation_uid>urn:uuid:00000000-0000-0000-0000-000000000001</generation_uid>
@@ -47,10 +48,8 @@
     <name>test</name>
     <edit_rate>25/1</edit_rate>
     <duration count="3">00:00:00:03</duration>
-    <start_timecodes>
-      <material>00:00:00:00</material>
-      <file_source>00:00:00:00</file_source>
-    </start_timecodes>
+    <primary_package>urn:smpte:umid:00000000.00000000.00000000.00000000.00000000.00000000.00000000.00000002</primary_package>
+    <start_timecodes/>
     <tracks size="1">
       <track index="0">
         <essence_kind>Picture</essence_kind>

@@ -14,10 +14,9 @@ create_mxf_cdci()
 {
     $appsdir/raw2bmx/raw2bmx \
         --regtest \
-        -t op1a \
+        -t imf \
         -o $2 \
         --clip test \
-        --part 60s \
         -f 25 \
         -a 16:9 \
         --frame-layout fullframe \
@@ -41,10 +40,9 @@ create_mxf_rgba()
 {
     $appsdir/raw2bmx/raw2bmx \
         --regtest \
-        -t op1a \
+        -t imf \
         -o $2 \
         --clip test \
-        --part 60s \
         -f 25 \
         -a 16:9 \
         --frame-layout fullframe \
@@ -67,10 +65,9 @@ transwrap_mxf()
 {
     $appsdir/bmxtranswrap/bmxtranswrap \
         --regtest \
-        -t op1a \
+        -t imf \
         -o $2 \
         --clip test \
-        --part 60s \
         $1 \
         >/dev/null
 }
