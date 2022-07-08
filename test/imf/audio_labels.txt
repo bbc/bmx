@@ -1,0 +1,8 @@
+0
+chL, chan=0
+chC, chan=1
+chR, chan=2
+chLs, chan=3
+chRs, chan=4
+chLFE, chan=5
+sg51, rfc_5646_spoken_language=fr, audio_content_kind=Music, audio_element_kind="Music and Effects", title="The testing", title_version="Developer's cut"

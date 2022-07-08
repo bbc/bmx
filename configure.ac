@@ -307,6 +307,7 @@ AC_CONFIG_FILES([
 	test/bbcarchive/Makefile
 	test/timed_text/Makefile
 	test/partial_audio_frames/Makefile
+	test/imf/Makefile
 	apps/Makefile
 	apps/mxf2raw/Makefile
 	apps/writers/Makefile
