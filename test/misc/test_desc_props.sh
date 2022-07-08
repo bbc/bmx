@@ -100,7 +100,7 @@ create_sample()
 
 mkdir -p $tmpdir
 
-if test "$1" = "create_data" ; then
+if test "$1" = "create-data" ; then
     create_data
 elif test "$1" = "create_sample" ; then
     create_sample

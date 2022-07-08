@@ -170,9 +170,9 @@ create_samples_all()
 
 mkdir -p $tmpdir
 
-if test "$1" = "create_data" ; then
+if test "$1" = "create-data" ; then
     create_data_all
-elif test "$1" = "create_samples" ; then
+elif test "$1" = "create-samples" ; then
     create_samples_all
 else
     check_all

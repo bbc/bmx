@@ -60,9 +60,9 @@ create_test_file
 
 if test -z "$1" ; then
     check
-elif test "$1" = "create_data" ; then
+elif test "$1" = "create-data" ; then
     create_data
-elif test "$1" = "create_samples" ; then
+elif test "$1" = "create-samples" ; then
     create_samples
 fi
 res=$?

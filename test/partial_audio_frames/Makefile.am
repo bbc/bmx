@@ -7,8 +7,8 @@ EXTRA_DIST = \
 
 .PHONY: create-data
 create-data:
-	${srcdir}/test.sh create_data
+	${srcdir}/test.sh create-data
 
 .PHONY: create-samples
 create-samples:
-	${srcdir}/test.sh create_samples
+	${srcdir}/test.sh create-samples
