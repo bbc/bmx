@@ -4209,10 +4209,17 @@ int main(int argc, const char** argv)
                     InputTrack *first_track = output_track->GetFirstInputTrack();
                     const MXFTrackReader *input_track_reader = dynamic_cast<MXFInputTrack*>(first_track)->GetTrackReader();
                     MXFDescriptorHelper *desc_helper = output_track->GetClipTrack()->GetMXFDescriptorHelper();
-                    if (desc_helper && input_track_reader) {
-                        FileDescriptor *file_desc = input_track_reader->GetFileDescriptor();
-                        if (file_desc)
-                            desc_helper->UpdateFileDescriptor(file_desc);
+                    if (input_track_reader && desc_helper) {
+                        // Note: D10 PCM tracks won't have a FileDescriptor set (file_desc == 0 here)
+                        // because a separate sound descriptor is created when preparing the header metadata.
+                        // The structure of the D10 classes would need to be changed to support the update here,
+                        // e.g. require a track map to be used to create a single D10PCMTrack rather than have
+                        // The D10File accept creation of multiple tracks.
+                        FileDescriptor *file_desc = desc_helper->GetFileDescriptor();
+
+                        FileDescriptor *file_desc_in = input_track_reader->GetFileDescriptor();
+                        if (file_desc && file_desc_in)
+                            desc_helper->UpdateFileDescriptor(file_desc_in);
                     }
                 }
             }
