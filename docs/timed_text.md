@@ -37,14 +37,14 @@ The `OP1ATimedTextTrack` class can be used to create a Timed Text track. It is c
 
 The `raw2bmx` utility can be used to embed Timed Text XML and ancillary font or image resources in MXF. It uses a manifest file to describe the source filenames and properties. The structure of the manifest file is described in the [Manifest File Format](#manifest-file-format) section.
 
-*Example 1*: Creates a file including a timed text track alongside video and audio tracks. The manifest file, `manifest.txt`, references the Timed Text XML file and ancillary resource files.
+*Example 1*: Creates an OP1a file including a timed text track alongside video and audio tracks. The manifest file, `manifest.txt`, references the Timed Text XML file and ancillary resource files.
 ```
 raw2bmx -t op1a -y 10:00:00:00 --avci video.h264 --wave audio.wav --tt manifest.txt
 ```
 
-*Example 2*: Creates a timed text track only file. An edit rate (`-f`) and duration (`--dur`) are required in this case as they are not parsed from the Timed Text XML file (assuming they are specified in there).
+*Example 2*: Creates a (mono-essence) IMF timed text track file. An edit rate (`-f`) and duration (`--dur`) are required in this case as they are not parsed from the Timed Text XML file (assuming they are specified in there).
 ```
-raw2bmx -t op1a -y 10:00:00:00 -f 25 --dur 100 --tt manifest.txt
+raw2bmx -t imf -f 25 --dur 100 --tt manifest.txt
 ```
 
 
