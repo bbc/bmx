@@ -118,11 +118,17 @@ AS02Version::~AS02Version()
     delete mHeaderMetadata;
 }
 
+void AS02Version::PrepareHeaderMetadata()
+{
+    AS02Clip::PrepareHeaderMetadata();
+
+    CreateHeaderMetadata();
+}
+
 void AS02Version::PrepareWrite()
 {
     AS02Clip::PrepareWrite();
 
-    CreateHeaderMetadata();
     CreateFile();
 }
 

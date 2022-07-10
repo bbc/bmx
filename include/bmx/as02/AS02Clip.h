@@ -65,6 +65,7 @@ public:
 public:
     AS02Track* CreateTrack(EssenceType essence_type);
 
+    virtual void PrepareHeaderMetadata();
     virtual void PrepareWrite();
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
     virtual void CompleteWrite();
@@ -96,6 +97,7 @@ protected:
     uint32_t mReserveMinBytes;
     mxfTimestamp mCreationDate;
     mxfUUID mGenerationUID;
+    bool mHavePreparedHeaderMetadata;
 
     std::vector<AS02Track*> mTracks;
     std::map<uint32_t, AS02Track*> mTrackMap;

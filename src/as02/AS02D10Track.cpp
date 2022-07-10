@@ -65,13 +65,13 @@ AS02D10Track::~AS02D10Track()
 {
 }
 
-void AS02D10Track::PrepareWrite()
+void AS02D10Track::PrepareHeaderMetadata()
 {
     uint32_t max_sample_size = mD10DescriptorHelper->GetMaxSampleSize();
     mWriterHelper.SetMaxSampleSize(max_sample_size);
     mD10DescriptorHelper->SetSampleSize(max_sample_size);
 
-    AS02PictureTrack::PrepareWrite();
+    AS02Track::PrepareHeaderMetadata();
 }
 
 void AS02D10Track::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)

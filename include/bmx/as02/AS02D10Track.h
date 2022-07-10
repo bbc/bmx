@@ -50,7 +50,7 @@ public:
     virtual ~AS02D10Track();
 
 public:
-    virtual void PrepareWrite();
+    virtual void PrepareHeaderMetadata();
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);
 
 private:

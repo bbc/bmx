@@ -70,6 +70,7 @@ AS02Clip::AS02Clip(AS02Bundle *bundle, string filepath, mxfRational frame_rate)
     mxf_generate_uuid(&mGenerationUID);
     mNextVideoTrackNumber = 1;
     mNextAudioTrackNumber = 1;
+    mHavePreparedHeaderMetadata = false;
 }
 
 AS02Clip::~AS02Clip()
@@ -135,9 +136,10 @@ AS02Track* AS02Clip::CreateTrack(EssenceType essence_type)
     return mTracks.back();
 }
 
-void AS02Clip::PrepareWrite()
+void AS02Clip::PrepareHeaderMetadata()
 {
-    mReserveMinBytes += 256; // account for extra bytes when updating header metadata
+    if (mHavePreparedHeaderMetadata)
+        return
 
     // sort tracks, picture followed by sound
     stable_sort(mTracks.begin(), mTracks.end(), compare_track);
@@ -157,6 +159,20 @@ void AS02Clip::PrepareWrite()
         }
     }
 
+    for (i = 0; i < mTracks.size(); i++)
+        mTracks[i]->PrepareHeaderMetadata();
+
+    mHavePreparedHeaderMetadata = true;
+}
+
+void AS02Clip::PrepareWrite()
+{
+    mReserveMinBytes += 256; // account for extra bytes when updating header metadata
+
+    if (!mHavePreparedHeaderMetadata)
+        PrepareHeaderMetadata();
+
+    size_t i;
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite();
 }

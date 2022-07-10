@@ -311,13 +311,17 @@ void AS02Track::SetOutputEndOffset(int64_t offset)
     mOutputEndOffset = offset;
 }
 
+void AS02Track::PrepareHeaderMetadata()
+{
+    mSampleSize = GetSampleSize();
+
+    CreateHeaderMetadata();
+}
+
 void AS02Track::PrepareWrite()
 {
     BMX_ASSERT(mMXFFile);
 
-    mSampleSize = GetSampleSize();
-
-    CreateHeaderMetadata();
     CreateFile();
 }
 

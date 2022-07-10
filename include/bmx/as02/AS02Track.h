@@ -70,6 +70,7 @@ public:
     MXFDescriptorHelper* GetMXFDescriptorHelper() { return mDescriptorHelper; }
 
 public:
+    virtual void PrepareHeaderMetadata();
     virtual void PrepareWrite();
     virtual void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples) = 0;
     void CompleteWrite();

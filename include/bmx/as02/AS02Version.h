@@ -57,6 +57,7 @@ public:
     virtual ~AS02Version();
 
 public:
+    virtual void PrepareHeaderMetadata();
     virtual void PrepareWrite();
     virtual void CompleteWrite();
 
