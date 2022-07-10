@@ -6,8 +6,16 @@
   </MXFLabels>
 
   <MXFTypes>
+    <Compound>
+      <ColorPrimary>
+          <X type="UInt16"/>
+          <Y type="UInt16"/>
+      </ColorPrimary>
+    </Compound>
     <Multiple>
-      <UInt8Batch base="UInt8" type="Batch"/>
+      <UInt8Batch           base="UInt8"         type="Batch"/>
+      <ULBatch              base="Label"         type="Batch"/>
+      <ThreeColorPrimaries  base="ColorPrimary"  type="Array"  size="3"/>
     </Multiple>
   </MXFTypes>
 
@@ -15,6 +23,25 @@
   <Preface>
     <IsRIPPresent type="Boolean" use="optional" globalKey="06 0e 2b 34 01 01 01 0e 04 04 05 03 00 00 00 00"/>
   </Preface>
+
+  <GenericSoundEssenceDescriptor>
+    <ReferenceImageEditRate        type="Rational"  use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 01 01 06 00 00 00"/>
+    <ReferenceAudioAlignmentLevel  type="Int8"      use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 01 01 07 00 00 00"/>
+  </GenericSoundEssenceDescriptor>
+
+  <GenericPictureEssenceDescriptor>
+    <CodingEquations                         type="Label"                use="optional"  globalKey="06 0e 2b 34 01 01 01 02 04 01 02 01 01 03 01 00"/>
+    <ColorPrimaries                          type="Label"                use="optional"  globalKey="06 0e 2b 34 01 01 01 09 04 01 02 01 01 06 01 00"/>
+    <MasteringDisplayPrimaries               type="ThreeColorPrimaries"  use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 20 04 01 01 01 00 00"/>
+    <MasteringDisplayWhitePointChromaticity  type="ColorPrimary"         use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 20 04 01 01 02 00 00"/>
+    <MasteringDisplayMaximumLuminance        type="UInt32"               use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 20 04 01 01 03 00 00"/>
+    <MasteringDisplayMinimumLuminance        type="UInt32"               use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 20 04 01 01 04 00 00"/>
+    <ActiveHeight                            type="UInt32"               use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 05 01 13 00 00 00"/>
+    <ActiveWidth                             type="UInt32"               use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 05 01 14 00 00 00"/>
+    <ActiveXOffset                           type="UInt32"               use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 05 01 15 00 00 00"/>
+    <ActiveYOffset                           type="UInt32"               use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 05 01 16 00 00 00"/>
+    <AlternativeCenterCuts                   type="ULBatch"              use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 03 02 0b 00 00 00"/>
+  </GenericPictureEssenceDescriptor>
 
   <AVCSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 6e 00">
     <AVCDecodingDelay             type="UInt8"    use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 06 01 0e 00 00"/>
@@ -103,6 +130,10 @@
     <VC2SequenceHeadersIdentical      type="Boolean"    use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 07 06 00 00 00"/>
     <VC2EditUnitsAreCompleteSequences type="Boolean"    use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 07 07 00 00 00"/>
   </VC2SubDescriptor>
+
+  <JPEG2000PictureSubDescriptor>
+    <J2CLayout  type="RGBALayout"  use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 03 0e 00 00 00"/>
+  </JPEG2000PictureSubDescriptor>
 
   <DCTimedTextDescriptor base="GenericDataEssenceDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 64 00">
     <ResourceID               type="UUID"         use="optional"  globalKey="06 0e 2b 34 01 01 01 0c 01 01 15 12 00 00 00 00"/>
