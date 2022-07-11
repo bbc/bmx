@@ -26,10 +26,11 @@ The following input and output wrapper formats and flavours are supported:
 * [AMWA AS-02](https://www.amwa.tv/specifications) MXF Versioning
 * [AMWA AS-10](https://www.amwa.tv/specifications) MXF for Production
 * [AMWA AS-11](https://www.amwa.tv/specifications) Media Contribution File Formats (MXF)
-* [SMPTE ST 378](https://ieeexplore.ieee.org/document/7291764) MXF OP-1A
+* [SMPTE ST 378](https://ieeexplore.ieee.org/document/7291764) MXF OP1a
 * [SMPTE RDD 9](https://ieeexplore.ieee.org/document/7290714) MXF MPEG Long GOP (Sony XDCAM)
 * [SMPTE ST 386](https://ieeexplore.ieee.org/document/7291350) MXF D-10 (Sony MPEG IMX)
-* [Avid native MXF OP-Atom](https://www.avid.com/static/resources/common/documents/mxf.pdf)
+* [SMPTE ST 2067-5](https://ieeexplore.ieee.org/document/9099734) Interoperable Master Format (IMF) - Essence Component
+* [Avid native MXF OPAtom](https://www.avid.com/static/resources/common/documents/mxf.pdf)
 * [WAV](https://en.wikipedia.org/wiki/WAV)
 
 The following essence formats are supported:
@@ -59,6 +60,7 @@ including the following:
 * [JPEG 2000](./docs/jpeg_2000.md)
 * [RDD 6 XML Creator](./meta/rdd6_xml_creator/README.md)
 * [MCA Labels Format](./docs/mca_labels_format.md)
+* [IMF Essence Component](./docs/imf_essence_component.md)
 
 
 ## Build and Installation
