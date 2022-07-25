@@ -293,7 +293,10 @@ void RDD36MXFDescriptorHelper::UpdateFileDescriptor(RDD36EssenceParser *essence_
             cdci_descriptor->setFieldDominance(1);
             cdci_descriptor->setDisplayF2Offset(0);
         }
+    } else if  ((mFlavour & MXFDESC_IMF_FLAVOUR)) {
+        cdci_descriptor->setDisplayF2Offset(0);
     }
+
     // stored dimensions are a multiple of 16, the macro block size
     cdci_descriptor->setStoredWidth((cdci_descriptor->getDisplayWidth() + 15) / 16 * 16);
     cdci_descriptor->setStoredHeight((cdci_descriptor->getDisplayHeight() + 15) / 16 * 16);

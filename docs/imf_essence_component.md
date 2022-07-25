@@ -11,7 +11,7 @@ The IMF flavour is enabled using the `-t imf` clip type option in bmxtranswrap a
 * index table follows the essence, even for clip-wrapped audio (`--index-follows`)
 * creates partitions every 60 seconds for VBE essence (`--part 60`)
 * adds an audio channel assignment label (`--audio-layout imf`)
-* sets Display F2 Offset to 0 for JPEG 2000 progressive video (`--display-f2-offset 0`)
+* sets Display F2 Offset to 0 for JPEG 2000 and RDD 36 progressive video (`--display-f2-offset 0`)
 
 The settings can be found in the code by searching for the OP1a define `OP1A_IMF_FLAVOUR` and the descriptor define `MXFDESC_IMF_FLAVOUR`. E.g. see `if ((flavour & OP1A_IMF_FLAVOUR))` in `src/mxf_op1a/OP1AFile.cpp` for the bulk of the settings.
 
