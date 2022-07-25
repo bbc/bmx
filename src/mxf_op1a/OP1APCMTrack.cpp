@@ -82,7 +82,7 @@ OP1APCMTrack::OP1APCMTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
         SetAES3Mapping(false);
 
     if ((file->GetFlavour() & OP1A_IMF_FLAVOUR))
-        mWaveDescriptorHelper->SetChannelAssignment(IMF_MCA_LABEL);
+        mWaveDescriptorHelper->SetChannelAssignment(IMF_MCA_LABEL_FRAMEWORK);
 
     SetSampleSequence();
 }

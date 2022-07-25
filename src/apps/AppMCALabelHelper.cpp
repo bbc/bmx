@@ -255,7 +255,7 @@ bool AppMCALabelHelper::ParseAudioLayoutMode(const string &audio_mode_str, UL *l
     else if (audio_mode_str == "as11-mode-2")
         *label = DEFAULT_LAYOUT_A_WITHOUT_MCA_LABEL;
     else if (audio_mode_str == "imf")
-        *label = IMF_MCA_LABEL;
+        *label = IMF_MCA_LABEL_FRAMEWORK;
     else
         return false;
 
