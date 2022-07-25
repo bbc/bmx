@@ -60,7 +60,7 @@ including the following:
 * [JPEG 2000](./docs/jpeg_2000.md)
 * [RDD 6 XML Creator](./meta/rdd6_xml_creator/README.md)
 * [MCA Labels Format](./docs/mca_labels_format.md)
-* [IMF Essence Component](./docs/imf_essence_component.md)
+* [IMF Track Files](./docs/imf_track_files.md)
 
 
 ## Build and Installation
