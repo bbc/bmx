@@ -4,14 +4,14 @@ The MXF OP1a writer has an Interoperable Master Format (IMF) flavour that helps 
 
 The IMF flavour is enabled using the `-t imf` clip type option in bmxtranswrap and raw2bmx. This results in the following settings for OP1a,
 * fill after the header metadata is at least 8192 bytes (`--head-fill 8192`)
+* index table follows the essence, even for clip-wrapped audio (`--index-follows`)
+* creates partitions every 60 seconds for frame-wrapped essence (`--part 60`)
 * audio clip-wrapping (`--clip-wrap`)
 * combines audio into a single track by default (`--track-map singlemca`)
 * adds a Primary Package property (`--primary-package`)
 * disables creation of timecode tracks (`--no-tc-track`)
-* index table follows the essence, even for clip-wrapped audio (`--index-follows`)
-* creates partitions every 60 seconds for VBE essence (`--part 60`)
-* adds an audio channel assignment label (`--audio-layout imf`)
-* sets Display F2 Offset to 0 for JPEG 2000 and RDD 36 progressive video (`--display-f2-offset 0`)
+* adds the audio Channel Assignment label descriptor property and sets it to the IMF label by default (`--audio-layout imf`). Use the `--audio-layout` option to override this default value.
+* add the Display F2 Offset and sets it to 0 for progressive JPEG 2000 and RDD 36 video (`--display-f2-offset 0`)
 
 The settings can be found in the code by searching for the OP1a define `OP1A_IMF_FLAVOUR` and the descriptor define `MXFDESC_IMF_FLAVOUR`. E.g. see `if ((flavour & OP1A_IMF_FLAVOUR))` in `src/mxf_op1a/OP1AFile.cpp` for the bulk of the settings.
 
