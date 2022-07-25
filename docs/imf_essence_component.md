@@ -17,6 +17,8 @@ The settings can be found in the code by searching for the OP1a define `OP1A_IMF
 
 Creating a single IMF Track File is supported. If the input MXF files contain multiple essence tracks then use options such as `--disable-video`, `--disable-audio`, `--disable-data` and `--track-map` to disable tracks.
 
+A number of topics related to creating complete IMF Track Files can be found in the [docs/](./docs/) directory, including Multi-channel Audio Labels, Timed Text and JPEG 2000.
+
 The bmxtranswrap and raw2bmx tools allow setting metadata defined in [SMPTE ST 2067-2](https://ieeexplore.ieee.org/document/9097478),
 * Reference Image Edit Rate (`--ref-image-edit-rate`)
 * Reference Audio Alignment Level (`--ref-audio-align-level`)
