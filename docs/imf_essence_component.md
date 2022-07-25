@@ -15,7 +15,7 @@ The IMF flavour is enabled using the `-t imf` clip type option in bmxtranswrap a
 
 The settings can be found in the code by searching for the OP1a define `OP1A_IMF_FLAVOUR` and the descriptor define `MXFDESC_IMF_FLAVOUR`. E.g. see `if ((flavour & OP1A_IMF_FLAVOUR))` in `src/mxf_op1a/OP1AFile.cpp` for the bulk of the settings.
 
-Creating a single IMF Track File is supported. If the input MXF files contain multiple essence tracks then use options such as `--disable-video`, `--disable-audio`, `--disable-data` and `--track-map` to disable tracks.
+IMF Track Files ordinarily contain only a single essence component. bmx provides support for creating such files. If the input MXF files contain multiple essence tracks then use options such as `--disable-video`, `--disable-audio`, `--disable-data` and `--track-map` to disable tracks.
 
 A number of topics related to creating complete IMF Track Files can be found in the [docs/](./docs/) directory, including Multi-channel Audio Labels, Timed Text and JPEG 2000.
 
