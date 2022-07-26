@@ -90,6 +90,10 @@ ADM_CHNASubDescriptor* bmx::convert_chunk_to_adm_chna_descriptor(HeaderMetadata 
     for (i = 0; i < audio_ids.size(); i++) {
         const WaveCHNA::AudioID &audio_id = audio_ids[i];
 
+        // The descriptor shall have no "null" or "unused" mappings
+        if (audio_id.track_index == 0)
+            continue;
+
         ADMChannelMapping *mapping = new ADMChannelMapping(header_metadata);
         mapping->setLocalChannelID(audio_id.track_index);
         mapping->setADMAudioTrackUID(string((const char*)audio_id.uid, sizeof(audio_id.uid)));
