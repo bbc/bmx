@@ -13,6 +13,7 @@ Tools from bmx:
   movdump:          text dump Quicktime / MP4 container files
   rdd36dump:        text dump raw SMPTE RDD 36 (Apple ProRes) essence files
   vc2dump:          text dump raw SMPTE ST 2042 (VC-2) essence files
+  bmxtimecode:      convert between timecode (drop and non-drop) and frame counts
 
 Tools from libMXF:
   archive_mxf_info: output BBC Archive Preservation Project MXF file metadata
