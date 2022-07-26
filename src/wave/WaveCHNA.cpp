@@ -68,10 +68,9 @@ void WaveCHNA::AppendAudioID(const AudioID &audio_id)
         if (existing_audio_id.track_index == 0)
             continue;
 
-        if (audio_id.track_index == existing_audio_id.track_index &&
-                memcmp(audio_id.uid, existing_audio_id.uid, sizeof(existing_audio_id.uid)) == 0)
-        {
-            log_warn("Ignoring duplicate audio ID with track index %u in CHNA chunk\n", audio_id.track_index);
+        // Each audio track UID shall be unique
+        if (memcmp(audio_id.uid, existing_audio_id.uid, sizeof(existing_audio_id.uid)) == 0) {
+            log_warn("Ignoring audio ID that has a duplicate UID\n");
             return;
         }
 

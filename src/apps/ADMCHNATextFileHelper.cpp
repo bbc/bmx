@@ -104,6 +104,9 @@ WaveCHNA* bmx::parse_chna_text_file(const string &filename)
         if (chna->GetNumTracks() == 0)
             BMX_EXCEPTION(("No audio IDs parsed"));
 
+        if (chna->GetNumUIDs() == 0)
+            BMX_EXCEPTION(("No non-null audio IDs parsed"));
+
     } catch (...) {
         delete chna;
         throw;
