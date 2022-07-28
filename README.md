@@ -61,6 +61,8 @@ including the following:
 * [RDD 6 XML Creator](./meta/rdd6_xml_creator/README.md)
 * [MCA Labels Format](./docs/mca_labels_format.md)
 * [IMF Track Files](./docs/imf_track_files.md)
+  * [IMF Audio Track Files](./docs/imf_audio_track_files.md)
+  * [IMF ProRes Image Track Files](./docs/imf_prores_track_files.md)
 
 
 ## Build and Installation
