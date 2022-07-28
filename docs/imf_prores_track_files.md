@@ -18,35 +18,4 @@ raw2bmx -o VIDEO.mxf \
 --rdd36_422_hq prores_hlg_source.raw
 ```
 
-## Audio Track Files
-
-For completeness, the following examples demonstrate the creation of Audio Track Files conforming to the BBC Delivery Document, and with wide applicability as they follow [IMF User Group Best Practice](https://www.imfug.com/TR/audio-track-files/).
-
-```text
-raw2bmx -o AUDIO.mxf \
--t imf \
---track-mca-labels as11 labels.txt \
---wave source.wav
-```
-
-where `labels.txt` (format described in [mca_labels_format.md](mca_labels_format.md)) contains, for a 5.1 surround soundfield,
-
-``` text
-0
-chL, chan=0
-chR, chan=1
-chC, chan=2
-chLFE, chan=3
-chLs, chan=4
-chRs, chan=5
-sg51, lang=en-GB, mcaaudiocontentkind=PRM, mcaaudioelementkind=FCMP, mcatitle=n/a, mcatitleversion=n/a
-```
-
-and for a stereo soundfield,
-
-```text
-0
-chL, chan=0
-chR, chan=1
-sgST, lang=en-GB, mcaaudiocontentkind=PRM, mcaaudioelementkind=FCMP, mcatitle=n/a, mcatitleversion=n/a
-```
+Creation of the corresponding Audio Track Files is described in [imf_audio_track_files.md](imf_audio_track_files.md).
