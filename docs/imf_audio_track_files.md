@@ -9,7 +9,7 @@ raw2bmx -o AUDIO.mxf \
 --wave source.wav
 ```
 
-where `labels.txt` (format described in [mca_labels_format.md](mca_labels_format.md)) contains, for a 5.1 surround soundfield,
+where `labels.txt` (format described in [mca_labels_format.md](./mca_labels_format.md)) contains, for a 5.1 surround soundfield,
 
 ``` text
 0
@@ -31,4 +31,4 @@ chR, chan=1
 sgST, lang=en-GB, mcaaudiocontentkind=PRM, mcaaudioelementkind=FCMP, mcatitle=n/a, mcatitleversion=n/a
 ```
 
-Creation of the corresponding Image Track File is described in [imf_prores_track_files.md](imf_prores_track_files.md).
+Creation of the corresponding Image Track File is described in [imf_prores_track_files.md](./imf_prores_track_files.md).
