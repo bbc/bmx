@@ -5,6 +5,7 @@ A SMPTE project named "31FS ST Mapping ADM to MXF" started in March 2022 to "def
 Provisional support for ADM has been implemented in `bmx` to allow samples files to be created to support the SMPTE project. The implementation is based on an initial design specification and is likely to change.
 
 The current support in the `bmx` implementation is as follows:
+
 - Reading Wave (BW64) that includes ADM chunks (chna, axml, bxml and sxml)
 - Writing Wave (BW64) with ADM chunks (chna, axml, bxml and sxml)
 - Reading MXF that includes Wave chunks and (mapped) ADM chna
@@ -18,10 +19,10 @@ The current support in the `bmx` implementation is as follows:
 - Set the Channel Assignment audio descriptor property for ADM-described content labelling
 
 The known limitations are:
+
 - mxf2raw doesn't yet show ADM metadata presence or allow ADM chunks or a chna text file to be extracted.
 - Re-wrapping a file using raw2bmx or bmxtranswrap with an offset or duration change may result in the ADM metadata and links becoming invalid. E.g. an audio object is no longer available in the new duration or the start offset has changed. The axml, bxml or sxml chunks are not parsed to ensure that the re-wrap retains valid ADM.
 - \> 4 GB chunk size is only supported for the data chunk. The ADM chunks are unlikely to be that large but it's worth adding support just in case that assumption is wrong.
-
 
 ## Creating a Wave+ADM sample file
 
@@ -41,7 +42,6 @@ Raw PCM files can also be used as input, e.g. replace `--wave input.wave` with:
 
 `-s 48000 -q 24 --audio-chan 2 --pcm audio_0_1.pcm -s 48000 -q 24 --audio-chan 2 --pcm audio_2_3.pcm`
 
-
 ## Converting a Wave+ADM to MXF+ADM
 
 A Wave+ADM can be converted to MXF+ADM using the following example commandline:
@@ -54,7 +54,6 @@ The default layout is to have mono-audio MXF tracks. This can be changed using t
 
 Note that the channel index is zero-based for track mapping.
 
-
 ## Converting a MXF+ADM to Wave+ADM
 
 A MXF+ADM can be converted to Wave+ADM using the following example commandline:
@@ -64,7 +63,6 @@ A MXF+ADM can be converted to Wave+ADM using the following example commandline:
 The `--track-map` option can be used to change the audio channels. For example, if only the first sereo pair is required:
 
 `bmxtranswrap -t wave -o output.wav --track-map '0,1' input.mxf`
-
 
 ## Converting a Wave+ADM to Wave+ADM
 
@@ -76,7 +74,6 @@ The `--track-map` option can be used to change what is output. For example, reor
 
 `raw2bmx -t wave -o output.wave --track-map '2,3,0,1' --wave input.wave`
 
-
 ## Add ADM MCA labels to MXF+ADM
 
 A ADM Soundfield Group Label Subdescriptor is created from a [MCA labels text file](./mca_labels_format.md) if the list of properties associated with the Soundfield Group contains an ADM property (the ADM properties have the prefix "ADM") or it is a ADM Soundfield Group label and there are no Audio Channels that reference it.
@@ -84,7 +81,8 @@ A ADM Soundfield Group Label Subdescriptor is created from a [MCA labels text fi
 A ADM Soundfield Group label can be added using the `ADM` symbol in a [MCA labels text file](./mca_labels_format.md).
 
 `mca.txt`:
-```
+
+```text
 0
 chL, chan=0
 chR, chan=1
@@ -103,7 +101,6 @@ The MCA labels defined in `mca.txt` can be added and the ADM-described content l
 `raw2bmx -t op1a -o output.mxf --track-map '0,1' --track-mca-labels x mca.txt --audio-layout adm --wave input.wave`
 
 The Soundfield Groups that use the ADM Soundfield Group Label Subdescriptor are shown using a `(ADM)` suffix in the summary output of `mxf2raw`. E.g. `ADM(ADM)` in the example `mca.txt` above. If the `--mca-detail` option is used and the Soundfield Group uses the ADM Soundfield Group Label Subdescriptor then the name used in the `SoundfieldGroups` array is `ADMSoundfieldGroup`.
-
 
 ## chna Text File Definition Format
 
@@ -124,7 +121,7 @@ A `track_index` 0 represents a null / placeholder entry that is used to support 
 
 An example chna text file is shown below. It describes 2 stereo pairs, each with "front left" and "front right" channels.
 
-```
+```text
 track_index: 1
 uid: ATU_00000001
 track_ref: AT_00010001_01
