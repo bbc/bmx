@@ -6,7 +6,7 @@ RDD 45 specifies certain [SMPTE RDD 36](https://ieeexplore.ieee.org/document/743
 
 The following example creates an Image Track File, from a Hybrid Log-Gamma (HLG) bitstream, that conforms to version 1.2 of the [BBC UHD Delivery Document](https://www.dropbox.com/s/tkvwxksgy3izpca/TechnicalDeliveryStandardsBBCUHDiPlayerSupplement.pdf?dl=0):
 
-```text
+```bash
 raw2bmx -o VIDEO.mxf \
 -t imf \
 -f 25 \
