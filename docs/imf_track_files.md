@@ -16,7 +16,7 @@ The IMF flavour is enabled using the `-t imf` clip type option in bmxtranswrap a
 
 The settings can be found in the code by searching for the OP1a define `OP1A_IMF_FLAVOUR` and the descriptor define `MXFDESC_IMF_FLAVOUR`. E.g. see `if ((flavour & OP1A_IMF_FLAVOUR))` in `src/mxf_op1a/OP1AFile.cpp` for the bulk of the settings.
 
-IMF Track Files ordinarily contain only a single essence component. bmx provides support for creating such files. If the input MXF files contain multiple essence tracks then use options such as `--disable-video`, `--disable-audio`, `--disable-data` and `--track-map` to disable tracks.
+IMF Track Files contain only a single essence component. bmx provides support for creating such files. If the input MXF files contain multiple essence tracks then use options such as `--disable-video`, `--disable-audio`, `--disable-data` and `--track-map` to disable tracks.
 
 A number of topics related to creating complete IMF Track Files can be found in the [docs/](./docs/) directory, including Multi-channel Audio Labels, Timed Text, JPEG 2000 and ProRes.
 
@@ -30,14 +30,8 @@ The bmxtranswrap and raw2bmx tools allow setting metadata defined in [SMPTE ST 2
 * Active Y Offset (`--active-y-offset`)
 * Alternative Center Cuts (`--center-cut-4-3` and `--center-cut-14-9`)
 
-and [SMPTE ST 2067-21 - Application #2E](https://ieeexplore.ieee.org/document/9097487) and derivatives,
+and [SMPTE ST 2067-21 - Application #2E](https://ieeexplore.ieee.org/document/9097487),
 
-* Component Depth (`-c`)
-* Frame Rate (`-f`)
-* Black Reference Level (`--black-level`)
-* White Reference Level (`--white-level`)
-* Color Range (`--color-range`)
-* Color Siting (`--color-siting`)
 * Mastering Display Primaries (`--display-primaries`)
 * Mastering Display White Point Chromaticity (`--display-white-point`)
 * Mastering Display Maximum Luminance (`--display-max-luma`)

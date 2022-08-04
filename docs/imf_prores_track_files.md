@@ -1,10 +1,27 @@
 # IMF ProRes Track Files
 
-The [IMF Flavour](./imf_track_files.md) of bmxtranswrap and raw2bmx can be used to create Image Track Files conforming to [SMPTE RDD 45](https://ieeexplore.ieee.org/document/8233487) Application ProRes or [SMPTE RDD 59-1](https://github.com/SMPTE/rdd59-1) Application DPP (ProRes).
+The [IMF Flavour](./imf_track_files.md) of `bmxtranswrap` and `raw2bmx` can be used to create Image Track Files conforming to [SMPTE RDD 45](https://ieeexplore.ieee.org/document/8233487) Application ProRes or [SMPTE RDD 59-1](https://github.com/SMPTE/rdd59-1) Application DPP (ProRes).
 
-RDD 45 specifies certain [SMPTE RDD 36](https://ieeexplore.ieee.org/document/7438722) ProRes bitstream parameters that must be set. bmx will populate the Essence Descriptor from the bitstream and other values supplied on the command line.
+RDD 45 specifies certain [SMPTE RDD 36](https://ieeexplore.ieee.org/document/7438722) ProRes bitstream parameters that must be set. bmx will populate the Essence Descriptor from the bitstream and other values supplied on the command line or as defaults.
 
-The following example creates an Image Track File, from a Hybrid Log-Gamma (HLG) bitstream, that conforms to version 1.2 of the [BBC UHD Delivery Document](https://www.dropbox.com/s/tkvwxksgy3izpca/TechnicalDeliveryStandardsBBCUHDiPlayerSupplement.pdf?dl=0):
+Here is edited output from `rdd36dump` of a suitable BT 2100 UHD, HLG transfer function, 25 Hz, YCbCr video source bitstream, showing the parameters that are mentioned in RDD 45:
+
+```text
+horizontal_size: 3840
+vertical_size: 2160
+chroma_format: 2 (4:2:2)
+interlace_mode: 0 (Progressive frame)
+aspect_ratio_information: 0 (Unknown/unspecified)
+frame_rate_code: 0 (Unknown/unspecified)
+color_primaries: 9 (ITU-R BT.2020)
+transfer_characteristic: 18 (HLG (reserved))
+matrix_coefficients: 9 (ITU-R BT.2020 (NCL))
+alpha_channel_type: 0 (Not present)
+```
+
+Note that RDD 45 specifies that `aspect_ratio_information` and `frame_rate_code` be ignored by readers, but despite this, if they not set to "Unknown" they should be the correct values to avoid confusion.
+
+The following example creates an Image Track File, from a bitstream formatted as above, that conforms to version 1.2 of the [BBC UHD Delivery Document](https://www.dropbox.com/s/tkvwxksgy3izpca/TechnicalDeliveryStandardsBBCUHDiPlayerSupplement.pdf?dl=0):
 
 ```bash
 raw2bmx -o VIDEO.mxf \
