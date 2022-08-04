@@ -4,7 +4,7 @@ The [IMF Flavour](./imf_track_files.md) of `bmxtranswrap` and `raw2bmx` can be u
 
 RDD 45 specifies certain [SMPTE RDD 36](https://ieeexplore.ieee.org/document/7438722) ProRes bitstream parameters that must be set. bmx will populate the Essence Descriptor from the bitstream and other values supplied on the command line or as defaults.
 
-Here is edited output from `rdd36dump` of a suitable BT 2100 UHD, HLG transfer function, 25 Hz, YCbCr video source bitstream, showing the parameters that are mentioned in RDD 45:
+Here is edited output from `rdd36dump` of a suitable [BT 2100](https://www.itu.int/rec/R-REC-BT.2100) UHD, HLG transfer function, 25 Hz, YCbCr video source bitstream, showing the parameters that are mentioned in RDD 45:
 
 ```text
 horizontal_size: 3840
