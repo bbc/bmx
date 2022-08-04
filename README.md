@@ -57,10 +57,10 @@ A number of topics are described in more detail in the [docs/](docs/) directory,
 including the following:
 
 * [Timed Text](./docs/timed_text.md)
-* [JPEG 2000](./docs/jpeg_2000.md)
 * [RDD 6 XML Creator](./meta/rdd6_xml_creator/README.md)
 * [MCA Labels Format](./docs/mca_labels_format.md)
 * [IMF Track Files](./docs/imf_track_files.md)
+  * [IMF JPEG 2000 Track Files](./docs/imf_jpeg_2000_track_files.md)
   * [IMF Audio Track Files](./docs/imf_audio_track_files.md)
   * [IMF ProRes Image Track Files](./docs/imf_prores_track_files.md)
 
