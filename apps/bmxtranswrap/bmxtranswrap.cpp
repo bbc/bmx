@@ -2234,6 +2234,17 @@ int main(int argc, const char** argv)
             memset(&next_embed_xml, 0, sizeof(next_embed_xml));
             cmdln_index++;
         }
+        else
+        {
+            // break if/else here to workaround Visual C++ error
+            // C1061: compiler limit : blocks nested too deeply
+            msvc_block_limit = true;
+        }
+
+        if (!msvc_block_limit)
+        {
+            // do nothing - wasn't the Visual C++ C1061 workaround
+        }
         else if (strcmp(argv[cmdln_index], "--no-tc-track") == 0)
         {
             no_tc_track = true;
@@ -2317,17 +2328,6 @@ int main(int argc, const char** argv)
                 return 1;
             }
             cmdln_index++;
-        }
-        else
-        {
-            // break if/else here to workaround Visual C++ error
-            // C1061: compiler limit : blocks nested too deeply
-            msvc_block_limit = true;
-        }
-
-        if (!msvc_block_limit)
-        {
-            // do nothing - wasn't the Visual C++ C1061 workaround
         }
         else if (strcmp(argv[cmdln_index], "--project") == 0)
         {
