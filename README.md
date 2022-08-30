@@ -50,7 +50,6 @@ The following essence formats are supported:
 * [SMPTE ST 436](https://ieeexplore.ieee.org/document/7290051) encapsulated ANC and VBI data
 * [IMSC 1 Timed Text](https://www.w3.org/TR/ttml-imsc1.0.1/)
 
-
 ## Topics
 
 A number of topics are described in more detail in the [docs/](docs/) directory,
@@ -64,11 +63,9 @@ including the following:
   * [IMF Audio Track Files](./docs/imf_audio_track_files.md)
   * [IMF ProRes Image Track Files](./docs/imf_prores_track_files.md)
 
-
 ## Build and Installation
 
 bmx is developed on Ubuntu Linux but is supported on other Unix-like systems using the autotools build system. A set of Microsoft Visual C++ project files are provided for Windows.
-
 
 ### Dependencies
 
@@ -82,10 +79,10 @@ The following libraries must be installed to build bmx. The (Ubuntu) debian pack
 
 The [libcurl](https://curl.haxx.se/libcurl/) (libcurl4-openssl-dev >= 7.22.0) library is optional for Unix-like systems and provides support for reading MXF files over HTTP(S).
 
-
 ### Unix-like Systems Build
 
 Install the development versions of the dependency libraries. The bmx library can then be built from source using autotools as follows,
+
 ```bash
 ./autogen.sh
 ./configure
@@ -93,6 +90,7 @@ make
 ```
 
 Run configure as shown below to see a list of build configuration options,
+
 ```bash
 ./configure -h
 ```
@@ -100,21 +98,24 @@ Run configure as shown below to see a list of build configuration options,
 Add the `--with-curl` option to the configure line to include libcurl and therefore support reading MXF files over HTTP(S).
 
 If you get library link errors similar to "error while loading shared libraries" then run
-```
+
+```bash
 sudo /sbin/ldconfig
 ```
+
 to update the runtime linker cache. E.g. the libMXF library was built and installed previously and the linker cache needs to be updated with the result.
 
 There are a number of regression tests that can be run using
+
 ```bash
 make check
 ```
 
 Finally, the library and utilities can be installed using
+
 ```bash
 sudo make install
 ```
-
 
 ### Microsoft Visual Studio C++ Build
 
@@ -129,7 +130,6 @@ A local copy of the expat and uriparser project files are included in the bmx bu
 The build depends on the `bmx_scm_version.h` header file in the root directory to provide the most recent git commit identifier. This file is generated automatically using the [gen_scm_version.sh](./gen_scm_version.sh) script when building using autotools and is included in the source distribution package. You are likely missing this file if you are using the source code directly from the git repository then and will need to create it manually.
 
 The [tools.sln](./msvc_build/vs10/tools.sln) build solution file is used to build the text dumper tools.
-
 
 ## Docker
 
@@ -176,18 +176,15 @@ This example runs `bmxtranswrap` from input `./sources/in.mxf` to output `./dest
 
 `./docker/bmx_docker.sh --input ./sources --output ./dests bmxtranswrap -o /output/out.mxf /input/in.mxf`
 
-
 ## Source and Binary Distributions
 
 Source distributions, including dependencies for the Windows build, and Windows binaries are made [available on SourceForge](https://sourceforge.net/projects/bmxlib/files/).
-
 
 ## Development Process
 
 Software development of new features and bug fixes is done using repositories on GitHub. Once a feature or a bug fix is complete it is copied over to the repository on Sourceforge.
 
 Source and binary distributions are generally only created when a new feature is required for creating standard compliant sample files for example, or when a release hasn't been made for a long time.
-
 
 ## License
 
