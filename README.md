@@ -52,7 +52,7 @@ The following essence formats are supported:
 
 ## Topics
 
-A number of topics are described in more detail in the [docs/](docs/) directory,
+A number of topics are described in more detail in the [docs/](./docs/) directory,
 including the following:
 
 * [Timed Text](./docs/timed_text.md)
