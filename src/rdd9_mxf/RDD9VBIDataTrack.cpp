@@ -54,4 +54,3 @@ RDD9VBIDataTrack::RDD9VBIDataTrack(RDD9File *file, uint32_t track_index, uint32_
 RDD9VBIDataTrack::~RDD9VBIDataTrack()
 {
 }
-

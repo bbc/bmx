@@ -89,4 +89,3 @@ void RDD9DataTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, ui
 
     mPosition++;
 }
-
