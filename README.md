@@ -71,8 +71,8 @@ bmx is developed on Ubuntu Linux but is supported on other Unix-like systems usi
 
 The following libraries must be installed to build bmx. The (Ubuntu) debian package names and versions are shown in brackets.
 
-* libMXF (libmxf >= 1.0.4)
-* libMXF++ (libmxf++ >= 1.0.4)
+* libMXF
+* libMXF++
 * [uriparser](https://github.com/uriparser/uriparser) (liburiparser-dev >= 0.7.2, <= 0.8).
 * [expat](https://github.com/libexpat/libexpat) (libexpat1-dev >= 2.1)
 * uuid, Unix-like systems only (uuid-dev)
