@@ -238,8 +238,10 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     BMX_ASSERT((mFlavour & MXFDESC_AVID_FLAVOUR) || mpeg_descriptor);
 
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
-    SetCodingEquationsMod(ITUR_BT709_CODING_EQ);
-    if (!(mFlavour & MXFDESC_AVID_FLAVOUR)) {
+    bool isMPEG2ML = mEssenceType == MPEG2LG_422P_ML_576I ||
+                     mEssenceType == MPEG2LG_MP_ML_576I;
+    SetCodingEquationsMod(isMPEG2ML ? ITUR_BT601_CODING_EQ : ITUR_BT709_CODING_EQ);
+    if (!isMPEG2ML && !(mFlavour & MXFDESC_AVID_FLAVOUR)) {
         if (mEssenceType == MPEG2LG_422P_HL_720P ||
             mEssenceType == MPEG2LG_MP_HL_720P)
         {
@@ -339,7 +341,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             BMX_ASSERT(false);
             break;
     }
-    if (!(mFlavour & MXFDESC_AVID_FLAVOUR))
+    if (!isMPEG2ML && !(mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
     cdci_descriptor->setComponentDepth(8);
     if (mEssenceType == MPEG2LG_422P_ML_576I ||
