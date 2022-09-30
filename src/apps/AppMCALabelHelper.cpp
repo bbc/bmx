@@ -216,9 +216,9 @@ public:
     PROPERTY_FUNCTIONS(MCASpokenLanguageAttribute);
     PROPERTY_FUNCTIONS(RFC5646AdditionalSpokenLanguages);
     PROPERTY_FUNCTIONS(MCAAdditionalLanguageAttributes);
-    ADM_PROPERTY_FUNCTIONS(ADMAudioProgrammeID_ADMsg);
-    ADM_PROPERTY_FUNCTIONS(ADMAudioContentID_ADMsg);
-    ADM_PROPERTY_FUNCTIONS(ADMAudioObjectID_ADMsg);
+    ADM_PROPERTY_FUNCTIONS(ADMAudioProgrammeID_ST2131);
+    ADM_PROPERTY_FUNCTIONS(ADMAudioContentID_ST2131);
+    ADM_PROPERTY_FUNCTIONS(ADMAudioObjectID_ST2131);
 };
 
 #define PROPERTY_FUNCTION_REFS(name)  MCAPropertyFunctions::Set##name, MCAPropertyFunctions::Check##name
@@ -246,12 +246,12 @@ struct MCAPropertyMapEntry {
    {"rfc5646additionalspokenlanguages", PROPERTY_FUNCTION_REFS(RFC5646AdditionalSpokenLanguages)},
    {"mcaadditionallanguageattributes", PROPERTY_FUNCTION_REFS(MCAAdditionalLanguageAttributes)},
    // ADM propertues will be identified by the "adm" prefix in AppMCALabelHelper
-   {"admaudioprogrammeid_admsg", PROPERTY_FUNCTION_REFS(ADMAudioProgrammeID_ADMsg)},
-   {"admaudioprogrammeid", PROPERTY_FUNCTION_REFS(ADMAudioProgrammeID_ADMsg)},  // without "_admsg" suffix
-   {"admaudiocontentid_admsg", PROPERTY_FUNCTION_REFS(ADMAudioContentID_ADMsg)},
-   {"admaudiocontentid", PROPERTY_FUNCTION_REFS(ADMAudioContentID_ADMsg)},  // without "_admsg" suffix
-   {"admaudioobjectid_admsg", PROPERTY_FUNCTION_REFS(ADMAudioObjectID_ADMsg)},
-   {"admaudioobjectid", PROPERTY_FUNCTION_REFS(ADMAudioObjectID_ADMsg)},  // without "_admsg" suffix
+   {"admaudioprogrammeid_st2131", PROPERTY_FUNCTION_REFS(ADMAudioProgrammeID_ST2131)},
+   {"admaudioprogrammeid", PROPERTY_FUNCTION_REFS(ADMAudioProgrammeID_ST2131)},  // without "_st2131" suffix
+   {"admaudiocontentid_st2131", PROPERTY_FUNCTION_REFS(ADMAudioContentID_ST2131)},
+   {"admaudiocontentid", PROPERTY_FUNCTION_REFS(ADMAudioContentID_ST2131)},  // without "_st2131" suffix
+   {"admaudioobjectid_st2131", PROPERTY_FUNCTION_REFS(ADMAudioObjectID_ST2131)},
+   {"admaudioobjectid", PROPERTY_FUNCTION_REFS(ADMAudioObjectID_ST2131)},  // without "_st2131" suffix
 };
 
 
