@@ -908,15 +908,6 @@ void OP1AFile::CreateHeaderMetadata()
             mult_descriptor->setEssenceContainer(MXF_EC_L(MultipleWrappings));
             if (mSupportCompleteSinglePass)
                 mult_descriptor->setContainerDuration(mInputDuration);
-
-            // Preface - ContentStorage - SourcePackage - (Multiple) File Descriptor - Wave Chunk sub-descriptors
-            map<uint32_t, WaveChunk*>::const_iterator iter;
-            for (iter = mWaveChunks.begin(); iter != mWaveChunks.end(); iter++) {
-                RIFFChunkDefinitionSubDescriptor *wave_chunk_subdesc = new RIFFChunkDefinitionSubDescriptor(mHeaderMetadata);
-                mult_descriptor->appendSubDescriptors(wave_chunk_subdesc);
-                wave_chunk_subdesc->setRIFFChunkStreamID(iter->first);
-                wave_chunk_subdesc->setRIFFChunkID(iter->second->Tag());
-            }
         }
     }
 
@@ -951,6 +942,18 @@ void OP1AFile::CreateHeaderMetadata()
     }
     for (i = 0; i < mXMLTracks.size(); i++)
         mXMLTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage);
+
+    // Preface - ContentStorage - SourcePackage - File Descriptor - Wave Chunk sub-descriptors
+    if (mFileSourcePackage && mFileSourcePackage->getDescriptor()) {
+        GenericDescriptor *descriptor = mFileSourcePackage->getDescriptor();
+        map<uint32_t, WaveChunk*>::const_iterator iter;
+        for (iter = mWaveChunks.begin(); iter != mWaveChunks.end(); iter++) {
+            RIFFChunkDefinitionSubDescriptor *wave_chunk_subdesc = new RIFFChunkDefinitionSubDescriptor(mHeaderMetadata);
+            descriptor->appendSubDescriptors(wave_chunk_subdesc);
+            wave_chunk_subdesc->setRIFFChunkStreamID(iter->first);
+            wave_chunk_subdesc->setRIFFChunkID(iter->second->Tag());
+        }
+    }
 
     // Signal ST 379-2 generic container compliance if mSignalST3792 or there is RDD 36 / ProRes video.
     // RDD 44 (RDD 36 / ProRes in MXF) requires ST 379-2 and specifically mentions ContainerConstraintSubDescriptor.
