@@ -79,9 +79,9 @@ MXFFileTrackReader::MXFFileTrackReader(MXFFileReader *file_reader, size_t track_
             if (chunk_ref_descriptor) {
                 // Get the chunk descriptors associated with the File Source Package descriptor
                 map<uint32_t, const RIFFChunkDefinitionSubDescriptor*> chunk_descriptors;
-                MultipleDescriptor *multi_descriptor = dynamic_cast<MultipleDescriptor*>(file_source_package->getDescriptor());
-                if (multi_descriptor && multi_descriptor->haveSubDescriptors()) {
-                    vector<SubDescriptor*> fsp_sub_descriptors = multi_descriptor->getSubDescriptors();
+                GenericDescriptor *descriptor = dynamic_cast<GenericDescriptor*>(file_source_package->getDescriptor());
+                if (descriptor && descriptor->haveSubDescriptors()) {
+                    vector<SubDescriptor*> fsp_sub_descriptors = descriptor->getSubDescriptors();
                     size_t k;
                     for (k = 0; k < fsp_sub_descriptors.size(); k++) {
                         RIFFChunkDefinitionSubDescriptor *chunk_descriptor =
