@@ -321,7 +321,7 @@ check()
     create_mxf_7 $tmpdir/test_wave_7.wav $tmpdir/test_mxf_7.mxf &&
         $md5tool < $tmpdir/test_mxf_7.mxf > $tmpdir/test.md5 &&
         diff $tmpdir/test.md5 $base/test_mxf_7.md5 &&
-    create_wave_8 $sampledir/test_mxf_7.mxf $tmpdir/test.wav &&
+    create_wave_8 $tmpdir/test_mxf_7.mxf $tmpdir/test.wav &&
         $md5tool < $tmpdir/test.wav > $tmpdir/test.md5 &&
         diff $tmpdir/test.md5 $base/test_wave_8.md5
 }
@@ -356,7 +356,7 @@ create_data()
         $md5tool < $tmpdir/test_wave_7.wav > $base/test_wave_7.md5 &&
     create_mxf_7 $tmpdir/test_wave_7.wav $tmpdir/test_mxf_7.mxf &&
         $md5tool < $tmpdir/test_mxf_7.mxf > $base/test_mxf_7.md5 &&
-    create_wave_8 $sampledir/test_mxf_7.mxf $tmpdir/test.wav &&
+    create_wave_8 $tmpdir/test_mxf_7.mxf $tmpdir/test.wav &&
         $md5tool < $tmpdir/test.wav > $base/test_wave_8.md5
 }
 
