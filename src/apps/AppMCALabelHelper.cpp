@@ -275,6 +275,8 @@ AppMCALabelHelper::AppMCALabelHelper(bool is_as11)
     char buffer[32];
     uint8_t i;
     for (i = 1; i < 128; i++) {
+        const UL imf_channel_label = IMF_CHANNEL_LABEL(0x08, i);
+
         GeneratedMCALabelEntry *generated_entry = new GeneratedMCALabelEntry();
 
         bmx_snprintf(buffer, sizeof(buffer), "chNSC%03d", i);
@@ -286,7 +288,7 @@ AppMCALabelHelper::AppMCALabelHelper(bool is_as11)
         generated_entry->entry.type = AUDIO_CHANNEL_LABEL;
         generated_entry->entry.tag_symbol = generated_entry->gen_tag_symbol.c_str();
         generated_entry->entry.tag_name = generated_entry->gen_tag_name.c_str();
-        generated_entry->entry.dict_id = IMF_CHANNEL_LABEL(0x08, i);
+        generated_entry->entry.dict_id = imf_channel_label;
 
         IndexGeneratedLabel(generated_entry, true);
     }
