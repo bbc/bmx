@@ -19,7 +19,7 @@ bmx provides a set of file format text dumper and essence extraction tools:
 * **movdump**: text dump Quicktime / MP4 files
 * **rdd36dump**: text dump SMPTE RDD 36 (Apple ProRes) bitstream files
 * **vc2dump**:  text dump SMPTE ST 2042 VC-2 bitstream files
-* **MXFDump**: text dumper for MXF files from the [AAF SDK](https://sourceforge.net/projects/aaf/). This utility is made available and built as part of libMXF.
+* **MXFDump**: text dumper for MXF files from the [AAF SDK](https://sourceforge.net/projects/aaf/). This utility is made available and built as part of [libMXF](https://github.com/bbc/libMXF).
 
 The following input and output wrapper formats and flavours are supported:
 
@@ -71,8 +71,8 @@ bmx is developed on Ubuntu Linux but is supported on other Unix-like systems usi
 
 The following libraries must be installed to build bmx. The (Ubuntu) debian package names and versions are shown in brackets.
 
-* libMXF
-* libMXF++
+* [libMXF](https://github.com/bbc/libMXF)
+* [libMXF++](https://github.com/bbc/libMXFpp)
 * [uriparser](https://github.com/uriparser/uriparser) (liburiparser-dev >= 0.7.2, <= 0.8).
 * [expat](https://github.com/libexpat/libexpat) (libexpat1-dev >= 2.1)
 * uuid, Unix-like systems only (uuid-dev)
