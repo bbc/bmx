@@ -3,8 +3,8 @@
 ##################################################
 FROM debian:latest as build
 
-ARG LIBMXF_GIT=https://git.code.sf.net/p/bmxlib/libmxf
-ARG LIBMXFPP_GIT=https://git.code.sf.net/p/bmxlib/libmxfpp
+ARG LIBMXF_GIT=https://github.com/bbc/libMXF.git
+ARG LIBMXFPP_GIT=https://github.com/bbc/libMXFpp.git
 
 WORKDIR /build
 
