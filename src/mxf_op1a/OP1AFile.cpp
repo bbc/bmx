@@ -304,6 +304,17 @@ uint32_t OP1AFile::AddWaveChunk(WaveChunk *chunk, bool take_ownership)
     return stream_id;
 }
 
+uint32_t OP1AFile::AddADMWaveChunk(WaveChunk *chunk, bool take_ownership, const vector<UL> &profile_and_level_uls)
+{
+    uint32_t stream_id = AddWaveChunk(chunk, take_ownership);
+
+    ADMWaveChunkInfo info;
+    info.profile_and_level_uls = profile_and_level_uls;
+    mADMWaveChunkInfo[stream_id] = info;
+
+    return stream_id;
+}
+
 void OP1AFile::SetOutputStartOffset(int64_t offset)
 {
     BMX_CHECK(offset >= 0);
@@ -952,6 +963,16 @@ void OP1AFile::CreateHeaderMetadata()
             descriptor->appendSubDescriptors(wave_chunk_subdesc);
             wave_chunk_subdesc->setRIFFChunkStreamID(iter->first);
             wave_chunk_subdesc->setRIFFChunkID(iter->second->Tag());
+
+            if (mADMWaveChunkInfo.count(iter->first)) {
+                const ADMWaveChunkInfo &info = mADMWaveChunkInfo[iter->first];
+
+                ADMAudioMetadataSubDescriptor *adm_audio_subdesc = new ADMAudioMetadataSubDescriptor(mHeaderMetadata);
+                descriptor->appendSubDescriptors(adm_audio_subdesc);
+                adm_audio_subdesc->setRIFFChunkStreamID_link1(iter->first);
+                if (!info.profile_and_level_uls.empty())
+                    adm_audio_subdesc->setADMProfileLevelULBatch(info.profile_and_level_uls);
+            }
         }
     }
 

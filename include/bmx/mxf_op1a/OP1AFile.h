@@ -108,6 +108,7 @@ public:
     void SetSignalST3792(bool enable);                                  // default false. If true then signal ST 379-2 compliance using sub-descriptor
 
     uint32_t AddWaveChunk(WaveChunk *chunk, bool take_ownership);
+    uint32_t AddADMWaveChunk(WaveChunk *chunk, bool take_ownership, const std::vector<UL> &profile_and_level_uls);
 
 public:
     void SetOutputStartOffset(int64_t offset);
@@ -169,6 +170,11 @@ private:
     void SetPartitionsFooterOffset();
 
     void CheckMCALabels();
+
+private:
+    typedef struct {
+        std::vector<UL> profile_and_level_uls;
+    } ADMWaveChunkInfo;
 
 private:
     int mFlavour;
@@ -242,6 +248,7 @@ private:
 
     std::map<uint32_t, WaveChunk*> mWaveChunks;
     std::vector<WaveChunk*> mOwnedWaveChunks;
+    std::map<uint32_t, ADMWaveChunkInfo> mADMWaveChunkInfo;
 };
 
 

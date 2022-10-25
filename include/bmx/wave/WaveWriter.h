@@ -55,6 +55,10 @@ public:
     friend class WaveTrackWriter;
 
 public:
+    static std::string GetBuiltinChunkListString();
+    static bool IsBuiltinChunk(WaveChunkTag tag);
+
+public:
     WaveWriter(WaveIO *output, bool take_ownership);
     ~WaveWriter();
 

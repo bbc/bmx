@@ -54,6 +54,9 @@ class WaveReader
 public:
     static WaveReader* Open(WaveIO *input, bool take_ownership);
 
+    static std::string GetBuiltinChunkListString();
+    static bool IsBuiltinChunk(WaveChunkTag tag);
+
 public:
     ~WaveReader();
 

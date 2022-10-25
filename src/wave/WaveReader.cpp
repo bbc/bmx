@@ -38,6 +38,7 @@
 #include <cstring>
 
 #include <bmx/wave/WaveReader.h>
+#include <bmx/wave/WaveWriter.h>
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -90,6 +91,16 @@ WaveReader* WaveReader::Open(WaveIO *input, bool take_ownership)
             delete input;
         return 0;
     }
+}
+
+string WaveReader::GetBuiltinChunkListString()
+{
+    return WaveWriter::GetBuiltinChunkListString();
+}
+
+bool WaveReader::IsBuiltinChunk(WaveChunkTag tag)
+{
+    return WaveWriter::IsBuiltinChunk(tag);
 }
 
 WaveReader::WaveReader(WaveIO *input, bool take_ownership, bool require_ds64, uint32_t riff_size)

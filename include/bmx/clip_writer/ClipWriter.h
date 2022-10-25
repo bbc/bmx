@@ -78,6 +78,7 @@ public:
     void ForceWriteCBEDuration0(bool enable);
 
     uint32_t AddWaveChunk(WaveChunk *chunk, bool take_ownership);
+    uint32_t AddADMWaveChunk(WaveChunk *chunk, bool take_ownership, const std::vector<UL> &profile_and_level_uls);
 
 public:
     ClipWriterTrack* CreateTrack(EssenceType essence_type, std::string track_filename = "");

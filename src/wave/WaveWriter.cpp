@@ -52,6 +52,33 @@ using namespace bmx;
 
 
 
+static WaveChunkTag BUILTIN_CHUNKS[] = {
+    WAVE_CHUNK_TAG("JUNK"), WAVE_CHUNK_TAG("ds64"), WAVE_CHUNK_TAG("fmt "),
+    WAVE_CHUNK_TAG("fact"), WAVE_CHUNK_TAG("bext"), WAVE_CHUNK_TAG("data"),
+    WAVE_CHUNK_TAG("chna")
+};
+
+
+string WaveWriter::GetBuiltinChunkListString()
+{
+    string builtin_list;
+    for (size_t i = 0; i < BMX_ARRAY_SIZE(BUILTIN_CHUNKS); i++) {
+        if (i > 0)
+            builtin_list.append(", ");
+        builtin_list.append("'" + get_wave_chunk_tag_str(BUILTIN_CHUNKS[i]) + "'");
+    }
+    return builtin_list;
+}
+
+bool WaveWriter::IsBuiltinChunk(WaveChunkTag tag)
+{
+    for (size_t i = 0; i < BMX_ARRAY_SIZE(BUILTIN_CHUNKS); i++) {
+        if (tag == BUILTIN_CHUNKS[i])
+            return true;
+    }
+    return false;
+}
+
 WaveWriter::WaveWriter(WaveIO *output, bool take_ownership)
 {
     mOutput = output;
@@ -159,12 +186,7 @@ void WaveWriter::UpdateChannelCounts()
 
 void WaveWriter::PrepareWrite()
 {
-    static WaveChunkTag builtin_chunks[] = {
-        WAVE_CHUNK_TAG("JUNK"), WAVE_CHUNK_TAG("ds64"), WAVE_CHUNK_TAG("fmt "),
-        WAVE_CHUNK_TAG("fact"), WAVE_CHUNK_TAG("bext"), WAVE_CHUNK_TAG("data"),
-        WAVE_CHUNK_TAG("chna")
-    };
-    set<WaveChunkTag> builtin_chunks_set(builtin_chunks, builtin_chunks + BMX_ARRAY_SIZE(builtin_chunks));
+    set<WaveChunkTag> builtin_chunks_set(BUILTIN_CHUNKS, BUILTIN_CHUNKS + BMX_ARRAY_SIZE(BUILTIN_CHUNKS));
 
     // Update the channel count and track start channels
     UpdateChannelCounts();

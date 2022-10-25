@@ -98,6 +98,12 @@ typedef enum
     OLD_AAFSDK_UMID_TYPE,
 } AvidUMIDType;
 
+typedef struct
+{
+    bool is_adm;
+    std::vector<UL> profile_and_level_uls;
+} WaveChunkRef;
+
 
 std::string get_app_version_info(const char *app_name);
 
@@ -159,6 +165,8 @@ bool parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *three_
 bool parse_color_primary(const char *str, mxfColorPrimary *color_primary);
 bool parse_essence_type_names(const char *str, std::map<EssenceType, std::string> *essence_type_names);
 bool parse_video_line_map(const char *str, mxfVideoLineMap *video_line_map);
+bool parse_wave_chunk_refs(const char *str, std::map<std::string, WaveChunkRef> *refs);
+bool parse_adm_wave_chunk_ref(const char *str, std::map<std::string, WaveChunkRef> *refs);
 
 std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def);
 

@@ -356,6 +356,33 @@ uint32_t ClipWriter::AddWaveChunk(WaveChunk *chunk, bool take_ownership)
     return id;
 }
 
+uint32_t ClipWriter::AddADMWaveChunk(WaveChunk *chunk, bool take_ownership, const std::vector<UL> &profile_and_level_uls)
+{
+    uint32_t id = 0;
+
+    switch (mType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+            id = mOP1AClip->AddADMWaveChunk(chunk, take_ownership, profile_and_level_uls);
+            break;
+        case CW_WAVE_CLIP_TYPE:
+            // It is the same as any other chunk
+            mWaveClip->AddChunk(chunk, take_ownership);
+            // No id and so 0 is always returned
+            break;
+        case CW_D10_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    return id;
+}
+
 ClipWriterTrack* ClipWriter::CreateTrack(EssenceType essence_type, string track_filename)
 {
     ClipWriterTrack *track = 0;
