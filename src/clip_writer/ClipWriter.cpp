@@ -716,6 +716,48 @@ int64_t ClipWriter::GetInputDuration() const
     return -1;
 }
 
+uint32_t ClipWriter::GetWaveChunkStreamID(WaveChunkTag chunk_id)
+{
+    switch (mType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+            return mOP1AClip->GetWaveChunkStreamID(chunk_id);
+        case CW_D10_CLIP_TYPE:
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    BMX_EXCEPTION(("Clip type does not support Wave chunks"));
+    return 0;
+}
+
+uint32_t ClipWriter::GetADMWaveChunkStreamID(WaveChunkTag chunk_id)
+{
+    switch (mType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+            return mOP1AClip->GetADMWaveChunkStreamID(chunk_id);
+        case CW_D10_CLIP_TYPE:
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+
+    BMX_EXCEPTION(("Clip type does not support Wave chunks"));
+    return 0;
+}
+
 ClipWriterTrack* ClipWriter::GetTrack(uint32_t track_index)
 {
     BMX_CHECK(track_index < mTracks.size());

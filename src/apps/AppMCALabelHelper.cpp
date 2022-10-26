@@ -45,6 +45,7 @@
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/rdd9_mxf/RDD9PCMTrack.h>
 #include <bmx/as11/AS11Labels.h>
+#include <bmx/wave/WaveChunk.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -268,6 +269,7 @@ void AppMCALabelHelper::LabelLine::Reset()
     repeat = true;
     string_properties.clear();
     adm_sg_subdesc = false;
+    adm_sg_chunk_id = {0, 0, 0, 0};
 }
 
 
@@ -555,10 +557,17 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                                  sg_label_line.id.c_str());
                     }
 
-                    if (sg_label_line.adm_sg_subdesc)
+                    if (sg_label_line.adm_sg_subdesc) {
+                        if (sg_label_line.adm_sg_chunk_id.c0 == 0) {
+                            BMX_EXCEPTION(("ADM soundfield group label requires a 'chunk_id' property"));
+                        }
+                        uint32_t stream_id = clip->GetADMWaveChunkStreamID(sg_label_line.adm_sg_chunk_id);
+
                         sg_desc = pcm_track->AddADMSoundfieldGroupLabel();
-                    else
+                        dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(sg_desc)->setRIFFChunkStreamID_link2(stream_id);
+                    } else {
                         sg_desc = pcm_track->AddSoundfieldGroupLabel();
+                    }
                     sg_desc->setMCALabelDictionaryID(sg_label_line.label->dict_id);
                     sg_desc->setMCATagSymbol(sg_label_line.label->tag_symbol);
                     if (sg_label_line.label->tag_name && sg_label_line.label->tag_name[0])
@@ -938,6 +947,13 @@ AppMCALabelHelper::LabelLine AppMCALabelHelper::ParseLabelLine(const string &lin
                         label_line.repeat = false;
                     else
                         label_line.repeat = true;
+
+                } else if (name == "chunk_id") {
+                    if (value.empty())
+                        throw BMXException("Empty audio label property value for '%s'\n", name.c_str());
+
+                    value.resize(4, ' ');
+                    label_line.adm_sg_chunk_id = WAVE_CHUNK_TAG(value.c_str());
 
                 } else {
                     if (value.empty())

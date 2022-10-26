@@ -4481,6 +4481,8 @@ int main(int argc, const char** argv)
 
 
         // insert MCA labels
+        // Note: this must happen after processing wave chunks because the ADM soundfield group label requires
+        // the MXF stream ID for a given wave chunk ID
 
         for (i = 0; i < track_mca_labels.size(); i++) {
             const string &scheme = track_mca_labels[i].first;

@@ -45,6 +45,7 @@
 #include <bmx/mxf_op1a/OP1ARDD36Track.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/MXFMCALabelHelper.h>
+#include <bmx/wave/WaveChunk.h>
 #include <bmx/BMXMXFIO.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
@@ -734,6 +735,28 @@ OP1ATrack* OP1AFile::GetTrack(uint32_t track_index)
 uint32_t OP1AFile::CreateStreamId()
 {
     return mStreamIdHelper.GetNextId(STREAM_TYPE);
+}
+
+uint32_t OP1AFile::GetWaveChunkStreamID(WaveChunkTag chunk_id)
+{
+    map<uint32_t, WaveChunk*>::const_iterator iter;
+    for (iter = mWaveChunks.begin(); iter != mWaveChunks.end(); iter++) {
+        if (iter->second->Tag() == chunk_id)
+            return iter->first;
+    }
+
+    BMX_EXCEPTION(("Wave chunk '%s' does not exist in OP1a output file", get_wave_chunk_tag_str(chunk_id).c_str()));
+}
+
+uint32_t OP1AFile::GetADMWaveChunkStreamID(WaveChunkTag chunk_id)
+{
+    uint32_t stream_id = GetWaveChunkStreamID(chunk_id);
+
+    if (mADMWaveChunkInfo.count(stream_id) == 0) {
+        BMX_EXCEPTION(("Wave chunk '%s' is not identified as containing ADM audio metadata (using an ADMAudioMetadataSubDescriptor)", get_wave_chunk_tag_str(chunk_id).c_str()));
+    }
+
+    return stream_id;
 }
 
 void OP1AFile::CreateHeaderMetadata()

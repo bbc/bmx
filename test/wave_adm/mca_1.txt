@@ -2,10 +2,10 @@
 chL, chan=0
 chR, chan=1
 sgST, lang=eng, mca_title="Test Example 1"
-ADM, adm_audio_programme_id="APR_1001", adm_audio_content_id="ACO_1001", adm_audio_object_id="AO_1001"
+ADM, chunk_id=axml, adm_audio_programme_id="APR_1001", adm_audio_content_id="ACO_1001", adm_audio_object_id="AO_1001"
 
 1
 chL, chan=0
 chR, chan=1
 sgST, lang=eng, mca_title="Test Example 1"
-ADM, adm_audio_programme_id="APR_1001", adm_audio_content_id="ACO_1002", adm_audio_object_id="AO_1002"
+ADM, chunk_id=axml, adm_audio_programme_id="APR_1001", adm_audio_content_id="ACO_1002", adm_audio_object_id="AO_1002"

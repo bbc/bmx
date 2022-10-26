@@ -42,8 +42,6 @@ namespace bmx
 {
 
 
-typedef mxfRIFFChunkIDType WaveChunkTag;
-
 #define WAVE_CHUNK_TAG(cstr)    (WaveChunkTag){(uint8_t)((cstr)[0]), (uint8_t)((cstr)[1]), (uint8_t)((cstr)[2]), (uint8_t)((cstr)[3])}
 
 std::string get_wave_chunk_tag_str(WaveChunkTag tag);

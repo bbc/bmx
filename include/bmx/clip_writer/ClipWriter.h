@@ -106,6 +106,9 @@ public:
     uint32_t GetNumTracks() const { return (uint32_t)mTracks.size(); }
     ClipWriterTrack* GetTrack(uint32_t track_index);
 
+    uint32_t GetWaveChunkStreamID(WaveChunkTag chunk_id);
+    uint32_t GetADMWaveChunkStreamID(WaveChunkTag chunk_id);
+
 public:
     ClipWriterType GetType() const { return mType; }
 
