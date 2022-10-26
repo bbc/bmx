@@ -5915,6 +5915,7 @@ int main(int argc, const char** argv)
             }
 
             // Loop over the output tracks
+            set<RawInput*> checked_wave_inputs;
             vector<pair<OutputTrack*, RawInput*> > output_tracks_using_chna;
             for (i = 0; i < output_tracks.size(); i++) {
                 OutputTrack *output_track = output_tracks[i];
@@ -5938,6 +5939,27 @@ int main(int argc, const char** argv)
                     WaveCHNA *input_chna = input->wave_reader->GetCHNA();
                     if (!input_chna)
                         continue;
+
+                    // Warn if there are no wave chunks transferred whilst there are known ADM chunks in the input
+                    if (!checked_wave_inputs.count(input)) {
+                        if (input->wave_chunk_refs->empty()) {
+                            string available_adm_chunks;
+                            const char *adm_chunks[] = {"axml", "bxml", "sxml"};
+                            for (size_t i = 0; i < BMX_ARRAY_SIZE(adm_chunks); i++) {
+                                if (input->wave_reader->GetAdditionalChunk(WAVE_CHUNK_TAG(adm_chunks[i]))) {
+                                    if (!available_adm_chunks.empty())
+                                        available_adm_chunks += ", ";
+                                    available_adm_chunks += "'" + string(adm_chunks[i]) + "'";
+                                }
+                            }
+                            if (!available_adm_chunks.empty()) {
+                                log_warn("Mapping 'chna' chunk with not ADM chunks, but %s is available. "
+                                            "Use --wave-chunks or --adm-wave-chunk options to add them\n",
+                                            available_adm_chunks.c_str());
+                            }
+                        }
+                        checked_wave_inputs.insert(input);
+                    }
 
                     // + 1 below because ADM track (channel) indexes start at 1
                     vector<WaveCHNA::AudioID> audio_ids = input_chna->GetAudioIDs(input_channel_index + 1);
