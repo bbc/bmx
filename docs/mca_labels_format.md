@@ -40,6 +40,8 @@ The `repeat` property is used to decide whether to repeat a SG or GOSG label tha
 
 The first instance of a SG or GOSG label with a given `id` will always be stored in the MXF track's file descriptor. Subsequent SG or GOSG labels with the same `id` will be stored as a copy of the earlier label if `repeat` is True.
 
+The `chunk_id` property is required for the `ADM` SG label. It is used to set the `RIFFChunkStreamID_link2` property value in the `ADM` SG label to the ID of the MXF generic stream that contains the ADM audio metadata chunk (with the given `chunk_id` chunk ID).
+
 The following string value properties can be used:
 
 - RFC5646SpokenLanguage (alternative is "lang")

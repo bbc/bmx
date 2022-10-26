@@ -87,13 +87,13 @@ A ADM Soundfield Group label can be added using the `ADM` symbol in a [MCA label
 chL, chan=0
 chR, chan=1
 sgST, lang=eng, mca_title="Example Programme"
-ADM, adm_audio_object_id="AO_1001"
+ADM, chunk_id=axml, adm_audio_object_id="AO_1001"
 
 1
 chL, chan=0
 chR, chan=1
 sgST, lang=eng, mca_title="Example Programme"
-ADM, adm_audio_object_id="AO_1002"
+ADM, chunk_id=axml, adm_audio_object_id="AO_1002"
 ```
 
 The MCA labels defined in `mca.txt` can be added and the ADM-described content label can be set in the audio descriptor Channel Assignment property using the following example commandline: (_note_: the `x` in `--track-mca-labels` is a legacy option component and will be ignored)
