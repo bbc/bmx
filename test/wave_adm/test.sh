@@ -114,6 +114,7 @@ create_wave_3()
 create_wave_4()
 {
     # Create a Wave file from mxf_3 with no ADM channels mapped.
+    # The axml chunk is still transferred!
 
     $appsdir/bmxtranswrap/bmxtranswrap \
         --regtest \
