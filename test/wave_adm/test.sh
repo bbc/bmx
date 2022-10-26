@@ -24,7 +24,7 @@ create_mxf_1()
         -o $1 \
         --track-map "2,3;0,1" \
         --avci100_1080i $tmpdir/video \
-        --wave-chunks axml \
+        --adm-wave-chunk axml,adm_itu2076 \
         --wave $base/adm_1.wav \
         >/dev/null
 }
@@ -44,7 +44,7 @@ create_mxf_2()
         -o $1 \
         --track-map "3,2" \
         --avci100_1080i $tmpdir/video \
-        --wave-chunks axml \
+        --adm-wave-chunk axml,adm_itu2076 \
         --wave $base/adm_1.wav \
         >/dev/null
 }
@@ -64,7 +64,7 @@ create_mxf_3()
         -o $1 \
         --track-map "0,s1;s1,1" \
         --avci100_1080i $tmpdir/video \
-        --wave-chunks axml \
+        --adm-wave-chunk axml,adm_itu2076 \
         --wave $base/adm_1.wav \
         >/dev/null
 }
@@ -132,7 +132,7 @@ create_wave_5()
         --regtest \
         -t wave \
         -o $1 \
-        --wave-chunks axml \
+        --adm-wave-chunk axml,adm_itu2076 \
         --wave $base/adm_1.wav \
         >/dev/null
 }
@@ -210,7 +210,7 @@ create_mxf_5()
         --track-mca-labels x $base/mca_1.txt \
         --audio-layout adm \
         --avci100_1080i $tmpdir/video \
-        --wave-chunks axml \
+        --adm-wave-chunk axml,adm_itu2076 \
         --wave $base/adm_1.wav \
         >/dev/null
 
@@ -240,7 +240,7 @@ create_mxf_6()
         --track-mca-labels x $base/mca_2.txt \
         --audio-layout adm \
         --avci100_1080i $tmpdir/video \
-        --wave-chunks axml \
+        --adm-wave-chunk axml,adm_itu2076 \
         --wave $base/adm_1.wav \
         >/dev/null
 
@@ -261,7 +261,7 @@ create_mxf_7()
         --regtest \
         -t op1a \
         -o $2 \
-        --wave-chunks axml \
+        --adm-wave-chunk axml,adm_itu2076 \
         --wave $1 \
         >/dev/null
 }
@@ -287,7 +287,7 @@ create_mxf_8()
         -t op1a \
         -o $2 \
         --track-map singlemca \
-        --wave-chunks axml \
+        --adm-wave-chunk axml,adm_itu2076 \
         --wave $1 \
         >/dev/null
 }
@@ -313,7 +313,7 @@ create_mxf_9()
         -t op1a \
         -o $2 \
         --track-map mono \
-        --wave-chunks axml \
+        --adm-wave-chunk axml,adm_itu2076 \
         --wave $1 \
         >/dev/null
 }
