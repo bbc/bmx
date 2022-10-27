@@ -739,13 +739,22 @@ uint32_t OP1AFile::CreateStreamId()
 
 uint32_t OP1AFile::GetWaveChunkStreamID(WaveChunkTag chunk_id)
 {
+    uint32_t stream_id = (uint32_t)(-1);
     map<uint32_t, WaveChunk*>::const_iterator iter;
     for (iter = mWaveChunks.begin(); iter != mWaveChunks.end(); iter++) {
-        if (iter->second->Tag() == chunk_id)
-            return iter->first;
+        if (iter->second->Tag() == chunk_id) {
+            if (stream_id != (uint32_t)(-1)) {
+                BMX_EXCEPTION(("Multiple wave chunks with ID '%s' exist in OP1a output file", get_wave_chunk_tag_str(chunk_id).c_str()));
+            }
+            stream_id = iter->first;
+        }
     }
 
-    BMX_EXCEPTION(("Wave chunk '%s' does not exist in OP1a output file", get_wave_chunk_tag_str(chunk_id).c_str()));
+    if (stream_id == (uint32_t)(-1)) {
+        BMX_EXCEPTION(("Wave chunk '%s' does not exist in OP1a output file", get_wave_chunk_tag_str(chunk_id).c_str()));
+    }
+
+    return stream_id;
 }
 
 uint32_t OP1AFile::GetADMWaveChunkStreamID(WaveChunkTag chunk_id)
