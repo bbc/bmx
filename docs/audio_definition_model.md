@@ -24,6 +24,19 @@ The known limitations are:
 - Re-wrapping a file using raw2bmx or bmxtranswrap with an offset or duration change may result in the ADM metadata and links becoming invalid. E.g. an audio object is no longer available in the new duration or the start offset has changed. The axml, bxml or sxml chunks are not parsed to ensure that the re-wrap retains valid ADM.
 - \> 4 GB chunk size is only supported for the data chunk. The ADM chunks are unlikely to be that large but it's worth adding support just in case that assumption is wrong.
 
+## Wave+ADM to MXF+ADM mapping process
+
+The process of mapping Wave+ADM to MXF+ADM is basically as follows:
+
+- A `chna` chunk is converted to a ADM_CHNASubDescriptor descriptor in each track using the audio channel mapping defined by the `--track-map` option
+- The `--wave-chunk` and `--adm-wave-chunk` options are used to select the (non-builtin) chunks to transfer to the MXF file
+    - The builtin chunks that can't be selected are: `JUNK`, `ds64`, `fmt `, `fact`, `bext`, `data` and `chna`
+    - The chunk data is copied into MXF generic streams and each will have a RIFFChunkDefinitionSubDescriptor associated with it
+    - Audio tracks containing channels originating from the input file will reference all the chunks from that input file using RIFFChunkReferencesSubDescriptors
+- The `--adm-wave-chunk` option is also used to signal that the chunk contains ADM audio metadata. Profile and level labels can be provided with the option
+    - A ADMAudioMetadataSubDescriptor descriptor is created, alongside the RIFFChunkDefinitionSubDescriptor, to identify these ADM audio metadata chunks. This descriptor holds the profile and level labels
+- ADM Soundfield Group labels are required to reference the chunk containing ADM audio metadata. The ADM `chunk_id` property is used in the labels text file to identify the chunk data and it is converted to the MXF generic stream ID
+
 ## Creating a Wave+ADM sample file
 
 A Wave+ADM sample file can be created using the following example commandline given a Wave file, a `chna` text file and an axml XML file:
