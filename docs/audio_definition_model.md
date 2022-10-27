@@ -6,16 +6,16 @@ Provisional support for ADM has been implemented in `bmx` to allow samples files
 
 The current support in the `bmx` implementation is as follows:
 
-- Reading Wave (BW64) that includes ADM chunks (chna, axml, bxml and sxml)
-- Writing Wave (BW64) with ADM chunks (chna, axml, bxml and sxml)
-- Reading MXF that includes Wave chunks and (mapped) ADM chna
-- Writing MXF that with Wave chunks and (mapped) ADM chna
+- Reading Wave (BW64) with access to Wave chunks such as ADM `axml` and a parsed ADM `chna` chunk
+- Writing Wave (BW64) with additional Wave chunks such as ADM `axml` and a serialised ADM `chna` chunk
+- Reading MXF that includes Wave chunks and ADM `chna` descriptors
+- Writing MXF that with Wave chunks and ADM `chna` descriptors
 - Converting Wave+ADM to MXF+ADM using raw2bmx
 - Converting Wave+ADM to Wave+ADM using raw2bmx
 - Converting MXF+ADM to Wave+ADM using bmxtranswrap
-- Creating Wave+ADM with Wave / raw PCM, chna text file and (optionally) axml/bxml/sxml file inputs
-- Preservation of ADM links after remapping audio channels using the `--track-map` option can be used to reorder, omit, group and add silence channels.
-- Add ADM Soundfield Group MCA label
+- Creating Wave+ADM with Wave / raw PCM, `chna` text file and (optionally) Wave chunk file inputs (e.g. containing `axml` chunk data)
+- Preservation of ADM links after remapping audio channels using the `--track-map` option. The option can be used to reorder, omit, group and add silence channels.
+- Option to add a ADM Soundfield Group MCA label and identify ADM chunks
 - Set the Channel Assignment audio descriptor property for ADM-described content labelling
 
 The known limitations are:
@@ -26,15 +26,15 @@ The known limitations are:
 
 ## Creating a Wave+ADM sample file
 
-A Wave+ADM sample file can be created using the following example commandline given a Wave file, a chna text file and an axml XML file:
+A Wave+ADM sample file can be created using the following example commandline given a Wave file, a `chna` text file and an axml XML file:
 
 `raw2bmx -t wave -o output.wav --wave-chunk-data axml.xml axml --chna-audio-ids chna.txt --wave input.wav`
 
-The axml file `axml.xml` is the data that will be written into the axml chunk (with tag `axml`). The chna text file `chna.txt` lists the audio identifiers that make up the chna chunk. The format of the text file is described in [chna Text file Definition Format](#chna-text-file-definition-format).
+The axml file `axml.xml` contains the data that will be written into the `axml` chunk. The `chna` text file `chna.txt` lists the audio identifiers that make up the `chna` chunk. The format of the text file is described in [chna Text file Definition Format](#chna-text-file-definition-format).
 
-If the source Wave file contained an axml chunk then the `--wave-chunk-data axml.xml axml` option will override it. If the source Wave file contained a chna chunk then the `--chna-audio-ids chna.txt` option will override it.
+If the source Wave file contained an `axml` chunk then the `--wave-chunk-data` option will override it. If the source Wave file contained a `chna` chunk then the `--chna-audio-ids chna.txt` option will override it.
 
-A Wave+ADM sample file can be created without a axml chunk, i.e. just a chna chunk, using the following example commandline given a Wave file (which doesn't have a axml chunk!) and a chna text file:
+A Wave+ADM sample file can be created without a `axml` chunk, i.e. just a `chna` chunk, using the following example commandline given a Wave file (which doesn't have a `axml` chunk!) and a `chna` text file:
 
 `raw2bmx -t wave -o output.wav --chna-audio-ids chna.txt --wave input.wav`
 
@@ -46,7 +46,9 @@ Raw PCM files can also be used as input, e.g. replace `--wave input.wave` with:
 
 A Wave+ADM can be converted to MXF+ADM using the following example commandline:
 
-`raw2bmx -t op1a -o output.mxf --wave input.wave`
+`raw2bmx -t op1a -o output.mxf --adm-wave-chunk axml,adm_itu2076 --wave input.wave`
+
+The `axml` chunk in this example is known to contain ADM metadata and therefore the `--adm-wave-chunk` option is used. If it doesn't contain ADM metadata and should still be transferred to MXF then use the `--wave-chunk` option. The `chna` chunk (mapped from MXF) is also written to the output file.
 
 The default layout is to have mono-audio MXF tracks. This can be changed using the `--track-map` option. For example, this command will group each stereo channels into an MXF track:
 
@@ -68,11 +70,13 @@ The `--track-map` option can be used to change the audio channels. For example, 
 
 A Wave+ADM can be converted to another Wave+ADM using the following example commandline:
 
-`raw2bmx -t wave -o output.wave --wave input.wave`
+`raw2bmx -t wave -o output.wave --wave-chunk axml --wave input.wave`
+
+The `--wave-chunk` option ensures that the `axml` chunk is copied over (in addition to the `chna` chunk). The `--adm-wave-chunk` isn't required here because the Wave file format doesn't need to know which chunks contain ADM audio metadata.
 
 The `--track-map` option can be used to change what is output. For example, reorder the stereo pairs:
 
-`raw2bmx -t wave -o output.wave --track-map '2,3,0,1' --wave input.wave`
+`raw2bmx -t wave -o output.wave --track-map '2,3,0,1' --wave-chunk axml --wave input.wave`
 
 ## Add ADM MCA labels to MXF+ADM
 
@@ -98,13 +102,15 @@ ADM, chunk_id=axml, adm_audio_object_id="AO_1002"
 
 The MCA labels defined in `mca.txt` can be added and the ADM-described content label can be set in the audio descriptor Channel Assignment property using the following example commandline: (_note_: the `x` in `--track-mca-labels` is a legacy option component and will be ignored)
 
-`raw2bmx -t op1a -o output.mxf --track-map '0,1' --track-mca-labels x mca.txt --audio-layout adm --wave input.wave`
+`raw2bmx -t op1a -o output.mxf --track-map '0,1' --track-mca-labels x mca.txt --audio-layout adm --adm-wave-chunk axml --wave input.wave`
+
+The required `chunk_id` property for the ADM Soundfield Group Label identifies that the `axml` chunk imported from the input Wave file using the `--adm-wave-chunk` option contains ADM audio metadata.
 
 The Soundfield Groups that use the ADM Soundfield Group Label Subdescriptor are shown using a `(ADM)` suffix in the summary output of `mxf2raw`. E.g. `ADM(ADM)` in the example `mca.txt` above. If the `--mca-detail` option is used and the Soundfield Group uses the ADM Soundfield Group Label Subdescriptor then the name used in the `SoundfieldGroups` array is `ADMSoundfieldGroup`.
 
 ## chna Text File Definition Format
 
-The chna text file contains the list of ADM audio identifiers that make up the chna chunk. The number of tracks and UIDs is automatically calculated.
+The chna text file contains the list of ADM audio identifiers that make up the `chna` chunk. The number of tracks and UIDs is automatically calculated.
 
 The chna text file consists of a set of name/value property pairs separated by a newline. The name/value pair uses the first ':' character as a separator. A '#' character signals the start of a comment.
 
