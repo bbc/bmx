@@ -277,11 +277,11 @@ MXFWaveChunk* MXFFileTrackReader::GetWaveChunk(size_t index) const
     return mWaveChunks[index];
 }
 
-MXFWaveChunk* MXFFileTrackReader::GetWaveChunk(WaveChunkTag tag) const
+MXFWaveChunk* MXFFileTrackReader::GetWaveChunk(WaveChunkId id) const
 {
     size_t i;
     for (i = 0; i < mWaveChunks.size(); i++) {
-        if (tag == mWaveChunks[i]->Tag())
+        if (id == mWaveChunks[i]->Id())
             return mWaveChunks[i];
     }
 

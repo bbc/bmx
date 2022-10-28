@@ -153,8 +153,8 @@ public:
 
     uint32_t CreateStreamId();
 
-    uint32_t GetWaveChunkStreamID(WaveChunkTag chunk_id);
-    uint32_t GetADMWaveChunkStreamID(WaveChunkTag chunk_id);
+    uint32_t GetWaveChunkStreamID(WaveChunkId chunk_id);
+    uint32_t GetADMWaveChunkStreamID(WaveChunkId chunk_id);
 
 private:
     OP1AIndexTable* GetIndexTable() const { return mIndexTable; }

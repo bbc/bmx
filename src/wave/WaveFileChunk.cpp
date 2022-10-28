@@ -41,8 +41,8 @@ using namespace std;
 using namespace bmx;
 
 
-WaveFileChunk::WaveFileChunk(WaveChunkTag tag, BMXIO *file, int64_t offset, uint32_t size)
-: WaveChunk(tag)
+WaveFileChunk::WaveFileChunk(WaveChunkId id, BMXIO *file, int64_t offset, uint32_t size)
+: WaveChunk(id)
 {
     mFile = file;
     mOffset = offset;

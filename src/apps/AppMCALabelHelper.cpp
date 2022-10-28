@@ -953,7 +953,7 @@ AppMCALabelHelper::LabelLine AppMCALabelHelper::ParseLabelLine(const string &lin
                         throw BMXException("Empty audio label property value for '%s'\n", name.c_str());
 
                     value.resize(4, ' ');
-                    label_line.adm_sg_chunk_id = WAVE_CHUNK_TAG(value.c_str());
+                    label_line.adm_sg_chunk_id = WAVE_CHUNK_ID(value.c_str());
 
                 } else {
                     if (value.empty())

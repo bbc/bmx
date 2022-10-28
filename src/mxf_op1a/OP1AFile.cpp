@@ -737,32 +737,32 @@ uint32_t OP1AFile::CreateStreamId()
     return mStreamIdHelper.GetNextId(STREAM_TYPE);
 }
 
-uint32_t OP1AFile::GetWaveChunkStreamID(WaveChunkTag chunk_id)
+uint32_t OP1AFile::GetWaveChunkStreamID(WaveChunkId chunk_id)
 {
     uint32_t stream_id = (uint32_t)(-1);
     map<uint32_t, WaveChunk*>::const_iterator iter;
     for (iter = mWaveChunks.begin(); iter != mWaveChunks.end(); iter++) {
-        if (iter->second->Tag() == chunk_id) {
+        if (iter->second->Id() == chunk_id) {
             if (stream_id != (uint32_t)(-1)) {
-                BMX_EXCEPTION(("Multiple wave chunks with ID '%s' exist in OP1a output file", get_wave_chunk_tag_str(chunk_id).c_str()));
+                BMX_EXCEPTION(("Multiple wave chunks with ID '%s' exist in OP1a output file", get_wave_chunk_id_str(chunk_id).c_str()));
             }
             stream_id = iter->first;
         }
     }
 
     if (stream_id == (uint32_t)(-1)) {
-        BMX_EXCEPTION(("Wave chunk '%s' does not exist in OP1a output file", get_wave_chunk_tag_str(chunk_id).c_str()));
+        BMX_EXCEPTION(("Wave chunk '%s' does not exist in OP1a output file", get_wave_chunk_id_str(chunk_id).c_str()));
     }
 
     return stream_id;
 }
 
-uint32_t OP1AFile::GetADMWaveChunkStreamID(WaveChunkTag chunk_id)
+uint32_t OP1AFile::GetADMWaveChunkStreamID(WaveChunkId chunk_id)
 {
     uint32_t stream_id = GetWaveChunkStreamID(chunk_id);
 
     if (mADMWaveChunkInfo.count(stream_id) == 0) {
-        BMX_EXCEPTION(("Wave chunk '%s' is not identified as containing ADM audio metadata (using an ADMAudioMetadataSubDescriptor)", get_wave_chunk_tag_str(chunk_id).c_str()));
+        BMX_EXCEPTION(("Wave chunk '%s' is not identified as containing ADM audio metadata (using an ADMAudioMetadataSubDescriptor)", get_wave_chunk_id_str(chunk_id).c_str()));
     }
 
     return stream_id;
@@ -994,7 +994,7 @@ void OP1AFile::CreateHeaderMetadata()
             RIFFChunkDefinitionSubDescriptor *wave_chunk_subdesc = new RIFFChunkDefinitionSubDescriptor(mHeaderMetadata);
             descriptor->appendSubDescriptors(wave_chunk_subdesc);
             wave_chunk_subdesc->setRIFFChunkStreamID(iter->first);
-            wave_chunk_subdesc->setRIFFChunkID(iter->second->Tag());
+            wave_chunk_subdesc->setRIFFChunkID(iter->second->Id());
 
             if (mADMWaveChunkInfo.count(iter->first)) {
                 const ADMWaveChunkInfo &info = mADMWaveChunkInfo[iter->first];

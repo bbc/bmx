@@ -716,7 +716,7 @@ int64_t ClipWriter::GetInputDuration() const
     return -1;
 }
 
-uint32_t ClipWriter::GetWaveChunkStreamID(WaveChunkTag chunk_id)
+uint32_t ClipWriter::GetWaveChunkStreamID(WaveChunkId chunk_id)
 {
     switch (mType)
     {
@@ -737,7 +737,7 @@ uint32_t ClipWriter::GetWaveChunkStreamID(WaveChunkTag chunk_id)
     return 0;
 }
 
-uint32_t ClipWriter::GetADMWaveChunkStreamID(WaveChunkTag chunk_id)
+uint32_t ClipWriter::GetADMWaveChunkStreamID(WaveChunkId chunk_id)
 {
     switch (mType)
     {

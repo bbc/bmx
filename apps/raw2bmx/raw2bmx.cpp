@@ -124,7 +124,7 @@ typedef struct
 typedef struct
 {
     const char *filename;
-    WaveChunkTag tag;
+    WaveChunkId id;
 } WaveChunkData;
 
 struct RawInput
@@ -619,7 +619,7 @@ static void usage(const char *cmd)
     printf("\n");
     printf("  wave:\n");
     printf("    --orig <name>                      Set originator in the output Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
-    printf("    --wave-chunk-data <file> <tag>     Add a chunk to the output Wave file that has chunk data (not including tag and size) from <file> and <tag>\n");
+    printf("    --wave-chunk-data <file> <id>      Add a chunk to the output Wave file that has chunk data (not including id and size) from <file> and chunk <id>\n");
     printf("                                       This chunk will override any non-builtin and <chna> chunk originating from the input Wave files\n");
     printf("    --chna-audio-ids <file>            Add a <chna> chunk to the output Wave file which is defined in the text <file>\n");
     printf("                                       This chunk will override any <chna> chunk originating from the input Wave files\n");
@@ -1852,16 +1852,16 @@ int main(int argc, const char** argv)
             }
             if (argv[cmdln_index + 2][0] == 0 || strlen(argv[cmdln_index + 2]) > 4) {
                 usage(argv[0]);
-                fprintf(stderr, "Invalid Wave chunk tag '%s' for option '%s'\n", argv[cmdln_index + 2], argv[cmdln_index]);
+                fprintf(stderr, "Invalid Wave chunk id '%s' for option '%s'\n", argv[cmdln_index + 2], argv[cmdln_index]);
                 return 1;
             }
 
-            string tag_str = argv[cmdln_index + 2];
-            tag_str.resize(4);
+            string id_str = argv[cmdln_index + 2];
+            id_str.resize(4);
 
             WaveChunkData wave_chunk_data;
             wave_chunk_data.filename = argv[cmdln_index + 1];
-            wave_chunk_data.tag = WAVE_CHUNK_TAG(tag_str);
+            wave_chunk_data.id = WAVE_CHUNK_ID(id_str);
             wave_chunk_datas.push_back(wave_chunk_data);
 
             cmdln_index += 2;
@@ -5865,10 +5865,10 @@ int main(int argc, const char** argv)
 
                     map<string, WaveChunkRef>::const_iterator refs_iter;
                     for (refs_iter = input->wave_chunk_refs->begin(); refs_iter != input->wave_chunk_refs->end(); refs_iter++) {
-                        WaveChunkTag tag = WAVE_CHUNK_TAG(refs_iter->first.c_str());
+                        WaveChunkId chunk_id = WAVE_CHUNK_ID(refs_iter->first.c_str());
                         const WaveChunkRef &ref = refs_iter->second;
 
-                        WaveFileChunk *chunk = wave_reader->GetAdditionalChunk(tag);
+                        WaveFileChunk *chunk = wave_reader->GetAdditionalChunk(chunk_id);
                         if (chunk) {
                             uint32_t stream_id;
                             if (ref.is_adm)
@@ -5877,7 +5877,7 @@ int main(int argc, const char** argv)
                                 stream_id = clip->AddWaveChunk(chunk, false);
                             input_chunk_refs[input].push_back(stream_id);
                         } else {
-                            if (WaveReader::IsBuiltinChunk(tag)) {
+                            if (WaveReader::IsBuiltinChunk(chunk_id)) {
                                 log_warn("WAVE chunk '%s' is a builtin\n", refs_iter->first.c_str());
                             } else {
                                 log_warn("WAVE chunk '%s' does not exist in the input\n", refs_iter->first.c_str());
@@ -5945,7 +5945,7 @@ int main(int argc, const char** argv)
                             string available_adm_chunks;
                             const char *adm_chunks[] = {"axml", "bxml", "sxml"};
                             for (size_t i = 0; i < BMX_ARRAY_SIZE(adm_chunks); i++) {
-                                if (input->wave_reader->GetAdditionalChunk(WAVE_CHUNK_TAG(adm_chunks[i]))) {
+                                if (input->wave_reader->GetAdditionalChunk(WAVE_CHUNK_ID(adm_chunks[i]))) {
                                     if (!available_adm_chunks.empty())
                                         available_adm_chunks += ", ";
                                     available_adm_chunks += "<" + string(adm_chunks[i]) + ">";
@@ -5986,7 +5986,7 @@ int main(int argc, const char** argv)
                 // Use the WaveFileIO class as a generic BMXIO class
                 BMXIO *file = WaveFileIO::OpenRead(wave_chunk_data.filename);
 
-                WaveFileChunk *chunk = new WaveFileChunk(wave_chunk_data.tag, file, 0, file->Size());
+                WaveFileChunk *chunk = new WaveFileChunk(wave_chunk_data.id, file, 0, file->Size());
                 wave_clip->AddChunk(chunk, true);
             }
 

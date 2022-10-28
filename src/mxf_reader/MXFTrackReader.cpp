@@ -61,10 +61,10 @@ MXFWaveChunk* MXFTrackReader::GetWaveChunk(size_t index) const
     return 0;
 }
 
-MXFWaveChunk* MXFTrackReader::GetWaveChunk(WaveChunkTag tag) const
+MXFWaveChunk* MXFTrackReader::GetWaveChunk(WaveChunkId id) const
 {
     // Not yet implemented in all sub-classes
-    (void)tag;
+    (void)id;
     return 0;
 }
 

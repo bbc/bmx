@@ -111,7 +111,7 @@ void WaveCHNA::Write(WaveIO *output)
 {
     uint32_t size = GetSize();
 
-    output->WriteTag("chna");
+    output->WriteId("chna");
     output->WriteSize(size);
 
     output->WriteUInt16(mNumTracks);

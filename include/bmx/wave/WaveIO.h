@@ -62,8 +62,8 @@ public:
     virtual int PutChar(int c) = 0;
 
 public:
-    void WriteTag(const char *tag);
-    void WriteTag(WaveChunkTag tag);
+    void WriteId(const char *id);
+    void WriteId(WaveChunkId id);
     void WriteSize(uint32_t size) { WriteUInt32(size); }
     void WriteZeros(uint32_t size);
     void WriteString(const char *value, uint32_t len, uint32_t fixed_size);
@@ -78,7 +78,7 @@ public:
     void WriteChunk(WaveChunk *chunk);
 
     void Skip(int64_t offset) { Seek(offset, SEEK_CUR); }
-    bool ReadTag(WaveChunkTag *tag);
+    bool ReadId(WaveChunkId *id);
     uint32_t ReadSize() { return ReadUInt32(); }
     void ReadString(char *value, uint32_t fixed_size);
     uint8_t ReadUInt8();

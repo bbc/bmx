@@ -68,7 +68,7 @@ public:
     void Write(WaveIO *output);
 
 public:
-    WaveChunkTag Tag() const { return WAVE_CHUNK_TAG("chna"); }
+    WaveChunkId Id() const { return WAVE_CHUNK_ID("chna"); }
 
     uint16_t GetNumTracks() const                   { return mNumTracks; }
     uint16_t GetNumUIDs() const                     { return mNumUIDs; }

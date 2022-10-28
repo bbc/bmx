@@ -52,10 +52,10 @@ using namespace bmx;
 
 
 
-static WaveChunkTag BUILTIN_CHUNKS[] = {
-    WAVE_CHUNK_TAG("JUNK"), WAVE_CHUNK_TAG("ds64"), WAVE_CHUNK_TAG("fmt "),
-    WAVE_CHUNK_TAG("fact"), WAVE_CHUNK_TAG("bext"), WAVE_CHUNK_TAG("data"),
-    WAVE_CHUNK_TAG("chna")
+static WaveChunkId BUILTIN_CHUNKS[] = {
+    WAVE_CHUNK_ID("JUNK"), WAVE_CHUNK_ID("ds64"), WAVE_CHUNK_ID("fmt "),
+    WAVE_CHUNK_ID("fact"), WAVE_CHUNK_ID("bext"), WAVE_CHUNK_ID("data"),
+    WAVE_CHUNK_ID("chna")
 };
 
 
@@ -65,15 +65,15 @@ string WaveWriter::GetBuiltinChunkListString()
     for (size_t i = 0; i < BMX_ARRAY_SIZE(BUILTIN_CHUNKS); i++) {
         if (i > 0)
             builtin_list.append(", ");
-        builtin_list.append("'" + get_wave_chunk_tag_str(BUILTIN_CHUNKS[i]) + "'");
+        builtin_list.append("<" + get_wave_chunk_id_str(BUILTIN_CHUNKS[i]) + ">");
     }
     return builtin_list;
 }
 
-bool WaveWriter::IsBuiltinChunk(WaveChunkTag tag)
+bool WaveWriter::IsBuiltinChunk(WaveChunkId id)
 {
     for (size_t i = 0; i < BMX_ARRAY_SIZE(BUILTIN_CHUNKS); i++) {
-        if (tag == BUILTIN_CHUNKS[i])
+        if (id == BUILTIN_CHUNKS[i])
             return true;
     }
     return false;
@@ -122,7 +122,7 @@ WaveWriter::~WaveWriter()
     for (i = 0; i < mTracks.size(); i++)
         delete mTracks[i];
 
-    map<WaveChunkTag, WaveChunk*>::const_iterator iter;
+    map<WaveChunkId, WaveChunk*>::const_iterator iter;
     for (iter = mOwnedAdditionalChunks.begin(); iter != mOwnedAdditionalChunks.end(); iter++)
         delete iter->second;
 }
@@ -140,7 +140,7 @@ void WaveWriter::SetSampleCount(int64_t count)
 
 void WaveWriter::AddCHNA(WaveCHNA *chna, bool take_ownership)
 {
-    RemoveChunk(chna->Tag());
+    RemoveChunk(chna->Id());
 
     mCHNA = chna;
     mOwnCHNA = take_ownership;
@@ -148,11 +148,11 @@ void WaveWriter::AddCHNA(WaveCHNA *chna, bool take_ownership)
 
 void WaveWriter::AddChunk(WaveChunk *chunk, bool take_ownership)
 {
-    RemoveChunk(chunk->Tag());
+    RemoveChunk(chunk->Id());
 
-    mAdditionalChunks[chunk->Tag()] = chunk;
+    mAdditionalChunks[chunk->Id()] = chunk;
     if (take_ownership)
-        mOwnedAdditionalChunks[chunk->Tag()] = chunk;
+        mOwnedAdditionalChunks[chunk->Id()] = chunk;
 }
 
 void WaveWriter::AddADMAudioID(const WaveCHNA::AudioID &audio_id)
@@ -186,7 +186,7 @@ void WaveWriter::UpdateChannelCounts()
 
 void WaveWriter::PrepareWrite()
 {
-    set<WaveChunkTag> builtin_chunks_set(BUILTIN_CHUNKS, BUILTIN_CHUNKS + BMX_ARRAY_SIZE(BUILTIN_CHUNKS));
+    set<WaveChunkId> builtin_chunks_set(BUILTIN_CHUNKS, BUILTIN_CHUNKS + BMX_ARRAY_SIZE(BUILTIN_CHUNKS));
 
     // Update the channel count and track start channels
     UpdateChannelCounts();
@@ -198,19 +198,19 @@ void WaveWriter::PrepareWrite()
         mWriteBW64 = true;
 
     vector<WaveChunk*> write_chunks;
-    map<WaveChunkTag, WaveChunk*>::const_iterator iter;
+    map<WaveChunkId, WaveChunk*>::const_iterator iter;
     for (iter = mAdditionalChunks.begin(); iter != mAdditionalChunks.end(); iter++) {
         WaveChunk *chunk = iter->second;
 
-        if (chunk->Tag() == "axml" || chunk->Tag() == "bxml" || chunk->Tag() == "sxml") {
+        if (chunk->Id() == "axml" || chunk->Id() == "bxml" || chunk->Id() == "sxml") {
             mWriteBW64 = true;
             write_chunks.push_back(chunk);
-        } else if (chunk->Tag() == "chna") {
-            // Accept a chna tag passed in using AddChunk() rather than AddCHNA()
+        } else if (chunk->Id() == "chna") {
+            // Accept a <chna> id passed in using AddChunk() rather than AddCHNA()
             // Don't add it to write_chunks here because it needs to be written first
             mWriteBW64 = true;
             chna_chunk = chunk;
-        } else if (!builtin_chunks_set.count(chunk->Tag())) {
+        } else if (!builtin_chunks_set.count(chunk->Id())) {
             write_chunks.push_back(chunk);
         }
     }
@@ -239,22 +239,22 @@ void WaveWriter::PrepareWrite()
 
     if (mRequire64Bit) {
         if (mWriteBW64)
-            mOutput->WriteTag("BW64");
+            mOutput->WriteId("BW64");
         else
-            mOutput->WriteTag("RF64");
+            mOutput->WriteId("RF64");
         mOutput->WriteSize(-1);
     } else {
-        mOutput->WriteTag("RIFF");
+        mOutput->WriteId("RIFF");
         if (mSetSize >= 0)
             mOutput->WriteSize((uint32_t)mSetSize);
         else
             mOutput->WriteSize(0);
     }
-    mOutput->WriteTag("WAVE");
+    mOutput->WriteId("WAVE");
 
     mJunkChunkFilePosition = mOutput->Tell();
     if (mRequire64Bit) {
-        mOutput->WriteTag("ds64");
+        mOutput->WriteId("ds64");
         mOutput->WriteSize(28);
         mOutput->WriteUInt64((uint64_t)mSetSize);
         mOutput->WriteUInt64((uint64_t)mSetDataSize);
@@ -264,7 +264,7 @@ void WaveWriter::PrepareWrite()
             mOutput->WriteUInt64((uint64_t)mSetSampleCount);
         mOutput->WriteUInt32(0);
     } else {
-        mOutput->WriteTag("JUNK");
+        mOutput->WriteId("JUNK");
         mOutput->WriteSize(28);
         mOutput->WriteZeros(28);
     }
@@ -274,7 +274,7 @@ void WaveWriter::PrepareWrite()
         mBEXT->Write(mOutput);
     }
 
-    mOutput->WriteTag("fmt ");
+    mOutput->WriteId("fmt ");
     mOutput->WriteSize(16);
     mOutput->WriteUInt16(1); // PCM
     mOutput->WriteUInt16(mChannelCount);
@@ -285,7 +285,7 @@ void WaveWriter::PrepareWrite()
 
     if (!mWriteBW64) {
         mFactChunkFilePosition = mOutput->Tell();
-        mOutput->WriteTag("fact");
+        mOutput->WriteId("fact");
         mOutput->WriteSize(4);
         if (mRequire64Bit)
             mOutput->WriteUInt32((uint32_t)(-1));
@@ -305,7 +305,7 @@ void WaveWriter::PrepareWrite()
         mOutput->WriteChunk(write_chunks[i]);
 
     mDataChunkFilePosition = mOutput->Tell();
-    mOutput->WriteTag("data");
+    mOutput->WriteId("data");
     if (mRequire64Bit)
         mOutput->WriteSize(-1);
     else if (mSetDataSize >= 0)
@@ -448,7 +448,7 @@ void WaveWriter::CompleteWrite()
 
         if (!mRequire64Bit || riff_size != mSetSize || mSampleCount != mSetSampleCount) {
             mOutput->Seek(mJunkChunkFilePosition, SEEK_SET);
-            mOutput->WriteTag("ds64");
+            mOutput->WriteId("ds64");
             mOutput->WriteSize(28);
             mOutput->WriteUInt64((uint64_t)riff_size);
             mOutput->WriteUInt64((uint64_t)data_size);
@@ -459,9 +459,9 @@ void WaveWriter::CompleteWrite()
         if (!mRequire64Bit) {
             mOutput->Seek(0, SEEK_SET);
             if (mWriteBW64)
-                mOutput->WriteTag("BW64");
+                mOutput->WriteId("BW64");
             else
-                mOutput->WriteTag("RF64");
+                mOutput->WriteId("RF64");
             mOutput->WriteSize((uint32_t)(-1));
         }
     } else {
@@ -517,21 +517,21 @@ void WaveWriter::SetQuantizationBits(uint16_t bits)
     mChannelBlockAlign = (mQuantizationBits + 7) / 8;
 }
 
-void WaveWriter::RemoveChunk(WaveChunkTag tag)
+void WaveWriter::RemoveChunk(WaveChunkId id)
 {
-    if (tag == "chna") {
+    if (id == "chna") {
         if (mOwnCHNA)
             delete mCHNA;
         mCHNA = 0;
         mOwnCHNA = false;
     }
 
-    if (mAdditionalChunks.count(tag)) {
-        mAdditionalChunks.erase(tag);
+    if (mAdditionalChunks.count(id)) {
+        mAdditionalChunks.erase(id);
 
-        if (mOwnedAdditionalChunks.count(tag)) {
-            delete mOwnedAdditionalChunks[tag];
-            mOwnedAdditionalChunks.erase(tag);
+        if (mOwnedAdditionalChunks.count(id)) {
+            delete mOwnedAdditionalChunks[id];
+            mOwnedAdditionalChunks.erase(id);
         }
     }
 }

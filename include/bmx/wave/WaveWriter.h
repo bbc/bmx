@@ -56,7 +56,7 @@ public:
 
 public:
     static std::string GetBuiltinChunkListString();
-    static bool IsBuiltinChunk(WaveChunkTag tag);
+    static bool IsBuiltinChunk(WaveChunkId id);
 
 public:
     WaveWriter(WaveIO *output, bool take_ownership);
@@ -93,7 +93,7 @@ private:
     void SetSamplingRate(Rational sampling_rate);
     void SetQuantizationBits(uint16_t bits);
 
-    void RemoveChunk(WaveChunkTag tag);
+    void RemoveChunk(WaveChunkId id);
 
 private:
     WaveIO *mOutput;
@@ -104,8 +104,8 @@ private:
     WaveBEXT *mBEXT;
     WaveCHNA *mCHNA;
     bool mOwnCHNA;
-    std::map<WaveChunkTag, WaveChunk*> mAdditionalChunks;
-    std::map<WaveChunkTag, WaveChunk*> mOwnedAdditionalChunks;
+    std::map<WaveChunkId, WaveChunk*> mAdditionalChunks;
+    std::map<WaveChunkId, WaveChunk*> mOwnedAdditionalChunks;
 
     Rational mSamplingRate;
     bool mSamplingRateSet;

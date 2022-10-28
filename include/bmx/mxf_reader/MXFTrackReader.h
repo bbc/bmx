@@ -108,7 +108,7 @@ public:
     virtual size_t GetNumWaveChunks() const;
     virtual MXFWaveChunk* GetWaveChunk(size_t index) const;
 
-    virtual MXFWaveChunk* GetWaveChunk(WaveChunkTag tag) const;
+    virtual MXFWaveChunk* GetWaveChunk(WaveChunkId id) const;
 
     virtual WaveCHNA* GetWaveCHNA() const;
 

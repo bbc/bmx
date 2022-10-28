@@ -42,7 +42,7 @@ namespace bmx
 class WaveFileChunk : public WaveChunk
 {
 public:
-    WaveFileChunk(WaveChunkTag tag, BMXIO *file, int64_t offset, uint32_t size);
+    WaveFileChunk(WaveChunkId id, BMXIO *file, int64_t offset, uint32_t size);
     virtual ~WaveFileChunk();
 
     virtual uint32_t Read(unsigned char *data, uint32_t size);

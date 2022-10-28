@@ -42,20 +42,20 @@ namespace bmx
 {
 
 
-#define WAVE_CHUNK_TAG(cstr)    (WaveChunkTag){(uint8_t)((cstr)[0]), (uint8_t)((cstr)[1]), (uint8_t)((cstr)[2]), (uint8_t)((cstr)[3])}
+#define WAVE_CHUNK_ID(cstr)    (WaveChunkId){(uint8_t)((cstr)[0]), (uint8_t)((cstr)[1]), (uint8_t)((cstr)[2]), (uint8_t)((cstr)[3])}
 
-std::string get_wave_chunk_tag_str(WaveChunkTag tag);
+std::string get_wave_chunk_id_str(WaveChunkId id);
 
 
 };
 
 
-bool operator==(const bmx::WaveChunkTag &left, const bmx::WaveChunkTag &right);
-bool operator!=(const bmx::WaveChunkTag &left, const bmx::WaveChunkTag &right);
-bool operator<(const bmx::WaveChunkTag &left, const bmx::WaveChunkTag &right);
+bool operator==(const bmx::WaveChunkId &left, const bmx::WaveChunkId &right);
+bool operator!=(const bmx::WaveChunkId &left, const bmx::WaveChunkId &right);
+bool operator<(const bmx::WaveChunkId &left, const bmx::WaveChunkId &right);
 
-bool operator==(const bmx::WaveChunkTag &left, const char *right);
-bool operator!=(const bmx::WaveChunkTag &left, const char *right);
+bool operator==(const bmx::WaveChunkId &left, const char *right);
+bool operator!=(const bmx::WaveChunkId &left, const char *right);
 
 
 namespace bmx
@@ -65,10 +65,10 @@ namespace bmx
 class WaveChunk : public BMXIO
 {
 public:
-    WaveChunk(WaveChunkTag tag);
+    WaveChunk(WaveChunkId id);
     virtual ~WaveChunk();
 
-    WaveChunkTag Tag() const { return mTag; }
+    WaveChunkId Id() const { return mId; }
 
     virtual uint32_t Read(unsigned char *data, uint32_t size) = 0;
     virtual int64_t Tell() = 0;
@@ -78,7 +78,7 @@ public:
     int64_t AlignedSize() { return Size() + (Size() & 1); }
 
 protected:
-    WaveChunkTag mTag;
+    WaveChunkId mId;
 };
 
 

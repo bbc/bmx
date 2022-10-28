@@ -119,7 +119,7 @@ private:
         bool repeat;
         std::vector<std::pair<std::string, std::string> > string_properties;
         bool adm_sg_subdesc;
-        WaveChunkTag adm_sg_chunk_id;
+        WaveChunkId adm_sg_chunk_id;
     };
 
     class SoundfieldGroup

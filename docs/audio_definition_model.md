@@ -16,7 +16,7 @@ Provisional support for ADM has been implemented in `bmx` to allow samples files
 - Option to add a ADM Soundfield Group MCA label and identify ADM chunks
 - Set the Channel Assignment audio descriptor property for ADM-described content labelling
 
-The known limitations are:
+The known limitations in the current support are:
 
 - mxf2raw doesn't yet show ADM metadata presence or allow ADM chunks or a \<chna\> text file to be extracted.
 - Re-wrapping a file using raw2bmx or bmxtranswrap with an offset or duration change may result in the ADM metadata and links becoming invalid. E.g. an audio object is no longer available in the new duration or the start offset has changed. The \<axml\>, \<bxml\> or \<sxml\> chunks are not parsed to ensure that the re-wrap retains valid ADM.
@@ -32,7 +32,7 @@ The process of mapping Wave+ADM to MXF+ADM is basically as follows:
     - The chunk data is copied into MXF generic streams and each will have a RIFFChunkDefinitionSubDescriptor associated with it
     - Audio tracks containing channels originating from the input file will reference all the chunks from that input file using RIFFChunkReferencesSubDescriptors
 - The `--adm-wave-chunk` option is also used to signal that the chunk contains ADM audio metadata. Profile and level labels can be provided with the option
-    - A ADMAudioMetadataSubDescriptor descriptor is created, alongside the RIFFChunkDefinitionSubDescriptor, to identify these ADM audio metadata chunks. This descriptor holds the profile and level labels
+    - A ADMAudioMetadataSubDescriptor descriptor is created, alongside the RIFFChunkDefinitionSubDescriptor, to identify these ADM audio metadata chunks. This descriptor holds the profile and level labels to which the metadata complies
 - ADM Soundfield Group labels are required to reference the chunk containing ADM audio metadata and described using a ADMAudioMetadataSubDescriptor descriptor. The ADM `chunk_id` property is used in the labels text file to identify the chunk data and it is converted to the MXF generic stream ID
 
 ## Creating a Wave+ADM sample file

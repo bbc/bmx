@@ -41,45 +41,45 @@ using namespace std;
 using namespace bmx;
 
 
-string bmx::get_wave_chunk_tag_str(WaveChunkTag tag)
+string bmx::get_wave_chunk_id_str(WaveChunkId id)
 {
     char buf[5];
-    memcpy(buf, &tag, 4);
+    memcpy(buf, &id, 4);
     buf[4] = 0;
 
     return buf;
 }
 
-bool operator==(const bmx::WaveChunkTag &left, const bmx::WaveChunkTag &right)
+bool operator==(const bmx::WaveChunkId &left, const bmx::WaveChunkId &right)
 {
     return memcmp(&left, &right, sizeof(left)) == 0;
 }
 
-bool operator!=(const bmx::WaveChunkTag &left, const bmx::WaveChunkTag &right)
+bool operator!=(const bmx::WaveChunkId &left, const bmx::WaveChunkId &right)
 {
     return memcmp(&left, &right, sizeof(left)) != 0;
 }
 
-bool operator<(const bmx::WaveChunkTag &left, const bmx::WaveChunkTag &right)
+bool operator<(const bmx::WaveChunkId &left, const bmx::WaveChunkId &right)
 {
     return memcmp(&left, &right, sizeof(left)) < 0;
 }
 
-bool operator==(const bmx::WaveChunkTag &left, const char *right)
+bool operator==(const bmx::WaveChunkId &left, const char *right)
 {
-    return left == WAVE_CHUNK_TAG((const unsigned char*)right);
+    return left == WAVE_CHUNK_ID((const unsigned char*)right);
 }
 
-bool operator!=(const bmx::WaveChunkTag &left, const char *right)
+bool operator!=(const bmx::WaveChunkId &left, const char *right)
 {
-    return left != WAVE_CHUNK_TAG((const unsigned char*)right);
+    return left != WAVE_CHUNK_ID((const unsigned char*)right);
 }
 
 
-WaveChunk::WaveChunk(WaveChunkTag tag)
+WaveChunk::WaveChunk(WaveChunkId id)
 : BMXIO()
 {
-    mTag = tag;
+    mId = id;
 }
 
 WaveChunk::~WaveChunk()

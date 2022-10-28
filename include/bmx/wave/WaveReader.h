@@ -55,7 +55,7 @@ public:
     static WaveReader* Open(WaveIO *input, bool take_ownership);
 
     static std::string GetBuiltinChunkListString();
-    static bool IsBuiltinChunk(WaveChunkTag tag);
+    static bool IsBuiltinChunk(WaveChunkId id);
 
 public:
     ~WaveReader();
@@ -90,7 +90,7 @@ public:
     uint32_t GetNumAdditionalChunks() const { return mChunks.size(); }
     WaveFileChunk* GetAdditionalChunk(uint32_t index) const;
 
-    WaveFileChunk* GetAdditionalChunk(WaveChunkTag tag) const;
+    WaveFileChunk* GetAdditionalChunk(WaveChunkId id) const;
 
 private:
     WaveReader(WaveIO *input, bool take_ownership, bool require_ds64, uint32_t riff_size);
