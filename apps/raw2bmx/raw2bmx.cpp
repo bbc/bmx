@@ -5870,6 +5870,18 @@ int main(int argc, const char** argv)
 
                         WaveFileChunk *chunk = wave_reader->GetAdditionalChunk(chunk_id);
                         if (chunk) {
+                            if (clip_type == CW_WAVE_CLIP_TYPE) {
+                                WaveWriter *wave_clip = clip->GetWaveClip();
+                                if (wave_clip->HaveChunk(chunk->Id())) {
+                                    // E.g. this can happen if multiple <axml> chunks exist that came from different Wave files
+                                    // and the <axml> chunks may or may not be identical or equivalent.
+                                    // The assumption is that only 1 chunk with a given ID can exist in a BWF64 / Wave file.
+                                    // The exception is probably <JUNK>, but that shouldn't be transferred between Wave or MXF.
+                                    log_warn("Replaced chunk <%s> with another with the same ID in the output\n",
+                                             get_wave_chunk_id_str(chunk->Id()).c_str());
+                                }
+                            }
+
                             uint32_t stream_id;
                             if (ref.is_adm)
                                 stream_id = clip->AddADMWaveChunk(chunk, false, ref.profile_and_level_uls);

@@ -69,6 +69,7 @@ public:
 
     void AddCHNA(WaveCHNA *chna, bool take_ownership);
     void AddChunk(WaveChunk *chunk, bool take_ownership);
+    bool HaveChunk(WaveChunkId id);
 
     void AddADMAudioID(const WaveCHNA::AudioID &audio_id);
 

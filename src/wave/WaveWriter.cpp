@@ -155,6 +155,11 @@ void WaveWriter::AddChunk(WaveChunk *chunk, bool take_ownership)
         mOwnedAdditionalChunks[chunk->Id()] = chunk;
 }
 
+bool WaveWriter::HaveChunk(WaveChunkId id)
+{
+    return (id == "chna" && mCHNA) || mAdditionalChunks.count(id) > 0;
+}
+
 void WaveWriter::AddADMAudioID(const WaveCHNA::AudioID &audio_id)
 {
     if (!mCHNA) {

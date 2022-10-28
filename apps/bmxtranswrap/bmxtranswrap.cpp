@@ -4417,6 +4417,14 @@ int main(int argc, const char** argv)
                         MXFWaveChunk *wave_chunk = input_track_reader->GetWaveChunk(k);
 
                         if (!unique_chunk_stream_ids.count(wave_chunk->GetStreamId())) {
+                            if (wave_clip->HaveChunk(wave_chunk->Id())) {
+                                // E.g. this can happen if multiple <axml> chunks exist that came from different Wave files
+                                // and the <axml> chunks may or may not be identical or equivalent.
+                                // The assumption is that only 1 chunk with a given ID can exist in a BWF64 / Wave file.
+                                // The exception is probably <JUNK>, but that shouldn't be transferred between Wave or MXF.
+                                log_warn("Replaced chunk <%s> with another with the same ID in the output\n",
+                                         get_wave_chunk_id_str(wave_chunk->Id()).c_str());
+                            }
                             wave_clip->AddChunk(wave_chunk, false);
                             unique_chunk_stream_ids.insert(wave_chunk->GetStreamId());
                         }
