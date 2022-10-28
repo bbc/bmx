@@ -4422,13 +4422,13 @@ int main(int argc, const char** argv)
                         }
                     }
 
-                    // Add audio IDs for the ADM chna chunk
+                    // Add audio IDs for the ADM <chna> chunk
                     vector<WaveCHNA::AudioID> audio_ids = input_track_reader->GetCHNAAudioIDs(input_channel_index);
                     for (size_t k = 0; k < audio_ids.size(); k++) {
                         WaveCHNA::AudioID &audio_id = audio_ids[k];
 
                         // Change the input channel track_index to the output channel track_index
-                        // + 1 because the chna track_index starts at 1
+                        // + 1 because the <chna> track_index starts at 1
                         audio_id.track_index = output_channel_index + 1;
                         wave_track->AddADMAudioID(audio_id);
                     }

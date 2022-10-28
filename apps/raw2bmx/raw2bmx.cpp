@@ -620,10 +620,9 @@ static void usage(const char *cmd)
     printf("  wave:\n");
     printf("    --orig <name>                      Set originator in the output Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
     printf("    --wave-chunk-data <file> <tag>     Add a chunk to the output Wave file that has chunk data (not including tag and size) from <file> and <tag>\n");
-    printf("                                       This chunk will override any non-builtin and 'chna' chunk originating from the input Wave files\n");
-    printf("    --chna-audio-ids <file>            Add a 'chna' chunk to the output Wave file which is defined in the text <file>\n");
-    printf("                                       This chunk will override any 'chna' chunk originating from the input Wave files\n");
-    printf("                                       The format for the <file> is described in bmx/docs/audio_definition_model#chna-text-file-definition-format\n");
+    printf("                                       This chunk will override any non-builtin and <chna> chunk originating from the input Wave files\n");
+    printf("    --chna-audio-ids <file>            Add a <chna> chunk to the output Wave file which is defined in the text <file>\n");
+    printf("                                       This chunk will override any <chna> chunk originating from the input Wave files\n");
     printf("\n");
     printf("  as02/op1a/as11op1a:\n");
     printf("    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");
@@ -5905,7 +5904,7 @@ int main(int argc, const char** argv)
         }
 
 
-        // Map chna chunks from the input wave file to MXF descriptors
+        // Map <chna> chunks from the input wave file to MXF descriptors
 
         if (clip_type == CW_OP1A_CLIP_TYPE || clip_type == CW_WAVE_CLIP_TYPE) {
             if (clip_type == CW_WAVE_CLIP_TYPE) {
@@ -5924,7 +5923,7 @@ int main(int argc, const char** argv)
 
                 ClipWriterTrack *clip_track = output_track->GetClipTrack();
 
-                // Loop over the input track channels for this output track, adding the input chna audio IDs
+                // Loop over the input track channels for this output track, adding the input <chna> audio IDs
                 const map<uint32_t, OutputTrack::InputMap> &input_maps = output_track->GetInputMaps();
                 map<uint32_t, OutputTrack::InputMap>::const_iterator iter;
                 for (iter = input_maps.begin(); iter != input_maps.end(); iter++) {
@@ -5935,7 +5934,7 @@ int main(int argc, const char** argv)
                     uint32_t output_channel_index = iter->first;
                     uint32_t input_channel_index = iter->second.input_channel_index;
 
-                    // Check that the input channel has a chna audio ID
+                    // Check that the input channel has a <chna> audio ID
                     WaveCHNA *input_chna = input->wave_reader->GetCHNA();
                     if (!input_chna)
                         continue;
@@ -5949,11 +5948,11 @@ int main(int argc, const char** argv)
                                 if (input->wave_reader->GetAdditionalChunk(WAVE_CHUNK_TAG(adm_chunks[i]))) {
                                     if (!available_adm_chunks.empty())
                                         available_adm_chunks += ", ";
-                                    available_adm_chunks += "'" + string(adm_chunks[i]) + "'";
+                                    available_adm_chunks += "<" + string(adm_chunks[i]) + ">";
                                 }
                             }
                             if (!available_adm_chunks.empty()) {
-                                log_warn("Mapping 'chna' chunk with not ADM chunks, but %s is available. "
+                                log_warn("Mapping <chna> chunk with no ADM chunks, but %s is available. "
                                             "Use --wave-chunks or --adm-wave-chunk options to add them\n",
                                             available_adm_chunks.c_str());
                             }

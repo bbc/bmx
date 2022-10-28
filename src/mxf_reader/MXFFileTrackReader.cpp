@@ -267,7 +267,7 @@ vector<WaveCHNA::AudioID> MXFFileTrackReader::GetCHNAAudioIDs(uint32_t channel_i
     if (!mWaveCHNA)
         return vector<WaveCHNA::AudioID>();
 
-    // + 1 because chna track_index starts from 1
+    // + 1 because <chna> track_index starts from 1
     return mWaveCHNA->GetAudioIDs(channel_index + 1);
 }
 

@@ -191,7 +191,7 @@ void WaveWriter::PrepareWrite()
     // Update the channel count and track start channels
     UpdateChannelCounts();
 
-    // Ensure ADM chna chunk is before other chunks. Filter out built-in chunks.
+    // Ensure ADM <chna> chunk is before other chunks. Filter out built-in chunks.
     // Write BW64 if there are ADM chunks.
     WaveChunk *chna_chunk = 0;
     if (mCHNA)
