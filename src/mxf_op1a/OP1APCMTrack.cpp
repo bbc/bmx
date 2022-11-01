@@ -292,9 +292,7 @@ void OP1APCMTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPa
 
     set<uint32_t>::const_iterator iter;
     for (iter = mWaveChunkReferences.begin(); iter != mWaveChunkReferences.end(); iter++) {
-        try {
-            mOP1AFile->mWaveChunks.at(*iter);
-        } catch (...) {
+        if (mOP1AFile->mWaveChunks.count(*iter) == 0) {
             BMX_EXCEPTION(("Wave chunk with stream ID %u has not been registered with OP1AFile", *iter));
         }
     }
