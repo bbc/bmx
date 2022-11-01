@@ -42,7 +42,7 @@ namespace bmx
 {
 
 
-#define WAVE_CHUNK_ID(cstr)    (WaveChunkId){(uint8_t)((cstr)[0]), (uint8_t)((cstr)[1]), (uint8_t)((cstr)[2]), (uint8_t)((cstr)[3])}
+#define WAVE_CHUNK_ID(cstr)    WaveChunkId({(uint8_t)((cstr)[0]), (uint8_t)((cstr)[1]), (uint8_t)((cstr)[2]), (uint8_t)((cstr)[3])})
 
 std::string get_wave_chunk_id_str(WaveChunkId id);
 
