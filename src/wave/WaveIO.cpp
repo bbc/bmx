@@ -150,7 +150,7 @@ void WaveIO::WriteInt64(int64_t value)
 void WaveIO::WriteChunk(WaveChunk *chunk)
 {
     WriteId(chunk->Id());
-    WriteSize(chunk->Size());
+    WriteSize((uint32_t)chunk->Size());
     BMXIO::Write(chunk);
 
     // add pad byte if chunk size is odd

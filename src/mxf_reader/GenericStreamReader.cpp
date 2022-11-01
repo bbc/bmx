@@ -110,7 +110,7 @@ uint32_t GenericStreamReader::Read(unsigned char *data, uint32_t size)
         }
     }
 
-    return read_size - read_remainder;
+    return (uint32_t)(read_size - read_remainder);
 }
 
 int64_t GenericStreamReader::Tell()
