@@ -1859,7 +1859,7 @@ int main(int argc, const char** argv)
             }
 
             string id_str = argv[cmdln_index + 2];
-            id_str.resize(4);
+            id_str.resize(4, ' ');
 
             WaveChunkData wave_chunk_data;
             wave_chunk_data.filename = argv[cmdln_index + 1];
