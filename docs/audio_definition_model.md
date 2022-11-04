@@ -2,7 +2,7 @@
 
 A SMPTE project named "31FS ST Mapping ADM to MXF" started in March 2022 to "define a means of mapping audio metadata RIFF chunks to MXF with specific consideration of the requirements related to ADM metadata (for example, with reference to ADM carriage in BW64 files per Rec. ITU-R BS.2088-1)."
 
-Provisional support for ADM has been implemented in `bmx` to allow samples files to be created to support the SMPTE project. The current levek of support in the `bmx` implementation is as follows:
+Provisional support for ADM has been implemented in `bmx` to allow samples files to be created to support the SMPTE project. The current level of support in the `bmx` implementation is as follows:
 
 - Reading Wave (BW64) with access to Wave chunks (e.g. ADM \<axml\>) and a parsed ADM \<chna\> chunk
 - Writing Wave (BW64) with additional Wave chunks (e.g. ADM \<axml\>) and a serialised ADM \<chna\> chunk
@@ -27,13 +27,16 @@ The known limitations in the current support are:
 The process of mapping Wave+ADM to MXF+ADM is basically as follows:
 
 - A \<chna\> chunk is converted to a ADM_CHNASubDescriptor descriptor in each track using the audio channel mapping defined by the `--track-map` option
-- The `--wave-chunk` and `--adm-wave-chunk` options are used to select the (non-builtin) chunks to transfer to the MXF file
+- The `--wave-chunks` and `--adm-wave-chunk` options are used to select the (non-builtin) chunks to transfer to the MXF file
     - The builtin chunks that can't be selected are: \<JUNK\>, \<ds64\>, \<fmt\>, \<fact\>, \<bext\>, \<data\> and \<chna\>
     - The chunk data is copied into MXF generic streams and each will have a RIFFChunkDefinitionSubDescriptor associated with it
     - Audio tracks containing channels originating from the input file will reference all the chunks from that input file using RIFFChunkReferencesSubDescriptors
-- The `--adm-wave-chunk` option is also used to signal that the chunk contains ADM audio metadata. Profile and level labels can be provided with the option
-    - A ADMAudioMetadataSubDescriptor descriptor is created, alongside the RIFFChunkDefinitionSubDescriptor, to identify these ADM audio metadata chunks. This descriptor holds the profile and level labels to which the metadata complies
-- ADM Soundfield Group labels are required to reference the chunk containing ADM audio metadata and described using a ADMAudioMetadataSubDescriptor descriptor. The ADM `chunk_id` property is used in the labels text file to identify the chunk data and it is converted to the MXF generic stream ID
+- The `--adm-wave-chunk` option is the same as `--wave-chunks`, except that it is for one chunk only (but can be used multiple times) and signals that the chunk contains ADM audio metadata.
+    - Profile and level labels can be provided with the option
+    - A ADMAudioMetadataSubDescriptor descriptor is created and it sits alongside the RIFFChunkDefinitionSubDescriptor.
+- ADM Soundfield Group labels are required to reference a chunk containing ADM audio metadata. The audio labels text file provides a `chunk_id` property for identifing the chunk containing ADM audio metadata.
+    - The chunk needs to identified as containing ADM audio metadata using a ADMAudioMetadataSubDescriptor descriptor.
+    - The chunk ID is converted to the MXF generic stream ID as part of the file creation process.
 
 ## Creating a Wave+ADM sample file
 
@@ -49,7 +52,12 @@ A Wave+ADM sample file can be created without a \<axml\> chunk, i.e. just a \<ch
 
 `raw2bmx -t wave -o output.wav --chna-audio-ids chna.txt --wave input.wav`
 
-Raw PCM files can also be used as input, e.g. replace `--wave input.wave` with:
+Raw PCM files can also be used as input. E.g.
+replace
+
+`--wave input.wave`
+
+with
 
 `-s 48000 -q 24 --audio-chan 2 --pcm audio_0_1.pcm -s 48000 -q 24 --audio-chan 2 --pcm audio_2_3.pcm`
 
@@ -59,7 +67,7 @@ A Wave+ADM can be converted to MXF+ADM using the following example commandline:
 
 `raw2bmx -t op1a -o output.mxf --adm-wave-chunk axml,adm_itu2076 --wave input.wave`
 
-The \<axml\> chunk in this example is known to contain ADM metadata and therefore the `--adm-wave-chunk` option is used. If it doesn't contain ADM metadata and should still be transferred to MXF then use the `--wave-chunk` option. The \<chna\> chunk (mapped to a MXF descriptor) is also written to the output file.
+The \<axml\> chunk in this example is known to contain ADM metadata and therefore the `--adm-wave-chunk` option is used. If it doesn't contain ADM metadata and should still be transferred to MXF then use the `--wave-chunks` option. The \<chna\> chunk (mapped to a MXF descriptor) is also written to the output file.
 
 The default layout is to have mono-audio MXF tracks. This can be changed using the `--track-map` option. For example, this command will group stereo pairs into MXF tracks:
 
@@ -73,7 +81,7 @@ A MXF+ADM can be converted to Wave+ADM using the following example commandline:
 
 `bmxtranswrap -t wave -o output.wav input.mxf`
 
-The `--track-map` option can be used to change the audio channels. For example, if only the first sereo pair is required:
+The `--track-map` option can be used to change the audio channels. For example, if only the first stereo pair is required:
 
 `bmxtranswrap -t wave -o output.wav --track-map '0,1' input.mxf`
 
@@ -81,13 +89,13 @@ The `--track-map` option can be used to change the audio channels. For example, 
 
 A Wave+ADM can be converted to another Wave+ADM using the following example commandline:
 
-`raw2bmx -t wave -o output.wave --wave-chunk axml --wave input.wave`
+`raw2bmx -t wave -o output.wave --wave-chunks axml --wave input.wave`
 
-The `--wave-chunk` option ensures that the \<axml\> chunk is copied over (in addition to the \<chna\> chunk). The `--adm-wave-chunk` isn't required here because the Wave file format doesn't need to know which chunks contain ADM audio metadata.
+The `--wave-chunks` option ensures that the \<axml\> chunk is copied over (in addition to the \<chna\> chunk). The `--adm-wave-chunk` isn't required here because the Wave file format doesn't need to know which chunks contain ADM audio metadata.
 
 The `--track-map` option can be used to change what is output. For example, reorder the stereo pairs:
 
-`raw2bmx -t wave -o output.wave --track-map '2,3,0,1' --wave-chunk axml --wave input.wave`
+`raw2bmx -t wave -o output.wave --track-map '2,3,0,1' --wave-chunks axml --wave input.wave`
 
 ## Add ADM MCA labels to MXF+ADM
 
@@ -127,7 +135,7 @@ The \<chna\> text file consists of a set of name/value property pairs separated 
 
 The properties for each audio identifier are as follows.
 
-- `track_index`: The index of the track in the Wave file, starting from 1. A value 0 represents a null / placeholder entry.
+- `track_index`: The index of the track in the Wave file, *starting from 1*. A value 0 represents a null / placeholder entry.
 - `uid`: The audioTrackUID value of the track.
 - `track_ref`: The audioTrackFormatID reference for the track.
 - `pack_ref`: The audioPackFormatID reference for the track.
