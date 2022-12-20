@@ -3869,6 +3869,9 @@ int main(int argc, const char** argv)
         init_input(&input);
     }
 
+    // Clear the unused last initialised input
+    clear_input(&input);
+
     if (cmdln_index != argc) {
         usage(argv[0]);
         fprintf(stderr, "Unknown Input Option '%s'\n", argv[cmdln_index]);
