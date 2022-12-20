@@ -1,0 +1,41 @@
+set(bmx_headers
+    bmx/BMXException.h
+    bmx/BMXTypes.h
+    bmx/BitBuffer.h
+    bmx/ByteArray.h
+    bmx/ByteBuffer.h
+    bmx/CRC32.h
+    bmx/Checksum.h
+    bmx/EssenceType.h
+    bmx/KLVParser.h
+    bmx/Logging.h
+    bmx/MD5.h
+    bmx/MXFChecksumFile.h
+    bmx/MXFHTTPFile.h
+    bmx/MXFUtils.h
+    bmx/SHA1.h
+    bmx/URI.h
+    bmx/Utils.h
+    bmx/Version.h
+    bmx/XMLUtils.h
+    bmx/XMLWriter.h
+)
+
+add_subdirectory(apps)
+add_subdirectory(as02)
+add_subdirectory(as10)
+add_subdirectory(as11)
+add_subdirectory(avid_mxf)
+add_subdirectory(clip_writer)
+add_subdirectory(d10_mxf)
+add_subdirectory(essence_parser)
+add_subdirectory(frame)
+add_subdirectory(mxf_helper)
+add_subdirectory(mxf_op1a)
+add_subdirectory(mxf_reader)
+add_subdirectory(rdd9_mxf)
+add_subdirectory(st436)
+add_subdirectory(wave)
+add_subdirectory(writer_helper)
+
+set(bmx_headers ${bmx_headers} PARENT_SCOPE)
