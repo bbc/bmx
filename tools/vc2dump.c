@@ -489,12 +489,12 @@ static int print_bytes(uint32_t size)
         read_byte();
         line[line_size++] = (uint8_t)state.value;
         if (line_size == sizeof(line)) {
-            print_bytes_line(i + 1 - line_size, line, line_size, sizeof(line));
+            print_bytes_line((uint32_t)(i + 1 - line_size), line, line_size, sizeof(line));
             line_size = 0;
         }
     }
     if (line_size > 0)
-        print_bytes_line(i - line_size, line, line_size, sizeof(line));
+        print_bytes_line((uint32_t)(i - line_size), line, line_size, sizeof(line));
 
     return 1;
 }
