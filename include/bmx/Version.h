@@ -38,23 +38,6 @@
 #include <bmx/BMXTypes.h>
 
 
-#define BMX_VERSION_MAJOR    0
-#define BMX_VERSION_MINOR    1
-#define BMX_VERSION_MICRO    3
-
-#define BMX_MXF_VERSION_RELEASE  2   /* 0 = Unknown version
-                                        1 = Released version
-                                        2 = Development version
-                                        3 = Released version with patches
-                                        4 = Pre-release beta version
-                                        5 = Private version not intended for general release */
-
-#define BMX_VERSION          (BMX_VERSION_MAJOR << 16 | BMX_VERSION_MINOR << 8 | BMX_VERSION_MICRO)
-
-#define BMX_LIBRARY_NAME     "bmx"
-
-
-
 namespace bmx
 {
 

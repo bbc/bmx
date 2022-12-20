@@ -1,12 +1,11 @@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-libdir=@libdir@
-includedir=@includedir@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix="${prefix}"
+libdir="${prefix}/lib"
+includedir="${prefix}/include"
 
-Name: bmx-@BMX_MAJORMINOR@
-Description: Library and utilities to read and write broadcasting media files
-Version: @VERSION@
-Requires: libMXF-@LIBMXF_MAJORMINOR@ libMXF++-@LIBMXFPP_MAJORMINOR@
-Libs: -L${libdir} -lbmx-@BMX_MAJORMINOR@ @PC_ADD_LIBS@
-Libs.private: @PC_ADD_PRIVATE_LIBS@
-Cflags: -I${includedir}/bmx-@BMX_MAJORMINOR@
+Name: @PROJECT_NAME@
+Description: @CMAKE_PROJECT_DESCRIPTION@
+Version: @PROJECT_VERSION@
+Requires.private: libMXF libMXF++
+Libs: -L${libdir} -lbmx @PC_ADD_LIBS@
+Cflags: -I${includedir}/bmx
