@@ -33,11 +33,12 @@
 #include "config.h"
 #endif
 
-#include "bmx_scm_version.h"
-
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+
+#include "git.h"
+#include "fallback_git_version.h"
 
 #include <bmx/Version.h>
 #include <bmx/Utils.h>
@@ -88,10 +89,26 @@ string bmx::get_bmx_version_string()
 
 string bmx::get_bmx_scm_version_string()
 {
-    if (BMX_REGRESSION_TEST)
+    if (BMX_REGRESSION_TEST) {
         return "regtest-head";
-    else
-        return BMX_SCM_VERSION;
+    } else {
+        static string version_string;
+        if (version_string.empty()) {
+            version_string = git::Describe();
+#ifdef PACKAGE_GIT_VERSION_STRING
+            if (version_string == "unknown") {
+                version_string = PACKAGE_GIT_VERSION_STRING;
+            }
+            else
+#endif
+            {
+                if (git::AnyUncommittedChanges())
+                    version_string += "-dirty";
+            }
+        }
+
+        return version_string.c_str();
+    }
 }
 
 string bmx::get_bmx_build_string()
@@ -202,11 +219,16 @@ string bmx::get_bmx_mxf_version_string()
     if (BMX_REGRESSION_TEST) {
         return "0.0.0";
     } else {
-        char buffer[64];
-        bmx_snprintf(buffer, sizeof(buffer), "%d.%d.%d (scm %s)",
-                     BMX_VERSION_MAJOR, BMX_VERSION_MINOR, BMX_VERSION_MICRO,
-                     BMX_SCM_VERSION);
-        return buffer;
+        static string version_string;
+        if (version_string.empty()) {
+            char buffer[64];
+            bmx_snprintf(buffer, sizeof(buffer), "%d.%d.%d",
+                         BMX_VERSION_MAJOR, BMX_VERSION_MINOR, BMX_VERSION_MICRO);
+            version_string = buffer;
+            version_string += " (scm " + get_bmx_scm_version_string() + ")";
+        }
+
+        return version_string;
     }
 }
 
