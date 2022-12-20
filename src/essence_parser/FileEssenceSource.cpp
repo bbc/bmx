@@ -119,7 +119,7 @@ uint32_t FileEssenceSource::Read(unsigned char *data, uint32_t size)
          return (uint32_t)len;
        }
 
-       size -= len;
+       size -= (uint32_t)len;
        data += len;
        size_t num_read = fread(data, 1, size, mFile);
        if (num_read < size && ferror(mFile))
