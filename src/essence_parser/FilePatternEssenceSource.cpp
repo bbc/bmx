@@ -248,7 +248,7 @@ bool FilePatternEssenceSource::BufferFile()
         if (num_read != next_read && ferror(file) != 0)
             mErrno = errno;
 
-        mFileBuffer.IncrementSize(num_read);
+        mFileBuffer.IncrementSize((uint32_t)num_read);
         rem_read -= num_read;
 
         if (num_read != next_read)
