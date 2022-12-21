@@ -6,10 +6,10 @@ option(BUILD_SHARED_LIBS "Build using shared libraries" $<IF:MSVC:OFF:ON>)
 option(BMX_BUILD_TESTING "Build testing" ON)
 
 # Option to build all the apps
-option(BMX_BUILD_APPS "Build all the apps" OFF)
+option(BMX_BUILD_APPS "Build all the apps" ON)
 
 # Option to build all the tools
-option(BMX_BUILD_TOOLS "Build all the tools" OFF)
+option(BMX_BUILD_TOOLS "Build all the tools" ON)
 
 # Option to change the directory where test sample files are written
 set(BMX_TEST_SAMPLES_DIR "test_samples" CACHE STRING "Directory for writing test sample files")
