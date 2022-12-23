@@ -38,7 +38,7 @@ if(NOT new_samples_dir STREQUAL ${BMX_TEST_SAMPLES_DIR})
 endif()
 
 if(MSVC)
-    add_compile_options(/W3)
+    add_compile_options(/W3 /EHsc)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
     if(BMX_SET_MSVC_RUNTIME AND CMAKE_VERSION VERSION_LESS 3.15.0)
