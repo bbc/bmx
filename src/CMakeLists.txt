@@ -86,7 +86,10 @@ set_target_properties(bmx PROPERTIES
     SOVERSION ${PROJECT_VERSION_MAJOR}
 )
 
-install(TARGETS bmx LIBRARY DESTINATION lib)
+install(TARGETS bmx
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+)
 # headers are installed in the include/CMakeLists.txt
 
 if(UNIX)
