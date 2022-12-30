@@ -11,6 +11,9 @@ option(BMX_BUILD_TOOLS "Build all the tools" ON)
 # Option to change the directory where test sample files are written
 set(BMX_TEST_SAMPLES_DIR "test_samples" CACHE STRING "Directory for writing test sample files")
 
+# Option to enable testing of large files
+option(BMX_TEST_LARGE_FILE "Test large (>4GB) files" OFF)
+
 if(UNIX)
     # Option to build a shared object library
     option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
