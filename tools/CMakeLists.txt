@@ -8,7 +8,7 @@ set(tool_sources
 )
 
 foreach(tool_source ${tool_sources})
-    get_filename_component(tool_target ${tool_source} NAME_WLE)
+    get_filename_component(tool_target ${tool_source} NAME_WE)
     add_executable(${tool_target}
         ${tool_source}
     )

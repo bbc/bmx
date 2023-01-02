@@ -8,6 +8,12 @@ if(MSVC AND BMX_SET_MSVC_RUNTIME AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.15.0)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
 
+if(BUILD_SHARED_LIBS)
+    # Ensure that static library code can be linked into the dynamic libraries (-fPIC compile option)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+set(CMAKE_CXX_STANDARD 11)
+
 project(bmx
     VERSION 0.1.3
     DESCRIPTION "A C++ library and set of utilities to read and write the SMPTE ST 377-1 MXF file format"
