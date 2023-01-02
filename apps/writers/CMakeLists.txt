@@ -14,11 +14,3 @@ target_compile_definitions(bmx_app_writers PRIVATE
 target_link_libraries(bmx_app_writers PUBLIC
     bmx
 )
-
-if(UNIX)
-    # The static library will be linked into the dynamic libraries of the writer apps.
-    # The -fPIC compile option ensures it generates position independent code
-    target_compile_options(bmx_app_writers PRIVATE
-        -fPIC
-    )
-endif()
