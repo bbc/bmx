@@ -1,18 +1,9 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
-include("${CMAKE_CURRENT_LIST_DIR}/cmake/options.cmake")
-
-if(MSVC AND BMX_SET_MSVC_RUNTIME AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.15.0)
-    # cmake version >= 3.15: Use MultiThreadedDLL runtime
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.15.0)
+    # Set policy CMP0091 to new to allow use of CMAKE_MSVC_RUNTIME_LIBRARY
     cmake_policy(SET CMP0091 NEW)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
-
-if(BUILD_SHARED_LIBS)
-    # Ensure that static library code can be linked into the dynamic libraries (-fPIC compile option)
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-endif()
-set(CMAKE_CXX_STANDARD 11)
 
 project(bmx
     VERSION 0.1.3
@@ -21,6 +12,19 @@ project(bmx
     LANGUAGES C CXX
 )
 set(PROJECT_VERSION_RELEASE 2)
+
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/options.cmake")
+
+if(MSVC AND BMX_SET_MSVC_RUNTIME AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.15.0)
+    # cmake version >= 3.15: Use MultiThreadedDLL runtime
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
+
+if(BUILD_SHARED_LIBS)
+    # Ensure that static library code can be linked into the dynamic libraries (-fPIC compile option)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+set(CMAKE_CXX_STANDARD 11)
 
 # Set the test samples output directory
 if(BMX_TEST_SAMPLES_DIR STREQUAL "")
@@ -48,11 +52,11 @@ if(MSVC)
         endmacro()
 
         update_msvc_runtime_flags(CMAKE_C_FLAGS)
-        update_msvc_runtime_flags(CMAKE_C_FLAGS_DEBUG)
-        update_msvc_runtime_flags(CMAKE_C_FLAGS_RELEASE)
         update_msvc_runtime_flags(CMAKE_CXX_FLAGS)
-        update_msvc_runtime_flags(CMAKE_CXX_FLAGS_DEBUG)
-        update_msvc_runtime_flags(CMAKE_CXX_FLAGS_RELEASE)
+        foreach(suffix _DEBUG _RELEASE _MINSIZEREL _RELWITHDEBINFO)
+            update_msvc_runtime_flags(CMAKE_C_FLAGS${suffix})
+            update_msvc_runtime_flags(CMAKE_CXX_FLAGS${suffix})
+        endforeach()
     endif()
 else()
     add_compile_options(-W -Wall -O2)
