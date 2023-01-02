@@ -50,6 +50,13 @@ if(MSVC)
     endif()
 else()
     add_compile_options(-W -Wall -O2)
+
+    # Enable large file support on 32-bit systems.
+    add_definitions(
+        -D_FILE_OFFSET_BITS=64
+        -D_LARGEFILE_SOURCE
+        -D_LARGEFILE64_SOURCE
+    )
 endif()
 
 if(BMX_BUILD_TESTING AND (NOT DEFINED BUILD_TESTING OR BUILD_TESTING))
