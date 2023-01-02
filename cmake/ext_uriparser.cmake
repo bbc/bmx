@@ -22,7 +22,12 @@ if(MSVC OR BMX_BUILD_URIPARSER_SOURCE)
         )
         message("-- Build using uriparser from git repo")
     endif()
-    FetchContent_MakeAvailable(liburiparser)
+
+    FetchContent_GetProperties(liburiparser)
+    if(NOT liburiparser_POPULATED)
+        FetchContent_Populate(liburiparser)
+        add_subdirectory(${liburiparser_SOURCE_DIR} ${liburiparser_BINARY_DIR})
+    endif()
 
     set(uriparser_link_lib uriparser)
 else()

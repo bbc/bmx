@@ -19,7 +19,12 @@ else()
     FetchContent_Declare(libMXF
         SOURCE_DIR ${PROJECT_SOURCE_DIR}/deps/libMXF
     )
-    FetchContent_MakeAvailable(libMXF)
+
+    FetchContent_GetProperties(libMXF)
+    if(NOT libMXF_POPULATED)
+        FetchContent_Populate(libMXF)
+        add_subdirectory(${libmxf_SOURCE_DIR} ${libmxf_BINARY_DIR})
+    endif()
 
     set(MXF_link_lib MXF)
 endif()
