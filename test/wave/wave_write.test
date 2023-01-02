@@ -1,4 +1,0 @@
-#!/bin/sh
-
-${srcdir}/check_write.sh 25 wave_write
-
