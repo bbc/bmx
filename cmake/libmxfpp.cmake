@@ -11,7 +11,16 @@ if(BMX_BUILD_LIBMXFPP_LIB)
 
     set(MXFpp_link_lib PkgConfig::PC_libMXFpp)
 else()
+    if(NOT EXISTS ${PROJECT_SOURCE_DIR}/deps/libMXFpp/CMakeLists.txt)
+        message(FATAL_ERROR
+            "libMXF submodule source code does not exist at 'deps/libMXFpp'\n"
+            "Run 'git submodule update --init' to fetch the source"
+        )
+    endif()
+
     include(FetchContent)
+
+    set(LIBMXFPP_SET_MSVC_RUNTIME ${BMX_SET_MSVC_RUNTIME} CACHE INTERNAL "")
 
     FetchContent_Declare(libMXFpp
         SOURCE_DIR ${PROJECT_SOURCE_DIR}/deps/libMXFpp
