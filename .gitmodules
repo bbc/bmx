@@ -1,0 +1,6 @@
+[submodule "libMXF"]
+	path = deps/libMXF
+	url = ../libMXF.git
+[submodule "libMXFpp"]
+	path = deps/libMXFpp
+	url = ../libMXFpp.git
