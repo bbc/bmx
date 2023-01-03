@@ -3,9 +3,6 @@
 ##################################################
 FROM debian:latest as build
 
-ARG LIBMXF_GIT=https://github.com/bbc/libMXF.git
-ARG LIBMXFPP_GIT=https://github.com/bbc/libMXFpp.git
-
 WORKDIR /build
 
 # Install build dependencies
@@ -14,39 +11,25 @@ RUN DEBIAN_FRONTEND=noninteractive \
     apt-get install -y \
         git \
         pkg-config \
-        automake \
-        libtool \
         g++ \
         gcc \
-        make \
-        autoconf \
+        cmake \
         uuid-dev \
         liburiparser-dev \
         libexpat1-dev \
         libcurl4-openssl-dev
 
-# Clone, configure and make install libMXF, libMXF++ and bmx
-
-RUN git clone $LIBMXF_GIT libMXF && \
-    cd libMXF && \
-    ./autogen.sh && \
-    ./configure PKG_CONFIG_PATH=/build/install/lib/pkgconfig --prefix /build/install --disable-static && \
-    make check && \
-    make install
-
-RUN git clone $LIBMXFPP_GIT libMXFpp && \
-    cd libMXFpp && \
-    ./autogen.sh && \
-    ./configure PKG_CONFIG_PATH=/build/install/lib/pkgconfig --prefix /build/install --disable-static --disable-examples && \
-    make check && \
-    make install
-
-COPY . bmx/
-RUN cd bmx && \
-    ./autogen.sh && \
-    ./configure PKG_CONFIG_PATH=/build/install/lib/pkgconfig --prefix /build/install --disable-static && \
-    make check && \
-    make install
+# Copy, configure and make install
+COPY . bmx
+RUN mkdir build && cd build && \
+    cmake -G "Unix Makefiles" \
+        -DCMAKE_INSTALL_PREFIX=/build/install \
+        -DBMX_BUILD_WITH_LIBCURL=ON \
+        -DLIBMXF_BUILD_ARCHIVE=ON \
+        -DLIBMXF_BUILD_AVIDMXFINFO=ON \
+        -DLIBMXF_BUILD_WRITEAVIDMXF=ON \
+        ../bmx && \
+    make && make test && make install
 
 
 ##################################################
