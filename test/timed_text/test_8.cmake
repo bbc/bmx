@@ -33,6 +33,6 @@ run_test_a(
     "${read_command}"
     "${output_file}"
     "test_4.md5"
-    "${output_info_file};info_4.xml"
-    "${output_essence_file_prefix}_d0.xml;text_example.xml;${output_essence_file_prefix}_d0_12.raw;font.ttf;${output_essence_file_prefix}_d0_13.raw;image.png"
+    "${output_info_file};info_4.xml.bin"
+    "${output_essence_file_prefix}_d0.xml;text_example.xml.bin;${output_essence_file_prefix}_d0_12.raw;font.ttf;${output_essence_file_prefix}_d0_13.raw;image.png"
 )

@@ -32,6 +32,6 @@ run_test_a(
     "${read_command}"
     "${output_file}"
     "test_9.md5"
-    "${output_info_file};info_9.xml"
-    "${output_essence_file_prefix}_d0.xml;text_example.xml"
+    "${output_info_file};info_9.xml.bin"
+    "${output_essence_file_prefix}_d0.xml;text_example.xml.bin"
 )

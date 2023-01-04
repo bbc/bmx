@@ -1,0 +1,8 @@
+info_d10.xml.bin text eol=lf
+info_op1a.xml.bin text eol=lf
+info_rdd9.xml.bin text eol=lf
+other.xml.bin text eol=lf
+utf16be.xml.bin binary
+utf16le.xml.bin binary
+utf8_noprolog.xml.bin text eol=lf
+utf8.xml.bin text eol=lf

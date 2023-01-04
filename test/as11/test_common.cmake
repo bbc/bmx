@@ -9,10 +9,10 @@ function(run_test test_name ess_type)
         file(MAKE_DIRECTORY ${BMX_TEST_SAMPLES_DIR})
 
         set(output_file ${BMX_TEST_SAMPLES_DIR}/test_${test_name}.mxf)
-        set(output_info_file ${BMX_TEST_SAMPLES_DIR}/test_${test_name}.xml)
+        set(output_info_file ${BMX_TEST_SAMPLES_DIR}/test_${test_name}.xml.bin)
     else()
         set(output_file test_${test_name}.mxf)
-        set(output_info_file ${TEST_SOURCE_DIR}/${test_name}.xml)
+        set(output_info_file ${TEST_SOURCE_DIR}/${test_name}.xml.bin)
     endif()
 
     set(create_test_audio ${CREATE_TEST_ESSENCE}
@@ -75,7 +75,7 @@ function(run_test test_name ess_type)
         "${read_command}"
         "${output_file}"
         "${test_name}.md5"
-        "${output_info_file};${test_name}.xml"
+        "${output_info_file};${test_name}.xml.bin"
         ""
     )
 endfunction()

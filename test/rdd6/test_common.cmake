@@ -44,7 +44,7 @@ function(run_test rate video_type rdd6_lines rdd6_sdid)
         --regtest
         -t op1a
         -o ${output_file}
-        --rdd6 ${TEST_SOURCE_DIR}/test${test_name}.xml
+        --rdd6 ${TEST_SOURCE_DIR}/test${test_name}.xml.bin
         --rdd6-lines ${rdd6_lines}
         --rdd6-sdid ${rdd6_sdid}
         test_intermediate_${test_name}.mxf
@@ -68,7 +68,7 @@ function(run_test rate video_type rdd6_lines rdd6_sdid)
         "${read_command}"
         "${output_file}"
         "test${test_name}.md5"
-        "${output_rdd6_file};test${test_name}.xml"
+        "${output_rdd6_file};test${test_name}.xml.bin"
         ""
     )
 endfunction()

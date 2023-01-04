@@ -31,13 +31,13 @@ run_test_a(
     "${read_command}"
     "${output_file}"
     "test_op1a.md5"
-    "${output_info_file};info_op1a.xml"
+    "${output_info_file};info_op1a.xml.bin"
     "\
-${output_text_file_prefix}_0.xml;utf8.xml;\
-${output_text_file_prefix}_1.xml;utf16be.xml;\
-${output_text_file_prefix}_2.xml;utf16le.xml;\
-${output_text_file_prefix}_3.xml;utf8.xml;\
-${output_text_file_prefix}_4.xml;other.xml;\
-${output_text_file_prefix}_5.xml;other.xml;\
-${output_text_file_prefix}_6.xml;utf8_noprolog.xml"
+${output_text_file_prefix}_0.xml;utf8.xml.bin;\
+${output_text_file_prefix}_1.xml;utf16be.xml.bin;\
+${output_text_file_prefix}_2.xml;utf16le.xml.bin;\
+${output_text_file_prefix}_3.xml;utf8.xml.bin;\
+${output_text_file_prefix}_4.xml;other.xml.bin;\
+${output_text_file_prefix}_5.xml;other.xml.bin;\
+${output_text_file_prefix}_6.xml;utf8_noprolog.xml.bin"
 )

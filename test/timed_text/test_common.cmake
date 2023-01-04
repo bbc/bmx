@@ -9,11 +9,11 @@ elseif(TEST_MODE STREQUAL "samples")
     file(MAKE_DIRECTORY ${BMX_TEST_SAMPLES_DIR})
 
     set(output_file ${BMX_TEST_SAMPLES_DIR}/test_${test_num}.mxf)
-    set(output_info_file ${BMX_TEST_SAMPLES_DIR}/info_${test_num}.xml)
+    set(output_info_file ${BMX_TEST_SAMPLES_DIR}/info_${test_num}.xml.bin)
     set(output_essence_file_prefix ${BMX_TEST_SAMPLES_DIR}/ess_${test_num})
 else()
     set(output_file test_${test_num}.mxf)
-    set(output_info_file ${TEST_SOURCE_DIR}/info_${test_num}.xml)
+    set(output_info_file ${TEST_SOURCE_DIR}/info_${test_num}.xml.bin)
     set(output_essence_file_prefix test_${test_num})
 endif()
 

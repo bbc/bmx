@@ -23,10 +23,10 @@ elseif(TEST_MODE STREQUAL "samples")
     file(MAKE_DIRECTORY ${BMX_TEST_SAMPLES_DIR})
 
     set(output_file_1 ${BMX_TEST_SAMPLES_DIR}/test_high_hd_2014_rb.mxf)
-    set(output_info_file_1 ${BMX_TEST_SAMPLES_DIR}/test_high_hd_2014_rb.xml)
+    set(output_info_file_1 ${BMX_TEST_SAMPLES_DIR}/test_high_hd_2014_rb.xml.bin)
 else()
     set(output_file_1 test_1.mxf)
-    set(output_info_file_1 ${TEST_SOURCE_DIR}/high_hd_2014_rb.xml)
+    set(output_info_file_1 ${TEST_SOURCE_DIR}/high_hd_2014_rb.xml.bin)
 endif()
 
 set(create_command ${RAW2BMX}
@@ -73,7 +73,7 @@ run_test_a(
     "${read_command}"
     "${output_file_1}"
     "high_hd_2014_rb.md5"
-    "${output_info_file_1};high_hd_2014_rb.xml"
+    "${output_info_file_1};high_hd_2014_rb.xml.bin"
     ""
 )
 
@@ -85,10 +85,10 @@ elseif(TEST_MODE STREQUAL "samples")
     file(MAKE_DIRECTORY ${BMX_TEST_SAMPLES_DIR})
 
     set(output_file_2 ${BMX_TEST_SAMPLES_DIR}/test_high_hd_2014_tw.mxf)
-    set(output_info_file_2 ${BMX_TEST_SAMPLES_DIR}/test_high_hd_2014_tw.xml)
+    set(output_info_file_2 ${BMX_TEST_SAMPLES_DIR}/test_high_hd_2014_tw.xml.bin)
 else()
     set(output_file_2 test_2.mxf)
-    set(output_info_file_2 ${TEST_SOURCE_DIR}/high_hd_2014_tw.xml)
+    set(output_info_file_2 ${TEST_SOURCE_DIR}/high_hd_2014_tw.xml.bin)
 endif()
 
 set(create_command ${BMXTRANSWRAP}
@@ -124,6 +124,6 @@ run_test_a(
     "${read_command}"
     "${output_file_2}"
     "high_hd_2014_tw.md5"
-    "${output_info_file_2};high_hd_2014_tw.xml"
+    "${output_info_file_2};high_hd_2014_tw.xml.bin"
     ""
 )
