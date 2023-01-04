@@ -27,6 +27,6 @@ run_test_a(
     "${read_command}"
     "${output_file}"
     "test_5.md5"
-    "${output_info_file};info_5.xml"
+    "${output_info_file};info_5.xml.bin"
     ""
 )

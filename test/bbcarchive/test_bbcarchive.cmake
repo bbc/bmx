@@ -10,10 +10,10 @@ elseif(TEST_MODE STREQUAL "samples")
     file(MAKE_DIRECTORY ${BMX_TEST_SAMPLES_DIR})
 
     set(output_file ${BMX_TEST_SAMPLES_DIR}/test_bbcarchive_1080_25i.mxf)
-    set(output_info_file ${BMX_TEST_SAMPLES_DIR}/test_bbcarchive_1080_25i.xml)
+    set(output_info_file ${BMX_TEST_SAMPLES_DIR}/test_bbcarchive_1080_25i.xml.bin)
 else()
     set(output_file test.mxf)
-    set(output_info_file ${TEST_SOURCE_DIR}/bbcarchive_1080_25i.xml)
+    set(output_info_file ${TEST_SOURCE_DIR}/bbcarchive_1080_25i.xml.bin)
 endif()
 
 set(create_command ${TEST_WRITE_ARCHIVE_MXF}
@@ -46,6 +46,6 @@ run_test_a(
     "${read_command}"
     "${output_file}"
     "bbcarchive_1080_25i.md5"
-    "${output_info_file};bbcarchive_1080_25i.xml"
+    "${output_info_file};bbcarchive_1080_25i.xml.bin"
     ""
 )
