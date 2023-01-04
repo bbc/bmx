@@ -13,10 +13,10 @@ if(TEST_MODE STREQUAL "check")
     set(output_info_file_1 info_1.xml)
 elseif(TEST_MODE STREQUAL "samples")
     set(output_file_1 ${BMX_TEST_SAMPLES_DIR}/test_1.mxf)
-    set(output_info_file_1 ${BMX_TEST_SAMPLES_DIR}/test_1.xml)
+    set(output_info_file_1 ${BMX_TEST_SAMPLES_DIR}/info_1.xml)
 else()
     set(output_file_1 test_1.mxf)
-    set(output_info_file_1 ${TEST_SOURCE_DIR}/info_1.xml)
+    set(output_info_file_1 ${TEST_SOURCE_DIR}/info_1.xml.bin)
 endif()
 
 set(create_command ${RAW2BMX}
@@ -62,7 +62,7 @@ run_test_a(
     "${read_command}"
     "${output_file_1}"
     "test_1.md5"
-    "${output_info_file_1};info_1.xml"
+    "${output_info_file_1};info_1.xml.bin"
     ""
 )
 
@@ -72,10 +72,10 @@ if(TEST_MODE STREQUAL "check")
     set(output_info_file_2 info_2.xml)
 elseif(TEST_MODE STREQUAL "samples")
     set(output_file_2 ${BMX_TEST_SAMPLES_DIR}/test_2.mxf)
-    set(output_info_file_2 ${BMX_TEST_SAMPLES_DIR}/test_2.xml)
+    set(output_info_file_2 ${BMX_TEST_SAMPLES_DIR}/info_2.xml.bin)
 else()
     set(output_file_2 test_2.mxf)
-    set(output_info_file_2 ${TEST_SOURCE_DIR}/info_2.xml)
+    set(output_info_file_2 ${TEST_SOURCE_DIR}/info_2.xml.bin)
 endif()
 
 set(create_command ${BMXTRANSWRAP}
@@ -106,6 +106,6 @@ run_test_a(
     "${read_command}"
     "${output_file_2}"
     "test_2.md5"
-    "${output_info_file_2};info_2.xml"
+    "${output_info_file_2};info_2.xml.bin"
     ""
 )

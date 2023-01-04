@@ -67,13 +67,13 @@ foreach(index RANGE ${max_index})
     elseif(TEST_MODE STREQUAL "samples")
         set(output_file_raw2bmx ${BMX_TEST_SAMPLES_DIR}/mca_${test_name}_raw2bmx.mxf)
         set(output_file_bmxtranswrap ${BMX_TEST_SAMPLES_DIR}/mca_${test_name}_bmxtranswrap.mxf)
-        set(output_info_file_raw2bmx ${BMX_TEST_SAMPLES_DIR}/mca_${test_name}_raw2bmx.xml)
-        set(output_info_file_bmxtranswrap ${BMX_TEST_SAMPLES_DIR}/mca_${test_name}_bmxtranswrap.xml)
+        set(output_info_file_raw2bmx ${BMX_TEST_SAMPLES_DIR}/mca_${test_name}_raw2bmx.xml.bin)
+        set(output_info_file_bmxtranswrap ${BMX_TEST_SAMPLES_DIR}/mca_${test_name}_bmxtranswrap.xml.bin)
     else()
         set(output_file_raw2bmx mca_${test_name}_raw2bmx.mxf)
         set(output_file_bmxtranswrap mca_${test_name}_bmxtranswrap.mxf)
         set(output_info_file_raw2bmx mca_${test_name}_raw2bmx.xml)
-        set(output_info_file_bmxtranswrap ${TEST_SOURCE_DIR}/mca_${test_name}.xml)
+        set(output_info_file_bmxtranswrap ${TEST_SOURCE_DIR}/mca_${test_name}.xml.bin)
     endif()
 
     set(create_command_1 ${RAW2BMX}
@@ -121,7 +121,7 @@ foreach(index RANGE ${max_index})
         "${read_command}"
         "${output_file_raw2bmx}"
         "mca_${test_name}.md5"
-        "${output_info_file_raw2bmx};mca_${test_name}.xml"
+        "${output_info_file_raw2bmx};mca_${test_name}.xml.bin"
         ""
     )
 
@@ -171,7 +171,7 @@ foreach(index RANGE ${max_index})
         "${read_command}"
         "${output_file_bmxtranswrap}"
         "mca_${test_name}.md5"
-        "${output_info_file_bmxtranswrap};mca_${test_name}.xml"
+        "${output_info_file_bmxtranswrap};mca_${test_name}.xml.bin"
         ""
     )
 endforeach()
