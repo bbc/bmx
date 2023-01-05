@@ -1,0 +1,54 @@
+name: Test Ubuntu
+run-name: ${{ github.actor }} is testing
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install \
+            git \
+            pkg-config \
+            g++ \
+            gcc \
+            cmake \
+            uuid-dev \
+            liburiparser-dev \
+            libexpat1-dev \
+            libcurl4-openssl-dev
+          git --version
+          cmake --version
+          gcc --version
+          g++ --version
+      - uses: actions/checkout@v3
+        with:
+          ref: philipn-cmake-actions
+          submodules: true
+      - name: Configure
+        shell: bash
+        run: |
+          mkdir -p out/build
+          cmake \
+            -B out/build \
+            -G "Unix Makefiles" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_INSTALL_PREFIX:PATH=out/install \
+            -DBMX_BUILD_WITH_LIBCURL=ON \
+            -DLIBMXF_BUILD_ARCHIVE=ON \
+            -DLIBMXF_BUILD_AVIDMXFINFO=ON \
+            -DLIBMXF_BUILD_WRITEAVIDMXF=ON \
+            .
+      - name: Build
+        shell: bash
+        run: |
+          cmake --build out/build
+      - name: Test
+        shell: bash
+        run: |
+          cmake --build out/build --target test -- ARGS="--output-on-failure"
+      - name: Install
+        shell: bash
+        run: |
+          cmake --install out/build
