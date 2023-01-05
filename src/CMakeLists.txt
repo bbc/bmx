@@ -53,7 +53,7 @@ target_compile_definitions(bmx PRIVATE
     HAVE_CONFIG_H
 )
 
-if(UNIX)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # Use target_link_libraries to add linker options. This is equivalent to
     # target_link_options which was added in cmake 3.13
     target_link_libraries(bmx PRIVATE -Wl,--no-undefined)
