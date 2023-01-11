@@ -41,30 +41,13 @@
 
 #include <bmx/as10/AS10MPEG2Validator.h>
 #include "as10_shims.h"
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
 using namespace std;
 using namespace mxfpp;
 using namespace bmx;
-
-
-// trim from start
-static inline std::string &ltrim(std::string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
-    return s;
-}
-
-// trim from end
-static inline std::string &rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
-    return s;
-}
-
-// trim from both ends
-static inline std::string &trim(std::string &s) {
-    return ltrim(rtrim(s));
-}
 
 
 AS10MPEG2Validator::AS10MPEG2Validator(AS10Shim as10_shim, const char *fname, int max_same_warn_messages,
@@ -231,8 +214,8 @@ void AS10MPEG2Validator::ParseDescriptorRefValues(const char *filename)
                 return;
             }
 
-            name = trim(name);
-            value = trim(value);
+            name = trim_string(name);
+            value = trim_string(value);
 
             if (mDfaultsMap.find(name) == mDfaultsMap.end())
             {
