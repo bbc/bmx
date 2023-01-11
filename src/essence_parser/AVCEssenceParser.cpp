@@ -1294,11 +1294,13 @@ bool AVCEssenceParser::ParseSEI(const unsigned char *data, uint32_t data_size)
             buffer.GetU(8, &temp);
             payload_size += temp;
 
-
             BMX_ASSERT((buffer.GetBitPos() & 7) == 0);
             uint32_t start_pos = buffer.GetPos();
 
             // parse payloads here
+
+            // Ignore unused warning
+            (void)payload_type;
 
             buffer.SetPos(start_pos);
             buffer.SkipRBSPBytes((uint32_t)(payload_size * 8));
