@@ -21,4 +21,7 @@ target_link_libraries(bmxtimecode PRIVATE
     bmx
 )
 
+include("${PROJECT_SOURCE_DIR}/cmake/source_filename.cmake")
+set_source_filename(bmxtimecode "${CMAKE_CURRENT_LIST_DIR}" "bmx")
+
 install(TARGETS bmxtimecode DESTINATION bin)

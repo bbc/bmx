@@ -2,9 +2,14 @@ add_executable(create_test_essence
     create_test_essence.cpp
 )
 
+include("${PROJECT_SOURCE_DIR}/cmake/source_filename.cmake")
+set_source_filename(create_test_essence "${CMAKE_CURRENT_LIST_DIR}" "bmx")
+
 add_executable(file_truncate
     file_truncate.cpp
 )
+
+set_source_filename(file_truncate "${CMAKE_CURRENT_LIST_DIR}" "bmx")
 
 add_subdirectory(ard_zdf_hdf)
 add_subdirectory(as02)

@@ -14,4 +14,7 @@ target_link_libraries(raw2bmx PRIVATE
     bmx_app_writers
 )
 
+include("${PROJECT_SOURCE_DIR}/cmake/source_filename.cmake")
+set_source_filename(raw2bmx "${CMAKE_CURRENT_LIST_DIR}" "bmx")
+
 install(TARGETS raw2bmx DESTINATION bin)

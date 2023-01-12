@@ -14,3 +14,6 @@ target_compile_definitions(bmx_app_writers PRIVATE
 target_link_libraries(bmx_app_writers PUBLIC
     bmx
 )
+
+include("${PROJECT_SOURCE_DIR}/cmake/source_filename.cmake")
+set_source_filename(bmx_app_writers "${CMAKE_CURRENT_LIST_DIR}" "bmx")

@@ -86,6 +86,9 @@ set_target_properties(bmx PROPERTIES
     SOVERSION ${PROJECT_VERSION_MAJOR}
 )
 
+include("${PROJECT_SOURCE_DIR}/cmake/source_filename.cmake")
+set_source_filename(bmx "${CMAKE_CURRENT_LIST_DIR}" "bmx")
+
 install(TARGETS bmx
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
