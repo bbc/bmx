@@ -913,7 +913,7 @@ void MXFFileReader::ProcessMetadata(Partition *partition)
 
     vector<SourcePackage*> file_source_packages = preface->findFileSourcePackages();
     if (file_source_packages.empty()) {
-        log_error("File with no file source packages is not supported\n");
+        log_error("No source package with known file descriptor found in file\n");
         THROW_RESULT(MXF_RESULT_NOT_SUPPORTED);
     }
 
