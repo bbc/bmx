@@ -1,0 +1,125 @@
+From 57f54da0274d3460144198b48e70efd8a846bf20 Mon Sep 17 00:00:00 2001
+From: Philip de Nier <philipn@rd.bbc.co.uk>
+Date: Mon, 16 Jan 2023 15:39:23 +0000
+Subject: [PATCH] Add git describe relative to matching tag
+
+---
+ CMakeLists.txt    |  4 ++--
+ git.c.in          |  3 +++
+ git.h             |  7 +++++++
+ git_watcher.cmake | 15 ++++++++++++++-
+ 4 files changed, 26 insertions(+), 3 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 55e6d07..7b277c3 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.2)
+-project(cmake_git_version_tracking
++project(bmx_cmake_git_version_tracking
+     LANGUAGES C)
+ 
+ # Define the two required variables before including
+@@ -15,7 +15,7 @@ include(git_watcher.cmake)
+ # 3rdparty library.
+ add_library(${PROJECT_NAME} STATIC ${POST_CONFIGURE_FILE})
+ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+-add_dependencies(${PROJECT_NAME} check_git)
++add_dependencies(${PROJECT_NAME} bmx_check_git)
+ 
+ # The C99 standard is only required because we're using <stdbool.h>.
+ # This could be removed if it's a problem for users, but would require the
+diff --git a/git.c.in b/git.c.in
+index a26d27c..8670076 100644
+--- a/git.c.in
++++ b/git.c.in
+@@ -30,3 +30,6 @@ const char* git_Describe() {
+ const char* git_Branch() {
+     return "@GIT_BRANCH@";
+ }
++const char* git_DescribeTag() {
++    return "@GIT_DESCRIBE_TAG@";
++}
+diff --git a/git.h b/git.h
+index fee780e..e35a79e 100644
+--- a/git.h
++++ b/git.h
+@@ -52,6 +52,9 @@ const char* git_Describe();
+ /// The symbolic reference tied to HEAD.
+ const char* git_Branch();
+ 
++/// The commit describe relative to matching tag.
++const char* git_DescribeTag();
++
+ GIT_VERSION_TRACKING_EXTERN_C_END
+ #undef GIT_VERSION_TRACKING_EXTERN_C_BEGIN
+ #undef GIT_VERSION_TRACKING_EXTERN_C_END
+@@ -143,6 +146,10 @@ inline const StringOrView Branch() {
+   static const StringOrView kValue = internal::InitString(git_Branch());
+   return kValue;
+ }
++inline const StringOrView DescribeTag() {
++  static const StringOrView kValue = internal::InitString(git_DescribeTag());
++  return kValue;
++}
+ 
+ }  // namespace git
+ 
+diff --git a/git_watcher.cmake b/git_watcher.cmake
+index 32313a3..f91f23b 100644
+--- a/git_watcher.cmake
++++ b/git_watcher.cmake
+@@ -36,6 +36,9 @@
+ #   -- Ignore the presence of untracked files when detecting if the
+ #      working tree is dirty. This is set to FALSE by default.
+ #
++#   GIT_DESCRIBE_TAG_PATTERN (OPTIONAL)
++#   -- Git tag pattern to match against to produce the GIT_DESCRIBE_TAG variable.
++#
+ # DESIGN
+ #   - This script was designed similar to a Python application
+ #     with a Main() function. I wanted to keep it compact to
+@@ -105,6 +108,7 @@ set(_state_variable_names
+     GIT_COMMIT_BODY
+     GIT_DESCRIBE
+     GIT_BRANCH
++    GIT_DESCRIBE_TAG
+     # >>>
+     # 1. Add the name of the additional git variable you're interested in monitoring
+     #    to this list.
+@@ -242,6 +246,14 @@ function(GetGitState _working_dir)
+         set(ENV{GIT_BRANCH} "${output}")
+     endif()
+ 
++    # Get output of git describe relative to the matching tag
++    RunGitCommand(describe --match ${GIT_DESCRIBE_TAG_PATTERN} ${object})
++    if(NOT exit_code EQUAL 0)
++        set(ENV{GIT_DESCRIBE_TAG} "unknown")
++    else()
++        set(ENV{GIT_DESCRIBE_TAG} "${output}")
++    endif()
++
+     # >>>
+     # 2. Additional git properties can be added here via the
+     #    "execute_process()" command. Be sure to set them in
+@@ -324,7 +336,7 @@ endfunction()
+ #              check the state of git before every build. If the state has
+ #              changed, then a file is configured.
+ function(SetupGitMonitoring)
+-    add_custom_target(check_git
++    add_custom_target(bmx_check_git
+         ALL
+         DEPENDS ${PRE_CONFIGURE_FILE}
+         BYPRODUCTS
+@@ -341,6 +353,7 @@ function(SetupGitMonitoring)
+             -DPOST_CONFIGURE_FILE=${POST_CONFIGURE_FILE}
+             -DGIT_FAIL_IF_NONZERO_EXIT=${GIT_FAIL_IF_NONZERO_EXIT}
+             -DGIT_IGNORE_UNTRACKED=${GIT_IGNORE_UNTRACKED}
++            -DGIT_DESCRIBE_TAG_PATTERN=${GIT_DESCRIBE_TAG_PATTERN}
+             -P "${CMAKE_CURRENT_LIST_FILE}")
+ endfunction()
+ 
+-- 
+2.25.1
+

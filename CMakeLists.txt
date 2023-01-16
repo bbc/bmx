@@ -6,12 +6,11 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.15.0)
 endif()
 
 project(bmx
-    VERSION 0.1.3
+    VERSION 0.1
     DESCRIPTION "A C++ library and set of utilities to read and write the SMPTE ST 377-1 MXF file format"
     HOMEPAGE_URL https://github.com/bbc/bmx
     LANGUAGES C CXX
 )
-set(PROJECT_VERSION_RELEASE 2)
 
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/options.cmake")
 
