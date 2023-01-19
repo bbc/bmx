@@ -58,10 +58,15 @@ The following string value properties can be used:
 - MCASpokenLanguageAttribute
 - RFC5646AdditionalSpokenLanguages
 - MCAAdditionalLanguageAttributes
+- ADMAudioProgrammeID_ADMsg
+- ADMAudioContentID_ADMsg
+- ADMAudioObjectID_ADMsg
 
 The "lang" name can be used instead of "RFC5646SpokenLanguage".
 
 The name may omit the "MCA" prefix, e.g. "TitleVersion" is accepted. The name matching is case-insenstive, e.g. "titleversion" is accepted. Underscores are ignored, e.g. "title_version" is accepted.
+
+The ADM properties, which are the properties with the "ADM" prefix, may also omit the "_ADMsg" suffix. The ADM properties can only be used in a "sgADM" SG label.
 
 The property value may be between quotation marks, either single or double quotes.
 

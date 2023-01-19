@@ -166,33 +166,59 @@ static const MCALabelEntry AS11_OVERRIDE_MCA_LABELS[] =
 };
 
 
+// Multi-channel audio labels from ADM, SMPTE ST 2131
+
+static const UL ADM_SG_DICT_ID = {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x03, 0x02, 0x02, 0x23, 0x00, 0x00, 0x00, 0x00};
+
+static const MCALabelEntry ADM_MCA_LABELS[] =
+{
+    // Soundfield Groups
+    {SOUNDFIELD_GROUP_LABEL, "sgADM", "ADM", ADM_SG_DICT_ID},
+};
+
+
 #define PROPERTY_FUNCTIONS(name) \
-   static void Set##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
-       descriptor->set##name (value);  \
-   }  \
-   static bool Check##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
-       return descriptor->have##name () && descriptor->get##name () == value;  \
-   }
+    static void Set##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
+        descriptor->set##name (value);  \
+    }  \
+    static bool Check##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
+        return descriptor->have##name () && descriptor->get##name () == value;  \
+    }
+
+#define ADM_PROPERTY_FUNCTIONS(name) \
+    static void Set##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
+        ADMSoundfieldGroupLabelSubDescriptor *adm_descriptor = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(descriptor);  \
+        BMX_CHECK_M(adm_descriptor, ("Can't set ADM SG label property on non-ADM SG label descriptor"));  \
+        adm_descriptor->set##name (value);  \
+    }  \
+    static bool Check##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
+        ADMSoundfieldGroupLabelSubDescriptor *adm_descriptor = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(descriptor);  \
+        BMX_CHECK_M(adm_descriptor, ("Can't check ADM SG label property on non-ADM SG label descriptor"));  \
+        return adm_descriptor->have##name () && adm_descriptor->get##name () == value;  \
+    }
 
 class MCAPropertyFunctions
 {
 public:
-   PROPERTY_FUNCTIONS(MCAPartitionKind);
-   PROPERTY_FUNCTIONS(MCAPartitionNumber);
-   PROPERTY_FUNCTIONS(MCATitle);
-   PROPERTY_FUNCTIONS(MCATitleVersion);
-   PROPERTY_FUNCTIONS(MCATitleSubVersion);
-   PROPERTY_FUNCTIONS(MCAEpisode);
-   PROPERTY_FUNCTIONS(RFC5646SpokenLanguage);
-   PROPERTY_FUNCTIONS(MCAAudioContentKind);
-   PROPERTY_FUNCTIONS(MCAAudioElementKind);
-   PROPERTY_FUNCTIONS(MCAContent);
-   PROPERTY_FUNCTIONS(MCAUseClass);
-   PROPERTY_FUNCTIONS(MCAContentSubtype);
-   PROPERTY_FUNCTIONS(MCAContentDifferentiator);
-   PROPERTY_FUNCTIONS(MCASpokenLanguageAttribute);
-   PROPERTY_FUNCTIONS(RFC5646AdditionalSpokenLanguages);
-   PROPERTY_FUNCTIONS(MCAAdditionalLanguageAttributes);
+    PROPERTY_FUNCTIONS(MCAPartitionKind);
+    PROPERTY_FUNCTIONS(MCAPartitionNumber);
+    PROPERTY_FUNCTIONS(MCATitle);
+    PROPERTY_FUNCTIONS(MCATitleVersion);
+    PROPERTY_FUNCTIONS(MCATitleSubVersion);
+    PROPERTY_FUNCTIONS(MCAEpisode);
+    PROPERTY_FUNCTIONS(RFC5646SpokenLanguage);
+    PROPERTY_FUNCTIONS(MCAAudioContentKind);
+    PROPERTY_FUNCTIONS(MCAAudioElementKind);
+    PROPERTY_FUNCTIONS(MCAContent);
+    PROPERTY_FUNCTIONS(MCAUseClass);
+    PROPERTY_FUNCTIONS(MCAContentSubtype);
+    PROPERTY_FUNCTIONS(MCAContentDifferentiator);
+    PROPERTY_FUNCTIONS(MCASpokenLanguageAttribute);
+    PROPERTY_FUNCTIONS(RFC5646AdditionalSpokenLanguages);
+    PROPERTY_FUNCTIONS(MCAAdditionalLanguageAttributes);
+    ADM_PROPERTY_FUNCTIONS(ADMAudioProgrammeID_ADMsg);
+    ADM_PROPERTY_FUNCTIONS(ADMAudioContentID_ADMsg);
+    ADM_PROPERTY_FUNCTIONS(ADMAudioObjectID_ADMsg);
 };
 
 #define PROPERTY_FUNCTION_REFS(name)  MCAPropertyFunctions::Set##name, MCAPropertyFunctions::Check##name
@@ -219,6 +245,12 @@ struct MCAPropertyMapEntry {
    {"mcaspokenlanguageattribute", PROPERTY_FUNCTION_REFS(MCASpokenLanguageAttribute)},
    {"rfc5646additionalspokenlanguages", PROPERTY_FUNCTION_REFS(RFC5646AdditionalSpokenLanguages)},
    {"mcaadditionallanguageattributes", PROPERTY_FUNCTION_REFS(MCAAdditionalLanguageAttributes)},
+   {"admaudioprogrammeid_admsg", PROPERTY_FUNCTION_REFS(ADMAudioProgrammeID_ADMsg)},
+   {"admaudioprogrammeid", PROPERTY_FUNCTION_REFS(ADMAudioProgrammeID_ADMsg)},  // without "_admsg" suffix
+   {"admaudiocontentid_admsg", PROPERTY_FUNCTION_REFS(ADMAudioContentID_ADMsg)},
+   {"admaudiocontentid", PROPERTY_FUNCTION_REFS(ADMAudioContentID_ADMsg)},  // without "_admsg" suffix
+   {"admaudioobjectid_admsg", PROPERTY_FUNCTION_REFS(ADMAudioObjectID_ADMsg)},
+   {"admaudioobjectid", PROPERTY_FUNCTION_REFS(ADMAudioObjectID_ADMsg)},  // without "_admsg" suffix
 };
 
 
@@ -256,6 +288,8 @@ bool AppMCALabelHelper::ParseAudioLayoutMode(const string &audio_mode_str, UL *l
         *label = DEFAULT_LAYOUT_A_WITHOUT_MCA_LABEL;
     else if (audio_mode_str == "imf")
         *label = IMF_MCA_LABEL_FRAMEWORK;
+    else if (audio_mode_str == "adm")
+        *label = ADM_MCA_LABEL_FRAMEWORK;
     else
         return false;
 
@@ -270,6 +304,7 @@ AppMCALabelHelper::AppMCALabelHelper(bool is_as11)
     IndexLabels(AS11_MCA_LABELS, BMX_ARRAY_SIZE(AS11_MCA_LABELS), true);
     if (is_as11)
         IndexLabels(AS11_OVERRIDE_MCA_LABELS, BMX_ARRAY_SIZE(AS11_OVERRIDE_MCA_LABELS), true);
+    IndexLabels(ADM_MCA_LABELS, BMX_ARRAY_SIZE(ADM_MCA_LABELS), true);
 
     // Generate numbered source audio labels
     char buffer[32];
@@ -518,7 +553,10 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                                  sg_label_line.id.c_str());
                     }
 
-                    sg_desc = pcm_track->AddSoundfieldGroupLabel();
+                    if (sg_label_line.label->dict_id == ADM_SG_DICT_ID)
+                        sg_desc = pcm_track->AddADMSoundfieldGroupLabel();
+                    else
+                        sg_desc = pcm_track->AddSoundfieldGroupLabel();
                     sg_desc->setMCALabelDictionaryID(sg_label_line.label->dict_id);
                     sg_desc->setMCATagSymbol(sg_label_line.label->tag_symbol);
                     if (sg_label_line.label->tag_name && sg_label_line.label->tag_name[0])

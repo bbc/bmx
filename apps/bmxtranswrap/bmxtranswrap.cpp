@@ -702,6 +702,7 @@ static void usage(const char *cmd)
     printf("                                * 'as11-mode-1', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02020000,\n");
     printf("                                * 'as11-mode-2', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02030000\n");
     printf("                                * 'imf', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020210.04010000\n");
+    printf("                                * 'adm', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020210.05010000\n");
     printf("    --track-mca-labels <scheme> <file>  Insert audio labels defined in <file>. The 'as11' <scheme> will add an override and otherwise <scheme> is ignored\n");
     printf("                                        The format of <file> is described in bmx/docs/mca_labels_format.md\n");
     printf("                                        All tag symbols registered in the bmx code are available for use\n");

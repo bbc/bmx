@@ -104,6 +104,8 @@ public:
         mxfpp::SoundfieldGroupLabelSubDescriptor *copy_from = 0);
     mxfpp::GroupOfSoundfieldGroupsLabelSubDescriptor* AddGroupOfSoundfieldGroupLabel(
         mxfpp::GroupOfSoundfieldGroupsLabelSubDescriptor *copy_from = 0);
+    mxfpp::ADMSoundfieldGroupLabelSubDescriptor* AddADMSoundfieldGroupLabel(
+        mxfpp::ADMSoundfieldGroupLabelSubDescriptor *copy_from = 0);
 
     void AddWaveChunkReference(uint32_t stream_id);
     void AddADMAudioID(const WaveCHNA::AudioID &audio_id);

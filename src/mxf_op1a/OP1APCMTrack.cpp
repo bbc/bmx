@@ -217,6 +217,24 @@ SoundfieldGroupLabelSubDescriptor* OP1APCMTrack::AddSoundfieldGroupLabel(Soundfi
     return desc;
 }
 
+ADMSoundfieldGroupLabelSubDescriptor* OP1APCMTrack::AddADMSoundfieldGroupLabel(ADMSoundfieldGroupLabelSubDescriptor *copy_from)
+{
+    ADMSoundfieldGroupLabelSubDescriptor *desc;
+    if (copy_from) {
+        desc = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(copy_from->clone(mOP1AFile->GetHeaderMetadata()));
+        BMX_CHECK_M(desc, ("Copying non-ADM SG label descriptor"));
+    } else {
+        desc = new ADMSoundfieldGroupLabelSubDescriptor(mOP1AFile->GetHeaderMetadata());
+        desc->setMCALinkID(generate_uuid());
+    }
+    mMCALabels.push_back(desc);
+
+    if (mOP1AFile->HavePreparedHeaderMetadata())
+      mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(mMCALabels.back());
+
+    return desc;
+}
+
 GroupOfSoundfieldGroupsLabelSubDescriptor* OP1APCMTrack::AddGroupOfSoundfieldGroupLabel(
         GroupOfSoundfieldGroupsLabelSubDescriptor *copy_from)
 {

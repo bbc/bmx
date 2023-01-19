@@ -14,6 +14,8 @@ The current support in the `bmx` implementation is as follows:
 - Converting MXF+ADM to Wave+ADM using bmxtranswrap
 - Creating Wave+ADM with Wave / raw PCM, chna text file and axml/bxml/sxml file inputs
 - Preservation of ADM links after remapping audio channels using the `--track-map` option can be used to reorder, omit, group and add silence channels.
+- Add ADM Soundfield Group MCA label
+- Set the Channel Assignment audio descriptor property for ADM-described content labelling
 
 The known limitations are:
 - mxf2raw doesn't yet show ADM metadata presence or allow ADM chunks or a chna text file to be extracted.
@@ -69,6 +71,22 @@ A Wave+ADM can be converted to another Wave+ADM using the following example comm
 The `--track-map` option can be used to change what is output. For example, reorder the stereo pairs:
 
 `raw2bmx -t wave -o output.wave --track-map '2,3,0,1' --wave input.wave`
+
+
+## Add ADM MCA labels to MXF+ADM
+
+An ADM Soundfield Group MCA label can be added using the `sgADM` symbol in a [MCA labels text file](./mca_labels_format.md):
+
+`mca.txt`:
+```
+0
+chL, chan=0
+chR, chan=1
+sgADM, lang=eng, mca_title="Example Programme", adm_audio_programme_id="APR_1001", adm_audio_content_id="ACO_1001", adm_audio_object_id="AO_1001"
+```
+
+The MCA labels defined in `mca.txt` can be added and the ADM-described content label can be set in the audio descriptor Channel Assignment property using the following example commandline:
+`raw2bmx -t op1a -o output.mxf --track-map '0,1' --track-mca-labels adm mca.txt --audio-layout adm --wave input.wave`
 
 
 ## chna Text File Definition Format

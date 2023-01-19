@@ -165,6 +165,24 @@ SoundfieldGroupLabelSubDescriptor* RDD9PCMTrack::AddSoundfieldGroupLabel(Soundfi
     return desc;
 }
 
+ADMSoundfieldGroupLabelSubDescriptor* RDD9PCMTrack::AddADMSoundfieldGroupLabel(ADMSoundfieldGroupLabelSubDescriptor *copy_from)
+{
+    ADMSoundfieldGroupLabelSubDescriptor *desc;
+    if (copy_from) {
+        desc = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(copy_from->clone(mRDD9File->GetHeaderMetadata()));
+        BMX_CHECK_M(desc, ("Copying non-ADM SG label descriptor"));
+    } else {
+        desc = new ADMSoundfieldGroupLabelSubDescriptor(mRDD9File->GetHeaderMetadata());
+        desc->setMCALinkID(generate_uuid());
+    }
+    mMCALabels.push_back(desc);
+
+    if (mRDD9File->HavePreparedHeaderMetadata())
+      mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(mMCALabels.back());
+
+    return desc;
+}
+
 GroupOfSoundfieldGroupsLabelSubDescriptor* RDD9PCMTrack::AddGroupOfSoundfieldGroupLabel(
         GroupOfSoundfieldGroupsLabelSubDescriptor *copy_from)
 {

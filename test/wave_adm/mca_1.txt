@@ -1,0 +1,9 @@
+0
+chL, chan=0
+chR, chan=1
+sgADM, lang=eng, mca_title="Test Example 1", adm_audio_programme_id="APR_1001", adm_audio_content_id="ACO_1001", adm_audio_object_id="AO_1001"
+
+1
+chL, chan=0
+chR, chan=1
+sgADM, lang=eng, mca_title="Test Example 1", adm_audio_programme_id="APR_1001", adm_audio_content_id="ACO_1002", adm_audio_object_id="AO_1002"
