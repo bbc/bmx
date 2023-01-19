@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2023, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -33,11 +33,11 @@
 #include "config.h"
 #endif
 
-#include <cstring>
+#include <errno.h>
+#include <string.h>
 #include <sys/types.h>
-#include <cerrno>
 
-#include <bmx/wave/WaveFileIO.h>
+#include <bmx/BMXFileIO.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -47,41 +47,85 @@ using namespace bmx;
 
 
 
-WaveFileIO* WaveFileIO::OpenRead(string filename)
+BMXFileIO* BMXFileIO::OpenRead(const string &filename)
 {
     FILE *file = fopen(filename.c_str(), "rb");
     if (!file)
-        BMX_EXCEPTION(("Failed to open wave file '%s' for reading: %s", filename.c_str(), bmx_strerror(errno).c_str()));
+        BMX_EXCEPTION(("Failed to open file '%s' for reading: %s", filename.c_str(), bmx_strerror(errno).c_str()));
 
-    return new WaveFileIO(file, true);
+    return new BMXFileIO(file, true);
 }
 
-WaveFileIO* WaveFileIO::OpenNew(string filename)
+BMXFileIO* BMXFileIO::OpenNew(const string &filename)
 {
     FILE *file = fopen(filename.c_str(), "wb");
     if (!file)
-        BMX_EXCEPTION(("Failed to open wave file '%s' for writing: %s", filename.c_str(), bmx_strerror(errno).c_str()));
+        BMX_EXCEPTION(("Failed to open file '%s' for writing: %s", filename.c_str(), bmx_strerror(errno).c_str()));
 
-    return new WaveFileIO(file, false);
+    return new BMXFileIO(file, false);
 }
 
-WaveFileIO::WaveFileIO(FILE *file, bool read_only)
-: BMXFileIO(file, read_only), WaveIO()
+BMXFileIO::BMXFileIO(FILE *file, bool read_only)
+: BMXIO()
 {
+    mFile = file;
+    mReadOnly = read_only;
 }
 
-WaveFileIO::~WaveFileIO()
+BMXFileIO::~BMXFileIO()
 {
+    if (mFile)
+        fclose(mFile);
 }
 
-int WaveFileIO::GetChar()
+uint32_t BMXFileIO::Read(unsigned char *data, uint32_t size)
 {
-    return fgetc(mFile);
+    size_t result = fread(data, 1, size, mFile);
+    if (result != size && ferror(mFile))
+        log_error("Failed to read %u bytes: %s\n", size, bmx_strerror(errno).c_str());
+
+    return (uint32_t)result;
 }
 
-int WaveFileIO::PutChar(int c)
+uint32_t BMXFileIO::Write(const unsigned char *data, uint32_t size)
 {
     BMX_ASSERT(!mReadOnly);
 
-    return fputc(c, mFile);
+    size_t result = fwrite(data, 1, size, mFile);
+    if (result != size)
+        log_error("Failed to write %u bytes: %s\n", size, bmx_strerror(errno).c_str());
+
+    return (uint32_t)result;
+}
+
+bool BMXFileIO::Seek(int64_t offset, int whence)
+{
+#if defined(_WIN32)
+    return _fseeki64(mFile, offset, whence) == 0;
+#else
+    return fseeko(mFile, offset, whence) == 0;
+#endif
+}
+
+int64_t BMXFileIO::Tell()
+{
+#if defined(_WIN32)
+    return _ftelli64(mFile);
+#else
+    return ftello(mFile);
+#endif
+}
+
+int64_t BMXFileIO::Size()
+{
+    // flush user-space data because fstat uses the stream's integer descriptor
+    if (!mReadOnly)
+        fflush(mFile);
+
+    try {
+        return get_file_size(mFile);
+    } catch (const BMXIOException &ex) {
+        errno = ex.GetErrno();
+        return -1;
+    }
 }

@@ -45,17 +45,11 @@ namespace bmx
 {
 
 
-class WaveIO : public BMXIO
+class WaveIO : public virtual BMXIO
 {
 public:
     WaveIO();
     virtual ~WaveIO();
-
-    virtual uint32_t Read(unsigned char *data, uint32_t size) = 0;
-    virtual uint32_t Write(const unsigned char *data, uint32_t size) = 0;
-    virtual bool Seek(int64_t offset, int whence) = 0;
-    virtual int64_t Tell() = 0;
-    virtual int64_t Size() = 0;
 
 public:
     virtual int GetChar() = 0;

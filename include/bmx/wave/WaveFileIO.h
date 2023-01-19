@@ -36,6 +36,7 @@
 #include <string>
 
 #include <bmx/wave/WaveIO.h>
+#include <bmx/BMXFileIO.h>
 
 
 
@@ -43,7 +44,7 @@ namespace bmx
 {
 
 
-class WaveFileIO : public WaveIO
+class WaveFileIO : public BMXFileIO, public WaveIO
 {
 public:
     static WaveFileIO* OpenRead(std::string filename);
@@ -52,23 +53,11 @@ public:
 public:
     virtual ~WaveFileIO();
 
-    virtual uint32_t Read(unsigned char *data, uint32_t size);
     virtual int GetChar();
-
-    virtual uint32_t Write(const unsigned char *data, uint32_t size);
     virtual int PutChar(int c);
-
-    virtual bool Seek(int64_t offset, int whence);
-
-    virtual int64_t Tell();
-    virtual int64_t Size();
 
 private:
     WaveFileIO(FILE *file, bool read_only);
-
-private:
-    FILE *mFile;
-    bool mReadOnly;
 };
 
 

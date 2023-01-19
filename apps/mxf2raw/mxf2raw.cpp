@@ -57,6 +57,7 @@
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/st436/ST436Element.h>
 #include <bmx/st436/RDD6Metadata.h>
+#include <bmx/BMXFileIO.h>
 #include <bmx/MD5.h>
 #include <bmx/CRC32.h>
 #include <bmx/MXFHTTPFile.h>
@@ -1582,6 +1583,26 @@ static string create_text_object_filename(string prefix, bool is_xml, size_t ind
     return prefix + buffer;
 }
 
+static void write_wave_chunk(MXFWaveChunk *chunk, string wave_chunks_output_prefix)
+{
+    char suffix[32];
+    bmx_snprintf(suffix, sizeof(suffix), "_%s_%u",
+                 get_wave_chunk_id_str(chunk->Id()).c_str(), chunk->GetStreamId());
+    string filename = wave_chunks_output_prefix + suffix;
+
+    BMXFileIO *output_file = 0;
+    try{
+        output_file = BMXFileIO::OpenNew(filename);
+        dynamic_cast<BMXIO*>(output_file)->Write(chunk);
+        delete output_file;
+    } catch (...) {
+        delete output_file;
+        throw;
+    }
+
+    log_info("Extracted wave chunk to '%s'\n", filename.c_str());
+}
+
 static bool parse_rdd6_frames(const char *frames_str, int64_t *min, int64_t *max)
 {
     if (parse_int_pair(frames_str, '-', min, max)) {
@@ -1760,6 +1781,9 @@ static void usage(const char *cmd)
     printf("\n");
     printf(" --text-out <prefix>   Extract text based objects to files starting with <prefix>\n");
     printf("                       and suffix '.xml' if it is XML and otherwise '.txt'\n");
+    printf(" --wave-chunks-out <prefix>   Extract Wave chunks to files starting with <prefix>\n");
+    printf("                              The file suffix is '_<chunk id>_<generic stream id>'\n");
+    printf(" --filter-wave-chunks <ids>   A comma separated list of Wave chunk identifiers to extract\n");
     printf("\n");
     printf("Input options:\n");
     printf(" --disable-tracks <tracks> A comma separated list of track indexes and/or ranges to disable when reading essence data.\n");
@@ -1836,6 +1860,8 @@ int main(int argc, const char** argv)
     bool use_mmap_file = false;
 #endif
     const char *text_output_prefix = 0;
+    const char *wave_chunks_output_prefix = 0;
+    set<WaveChunkId> filter_wave_chunks;
     bool mca_detail = false;
     unsigned int uvalue;
     int cmdln_index;
@@ -2327,6 +2353,36 @@ int main(int argc, const char** argv)
             }
             text_output_prefix = argv[cmdln_index + 1];
             have_action = true;
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--wave-chunks-out") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            wave_chunks_output_prefix = argv[cmdln_index + 1];
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--filter-wave-chunks") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            bool have_all;
+            if (!parse_wave_chunk_ids(argv[cmdln_index + 1], &filter_wave_chunks, &have_all))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            if (have_all)
+                filter_wave_chunks.clear();
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--http-min-read") == 0)
@@ -3183,6 +3239,34 @@ int main(int argc, const char** argv)
                 fclose(text_file);
 
                 log_info("Extracted text object to '%s'\n", text_filename.c_str());
+            }
+        }
+
+        // extract Wave chunks
+        if (wave_chunks_output_prefix) {
+            set<uint32_t> extracted_stream_ids;
+            for (size_t i = 0; i < reader->GetNumTrackReaders(); i++) {
+                MXFTrackReader *track_reader = reader->GetTrackReader(i);
+                if (filter_wave_chunks.empty()) {
+                    for (size_t c = 0; c < track_reader->GetNumWaveChunks(); c++) {
+                        MXFWaveChunk *chunk = track_reader->GetWaveChunk(c);
+
+                        if (!extracted_stream_ids.count(chunk->GetStreamId())) {
+                            write_wave_chunk(chunk, wave_chunks_output_prefix);
+                            extracted_stream_ids.insert(chunk->GetStreamId());
+                        }
+                    }
+                } else {
+                    set<WaveChunkId>::const_iterator id_iter;
+                    for (id_iter = filter_wave_chunks.begin(); id_iter != filter_wave_chunks.end(); id_iter++) {
+                        MXFWaveChunk *chunk = track_reader->GetWaveChunk(*id_iter);
+
+                        if (chunk && !extracted_stream_ids.count(chunk->GetStreamId())) {
+                            write_wave_chunk(chunk, wave_chunks_output_prefix);
+                            extracted_stream_ids.insert(chunk->GetStreamId());
+                        }
+                    }
+                }
             }
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2023, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,59 +29,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef BMX_FILE_IO_H_
+#define BMX_FILE_IO_H_
+
+#include <stdio.h>
+
+#include <string>
+
+#include <bmx/BMXIO.h>
+
+
+namespace bmx
+{
+
+
+class BMXFileIO: public virtual BMXIO
+{
+public:
+    static BMXFileIO* OpenRead(const std::string &filename);
+    static BMXFileIO* OpenNew(const std::string &filename);
+
+public:
+    virtual ~BMXFileIO();
+
+    virtual uint32_t Read(unsigned char *data, uint32_t size);
+
+    virtual uint32_t Write(const unsigned char *data, uint32_t size);
+
+    virtual bool Seek(int64_t offset, int whence);
+
+    virtual int64_t Tell();
+    virtual int64_t Size();
+
+protected:
+    BMXFileIO(FILE *file, bool read_only);
+
+protected:
+    FILE *mFile;
+    bool mReadOnly;
+};
+
+
+};
+
+
 #endif
-
-#include <cstring>
-#include <sys/types.h>
-#include <cerrno>
-
-#include <bmx/wave/WaveFileIO.h>
-#include <bmx/Utils.h>
-#include <bmx/BMXException.h>
-#include <bmx/Logging.h>
-
-using namespace std;
-using namespace bmx;
-
-
-
-WaveFileIO* WaveFileIO::OpenRead(string filename)
-{
-    FILE *file = fopen(filename.c_str(), "rb");
-    if (!file)
-        BMX_EXCEPTION(("Failed to open wave file '%s' for reading: %s", filename.c_str(), bmx_strerror(errno).c_str()));
-
-    return new WaveFileIO(file, true);
-}
-
-WaveFileIO* WaveFileIO::OpenNew(string filename)
-{
-    FILE *file = fopen(filename.c_str(), "wb");
-    if (!file)
-        BMX_EXCEPTION(("Failed to open wave file '%s' for writing: %s", filename.c_str(), bmx_strerror(errno).c_str()));
-
-    return new WaveFileIO(file, false);
-}
-
-WaveFileIO::WaveFileIO(FILE *file, bool read_only)
-: BMXFileIO(file, read_only), WaveIO()
-{
-}
-
-WaveFileIO::~WaveFileIO()
-{
-}
-
-int WaveFileIO::GetChar()
-{
-    return fgetc(mFile);
-}
-
-int WaveFileIO::PutChar(int c)
-{
-    BMX_ASSERT(!mReadOnly);
-
-    return fputc(c, mFile);
-}
