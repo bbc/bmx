@@ -164,6 +164,7 @@ struct RawInput
     bool set_bs_aspect_ratio;
 
     map<string, WaveChunkRef> *wave_chunk_refs;
+    bool no_chna_chunk;
 
     // picture
     BMX_OPT_PROP_DECL(Rational, aspect_ratio);
@@ -724,6 +725,7 @@ static void usage(const char *cmd)
     printf("                                     A comma separated list of profile and level labels can be provided as well. A <label> can be:\n");
     printf("                                       * a SMPTE UL, formatted as a 'urn:smpte:ul:...',\n");
     printf("                                       * 'adm_itu2076', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020211.01010000\n");
+    printf("  --no-chna-chunk                    Don't transfer the ADM <chna> chunk from the input\n");
     printf("\n");
     printf("  as02:\n");
     printf("    --trk-out-start <offset>   Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
@@ -2809,6 +2811,11 @@ int main(int argc, const char** argv)
                 return 1;
             }
             cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--no-chna-chunk") == 0)
+        {
+            input.no_chna_chunk = true;
             continue; // skip input reset at the end
         }
         else if (strcmp(argv[cmdln_index], "--trk-out-start") == 0)
@@ -5946,7 +5953,9 @@ int main(int argc, const char** argv)
                     uint32_t output_channel_index = iter->first;
                     uint32_t input_channel_index = iter->second.input_channel_index;
 
-                    // Check that the input channel has a <chna> audio ID
+                    // Check that the input channel has a <chna> audio ID and that is should be read
+                    if (input->no_chna_chunk)
+                        continue;
                     WaveCHNA *input_chna = input->wave_reader->GetCHNA();
                     if (!input_chna)
                         continue;

@@ -331,6 +331,50 @@ create_wave_10()
         >/dev/null
 }
 
+create_mxf_10()
+{
+    # Create an MXF from a Wave+ADM and AVC-Intra, but don't include <chna> or any other Wave chunks
+
+    $testdir/create_test_essence -t 7 -d 1 $tmpdir/video
+
+    $appsdir/raw2bmx/raw2bmx \
+        --regtest \
+        -t op1a \
+        -f 25 \
+        -o $1 \
+        --track-map "2,3;0,1" \
+        --avci100_1080i $tmpdir/video \
+        --no-chna-chunk \
+        --wave $base/adm_1.wav \
+        >/dev/null
+}
+
+create_wave_11()
+{
+    # Create a Wave file from mxf_1, but exclude all Wave chunks
+
+    $appsdir/bmxtranswrap/bmxtranswrap \
+        --regtest \
+        -t wave \
+        -o $2 \
+        --exclude-wave-chunks all \
+        $1 \
+        >/dev/null
+}
+
+create_wave_12()
+{
+    # Create a Wave file from mxf_1, but exclude just the <chna> chunk
+
+    $appsdir/bmxtranswrap/bmxtranswrap \
+        --regtest \
+        -t wave \
+        -o $2 \
+        --exclude-wave-chunks chna \
+        $1 \
+        >/dev/null
+}
+
 
 check()
 {
@@ -396,7 +440,16 @@ check()
     create_wave_10 $tmpdir/test_mxf_9.mxf $tmpdir/test.wav &&
         $md5tool < $tmpdir/test.wav > $tmpdir/test.md5 &&
         diff $tmpdir/test.md5 $base/test_wave_10.md5 &&
-        diff $tmpdir/test.wav $tmpdir/test_wave_3.wav
+        diff $tmpdir/test.wav $tmpdir/test_wave_3.wav &&
+    create_mxf_10 $tmpdir/test.mxf &&
+        $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
+        diff $tmpdir/test.md5 $base/test_mxf_10.md5 &&
+    create_wave_11 $tmpdir/test_mxf_1.mxf $tmpdir/test.wav &&
+        $md5tool < $tmpdir/test.wav > $tmpdir/test.md5 &&
+        diff $tmpdir/test.md5 $base/test_wave_11.md5 &&
+    create_wave_12 $tmpdir/test_mxf_1.mxf $tmpdir/test.wav &&
+        $md5tool < $tmpdir/test.wav > $tmpdir/test.md5 &&
+        diff $tmpdir/test.md5 $base/test_wave_12.md5
 }
 
 create_data()
@@ -438,7 +491,13 @@ create_data()
     create_mxf_9 $tmpdir/test_wave_3.wav $tmpdir/test_mxf_9.mxf &&
         $md5tool < $tmpdir/test_mxf_9.mxf > $base/test_mxf_9.md5 &&
     create_wave_10 $tmpdir/test_mxf_9.mxf $tmpdir/test.wav &&
-        $md5tool < $tmpdir/test.wav > $base/test_wave_10.md5
+        $md5tool < $tmpdir/test.wav > $base/test_wave_10.md5 &&
+    create_mxf_10 $tmpdir/test.mxf &&
+        $md5tool < $tmpdir/test.mxf > $base/test_mxf_10.md5 &&
+    create_wave_11 $tmpdir/test_mxf_1.mxf $tmpdir/test.wav &&
+        $md5tool < $tmpdir/test.wav > $base/test_wave_11.md5 &&
+    create_wave_12 $tmpdir/test_mxf_1.mxf $tmpdir/test.wav &&
+        $md5tool < $tmpdir/test.wav > $base/test_wave_12.md5
 }
 
 create_samples()
@@ -461,7 +520,10 @@ create_samples()
     create_mxf_8 $sampledir/test_wave_3.wav $sampledir/test_mxf_8.mxf &&
     create_wave_9 $sampledir/test_mxf_8.mxf $sampledir/test_wave_9.wav &&
     create_mxf_9 $sampledir/test_wave_3.wav $sampledir/test_mxf_9.mxf &&
-    create_wave_10 $sampledir/test_mxf_9.mxf $sampledir/test_wave_10.wav
+    create_wave_10 $sampledir/test_mxf_9.mxf $sampledir/test_wave_10.wav &&
+    create_mxf_10 $sampledir/test_mxf_10.mxf &&
+    create_wave_11 $sampledir/test_mxf_1.mxf $sampledir/test_wave_11.wav &&
+    create_wave_12 $sampledir/test_mxf_1.mxf $sampledir/test_wave_12.wav
 }
 
 

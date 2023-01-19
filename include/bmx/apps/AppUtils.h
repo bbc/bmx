@@ -167,6 +167,7 @@ bool parse_essence_type_names(const char *str, std::map<EssenceType, std::string
 bool parse_video_line_map(const char *str, mxfVideoLineMap *video_line_map);
 bool parse_wave_chunk_refs(const char *str, std::map<std::string, WaveChunkRef> *refs);
 bool parse_adm_wave_chunk_ref(const char *str, std::map<std::string, WaveChunkRef> *refs);
+bool parse_wave_chunk_ids(const char *str, std::set<WaveChunkId> *ids, bool *have_all);
 
 std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def);
 

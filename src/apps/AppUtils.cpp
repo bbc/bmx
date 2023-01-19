@@ -1178,6 +1178,28 @@ bool bmx::parse_adm_wave_chunk_ref(const char *str, map<string, WaveChunkRef> *r
     return true;
 }
 
+bool bmx::parse_wave_chunk_ids(const char *str, std::set<WaveChunkId> *ids_out, bool *have_all)
+{
+    vector<string> ids = split_string(str, ',', false, true);
+    if (ids.empty())
+        return false;
+
+    *have_all = false;
+    for (size_t i = 0; i < ids.size(); i++) {
+        if (ids[i] == "all") {
+            *have_all = true;
+            return true;
+        }
+    }
+
+    for (size_t i = 0; i < ids.size(); i++) {
+        ids[i].resize(4, ' ');
+        ids_out->insert(WAVE_CHUNK_ID(ids[i]));
+    }
+
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {

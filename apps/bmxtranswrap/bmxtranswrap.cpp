@@ -60,6 +60,7 @@
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as02/AS02PictureTrack.h>
 #include <bmx/wave/WaveFileIO.h>
+#include <bmx/wave/WaveChunk.h>
 #include <bmx/st436/ST436Element.h>
 #include <bmx/st436/RDD6Metadata.h>
 #include <bmx/URI.h>
@@ -689,7 +690,9 @@ static void usage(const char *cmd)
     printf("    --force-no-avci-head    Strip AVCI header (512 bytes, sequence and picture parameter sets) if present\n");
     printf("\n");
     printf("  wave:\n");
-    printf("    --orig <name>           Set originator in the Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
+    printf("    --orig <name>                Set originator in the Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
+    printf("    --exclude-wave-chunks <ids>  Don't transfer non-builtin or <chna> Wave chunks with ID in the comma-separated list of chunk <ids>\n");
+    printf("                                 Set <ids> to 'all' to exclude all Wave chunks\n");
     printf("\n");
     printf("  as02/op1a/as11op1a:\n");
     printf("    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");
@@ -872,6 +875,8 @@ int main(int argc, const char** argv)
     uint8_t d10_mute_sound_flags = 0;
     uint8_t d10_invalid_sound_flags = 0;
     const char *originator = DEFAULT_BEXT_ORIGINATOR;
+    set<WaveChunkId> exclude_wave_chunks;
+    bool exclude_all_wave_chunks = false;
     AvidUMIDType avid_umid_type = AAFSDK_UMID_TYPE;
     UMID mp_uid = g_Null_UMID;
     bool mp_uid_set = false;
@@ -2648,6 +2653,22 @@ int main(int argc, const char** argv)
             originator = argv[cmdln_index + 1];
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--exclude-wave-chunks") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_wave_chunk_ids(argv[cmdln_index + 1], &exclude_wave_chunks, &exclude_all_wave_chunks))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--track-map") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -4416,6 +4437,10 @@ int main(int argc, const char** argv)
                     for (size_t k = 0; k < input_track_reader->GetNumWaveChunks(); k++) {
                         MXFWaveChunk *wave_chunk = input_track_reader->GetWaveChunk(k);
 
+                        // Don't write chunks in the exclusion list
+                        if (exclude_all_wave_chunks || exclude_wave_chunks.count(wave_chunk->Id()) > 0)
+                            continue;
+
                         if (!unique_chunk_stream_ids.count(wave_chunk->GetStreamId())) {
                             if (wave_clip->HaveChunk(wave_chunk->Id())) {
                                 // E.g. this can happen if multiple <axml> chunks exist that came from different Wave files
@@ -4430,15 +4455,17 @@ int main(int argc, const char** argv)
                         }
                     }
 
-                    // Add audio IDs for the ADM <chna> chunk
-                    vector<WaveCHNA::AudioID> audio_ids = input_track_reader->GetCHNAAudioIDs(input_channel_index);
-                    for (size_t k = 0; k < audio_ids.size(); k++) {
-                        WaveCHNA::AudioID &audio_id = audio_ids[k];
+                    if (!exclude_all_wave_chunks && exclude_wave_chunks.count(WAVE_CHUNK_ID("chna")) == 0) {
+                        // Add audio IDs for the ADM <chna> chunk
+                        vector<WaveCHNA::AudioID> audio_ids = input_track_reader->GetCHNAAudioIDs(input_channel_index);
+                        for (size_t k = 0; k < audio_ids.size(); k++) {
+                            WaveCHNA::AudioID &audio_id = audio_ids[k];
 
-                        // Change the input channel track_index to the output channel track_index
-                        // + 1 because the <chna> track_index starts at 1
-                        audio_id.track_index = output_channel_index + 1;
-                        wave_track->AddADMAudioID(audio_id);
+                            // Change the input channel track_index to the output channel track_index
+                            // + 1 because the <chna> track_index starts at 1
+                            audio_id.track_index = output_channel_index + 1;
+                            wave_track->AddADMAudioID(audio_id);
+                        }
                     }
                 }
             }
