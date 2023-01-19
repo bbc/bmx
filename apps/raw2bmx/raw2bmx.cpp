@@ -619,6 +619,7 @@ static void usage(const char *cmd)
     printf("                                       This chunk will override any non-builtin and 'chna' chunk originating from the input Wave files\n");
     printf("    --chna-audio-ids <file>            Add a 'chna' chunk to the output Wave file which is defined in the text <file>\n");
     printf("                                       This chunk will override any 'chna' chunk originating from the input Wave files\n");
+    printf("                                       The format for the <file> is described in bmx/docs/audio_definition_model#chna-text-file-definition-format\n");
     printf("\n");
     printf("  as02/op1a/as11op1a:\n");
     printf("    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");

@@ -64,6 +64,7 @@ including the following:
     * [IMF JPEG 2000 Track Files](./docs/imf_jpeg_2000_track_files.md)
     * [IMF Audio Track Files](./docs/imf_audio_track_files.md)
     * [IMF ProRes Image Track Files](./docs/imf_prores_track_files.md)
+* [Audio Definition Model](./docs/audio_definition_model.md)
 
 ## Build, Test and Install
 
