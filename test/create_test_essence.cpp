@@ -910,7 +910,7 @@ static void write_vbi_data(FILE *file, unsigned int duration)
 
 static void print_usage(const char *cmd)
 {
-    fprintf(stderr, "Usage: %s [-d <frames>] -t <type> <filename>\n", cmd);
+    fprintf(stderr, "Usage: %s [-d <frames>] [-s <initval>] -t <type> <filename>\n", cmd);
     fprintf(stderr, "Types:\n");
     fprintf(stderr, "  1: 16-bit PCM\n");
     fprintf(stderr, "  2: IEC DV 25\n");

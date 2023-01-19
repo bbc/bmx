@@ -2,8 +2,6 @@
  * Copyright (C) 2022, British Broadcasting Corporation
  * All Rights Reserved.
  *
- * Author: Philip de Nier
- *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
@@ -29,65 +27,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_WAVE_CHNA_H_
-#define BMX_WAVE_CHNA_H_
+#ifndef BMX_ADM_CHNA_TEST_FILE_HELPER_H_
+#define BMX_ADM_CHNA_TEST_FILE_HELPER_H_
 
+#include <string>
 
-#include <vector>
-
-#include <bmx/BMXTypes.h>
-#include <bmx/wave/WaveIO.h>
-#include <bmx/wave/WaveChunk.h>
-
+#include <bmx/wave/WaveCHNA.h>
 
 
 namespace bmx
 {
 
 
-class WaveCHNA
-{
-public:
-    WaveCHNA();
-    ~WaveCHNA();
+WaveCHNA* parse_chna_text_file(const std::string &filename);
 
-public:
-    typedef struct {
-        uint16_t track_index;
-        uint8_t uid[12];
-        uint8_t track_ref[14];
-        uint8_t pack_ref[11];
-    } AudioID;
-
-public:
-    void AppendAudioID(const AudioID &audio_id);
-
-    uint32_t GetSize();
-    uint32_t GetAlignedSize() { return GetSize(); }
-
-    void Write(WaveIO *output);
-
-public:
-    WaveChunkTag Tag() const { return WAVE_CHUNK_TAG("chna"); }
-
-    uint16_t GetNumTracks() const                   { return mNumTracks; }
-    uint16_t GetNumUIDs() const                     { return mNumUIDs; }
-    const std::vector<AudioID>& GetAudioIDs() const { return mAudioIDs; }
-
-    std::vector<AudioID> GetAudioIDs(uint16_t track_index) const;
-
-    void Read(WaveIO *input, uint32_t size);
-
-private:
-    uint16_t mNumTracks;
-    uint16_t mNumUIDs;
-    std::vector<AudioID> mAudioIDs;
-};
+void write_chna_text_file(const std::string &filename, WaveCHNA *chna);
 
 
 };
-
-
 
 #endif
-

@@ -68,7 +68,9 @@
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/wave/WaveFileIO.h>
+#include <bmx/wave/WaveFileChunk.h>
 #include <bmx/wave/WaveReader.h>
+#include <bmx/wave/WaveCHNA.h>
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/URI.h>
 #include <bmx/MXFUtils.h>
@@ -76,6 +78,7 @@
 #include <bmx/Version.h>
 #include <bmx/apps/AppUtils.h>
 #include <bmx/apps/TimedTextManifestParser.h>
+#include <bmx/apps/ADMCHNATextFileHelper.h>
 #include <bmx/as11/AS11Labels.h>
 #include <bmx/as10/AS10ShimNames.h>
 #include <bmx/as10/AS10MPEG2Validator.h>
@@ -117,6 +120,12 @@ typedef struct
     const char *position_str;
     AvidLocator locator;
 } LocatorOption;
+
+typedef struct
+{
+    const char *filename;
+    WaveChunkTag tag;
+} WaveChunkData;
 
 struct RawInput
 {
@@ -605,7 +614,11 @@ static void usage(const char *cmd)
     printf("    --force-no-avci-head    Strip AVCI header (512 bytes, sequence and picture parameter sets) if present\n");
     printf("\n");
     printf("  wave:\n");
-    printf("    --orig <name>           Set originator in the output Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
+    printf("    --orig <name>                      Set originator in the output Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
+    printf("    --wave-chunk-data <file> <tag>     Add a chunk to the output Wave file that has chunk data (not including tag and size) from <file> and <tag>\n");
+    printf("                                       This chunk will override any non-builtin and 'chna' chunk originating from the input Wave files\n");
+    printf("    --chna-audio-ids <file>            Add a 'chna' chunk to the output Wave file which is defined in the text <file>\n");
+    printf("                                       This chunk will override any 'chna' chunk originating from the input Wave files\n");
     printf("\n");
     printf("  as02/op1a/as11op1a:\n");
     printf("    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");
@@ -958,6 +971,8 @@ int main(int argc, const char** argv)
     BMX_OPT_PROP_DECL_DEF(uint32_t, head_fill, 0);
     mxfThreeColorPrimaries three_color_primaries;
     mxfColorPrimary color_primary;
+    vector<WaveChunkData> wave_chunk_datas;
+    const char *chna_audio_ids_file = 0;
     bool real_essence_regtest = false;
     int value, num, den;
     unsigned int uvalue;
@@ -1812,6 +1827,41 @@ int main(int argc, const char** argv)
                 return 1;
             }
             originator = argv[cmdln_index + 1];
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--wave-chunk-data") == 0)
+        {
+            if (cmdln_index + 2 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (argv[cmdln_index + 2][0] == 0 || strlen(argv[cmdln_index + 2]) > 4) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid Wave chunk tag '%s' for option '%s'\n", argv[cmdln_index + 2], argv[cmdln_index]);
+                return 1;
+            }
+
+            string tag_str = argv[cmdln_index + 2];
+            tag_str.resize(4);
+
+            WaveChunkData wave_chunk_data;
+            wave_chunk_data.filename = argv[cmdln_index + 1];
+            wave_chunk_data.tag = WAVE_CHUNK_TAG(tag_str);
+            wave_chunk_datas.push_back(wave_chunk_data);
+
+            cmdln_index += 2;
+        }
+        else if (strcmp(argv[cmdln_index], "--chna-audio-ids") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            chna_audio_ids_file = argv[cmdln_index + 1];
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--track-map") == 0)
@@ -5852,6 +5902,29 @@ int main(int argc, const char** argv)
                         }
                     }
                 }
+            }
+        }
+
+
+        // Add Wave chunks provided via commandline args.
+        // These chunks will override any chunks added above for ADM
+
+        if (clip_type == CW_WAVE_CLIP_TYPE) {
+            WaveWriter *wave_clip = clip->GetWaveClip();
+            size_t i;
+            for (i = 0; i < wave_chunk_datas.size(); i++) {
+                const WaveChunkData &wave_chunk_data = wave_chunk_datas[i];
+
+                // Use the WaveFileIO class as a generic BMXIO class
+                BMXIO *file = WaveFileIO::OpenRead(wave_chunk_data.filename);
+
+                WaveFileChunk *chunk = new WaveFileChunk(wave_chunk_data.tag, file, 0, file->Size());
+                wave_clip->AddChunk(chunk, true);
+            }
+
+            if (chna_audio_ids_file) {
+                WaveCHNA *chna = parse_chna_text_file(chna_audio_ids_file);
+                wave_clip->AddCHNA(chna, true);
             }
         }
 

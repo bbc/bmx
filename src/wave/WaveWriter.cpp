@@ -95,8 +95,9 @@ WaveWriter::~WaveWriter()
     for (i = 0; i < mTracks.size(); i++)
         delete mTracks[i];
 
-    for (i = 0; i < mOwnedAdditionalChunks.size(); i++)
-        delete mOwnedAdditionalChunks[i];
+    map<WaveChunkTag, WaveChunk*>::const_iterator iter;
+    for (iter = mOwnedAdditionalChunks.begin(); iter != mOwnedAdditionalChunks.end(); iter++)
+        delete iter->second;
 }
 
 void WaveWriter::SetStartTimecode(Timecode start_timecode)
@@ -112,8 +113,7 @@ void WaveWriter::SetSampleCount(int64_t count)
 
 void WaveWriter::AddCHNA(WaveCHNA *chna, bool take_ownership)
 {
-    if (mOwnCHNA)
-        delete mCHNA;
+    RemoveChunk(chna->Tag());
 
     mCHNA = chna;
     mOwnCHNA = take_ownership;
@@ -121,9 +121,11 @@ void WaveWriter::AddCHNA(WaveCHNA *chna, bool take_ownership)
 
 void WaveWriter::AddChunk(WaveChunk *chunk, bool take_ownership)
 {
-    mAdditionalChunks.push_back(chunk);
+    RemoveChunk(chunk->Tag());
+
+    mAdditionalChunks[chunk->Tag()] = chunk;
     if (take_ownership)
-        mOwnedAdditionalChunks.push_back(chunk);
+        mOwnedAdditionalChunks[chunk->Tag()] = chunk;
 }
 
 void WaveWriter::AddADMAudioID(const WaveCHNA::AudioID &audio_id)
@@ -174,14 +176,14 @@ void WaveWriter::PrepareWrite()
         mWriteBW64 = true;
 
     vector<WaveChunk*> write_chunks;
-    size_t i;
-    for (i = 0; i < mAdditionalChunks.size(); i++) {
-        WaveChunk *chunk = mAdditionalChunks[i];
+    map<WaveChunkTag, WaveChunk*>::const_iterator iter;
+    for (iter = mAdditionalChunks.begin(); iter != mAdditionalChunks.end(); iter++) {
+        WaveChunk *chunk = iter->second;
 
         if (chunk->Tag() == "axml" || chunk->Tag() == "bxml" || chunk->Tag() == "sxml") {
             mWriteBW64 = true;
             write_chunks.push_back(chunk);
-        } else if (chunk->Tag() == "chna" && !mCHNA) {
+        } else if (chunk->Tag() == "chna") {
             // Accept a chna tag passed in using AddChunk() rather than AddCHNA()
             // Don't add it to write_chunks here because it needs to be written first
             mWriteBW64 = true;
@@ -205,6 +207,7 @@ void WaveWriter::PrepareWrite()
         mSetSize = 4 + (8 + 28) + (8 + 16) + (8 + mSetDataSize);
         if (!mWriteBW64)
             mSetSize += (8 + 4) + (8 + mBEXT->GetAlignedSize());  // fact and bext chunks
+        size_t i;
         for (i = 0; i < write_chunks.size(); i++)
             mSetSize += 8 + write_chunks[i]->AlignedSize();
 
@@ -275,6 +278,7 @@ void WaveWriter::PrepareWrite()
     else if (chna_chunk)
         mOutput->WriteChunk(chna_chunk);
 
+    size_t i;
     for (i = 0; i < write_chunks.size(); i++)
         mOutput->WriteChunk(write_chunks[i]);
 
@@ -491,3 +495,21 @@ void WaveWriter::SetQuantizationBits(uint16_t bits)
     mChannelBlockAlign = (mQuantizationBits + 7) / 8;
 }
 
+void WaveWriter::RemoveChunk(WaveChunkTag tag)
+{
+    if (tag == "chna") {
+        if (mOwnCHNA)
+            delete mCHNA;
+        mCHNA = 0;
+        mOwnCHNA = false;
+    }
+
+    if (mAdditionalChunks.count(tag)) {
+        mAdditionalChunks.erase(tag);
+
+        if (mOwnedAdditionalChunks.count(tag)) {
+            delete mOwnedAdditionalChunks[tag];
+            mOwnedAdditionalChunks.erase(tag);
+        }
+    }
+}

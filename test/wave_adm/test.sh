@@ -133,6 +133,28 @@ create_wave_5()
         >/dev/null
 }
 
+create_wave_6()
+{
+    # Create a Wave file from test generated content, an axml chunk file and a chna text file.
+
+    $testdir/create_test_essence -t 42 -d 1 -s 1 $tmpdir/audio1.pcm
+    $testdir/create_test_essence -t 42 -d 1 -s 2 $tmpdir/audio2.pcm
+    $testdir/create_test_essence -t 42 -d 1 -s 3 $tmpdir/audio3.pcm
+    $testdir/create_test_essence -t 42 -d 1 -s 4 $tmpdir/audio4.pcm
+
+    $appsdir/raw2bmx/raw2bmx \
+        --regtest \
+        -t wave \
+        -o $3 \
+        --wave-chunk-data $1 axml \
+        --chna-audio-ids $2 \
+        -s 48000 -q 24 --pcm $tmpdir/audio1.pcm \
+        -s 48000 -q 24 --pcm $tmpdir/audio2.pcm \
+        -s 48000 -q 24 --pcm $tmpdir/audio3.pcm \
+        -s 48000 -q 24 --pcm $tmpdir/audio4.pcm \
+        >/dev/null
+}
+
 create_mxf_4()
 {
     # Create an MXF from wave_3 including only silence (non-ADM) channels.
@@ -175,6 +197,9 @@ check()
         $md5tool < $tmpdir/test.wav > $tmpdir/test.md5 &&
         diff $tmpdir/test.md5 $base/test_wave_5.md5 &&
         diff $tmpdir/test.wav $base/adm_1.wav &&
+    create_wave_6 $base/axml_1.xml $base/chna_1.txt $tmpdir/test.wav &&
+        $md5tool < $tmpdir/test.wav > $tmpdir/test.md5 &&
+        diff $tmpdir/test.md5 $base/test_wave_6.md5 &&
     create_mxf_4 $tmpdir/test_wav_3.wav $tmpdir/test.mxf &&
         $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
         diff $tmpdir/test.md5 $base/test_mxf_4.md5
@@ -198,6 +223,8 @@ create_data()
         $md5tool < $tmpdir/test.wav > $base/test_wave_4.md5 &&
     create_wave_5 $tmpdir/test.wav &&
         $md5tool < $tmpdir/test.wav > $base/test_wave_5.md5 &&
+    create_wave_6 $base/axml_1.xml $base/chna_1.txt $tmpdir/test.wav &&
+        $md5tool < $tmpdir/test.wav > $base/test_wave_6.md5 &&
     create_mxf_4 $tmpdir/test_wave_3.wav $tmpdir/test.mxf &&
         $md5tool < $tmpdir/test.mxf > $base/test_mxf_4.md5
 }
@@ -212,6 +239,7 @@ create_samples()
     create_wave_3 $sampledir/test_mxf_3.mxf $sampledir/test_wave_3.wav &&
     create_wave_4 $sampledir/test_mxf_3.mxf $sampledir/test_wave_4.wav &&
     create_wave_5 $sampledir/test_wave_5.wav &&
+    create_wave_6 $base/axml_1.xml $base/chna_1.txt $sampledir/test_wave_6.wav &&
     create_mxf_4 $sampledir/test_wave_3.wav $sampledir/test_mxf_4.mxf
 }
 

@@ -35,6 +35,7 @@
 
 #include <vector>
 #include <deque>
+#include <map>
 
 #include <bmx/ByteArray.h>
 #include <bmx/wave/WaveIO.h>
@@ -88,6 +89,8 @@ private:
     void SetSamplingRate(Rational sampling_rate);
     void SetQuantizationBits(uint16_t bits);
 
+    void RemoveChunk(WaveChunkTag tag);
+
 private:
     WaveIO *mOutput;
     bool mOwnOutput;
@@ -97,8 +100,8 @@ private:
     WaveBEXT *mBEXT;
     WaveCHNA *mCHNA;
     bool mOwnCHNA;
-    std::vector<WaveChunk*> mAdditionalChunks;
-    std::vector<WaveChunk*> mOwnedAdditionalChunks;
+    std::map<WaveChunkTag, WaveChunk*> mAdditionalChunks;
+    std::map<WaveChunkTag, WaveChunk*> mOwnedAdditionalChunks;
 
     Rational mSamplingRate;
     bool mSamplingRateSet;
