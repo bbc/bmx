@@ -1,5 +1,8 @@
 list(APPEND bmx_sources
     wave/WaveBEXT.cpp
+    wave/WaveCHNA.cpp
+    wave/WaveChunk.cpp
+    wave/WaveFileChunk.cpp
     wave/WaveFileIO.cpp
     wave/WaveIO.cpp
     wave/WaveReader.cpp
