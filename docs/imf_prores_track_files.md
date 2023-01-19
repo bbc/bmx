@@ -1,6 +1,6 @@
 # IMF ProRes Track Files
 
-The [IMF Flavour](./imf_track_files.md) of `bmxtranswrap` and `raw2bmx` can be used to create Image Track Files conforming to [SMPTE RDD 45](https://ieeexplore.ieee.org/document/8233487) Application ProRes or [SMPTE RDD 59-1](https://github.com/SMPTE/rdd59-1) Application DPP (ProRes) (which is based on RDD 45).
+The [IMF Flavour](./imf_track_files.md) of `bmxtranswrap` and `raw2bmx` can be used to create Image Track Files conforming to [SMPTE RDD 45](https://ieeexplore.ieee.org/document/8233487) Application ProRes or [SMPTE RDD 59-1](https://ieeexplore.ieee.org/document/9999622) Application DPP (ProRes) (which is based on RDD 45).
 
 RDD 45 specifies certain [SMPTE RDD 36](https://ieeexplore.ieee.org/document/7438722) ProRes bitstream parameters that must be set. bmx will populate the Essence Descriptor from the bitstream and other values supplied on the command line or as defaults.
 
