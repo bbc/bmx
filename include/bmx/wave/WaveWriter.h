@@ -65,6 +65,8 @@ public:
     void AddCHNA(WaveCHNA *chna, bool take_ownership);
     void AddChunk(WaveChunk *chunk, bool take_ownership);
 
+    void AddADMAudioID(const WaveCHNA::AudioID &audio_id);
+
 public:
     WaveTrackWriter* CreateTrack();
 

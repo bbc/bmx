@@ -5731,7 +5731,13 @@ int main(int argc, const char** argv)
 
         // Add ADM Wave chunks and references
 
-        if (clip_type == CW_OP1A_CLIP_TYPE) {
+        if (clip_type == CW_OP1A_CLIP_TYPE || clip_type == CW_WAVE_CLIP_TYPE) {
+            if (clip_type == CW_WAVE_CLIP_TYPE) {
+                // Ensure that the start channels are up-to-date for each track
+                WaveWriter *wave_clip = clip->GetWaveClip();
+                wave_clip->UpdateChannelCounts();
+            }
+
             // Get the output tracks and referenced Wave file inputs that contain ADM chunks
             // Only allow a single Wave with ADM for each output track to ensure that references between
             // the ADM chunks and channels remain unambiguous
@@ -5787,8 +5793,10 @@ int main(int argc, const char** argv)
             }
 
             if (!output_tracks_using_adm.empty()) {
-                // Add ADM chunks to the clip
+                // These refs are only used in MXF. It is ignored for Wave
                 map<RawInput*, vector<uint32_t> > input_chunk_refs;
+
+                // Add ADM chunks to the clip
                 set<RawInput*>::const_iterator iter;
                 for (iter = wave_adm_inputs.begin(); iter != wave_adm_inputs.end(); iter++) {
                     RawInput *input = *iter;
@@ -5812,11 +5820,13 @@ int main(int argc, const char** argv)
 
                     ClipWriterTrack *clip_track = output_track->GetClipTrack();
 
-                    // Add generic stream ID references to the chunks to the clip track
-                    const vector<uint32_t> &chunk_refs = input_chunk_refs[wave_adm_input];
-                    size_t k;
-                    for (k = 0; k < chunk_refs.size(); k++)
-                        clip_track->AddWaveChunkReference(chunk_refs[k]);
+                    if (clip_type != CW_WAVE_CLIP_TYPE) {
+                        // Add generic stream ID references to the chunks to the MXF clip track
+                        const vector<uint32_t> &chunk_refs = input_chunk_refs[wave_adm_input];
+                        size_t k;
+                        for (k = 0; k < chunk_refs.size(); k++)
+                            clip_track->AddWaveChunkReference(chunk_refs[k]);
+                    }
 
                     // Add chna AudioIDs to the clip track.
                     // Use the input to output channel mapping to set the chna track_index
@@ -5831,6 +5841,7 @@ int main(int argc, const char** argv)
                         // + 1 below because ADM track (channel) indexes start at 1
                         uint32_t input_channel_index = iter->second.input_channel_index;
                         vector<WaveCHNA::AudioID> audio_ids = input_chna->GetAudioIDs(input_channel_index + 1);
+                        size_t k;
                         for (k = 0; k < audio_ids.size(); k++) {
                             WaveCHNA::AudioID &audio_id = audio_ids[k];
 

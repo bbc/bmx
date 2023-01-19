@@ -332,25 +332,28 @@ void ClipWriter::ForceWriteCBEDuration0(bool enable)
 
 uint32_t ClipWriter::AddWaveChunk(WaveChunk *chunk, bool take_ownership)
 {
-    uint32_t stream_id = 0;
+    uint32_t id = 0;
 
     switch (mType)
     {
         case CW_OP1A_CLIP_TYPE:
-            stream_id = mOP1AClip->AddWaveChunk(chunk, take_ownership);
+            id = mOP1AClip->AddWaveChunk(chunk, take_ownership);
+            break;
+        case CW_WAVE_CLIP_TYPE:
+            mWaveClip->AddChunk(chunk, take_ownership);
+            // No id and so 0 is always returned
             break;
         case CW_D10_CLIP_TYPE:
         case CW_RDD9_CLIP_TYPE:
         case CW_AS02_CLIP_TYPE:
         case CW_AVID_CLIP_TYPE:
-        case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
             break;
     }
 
-    return stream_id;
+    return id;
 }
 
 ClipWriterTrack* ClipWriter::CreateTrack(EssenceType essence_type, string track_filename)

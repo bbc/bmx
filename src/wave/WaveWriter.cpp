@@ -112,6 +112,9 @@ void WaveWriter::SetSampleCount(int64_t count)
 
 void WaveWriter::AddCHNA(WaveCHNA *chna, bool take_ownership)
 {
+    if (mOwnCHNA)
+        delete mCHNA;
+
     mCHNA = chna;
     mOwnCHNA = take_ownership;
 }
@@ -121,6 +124,16 @@ void WaveWriter::AddChunk(WaveChunk *chunk, bool take_ownership)
     mAdditionalChunks.push_back(chunk);
     if (take_ownership)
         mOwnedAdditionalChunks.push_back(chunk);
+}
+
+void WaveWriter::AddADMAudioID(const WaveCHNA::AudioID &audio_id)
+{
+    if (!mCHNA) {
+        mCHNA = new WaveCHNA();
+        mOwnCHNA = true;
+    }
+
+    mCHNA->AppendAudioID(audio_id);
 }
 
 WaveTrackWriter* WaveWriter::CreateTrack()

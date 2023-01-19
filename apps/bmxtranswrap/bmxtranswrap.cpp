@@ -4397,7 +4397,6 @@ int main(int argc, const char** argv)
 
             // Loop over the Wave output tracks and add referenced chunks to the Wave file.
             // Construct the output chna chunk based on the track mapping
-            WaveCHNA *output_chna = 0;
             size_t i;
             for (i = 0; i < output_tracks.size(); i++) {
                 OutputTrack *output_track = output_tracks[i];
@@ -4438,18 +4437,12 @@ int main(int argc, const char** argv)
                     for (k = 0; k < audio_ids.size(); k++) {
                         WaveCHNA::AudioID &audio_id = audio_ids[k];
 
-                        if (!output_chna)
-                            output_chna = new WaveCHNA();
-
                         // + 1 because the chna track_index starts at 1
                         audio_id.track_index = wave_track->GetStartChannel() + output_channel_index + 1;
-                        output_chna->AppendAudioID(audio_id);
+                        wave_track->AddADMAudioID(audio_id);
                     }
                 }
             }
-
-            if (output_chna)
-                wave_clip->AddCHNA(output_chna, true);
         }
 
 

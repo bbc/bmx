@@ -34,6 +34,7 @@
 
 
 #include <bmx/wave/WaveIO.h>
+#include <bmx/wave/WaveCHNA.h>
 
 
 
@@ -54,6 +55,8 @@ public:
     void SetSamplingRate(Rational sampling_rate);       // default 48000/1
     void SetQuantizationBits(uint16_t bits);            // default 16
     void SetChannelCount(uint16_t count);               // default 1
+
+    void AddADMAudioID(const WaveCHNA::AudioID &audio_id);
 
 public:
     void WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples);

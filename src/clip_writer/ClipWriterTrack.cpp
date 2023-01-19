@@ -1158,11 +1158,13 @@ void ClipWriterTrack::AddADMAudioID(const WaveCHNA::AudioID &audio_id)
                 pcm_track->AddADMAudioID(audio_id);
             break;
         }
+        case CW_WAVE_CLIP_TYPE:
+            mWaveTrack->AddADMAudioID(audio_id);
+            break;
         case CW_D10_CLIP_TYPE:
         case CW_RDD9_CLIP_TYPE:
         case CW_AS02_CLIP_TYPE:
         case CW_AVID_CLIP_TYPE:
-        case CW_WAVE_CLIP_TYPE:
             break;
         case CW_UNKNOWN_CLIP_TYPE:
             BMX_ASSERT(false);
