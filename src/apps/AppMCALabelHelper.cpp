@@ -173,7 +173,7 @@ static const UL ADM_SG_DICT_ID = {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d
 static const MCALabelEntry ADM_MCA_LABELS[] =
 {
     // Soundfield Groups
-    {SOUNDFIELD_GROUP_LABEL, "sgADM", "ADM", ADM_SG_DICT_ID},
+    {SOUNDFIELD_GROUP_LABEL, "ADM", "ADM", ADM_SG_DICT_ID},
 };
 
 
@@ -245,6 +245,7 @@ struct MCAPropertyMapEntry {
    {"mcaspokenlanguageattribute", PROPERTY_FUNCTION_REFS(MCASpokenLanguageAttribute)},
    {"rfc5646additionalspokenlanguages", PROPERTY_FUNCTION_REFS(RFC5646AdditionalSpokenLanguages)},
    {"mcaadditionallanguageattributes", PROPERTY_FUNCTION_REFS(MCAAdditionalLanguageAttributes)},
+   // ADM propertues will be identified by the "adm" prefix in AppMCALabelHelper
    {"admaudioprogrammeid_admsg", PROPERTY_FUNCTION_REFS(ADMAudioProgrammeID_ADMsg)},
    {"admaudioprogrammeid", PROPERTY_FUNCTION_REFS(ADMAudioProgrammeID_ADMsg)},  // without "_admsg" suffix
    {"admaudiocontentid_admsg", PROPERTY_FUNCTION_REFS(ADMAudioContentID_ADMsg)},
@@ -266,6 +267,7 @@ void AppMCALabelHelper::LabelLine::Reset()
     channel_index = (uint32_t)(-1);
     repeat = true;
     string_properties.clear();
+    adm_sg_subdesc = false;
 }
 
 
@@ -553,7 +555,7 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                                  sg_label_line.id.c_str());
                     }
 
-                    if (sg_label_line.label->dict_id == ADM_SG_DICT_ID)
+                    if (sg_label_line.adm_sg_subdesc)
                         sg_desc = pcm_track->AddADMSoundfieldGroupLabel();
                     else
                         sg_desc = pcm_track->AddSoundfieldGroupLabel();
@@ -643,7 +645,8 @@ void AppMCALabelHelper::ParseTrackLines(const vector<string> &lines)
         track_labels = new TrackLabels();
         track_labels->track_index = track_index;
 
-        SoundfieldGroup sg;
+        vector<SoundfieldGroup> sgs;
+        SoundfieldGroup next_sg;
         size_t i;
         for (i = 1; i < lines.size(); i++) {
             LabelLine label_line = ParseLabelLine(lines[i]);
@@ -651,27 +654,59 @@ void AppMCALabelHelper::ParseTrackLines(const vector<string> &lines)
                 continue;
 
             if (label_line.label->type == AUDIO_CHANNEL_LABEL) {
-                if (!sg.gosg_label_lines.empty() || sg.sg_label_line.label) {
-                    track_labels->soundfield_groups.push_back(sg);
-                    sg.Reset();
+                // Add all the SGs created for this track before this CH
+                if (!sgs.empty()) {
+                    track_labels->soundfield_groups.insert(track_labels->soundfield_groups.end(), sgs.begin(), sgs.end());
+                    sgs.clear();
                 }
-                sg.c_label_lines.push_back(label_line);
+
+                next_sg.c_label_lines.push_back(label_line);
+
             } else if (label_line.label->type == SOUNDFIELD_GROUP_LABEL) {
-                if (sg.c_label_lines.empty())
-                    throw BMXException("No channels in soundfield group");
-                if (sg.sg_label_line.label)
-                    throw BMXException("Multiple soundfield group labels");
-                sg.sg_label_line = label_line;
+                // The ADM SG sub-descriptor allows the SG to have no references from CH.
+                // The ADM SG sub-descriptor also allows multiple SGs in a track.
+                // If there are no ADM properties present (!adm_sg_subdesc) then force a
+                // "ADM" SG label to use the ADM SG sub-descriptor if the conditions fail below
+                if (!label_line.adm_sg_subdesc) {
+                    if (next_sg.c_label_lines.empty()) {
+                        if (label_line.label->dict_id == ADM_SG_DICT_ID)
+                            label_line.adm_sg_subdesc = true;
+                        else
+                            throw BMXException("No channels in soundfield group");
+                    }
+                    if (!sgs.empty()) {
+                        if (label_line.label->dict_id == ADM_SG_DICT_ID)
+                            label_line.adm_sg_subdesc = true;
+                        else
+                            throw BMXException("Multiple soundfield group labels");
+                    }
+                }
+
+                next_sg.sg_label_line = label_line;
+                sgs.push_back(next_sg);
+                next_sg.Reset();
+
             } else { // GROUP_OF_SOUNDFIELD_GROUP_LABEL
-                if (!sg.sg_label_line.label)
+                if (sgs.empty())
                     throw BMXException("No soundfield group label before group of soundfield groups label");
-                sg.gosg_label_lines.push_back(label_line);
+
+                // Add the GOSG to all SG that came before it
+                size_t k;
+                for (k = 0; k < sgs.size(); k++) {
+                    SoundfieldGroup &sg = sgs[k];
+                    sg.gosg_label_lines.push_back(label_line);
+                }
             }
         }
-        if (!sg.gosg_label_lines.empty() || sg.sg_label_line.label || !sg.c_label_lines.empty()) {
-            track_labels->soundfield_groups.push_back(sg);
-            sg.Reset();
+
+        // Add the remaining placeholder SG (sg_label_line not set) that is used to carry the CHs
+        if (!next_sg.c_label_lines.empty()) {
+            sgs.push_back(next_sg);
+            next_sg.Reset();
         }
+
+        // Add all the SGs created for this track
+        track_labels->soundfield_groups.insert(track_labels->soundfield_groups.end(), sgs.begin(), sgs.end());
 
         mTrackLabels.push_back(track_labels);
         mTrackLabelsByTrackIndex[track_index] = track_labels;
@@ -921,6 +956,10 @@ AppMCALabelHelper::LabelLine AppMCALabelHelper::ParseLabelLine(const string &lin
                         if (!mMCAPropertySetterMap.count(map_name))
                             throw BMXException("Unknown MCA label property '%s', %s", name.c_str());
                     }
+
+                    // If there are ADM properties then the ADM SG subdescriptor must be used
+                    if (map_name.compare(0, 3, "adm") == 0)
+                        label_line.adm_sg_subdesc = true;
 
                     label_line.string_properties.push_back(make_pair(map_name, value));
                 }

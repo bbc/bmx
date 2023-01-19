@@ -52,6 +52,8 @@ public:
     void RegisterLabel(mxfpp::MCALabelSubDescriptor *label);
     void RegisterLabels(const MXFMCALabelIndex *from_index);
 
+    bool IsReferenced(mxfpp::SoundfieldGroupLabelSubDescriptor *sg_label);
+
     void CheckReferences(mxfpp::MCALabelSubDescriptor *label);
 
 public:

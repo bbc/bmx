@@ -94,6 +94,22 @@ void MXFMCALabelIndex::CheckReferences(MCALabelSubDescriptor *label)
     }
 }
 
+bool MXFMCALabelIndex::IsReferenced(SoundfieldGroupLabelSubDescriptor *sg_label)
+{
+    map<mxfUUID, MCALabelSubDescriptor*>::const_iterator iter;
+    for (iter = mLabels.begin(); iter != mLabels.end(); iter++) {
+        AudioChannelLabelSubDescriptor *ch_label = dynamic_cast<AudioChannelLabelSubDescriptor*>(iter->second);
+        if (ch_label &&
+            ch_label->haveSoundfieldGroupLinkID() &&
+            ch_label->getSoundfieldGroupLinkID() == sg_label->getMCALinkID())
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 MCALabelSubDescriptor* MXFMCALabelIndex::FindLabel(mxfUUID link_id) const
 {
     if (mLabels.count(link_id))

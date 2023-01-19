@@ -75,18 +75,30 @@ The `--track-map` option can be used to change what is output. For example, reor
 
 ## Add ADM MCA labels to MXF+ADM
 
-An ADM Soundfield Group MCA label can be added using the `sgADM` symbol in a [MCA labels text file](./mca_labels_format.md):
+A ADM Soundfield Group Label Subdescriptor is created from a [MCA labels text file](./mca_labels_format.md) if the list of properties associated with the Soundfield Group contains an ADM property (the ADM properties have the prefix "ADM") or it is a ADM Soundfield Group label and there are no Audio Channels that reference it.
+
+A ADM Soundfield Group label can be added using the `ADM` symbol in a [MCA labels text file](./mca_labels_format.md).
 
 `mca.txt`:
 ```
 0
 chL, chan=0
 chR, chan=1
-sgADM, lang=eng, mca_title="Example Programme", adm_audio_programme_id="APR_1001", adm_audio_content_id="ACO_1001", adm_audio_object_id="AO_1001"
+sgST, lang=eng, mca_title="Example Programme"
+ADM, adm_audio_object_id="AO_1001"
+
+1
+chL, chan=0
+chR, chan=1
+sgST, lang=eng, mca_title="Example Programme"
+ADM, adm_audio_object_id="AO_1002"
 ```
 
-The MCA labels defined in `mca.txt` can be added and the ADM-described content label can be set in the audio descriptor Channel Assignment property using the following example commandline:
-`raw2bmx -t op1a -o output.mxf --track-map '0,1' --track-mca-labels adm mca.txt --audio-layout adm --wave input.wave`
+The MCA labels defined in `mca.txt` can be added and the ADM-described content label can be set in the audio descriptor Channel Assignment property using the following example commandline: (_note_: the `x` in `--track-mca-labels` is a legacy option component and will be ignored)
+
+`raw2bmx -t op1a -o output.mxf --track-map '0,1' --track-mca-labels x mca.txt --audio-layout adm --wave input.wave`
+
+The Soundfield Groups that use the ADM Soundfield Group Label Subdescriptor are shown using a `(ADM)` suffix in the summary output of `mxf2raw`. E.g. `ADM(ADM)` in the example `mca.txt` above. If the `--mca-detail` option is used and the Soundfield Group uses the ADM Soundfield Group Label Subdescriptor then the name used in the `SoundfieldGroups` array is `ADMSoundfieldGroup`.
 
 
 ## chna Text File Definition Format

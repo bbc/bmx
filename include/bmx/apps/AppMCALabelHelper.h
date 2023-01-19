@@ -35,6 +35,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 #include <libMXF++/MXF.h>
 
@@ -117,12 +118,14 @@ private:
         uint32_t channel_index; // starts from 0. Note that the descriptor ChannelID starts from 1!
         bool repeat;
         std::vector<std::pair<std::string, std::string> > string_properties;
+        bool adm_sg_subdesc;
     };
 
     class SoundfieldGroup
     {
     public:
         void Reset();
+        bool IsNull() const { return !sg_label_line.label; }
 
         LabelLine sg_label_line; // can be 'null', indicating that the channels are not assigned to a soundfield group
         std::vector<LabelLine> c_label_lines;

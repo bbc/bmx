@@ -427,11 +427,18 @@
     </xs:complexContent>
   </xs:complexType>
 
+  <xs:group name="mca_sg_group">
+    <xs:choice>
+      <xs:element name="soundfield_group" type="mca_sg_label_type"/>
+      <xs:element name="adm_soundfield_group" type="mca_sg_label_type"/>
+    </xs:choice>
+  </xs:group>
+
   <xs:complexType name="mca_sg_type">
     <xs:complexContent>
       <xs:extension base="array_type">
         <xs:sequence>
-          <xs:element name="soundfield_group" type="mca_sg_label_type" maxOccurs="unbounded"/>
+          <xs:group ref="mca_sg_group" maxOccurs="unbounded"/>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>

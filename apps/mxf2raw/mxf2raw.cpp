@@ -652,20 +652,31 @@ static void write_track_mca_label_info(AppInfoWriter *info_writer, MXFReader *re
     map<UUID, GroupOfSoundfieldGroupsLabelSubDescriptor*> gosg_labels;
     size_t i;
     for (i = 0; i < sound_info->mca_labels.size(); i++) {
-        AudioChannelLabelSubDescriptor *c_label = sound_info->mca_labels[i];
-        if (c_label->haveMCAChannelID()) {
-            c_labels[c_label->getMCAChannelID()].push_back(c_label);
-        } else {
-            BMX_CHECK(sound_info->channel_count == 1);
-            c_labels[1].push_back(c_label);
+        AudioChannelLabelSubDescriptor *c_label = dynamic_cast<AudioChannelLabelSubDescriptor*>(sound_info->mca_labels[i]);
+        ADMSoundfieldGroupLabelSubDescriptor *adm_sg_label = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(sound_info->mca_labels[i]);
+        SoundfieldGroupLabelSubDescriptor *sg_label = 0;
+
+        if (c_label) {
+            if (c_label->haveMCAChannelID()) {
+                c_labels[c_label->getMCAChannelID()].push_back(c_label);
+            } else {
+                BMX_CHECK(sound_info->channel_count == 1);
+                c_labels[1].push_back(c_label);
+            }
+
+            if (c_label->haveSoundfieldGroupLinkID()) {
+                UUID link_id = c_label->getSoundfieldGroupLinkID();
+                MCALabelSubDescriptor *label = mca_label_index->FindLabel(link_id);
+                sg_label = dynamic_cast<SoundfieldGroupLabelSubDescriptor*>(label);
+                BMX_CHECK(sg_label);
+            }
+        } else if (adm_sg_label) {
+            // ADM Soundfield Group that is not referenced by a Audio Channel
+            sg_label = adm_sg_label;
         }
 
-        if (c_label->haveSoundfieldGroupLinkID()) {
-            UUID link_id = c_label->getSoundfieldGroupLinkID();
-            MCALabelSubDescriptor *label = mca_label_index->FindLabel(link_id);
-            SoundfieldGroupLabelSubDescriptor *sg_label = dynamic_cast<SoundfieldGroupLabelSubDescriptor*>(label);
-            BMX_CHECK(sg_label);
-            sg_labels[link_id] = sg_label;
+        if (sg_label) {
+            sg_labels[sg_label->getMCALinkID()] = sg_label;
 
             if (sg_label->haveGroupOfSoundfieldGroupsLinkID()) {
                 vector<UUID> link_ids = sg_label->getGroupOfSoundfieldGroupsLinkID();
@@ -682,6 +693,7 @@ static void write_track_mca_label_info(AppInfoWriter *info_writer, MXFReader *re
     }
 
     string c_summary;
+    bool have_channel_label = false;
     uint32_t c;
     for (c = 0; c < sound_info->channel_count; c++) {
         uint32_t channel_id = c + 1;
@@ -696,20 +708,26 @@ static void write_track_mca_label_info(AppInfoWriter *info_writer, MXFReader *re
                     c_summary.append(",");
                 c_summary.append(c_label->getMCATagSymbol());
             }
+            have_channel_label = true;
         } else {
             c_summary.append("_");
         }
     }
-    info_writer->WriteStringItem("channel_summary", c_summary);
+    if (have_channel_label)
+        info_writer->WriteStringItem("channel_summary", c_summary);
 
     if (!sg_labels.empty()) {
         string sg_summary;
         map<UUID, SoundfieldGroupLabelSubDescriptor*>::iterator sg_iter;
         for (sg_iter = sg_labels.begin(); sg_iter != sg_labels.end(); sg_iter++) {
             SoundfieldGroupLabelSubDescriptor *sg_label = sg_iter->second;
+            ADMSoundfieldGroupLabelSubDescriptor *adm_sg_label = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(sg_iter->second);
             if (sg_iter != sg_labels.begin())
                 sg_summary.append("; ");
-            sg_summary.append(sg_label->getMCATagSymbol());
+            if (adm_sg_label)
+                sg_summary.append(sg_label->getMCATagSymbol() + "(ADM)");
+            else
+                sg_summary.append(sg_label->getMCATagSymbol());
         }
         info_writer->WriteStringItem("sg_summary", sg_summary);
     }
@@ -728,36 +746,38 @@ static void write_track_mca_label_info(AppInfoWriter *info_writer, MXFReader *re
 
 
     if (mca_detail) {
-        info_writer->StartArrayItem("channels", sound_info->channel_count);
-        uint32_t c;
-        for (c = 0; c < sound_info->channel_count; c++) {
-            uint32_t channel_id = c + 1;
-            info_writer->StartArrayElement("channel", c);
-            info_writer->WriteIntegerItem("index", c);
-            info_writer->WriteIntegerItem("id", channel_id);
-            if (c_labels.count(channel_id)) {
-                vector<AudioChannelLabelSubDescriptor*> &labels = c_labels[channel_id];
-                info_writer->StartArrayItem("labels", labels.size());
-                size_t l;
-                for (l = 0; l < labels.size(); l++) {
-                    AudioChannelLabelSubDescriptor *c_label = labels[l];
-                    info_writer->StartArrayElement("channel_label", l);
-                    write_mca_label_info(info_writer, c_label);
-                    if (c_label->haveSoundfieldGroupLinkID()) {
-                        UUID link_id = c_label->getSoundfieldGroupLinkID();
-                        SoundfieldGroupLabelSubDescriptor *sg_label = sg_labels.at(link_id);
-                        info_writer->StartAnnotations();
-                        info_writer->WriteStringItem("tag_symbol", sg_label->getMCATagSymbol());
-                        info_writer->EndAnnotations();
-                        info_writer->WriteIDAUItem("sg_link_id", link_id);
+        if (have_channel_label) {
+            info_writer->StartArrayItem("channels", sound_info->channel_count);
+            uint32_t c;
+            for (c = 0; c < sound_info->channel_count; c++) {
+                uint32_t channel_id = c + 1;
+                info_writer->StartArrayElement("channel", c);
+                info_writer->WriteIntegerItem("index", c);
+                info_writer->WriteIntegerItem("id", channel_id);
+                if (c_labels.count(channel_id)) {
+                    vector<AudioChannelLabelSubDescriptor*> &labels = c_labels[channel_id];
+                    info_writer->StartArrayItem("labels", labels.size());
+                    size_t l;
+                    for (l = 0; l < labels.size(); l++) {
+                        AudioChannelLabelSubDescriptor *c_label = labels[l];
+                        info_writer->StartArrayElement("channel_label", l);
+                        write_mca_label_info(info_writer, c_label);
+                        if (c_label->haveSoundfieldGroupLinkID()) {
+                            UUID link_id = c_label->getSoundfieldGroupLinkID();
+                            SoundfieldGroupLabelSubDescriptor *sg_label = sg_labels.at(link_id);
+                            info_writer->StartAnnotations();
+                            info_writer->WriteStringItem("tag_symbol", sg_label->getMCATagSymbol());
+                            info_writer->EndAnnotations();
+                            info_writer->WriteIDAUItem("sg_link_id", link_id);
+                        }
+                        info_writer->EndArrayElement();
                     }
-                    info_writer->EndArrayElement();
+                    info_writer->EndArrayItem();
                 }
-                info_writer->EndArrayItem();
+                info_writer->EndArrayElement();
             }
-            info_writer->EndArrayElement();
+            info_writer->EndArrayItem();
         }
-        info_writer->EndArrayItem();
 
         if (!sg_labels.empty()) {
             info_writer->StartArrayItem("soundfield_groups", sg_labels.size());
@@ -765,7 +785,11 @@ static void write_track_mca_label_info(AppInfoWriter *info_writer, MXFReader *re
             map<UUID, SoundfieldGroupLabelSubDescriptor*>::iterator iter;
             for (iter = sg_labels.begin(), index = 0; iter != sg_labels.end(); iter++, index++) {
                 SoundfieldGroupLabelSubDescriptor *sg_label = iter->second;
-                info_writer->StartArrayElement("soundfield_group", index);
+                ADMSoundfieldGroupLabelSubDescriptor *adm_sg_label = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(iter->second);
+                if (adm_sg_label)
+                    info_writer->StartArrayElement("adm_soundfield_group", index);
+                else
+                    info_writer->StartArrayElement("soundfield_group", index);
                 write_mca_label_info(info_writer, sg_label);
                 if (sg_label->haveGroupOfSoundfieldGroupsLinkID()) {
                     vector<UUID> gosg_link_ids = sg_label->getGroupOfSoundfieldGroupsLinkID();

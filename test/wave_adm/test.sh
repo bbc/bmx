@@ -172,7 +172,7 @@ create_mxf_5()
 {
     # Create an MXF from a Wave+ADM and AVC-Intra.
     # Map the audio channels to 2 stereo tracks
-    # Add ADM MCA labels
+    # Add ADM MCA labels from mca_1.txt
 
     $testdir/create_test_essence -t 7 -d 1 $tmpdir/video
 
@@ -182,11 +182,48 @@ create_mxf_5()
         -f 25 \
         -o $1 \
         --track-map "0,1;2,3" \
-        --track-mca-labels adm $2 \
+        --track-mca-labels x $base/mca_1.txt \
         --audio-layout adm \
         --avci100_1080i $tmpdir/video \
         --wave $base/adm_1.wav \
         >/dev/null
+
+    $appsdir/mxf2raw/mxf2raw \
+        --regtest \
+        --info \
+        --info-format xml \
+        --info-file $2 \
+        --mca-detail \
+        $1
+}
+
+create_mxf_6()
+{
+    # Create an MXF from a Wave+ADM and AVC-Intra.
+    # Map the audio channels to mono, mono and stereo tracks
+    # Add ADM MCA labels from mca_2.txt
+
+    $testdir/create_test_essence -t 7 -d 1 $tmpdir/video
+
+    $appsdir/raw2bmx/raw2bmx \
+        --regtest \
+        -t op1a \
+        -f 25 \
+        -o $1 \
+        --track-map "0;1;2,3" \
+        --track-mca-labels x $base/mca_2.txt \
+        --audio-layout adm \
+        --avci100_1080i $tmpdir/video \
+        --wave $base/adm_1.wav \
+        >/dev/null
+
+    $appsdir/mxf2raw/mxf2raw \
+        --regtest \
+        --info \
+        --info-format xml \
+        --info-file $2 \
+        --mca-detail \
+        $1
 }
 
 
@@ -224,9 +261,14 @@ check()
     create_mxf_4 $tmpdir/test_wav_3.wav $tmpdir/test.mxf &&
         $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
         diff $tmpdir/test.md5 $base/test_mxf_4.md5 &&
-    create_mxf_5 $tmpdir/test.mxf $base/mca_1.txt &&
+    create_mxf_5 $tmpdir/test.mxf $tmpdir/test.xml &&
         $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
-        diff $tmpdir/test.md5 $base/test_mxf_5.md5
+        diff $tmpdir/test.md5 $base/test_mxf_5.md5 &&
+        diff $tmpdir/test.xml $base/test_mxf_5.xml &&
+    create_mxf_6 $tmpdir/test.mxf $tmpdir/test.xml &&
+        $md5tool < $tmpdir/test.mxf > $tmpdir/test.md5 &&
+        diff $tmpdir/test.md5 $base/test_mxf_6.md5 &&
+        diff $tmpdir/test.xml $base/test_mxf_6.xml
 }
 
 create_data()
@@ -251,8 +293,10 @@ create_data()
         $md5tool < $tmpdir/test.wav > $base/test_wave_6.md5 &&
     create_mxf_4 $tmpdir/test_wave_3.wav $tmpdir/test.mxf &&
         $md5tool < $tmpdir/test.mxf > $base/test_mxf_4.md5 &&
-    create_mxf_5 $tmpdir/test.mxf $base/mca_1.txt &&
-        $md5tool < $tmpdir/test.mxf > $base/test_mxf_5.md5
+    create_mxf_5 $tmpdir/test.mxf $base/test_mxf_5.xml &&
+        $md5tool < $tmpdir/test.mxf > $base/test_mxf_5.md5 &&
+    create_mxf_6 $tmpdir/test.mxf $base/test_mxf_6.xml &&
+        $md5tool < $tmpdir/test.mxf > $base/test_mxf_6.md5
 }
 
 create_samples()
@@ -267,7 +311,8 @@ create_samples()
     create_wave_5 $sampledir/test_wave_5.wav &&
     create_wave_6 $base/axml_1.xml $base/chna_1.txt $sampledir/test_wave_6.wav &&
     create_mxf_4 $sampledir/test_wave_3.wav $sampledir/test_mxf_4.mxf &&
-    create_mxf_5 $sampledir/test_mxf_5.mxf $base/mca_1.txt
+    create_mxf_5 $sampledir/test_mxf_5.mxf $sampledir/test_mxf_5.xml &&
+    create_mxf_6 $sampledir/test_mxf_6.mxf $sampledir/test_mxf_6.xml
 }
 
 

@@ -109,3 +109,5 @@ chR
 sgST, id=sg1, repeat=false
 ggAPg, id=gosg1, repeat=false
 ```
+
+See [audio_definition_model.md](./audio_definition_model.md#add-adm-mca-labels-to-mxfadm) for an example that uses the ADM properties.
