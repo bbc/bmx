@@ -654,6 +654,7 @@ static void write_track_mca_label_info(AppInfoWriter *info_writer, MXFReader *re
     for (i = 0; i < sound_info->mca_labels.size(); i++) {
         AudioChannelLabelSubDescriptor *c_label = dynamic_cast<AudioChannelLabelSubDescriptor*>(sound_info->mca_labels[i]);
         ADMSoundfieldGroupLabelSubDescriptor *adm_sg_label = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(sound_info->mca_labels[i]);
+        MGASoundfieldGroupLabelSubDescriptor *mga_sg_label = dynamic_cast<MGASoundfieldGroupLabelSubDescriptor*>(sound_info->mca_labels[i]);
         SoundfieldGroupLabelSubDescriptor *sg_label = 0;
 
         if (c_label) {
@@ -673,6 +674,9 @@ static void write_track_mca_label_info(AppInfoWriter *info_writer, MXFReader *re
         } else if (adm_sg_label) {
             // ADM Soundfield Group that is not referenced by a Audio Channel
             sg_label = adm_sg_label;
+        } else if (mga_sg_label) {
+            // MGA Soundfield Group that is not referenced by a Audio Channel
+            sg_label = mga_sg_label;
         }
 
         if (sg_label) {
@@ -722,10 +726,13 @@ static void write_track_mca_label_info(AppInfoWriter *info_writer, MXFReader *re
         for (sg_iter = sg_labels.begin(); sg_iter != sg_labels.end(); sg_iter++) {
             SoundfieldGroupLabelSubDescriptor *sg_label = sg_iter->second;
             ADMSoundfieldGroupLabelSubDescriptor *adm_sg_label = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(sg_iter->second);
+            MGASoundfieldGroupLabelSubDescriptor *mga_sg_label = dynamic_cast<MGASoundfieldGroupLabelSubDescriptor*>(sg_iter->second);
             if (sg_iter != sg_labels.begin())
                 sg_summary.append("; ");
             if (adm_sg_label)
                 sg_summary.append(sg_label->getMCATagSymbol() + "(ADM)");
+            else if (mga_sg_label)
+                sg_summary.append(sg_label->getMCATagSymbol() + "(MGA)");
             else
                 sg_summary.append(sg_label->getMCATagSymbol());
         }
@@ -786,8 +793,11 @@ static void write_track_mca_label_info(AppInfoWriter *info_writer, MXFReader *re
             for (iter = sg_labels.begin(), index = 0; iter != sg_labels.end(); iter++, index++) {
                 SoundfieldGroupLabelSubDescriptor *sg_label = iter->second;
                 ADMSoundfieldGroupLabelSubDescriptor *adm_sg_label = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(iter->second);
+                MGASoundfieldGroupLabelSubDescriptor *mga_sg_label = dynamic_cast<MGASoundfieldGroupLabelSubDescriptor*>(iter->second);
                 if (adm_sg_label)
                     info_writer->StartArrayElement("adm_soundfield_group", index);
+                else if (mga_sg_label)
+                    info_writer->StartArrayElement("mga_soundfield_group", index);
                 else
                     info_writer->StartArrayElement("soundfield_group", index);
                 write_mca_label_info(info_writer, sg_label);
@@ -2933,7 +2943,9 @@ int main(int argc, const char** argv)
                             FILE *file;
                             string filename;
                             const MXFSoundTrackInfo *sound_info = dynamic_cast<const MXFSoundTrackInfo*>(track_info);
-                            if (sound_info && deinterleave && sound_info->channel_count > 1) {
+                            if (sound_info && deinterleave && sound_info->channel_count > 1 &&
+                                sound_info->essence_type != MGA && sound_info->essence_type != MGA_SADM)
+                            {
                                 sound_buffer.Allocate(frame->GetSize()); // more than enough
                                 uint32_t c;
                                 for (c = 0; c < sound_info->channel_count; c++) {

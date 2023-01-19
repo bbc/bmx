@@ -4285,6 +4285,8 @@ int main(int argc, const char** argv)
                     break;
                 }
                 case D10_AES3_PCM:
+                case MGA:
+                case MGA_SADM:
                 case PICTURE_ESSENCE:
                 case SOUND_ESSENCE:
                 case DATA_ESSENCE:

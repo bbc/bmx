@@ -35,6 +35,7 @@
 
 #include <bmx/mxf_helper/SoundMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/WaveMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/MGAMXFDescriptorHelper.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -79,8 +80,10 @@ EssenceType SoundMXFDescriptorHelper::IsSupported(FileDescriptor *file_descripto
             return SUPPORTED_ESSENCE[i].essence_type;
     }
 
-    EssenceType essence_type =
-        WaveMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+    EssenceType essence_type = WaveMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+    if (essence_type)
+        return essence_type;
+    essence_type = MGAMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)
         return essence_type;
 
