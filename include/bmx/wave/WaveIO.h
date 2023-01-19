@@ -36,6 +36,8 @@
 #include <cstdio>
 
 #include <bmx/BMXTypes.h>
+#include <bmx/BMXIO.h>
+#include <bmx/wave/WaveChunk.h>
 
 
 
@@ -43,25 +45,25 @@ namespace bmx
 {
 
 
-class WaveIO
+class WaveIO : public BMXIO
 {
 public:
     WaveIO();
     virtual ~WaveIO();
 
     virtual uint32_t Read(unsigned char *data, uint32_t size) = 0;
-    virtual int GetChar() = 0;
-
     virtual uint32_t Write(const unsigned char *data, uint32_t size) = 0;
-    virtual int PutChar(int c) = 0;
-
     virtual bool Seek(int64_t offset, int whence) = 0;
-
     virtual int64_t Tell() = 0;
     virtual int64_t Size() = 0;
 
 public:
+    virtual int GetChar() = 0;
+    virtual int PutChar(int c) = 0;
+
+public:
     void WriteTag(const char *tag);
+    void WriteTag(WaveChunkTag tag);
     void WriteSize(uint32_t size) { WriteUInt32(size); }
     void WriteZeros(uint32_t size);
     void WriteString(const char *value, uint32_t len, uint32_t fixed_size);
@@ -73,9 +75,10 @@ public:
     void WriteInt16(int16_t value);
     void WriteInt32(int32_t value);
     void WriteInt64(int64_t value);
+    void WriteChunk(WaveChunk *chunk);
 
     void Skip(int64_t offset) { Seek(offset, SEEK_CUR); }
-    bool ReadTag(char *tag);
+    bool ReadTag(WaveChunkTag *tag);
     uint32_t ReadSize() { return ReadUInt32(); }
     void ReadString(char *value, uint32_t fixed_size);
     uint8_t ReadUInt8();

@@ -1147,6 +1147,52 @@ GroupOfSoundfieldGroupsLabelSubDescriptor* ClipWriterTrack::AddGroupOfSoundfield
     return 0;
 }
 
+void ClipWriterTrack::AddADMAudioID(const WaveCHNA::AudioID &audio_id)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
+            if (pcm_track)
+                pcm_track->AddADMAudioID(audio_id);
+            break;
+        }
+        case CW_D10_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
+void ClipWriterTrack::AddWaveChunkReference(uint32_t stream_id)
+{
+    switch (mClipType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+        {
+            OP1APCMTrack *pcm_track = dynamic_cast<OP1APCMTrack*>(mOP1ATrack);
+            if (pcm_track)
+                pcm_track->AddWaveChunkReference(stream_id);
+            break;
+        }
+        case CW_D10_CLIP_TYPE:
+        case CW_RDD9_CLIP_TYPE:
+        case CW_AS02_CLIP_TYPE:
+        case CW_AVID_CLIP_TYPE:
+        case CW_WAVE_CLIP_TYPE:
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
 void ClipWriterTrack::SetConstantDataSize(uint32_t size)
 {
     switch (mClipType)

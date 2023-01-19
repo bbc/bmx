@@ -92,6 +92,16 @@ public:
     void SetAVCIHeader(const unsigned char *frame_data, uint32_t frame_data_size);
 
 public:
+    virtual std::vector<WaveCHNA::AudioID> GetCHNAAudioIDs(uint32_t channel_index) const;
+
+    virtual size_t GetNumWaveChunks() const { return mWaveChunks.size(); }
+    virtual MXFWaveChunk* GetWaveChunk(size_t index) const;
+
+    virtual MXFWaveChunk* GetWaveChunk(WaveChunkTag tag) const;
+
+    virtual WaveCHNA* GetWaveCHNA() const { return mWaveCHNA; }
+
+public:
     virtual bool IsEnabled() const        { return mIsEnabled; }
     virtual FrameBuffer* GetFrameBuffer() { return &mFrameBuffer; }
 
@@ -111,6 +121,9 @@ protected:
     MXFFrameBuffer mFrameBuffer;
 
     unsigned char *mAVCIHeader;
+
+    std::vector<MXFWaveChunk*> mWaveChunks;
+    WaveCHNA *mWaveCHNA;
 };
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2022, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -33,63 +33,55 @@
 #include "config.h"
 #endif
 
-#include <cstring>
+#include <string.h>
 
-#include <bmx/wave/WaveTrackWriter.h>
-#include <bmx/wave/WaveWriter.h>
-#include <bmx/BMXException.h>
-#include <bmx/Logging.h>
+#include <bmx/wave/WaveChunk.h>
 
 using namespace std;
 using namespace bmx;
 
 
-
-WaveTrackWriter::WaveTrackWriter(WaveWriter *writer, uint32_t track_index)
+string bmx::get_wave_chunk_tag_str(WaveChunkTag tag)
 {
-    mWriter = writer;
-    mTrackIndex = track_index;
-    mStartChannel = 0;
-    mChannelCount = 1;
-    mSampleCount = 0;
+    char buf[5];
+    memcpy(buf, &tag, 4);
+    buf[4] = 0;
+
+    return buf;
 }
 
-WaveTrackWriter::~WaveTrackWriter()
+bool operator==(const bmx::WaveChunkTag &left, const bmx::WaveChunkTag &right)
 {
+    return memcmp(&left, &right, sizeof(left)) == 0;
 }
 
-void WaveTrackWriter::SetSamplingRate(Rational sampling_rate)
+bool operator!=(const bmx::WaveChunkTag &left, const bmx::WaveChunkTag &right)
 {
-    mWriter->SetSamplingRate(sampling_rate);
+    return memcmp(&left, &right, sizeof(left)) != 0;
 }
 
-void WaveTrackWriter::SetQuantizationBits(uint16_t bits)
+bool operator<(const bmx::WaveChunkTag &left, const bmx::WaveChunkTag &right)
 {
-    mWriter->SetQuantizationBits(bits);
+    return memcmp(&left, &right, sizeof(left)) < 0;
 }
 
-void WaveTrackWriter::SetChannelCount(uint16_t count)
+bool operator==(const bmx::WaveChunkTag &left, const char *right)
 {
-    BMX_CHECK(count > 0);
-    mChannelCount = count;
+    return left == WAVE_CHUNK_TAG((const unsigned char*)right);
 }
 
-void WaveTrackWriter::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
+bool operator!=(const bmx::WaveChunkTag &left, const char *right)
 {
-    mWriter->WriteSamples(mTrackIndex, data, size, num_samples);
+    return left != WAVE_CHUNK_TAG((const unsigned char*)right);
 }
 
-uint32_t WaveTrackWriter::GetSampleSize() const
+
+WaveChunk::WaveChunk(WaveChunkTag tag)
+: BMXIO()
 {
-    return mWriter->mChannelBlockAlign * mChannelCount;
+    mTag = tag;
 }
 
-Rational WaveTrackWriter::GetSamplingRate() const
+WaveChunk::~WaveChunk()
 {
-    return mWriter->GetSamplingRate();
-}
-
-int64_t WaveTrackWriter::GetDuration() const
-{
-    return mWriter->GetDuration();
 }

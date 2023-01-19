@@ -284,6 +284,10 @@ void WaveBEXT::Write(WaveIO *output)
     if (!mCodingHistory.empty())
         output->Write((const unsigned char*)mCodingHistory.c_str(), coding_history_size);
 
+    // WORD alignment byte
+    if ((size & 1))
+        output->PutChar(0);
+
     mWasUpdated = false;
     mWrittenSize = size;
 }

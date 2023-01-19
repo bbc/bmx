@@ -77,6 +77,8 @@ public:
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);
     void ForceWriteCBEDuration0(bool enable);
 
+    uint32_t AddWaveChunk(WaveChunk *chunk, bool take_ownership);
+
 public:
     ClipWriterTrack* CreateTrack(EssenceType essence_type, std::string track_filename = "");
     ClipWriterTrack* CreateXMLTrack();

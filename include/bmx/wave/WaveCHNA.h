@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2022, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,67 +29,62 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef BMX_WAVE_CHNA_H_
+#define BMX_WAVE_CHNA_H_
+
+
+#include <vector>
+
+#include <bmx/BMXTypes.h>
+#include <bmx/wave/WaveIO.h>
+
+
+
+namespace bmx
+{
+
+
+class WaveCHNA
+{
+public:
+    WaveCHNA();
+    ~WaveCHNA();
+
+public:
+    typedef struct {
+        uint16_t track_index;
+        uint8_t uid[12];
+        uint8_t track_ref[14];
+        uint8_t pack_ref[11];
+    } AudioID;
+
+public:
+    void AppendAudioID(const AudioID &audio_id);
+
+    uint32_t GetSize();
+    uint32_t GetAlignedSize() { return GetSize(); }
+
+    void Write(WaveIO *output);
+
+public:
+    uint16_t GetNumTracks() const                   { return mNumTracks; }
+    uint16_t GetNumUIDs() const                     { return mNumUIDs; }
+    const std::vector<AudioID>& GetAudioIDs() const { return mAudioIDs; }
+
+    std::vector<AudioID> GetAudioIDs(uint16_t track_index) const;
+
+    void Read(WaveIO *input, uint32_t size);
+
+private:
+    uint16_t mNumTracks;
+    uint16_t mNumUIDs;
+    std::vector<AudioID> mAudioIDs;
+};
+
+
+};
+
+
+
 #endif
 
-#include <cstring>
-
-#include <bmx/wave/WaveTrackWriter.h>
-#include <bmx/wave/WaveWriter.h>
-#include <bmx/BMXException.h>
-#include <bmx/Logging.h>
-
-using namespace std;
-using namespace bmx;
-
-
-
-WaveTrackWriter::WaveTrackWriter(WaveWriter *writer, uint32_t track_index)
-{
-    mWriter = writer;
-    mTrackIndex = track_index;
-    mStartChannel = 0;
-    mChannelCount = 1;
-    mSampleCount = 0;
-}
-
-WaveTrackWriter::~WaveTrackWriter()
-{
-}
-
-void WaveTrackWriter::SetSamplingRate(Rational sampling_rate)
-{
-    mWriter->SetSamplingRate(sampling_rate);
-}
-
-void WaveTrackWriter::SetQuantizationBits(uint16_t bits)
-{
-    mWriter->SetQuantizationBits(bits);
-}
-
-void WaveTrackWriter::SetChannelCount(uint16_t count)
-{
-    BMX_CHECK(count > 0);
-    mChannelCount = count;
-}
-
-void WaveTrackWriter::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
-{
-    mWriter->WriteSamples(mTrackIndex, data, size, num_samples);
-}
-
-uint32_t WaveTrackWriter::GetSampleSize() const
-{
-    return mWriter->mChannelBlockAlign * mChannelCount;
-}
-
-Rational WaveTrackWriter::GetSamplingRate() const
-{
-    return mWriter->GetSamplingRate();
-}
-
-int64_t WaveTrackWriter::GetDuration() const
-{
-    return mWriter->GetDuration();
-}

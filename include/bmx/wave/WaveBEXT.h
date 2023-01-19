@@ -68,6 +68,7 @@ public:
     void AppendCodingHistory(std::vector<std::pair<std::string, std::string> > line);
 
     uint32_t GetSize();
+    uint32_t GetAlignedSize() { return GetSize() + (GetSize() & 1); }
     bool WasUpdated() { return mWasUpdated; }
 
     void Write(WaveIO *output);

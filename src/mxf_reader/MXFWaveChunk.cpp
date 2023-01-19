@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2022, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -33,63 +33,46 @@
 #include "config.h"
 #endif
 
-#include <cstring>
+#define __STDC_LIMIT_MACROS
 
-#include <bmx/wave/WaveTrackWriter.h>
-#include <bmx/wave/WaveWriter.h>
+#include <limits.h>
+
+#include <bmx/mxf_reader/MXFWaveChunk.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
 using namespace std;
 using namespace bmx;
+using namespace mxfpp;
 
 
-
-WaveTrackWriter::WaveTrackWriter(WaveWriter *writer, uint32_t track_index)
+MXFWaveChunk::MXFWaveChunk(File *mxf_file, const RIFFChunkDefinitionSubDescriptor *riff_chunk_descriptor)
+: WaveChunk(riff_chunk_descriptor->getRIFFChunkID())
 {
-    mWriter = writer;
-    mTrackIndex = track_index;
-    mStartChannel = 0;
-    mChannelCount = 1;
-    mSampleCount = 0;
+    mGSReader = new GenericStreamReader(mxf_file, riff_chunk_descriptor->getRIFFChunkStreamID(), vector<mxfKey>());
 }
 
-WaveTrackWriter::~WaveTrackWriter()
+MXFWaveChunk::~MXFWaveChunk()
 {
+    delete mGSReader;
 }
 
-void WaveTrackWriter::SetSamplingRate(Rational sampling_rate)
+uint32_t MXFWaveChunk::Read(unsigned char *data, uint32_t size)
 {
-    mWriter->SetSamplingRate(sampling_rate);
+    return mGSReader->Read(data, size);
 }
 
-void WaveTrackWriter::SetQuantizationBits(uint16_t bits)
+int64_t MXFWaveChunk::Tell()
 {
-    mWriter->SetQuantizationBits(bits);
+    return mGSReader->Tell();
 }
 
-void WaveTrackWriter::SetChannelCount(uint16_t count)
+int64_t MXFWaveChunk::Size()
 {
-    BMX_CHECK(count > 0);
-    mChannelCount = count;
-}
+    int64_t size = mGSReader->Size();
 
-void WaveTrackWriter::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
-{
-    mWriter->WriteSamples(mTrackIndex, data, size, num_samples);
-}
+    if (size > (int64_t)UINT32_MAX)
+        BMX_EXCEPTION(("Chunk data size in MXF exceeds size that can be represented in a Wave file"));
 
-uint32_t WaveTrackWriter::GetSampleSize() const
-{
-    return mWriter->mChannelBlockAlign * mChannelCount;
-}
-
-Rational WaveTrackWriter::GetSamplingRate() const
-{
-    return mWriter->GetSamplingRate();
-}
-
-int64_t WaveTrackWriter::GetDuration() const
-{
-    return mWriter->GetDuration();
+    return size;
 }

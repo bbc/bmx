@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2022, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -33,10 +33,7 @@
 #include "config.h"
 #endif
 
-#include <cstring>
-
-#include <bmx/wave/WaveTrackWriter.h>
-#include <bmx/wave/WaveWriter.h>
+#include <bmx/mxf_reader/MXFTrackReader.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -44,52 +41,35 @@ using namespace std;
 using namespace bmx;
 
 
-
-WaveTrackWriter::WaveTrackWriter(WaveWriter *writer, uint32_t track_index)
+vector<WaveCHNA::AudioID> MXFTrackReader::GetCHNAAudioIDs(uint32_t channel_index) const
 {
-    mWriter = writer;
-    mTrackIndex = track_index;
-    mStartChannel = 0;
-    mChannelCount = 1;
-    mSampleCount = 0;
+    // Not yet implemented in all sub-classes
+    (void)channel_index;
+    return vector<WaveCHNA::AudioID>();
 }
 
-WaveTrackWriter::~WaveTrackWriter()
+size_t MXFTrackReader::GetNumWaveChunks() const
 {
+    // Not yet implemented in all sub-classes
+    return 0;
 }
 
-void WaveTrackWriter::SetSamplingRate(Rational sampling_rate)
+MXFWaveChunk* MXFTrackReader::GetWaveChunk(size_t index) const
 {
-    mWriter->SetSamplingRate(sampling_rate);
+    // Not yet implemented in all sub-classes
+    (void)index;
+    return 0;
 }
 
-void WaveTrackWriter::SetQuantizationBits(uint16_t bits)
+MXFWaveChunk* MXFTrackReader::GetWaveChunk(WaveChunkTag tag) const
 {
-    mWriter->SetQuantizationBits(bits);
+    // Not yet implemented in all sub-classes
+    (void)tag;
+    return 0;
 }
 
-void WaveTrackWriter::SetChannelCount(uint16_t count)
+WaveCHNA* MXFTrackReader::GetWaveCHNA() const
 {
-    BMX_CHECK(count > 0);
-    mChannelCount = count;
-}
-
-void WaveTrackWriter::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
-{
-    mWriter->WriteSamples(mTrackIndex, data, size, num_samples);
-}
-
-uint32_t WaveTrackWriter::GetSampleSize() const
-{
-    return mWriter->mChannelBlockAlign * mChannelCount;
-}
-
-Rational WaveTrackWriter::GetSamplingRate() const
-{
-    return mWriter->GetSamplingRate();
-}
-
-int64_t WaveTrackWriter::GetDuration() const
-{
-    return mWriter->GetDuration();
+    // Not yet implemented in all sub-classes
+    return 0;
 }

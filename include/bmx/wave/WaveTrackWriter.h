@@ -62,6 +62,7 @@ public:
     uint32_t GetSampleSize() const;
     Rational GetSamplingRate() const;
     uint16_t GetChannelCount() const { return mChannelCount; }
+    uint16_t GetStartChannel() const { return mStartChannel; }
 
     int64_t GetDuration() const;
 

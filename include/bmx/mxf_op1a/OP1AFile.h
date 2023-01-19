@@ -42,7 +42,10 @@
 #include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
 #include <bmx/mxf_op1a/OP1AXMLTrack.h>
 #include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
+#include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_helper/UniqueIdHelper.h>
+#include <bmx/mxf_helper/UniqueIdHelper.h>
+#include <bmx/wave/WaveChunk.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFChecksumFile.h>
 
@@ -74,6 +77,7 @@ public:
     friend class OP1ATrack;
     friend class OP1AMPEG2LGTrack;
     friend class OP1ATimedTextTrack;
+    friend class OP1APCMTrack;
 
 public:
     static mxfUMID CreatePackageUID();
@@ -102,6 +106,8 @@ public:
     void SetPrimaryPackage(bool enable);                                // default false
     void SetIndexFollowsEssence(bool enable);                           // default false. If true then place index partition after the essence it indexes, even for CBE
     void SetSignalST3792(bool enable);                                  // default false. If true then signal ST 379-2 compliance using sub-descriptor
+
+    uint32_t AddWaveChunk(WaveChunk *chunk, bool take_ownership);
 
 public:
     void SetOutputStartOffset(int64_t offset);
@@ -233,6 +239,9 @@ private:
 
     UniqueIdHelper mTrackIdHelper;
     UniqueIdHelper mStreamIdHelper;
+
+    std::map<uint32_t, WaveChunk*> mWaveChunks;
+    std::vector<WaveChunk*> mOwnedWaveChunks;
 };
 
 

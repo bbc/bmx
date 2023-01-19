@@ -35,6 +35,7 @@
 
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_op1a/OP1AFile.h>
+#include <bmx/mxf_helper/ADMCHNAMXFDescriptorHelper.h>
 #include <bmx/apps/AppMCALabelHelper.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
@@ -58,6 +59,8 @@ OP1APCMTrack::OP1APCMTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
                            mxfRational frame_rate, EssenceType essence_type)
 : OP1ATrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
 {
+    mCHNAChunk = 0;
+
     BMX_ASSERT(essence_type == WAVE_PCM);
 
     mWaveDescriptorHelper = dynamic_cast<WaveMXFDescriptorHelper*>(mDescriptorHelper);
@@ -89,6 +92,7 @@ OP1APCMTrack::OP1APCMTrack(OP1AFile *file, uint32_t track_index, uint32_t track_
 
 OP1APCMTrack::~OP1APCMTrack()
 {
+    delete mCHNAChunk;
 }
 
 void OP1APCMTrack::SetAES3Mapping(bool enable)
@@ -165,6 +169,19 @@ void OP1APCMTrack::SetSequenceOffset(uint8_t offset)
 void OP1APCMTrack::SetChannelAssignment(UL label)
 {
     mWaveDescriptorHelper->SetChannelAssignment(label);
+}
+
+void OP1APCMTrack::AddADMAudioID(const WaveCHNA::AudioID &audio_id)
+{
+    if (!mCHNAChunk)
+        mCHNAChunk = new WaveCHNA();
+
+    mCHNAChunk->AppendAudioID(audio_id);
+}
+
+void OP1APCMTrack::AddWaveChunkReference(uint32_t stream_id)
+{
+    mWaveChunkReferences.insert(stream_id);
 }
 
 AudioChannelLabelSubDescriptor* OP1APCMTrack::AddAudioChannelLabel(AudioChannelLabelSubDescriptor *copy_from)
@@ -255,11 +272,35 @@ void OP1APCMTrack::AddHeaderMetadata(HeaderMetadata *header_metadata, MaterialPa
         }
     }
 
+    set<uint32_t>::const_iterator iter;
+    for (iter = mWaveChunkReferences.begin(); iter != mWaveChunkReferences.end(); iter++) {
+        try {
+            mOP1AFile->mWaveChunks.at(*iter);
+        } catch (...) {
+            BMX_EXCEPTION(("Wave chunk with stream ID %u has not been registered with OP1AFile", *iter));
+        }
+    }
+
     OP1ATrack::AddHeaderMetadata(header_metadata, material_package, file_source_package);
 
     for (i = 0; i < mMCALabels.size(); i++) {
         header_metadata->moveToEnd(mMCALabels[i]); // so that they appear after the descriptor in the file
         mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(mMCALabels[i]);
+    }
+
+    if (mCHNAChunk) {
+        ADM_CHNASubDescriptor *chna_subdesc = convert_chunk_to_adm_chna_descriptor(header_metadata, mCHNAChunk);
+
+        header_metadata->moveToEnd(chna_subdesc); // so that they appear after the descriptor in the file
+        mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(chna_subdesc);
+    }
+
+    if (!mWaveChunkReferences.empty()) {
+        RIFFChunkReferencesSubDescriptor *chunk_ref_subdesc = new RIFFChunkReferencesSubDescriptor(mOP1AFile->GetHeaderMetadata());
+        chunk_ref_subdesc->setRIFFChunkStreamIDsArray(vector<uint32_t>(mWaveChunkReferences.begin(), mWaveChunkReferences.end()));
+
+        header_metadata->moveToEnd(chunk_ref_subdesc); // so that they appear after the descriptor in the file
+        mDescriptorHelper->GetFileDescriptor()->appendSubDescriptors(chunk_ref_subdesc);
     }
 }
 

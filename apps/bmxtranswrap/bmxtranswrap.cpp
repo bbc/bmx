@@ -4384,6 +4384,75 @@ int main(int argc, const char** argv)
         }
 
 
+        // Add ADM Wave chunks and references
+
+        if (clip_type == CW_WAVE_CLIP_TYPE) {
+            WaveWriter *wave_clip = clip->GetWaveClip();
+
+            // Ensure that the start channels are up-to-date for each track
+            wave_clip->UpdateChannelCounts();
+
+            // Use the generic stream identifier to ensure chunks are included only once
+            set<uint32_t> unique_stream_ids;
+
+            // Loop over the Wave output tracks and add referenced chunks to the Wave file.
+            // Construct the output chna chunk based on the track mapping
+            WaveCHNA *output_chna = 0;
+            size_t i;
+            for (i = 0; i < output_tracks.size(); i++) {
+                OutputTrack *output_track = output_tracks[i];
+
+                WaveTrackWriter *wave_track = output_track->GetClipTrack()->GetWaveTrack();
+
+                // Loop over the output track channels, each mapped from an input track channel
+                const map<uint32_t, OutputTrack::InputMap> &input_maps = output_track->GetInputMaps();
+                map<uint32_t, OutputTrack::InputMap>::const_iterator iter;
+                for (iter = input_maps.begin(); iter != input_maps.end(); iter++) {
+                    uint32_t output_channel_index = iter->first;
+                    uint32_t input_channel_index = iter->second.input_channel_index;
+
+                    InputTrack *input_track = iter->second.input_track;
+                    const MXFTrackReader *input_track_reader = dynamic_cast<MXFInputTrack*>(input_track)->GetTrackReader();
+
+                    // Only continue if the input track channel has a chna audio ID
+                    vector<WaveCHNA::AudioID> audio_ids = input_track_reader->GetCHNAAudioIDs(input_channel_index);
+                    if (audio_ids.empty())
+                        continue;
+
+                    // Add all ADM chunks if not already present
+                    size_t k;
+                    for (k = 0; k < input_track_reader->GetNumWaveChunks(); k++) {
+                        MXFWaveChunk *wave_chunk = input_track_reader->GetWaveChunk(k);
+
+                        if (!unique_stream_ids.count(wave_chunk->GetStreamId()) &&
+                                (wave_chunk->Tag() == WAVE_CHUNK_TAG("axml") ||
+                                    wave_chunk->Tag() == WAVE_CHUNK_TAG("bxml") ||
+                                    wave_chunk->Tag() == WAVE_CHUNK_TAG("sxml")))
+                        {
+                            wave_clip->AddChunk(wave_chunk, false);
+                            unique_stream_ids.insert(wave_chunk->GetStreamId());
+                        }
+                    }
+
+                    // Change the input channel track_index to the output channel track_index and add to the chna
+                    for (k = 0; k < audio_ids.size(); k++) {
+                        WaveCHNA::AudioID &audio_id = audio_ids[k];
+
+                        if (!output_chna)
+                            output_chna = new WaveCHNA();
+
+                        // + 1 because the chna track_index starts at 1
+                        audio_id.track_index = wave_track->GetStartChannel() + output_channel_index + 1;
+                        output_chna->AppendAudioID(audio_id);
+                    }
+                }
+            }
+
+            if (output_chna)
+                wave_clip->AddCHNA(output_chna, true);
+        }
+
+
         // prepare the clip's header metadata and update file descriptors from input where supported
 
         clip->PrepareHeaderMetadata();

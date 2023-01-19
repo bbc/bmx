@@ -45,6 +45,7 @@
 #include <bmx/mxf_op1a/OP1ARDD36Track.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/MXFMCALabelHelper.h>
+#include <bmx/BMXMXFIO.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/Version.h>
@@ -176,6 +177,8 @@ OP1AFile::~OP1AFile()
         delete mTracks[i];
     for (i = 0; i < mXMLTracks.size(); i++)
         delete mXMLTracks[i];
+    for (i = 0; i < mOwnedWaveChunks.size(); i++)
+        delete mOwnedWaveChunks[i];
 
     delete mMXFFile;
     delete mDataModel;
@@ -288,6 +291,17 @@ void OP1AFile::SetIndexFollowsEssence(bool enable)
 void OP1AFile::SetSignalST3792(bool enable)
 {
     mSignalST3792 = enable;
+}
+
+uint32_t OP1AFile::AddWaveChunk(WaveChunk *chunk, bool take_ownership)
+{
+    uint32_t stream_id = mStreamIdHelper.GetNextId(STREAM_TYPE);
+    mWaveChunks[stream_id] = chunk;
+
+    if (take_ownership)
+        mOwnedWaveChunks.push_back(chunk);
+
+    return stream_id;
 }
 
 void OP1AFile::SetOutputStartOffset(int64_t offset)
@@ -894,6 +908,15 @@ void OP1AFile::CreateHeaderMetadata()
             mult_descriptor->setEssenceContainer(MXF_EC_L(MultipleWrappings));
             if (mSupportCompleteSinglePass)
                 mult_descriptor->setContainerDuration(mInputDuration);
+
+            // Preface - ContentStorage - SourcePackage - (Multiple) File Descriptor - Wave Chunk sub-descriptors
+            map<uint32_t, WaveChunk*>::const_iterator iter;
+            for (iter = mWaveChunks.begin(); iter != mWaveChunks.end(); iter++) {
+                RIFFChunkDefinitionSubDescriptor *wave_chunk_subdesc = new RIFFChunkDefinitionSubDescriptor(mHeaderMetadata);
+                mult_descriptor->appendSubDescriptors(wave_chunk_subdesc);
+                wave_chunk_subdesc->setRIFFChunkStreamID(iter->first);
+                wave_chunk_subdesc->setRIFFChunkID(iter->second->Tag());
+            }
         }
     }
 
@@ -997,7 +1020,7 @@ void OP1AFile::CreateFile()
     mHeaderMetadataEndPos = mMXFFile->tell();  // need this position when we re-write the header metadata
 
 
-    // write generic stream partitions
+    // write XML generic stream partitions
 
     size_t i;
     for (i = 0; i < mXMLTracks.size(); i++) {
@@ -1018,6 +1041,35 @@ void OP1AFile::CreateFile()
             xml_track->WriteStreamXMLData(mMXFFile);
             stream_partition.fillToKag(mMXFFile);
         }
+    }
+
+
+    // write Wave chunk generic stream partitions
+
+    map<uint32_t, WaveChunk*>::const_iterator wave_chunk_iter;
+    for (wave_chunk_iter = mWaveChunks.begin(); wave_chunk_iter != mWaveChunks.end(); wave_chunk_iter++) {
+        if (header_partition.getIndexSID() || header_partition.getBodySID())
+            BMX_EXCEPTION(("Wave chunk's Generic Stream partition is currently incompatible with minimal partitions flavour"));
+        if (mSupportCompleteSinglePass)
+            BMX_EXCEPTION(("Wave chunk's Generic Stream partition is currently incompatible with single pass flavour"));
+
+        if (mMXFFile->isMemoryFileOpen())
+            mMXFFile->closeMemoryFile();
+
+        Partition &stream_partition = mMXFFile->createPartition();
+        stream_partition.setKey(&MXF_GS_PP_K(GenericStream));
+        stream_partition.setBodySID(wave_chunk_iter->first);
+        stream_partition.write(mMXFFile);
+
+        uint8_t llen = mxf_get_llen(mMXFFile->getCFile(), wave_chunk_iter->second->Size());
+        if (llen < 4)
+            llen = 4;
+        mMXFFile->writeFixedKL(&MXF_EE_K(WaveChunk), llen, wave_chunk_iter->second->Size());
+
+        BMXMXFIO bmx_mxf_io(mMXFFile);
+        dynamic_cast<BMXIO*>(&bmx_mxf_io)->Write(wave_chunk_iter->second);
+
+        stream_partition.fillToKag(mMXFFile);
     }
 
 

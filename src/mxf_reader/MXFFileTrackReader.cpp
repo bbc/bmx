@@ -34,9 +34,13 @@
 #endif
 
 #include <cstring>
+#include <map>
+#include <set>
 
 #include <bmx/mxf_reader/MXFFileTrackReader.h>
 #include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/mxf_reader/GenericStreamReader.h>
+#include <bmx/mxf_helper/ADMCHNAMXFDescriptorHelper.h>
 #include <bmx/essence_parser/AVCEssenceParser.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -60,12 +64,69 @@ MXFFileTrackReader::MXFFileTrackReader(MXFFileReader *file_reader, size_t track_
     mFrameBuffer.SetTargetBuffer(new DefaultFrameBuffer(), true);
 
     mAVCIHeader = 0;
+    mWaveCHNA = 0;
+
+    // get MXFWaveChunks for each RIFFChunkReferenceSubDescriptor sub-descriptor reference
+    // get a WaveCHNA from a ADM_CHNASubDescriptor
+    WaveAudioDescriptor *wave_descriptor = dynamic_cast<WaveAudioDescriptor*>(file_descriptor);
+    if (file_source_package->getDescriptor()->haveSubDescriptors() &&
+        wave_descriptor && wave_descriptor->haveSubDescriptors())
+    {
+        vector<SubDescriptor*> sub_descriptors = wave_descriptor->getSubDescriptors();
+        size_t i;
+        for (i = 0; i < sub_descriptors.size(); i++) {
+            RIFFChunkReferencesSubDescriptor *chunk_ref_descriptor =
+                dynamic_cast<RIFFChunkReferencesSubDescriptor*>(sub_descriptors[i]);
+
+            if (chunk_ref_descriptor) {
+                // Get the chunk descriptors associated with the File Source Package descriptor
+                map<uint32_t, const RIFFChunkDefinitionSubDescriptor*> chunk_descriptors;
+                MultipleDescriptor *multi_descriptor = dynamic_cast<MultipleDescriptor*>(file_source_package->getDescriptor());
+                if (multi_descriptor) {
+                    vector<SubDescriptor*> fsp_sub_descriptors = multi_descriptor->getSubDescriptors();
+                    size_t k;
+                    for (k = 0; k < fsp_sub_descriptors.size(); k++) {
+                        RIFFChunkDefinitionSubDescriptor *chunk_descriptor =
+                            dynamic_cast<RIFFChunkDefinitionSubDescriptor*>(fsp_sub_descriptors[k]);
+                        if (chunk_descriptor)
+                            chunk_descriptors[chunk_descriptor->getRIFFChunkStreamID()] = chunk_descriptor;
+                    }
+
+                    // Create a MXFWaveChunk for each chunk referenced
+                    vector<uint32_t> stream_ids = chunk_ref_descriptor->getRIFFChunkStreamIDsArray();
+                    set<uint32_t> unique_stream_ids(stream_ids.begin(), stream_ids.end());
+                    set<uint32_t>::const_iterator iter;
+                    for (iter = unique_stream_ids.begin(); iter != unique_stream_ids.end(); iter++) {
+                        const RIFFChunkDefinitionSubDescriptor *chunk_descriptor = 0;
+                        try {
+                            chunk_descriptor = chunk_descriptors.at(*iter);
+                        } catch (...) {
+                            log_warn("Referenced chunk descriptor with stream id %u does not exist in package descriptor\n", *iter);
+                            continue;
+                        }
+
+                        mWaveChunks.push_back(new MXFWaveChunk(file_reader->mFile, chunk_descriptor));
+                    }
+                }
+            } else {
+                ADM_CHNASubDescriptor *chna_descriptor =
+                    dynamic_cast<ADM_CHNASubDescriptor*>(sub_descriptors[i]);
+                if (chna_descriptor)
+                    mWaveCHNA = convert_adm_chna_descriptor_to_chunk(chna_descriptor);
+            }
+        }
+    }
 }
 
 MXFFileTrackReader::~MXFFileTrackReader()
 {
     delete mTrackInfo;
     delete [] mAVCIHeader;
+
+    size_t i;
+    for (i = 0; i < mWaveChunks.size(); i++)
+        delete mWaveChunks[i];
+    delete mWaveCHNA;
 }
 
 void MXFFileTrackReader::SetEmptyFrames(bool enable)
@@ -203,3 +264,28 @@ void MXFFileTrackReader::SetAVCIHeader(const unsigned char *frame_data, uint32_t
     memcpy(mAVCIHeader, frame_data, AVCI_HEADER_SIZE);
 }
 
+vector<WaveCHNA::AudioID> MXFFileTrackReader::GetCHNAAudioIDs(uint32_t channel_index) const
+{
+    if (!mWaveCHNA)
+        return vector<WaveCHNA::AudioID>();
+
+    // + 1 because chna track_index starts from 1
+    return mWaveCHNA->GetAudioIDs(channel_index + 1);
+}
+
+MXFWaveChunk* MXFFileTrackReader::GetWaveChunk(size_t index) const
+{
+    BMX_CHECK(index < mWaveChunks.size());
+    return mWaveChunks[index];
+}
+
+MXFWaveChunk* MXFFileTrackReader::GetWaveChunk(WaveChunkTag tag) const
+{
+    size_t i;
+    for (i = 0; i < mWaveChunks.size(); i++) {
+        if (tag == mWaveChunks[i]->Tag())
+            return mWaveChunks[i];
+    }
+
+    return 0;
+}

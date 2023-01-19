@@ -34,6 +34,7 @@
 
 #include <bmx/mxf_op1a/OP1ATrack.h>
 #include <bmx/mxf_helper/WaveMXFDescriptorHelper.h>
+#include <bmx/wave/WaveCHNA.h>
 
 
 
@@ -57,6 +58,9 @@ public:
     void SetDialNorm(int8_t dial_norm);                 // default not set
     void SetSequenceOffset(uint8_t offset);             // default not set
     void SetChannelAssignment(UL label);                // default not set
+
+    void AddADMAudioID(const WaveCHNA::AudioID &audio_id);
+    void AddWaveChunkReference(uint32_t stream_id);
 
     mxfpp::AudioChannelLabelSubDescriptor* AddAudioChannelLabel(
         mxfpp::AudioChannelLabelSubDescriptor *copy_from = 0);
@@ -88,6 +92,8 @@ private:
     WaveMXFDescriptorHelper *mWaveDescriptorHelper;
     std::vector<uint32_t> mSampleSequence;
     std::vector<mxfpp::MCALabelSubDescriptor*> mMCALabels;
+    WaveCHNA *mCHNAChunk;
+    std::set<uint32_t> mWaveChunkReferences;
 };
 
 

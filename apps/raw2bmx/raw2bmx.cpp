@@ -5729,6 +5729,122 @@ int main(int argc, const char** argv)
         }
 
 
+        // Add ADM Wave chunks and references
+
+        if (clip_type == CW_OP1A_CLIP_TYPE) {
+            // Get the output tracks and referenced Wave file inputs that contain ADM chunks
+            // Only allow a single Wave with ADM for each output track to ensure that references between
+            // the ADM chunks and channels remain unambiguous
+            vector<pair<OutputTrack*, RawInput*> > output_tracks_using_adm;
+            set<RawInput*> wave_adm_inputs;
+            bool done = false;
+            for (i = 0; i < output_tracks.size() && !done; i++) {
+                OutputTrack *output_track = output_tracks[i];
+                if (!output_track->HaveInputTrack())
+                    continue;
+
+                // Loop over the input track channels and add input if the channel has a chna audio ID
+                // and there exist ADM chunks
+                RawInput *output_track_wave_adm_input = 0;
+                const map<uint32_t, OutputTrack::InputMap> &input_maps = output_track->GetInputMaps();
+                map<uint32_t, OutputTrack::InputMap>::const_iterator iter;
+                for (iter = input_maps.begin(); iter != input_maps.end(); iter++) {
+                    RawInput *input = dynamic_cast<RawInputTrack*>(iter->second.input_track)->GetRawInput();
+                    if (input->essence_type != WAVE_PCM || !input->wave_reader)
+                        continue;
+
+                    // Check that the input channel has a chna audio ID
+                    WaveCHNA *chna = input->wave_reader->GetCHNA();
+                    if (!chna)
+                        continue;
+
+                    // + 1 below because ADM track (channel) indexes start at 1
+                    uint32_t input_channel_index = iter->second.input_channel_index;
+                    vector<WaveCHNA::AudioID> audio_ids = chna->GetAudioIDs(input_channel_index + 1);
+                    if (audio_ids.empty())
+                        continue;
+
+                    // Require at least a axml, bxml or sxml chunk
+                    WaveFileChunk *axml = input->wave_reader->GetAdditionalChunk(WAVE_CHUNK_TAG("axml"));
+                    WaveFileChunk *bxml = input->wave_reader->GetAdditionalChunk(WAVE_CHUNK_TAG("bxml"));
+                    WaveFileChunk *sxml = input->wave_reader->GetAdditionalChunk(WAVE_CHUNK_TAG("sxml"));
+                    if (axml || bxml || sxml) {
+                        if (output_track_wave_adm_input) {
+                            if (input != output_track_wave_adm_input) {
+                                log_warn("MXF output track references multiple WAVE input files with ADM\n");
+                                // This wrap is not supported; decide to not include any ADM in the output
+                                output_tracks_using_adm.clear();
+                                done = true;
+                                break;
+                            }
+                        } else {
+                            output_tracks_using_adm.push_back(make_pair(output_track, input));
+                            output_track_wave_adm_input = input;
+                            wave_adm_inputs.insert(input);
+                        }
+                    }
+                }
+            }
+
+            if (!output_tracks_using_adm.empty()) {
+                // Add ADM chunks to the clip
+                map<RawInput*, vector<uint32_t> > input_chunk_refs;
+                set<RawInput*>::const_iterator iter;
+                for (iter = wave_adm_inputs.begin(); iter != wave_adm_inputs.end(); iter++) {
+                    RawInput *input = *iter;
+                    WaveReader *wave_reader = input->wave_reader;
+
+                    WaveFileChunk *axml = wave_reader->GetAdditionalChunk(WAVE_CHUNK_TAG("axml"));
+                    if (axml)
+                        input_chunk_refs[input].push_back(clip->AddWaveChunk(axml, false));
+                    WaveFileChunk *bxml = wave_reader->GetAdditionalChunk(WAVE_CHUNK_TAG("bxml"));
+                    if (bxml)
+                        input_chunk_refs[input].push_back(clip->AddWaveChunk(bxml, false));
+                    WaveFileChunk *sxml = wave_reader->GetAdditionalChunk(WAVE_CHUNK_TAG("sxml"));
+                    if (sxml)
+                        input_chunk_refs[input].push_back(clip->AddWaveChunk(sxml, false));
+                }
+
+                // Add references to the ADM chunks and chna audio IDs to the clip tracks
+                for (i = 0; i < output_tracks_using_adm.size(); i++) {
+                    OutputTrack *output_track = output_tracks_using_adm[i].first;
+                    RawInput *wave_adm_input = output_tracks_using_adm[i].second;
+
+                    ClipWriterTrack *clip_track = output_track->GetClipTrack();
+
+                    // Add generic stream ID references to the chunks to the clip track
+                    const vector<uint32_t> &chunk_refs = input_chunk_refs[wave_adm_input];
+                    size_t k;
+                    for (k = 0; k < chunk_refs.size(); k++)
+                        clip_track->AddWaveChunkReference(chunk_refs[k]);
+
+                    // Add chna AudioIDs to the clip track.
+                    // Use the input to output channel mapping to set the chna track_index
+                    WaveCHNA *input_chna = wave_adm_input->wave_reader->GetCHNA();
+                    const map<uint32_t, OutputTrack::InputMap> &input_maps = output_track->GetInputMaps();
+                    map<uint32_t, OutputTrack::InputMap>::const_iterator iter;
+                    for (iter = input_maps.begin(); iter != input_maps.end(); iter++) {
+                        RawInput *input = dynamic_cast<RawInputTrack*>(iter->second.input_track)->GetRawInput();
+                        if (input != wave_adm_input)
+                            continue;
+
+                        // + 1 below because ADM track (channel) indexes start at 1
+                        uint32_t input_channel_index = iter->second.input_channel_index;
+                        vector<WaveCHNA::AudioID> audio_ids = input_chna->GetAudioIDs(input_channel_index + 1);
+                        for (k = 0; k < audio_ids.size(); k++) {
+                            WaveCHNA::AudioID &audio_id = audio_ids[k];
+
+                            // + 1 below because ADM track (channel) indexes start at 1
+                            uint32_t output_channel_index = iter->first;
+                            audio_id.track_index = output_channel_index + 1;
+                            clip_track->AddADMAudioID(audio_id);
+                        }
+                    }
+                }
+            }
+        }
+
+
         // prepare the clip's header metadata
 
         clip->PrepareHeaderMetadata();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2022, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,67 +29,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef BMX_MXF_IO_H_
+#define BMX_MXF_IO_H_
+
+#include <libMXF++/File.h>
+
+#include <bmx/BMXIO.h>
+
+
+namespace bmx
+{
+
+
+class BMXMXFIO: public BMXIO
+{
+public:
+    BMXMXFIO(mxfpp::File *mxf_file);
+    virtual ~BMXMXFIO();
+
+    virtual uint32_t Read(unsigned char *data, uint32_t size);
+
+    virtual uint32_t Write(const unsigned char *data, uint32_t size);
+
+    virtual bool Seek(int64_t offset, int whence);
+
+    virtual int64_t Tell();
+    virtual int64_t Size();
+
+private:
+    mxfpp::File *mFile;
+};
+
+
+};
+
+
 #endif
-
-#include <cstring>
-
-#include <bmx/wave/WaveTrackWriter.h>
-#include <bmx/wave/WaveWriter.h>
-#include <bmx/BMXException.h>
-#include <bmx/Logging.h>
-
-using namespace std;
-using namespace bmx;
-
-
-
-WaveTrackWriter::WaveTrackWriter(WaveWriter *writer, uint32_t track_index)
-{
-    mWriter = writer;
-    mTrackIndex = track_index;
-    mStartChannel = 0;
-    mChannelCount = 1;
-    mSampleCount = 0;
-}
-
-WaveTrackWriter::~WaveTrackWriter()
-{
-}
-
-void WaveTrackWriter::SetSamplingRate(Rational sampling_rate)
-{
-    mWriter->SetSamplingRate(sampling_rate);
-}
-
-void WaveTrackWriter::SetQuantizationBits(uint16_t bits)
-{
-    mWriter->SetQuantizationBits(bits);
-}
-
-void WaveTrackWriter::SetChannelCount(uint16_t count)
-{
-    BMX_CHECK(count > 0);
-    mChannelCount = count;
-}
-
-void WaveTrackWriter::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
-{
-    mWriter->WriteSamples(mTrackIndex, data, size, num_samples);
-}
-
-uint32_t WaveTrackWriter::GetSampleSize() const
-{
-    return mWriter->mChannelBlockAlign * mChannelCount;
-}
-
-Rational WaveTrackWriter::GetSamplingRate() const
-{
-    return mWriter->GetSamplingRate();
-}
-
-int64_t WaveTrackWriter::GetDuration() const
-{
-    return mWriter->GetDuration();
-}

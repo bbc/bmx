@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012, British Broadcasting Corporation
+ * Copyright (C) 2022, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -33,10 +33,7 @@
 #include "config.h"
 #endif
 
-#include <cstring>
-
-#include <bmx/wave/WaveTrackWriter.h>
-#include <bmx/wave/WaveWriter.h>
+#include <bmx/wave/WaveFileChunk.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -44,52 +41,33 @@ using namespace std;
 using namespace bmx;
 
 
-
-WaveTrackWriter::WaveTrackWriter(WaveWriter *writer, uint32_t track_index)
+WaveFileChunk::WaveFileChunk(WaveChunkTag tag, BMXIO *file, int64_t offset, uint32_t size)
+: WaveChunk(tag)
 {
-    mWriter = writer;
-    mTrackIndex = track_index;
-    mStartChannel = 0;
-    mChannelCount = 1;
-    mSampleCount = 0;
+    mFile = file;
+    mOffset = offset;
+    mSize = size;
+    mPosition = 0;
 }
 
-WaveTrackWriter::~WaveTrackWriter()
+WaveFileChunk::~WaveFileChunk()
 {
 }
 
-void WaveTrackWriter::SetSamplingRate(Rational sampling_rate)
+uint32_t WaveFileChunk::Read(unsigned char *data, uint32_t size)
 {
-    mWriter->SetSamplingRate(sampling_rate);
-}
+    if (mPosition >= mSize)
+        return 0;
 
-void WaveTrackWriter::SetQuantizationBits(uint16_t bits)
-{
-    mWriter->SetQuantizationBits(bits);
-}
+    uint32_t to_read = mSize - mPosition;
+    if (to_read > size)
+        to_read = size;
 
-void WaveTrackWriter::SetChannelCount(uint16_t count)
-{
-    BMX_CHECK(count > 0);
-    mChannelCount = count;
-}
+    if (mPosition == 0)
+        mFile->Seek(mOffset, SEEK_SET);
 
-void WaveTrackWriter::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
-{
-    mWriter->WriteSamples(mTrackIndex, data, size, num_samples);
-}
+    uint32_t have_read = mFile->Read(data, to_read);
+    mPosition += have_read;
 
-uint32_t WaveTrackWriter::GetSampleSize() const
-{
-    return mWriter->mChannelBlockAlign * mChannelCount;
-}
-
-Rational WaveTrackWriter::GetSamplingRate() const
-{
-    return mWriter->GetSamplingRate();
-}
-
-int64_t WaveTrackWriter::GetDuration() const
-{
-    return mWriter->GetDuration();
+    return have_read;
 }

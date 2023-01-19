@@ -39,7 +39,9 @@
 #include <bmx/ByteArray.h>
 #include <bmx/wave/WaveIO.h>
 #include <bmx/wave/WaveBEXT.h>
+#include <bmx/wave/WaveCHNA.h>
 #include <bmx/wave/WaveTrackReader.h>
+#include <bmx/wave/WaveFileChunk.h>
 
 
 
@@ -74,16 +76,23 @@ public:
     uint16_t GetChannelBlockAlign() const { return mChannelBlockAlign; }
     uint16_t GetBlockAlign() const        { return mBlockAlign; }
     WaveBEXT* GetBEXT() const             { return mBEXT; }
+    WaveCHNA* GetCHNA() const             { return mCHNA; }
 
     uint32_t GetNumTracks() const         { return (uint32_t)mTracks.size(); }
     WaveTrackReader* GetTrack(uint32_t track_index) const;
 
     bool IsEnabled() const;
 
-private:
-    WaveReader(WaveIO *input, bool take_ownership, bool is_rf64, uint32_t riff_size);
+public:
+    uint32_t GetNumAdditionalChunks() const { return mChunks.size(); }
+    WaveFileChunk* GetAdditionalChunk(uint32_t index) const;
 
-    void ReadChunks(bool is_rf64, uint32_t riff_size);
+    WaveFileChunk* GetAdditionalChunk(WaveChunkTag tag) const;
+
+private:
+    WaveReader(WaveIO *input, bool take_ownership, bool require_ds64, uint32_t riff_size);
+
+    void ReadChunks(bool require_ds64, uint32_t riff_size);
 
 private:
     WaveIO *mInput;
@@ -95,6 +104,7 @@ private:
     uint16_t mChannelBlockAlign;
     uint16_t mBlockAlign;
     WaveBEXT *mBEXT;
+    WaveCHNA *mCHNA;
     int64_t mSampleCount;
 
     std::vector<WaveTrackReader*> mTracks;
@@ -105,6 +115,8 @@ private:
     int64_t mDataStartFilePosition;
     int64_t mPosition;
     ByteArray mReadBuffer;
+
+    std::vector<WaveFileChunk*> mChunks;
 };
 
 

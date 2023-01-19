@@ -39,8 +39,9 @@
 #include <bmx/ByteArray.h>
 #include <bmx/wave/WaveIO.h>
 #include <bmx/wave/WaveBEXT.h>
+#include <bmx/wave/WaveCHNA.h>
 #include <bmx/wave/WaveTrackWriter.h>
-
+#include <bmx/wave/WaveChunk.h>
 
 
 namespace bmx
@@ -58,12 +59,18 @@ public:
 
     void SetStartTimecode(Timecode start_timecode);     // sets time_reference in bext
     void SetSampleCount(int64_t count);                 // metadata and sizes are calculated and set
+
     WaveBEXT* GetBroadcastAudioExtension() { return mBEXT; }
+
+    void AddCHNA(WaveCHNA *chna, bool take_ownership);
+    void AddChunk(WaveChunk *chunk, bool take_ownership);
 
 public:
     WaveTrackWriter* CreateTrack();
 
 public:
+    void UpdateChannelCounts();
+
     void PrepareWrite();
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
     void CompleteWrite();
@@ -86,6 +93,10 @@ private:
     bool mStartTimecodeSet;
     int64_t mSetSampleCount;
     WaveBEXT *mBEXT;
+    WaveCHNA *mCHNA;
+    bool mOwnCHNA;
+    std::vector<WaveChunk*> mAdditionalChunks;
+    std::vector<WaveChunk*> mOwnedAdditionalChunks;
 
     Rational mSamplingRate;
     bool mSamplingRateSet;
@@ -114,7 +125,8 @@ private:
     int64_t mDataChunkFilePosition;
     int64_t mFactChunkFilePosition;
 
-    bool mUseRF64;
+    bool mRequire64Bit;
+    bool mWriteBW64;
     int64_t mSetSize;
     int64_t mSetDataSize;
 };

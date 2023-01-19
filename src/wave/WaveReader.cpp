@@ -47,27 +47,21 @@ using namespace bmx;
 
 
 
-static bool tag_equals(const char *left, const char *right)
-{
-    return memcmp(left, right, 4) == 0;
-}
-
-
 WaveReader* WaveReader::Open(WaveIO *input, bool take_ownership)
 {
     try
     {
-        char tag[4];
-        if (!input->ReadTag(tag)) {
+        WaveChunkTag tag;
+        if (!input->ReadTag(&tag)) {
             log_error("File is not a Wave file\n");
             throw false;
         }
 
-        bool is_rf64;
-        if (tag_equals(tag, "RIFF")) {
-            is_rf64 = false;
-        } else if (tag_equals(tag, "RF64")) {
-            is_rf64 = true;
+        bool require_ds64;
+        if (tag == "RIFF") {
+            require_ds64 = false;
+        } else if (tag == "RF64" || tag == "BW64") {
+            require_ds64 = true;
         } else {
             log_error("File is not a Wave file\n");
             throw false;
@@ -75,12 +69,12 @@ WaveReader* WaveReader::Open(WaveIO *input, bool take_ownership)
 
         uint32_t size = input->ReadSize();
 
-        if (!input->ReadTag(tag) || !tag_equals(tag, "WAVE")) {
+        if (!input->ReadTag(&tag) || tag != "WAVE") {
             log_error("File is not a Wave file\n");
             throw false;
         }
 
-        return new WaveReader(input, take_ownership, is_rf64, size);
+        return new WaveReader(input, take_ownership, require_ds64, size);
     }
     catch (const BMXException &ex)
     {
@@ -98,7 +92,7 @@ WaveReader* WaveReader::Open(WaveIO *input, bool take_ownership)
     }
 }
 
-WaveReader::WaveReader(WaveIO *input, bool take_ownership, bool is_rf64, uint32_t riff_size)
+WaveReader::WaveReader(WaveIO *input, bool take_ownership, bool require_ds64, uint32_t riff_size)
 {
     mInput = input;
     mOwnInput = take_ownership;
@@ -108,13 +102,14 @@ WaveReader::WaveReader(WaveIO *input, bool take_ownership, bool is_rf64, uint32_
     mChannelBlockAlign = 0;
     mBlockAlign = 0;
     mBEXT = 0;
+    mCHNA = 0;
     mSampleCount = 0;
     mReadStartPosition = 0;
     mReadDuration = 0;
     mDataStartFilePosition = 0;
     mPosition = 0;
 
-    ReadChunks(is_rf64, riff_size);
+    ReadChunks(require_ds64, riff_size);
 
     // 1 track per channel
     uint16_t i;
@@ -128,6 +123,7 @@ WaveReader::WaveReader(WaveIO *input, bool take_ownership, bool is_rf64, uint32_
 WaveReader::~WaveReader()
 {
     delete mBEXT;
+    delete mCHNA;
     if (mOwnInput)
         delete mInput;
 
@@ -166,10 +162,11 @@ uint32_t WaveReader::Read(uint32_t num_samples)
         return 0;
     }
 
-    // adjust sample count and seek to start of data if needed
+    // adjust the sample count if needed
+    // seek if at the start of the data
     uint32_t first_sample_offset = 0;
     uint32_t read_num_samples = num_samples;
-    if (mPosition < mReadStartPosition) {
+    if (mPosition <= mReadStartPosition) {
         first_sample_offset = (uint32_t)(mReadStartPosition - mPosition);
         read_num_samples -= first_sample_offset;
         Seek(mReadStartPosition);
@@ -270,7 +267,24 @@ bool WaveReader::IsEnabled() const
     return false;
 }
 
-void WaveReader::ReadChunks(bool is_rf64, uint32_t riff_size)
+WaveFileChunk* WaveReader::GetAdditionalChunk(uint32_t index) const
+{
+    BMX_CHECK(index < mChunks.size());
+    return mChunks[index];
+}
+
+WaveFileChunk* WaveReader::GetAdditionalChunk(WaveChunkTag tag) const
+{
+    size_t i;
+    for (i = 0; i < mChunks.size(); i++) {
+        if (mChunks[i]->Tag() == tag)
+            return mChunks[i];
+    }
+
+    return 0;
+}
+
+void WaveReader::ReadChunks(bool require_ds64, uint32_t riff_size)
 {
     (void)riff_size;
 
@@ -279,14 +293,15 @@ void WaveReader::ReadChunks(bool is_rf64, uint32_t riff_size)
     bool have_fmt  = false;
     bool have_fact = false;
     bool have_data = false;
-    char tag[4];
+    WaveChunkTag tag;
 
     while (true) {
-        if (!mInput->ReadTag(tag))
+        if (!mInput->ReadTag(&tag))
             break;
 
-        uint32_t size = mInput->ReadSize();
-        if (is_rf64 && tag_equals(tag, "ds64")) {
+        // Use uint64_t for size to allow assignment of actual_data_size and check to skip the WORD alignment byte
+        uint64_t size = mInput->ReadSize();
+        if (require_ds64 && tag == "ds64") {
             BMX_CHECK(size == 28);
             mInput->Skip(8); // riff size
             actual_data_size = mInput->ReadUInt64();
@@ -294,7 +309,7 @@ void WaveReader::ReadChunks(bool is_rf64, uint32_t riff_size)
             BMX_CHECK(mSampleCount >= 0);
             mInput->Skip(4);
             have_ds64 = true;
-        } else if (tag_equals(tag, "fmt ")) {
+        } else if (tag == "fmt ") {
             BMX_CHECK(size >= 16);
             uint16_t format_category = mInput->ReadUInt16();
             if (!(format_category == 1 || format_category == 0xFFFE)) { // PCM
@@ -312,31 +327,43 @@ void WaveReader::ReadChunks(bool is_rf64, uint32_t riff_size)
             if (size > 16)
                 mInput->Skip(size - 16);
             have_fmt = true;
-        } else if (tag_equals(tag, "fact")) {
+        } else if (tag == "fact") {
             BMX_CHECK(size == 4);
-            if (is_rf64) {
+            if (require_ds64) {
                 BMX_CHECK(have_ds64);
                 mInput->Skip(4);
             } else {
                 mSampleCount = (int64_t)mInput->ReadUInt32();
             }
             have_fact = true;
-        } else if (tag_equals(tag, "bext")) {
+        } else if (tag == "bext") {
             delete mBEXT;
             mBEXT = new WaveBEXT();
-            mBEXT->Read(mInput, size);
-        } else if (tag_equals(tag, "data")) {
+            mBEXT->Read(mInput, (uint32_t)size);
+        } else if (tag == "chna") {
+            delete mCHNA;
+            mCHNA = new WaveCHNA();
+            mCHNA->Read(mInput, (uint32_t)size);
+        } else if (tag == "data") {
             mDataStartFilePosition = mInput->Tell();
-            if (is_rf64) {
+            if (require_ds64) {
                 BMX_CHECK(have_ds64);
+                size = actual_data_size;
             } else {
                 actual_data_size = size;
             }
             mInput->Skip(actual_data_size);
             have_data = true;
         } else {
+            if (tag != "JUNK")
+                mChunks.push_back(new WaveFileChunk(tag, mInput, mInput->Tell(), (uint32_t)size));
+
             mInput->Skip(size);
         }
+
+        // Skip the WORD alignment byte
+        if ((size & 1))
+            mInput->Skip(1);
     }
 
     if (!have_data) {
