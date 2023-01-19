@@ -69,9 +69,7 @@ MXFFileTrackReader::MXFFileTrackReader(MXFFileReader *file_reader, size_t track_
     // get MXFWaveChunks for each RIFFChunkReferenceSubDescriptor sub-descriptor reference
     // get a WaveCHNA from a ADM_CHNASubDescriptor
     WaveAudioDescriptor *wave_descriptor = dynamic_cast<WaveAudioDescriptor*>(file_descriptor);
-    if (file_source_package->getDescriptor()->haveSubDescriptors() &&
-        wave_descriptor && wave_descriptor->haveSubDescriptors())
-    {
+    if (wave_descriptor && wave_descriptor->haveSubDescriptors()) {
         vector<SubDescriptor*> sub_descriptors = wave_descriptor->getSubDescriptors();
         size_t i;
         for (i = 0; i < sub_descriptors.size(); i++) {
@@ -82,7 +80,7 @@ MXFFileTrackReader::MXFFileTrackReader(MXFFileReader *file_reader, size_t track_
                 // Get the chunk descriptors associated with the File Source Package descriptor
                 map<uint32_t, const RIFFChunkDefinitionSubDescriptor*> chunk_descriptors;
                 MultipleDescriptor *multi_descriptor = dynamic_cast<MultipleDescriptor*>(file_source_package->getDescriptor());
-                if (multi_descriptor) {
+                if (multi_descriptor && multi_descriptor->haveSubDescriptors()) {
                     vector<SubDescriptor*> fsp_sub_descriptors = multi_descriptor->getSubDescriptors();
                     size_t k;
                     for (k = 0; k < fsp_sub_descriptors.size(); k++) {

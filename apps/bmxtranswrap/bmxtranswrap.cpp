@@ -4439,7 +4439,7 @@ int main(int argc, const char** argv)
                         WaveCHNA::AudioID &audio_id = audio_ids[k];
 
                         // + 1 because the chna track_index starts at 1
-                        audio_id.track_index = wave_track->GetStartChannel() + output_channel_index + 1;
+                        audio_id.track_index = output_channel_index + 1;
                         wave_track->AddADMAudioID(audio_id);
                     }
                 }

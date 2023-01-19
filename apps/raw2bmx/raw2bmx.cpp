@@ -5840,6 +5840,11 @@ int main(int argc, const char** argv)
                             output_track_wave_adm_input = input;
                             wave_adm_inputs.insert(input);
                         }
+                    } else {
+                        // Input only has a chna
+                        output_tracks_using_adm.push_back(make_pair(output_track, input));
+                        output_track_wave_adm_input = input;
+                        wave_adm_inputs.insert(input);
                     }
                 }
             }

@@ -12,7 +12,7 @@ The current support in the `bmx` implementation is as follows:
 - Converting Wave+ADM to MXF+ADM using raw2bmx
 - Converting Wave+ADM to Wave+ADM using raw2bmx
 - Converting MXF+ADM to Wave+ADM using bmxtranswrap
-- Creating Wave+ADM with Wave / raw PCM, chna text file and axml/bxml/sxml file inputs
+- Creating Wave+ADM with Wave / raw PCM, chna text file and (optionally) axml/bxml/sxml file inputs
 - Preservation of ADM links after remapping audio channels using the `--track-map` option can be used to reorder, omit, group and add silence channels.
 - Add ADM Soundfield Group MCA label
 - Set the Channel Assignment audio descriptor property for ADM-described content labelling
@@ -32,6 +32,10 @@ A Wave+ADM sample file can be created using the following example commandline gi
 The axml file `axml.xml` is the data that will be written into the axml chunk (with tag `axml`). The chna text file `chna.txt` lists the audio identifiers that make up the chna chunk. The format of the text file is described in [chna Text file Definition Format](#chna-text-file-definition-format).
 
 If the source Wave file contained an axml chunk then the `--wave-chunk-data axml.xml axml` option will override it. If the source Wave file contained a chna chunk then the `--chna-audio-ids chna.txt` option will override it.
+
+A Wave+ADM sample file can be created without a axml chunk, i.e. just a chna chunk, using the following example commandline given a Wave file (which doesn't have a axml chunk!) and a chna text file:
+
+`raw2bmx -t wave -o output.wav --chna-audio-ids chna.txt --wave input.wav`
 
 Raw PCM files can also be used as input, e.g. replace `--wave input.wave` with:
 
