@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015, British Broadcasting Corporation
+ * Copyright (C) 2022, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,70 +29,63 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_MXF_TEXT_OBJECT_H_
-#define BMX_MXF_TEXT_OBJECT_H_
+#ifndef BMX_GENERIC_STREAM_READER_H_
+#define BMX_GENERIC_STREAM_READER_H_
 
-#include <stdio.h>
-#include <vector>
-
+#include <bmx/BMXIO.h>
 #include <bmx/BMXTypes.h>
 
-
-namespace mxfpp
-{
-    class TextBasedObject;
-};
 
 namespace bmx
 {
 
-class MXFFileReader;
 
-class MXFTextObject
+class GenericStreamReader : public BMXIO
 {
 public:
-    MXFTextObject(MXFFileReader *file_reader, mxfpp::TextBasedObject *text_object,
-                  mxfUMID package_uid, uint32_t track_id, uint16_t component_index);
-    ~MXFTextObject();
+    GenericStreamReader(mxfpp::File *mxf_file, uint32_t stream_id, const std::vector<mxfKey> &expected_stream_keys);
+    virtual ~GenericStreamReader();
 
+public:
+    // From BMXIO
+    virtual uint32_t Read(unsigned char *data, uint32_t size);
+    virtual int64_t Tell();
+    virtual int64_t Size();
+
+    virtual void Read(FILE *file);
+    virtual void Read(BMXIO *bmx_io);
+
+public:
     void Read(unsigned char **data, size_t *size);
-    void Read(FILE *file);
 
-    mxfUMID GetPackageUID() const      { return mPackageUID; }
-    uint32_t GetTrackId() const        { return mTrackId; }
-    uint16_t GetComponentIndex() const { return mComponentIndex; }
+    const std::vector<std::pair<int64_t, int64_t> >& GetFileOffsetRanges();
 
-    mxfUL GetSchemeId() const;
-    std::string GetMimeType() const;
-    std::string GetLanguageCode() const;
-    std::string GetTextDataDescription() const;
-    TextEncoding GetEncoding() const;
-    bool IsInGenericStream() const;
+public:
+    uint32_t GetStreamId() const { return mStreamId; }
 
-    // only valid after Read() and IsInGenericStream() true
-    // it doesn't distinguish between BMX_BIG_ENDIAN or BMX_BYTE_ORIENTED
-    ByteOrder GetGSByteOrder() const { return mGSByteOrder; }
-
-    bool IsXML() const { return mIsXML; }
+    const mxfKey* GetStreamKey() const { return &mStreamKey; }
 
 private:
-    bool CheckIsXML();
-
-    void ReadGenericStream(FILE *text_file_out, unsigned char **data_out, size_t *data_out_size);
+    bool MatchesExpectedStreamKey(const mxfKey *key);
+    void Read(FILE *file, BMXIO *bmx_io, unsigned char **data, size_t *size);
 
 private:
-    MXFFileReader *mFileReader;
-    mxfpp::TextBasedObject *mTextObject;
-    mxfUMID mPackageUID;
-    uint32_t mTrackId;
-    uint16_t mComponentIndex;
-    bool mIsXML;
-    ByteOrder mGSByteOrder;
+    mxfpp::File *mMXFFile;
+    uint32_t mStreamId;
     std::vector<mxfKey> mExpectedStreamKeys;
+    mxfKey mStreamKey;
+
+    bool mHaveFileOffsetRanges;
+    std::vector<std::pair<int64_t, int64_t> > mFileOffsetRanges;
+    int64_t mSize;
+    int64_t mPosition;
+    size_t mRangeIndex;
+    int64_t mRangeOffset;
 };
 
 
 };
+
 
 
 #endif

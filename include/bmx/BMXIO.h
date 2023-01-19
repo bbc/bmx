@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015, British Broadcasting Corporation
+ * Copyright (C) 2022, British Broadcasting Corporation
  * All Rights Reserved.
  *
  * Author: Philip de Nier
@@ -29,70 +29,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_MXF_TEXT_OBJECT_H_
-#define BMX_MXF_TEXT_OBJECT_H_
+#ifndef BMX_IO_H_
+#define BMX_IO_H_
 
-#include <stdio.h>
-#include <vector>
+#include <cstdio>
 
 #include <bmx/BMXTypes.h>
 
 
-namespace mxfpp
-{
-    class TextBasedObject;
-};
-
 namespace bmx
 {
 
-class MXFFileReader;
 
-class MXFTextObject
+class BMXIO
 {
 public:
-    MXFTextObject(MXFFileReader *file_reader, mxfpp::TextBasedObject *text_object,
-                  mxfUMID package_uid, uint32_t track_id, uint16_t component_index);
-    ~MXFTextObject();
+    BMXIO();
+    virtual ~BMXIO();
 
-    void Read(unsigned char **data, size_t *size);
-    void Read(FILE *file);
+    virtual uint32_t Read(unsigned char *data, uint32_t size);
+    virtual void Read(FILE *file);
+    virtual void Read(BMXIO *bmx_io);
 
-    mxfUMID GetPackageUID() const      { return mPackageUID; }
-    uint32_t GetTrackId() const        { return mTrackId; }
-    uint16_t GetComponentIndex() const { return mComponentIndex; }
+    virtual uint32_t Write(const unsigned char *data, uint32_t size);
+    virtual void Write(FILE *file);
+    virtual void Write(BMXIO *bmx_io);
 
-    mxfUL GetSchemeId() const;
-    std::string GetMimeType() const;
-    std::string GetLanguageCode() const;
-    std::string GetTextDataDescription() const;
-    TextEncoding GetEncoding() const;
-    bool IsInGenericStream() const;
+    virtual bool Seek(int64_t offset, int whence);
 
-    // only valid after Read() and IsInGenericStream() true
-    // it doesn't distinguish between BMX_BIG_ENDIAN or BMX_BYTE_ORIENTED
-    ByteOrder GetGSByteOrder() const { return mGSByteOrder; }
-
-    bool IsXML() const { return mIsXML; }
-
-private:
-    bool CheckIsXML();
-
-    void ReadGenericStream(FILE *text_file_out, unsigned char **data_out, size_t *data_out_size);
-
-private:
-    MXFFileReader *mFileReader;
-    mxfpp::TextBasedObject *mTextObject;
-    mxfUMID mPackageUID;
-    uint32_t mTrackId;
-    uint16_t mComponentIndex;
-    bool mIsXML;
-    ByteOrder mGSByteOrder;
-    std::vector<mxfKey> mExpectedStreamKeys;
+    virtual int64_t Tell();
+    virtual int64_t Size();
 };
 
 
 };
+
 
 
 #endif
