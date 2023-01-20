@@ -44,6 +44,14 @@ namespace bmx
 {
 
 
+// Ignore Visual Studio inherits via dominance warning for the WaveFileIO class.
+// Both BMXFileIO and WaveIO (virtual) inherit from BMXIO.
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4250)
+#endif
+
+
 class WaveFileIO : public BMXFileIO, public WaveIO
 {
 public:
@@ -59,6 +67,11 @@ public:
 private:
     WaveFileIO(FILE *file, bool read_only);
 };
+
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 
 };
