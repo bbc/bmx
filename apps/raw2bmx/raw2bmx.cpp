@@ -6007,7 +6007,7 @@ int main(int argc, const char** argv)
                 // Use the WaveFileIO class as a generic BMXIO class
                 BMXIO *file = WaveFileIO::OpenRead(wave_chunk_data.filename);
 
-                WaveFileChunk *chunk = new WaveFileChunk(wave_chunk_data.id, file, 0, (uint32_t)file->Size());
+                WaveFileChunk *chunk = new WaveFileChunk(wave_chunk_data.id, file, true, 0, (uint32_t)file->Size());
                 wave_clip->AddChunk(chunk, true);
             }
 

@@ -141,6 +141,8 @@ WaveReader::~WaveReader()
     size_t i;
     for (i = 0; i < mTracks.size(); i++)
         delete mTracks[i];
+    for (i = 0; i < mChunks.size(); i++)
+        delete mChunks[i];
 }
 
 void WaveReader::SetReadLimits()
@@ -367,7 +369,7 @@ void WaveReader::ReadChunks(bool require_ds64, uint32_t riff_size)
             have_data = true;
         } else {
             if (id != "JUNK")
-                mChunks.push_back(new WaveFileChunk(id, mInput, mInput->Tell(), (uint32_t)size));
+                mChunks.push_back(new WaveFileChunk(id, mInput, false, mInput->Tell(), (uint32_t)size));
 
             mInput->Skip(size);
         }

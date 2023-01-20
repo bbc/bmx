@@ -41,10 +41,11 @@ using namespace std;
 using namespace bmx;
 
 
-WaveFileChunk::WaveFileChunk(WaveChunkId id, BMXIO *file, int64_t offset, uint32_t size)
+WaveFileChunk::WaveFileChunk(WaveChunkId id, BMXIO *file, bool own_file, int64_t offset, uint32_t size)
 : WaveChunk(id)
 {
     mFile = file;
+    mOwnFile = own_file;
     mOffset = offset;
     mSize = size;
     mPosition = 0;
@@ -52,6 +53,8 @@ WaveFileChunk::WaveFileChunk(WaveChunkId id, BMXIO *file, int64_t offset, uint32
 
 WaveFileChunk::~WaveFileChunk()
 {
+    if (mOwnFile)
+        delete mFile;
 }
 
 uint32_t WaveFileChunk::Read(unsigned char *data, uint32_t size)
