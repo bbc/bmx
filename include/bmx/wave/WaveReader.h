@@ -87,7 +87,7 @@ public:
     bool IsEnabled() const;
 
 public:
-    uint32_t GetNumAdditionalChunks() const { return mChunks.size(); }
+    uint32_t GetNumAdditionalChunks() const { return (uint32_t)mChunks.size(); }
     WaveFileChunk* GetAdditionalChunk(uint32_t index) const;
 
     WaveFileChunk* GetAdditionalChunk(WaveChunkId id) const;

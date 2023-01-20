@@ -90,7 +90,7 @@ void WaveCHNA::AppendAudioID(const AudioID &audio_id)
 
 uint32_t WaveCHNA::GetSize()
 {
-    return 4 + mAudioIDs.size() * 40;
+    return 4 + (uint32_t)mAudioIDs.size() * 40;
 }
 
 vector<WaveCHNA::AudioID> WaveCHNA::GetAudioIDs(uint16_t track_index) const

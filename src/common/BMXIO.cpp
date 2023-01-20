@@ -123,7 +123,7 @@ void BMXIO::Write(FILE *file)
         }
 
         if (num_read > 0) {
-            uint32_t num_write = Write(buffer.GetBytesAvailable(), num_read);
+            uint32_t num_write = Write(buffer.GetBytesAvailable(), (uint32_t)num_read);
             if (num_write != num_read)
                 BMX_EXCEPTION(("Failed to write to output file"));
         }
