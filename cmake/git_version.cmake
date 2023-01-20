@@ -23,7 +23,8 @@ else()
     FetchContent_Declare(bmx_cmake_git_version_tracking
         GIT_REPOSITORY "https://github.com/andrew-hardin/cmake-git-version-tracking.git"
         GIT_TAG "904dbda1336ba4b9a1415a68d5f203f576b696bb"
-        PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/git_version_904dbda.patch"
+        PATCH_COMMAND git reset --hard
+        COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/git_version_904dbda.patch"
     )
 endif()
 
