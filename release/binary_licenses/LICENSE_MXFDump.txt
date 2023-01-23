@@ -1,0 +1,369 @@
+AAF SDK PUBLIC SOURCE LICENSE AGREEMENT
+Version 2.0
+November 2008
+
+THIS DOCUMENT IS A LEGAL AGREEMENT BETWEEN YOU (EITHER AN 
+INDIVIDUAL OR AN ENTITY) AND THE CONTRIBUTORS TO THE ADVANCED 
+AUTHORING FORMAT SOFTWARE DEVELOPMENT KIT ("AAF SDK").  PLEASE 
+READ THESE TERMS CAREFULLY BEFORE USING THE AAF SDK.  THE 
+CONTRIBUTORS ARE WILLING TO LICENSE THE AAF SDK TO YOU ONLY 
+UPON THE CONDITION THAT YOU ACCEPT ALL OF THE TERMS AND 
+CONDITIONS CONTAINED IN THIS LICENSE AGREEMENT.  BY USING, 
+INSTALLING, OR COPYING THE AAF SDK, YOU ARE CONSENTING TO BE 
+BOUND BY ALL THE TERMS AND CONDITIONS CONTAINED IN THIS 
+LICENSE AGREEMENT.  YOU AGREE THAT YOUR USE, INSTALLATION, OR 
+COPYING OF THE AAF SDK ACKNOWLEDGES THAT YOU HAVE READ THIS 
+LICENSE, UNDERSTAND IT, AND AGREE TO BE BOUND BY ITS TERMS AND 
+CONDITIONS.
+
+ANY SOFTWARE THAT MAY BE PROVIDED WITH THE AAF SDK BUT TO 
+WHICH THIS AGREEMENT DOES NOT APPLY IS INCLUDED FOR USE AT 
+YOUR OPTION.  IF YOU CHOOSE TO USE SUCH SOFTWARE, THEN SUCH USE 
+SHALL BE GOVERNED BY ANY LICENSE AGREEMENT ACCOMPANYING 
+SUCH SOFTWARE.
+
+WARNING:  ALTHOUGH NO ADDITIONAL LICENSE IS REQUIRED FROM THE 
+CONTRIBUTORS TO USE THE SOURCE CODE IN THIS AAF SDK TO WHICH 
+THIS AGREEEMENT APPLIES, THIS AGREEMENT DOES NOT PROVIDE ALL 
+LICENSES, UNDER INTELLECTUAL PROPERTY RIGHTS COVERING THE AAF 
+STANDARD, THAT MAY BE NECESSARY TO CREATE AND DISTRIBUTE AAF 
+COMPLIANT PRODUCTS.  PLEASE CONTACT THE ADVANCED MEDIA 
+WORKFLOW ASSOCIATION, INC. FOR MORE INFORMATION ABOUT ANY 
+ADDITIONAL LICENSES THAT MAY BE REQUIRED TO CREATE AND 
+DISTRIBUTE AAF COMPLIANT PRODUCTS 
+(HTTP://WWW.AMWA.TV/POLICIES).
+
+SOME FILES OF THE AAF SDK MAY BE USED TO IMPLEMENT STRUCTURED 
+STORAGE.  SOURCE CODE IMPLEMENTING STRUCTURED STORAGE MAY 
+INCORPORATE INTELLECTUAL PROPERTY OWNED BY MICROSOFT 
+CORPORATION.  THE PROVISION OF THIS SOURCE CODE DOES NOT 
+INCLUDE ANY LICENSES OR ANY OTHER RIGHTS TO YOU UNDER ANY 
+MICROSOFT INTELLECTUAL PROPERTY.  IF YOU WOULD LIKE A LICENSE 
+FROM MICROSOFT (E.G., REBRAND, REDISTRIBUTE),  PLEASE CONTACT 
+MICROSOFT DIRECTLY OR VISIT 
+HTTP://WWW.MICROSOFT.COM/MSCORP/IP/STANDARDS/.
+
+
+
+1. Definitions.
+
+1.1. "AAF SDK" means the Original Code and any Modifications thereto.  The term 
+"AAF SDK" includes but is not limited to Standard Versions of the AAF SDK.
+
+1.2. "Affiliate" means an entity that directly or indirectly controls, is controlled by, or is 
+under common control with, another entity, so long as such control exists.  "Control" 
+means direct or indirect beneficial ownership of or the right to exercise (a) more than 
+fifty percent (50%) of the voting stock or equity in an entity; or (b) more than fifty 
+percent (50%) of the relevant ownership interest or decision-making authority 
+representing the right to make the decisions for the subject entity in the event that there is 
+no voting stock or equity.
+
+1.3. "Agreement" means this document.
+
+1.4. "Contributor" means any individual or entity (and its Affiliates) that is an Initial 
+Developer or that makes Modifications to the AAF SDK.
+
+1.5. "Contributor Version" means the AAF SDK, including the Modifications made by 
+that particular Contributor, whether in Executable form or Source Code.
+
+1.6. "Executable" means computer program code in any form other than Source Code.
+
+1.7. "Initial Developer" means the individual or entity (and its Affiliates) identified as the 
+Initial Developer in the notice set forth in Exhibit A.
+
+1.8. "Larger Work" means a work that combines Original Code and/or Modifications, or 
+portions thereof, with computer program code not governed by the terms of this 
+Agreement.
+
+1.9. "Modification" means any addition to or deletion from the substance or structure of 
+either the Original Code or any other Modification, or any addition to or deletion from 
+the contents of a file containing Original Code or other Modification, or any new file that 
+contains any part of the Original Code or other Modification.
+
+1.10. "Original Code" means Source Code containing the notice set forth in Exhibit A 
+that is first distributed under this Agreement by the Initial Developer and that is not a 
+Modification.
+
+1.11. "Source Code" means the preferred form of a computer program for making 
+changes to it, including all modules it contains, plus any associated interface definition 
+files, or scripts used to control compilation and installation of an Executable. 
+
+1.12. "Standard" means the Advanced Authoring Format (AAF) as defined in the AAF 
+Specification, and any Updates thereto, authored, adopted, and published by the 
+Promoters of AAF and/or the Members of the Advanced Media Workflow Association, 
+Inc.. Information about the Standard is available from the Standards Body.
+
+1.13. "Standard Versions of the AAF SDK" means any and all versions of the AAF SDK 
+which are designated as a "Standard Version" by the Standards Body.
+
+1.14. "Standards Body" means the Advanced Media Workflow Association, Inc., a 
+corporation duly formed under the laws of Delaware, with offices at 436 North Westfield 
+Road, Madison, Wisconsin 53717, or its successor in interest, or any successor appointed 
+by the Advanced Media Workflow Association for the purpose of maintaining the 
+Standard and the AAF SDK, and its Affiliates.
+
+1.15. "You" (or "Your") means an individual or a legal entity, and its Affiliates, 
+exercising rights under, and complying with all of the terms of, this Agreement.
+
+2. License Grants.
+
+2.1.  Subject to the terms and conditions of this Agreement, and subject to third party 
+intellectual property claims, each Contributor hereby grants You a worldwide, 
+compensation-free, nonexclusive license, subject to compliance with the Distribution and 
+Production Use Requirements of Section 3 below:
+
+2.1.1. under copyrights, to download, store, reproduce and display the AAF SDK, 
+without alteration, solely for the purpose of Your internal review and evaluation of the 
+AAF SDK, and for no commercial use whatsoever;
+
+2.1.2. under copyrights, to use, reproduce, modify, display, perform, prepare derivative 
+works of the AAF SDK (or portions thereof) with or without Modifications, and to 
+combine the AAF SDK (or portions thereof) with or without Modifications with other 
+computer program code not governed by the terms of this Agreement to create a Larger 
+Work;
+
+2.1.3. under copyrights to redistribute the AAF SDK (or portions thereof) in Source Code 
+and Executable form with or without Modifications or as part of a Larger Work under the 
+terms and conditions of this Agreement; and
+
+2.1.4. under a claim of any patent or patent application licensable by the Contributor and 
+necessarily infringed by the making, practicing, using, selling, offering for sale, or 
+importing of its Contributor Version, to make, practice, use, sell, offer for sale, and 
+import, and/or otherwise dispose of, the Contributor Version of such Contributor.  This 
+patent license shall apply to a claim of a patent licensable by a Contributor only if, at the 
+time the Contributor should have delivered under Section 3.1 to the Standards Body its 
+Contributor Version, the Contributor Version necessarily infringes the claim.  No license 
+under any claim of any patent or patent application is granted to You: a) for code that 
+You delete from the AAF SDK; b) separate from the AAF SDK; or c) for infringements 
+caused by: i) Your Modifications of the AAF SDK or ii) the combination of the AAF 
+SDK with other software or devices, including but not limited to Your Modifications or 
+any Larger Work.
+
+2.1.5. No other rights.  You neither grant nor receive any license or right to use any 
+trademark, trade name, or maskwork hereunder. Without limitation of the foregoing, You 
+will use the terms "Advanced Authoring Format" or "AAF" in Your Contributor Version 
+and/or Your Modifications only if Your Contributor Version and/or Modifications are 
+designated as a Standard Version of the AAF SDK. Except for the rights expressly 
+provided by this Agreement, a) You shall not have any other rights in the AAF SDK, and 
+b) You neither grant nor receive, by implication, estoppel, or otherwise, any rights to any 
+patents, copyrights, or other intellectual property rights.
+
+2.2.  Reciprocal Patent License.  As an express condition to the license grant in Section 
+2.1.4, and subject to the terms and conditions of this Agreement and to third party 
+intellectual property claims, You agree to grant all Contributors and other licensees of 
+this AAF SDK a worldwide, compensation-free, and otherwise reasonable and 
+nondiscriminatory nonexclusive license under a claim of any patent or patent application 
+licensable by You and necessarily infringed by the making, practicing, using, selling, 
+offering for sale or importing of this AAF SDK, to make, practice, use, sell, offer for sale, 
+and import, and/or otherwise dispose of, this AAF SDK.  This patent license shall apply 
+to a claim of a patent licensable by You only if the AAF SDK You have been licensed 
+(i.e., “this AAF SDK”) necessarily infringes the claim.  No license under any claim of 
+any patent or patent application is granted by You: a) for code that is deleted by another 
+from this AAF SDK; b) separate from this AAF SDK; or c) for infringements caused by: 
+i) Modifications by another to this AAF SDK or ii) the combination by another of this 
+AAF SDK with other software or devices, including but not limited to Modifications or 
+any Larger Work.
+2.3.  Defensive Suspension.  If any Contributor, any licensee of the AAF SDK, or any of 
+its Affiliates (“the sued party”) is first sued for patent infringement by You or any of 
+Your Affiliates, on account of the sued party’s making, practicing, using, selling, offering 
+for sale, or importing of the AAF SDK, then the sued party may terminate all license 
+grants and any other rights provided under this Agreement to You.  The foregoing shall 
+not apply if the patent infringement suit that would otherwise trigger this clause is solely 
+based on a failure to comply with the scope of the license grants set forth in this 
+Agreement.
+3. Distribution and Production Use Requirements.
+
+3.1. Delivery of Source Code to Standards Body.  You agree to deliver to the Standards 
+Body Your Modifications and/or Your Contributor Version in Source Code form within 
+sixty (60) days after You first distribute or use in production any AAF SDK (or portion 
+thereof) with Your Modifications.  If Your Modifications and/or Your Contributor 
+Version do not comply with all requirements of the Standard and all other requirements 
+set out by the Standards Body, You must also deliver to the Standards Body a description 
+of any deviation from the Standard resulting from Your Modifications.
+
+3.2. Grant Back of Your Modifications to the Standards Body.  Subject to the terms and 
+conditions of this Agreement, You hereby grant to the Standards Body a worldwide, 
+nonexclusive, compensation-free license to Your Contributor Version and Modifications, 
+in whole and in part, and with and without additional Modifications, in the same scope 
+and for the same purposes as the licenses granted to You in Section 2.1 above. Without 
+limiting Your right to reproduce, use, and distribute Your Contributor Version, the 
+Standards Body may choose in its sole discretion to designate Your Contributor Version 
+a Standard Version of the AAF SDK, and/or may use any part of Your Contributor 
+Version, with or without other Modifications, to create and designate a Standard Version 
+of the AAF SDK.  The Standards Body may redistribute a Standard Version of the AAF 
+SDK under the terms of this Agreement.
+
+3.3.  Required Notice in Source Code.  The Source Code for the AAF SDK (or portion 
+thereof), with or without Modifications, may only be distributed under the terms of this 
+Agreement, and, at a minimum, within every copy of the AAF SDK (or portion thereof) 
+that You distribute, You must include a copy of this Agreement within a file called 
+“AAFSDKPSL.TXT” in a sub-directory named “LEGAL” along with the AAF SDK 
+Source Code. You may not offer or impose any terms on any version of the AAF SDK 
+(or portion thereof) that alters or restricts this Agreement, or the recipients' rights 
+hereunder. Your license for shipment of the AAF SDK (or portion thereof) with or 
+without Modifications is conditioned upon Your full compliance with this Section 3.  
+You must duplicate or retain the notice in Exhibit A in each file of the Source Code for 
+the AAF SDK.  If You create Original Code to be distributed under this Agreement, You 
+must insert the notice in Exhibit A into the Source Code file for that Original Code, and 
+you may insert Your name as the Initial Developer.  If You created one or more 
+Modification(s), You may add Your name as a Contributor to such a notice in any file 
+containing such Modification(s).  If Your Contributor Version and/or Your Modifications 
+do not comply with all requirements of the Standard and all other requirements set out by 
+the Standards Body that are in effect sixty (60) days before distribution or production, 
+You must provide a description with Your Contributor Version and/or Your 
+Modifications of any deviation from the Standard resulting from Your Modifications; 
+and, unless Your Contributor Version has been designated a Standard Version of the 
+AAF SDK, You must prominently state that it is not a Standard Version. All Standard 
+Versions of the AAF SDK must be so labeled.
+
+3.4.  Required Notice for Larger Works.  In any documentation for a Larger Work, you 
+must include the following notice:
+
+“The Source Code version of the AAF SDK used herein is available from [INSERT 
+YOUR NAME HERE] and/or the Advanced Media Wokflow Association, Inc., under the 
+terms of the AAF SDK Public Source License Version 2.0.  A copy of this license is 
+available at www.amwa.tv/licenses.”
+The notice must be conspicuously included in the Larger Work, related documentation, or 
+collateral in which You describe recipients' rights or ownership rights relating to the AAF 
+SDK.
+
+3.5.  Licenses Granted by You for Larger Works.  You may distribute a Larger Work 
+under Section 2.1 under a license of Your choice, which may contain terms different from 
+this Agreement, provided that You are in compliance with the terms of this Agreement. If 
+You distribute the Larger Work under a different license, then You must make it 
+absolutely clear that any terms which differ from this Agreement are offered by You 
+alone, not by any Contributor. You hereby agree to indemnify each Contributor for any 
+liability incurred by the Contributor as a result of any such terms You offer.  You may 
+choose to offer, and to charge a fee for, warranty, support, indemnity, or liability 
+obligations to one or more recipients of a Larger Work. However, You may do so only on 
+Your own behalf, and not on behalf of any Contributor. You must make it absolutely 
+clear that any such warranty, support, indemnity, or liability obligation is offered by You 
+alone, and You hereby agree to indemnify other Contributors for any liability incurred by 
+them as a result of warranty, support, indemnity, or liability terms You offer.
+
+4. Application of this Agreement.  This Agreement applies to code to which a Contributor 
+has attached the notice in Exhibit A.
+
+5. DISCLAIMER OF WARRANTY. TO THE MAXIMUM EXTENT PERMITTED BY 
+APPLICABLE LAW, THE AAF SDK (INCLUDING WITHOUT LIMITATION EACH 
+STANDARD VERSION OF THE AAF SDK) IS PROVIDED "AS IS" AND WITH ALL 
+FAULTS, AND EACH CONTRIBUTOR AND THE STANDARDS BODY HEREBY 
+DISCLAIM ALL WARRANTIES AND CONDITIONS, EITHER EXPRESS, IMPLIED, 
+OR STATUTORY, WITH RESPECT TO THE AAF SDK (OR ANY ELEMENT 
+THEREOF), INCLUDING BUT NOT LIMITED TO ANY (IF ANY) IMPLIED 
+WARRANTIES OR CONDITIONS OF MERCHANTABILITY, FITNESS FOR A 
+PARTICULAR PURPOSE, NON-INFRINGEMENT OF THIRD PARTY'S RIGHTS, 
+TITLE, QUIET ENJOYMENT, QUIET POSSESSION, QUALITY, LACK OF 
+NEGLIGENCE, LACK OF WORKMANLIKE PERFORMANCE, LACK OF 
+VIRUSES, ACCURACY OR COMPLETENESS OR RESPONSES, RESULTS, OR 
+PERFORMANCE.  WITHOUT LIMITING THE FOREGOING, EACH 
+CONTRIBUTOR AND THE STANDARDS BODY HEREBY DISCLAIMS ANY (IF 
+ANY) WARRANTY (A) REGARDING THE ACCURACY OR COMPLETENESS OF 
+THE AAF SDK, AND (B) THAT THE AAF SDK IS APPROPRIATE FOR ANY 
+PARTICULAR USE OR THAT USE OF THE AAF SDK WILL BE 
+UNINTERRUPTED OR ERROR-FREE.  THE ENTIRE RISK AS TO THE USE, 
+QUALITY, AND PERFORMANCE OF THE AAF SDK IS WITH YOU.  THIS 
+DISCLAIMER IS AN ESSENTIAL PART OF THIS AGREEMENT.  NO 
+DISTRIBUTION OF THE AAF SDK, SPECIFICALLY INCLUDING ANY 
+STANDARD VERSIONS OF THE AAF SDK, IS AUTHORIZED EXCEPT UNDER 
+THIS DISCLAIMER.
+
+6. Termination.  This Agreement and the rights granted hereunder will terminate 
+automatically if You fail to comply with terms herein and fail to cure such breach within 
+30 days of becoming aware of the breach. Provisions which, by their nature, must remain 
+in effect beyond the termination of this Agreement under this Section 6 shall survive.  
+Any license granted by You to any Contributor, any licensee of the AAF SDK, or the 
+Standards Body, and any end user license agreement for Larger Works containing or 
+linking to the AAF SDK in Executable form that have been validly granted by You 
+hereunder prior to termination shall continue in full force even after such termination.
+
+7. LIMITATION OF LIABILITY.  IN NO EVENT SHALL ANY CONTRIBUTOR 
+AND/OR THE STANDARDS BODY BE LIABLE TO ANY PERSON FOR ANY 
+DIRECT, INDIRECT, SPECIAL, GENERAL, ECONOMIC, INCIDENTAL, 
+PUNITIVE, OR CONSEQUENTIAL DAMAGES (INCLUDING BUT NOT LIMITED 
+TO DAMAGES FOR LOST PROFITS, LOSS OF GOODWILL, OR BUSINESS 
+INTERRUPTION), OR FOR ANY DAMAGES RESULTING FROM LOSS OF USE, 
+LOSS OF DATA, OR LOSS OF ANTICIPATED PROFITS, IN ANY WAY RELATED 
+TO USE OF OR INABILITY TO USE THE AAF SDK, OR OTHERWISE IN 
+CONNECTION WITH ANY PROVISION OF THIS AGREEMENT, EVEN IF THE 
+CONTRIBUTOR AND/OR THE STANDARDS BODY HAS BEEN ADVISED OF 
+THE POSSIBILITY OF SUCH DAMAGE. THE SOLE AND EXCLUSIVE REMEDY 
+FOR LACK OF SATISFACTION WITH THE AAF SDK IS TO DISCONTINUE 
+USING THE AAF SDK. THIS LIMITATION OF LIABILITY SHALL NOT APPLY 
+TO LIABILITY FOR DEATH OR PERSONAL INJURY RESULTING FROM SUCH 
+PARTY'S NEGLIGENCE TO THE EXTENT APPLICABLE LAW PROHIBITS SUCH 
+LIMITATION. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OR 
+LIMITATION OF INCIDENTAL OR CONSEQUENTIAL DAMAGES, SO THIS 
+EXCLUSION AND LIMITATION MAY NOT APPLY TO YOU.
+
+8. U.S. Government End Users.  U.S. Government: If the AAF SDK is being acquired by 
+or on behalf of the U.S. Government or by a U.S. Government prime contractor or 
+subcontractor (at any tier), then the Government's rights in the AAF SDK and 
+accompanying documentation shall be only as set forth in this Agreement; this is in 
+accordance with 48 C.F.R. 227.7201 through 227.7202-4 (for Department of Defense 
+(DoD) acquisitions) and with 48 C.F.R. 2.101 and 12.212 (for non-DoD acquisitions).
+
+9. Miscellaneous. This Agreement shall constitute the complete and exclusive agreement 
+concerning the subject matter hereof. The Exhibit identified in this Agreement is 
+incorporated herein by reference and made a part hereof.  If any provision of this 
+Agreement is held to be unenforceable for any reason in a jurisdiction, such provision 
+shall be reformed only to the extent necessary to make it enforceable, and such holding 
+shall not affect the enforceability of such provision under other circumstances or in other 
+jurisdictions, or of the remaining provisions hereof under all circumstances. None of the 
+provisions of this Agreement shall be deemed to have been waived by any act or 
+acquiescence on the part of any Contributor and/or the Standards Body, their agents or 
+employees, but only by an instrument in writing signed by them. With respect to disputes 
+in which at least one party is a citizen of, or an entity chartered or registered to do 
+business in the United States of America, any litigation relating to this Agreement shall 
+be subject to the jurisdiction of the Federal Courts of the Commonwealth of 
+Massachusetts, with the losing party responsible for costs, including without limitation, 
+court costs and reasonable attorneys' fees and expenses.  The application of the United 
+Nations Convention on Contracts for the International Sale of Goods is expressly 
+excluded. Any law or regulation which provides that the language of a contract shall be 
+construed against the drafter shall not apply to this Agreement.
+
+10. Effective Date.  The terms and conditions of this Agreement will become effective 
+upon Your first use, installation, or copying of the AAF SDK.  You hereby represent and 
+warrant that You have full authority to enter into this Agreement and grant the licenses 
+set forth herein.
+
+
+
+
+
+EXHIBIT A - Required Notice.
+/***********************************************************************
+* The contents of this file are subject to the AAF SDK Public Source
+* License Agreement Version 2.0 (the "License"); You may not use this
+* file except in compliance with the License.  The License is available
+* in AAFSDKPSL.TXT, or you may obtain a copy of the License from the
+* Advanced Media Workflow Association, Inc., or its successor.
+* 
+* Software distributed under the License is distributed on an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+* the License for the specific language governing rights and limitations
+* under the License.  Refer to Section 3.3 of the License for proper use
+* of this Exhibit.
+* 
+* WARNING:  Please contact the Advanced Media Workflow Association,
+* Inc., for more information about any additional licenses to
+* intellectual property covering the AAF Standard that may be required
+* to create and distribute AAF compliant products.
+* (http://www.amwa.tv/policies).
+* 
+* Copyright Notices:
+* The Original Code of this file is Copyright [date], licensor of the
+* Advanced Media Workflow Association.  All rights reserved.
+* 
+* The Initial Developer of the Original Code of this file and the
+* licensor of the Advanced Media Workflow Association is
+* [Initial Developer name].
+* All rights reserved.
+* 
+* Portions created by [Contributor name] are Copyright [year],
+* [Contributor name].  All rights reserved.
+* 
+* Contributors and additional licensors of the Advanced Media Workflow
+* Association: [Contributor name]
+**********************************************************************/
+
