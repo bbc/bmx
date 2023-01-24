@@ -26,8 +26,6 @@ RUN mkdir build && cd build && \
         -DCMAKE_INSTALL_PREFIX=/build/install \
         -DBMX_BUILD_WITH_LIBCURL=ON \
         -DLIBMXF_BUILD_ARCHIVE=ON \
-        -DLIBMXF_BUILD_AVIDMXFINFO=ON \
-        -DLIBMXF_BUILD_WRITEAVIDMXF=ON \
         ../bmx && \
     make && make test && make install
 
