@@ -17,7 +17,7 @@ index 55e6d07..7b277c3 100644
 @@ -1,5 +1,5 @@
  cmake_minimum_required(VERSION 3.2)
 -project(cmake_git_version_tracking
-+project(bmx_cmake_git_version_tracking
++project(bmx_git_version
      LANGUAGES C)
  
  # Define the two required variables before including

@@ -78,7 +78,7 @@ endif()
 # Add the git version tracking library code
 include("${PROJECT_SOURCE_DIR}/cmake/git_version.cmake")
 target_link_libraries(bmx PRIVATE
-    bmx_cmake_git_version_tracking
+    bmx_git_version
 )
 
 set_target_properties(bmx PROPERTIES
