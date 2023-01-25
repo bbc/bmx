@@ -1,0 +1,102 @@
+name: Build and Test
+on:
+  pull_request:
+  push:
+jobs:
+  build_and_test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ubuntu
+            os: ubuntu-latest
+            cmake_config_args: >-
+              -DCMAKE_BUILD_TYPE=Debug
+              -DBMX_BUILD_WITH_LIBCURL=ON
+          - name: ubuntu-valgrind
+            os: ubuntu-latest
+            apt_installs: >-
+              valgrind
+            cmake_config_args: >-
+              -DCMAKE_BUILD_TYPE=Debug
+              -DBMX_BUILD_WITH_LIBCURL=ON
+              -DBMX_TEST_WITH_VALGRIND=ON
+              -DLIBMXF_TEST_WITH_VALGRIND=ON
+              -DLIBMXFPP_TEST_WITH_VALGRIND=ON
+          - name: macos
+            os: macos-latest
+            cmake_config_args: >-
+              -DCMAKE_BUILD_TYPE=Debug
+              -DBMX_BUILD_WITH_LIBCURL=ON
+          - name: windows
+            os: windows-latest
+            cmake_build_args: >-
+              --config Debug
+            cmake_test_args: >-
+              -C Debug
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Install dependencies (Ubuntu)
+        if: ${{ contains(matrix.os, 'ubuntu') }}
+        shell: bash
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install \
+            ${{ matrix.apt_installs }} \
+            git \
+            pkg-config \
+            g++ \
+            gcc \
+            cmake \
+            uuid-dev \
+            liburiparser-dev \
+            libexpat1-dev \
+            libcurl4-openssl-dev
+      - name: Install dependencies (MacOS)
+        if: ${{ contains(matrix.os, 'macos') }}
+        shell: bash
+        run: |
+          brew install git cmake expat uriparser curl
+
+      - name: Show Versions
+        shell: bash
+        run: |
+          git --version
+          cmake --version
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Configure
+        shell: bash
+        run: |
+          mkdir -p out/build
+          cmake \
+            -B out/build \
+            ${{ matrix.cmake_config_args }} \
+            -DCMAKE_INSTALL_PREFIX:PATH=out/install \
+            -DLIBMXF_BUILD_EXAMPLES=ON \
+            -DLIBMXF_BUILD_TOOLS=ON \
+            -DLIBMXFPP_BUILD_EXAMPLES=ON \
+            -DLIBMXFPP_BUILD_TOOLS=ON \
+            .
+
+      - name: Build
+        shell: bash
+        run: |
+          cmake --build out/build ${{ matrix.cmake_build_args }}
+
+      - name: Test
+        shell: bash
+        run: |
+          cd out/build
+          ctest --output-on-failure ${{ matrix.cmake_test_args }}
+
+      - name: Install
+        shell: bash
+        run: |
+          cmake --build out/build --target install ${{ matrix.cmake_build_args }}
