@@ -1,5 +1,23 @@
 # bmx Changelog
 
+## v1.1
+
+### Breaking changes
+
+* None
+
+### Features
+
+* Moved to cmake build system ([PR 3](https://github.com/bbc/bmx/pull/3))
+  * Replaced absolute source file paths in log messages to relative file paths
+  * Interpret forward slash as backward slash in Windows file URIs
+  * Generate library version from git tag
+
+### Bug fixes
+
+* MPEG-2 LG 576i: fix coding equations and remove signal standard and transfer characteristic
+* Fixed various build warnings and memory deallocs as part of cmake build change
+
 ## Snapshot 2022-08-31 (v0.1)
 
 ### Features
