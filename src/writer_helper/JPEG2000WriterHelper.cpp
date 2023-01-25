@@ -103,7 +103,7 @@ void JPEG2000WriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
 
         if (is_static) {
             if (mCodingStyleDefault->GetSize() == 0)
-                mCodingStyleDefault->Append(coding_style, size);
+                mCodingStyleDefault->Append(coding_style, (uint32_t)size);
         } else {
             delete mCodingStyleDefault;
             mCodingStyleDefault = 0;
@@ -132,7 +132,7 @@ void JPEG2000WriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
 
         if (is_static) {
             if (mQuantizationDefault->GetSize() == 0)
-                mQuantizationDefault->Append(quantization, size);
+                mQuantizationDefault->Append(quantization, (uint32_t)size);
         } else {
             delete mQuantizationDefault;
             mQuantizationDefault = 0;

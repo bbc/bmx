@@ -689,7 +689,7 @@ static void write_unc(FILE *file, int type, unsigned int duration)
             break;
     }
 
-    write_data(file, duration * frame_size);
+    write_data(file, (int64_t)duration * frame_size);
 }
 
 static void set_rdd36_bits(unsigned char *data, uint32_t *bit_offset, uint8_t num_bits, uint32_t value)

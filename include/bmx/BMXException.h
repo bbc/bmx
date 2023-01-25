@@ -38,11 +38,11 @@
 #include <exception>
 
 
-#define BMX_EXCEPTION(err)                                          \
-    do {                                                            \
-        bmx::log_error_nl err;                                      \
-        bmx::log_error("    near %s:%d\n", __FILE__, __LINE__);     \
-        throw BMXException err;                                     \
+#define BMX_EXCEPTION(err)                                           \
+    do {                                                             \
+        bmx::log_error_nl err;                                       \
+        bmx::log_error("    near %s:%d\n", __FILENAME__, __LINE__);  \
+        throw BMXException err;                                      \
     } while (0)
 
 #define BMX_CHECK(cond)                                     \

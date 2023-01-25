@@ -1,4 +1,0 @@
-#!/bin/sh
-
-${srcdir}/check.sh 3 30 avci50_720p 50
-

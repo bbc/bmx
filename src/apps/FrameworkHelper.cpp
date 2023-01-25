@@ -265,6 +265,7 @@ FrameworkHelper::FrameworkHelper(DMFramework *framework, const FrameworkInfo *in
 
 FrameworkHelper::~FrameworkHelper()
 {
+    delete mSetDef;
 }
 
 void FrameworkHelper::NormaliseStrings()
@@ -278,6 +279,7 @@ void FrameworkHelper::NormaliseStrings()
         if (item_def->getCItemDef()->typeId == MXF_UTF16STRING_TYPE) {
             mFramework->setStringItem(&items[i]->key, mFramework->getStringItem(&items[i]->key));
         }
+        delete item_def;
     }
 }
 
@@ -297,6 +299,8 @@ bool FrameworkHelper::SetProperty(const string &name, const string &value)
     ItemDef *item_def;
     BMX_ASSERT(mSetDef->findItemDef(&property_info->item_key, &item_def));
     MXFItemDef *c_item_def = item_def->getCItemDef();
+    delete item_def;
+    item_def = 0;
 
     switch (c_item_def->typeId)
     {

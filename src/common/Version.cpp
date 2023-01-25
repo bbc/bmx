@@ -33,11 +33,13 @@
 #include "config.h"
 #endif
 
-#include "bmx_scm_version.h"
-
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <limits.h>
+
+#include "git.h"
+#include "fallback_git_version.h"
 
 #include <bmx/Version.h>
 #include <bmx/Utils.h>
@@ -55,12 +57,6 @@ bool BMX_REGRESSION_TEST = false;
 static const char* BMX_COMPANY_NAME = "BBC";
 static const bmx::UUID BMX_PRODUCT_UID =
     {0xb8, 0x60, 0x4d, 0x31, 0x2e, 0x15, 0x47, 0x99, 0xa3, 0xc6, 0x04, 0x7e, 0xd0, 0xe6, 0xf9, 0xa1};
-static const mxfProductVersion BMX_MXF_PRODUCT_VERSION = {BMX_VERSION_MAJOR,
-                                                          BMX_VERSION_MINOR,
-                                                          BMX_VERSION_MICRO,
-                                                          0,
-                                                          BMX_MXF_VERSION_RELEASE};
-
 static const bmx::UUID REGTEST_PRODUCT_UID =
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const mxfProductVersion REGTEST_MXF_PRODUCT_VERSION = {1, 0, 0, 0, 0};
@@ -80,18 +76,39 @@ string bmx::get_bmx_version_string()
     if (BMX_REGRESSION_TEST) {
         return "0.0.0";
     } else {
+        mxfProductVersion product_version = get_bmx_mxf_product_version();
         char buffer[32];
-        bmx_snprintf(buffer, sizeof(buffer), "%d.%d.%d", BMX_VERSION_MAJOR, BMX_VERSION_MINOR, BMX_VERSION_MICRO);
+        bmx_snprintf(buffer, sizeof(buffer), "%d.%d.%d",
+                     product_version.major, product_version.minor, product_version.patch);
         return buffer;
     }
 }
 
 string bmx::get_bmx_scm_version_string()
 {
-    if (BMX_REGRESSION_TEST)
+    if (BMX_REGRESSION_TEST) {
         return "regtest-head";
-    else
-        return BMX_SCM_VERSION;
+    } else {
+        static string version_string;
+        if (version_string.empty()) {
+            version_string = git::DescribeTag();
+            if (version_string.empty() || version_string == "unknown")
+                version_string = git::Describe();
+
+#ifdef PACKAGE_GIT_VERSION_STRING
+            if (version_string.empty() || version_string == "unknown") {
+                version_string = PACKAGE_GIT_VERSION_STRING;
+            }
+            else
+#endif
+            {
+                if (git::AnyUncommittedChanges())
+                    version_string += "-dirty";
+            }
+        }
+
+        return version_string.c_str();
+    }
 }
 
 string bmx::get_bmx_build_string()
@@ -193,8 +210,42 @@ mxfProductVersion bmx::get_bmx_mxf_product_version()
 {
     if (BMX_REGRESSION_TEST)
         return REGTEST_MXF_PRODUCT_VERSION;
-    else
-        return BMX_MXF_PRODUCT_VERSION;
+
+    static mxfProductVersion product_version = {0, 0, 0, 0, 0};
+    if (product_version.major == 0 && product_version.minor == 0) {
+        product_version.major = BMX_VERSION_MAJOR;
+        product_version.minor = BMX_VERSION_MINOR;
+
+        // Set the patch version value to the commit offset from the release tag.
+        // The commit offset is part of the git describe tag string which has the
+        // format "<tag>-<offset>-g<commit id>"
+        string describe = git::DescribeTag();
+#ifdef PACKAGE_GIT_VERSION_STRING
+        if (describe.empty() || describe == "unknown")
+            describe = PACKAGE_GIT_VERSION_STRING;
+#endif
+        if (!describe.empty() && describe != "unknown") {
+            size_t dash_pos = describe.rfind("-", describe.size() - 1);
+            if (dash_pos != string::npos) {
+                dash_pos = describe.rfind("-", dash_pos - 1);
+                if (dash_pos != string::npos)
+                    dash_pos++;
+            }
+
+            int offset;
+            if (dash_pos != string::npos && sscanf(&describe[dash_pos], "%d", &offset) == 1 && offset >= 0 && offset <= UINT16_MAX) {
+                product_version.patch = (uint16_t)offset;
+                if (git::AnyUncommittedChanges())
+                    product_version.release = 0;  /* Unknown version */
+                else if (offset == 0)
+                    product_version.release = 1;  /* Released version */
+                else
+                    product_version.release = 2;  /* Post release, development version */
+            }
+        }
+    }
+
+    return product_version;
 }
 
 string bmx::get_bmx_mxf_version_string()
@@ -202,11 +253,17 @@ string bmx::get_bmx_mxf_version_string()
     if (BMX_REGRESSION_TEST) {
         return "0.0.0";
     } else {
-        char buffer[64];
-        bmx_snprintf(buffer, sizeof(buffer), "%d.%d.%d (scm %s)",
-                     BMX_VERSION_MAJOR, BMX_VERSION_MINOR, BMX_VERSION_MICRO,
-                     BMX_SCM_VERSION);
-        return buffer;
+        static string version_string;
+        if (version_string.empty()) {
+            mxfProductVersion product_version = get_bmx_mxf_product_version();
+            char buffer[64];
+            bmx_snprintf(buffer, sizeof(buffer), "%d.%d.%d",
+                         product_version.major, product_version.minor, product_version.patch);
+            version_string = buffer;
+            version_string += " (scm " + get_bmx_scm_version_string() + ")";
+        }
+
+        return version_string;
     }
 }
 

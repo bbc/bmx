@@ -189,10 +189,20 @@ bool URI::ParseFilename(string filename)
     uri_str.Allocate(uri_str_size);
 
     int result;
-    if (mWindowsNameConvert)
+    if (mWindowsNameConvert) {
+        // Replace Unix path separators '/' with Windows path separators '\'. This avoids
+        // uriWindowsFilenameToUriStringA escaping them in the URI when they are most
+        // likely intended to be path separators.
+        size_t index = filename.find("/");
+        while (index != string::npos) {
+            filename[index] = '\\';
+            index = filename.find("/", index + 1);
+        }
+
         result = uriWindowsFilenameToUriStringA(filename.c_str(), uri_str.GetStr());
-    else
+    } else {
         result = uriUnixFilenameToUriStringA(filename.c_str(), uri_str.GetStr());
+    }
     if (result)
         return false;
 

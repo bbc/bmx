@@ -63,73 +63,67 @@ including the following:
     * [IMF Audio Track Files](./docs/imf_audio_track_files.md)
     * [IMF ProRes Image Track Files](./docs/imf_prores_track_files.md)
 
-## Build and Installation
+## Build, Test and Install
 
-bmx is developed on Ubuntu Linux but is supported on other Unix-like systems using the autotools build system. A set of Microsoft Visual C++ project files are provided for Windows.
+bmx is developed on Ubuntu Linux but is supported on other Unix-like systems and Windows.
+
+The [cmake](https://cmake.org/) build system is used, with minimum version **3.12**. The build requires the `git` tool along with the C/C++ compilers.
+
+The build process has been tested on 32- and 64-bit versions of Ubuntu, Debian and Windows (Microsoft Visual C++ 2017 v15.9.51 and later versions).
 
 ### Dependencies
 
-The following libraries must be installed to build bmx. The (Ubuntu) debian package names and versions are shown in brackets.
-
-* [libMXF](https://github.com/bbc/libMXF)
-* [libMXF++](https://github.com/bbc/libMXFpp)
-* [uriparser](https://github.com/uriparser/uriparser) (liburiparser-dev >= 0.7.2, <= 0.8).
-* [expat](https://github.com/libexpat/libexpat) (libexpat1-dev >= 2.1)
-* uuid, Unix-like systems only (uuid-dev)
-
-The [libcurl](https://curl.haxx.se/libcurl/) (libcurl4-openssl-dev >= 7.22.0) library is optional for Unix-like systems and provides support for reading MXF files over HTTP(S).
-
-### Unix-like Systems Build
-
-Install the development versions of the dependency libraries. The bmx library can then be built from source using autotools as follows,
+The [libMXF](https://github.com/bbc/libMXF) and [libMXF++](https://github.com/bbc/libMXFpp) libraries are required. They are included as git submodules in the `deps/` directory. Run
 
 ```bash
-./autogen.sh
-./configure
-make
+git submodule update --init
 ```
 
-Run configure as shown below to see a list of build configuration options,
+to ensure the submodules are available and up-to-date in the working tree.
+
+The [uriparser](https://github.com/uriparser/uriparser) and [expat](https://github.com/libexpat/libexpat) libraries are required. These libraries are typically provided as software packages on Unix-like systems; the Ubuntu / Debian package names are `liburiparser-dev` and `libexpat1-dev`. The libraries are built from the GitHub source when building on Windows using Microsoft Visual Studio C++.
+
+The uuid library (Ubuntu / Debian package name `uuid-dev`) is also required for non-Apple Unix-like systems.
+
+The [libcurl](https://curl.haxx.se/libcurl/) (Ubuntu / Debian package name `libcurl4-openssl-dev`) library is an optional dependency for Unix-like systems. It enables support for reading MXF files over HTTP(S). Add the `-DBMX_BUILD_WITH_LIBCURL=ON` option to the cmake configure command to include it in the build.
+
+### Commands
+
+A basic commandline process is described here for platforms that default to the Unix Makefiles or Visual Studio cmake generators. See [./docs/build.md](./docs/build.md) for more detailed build options.
+
+Replace `<build type>` in the commandlines below with `Debug` or `Release`. Note that the Visual Studio generator supports multiple build types for a configuration, which is why the build type is selected _after_ configuration.
+
+The default generator can be overridden using the cmake `-G` option. The list of available generators is shown at the end of the output of `cmake --help`.
+
+Start by creating a build directory and change into it. The commandlines below use a `out/build` build directory in the working tree, which follows the approach taken by Microsoft Visual Studio C++.
+
+#### Unix-like (Unix Makefiles)
 
 ```bash
-./configure -h
+mkdir -p out/build
+cd out/build
+cmake ../../ -DCMAKE_BUILD_TYPE=<build type>
+cmake --build .
+make test
+sudo make install
 ```
 
-Add the `--with-curl` option to the configure line to include libcurl and therefore support reading MXF files over HTTP(S).
-
-If you get library link errors similar to "error while loading shared libraries" then run
+Run `ldconfig` to update the runtime linker cache. This avoids library link errors similar to "error while loading shared libraries".
 
 ```bash
 sudo /sbin/ldconfig
 ```
 
-to update the runtime linker cache. E.g. the libMXF library was built and installed previously and the linker cache needs to be updated with the result.
+#### Windows (Visual Studio)
 
-There are a number of regression tests that can be run using
-
-```bash
-make check
+```console
+mkdir out\build
+cd out\build
+cmake ..\..\
+cmake --build . --config <build type>
+ctest -C <build type>
+cmake --build . --config <build type> --target install
 ```
-
-Finally, the library and utilities can be installed using
-
-```bash
-sudo make install
-```
-
-### Microsoft Visual Studio C++ Build
-
-The Visual Studio 2010 build solution and project files can be found in the [msvc_build/vs10](./msvc_build/vs10) directory. These files can be upgraded to any more recent version when importing into the IDE.
-
-The main build solution file is [bmx.sln](./msvc_build/vs10/bmx.sln). It is used to build the library and MXF applications. The build solution assumes the following directories are present at the same directory level as bmx: `libMXF/`, `libMXF++/`, `uriparser/` and `expat/`.
-
-The source distributions will contain a copy of the expat and uriparser libraries. See [Source and Binary Distributions](#source-and-binary-distributions) below.
-
-A local copy of the expat and uriparser project files are included in the bmx build directory, i.e. the project files in the external repository are not used. The build solution file will build the dependency libraries.
-
-The build depends on the `bmx_scm_version.h` header file in the root directory to provide the most recent git commit identifier. This file is generated automatically using the [gen_scm_version.sh](./gen_scm_version.sh) script when building using autotools and is included in the source distribution package. You are likely missing this file if you are using the source code directly from the git repository then and will need to create it manually.
-
-The [tools.sln](./msvc_build/vs10/tools.sln) build solution file is used to build the text dumper tools.
 
 ## Docker
 
@@ -142,11 +136,17 @@ The Dockerfile contains a **build** and **runtime** layer:
 
 ### Build
 
-The runtime Docker image can be built using docker build,
+Ensure that the libMXF and libMXFpp git submodules are available and up-to-date in the `deps/` directory by running,
 
-`DOCKER_BUILDKIT=1 docker build -t bmxtools .`
+```bash
+git submodule update --init
+```
 
-The `LIBMXF_GIT` and `LIBMXFPP_GIT` ARGS default to the Sourceforge git URLs. These can be changed by using the `--build-arg` commandline argument.
+The runtime Docker image can be built in the top-level directory using docker build,
+
+```bash
+DOCKER_BUILDKIT=1 docker build -t bmxtools .
+```
 
 If you are behind a proxy then remember to use the `--build-arg` commandline arguments to set the Docker proxy ARGS.
 
@@ -154,7 +154,9 @@ If you are behind a proxy then remember to use the `--build-arg` commandline arg
 
 The [docker/bmx_docker.sh](./docker/bmx_docker.sh) shell script is provided to make it easier to run the Docker container. Run
 
-`./docker/bmx_docker.sh`
+```bash
+./docker/bmx_docker.sh
+```
 
 to see the usage and list of available tools.
 
@@ -166,15 +168,21 @@ If the input and output directories are the same then that directory is also bin
 
 This example runs `bmxtranswrap` from input `./in.mxf` to output `./out.mxf`.
 
-`./docker/bmx_docker.sh bmxtranswrap -o out.mxf in.mxf`
+```bash
+./docker/bmx_docker.sh bmxtranswrap -o out.mxf in.mxf
+```
 
 This example runs `bmxtranswrap` from input `./in.mxf` to output `/tmp/out.mxf`.
 
-`./docker/bmx_docker.sh --output /tmp bmxtranswrap -o /output/out.mxf in.mxf`
+```bash
+./docker/bmx_docker.sh --output /tmp bmxtranswrap -o /output/out.mxf in.mxf
+```
 
 This example runs `bmxtranswrap` from input `./sources/in.mxf` to output `./dests/out.mxf`.
 
-`./docker/bmx_docker.sh --input ./sources --output ./dests bmxtranswrap -o /output/out.mxf /input/in.mxf`
+```bash
+./docker/bmx_docker.sh --input ./sources --output ./dests bmxtranswrap -o /output/out.mxf /input/in.mxf
+```
 
 ## Source and Binary Distributions
 

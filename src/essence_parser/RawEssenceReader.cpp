@@ -92,6 +92,7 @@ void RawEssenceReader::SetFixedSampleSize(uint32_t size)
 
 void RawEssenceReader::SetEssenceParser(EssenceParser *essence_parser)
 {
+    delete mEssenceParser;
     mEssenceParser = essence_parser;
 }
 

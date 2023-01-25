@@ -1,0 +1,18 @@
+/* library names */
+#define BMX_LIBRARY_NAME     "@PROJECT_NAME@"
+
+/* Library versions */
+#define BMX_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define BMX_VERSION_MINOR @PROJECT_VERSION_MINOR@
+
+/* Define printf size_t format specifier */
+#if defined(_WIN64)
+#define PRIszt  "I64u"
+#elif defined(_WIN32)
+#define PRIszt  "u"
+#else
+#define PRIszt "zu"
+#endif
+
+/* Define if CURL library is available for reading MXF files over HTTP */
+#cmakedefine HAVE_LIBCURL

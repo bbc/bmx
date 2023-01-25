@@ -162,6 +162,7 @@ RDD9File::~RDD9File()
     delete mHeaderMetadata;
     delete mCPManager;
     delete mIndexTable;
+    delete mValidator;
 }
 
 void RDD9File::SetClipName(string name)

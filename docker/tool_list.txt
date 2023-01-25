@@ -17,8 +17,6 @@ Tools from bmx:
 
 Tools from libMXF:
   archive_mxf_info: output BBC Archive Preservation Project MXF file metadata
-  avidmxfinfo:      (legacy) text dump Avid MXF OP-Atom file metadata
-  writeavidmxf:     (legacy) create Avid MXF OP-Atom files
 
 Tools from AAF SDK:
   MXFDump:          text dump detailed MXF file structure

@@ -1,4 +1,0 @@
-#!/bin/sh
-
-${srcdir}/check.sh 3 47 avci200_1080p 50
-

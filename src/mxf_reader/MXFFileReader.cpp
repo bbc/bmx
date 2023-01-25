@@ -100,7 +100,7 @@ static const char *RESULT_STRINGS[] =
 
 #define THROW_RESULT(result)                                                        \
     do {                                                                            \
-        log_warn("Open error '%s' near %s:%d\n", #result, __FILE__, __LINE__);      \
+        log_warn("Open error '%s' near %s:%d\n", #result, __FILENAME__, __LINE__);  \
         throw result;                                                               \
     } while (0)
 
