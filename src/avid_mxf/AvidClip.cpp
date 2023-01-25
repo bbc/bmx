@@ -291,7 +291,7 @@ SourcePackage* AvidClip::CreateDefaultTapeSource(string name, uint32_t num_video
         Track *aux_tc_track = new Track(mHeaderMetadata);
         tape_package->appendTracks(aux_tc_track);
         char aux_track_num[21];
-        sprintf(aux_track_num, "%u", i+1);
+        bmx_snprintf(aux_track_num, sizeof(aux_track_num), "%u", i+1);
         aux_tc_track->setTrackName(aux_track_base_name + aux_track_num);
         aux_tc_track->setTrackID(track_id);
         // Avid auxiliary timecode tracks start from track number 3 (track 1 = normal TC, track 2 = AUX24)
@@ -426,7 +426,7 @@ SourcePackage* AvidClip::CreateDefaultImportSource(string uri, string name,
         Track *aux_tc_track = new Track(mHeaderMetadata);
         import_package->appendTracks(aux_tc_track);
         char aux_track_num[21];
-        sprintf(aux_track_num, "%u", i+1);
+        bmx_snprintf(aux_track_num, sizeof(aux_track_num), "%u", i+1);
         aux_tc_track->setTrackName(aux_track_base_name + aux_track_num);
         aux_tc_track->setTrackID(track_id);
         // Avid auxiliary timecode tracks start from track number 3 (track 1 = normal TC, track 2 = AUX24)
