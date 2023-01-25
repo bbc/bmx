@@ -32,9 +32,9 @@ The Microsoft Visual Studio C++ build currently supports static libraries only. 
 
 ## Git Library Version String
 
-The MXF library version string (Identification::VersionString) includes the output of `git describe`. This git commit information is provided to the cmake build by the [cmake-git-version-tracking utility](https://github.com/andrew-hardin/cmake-git-version-tracking.git).
+The MXF library version string (Identification::VersionString) includes the output of `git describe`. This git commit information is provided to the cmake build by the [cmake-git-version-tracking utility](https://github.com/andrew-hardin/cmake-git-version-tracking.git), modified with [this patch](../cmake/git_version_904dbda.patch).
 
-If no `.git` files are present in the source tree then the string defined in [fallback_git_version.h header file](../fallback_git_version.h) is used instead. This fallback is used in source-only packages.
+If no `.git` files are present in the source tree then the string defined in the [fallback_git_version.h](../fallback_git_version.h) header file is used instead. This fallback is used in source-only packages.
 
 If a checkout of the cmake-git-version-tracking utility is present in `deps/` than that will be used. See [git_version.cmake](../cmake/git_version.cmake) for the git URL and tag used by default.
 
