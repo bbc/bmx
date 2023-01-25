@@ -33,7 +33,6 @@
 
 #include <bmx/rdd9_mxf/RDD9Validator.h>
 
-using namespace std;
 using namespace bmx;
 
 
