@@ -1,0 +1,49 @@
+name: Release
+on:
+  workflow_dispatch:
+jobs:
+  release:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Source release
+        shell: bash
+        working-directory: ../
+        run: |
+          cmake -P bmx/release/source_release.cmake
+
+      - name: Win64 binary release
+        shell: bash
+        working-directory: ../
+        run: |
+          mkdir binary_release
+          cd binary_release
+          unzip -q ../source_release/bmx-*.zip
+          cd bmx-*
+          cmake -P release/win64_binary_release.cmake
+
+      # actions/upload-artifact doesn't allow . and .. in paths
+      - name: Move artefacts into working directory
+        shell: bash
+        run: |
+          mv ../source_release .
+          mv ../binary_release/bmx-*/out/package ./binary_release
+
+      - name: Upload source release
+        uses: actions/upload-artifact@v3
+        with:
+          name: source-release
+          path: |
+            source_release/*.zip
+            source_release/*.tar.gz
+
+      - name: Upload binary release
+        uses: actions/upload-artifact@v3
+        with:
+          name: binary-release
+          path: |
+            binary_release/*.zip
