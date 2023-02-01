@@ -24,7 +24,7 @@ Note that RDD 45 specifies that `aspect_ratio_information` and `frame_rate_code`
 The following example creates an Image Track File, from a bitstream formatted as above, that conforms to version 1.2 of the [BBC UHD Delivery Document](https://www.dropbox.com/s/tkvwxksgy3izpca/TechnicalDeliveryStandardsBBCUHDiPlayerSupplement.pdf?dl=0):
 
 ```bash
-raw2bmx -o VIDEO.mxf \
+raw2bmx -o {Type}_{fp_uuid}.mxf \
 -t imf \
 -f 25 \
 -c 10 \

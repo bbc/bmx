@@ -3,7 +3,7 @@
 The following examples demonstrate how the [IMF Flavour](./imf_track_files.md) of raw2bmx can be used to create Audio Track Files, from multichannel WAV files, that conform to version 1.2 of the [BBC UHD Delivery Document](https://www.dropbox.com/s/tkvwxksgy3izpca/TechnicalDeliveryStandardsBBCUHDiPlayerSupplement.pdf?dl=0). They have wide general applicability as they follow [IMF User Group Best Practice](https://www.imfug.com/TR/audio-track-files/).
 
 ```bash
-raw2bmx -o AUDIO.mxf \
+raw2bmx -o {Type}_{fp_uuid}.mxf \
 -t imf \
 --track-mca-labels as11 labels.txt \
 --wave source.wav
