@@ -76,6 +76,9 @@ public:
     friend class OP1ATimedTextTrack;
 
 public:
+    static mxfUMID CreatePackageUID();
+
+public:
     OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate);
     virtual ~OP1AFile();
 

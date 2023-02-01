@@ -40,6 +40,7 @@
 #include <cstring>
 #include <cerrno>
 #include <ctime>
+#include <ctype.h>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -55,6 +56,7 @@
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/writer_helper/VC2WriterHelper.h>
 #include "ps_avci_header_data.h"
+#include <bmx/EssenceType.h>
 #include <bmx/Utils.h>
 #include <bmx/Version.h>
 #include <bmx/BMXException.h>
@@ -1023,6 +1025,20 @@ int bmx::parse_color_primary(const char *str, mxfColorPrimary *color_primary)
     return true;
 }
 
+bool bmx::parse_essence_type_names(const char *str, map<EssenceType, string> *essence_type_names)
+{
+    vector<string> names = split_string(str, ',', false, true);
+    if (names.size() != 4)
+        return false;
+
+    (*essence_type_names)[PICTURE_ESSENCE] = names[0];
+    (*essence_type_names)[SOUND_ESSENCE] = names[1];
+    (*essence_type_names)[DATA_ESSENCE] = names[2];
+    (*essence_type_names)[UNKNOWN_ESSENCE_TYPE] = names[3];
+
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {
@@ -1042,6 +1058,143 @@ string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number,
 
     string filename = prefix;
     return filename.append(buffer);
+}
+
+
+bool bmx::uses_filename_pattern_variables(const string &pattern)
+{
+    static const char* pattern_variables[] = {
+        "{type}", "{mp_uuid}", "{mp_umid}", "{fp_uuid}", "{fp_umid}"
+    };
+
+    string lc_pattern = lowercase(pattern);
+    for(size_t i = 0; i < BMX_ARRAY_SIZE(pattern_variables); i++) {
+        if (lc_pattern.find(pattern_variables[i]) != string::npos)
+            return true;
+    }
+
+    return false;
+}
+
+string bmx::create_filename_from_pattern(const string &pattern, EssenceType generic_essence_type_in,
+                                         const map<EssenceType, string> &essence_type_names,
+                                         UMID mp_uid, UMID fp_uid)
+{
+    EssenceType generic_essence_type = get_generic_essence_type(generic_essence_type_in);
+    string type_variable_value = essence_type_names.at(generic_essence_type);
+
+    string mp_umid_variable_value;
+    string mp_uuid_variable_value;
+    if (mp_uid != g_Null_UMID) {
+        mp_umid_variable_value = get_umid_string_2(mp_uid);
+        if (mxf_is_simple_idau_umid(&mp_uid)) {
+            UUID uuid;
+            mxf_extract_umid_material_number((mxfUID*)&uuid, &mp_uid);
+            mp_uuid_variable_value = get_uuid_string(uuid);
+        }
+    }
+
+    string fp_umid_variable_value;
+    string fp_uuid_variable_value;
+    if (fp_uid != g_Null_UMID) {
+        fp_umid_variable_value = get_umid_string_2(fp_uid);
+        if (mxf_is_simple_idau_umid(&fp_uid)) {
+            UUID uuid;
+            mxf_extract_umid_material_number((mxfUID*)&uuid, &fp_uid);
+            fp_uuid_variable_value = get_uuid_string(uuid);
+        }
+    }
+
+    string result;
+    string variable_name;
+    string lc_variable_name;
+    for (size_t i = 0; i < pattern.size(); i++) {
+        char c = pattern[i];
+        if (c == '{') {
+            result += variable_name;
+            variable_name = c;
+            lc_variable_name = c;
+            continue;
+        } else if (!variable_name.empty()) {
+            variable_name += c;
+            lc_variable_name += tolower(c);
+        } else {
+            result += c;
+            continue;
+        }
+
+        // Substitute variables in pattern. If at least the first letter of the variable name
+        // is uppercase then convert the variable value to uppercase
+        if (lc_variable_name.compare(0, lc_variable_name.size(), "{type}", lc_variable_name.size()) == 0) {
+            if (lc_variable_name == "{type}") {
+                if (lc_variable_name[1] != variable_name[1])
+                    result += uppercase(type_variable_value);
+                else
+                    result += type_variable_value;
+
+                variable_name.clear();
+                lc_variable_name.clear();
+            }
+        } else if (lc_variable_name.compare(0, lc_variable_name.size(), "{mp_uuid}", lc_variable_name.size()) == 0) {
+            if (lc_variable_name == "{mp_uuid}") {
+                if (mp_uuid_variable_value.empty())
+                    BMX_EXCEPTION(("No material package UMID containing a UUID available for filename"));
+
+                if (lc_variable_name[1] != variable_name[1])
+                    result += uppercase(mp_uuid_variable_value);
+                else
+                    result += mp_uuid_variable_value;
+
+                variable_name.clear();
+                lc_variable_name.clear();
+            }
+        } else if (lc_variable_name.compare(0, lc_variable_name.size(), "{mp_umid}", lc_variable_name.size()) == 0) {
+            if (lc_variable_name == "{mp_umid}") {
+                if (mp_umid_variable_value.empty())
+                    BMX_EXCEPTION(("No material source package UMID containing a UUID available for filename"));
+
+                if (lc_variable_name[1] != variable_name[1])
+                    result += uppercase(mp_umid_variable_value);
+                else
+                    result += mp_umid_variable_value;
+
+                variable_name.clear();
+                lc_variable_name.clear();
+            }
+        } else if (lc_variable_name.compare(0, lc_variable_name.size(), "{fp_uuid}", lc_variable_name.size()) == 0) {
+            if (lc_variable_name == "{fp_uuid}") {
+                if (fp_uuid_variable_value.empty())
+                    BMX_EXCEPTION(("No file source package UMID containing a UUID available for filename"));
+
+                if (lc_variable_name[1] != variable_name[1])
+                    result += uppercase(fp_uuid_variable_value);
+                else
+                    result += fp_uuid_variable_value;
+
+                variable_name.clear();
+                lc_variable_name.clear();
+            }
+        } else if (lc_variable_name.compare(0, lc_variable_name.size(), "{fp_umid}", lc_variable_name.size()) == 0) {
+            if (lc_variable_name == "{fp_umid}") {
+                if (fp_umid_variable_value.empty())
+                    BMX_EXCEPTION(("No file source package UMID available for filename"));
+
+                if (lc_variable_name[1] != variable_name[1])
+                    result += uppercase(fp_umid_variable_value);
+                else
+                    result += fp_umid_variable_value;
+
+                variable_name.clear();
+                lc_variable_name.clear();
+            }
+        } else {
+            result += variable_name;
+            variable_name.clear();
+            lc_variable_name.clear();
+        }
+    }
+
+    return result;
 }
 
 

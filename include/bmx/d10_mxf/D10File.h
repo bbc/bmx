@@ -63,6 +63,9 @@ public:
     friend class D10Track;
 
 public:
+    static mxfUMID CreatePackageUID();
+
+public:
     D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate);
     virtual ~D10File();
 

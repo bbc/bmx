@@ -66,6 +66,13 @@ static bool compare_track(RDD9Track *left, RDD9Track *right)
 
 
 
+mxfUMID RDD9File::CreatePackageUID()
+{
+    mxfUMID package_uid;
+    mxf_generate_umid(&package_uid);
+    return package_uid;
+}
+
 RDD9File::RDD9File(int flavour, File *mxf_file, Rational frame_rate)
 {
     if (frame_rate != FRAME_RATE_23976 &&
@@ -91,8 +98,8 @@ RDD9File::RDD9File(int flavour, File *mxf_file, Rational frame_rate)
     mReserveMinBytes = 8192;
     mxf_get_timestamp_now(&mCreationDate);
     mxf_generate_uuid(&mGenerationUID);
-    mxf_generate_umid(&mMaterialPackageUID);
-    mxf_generate_umid(&mFileSourcePackageUID);
+    mMaterialPackageUID = RDD9File::CreatePackageUID();
+    mFileSourcePackageUID = RDD9File::CreatePackageUID();
     mOutputStartOffset = 0;
     mOutputEndOffset = 0;
     mHaveANCTrack = false;

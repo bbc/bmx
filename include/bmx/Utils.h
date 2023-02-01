@@ -104,6 +104,9 @@ int64_t get_file_size(FILE *file);
 std::string trim_string(std::string value);
 std::vector<std::string> split_string(std::string value, char separator, bool allow_empty, bool trim);
 
+std::string lowercase(const std::string &value);
+std::string uppercase(const std::string &value);
+
 void get_xml_encoding(const unsigned char *data, size_t size, TextEncoding *encoding, ByteOrder *byte_order);
 
 Timestamp generate_timestamp_now();
@@ -124,7 +127,9 @@ Rational convert_int_to_rational(int32_t value);
 
 std::string get_timecode_string(Timecode timecode);
 std::string get_umid_string(UMID umid);
+std::string get_umid_string_2(UMID umid);
 std::string get_uuid_string(UUID uuid);
+std::string get_ul_string(UL ul);
 
 Rational reduce_rational(Rational rational);
 Rational normalize_rate(Rational rate);

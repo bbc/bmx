@@ -73,6 +73,13 @@ static bool compare_track(OP1ATrack *left, OP1ATrack *right)
 
 
 
+mxfUMID OP1AFile::CreatePackageUID()
+{
+    mxfUMID package_uid;
+    mxf_generate_umid(&package_uid);
+    return package_uid;
+}
+
 OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
 {
     mFlavour = flavour;
@@ -90,8 +97,8 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mInputDuration = -1;
     mxf_get_timestamp_now(&mCreationDate);
     mxf_generate_uuid(&mGenerationUID);
-    mxf_generate_umid(&mMaterialPackageUID);
-    mxf_generate_umid(&mFileSourcePackageUID);
+    mMaterialPackageUID = OP1AFile::CreatePackageUID();
+    mFileSourcePackageUID = OP1AFile::CreatePackageUID();
     mFrameWrapped = true;
     mOPLabel = MXF_OP_L(1a, UniTrack_Stream_Internal);
     mOutputStartOffset = 0;

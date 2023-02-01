@@ -40,7 +40,6 @@
 #include <bmx/EssenceType.h>
 #include <bmx/Logging.h>
 #include <bmx/URI.h>
-#include <bmx/clip_writer/ClipWriterTrack.h>
 #include <bmx/as02/AS02Manifest.h>
 #include <bmx/Checksum.h>
 
@@ -49,6 +48,17 @@
 namespace bmx
 {
 
+
+typedef enum
+{
+    CW_UNKNOWN_CLIP_TYPE = 0,
+    CW_AS02_CLIP_TYPE,
+    CW_OP1A_CLIP_TYPE,
+    CW_AVID_CLIP_TYPE,
+    CW_D10_CLIP_TYPE,
+    CW_RDD9_CLIP_TYPE,
+    CW_WAVE_CLIP_TYPE,
+} ClipWriterType;
 
 typedef enum
 {
@@ -137,8 +147,14 @@ bool parse_vc2_mode(const char *mode_str, int *vc2_mode_flags);
 bool parse_avid_umid_type(const char *str, AvidUMIDType *value);
 int parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *three_color_primaries);
 int parse_color_primary(const char *str, mxfColorPrimary *color_primary);
+bool parse_essence_type_names(const char *str, std::map<EssenceType, std::string> *essence_type_names);
 
 std::string create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def);
+
+bool uses_filename_pattern_variables(const std::string &pattern);
+std::string create_filename_from_pattern(const std::string &pattern, EssenceType generic_essence_type,
+                                         const std::map<EssenceType, std::string> &essence_type_names,
+                                         UMID mp_uid, UMID fp_uid);
 
 void set_avid_umid_type(AvidUMIDType type);
 

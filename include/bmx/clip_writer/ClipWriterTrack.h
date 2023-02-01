@@ -46,24 +46,12 @@
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
 #include <bmx/mxf_helper/TimedTextManifest.h>
 #include <bmx/mxf_helper/TimedTextMXFResourceProvider.h>
+#include <bmx/apps/AppUtils.h>
 
 
 
 namespace bmx
 {
-
-
-typedef enum
-{
-    CW_UNKNOWN_CLIP_TYPE = 0,
-    CW_AS02_CLIP_TYPE,
-    CW_OP1A_CLIP_TYPE,
-    CW_AVID_CLIP_TYPE,
-    CW_D10_CLIP_TYPE,
-    CW_RDD9_CLIP_TYPE,
-    CW_WAVE_CLIP_TYPE,
-} ClipWriterType;
-
 
 
 class ClipWriterTrack

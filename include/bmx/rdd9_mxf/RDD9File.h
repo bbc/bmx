@@ -58,6 +58,9 @@ public:
     friend class RDD9PCMTrack;
 
 public:
+    static mxfUMID CreatePackageUID();
+
+public:
     RDD9File(int flavour, mxfpp::File *mxf_file, Rational frame_rate);
     virtual ~RDD9File();
 
