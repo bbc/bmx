@@ -26,7 +26,7 @@ Below is an example commandline for generating an IMF Track File containing [ITU
 ```bash
    raw2bmx \
         -t imf \
-        -o output.mxf \
+        -o {Type}_{fp_uuid}.mxf \
         --clip "YCbCr example" \
         -f 25 \
         -a 16:9 \
@@ -55,7 +55,7 @@ A similar commandline for RGB is shown below, where the main difference is the u
 ```bash
     raw2bmx \
         -t imf \
-        -o output.mxf \
+        -o {Type}_{fp_uuid}.mxf \
         --clip "RGB example" \
         -f 25 \
         -a 16:9 \
@@ -79,7 +79,7 @@ The `bmxtranswrap` tool can be used to re-wrap an input MXF file to another MXF 
 ```bash
     bmxtranswrap \
         -t imf \
-        -o output.mxf \
+        -o {Type}_{fp_uuid}.mxf \
         --clip "A re-wrapped example" \
         --transfer-ch hlg \
         --display-primaries 35400,14600,8500,39850,6550,2300 \
