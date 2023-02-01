@@ -51,29 +51,6 @@ using namespace std;
 using namespace bmx;
 
 
-
-static void print_hex_quad(char *buffer, size_t buffer_size, const unsigned char *bytes, size_t num_bytes)
-{
-    static const char hex_chars[] = "0123456789abcdef";
-
-    BMX_ASSERT((num_bytes & 3) == 0);
-    BMX_ASSERT(num_bytes >= 4 && buffer_size >= num_bytes * 2 + ((num_bytes - 4) >> 2));
-
-    size_t index = 0;
-    size_t i, j;
-    for (i = 0; i < num_bytes; i += 4) {
-        if (i != 0)
-            buffer[index++] = '.';
-        for (j = 0; j < 4; j++) {
-            buffer[index++] = hex_chars[(bytes[i + j] >> 4) & 0x0f];
-            buffer[index++] = hex_chars[ bytes[i + j]       & 0x0f];
-        }
-    }
-    buffer[index] = '\0';
-}
-
-
-
 AppInfoWriter::AppInfoWriter()
 {
     mClipEditRate = ZERO_RATIONAL;
@@ -296,16 +273,13 @@ void AppInfoWriter::WriteIDAUItem(const string &name, UUID value)
 
 void AppInfoWriter::WriteUMIDItem(const string &name, UMID value)
 {
-    char buffer[128];
-
-    bmx_snprintf(buffer, sizeof(buffer), "urn:smpte:umid:");
-    size_t len = strlen(buffer);
-    print_hex_quad(&buffer[len], sizeof(buffer) - len, &value.octet0, 32);
+    string umid_str = "urn:smpte:umid:";
+    umid_str += get_umid_string(value);
 
     if (mIsAnnotation)
-        mAnnotations.push_back(make_pair(name, buffer));
+        mAnnotations.push_back(make_pair(name, umid_str));
     else
-        WriteItem(name, buffer);
+        WriteItem(name, umid_str);
 }
 
 void AppInfoWriter::WriteTimestampItem(const string &name, Timestamp value)
@@ -488,16 +462,13 @@ void AppInfoWriter::WriteFormatItem(const string &name, const char *format, ...)
 
 void AppInfoWriter::WriteULItem(const string &name, const UL *value)
 {
-    char buffer[64];
-
-    bmx_snprintf(buffer, sizeof(buffer), "urn:smpte:ul:");
-    size_t len = strlen(buffer);
-    print_hex_quad(&buffer[len], sizeof(buffer) - len, &value->octet0, 16);
+    string ul_str = "urn:smpte:ul:";
+    ul_str += get_ul_string(*value);
 
     if (mIsAnnotation)
-        mAnnotations.push_back(make_pair(name, buffer));
+        mAnnotations.push_back(make_pair(name, ul_str));
     else
-        WriteItem(name, buffer);
+        WriteItem(name, ul_str);
 }
 
 void AppInfoWriter::WriteUUIDItem(const string &name, const UUID *value)

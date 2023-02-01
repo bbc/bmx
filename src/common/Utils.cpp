@@ -39,6 +39,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cerrno>
+#include <ctype.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -246,6 +247,25 @@ static void get_xml_prolog_encoding_16bit_le(const unsigned char *data, size_t s
       *encoding = bmx::UNKNOWN_TEXT_ENCODING; // ignore contradictory prolog encoding utf-8
 }
 
+static void print_hex_quad(char *buffer, size_t buffer_size, const unsigned char *bytes, size_t num_bytes)
+{
+    static const char hex_chars[] = "0123456789abcdef";
+
+    BMX_ASSERT((num_bytes & 3) == 0);
+    BMX_ASSERT(num_bytes >= 4 && buffer_size >= num_bytes * 2 + ((num_bytes - 4) >> 2));
+
+    size_t index = 0;
+    size_t i, j;
+    for (i = 0; i < num_bytes; i += 4) {
+        if (i != 0)
+            buffer[index++] = '.';
+        for (j = 0; j < 4; j++) {
+            buffer[index++] = hex_chars[(bytes[i + j] >> 4) & 0x0f];
+            buffer[index++] = hex_chars[ bytes[i + j]       & 0x0f];
+        }
+    }
+    buffer[index] = '\0';
+}
 
 
 int64_t bmx::convert_position(int64_t in_position, int64_t factor_top, int64_t factor_bottom, Rounding rounding)
@@ -766,6 +786,26 @@ vector<string> bmx::split_string(string value, char separator, bool allow_empty,
     return result;
 }
 
+string bmx::lowercase(const string &value)
+{
+    string result;
+    for (size_t i = 0; i < value.size(); i++) {
+        result += tolower(value[i]);
+    }
+
+    return result;
+}
+
+string bmx::uppercase(const string &value)
+{
+    string result;
+    for (size_t i = 0; i < value.size(); i++) {
+        result += toupper(value[i]);
+    }
+
+    return result;
+}
+
 void bmx::get_xml_encoding(const unsigned char *data, size_t size, bmx::TextEncoding *encoding, bmx::ByteOrder *byte_order)
 {
     // see also section F in the XML specification, http://www.w3.org/TR/REC-xml/
@@ -1034,20 +1074,24 @@ string bmx::get_timecode_string(Timecode timecode)
 
 string bmx::get_umid_string(UMID umid)
 {
+    char buffer[128];
+
+    print_hex_quad(buffer, sizeof(buffer), &umid.octet0, 32);
+
+    return buffer;
+}
+
+string bmx::get_umid_string_2(UMID umid)
+{
     static const char hex_chars[] = "0123456789abcdef";
     char buffer[128];
-    int offset = 0;
+    uint8_t *bytes = &umid.octet0;
 
-    int i, j;
-    for (i = 0; i < 32; i += 4) {
-        if (i != 0)
-            buffer[offset++] = '.';
-        for (j = 0; j < 4; j++) {
-            buffer[offset++] = hex_chars[((&umid.octet0)[i + j] >> 4) & 0x0f];
-            buffer[offset++] = hex_chars[ (&umid.octet0)[i + j]       & 0x0f];
-        }
+    for (size_t i = 0; i < 32; i++) {
+        buffer[2 * i] = hex_chars[(bytes[i] >> 4) & 0x0f];
+        buffer[2 * i + 1] = hex_chars[bytes[i] & 0x0f];
     }
-    buffer[offset] = '\0';
+    buffer[2 * 32] = '\0';
 
     return buffer;
 }
@@ -1062,6 +1106,15 @@ string bmx::get_uuid_string(UUID uuid)
                  uuid.octet4,  uuid.octet5,  uuid.octet6,  uuid.octet7,
                  uuid.octet8,  uuid.octet9,  uuid.octet10, uuid.octet11,
                  uuid.octet12, uuid.octet13, uuid.octet14, uuid.octet15);
+
+    return buffer;
+}
+
+string bmx::get_ul_string(UL ul)
+{
+    char buffer[64];
+
+    print_hex_quad(buffer, sizeof(buffer), &ul.octet0, 16);
 
     return buffer;
 }

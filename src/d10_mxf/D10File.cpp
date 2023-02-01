@@ -94,6 +94,13 @@ static mxfUL get_essence_container_ul(EssenceType essence_type, mxfRational fram
 
 
 
+mxfUMID D10File::CreatePackageUID()
+{
+    mxfUMID package_uid;
+    mxf_generate_umid(&package_uid);
+    return package_uid;
+}
+
 D10File::D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
 {
     BMX_CHECK(frame_rate == FRAME_RATE_25 || frame_rate == FRAME_RATE_2997);
@@ -112,8 +119,8 @@ D10File::D10File(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mInputDuration = -1;
     mxf_get_timestamp_now(&mCreationDate);
     mxf_generate_uuid(&mGenerationUID);
-    mxf_generate_umid(&mMaterialPackageUID);
-    mxf_generate_umid(&mFileSourcePackageUID);
+    mMaterialPackageUID = D10File::CreatePackageUID();
+    mFileSourcePackageUID = D10File::CreatePackageUID();
     mPictureTrack = 0;
     mFirstSoundTrack = 0;
     memset(&mEssenceContainerUL, 0, sizeof(mEssenceContainerUL));
