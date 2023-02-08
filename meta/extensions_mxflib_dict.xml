@@ -153,8 +153,7 @@
     <RIFFChunkStreamID         type="UInt32"          use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 08 01 00 00 00"/>
     <RIFFChunkID               type="RIFFChunkIDType" use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 08 02 00 00 00"/>
     <RIFFChunkUUID             type="UUID"            use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 08 03 00 00 00"/>
-    <RIFFChunkHash             type="DataValue"       use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 08 04 00 00 00"/>
-    <RIFFChunkHashAlgorithm    type="UTF16String"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 08 05 00 00 00"/>
+    <RIFFChunkHashSHA1         type="DataValue"       use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 08 04 00 00 00"/>
   </RIFFChunkDefinitionSubDescriptor>
 
   <ADM_CHNASubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 0e">
