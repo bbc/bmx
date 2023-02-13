@@ -247,6 +247,9 @@ static void get_xml_prolog_encoding_16bit_le(const unsigned char *data, size_t s
       *encoding = bmx::UNKNOWN_TEXT_ENCODING; // ignore contradictory prolog encoding utf-8
 }
 
+
+namespace bmx {
+
 static void print_hex_quad(char *buffer, size_t buffer_size, const unsigned char *bytes, size_t num_bytes)
 {
     static const char hex_chars[] = "0123456789abcdef";
@@ -266,6 +269,8 @@ static void print_hex_quad(char *buffer, size_t buffer_size, const unsigned char
     }
     buffer[index] = '\0';
 }
+
+};
 
 
 int64_t bmx::convert_position(int64_t in_position, int64_t factor_top, int64_t factor_bottom, Rounding rounding)
