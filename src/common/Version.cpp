@@ -91,9 +91,9 @@ string bmx::get_bmx_scm_version_string()
     } else {
         static string version_string;
         if (version_string.empty()) {
-            version_string = git::DescribeTag();
+            version_string = bmx_git::DescribeTag();
             if (version_string.empty() || version_string == "unknown")
-                version_string = git::Describe();
+                version_string = bmx_git::Describe();
 
 #ifdef PACKAGE_GIT_VERSION_STRING
             if (version_string.empty() || version_string == "unknown") {
@@ -102,7 +102,7 @@ string bmx::get_bmx_scm_version_string()
             else
 #endif
             {
-                if (git::AnyUncommittedChanges())
+                if (bmx_git::AnyUncommittedChanges())
                     version_string += "-dirty";
             }
         }
@@ -219,7 +219,7 @@ mxfProductVersion bmx::get_bmx_mxf_product_version()
         // Set the patch version value to the commit offset from the release tag.
         // The commit offset is part of the git describe tag string which has the
         // format "<tag>-<offset>-g<commit id>"
-        string describe = git::DescribeTag();
+        string describe = bmx_git::DescribeTag();
 #ifdef PACKAGE_GIT_VERSION_STRING
         if (describe.empty() || describe == "unknown")
             describe = PACKAGE_GIT_VERSION_STRING;
@@ -235,7 +235,7 @@ mxfProductVersion bmx::get_bmx_mxf_product_version()
             int offset;
             if (dash_pos != string::npos && sscanf(&describe[dash_pos], "%d", &offset) == 1 && offset >= 0 && offset <= UINT16_MAX) {
                 product_version.patch = (uint16_t)offset;
-                if (git::AnyUncommittedChanges())
+                if (bmx_git::AnyUncommittedChanges())
                     product_version.release = 0;  /* Unknown version */
                 else if (offset == 0)
                     product_version.release = 1;  /* Released version */
