@@ -101,9 +101,9 @@ static size_t curl_file_size_header_cb(char *buffer, size_t size, size_t nmemb, 
 {
   int64_t *file_size_out = (int64_t*)priv;
 
-  const string header_str(buffer, size * nmemb);
+  string header_str = lowercase(string(buffer, size * nmemb));
 
-  size_t fidx = get_http_field_value_pos(header_str, "Content-Length");
+  size_t fidx = get_http_field_value_pos(header_str, "content-length");
   if (fidx != string::npos) {
       int64_t content_length;
       if (sscanf(&header_str.c_str()[fidx], "%" PRId64, &content_length) == 1)
@@ -117,16 +117,16 @@ static size_t curl_header_cb(char *buffer, size_t size, size_t nmemb, void *priv
 {
   CURLReceiveInfo *info = (CURLReceiveInfo*)priv;
 
-  const string header_str(buffer, size * nmemb);
+  string header_str = lowercase(string(buffer, size * nmemb));
 
-  size_t fidx = get_http_field_value_pos(header_str, "Accept-Ranges");
+  size_t fidx = get_http_field_value_pos(header_str, "accept-ranges");
   if (fidx != string::npos) {
       info->accept_range_recv = true;
       if (header_str.compare(fidx, 5, "bytes"))
           info->accept_bytes_range = true;
   }
 
-  fidx = get_http_field_value_pos(header_str, "Content-Range");
+  fidx = get_http_field_value_pos(header_str, "content-range");
   if (fidx != string::npos) {
       int64_t first;
       if (sscanf(&header_str.c_str()[fidx], "%" PRId64, &first) == 1) {
