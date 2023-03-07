@@ -120,7 +120,7 @@ static const uint32_t DEFAULT_RW_INTL_SIZE  = (64 * 1024);
 static const uint16_t DEFAULT_RDD6_LINES[2] = {9, 572};     /* ST 274, line 9 field 1 and 2 */
 static const uint8_t DEFAULT_RDD6_SDID      = 4;            /* first channel pair is 5/6 */
 
-static const uint32_t DEFAULT_HTTP_MIN_READ = 64 * 1024;
+static const uint32_t DEFAULT_HTTP_MIN_READ = 1024 * 1024;
 
 
 namespace bmx
