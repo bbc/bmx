@@ -188,10 +188,13 @@ static void http_file_close(MXFFileSysData *sys_data)
     delete [] sys_data->buffer;
 }
 
-static uint32_t http_file_read(MXFFileSysData *sys_data, uint8_t *data, uint32_t count)
+static uint32_t _http_file_read(MXFFileSysData *sys_data, uint8_t *data, uint32_t count,
+                                bool close_connections, CURLcode *error_code)
 {
     uint8_t *data_ptr  = data;
     uint32_t rem_count = count;
+
+    *error_code = CURLE_OK;
 
     sys_data->eof = 0;
 
@@ -242,6 +245,12 @@ static uint32_t http_file_read(MXFFileSysData *sys_data, uint8_t *data, uint32_t
         curl_easy_setopt(sys_data->curl, CURLOPT_HEADERDATA, (void*)&info);
         curl_easy_setopt(sys_data->curl, CURLOPT_FAILONERROR, 1);
 
+        if (close_connections) {
+            // This closes the connections and opens a new connection
+            curl_easy_setopt(sys_data->curl, CURLOPT_MAXCONNECTS, 1L);
+            curl_easy_setopt(sys_data->curl, CURLOPT_FRESH_CONNECT, 1L);
+        }
+
         CURLcode result = curl_easy_perform(sys_data->curl);
         rem_count = info.client_rem_count;
 
@@ -277,9 +286,30 @@ static uint32_t http_file_read(MXFFileSysData *sys_data, uint8_t *data, uint32_t
                 sys_data->disable_response_code_warn = false;
             }
         }
+
+        *error_code = result;
     }
 
     return count - rem_count;
+}
+
+static uint32_t http_file_read(MXFFileSysData *sys_data, uint8_t *data, uint32_t count)
+{
+    CURLcode error_code;
+    uint32_t result = _http_file_read(sys_data, data, count, false, &error_code);
+
+    // It was found that the google storage api would cause curl to return a CURLE_HTTP2
+    // error after around an hour. The workaround implemented here is to close the connection
+    // and open a new one. The issue appears similar to https://github.com/curl/curl/issues/5389
+    // and https://github.com/curl/curl/pull/5643. The fix
+    // https://github.com/curl/curl/commit/ef86daf4d39e99b227d42bb712000c9adfdbdf76 didn't
+    // solve the issue (version 7.74.0).
+    if (result < count && error_code == CURLE_HTTP2) {
+        log_warn("Closing curl connections and retrying a read after a CURLE_HTTP2 error\n");
+        result += _http_file_read(sys_data, data, count - result, true, &error_code);
+    }
+
+    return result;
 }
 
 static uint32_t http_file_write(MXFFileSysData *sys_data, const uint8_t *data, uint32_t count)
