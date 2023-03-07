@@ -140,6 +140,16 @@ static size_t curl_header_cb(char *buffer, size_t size, size_t nmemb, void *priv
   return size * nmemb;
 }
 
+static size_t curl_abort_write_cb(void* ptr, size_t size, size_t nmemb, void *priv)
+{
+    // Abort writing of received data. This is used when getting the Content-Length header only.
+    (void)ptr;
+    (void)size;
+    (void)nmemb;
+    (void)priv;
+    return 0;
+}
+
 static size_t curl_data_cb(void* ptr, size_t size, size_t nmemb, void *priv)
 {
   CURLReceiveInfo *info = (CURLReceiveInfo*)priv;
@@ -317,8 +327,9 @@ static int64_t http_file_size(MXFFileSysData *sys_data)
 {
     int64_t file_size = -1;
 
-    // note: not using CURLINFO_CONTENT_LENGTH_DOWNLOAD because it returns a double
+    // Not using CURLINFO_CONTENT_LENGTH_DOWNLOAD because it returns a double.
 
+    // Try a HEAD request to get the content length
     char error_buf[CURL_ERROR_SIZE];
     curl_easy_reset(sys_data->curl);
     curl_easy_setopt(sys_data->curl, CURLOPT_ERRORBUFFER, error_buf);
@@ -331,8 +342,27 @@ static int64_t http_file_size(MXFFileSysData *sys_data)
     curl_easy_setopt(sys_data->curl, CURLOPT_FAILONERROR, 1);
 
     CURLcode result = curl_easy_perform(sys_data->curl);
-    if (result != 0)
+
+    if (result == CURLE_HTTP_RETURNED_ERROR) {
+        // Try a GET request to get the content length. This supports pre-signed URLs that restrict
+        // the request method and therefore a HEAD request would fail.
+        error_buf[0] = 0;
+        curl_easy_reset(sys_data->curl);
+        curl_easy_setopt(sys_data->curl, CURLOPT_ERRORBUFFER, error_buf);
+        curl_easy_setopt(sys_data->curl, CURLOPT_NOPROGRESS, 1);
+        curl_easy_setopt(sys_data->curl, CURLOPT_URL, sys_data->url_str.c_str());
+        // Abort writing of received data, resulting in a CURLE_WRITE_ERROR. Only need the headers
+        curl_easy_setopt(sys_data->curl, CURLOPT_WRITEFUNCTION, curl_abort_write_cb);
+        curl_easy_setopt(sys_data->curl, CURLOPT_HEADERFUNCTION, curl_file_size_header_cb);
+        curl_easy_setopt(sys_data->curl, CURLOPT_HEADERDATA, (void*)&file_size);
+        curl_easy_setopt(sys_data->curl, CURLOPT_FAILONERROR, 1);
+
+        result = curl_easy_perform(sys_data->curl);
+        if (file_size == -1 && result != CURLE_OK && result != CURLE_WRITE_ERROR)
+            log_error("Failed to get file size: %s (curl result = %d)\n", error_buf, result);
+    } else if (result != CURLE_OK) {
         log_error("Failed to get file size: %s (curl result = %d)\n", error_buf, result);
+    }
 
     return file_size;
 }
