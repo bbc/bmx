@@ -35,6 +35,10 @@ RUN mkdir build && cd build && \
 ##################################################
 FROM debian:latest as runtime
 
+LABEL org.opencontainers.image.source=https://github.com/bbc/bmx
+LABEL org.opencontainers.image.description="A useful set of tools for handling MXF and related files"
+LABEL org.opencontainers.image.licenses=BSD-3-Clause
+
 # Install runtime dependencies
 RUN DEBIAN_FRONTEND=noninteractive \
     apt-get update -y && \

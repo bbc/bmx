@@ -12,7 +12,7 @@
 
 SCRIPT=$(basename $0)
 
-DEFAULT_DOCKER_IMAGE="bmxtools:latest"
+DEFAULT_DOCKER_IMAGE="ghcr.io/bbc/bmxtools:latest"
 DEFAULT_INPUT="."
 DEFAULT_OUTPUT="."
 
