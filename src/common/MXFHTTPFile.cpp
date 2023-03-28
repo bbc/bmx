@@ -101,9 +101,9 @@ static size_t curl_file_size_header_cb(char *buffer, size_t size, size_t nmemb, 
 {
   int64_t *file_size_out = (int64_t*)priv;
 
-  const string header_str(buffer, size * nmemb);
+  string header_str = lowercase(string(buffer, size * nmemb));
 
-  size_t fidx = get_http_field_value_pos(header_str, "Content-Length");
+  size_t fidx = get_http_field_value_pos(header_str, "content-length");
   if (fidx != string::npos) {
       int64_t content_length;
       if (sscanf(&header_str.c_str()[fidx], "%" PRId64, &content_length) == 1)
@@ -117,16 +117,16 @@ static size_t curl_header_cb(char *buffer, size_t size, size_t nmemb, void *priv
 {
   CURLReceiveInfo *info = (CURLReceiveInfo*)priv;
 
-  const string header_str(buffer, size * nmemb);
+  string header_str = lowercase(string(buffer, size * nmemb));
 
-  size_t fidx = get_http_field_value_pos(header_str, "Accept-Ranges");
+  size_t fidx = get_http_field_value_pos(header_str, "accept-ranges");
   if (fidx != string::npos) {
       info->accept_range_recv = true;
       if (header_str.compare(fidx, 5, "bytes"))
           info->accept_bytes_range = true;
   }
 
-  fidx = get_http_field_value_pos(header_str, "Content-Range");
+  fidx = get_http_field_value_pos(header_str, "content-range");
   if (fidx != string::npos) {
       int64_t first;
       if (sscanf(&header_str.c_str()[fidx], "%" PRId64, &first) == 1) {
@@ -138,6 +138,16 @@ static size_t curl_header_cb(char *buffer, size_t size, size_t nmemb, void *priv
   }
 
   return size * nmemb;
+}
+
+static size_t curl_abort_write_cb(void* ptr, size_t size, size_t nmemb, void *priv)
+{
+    // Abort writing of received data. This is used when getting the Content-Length header only.
+    (void)ptr;
+    (void)size;
+    (void)nmemb;
+    (void)priv;
+    return 0;
 }
 
 static size_t curl_data_cb(void* ptr, size_t size, size_t nmemb, void *priv)
@@ -178,10 +188,13 @@ static void http_file_close(MXFFileSysData *sys_data)
     delete [] sys_data->buffer;
 }
 
-static uint32_t http_file_read(MXFFileSysData *sys_data, uint8_t *data, uint32_t count)
+static uint32_t _http_file_read(MXFFileSysData *sys_data, uint8_t *data, uint32_t count,
+                                bool close_connections, CURLcode *error_code)
 {
     uint8_t *data_ptr  = data;
     uint32_t rem_count = count;
+
+    *error_code = CURLE_OK;
 
     sys_data->eof = 0;
 
@@ -232,6 +245,12 @@ static uint32_t http_file_read(MXFFileSysData *sys_data, uint8_t *data, uint32_t
         curl_easy_setopt(sys_data->curl, CURLOPT_HEADERDATA, (void*)&info);
         curl_easy_setopt(sys_data->curl, CURLOPT_FAILONERROR, 1);
 
+        if (close_connections) {
+            // This closes the connections and opens a new connection
+            curl_easy_setopt(sys_data->curl, CURLOPT_MAXCONNECTS, 1L);
+            curl_easy_setopt(sys_data->curl, CURLOPT_FRESH_CONNECT, 1L);
+        }
+
         CURLcode result = curl_easy_perform(sys_data->curl);
         rem_count = info.client_rem_count;
 
@@ -267,9 +286,30 @@ static uint32_t http_file_read(MXFFileSysData *sys_data, uint8_t *data, uint32_t
                 sys_data->disable_response_code_warn = false;
             }
         }
+
+        *error_code = result;
     }
 
     return count - rem_count;
+}
+
+static uint32_t http_file_read(MXFFileSysData *sys_data, uint8_t *data, uint32_t count)
+{
+    CURLcode error_code;
+    uint32_t result = _http_file_read(sys_data, data, count, false, &error_code);
+
+    // It was found that the google storage api would cause curl to return a CURLE_HTTP2
+    // error after around an hour. The workaround implemented here is to close the connection
+    // and open a new one. The issue appears similar to https://github.com/curl/curl/issues/5389
+    // and https://github.com/curl/curl/pull/5643. The fix
+    // https://github.com/curl/curl/commit/ef86daf4d39e99b227d42bb712000c9adfdbdf76 didn't
+    // solve the issue (version 7.74.0).
+    if (result < count && error_code == CURLE_HTTP2) {
+        log_warn("Closing curl connections and retrying a read after a CURLE_HTTP2 error\n");
+        result += _http_file_read(sys_data, data, count - result, true, &error_code);
+    }
+
+    return result;
 }
 
 static uint32_t http_file_write(MXFFileSysData *sys_data, const uint8_t *data, uint32_t count)
@@ -317,8 +357,9 @@ static int64_t http_file_size(MXFFileSysData *sys_data)
 {
     int64_t file_size = -1;
 
-    // note: not using CURLINFO_CONTENT_LENGTH_DOWNLOAD because it returns a double
+    // Not using CURLINFO_CONTENT_LENGTH_DOWNLOAD because it returns a double.
 
+    // Try a HEAD request to get the content length
     char error_buf[CURL_ERROR_SIZE];
     curl_easy_reset(sys_data->curl);
     curl_easy_setopt(sys_data->curl, CURLOPT_ERRORBUFFER, error_buf);
@@ -331,8 +372,27 @@ static int64_t http_file_size(MXFFileSysData *sys_data)
     curl_easy_setopt(sys_data->curl, CURLOPT_FAILONERROR, 1);
 
     CURLcode result = curl_easy_perform(sys_data->curl);
-    if (result != 0)
+
+    if (result == CURLE_HTTP_RETURNED_ERROR) {
+        // Try a GET request to get the content length. This supports pre-signed URLs that restrict
+        // the request method and therefore a HEAD request would fail.
+        error_buf[0] = 0;
+        curl_easy_reset(sys_data->curl);
+        curl_easy_setopt(sys_data->curl, CURLOPT_ERRORBUFFER, error_buf);
+        curl_easy_setopt(sys_data->curl, CURLOPT_NOPROGRESS, 1);
+        curl_easy_setopt(sys_data->curl, CURLOPT_URL, sys_data->url_str.c_str());
+        // Abort writing of received data, resulting in a CURLE_WRITE_ERROR. Only need the headers
+        curl_easy_setopt(sys_data->curl, CURLOPT_WRITEFUNCTION, curl_abort_write_cb);
+        curl_easy_setopt(sys_data->curl, CURLOPT_HEADERFUNCTION, curl_file_size_header_cb);
+        curl_easy_setopt(sys_data->curl, CURLOPT_HEADERDATA, (void*)&file_size);
+        curl_easy_setopt(sys_data->curl, CURLOPT_FAILONERROR, 1);
+
+        result = curl_easy_perform(sys_data->curl);
+        if (file_size == -1 && result != CURLE_OK && result != CURLE_WRITE_ERROR)
+            log_error("Failed to get file size: %s (curl result = %d)\n", error_buf, result);
+    } else if (result != CURLE_OK) {
         log_error("Failed to get file size: %s (curl result = %d)\n", error_buf, result);
+    }
 
     return file_size;
 }

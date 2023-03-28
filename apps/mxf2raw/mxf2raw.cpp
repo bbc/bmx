@@ -139,7 +139,7 @@ static const char *XML_INFO_WRITER_VERSION      = "0.1"; // format <major>.<mino
 
 static const char* STDIN_FILENAME = "stdin:";
 
-static const uint32_t DEFAULT_HTTP_MIN_READ = 64 * 1024;
+static const uint32_t DEFAULT_HTTP_MIN_READ = 1024 * 1024;
 
 
 namespace bmx
