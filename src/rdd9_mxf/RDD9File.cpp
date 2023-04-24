@@ -44,6 +44,7 @@
 #include <bmx/mxf_helper/MXFMCALabelHelper.h>
 #include <bmx/Version.h>
 #include <bmx/MXFUtils.h>
+#include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
 
@@ -57,6 +58,22 @@ using namespace mxfpp;
 static const uint32_t KAG_SIZE                  = 0x200;
 static const uint32_t MEMORY_WRITE_CHUNK_SIZE   = 8192;
 
+
+
+typedef struct
+{
+    Rational frame_rate;
+    int64_t partition_interval;
+} RDD9PartitionInterval;
+
+static const RDD9PartitionInterval RDD9_PARTITION_INTERVAL[] =
+{
+    {{24000, 1001}, 240},
+    {{25, 1},       240},
+    {{30000, 1001}, 300},
+    {{50, 1},       480},
+    {{60000, 1001}, 600}
+};
 
 
 static bool compare_track(RDD9Track *left, RDD9Track *right)
@@ -109,10 +126,20 @@ RDD9File::RDD9File(int flavour, File *mxf_file, Rational frame_rate)
     mMaterialPackage = 0;
     mFileSourcePackage = 0;
     mFirstWrite = true;
-    mPartitionInterval = 10 * frame_rate.numerator / frame_rate.denominator;
+    mPartitionInterval = 0;
     mValidator = 0;
     mPartitionFrameCount = 0;
     mMXFChecksumFile = 0;
+
+    // Target 10 seconds partition duration and use the "should" values from
+    // RDD 9 2013, Table B.2 if a compliant frame rate is set.
+    mPartitionInterval = 10 * frame_rate.numerator / frame_rate.denominator;
+    for (size_t i = 0; i < BMX_ARRAY_SIZE(RDD9_PARTITION_INTERVAL); i++) {
+        if (frame_rate == RDD9_PARTITION_INTERVAL[i].frame_rate) {
+            mPartitionInterval = RDD9_PARTITION_INTERVAL[i].partition_interval;
+            break;
+        }
+    }
 
     mTrackIdHelper.SetId("TimecodeTrack", 1);
     mTrackIdHelper.SetStartId(MXF_PICTURE_DDEF, 2);
