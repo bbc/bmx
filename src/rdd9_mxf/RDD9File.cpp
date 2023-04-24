@@ -800,7 +800,7 @@ void RDD9File::WriteContentPackages(bool final_write)
         // start body partition at first write or when # frames per partition close to exceeding maximum
         if (mFirstWrite ||
             (mPartitionInterval > 0 && mPartitionFrameCount > 0 &&
-                mPartitionFrameCount + MAX_GOP_SIZE >= mPartitionInterval && mIndexTable->CanStartPartition()))
+                mPartitionFrameCount >= mPartitionInterval && mIndexTable->CanStartPartition()))
         {
             mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
 
