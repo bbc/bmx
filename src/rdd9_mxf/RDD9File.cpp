@@ -127,6 +127,7 @@ RDD9File::RDD9File(int flavour, File *mxf_file, Rational frame_rate)
     mFileSourcePackage = 0;
     mFirstWrite = true;
     mPartitionInterval = 0;
+    mFixedPartitionInterval = false;
     mValidator = 0;
     mPartitionFrameCount = 0;
     mMXFChecksumFile = 0;
@@ -253,6 +254,11 @@ void RDD9File::SetPartitionInterval(int64_t frame_count)
 {
     BMX_CHECK(frame_count >= 0);
     mPartitionInterval = frame_count;
+}
+
+void RDD9File::SetFixedPartitionInterval(bool enable)
+{
+    mFixedPartitionInterval = enable;
 }
 
 void RDD9File::SetValidator(RDD9Validator *validator)
@@ -800,7 +806,8 @@ void RDD9File::WriteContentPackages(bool final_write)
         // start body partition at first write or when # frames per partition close to exceeding maximum
         if (mFirstWrite ||
             (mPartitionInterval > 0 && mPartitionFrameCount > 0 &&
-                mPartitionFrameCount >= mPartitionInterval && mIndexTable->CanStartPartition()))
+                mPartitionFrameCount >= mPartitionInterval &&
+                (mFixedPartitionInterval || mIndexTable->CanStartPartition())))
         {
             mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
 
