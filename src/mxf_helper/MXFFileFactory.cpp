@@ -59,7 +59,7 @@ File* DefaultMXFFileFactory::OpenRead(string filename)
         BMX_CHECK(mxf_stdin_wrap_read(&mxf_file));
         return new File(mxf_file);
     } else if (mxf_http_is_url(filename)) {
-        return new File(mxf_http_file_open_read(filename, 64 * 1024), true);
+        return new File(mxf_http_file_open_read(filename, 1024 * 1024, true));
     } else {
         return File::openRead(filename);
     }

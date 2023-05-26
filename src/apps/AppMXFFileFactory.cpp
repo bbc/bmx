@@ -53,7 +53,7 @@ AppMXFFileFactory::AppMXFFileFactory()
 {
     mInputFlags = 0;
     mRWInterleaver = 0;
-    mHTTPMinReadSize = 64 * 1024;
+    mHTTPMinReadSize = 1024 * 1024;
     mHTTPEnableSeek = true;
 #if defined(_WIN32) && !defined(__MINGW32__)
     mUseMMapFile = false;
