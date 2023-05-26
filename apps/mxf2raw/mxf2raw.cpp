@@ -1708,6 +1708,7 @@ static void usage(const char *cmd)
 
 int main(int argc, const char** argv)
 {
+    bool have_action = false;  // true when an option is selected to take a specific action
     std::vector<const char *> input_filenames;
     const char *log_filename = 0;
     LogLevel log_level = INFO_LOG;
@@ -1795,6 +1796,7 @@ int main(int argc, const char** argv)
                 return 0;
             }
             fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "-l") == 0)
         {
@@ -1838,6 +1840,7 @@ int main(int argc, const char** argv)
                 return 1;
             }
             file_checksum_only_types.insert(checkum_type);
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--group") == 0)
@@ -1851,25 +1854,30 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--check-end") == 0)
         {
             check_end = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--check-complete") == 0)
         {
             check_complete = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--check-app-issues") == 0)
         {
             check_app_issues = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--check-app-crc32") == 0)
         {
             check_app_crc32 = true;
             do_ess_read = true;
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "-i") == 0 ||
                  strcmp(argv[cmdln_index], "--info") == 0)
         {
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--info-format") == 0)
         {
@@ -1917,6 +1925,7 @@ int main(int argc, const char** argv)
             track_checksum_types.insert(checkum_type);
             do_write_info = true;
             do_ess_read = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--file-chksum") == 0)
@@ -1935,22 +1944,26 @@ int main(int argc, const char** argv)
             }
             file_checksum_types.insert(checkum_type);
             do_write_info = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--as11") == 0)
         {
             do_as11_info = true;
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--as10") == 0)
         {
             do_as10_info = true;
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--app") == 0)
         {
             do_app_info = true;
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--app-events") == 0)
         {
@@ -1968,6 +1981,7 @@ int main(int argc, const char** argv)
             }
             do_app_info = true;
             do_write_info = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--no-app-events-tc") == 0)
@@ -1984,6 +1998,7 @@ int main(int argc, const char** argv)
             }
             app_crc32_filename = argv[cmdln_index + 1];
             do_ess_read = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--app-tc") == 0)
@@ -1996,6 +2011,7 @@ int main(int argc, const char** argv)
             }
             app_tc_filename = argv[cmdln_index + 1];
             do_ess_read = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--all-tc") == 0)
@@ -2008,6 +2024,7 @@ int main(int argc, const char** argv)
             }
             all_tc_filename = argv[cmdln_index + 1];
             do_ess_read = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--index") == 0)
@@ -2015,11 +2032,13 @@ int main(int argc, const char** argv)
             do_index_info = true;
             do_write_info = true;
             do_parse_read = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--avid") == 0)
         {
             do_avid_info = true;
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--st436-mf") == 0)
         {
@@ -2037,6 +2056,7 @@ int main(int argc, const char** argv)
             }
             st436_manifest_count = (uint32_t)(uvalue);
             do_write_info = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--rdd6") == 0)
@@ -2054,12 +2074,14 @@ int main(int argc, const char** argv)
                 return 1;
             }
             rdd6_filename = argv[cmdln_index + 2];
+            have_action = true;
             cmdln_index += 2;
         }
         else if (strcmp(argv[cmdln_index], "--mca-detail") == 0)
         {
             mca_detail = true;
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "-p") == 0 ||
                  strcmp(argv[cmdln_index], "--ess-out") == 0)
@@ -2072,6 +2094,7 @@ int main(int argc, const char** argv)
             }
             ess_output_prefix = argv[cmdln_index + 1];
             do_ess_read = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--wrap-klv") == 0)
@@ -2093,6 +2116,7 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--read-ess") == 0)
         {
             do_ess_read = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--deint") == 0)
         {
@@ -2232,6 +2256,7 @@ int main(int argc, const char** argv)
                 return 1;
             }
             text_output_prefix = argv[cmdln_index + 1];
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--http-min-read") == 0)
@@ -2275,8 +2300,8 @@ int main(int argc, const char** argv)
         return 1;
     }
 
-    if (cmdln_index == 1) {
-        // default to outputting info if no options are given
+    if (!have_action) {
+        // default to outputting info if no specific action has been selected
         do_write_info = true;
     }
 
