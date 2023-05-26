@@ -1690,6 +1690,7 @@ static void usage(const char *cmd)
     if (mxf_http_is_supported()) {
         fprintf(stderr, " --http-min-read <bytes>\n");
         fprintf(stderr, "                       Set the minimum number of bytes to read when accessing a file over HTTP. The default is %u.\n", DEFAULT_HTTP_MIN_READ);
+        fprintf(stderr, " --http-disable-seek   Disable seeking when reading file over HTTP\n");
     }
     fprintf(stderr, "\n");
     fprintf(stderr, " --text-out <prefix>   Extract text based objects to files starting with <prefix>\n");
@@ -1762,6 +1763,7 @@ int main(int argc, const char** argv)
     float gf_retry_delay = DEFAULT_GF_RETRY_DELAY;
     float gf_rate_after_fail = DEFAULT_GF_RATE_AFTER_FAIL;
     uint32_t http_min_read = DEFAULT_HTTP_MIN_READ;
+    bool http_enable_seek = true;
     ChecksumType checkum_type;
 #if defined(_WIN32) && !defined(__MINGW32__)
     bool use_mmap_file = false;
@@ -2249,6 +2251,10 @@ int main(int argc, const char** argv)
             http_min_read = (uint32_t)(uvalue);
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--http-disable-seek") == 0)
+        {
+            http_enable_seek = false;
+        }
         else if (strcmp(argv[cmdln_index], "--regtest") == 0)
         {
             BMX_REGRESSION_TEST = true;
@@ -2409,6 +2415,7 @@ int main(int argc, const char** argv)
             file_factory.SetInputChecksumTypes(file_checksum_types);
         file_factory.SetInputFlags(file_flags);
         file_factory.SetHTTPMinReadSize(http_min_read);
+        file_factory.SetHTTPEnableSeek(http_enable_seek);
 #if defined(_WIN32) && !defined(__MINGW32__)
         file_factory.SetUseMMapFile(use_mmap_file);
 #endif

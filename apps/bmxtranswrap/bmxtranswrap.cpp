@@ -419,6 +419,7 @@ static void usage(const char *cmd)
     if (mxf_http_is_supported()) {
         fprintf(stderr, " --http-min-read <bytes>\n");
         fprintf(stderr, "                          Set the minimum number of bytes to read when accessing a file over HTTP. The default is %u.\n", DEFAULT_HTTP_MIN_READ);
+        fprintf(stderr, " --http-disable-seek      Disable seeking when reading file over HTTP\n");
     }
     fprintf(stderr, "  --no-precharge          Don't output clip/track with precharge. Adjust the start position and duration instead\n");
     fprintf(stderr, "  --no-rollout            Don't output clip/track with rollout. Adjust the duration instead\n");
@@ -906,6 +907,7 @@ int main(int argc, const char** argv)
     uint16_t rdd6_lines[2] = {DEFAULT_RDD6_LINES[0], DEFAULT_RDD6_LINES[1]};
     uint8_t rdd6_sdid = DEFAULT_RDD6_SDID;
     uint32_t http_min_read = DEFAULT_HTTP_MIN_READ;
+    bool http_enable_seek = true;
     bool mp_track_num = false;
 #if defined(_WIN32) && !defined(__MINGW32__)
     bool use_mmap_file = false;
@@ -1279,6 +1281,10 @@ int main(int argc, const char** argv)
             }
             http_min_read = (uint32_t)(uvalue);
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--http-disable-seek") == 0)
+        {
+            http_enable_seek = false;
         }
         else if (strcmp(argv[cmdln_index], "--no-precharge") == 0)
         {
@@ -2856,6 +2862,7 @@ int main(int argc, const char** argv)
         if (rw_interleave)
             file_factory.SetRWInterleave(rw_interleave_size);
         file_factory.SetHTTPMinReadSize(http_min_read);
+        file_factory.SetHTTPEnableSeek(http_enable_seek);
 #if defined(_WIN32) && !defined(__MINGW32__)
         file_factory.SetUseMMapFile(use_mmap_file);
 #endif
