@@ -1624,7 +1624,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                       Use this option for files with broken timecode\n");
     fprintf(stderr, "\n");
     fprintf(stderr, " --check-end           Check that the last edit unit (start + duration - 1) can be read when opening the files\n");
-    fprintf(stderr, " --check-complete      Check that the input files are complete\n");
+    fprintf(stderr, " --check-complete      Check that the input file structure info can be read and is complete\n");
     fprintf(stderr, " --check-app-issues    Check that there are no known issues with the APP (Archive Preservation Project) file\n");
     fprintf(stderr, " --check-app-crc32     Check APP essence CRC-32 data\n");
     fprintf(stderr, "\n");
@@ -2501,7 +2501,7 @@ int main(int argc, const char** argv)
             if (reader->IsSeekable())
                 log_warn("Input file is incomplete\n");
             else
-                log_debug("Input file is not seekable\n");
+                log_debug("Input file is incomplete, probably because the file is not seekable\n");
         }
 
         mxfRational edit_rate = reader->GetEditRate();

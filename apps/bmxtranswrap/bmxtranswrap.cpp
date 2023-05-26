@@ -403,7 +403,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "  --dur <count>           Set the duration in input edit rate units. Default is minimum input duration\n");
     fprintf(stderr, "  --check-end             Check at the start that the last (start + duration - 1) edit unit can be read\n");
     fprintf(stderr, "  --check-end-tolerance <frame> Allow output duration shorter than input declared duration\n");
-    fprintf(stderr, "  --check-complete        Check that the input file is complete\n");
+    fprintf(stderr, "  --check-complete        Check that the input file structure can be read and is complete\n");
     fprintf(stderr, "  --group                 Use the group reader instead of the sequence reader\n");
     fprintf(stderr, "                          Use this option if the files have different material packages\n");
     fprintf(stderr, "                          but actually belong to the same virtual package / group\n");
@@ -2940,7 +2940,10 @@ int main(int argc, const char** argv)
                 log_error("Input file is incomplete\n");
                 throw false;
             }
-            log_warn("Input file is incomplete\n");
+            if (reader->IsSeekable())
+                log_warn("Input file is incomplete\n");
+            else
+                log_debug("Input file is incomplete, probably because the file is not seekable\n");
         }
 
         reader->SetEmptyFrames(true);
