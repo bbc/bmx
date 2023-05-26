@@ -1687,6 +1687,8 @@ static void usage(const char *cmd)
     fprintf(stderr, " --gf-delay <sec>      Set the delay (in seconds) between a failure to read and a retry. The default is %f.\n", DEFAULT_GF_RETRY_DELAY);
     fprintf(stderr, " --gf-rate <factor>    Limit the read rate to realtime rate x <factor> after a read failure. The default is %f\n", DEFAULT_GF_RATE_AFTER_FAIL);
     fprintf(stderr, "                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
+    fprintf(stderr, " --disable-indexing-file   Use this option to stop the reader creating an index of the partitions and essence positions in the file up front\n");
+    fprintf(stderr, "                           This option can be used to avoid indexing files containing many partitions\n");
     if (mxf_http_is_supported()) {
         fprintf(stderr, " --http-min-read <bytes>\n");
         fprintf(stderr, "                       Set the minimum number of bytes to read when accessing a file over HTTP. The default is %u.\n", DEFAULT_HTTP_MIN_READ);
@@ -1763,6 +1765,7 @@ int main(int argc, const char** argv)
     unsigned int gf_retries = DEFAULT_GF_RETRIES;
     float gf_retry_delay = DEFAULT_GF_RETRY_DELAY;
     float gf_rate_after_fail = DEFAULT_GF_RATE_AFTER_FAIL;
+    bool enable_indexing_file = true;
     uint32_t http_min_read = DEFAULT_HTTP_MIN_READ;
     bool http_enable_seek = true;
     ChecksumType checkum_type;
@@ -2247,6 +2250,10 @@ int main(int argc, const char** argv)
             growing_file = true;
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--disable-indexing-file") == 0)
+        {
+            enable_indexing_file = false;
+        }
         else if (strcmp(argv[cmdln_index], "--text-out") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -2455,6 +2462,7 @@ int main(int argc, const char** argv)
                 grp_file_reader->SetFileFactory(&file_factory, false);
                 grp_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
                 grp_file_reader->SetST436ManifestFrameCount(st436_manifest_count);
+                grp_file_reader->SetEnableIndexFile(enable_indexing_file);
                 result = grp_file_reader->Open(input_filenames[i], input_open_flags);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", get_input_filename(input_filenames[i]),
@@ -2478,6 +2486,7 @@ int main(int argc, const char** argv)
                 seq_file_reader->SetFileFactory(&file_factory, false);
                 seq_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
                 seq_file_reader->SetST436ManifestFrameCount(st436_manifest_count);
+                seq_file_reader->SetEnableIndexFile(enable_indexing_file);
                 result = seq_file_reader->Open(input_filenames[i], input_open_flags);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", get_input_filename(input_filenames[i]),
@@ -2498,6 +2507,7 @@ int main(int argc, const char** argv)
             file_reader->SetFileFactory(&file_factory, false);
             file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
             file_reader->SetST436ManifestFrameCount(st436_manifest_count);
+            file_reader->SetEnableIndexFile(enable_indexing_file);
             if (do_as11_info)
                 as11_register_extensions(file_reader);
             if (do_as10_info)
@@ -2523,7 +2533,7 @@ int main(int argc, const char** argv)
                 complete_result = false;
                 cmd_result = 1;
             }
-            if (reader->IsSeekable())
+            if (reader->IsSeekable() && enable_indexing_file)
                 log_warn("Input file is incomplete\n");
             else
                 log_debug("Input file is incomplete, probably because the file is not seekable\n");
