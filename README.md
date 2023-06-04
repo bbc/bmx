@@ -99,14 +99,23 @@ Start by creating a build directory and change into it. The commandlines below u
 
 #### Unix-like (Unix Makefiles)
 
+Build and test using
+
 ```bash
 mkdir -p out/build
 cd out/build
 cmake ../../ -DCMAKE_BUILD_TYPE=<build type>
 cmake --build .
 make test
+```
+
+Install using
+
+```bash
 sudo make install
 ```
+
+The installation may require root permissions. Add `-DCMAKE_INSTALL_PREFIX=<install dir>` (fill in `<install dir>`) to the first `cmake` command above to change the installation directory.
 
 Run `ldconfig` to update the runtime linker cache. This avoids library link errors similar to "error while loading shared libraries".
 
@@ -116,14 +125,24 @@ sudo /sbin/ldconfig
 
 #### Windows (Visual Studio)
 
+Build and test using
+
 ```console
 mkdir out\build
 cd out\build
 cmake ..\..\
 cmake --build . --config <build type>
 ctest -C <build type>
+```
+
+Install using
+
+```console
 cmake --build . --config <build type> --target install
 ```
+
+The installation may require administrator privileges. Add `-DCMAKE_INSTALL_PREFIX=<install dir>` (fill in `<install dir>`) to the first `cmake` command above to change the installation directory.
+
 
 ## Building External Applications
 
