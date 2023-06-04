@@ -11,7 +11,7 @@ add_executable(file_truncate
 
 set_source_filename(file_truncate "${CMAKE_CURRENT_LIST_DIR}" "bmx")
 
-if(BMX_BUILD_APPS)
+if(NOT BMX_BUILD_LIB_ONLY AND BMX_BUILD_APPS)
     add_subdirectory(ard_zdf_hdf)
     add_subdirectory(as02)
     add_subdirectory(as10)
@@ -41,6 +41,6 @@ if(BMX_BUILD_APPS)
     add_subdirectory(wave)
 else()
     if(BMX_BUILD_TESTING AND (NOT DEFINED BUILD_TESTING OR BUILD_TESTING))
-        message("-- WARNING: Disabled bmx tests because the apps are not built (BMX_BUILD_APPS is ${BMX_BUILD_APPS})")
+        message("-- WARNING: Disabled bmx tests because the apps are not built")
     endif()
 endif()
