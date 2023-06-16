@@ -99,14 +99,23 @@ Start by creating a build directory and change into it. The commandlines below u
 
 #### Unix-like (Unix Makefiles)
 
+Build and test using
+
 ```bash
 mkdir -p out/build
 cd out/build
 cmake ../../ -DCMAKE_BUILD_TYPE=<build type>
 cmake --build .
 make test
+```
+
+Install using
+
+```bash
 sudo make install
 ```
+
+The installation may require root permissions. Add `-DCMAKE_INSTALL_PREFIX=<install dir>` (fill in `<install dir>`) to the first `cmake` command above to change the installation directory.
 
 Run `ldconfig` to update the runtime linker cache. This avoids library link errors similar to "error while loading shared libraries".
 
@@ -116,13 +125,52 @@ sudo /sbin/ldconfig
 
 #### Windows (Visual Studio)
 
+Build and test using
+
 ```console
 mkdir out\build
 cd out\build
 cmake ..\..\
 cmake --build . --config <build type>
 ctest -C <build type>
+```
+
+Install using
+
+```console
 cmake --build . --config <build type> --target install
+```
+
+The installation may require administrator privileges. Add `-DCMAKE_INSTALL_PREFIX=<install dir>` (fill in `<install dir>`) to the first `cmake` command above to change the installation directory.
+
+
+## Building External Applications
+
+External applications that require bmx can be built using cmake similar to the simple executable example shown below.
+
+```text
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+project(example_project LANGUAGES CXX)
+
+include(FetchContent)
+FetchContent_Declare(bmx
+    GIT_REPOSITORY "https://github.com/bbc/bmx"
+    GIT_TAG "origin/main"
+)
+FetchContent_GetProperties(bmx)
+if(NOT bmx_POPULATED)
+    FetchContent_Populate(bmx)
+    add_subdirectory(${bmx_SOURCE_DIR} ${bmx_BINARY_DIR})
+endif()
+
+add_executable(example example.cpp)
+target_link_libraries(example bmx)
+```
+
+The `BMX_BUILD_LIB_ONLY` cmake option can be set to `ON` to avoid building the apps and examples in bmx, libMXF and libMXF++. Setting the option to `ON` will disable the bmx tests because they requires the apps. Add this line to the cmake
+
+```text
+set(BMX_BUILD_LIB_ONLY ON CACHE BOOL "Build bmx, MXF and MXF++ libraries only")
 ```
 
 ## Docker

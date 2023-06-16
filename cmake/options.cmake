@@ -1,3 +1,6 @@
+# Option to only build the library
+option(BMX_BUILD_LIB_ONLY "Build bmx, MXF and MXF++ libraries only" OFF)
+
 # Option to build testing
 # This option is ignored if BUILD_TESTING is defined and falsy
 option(BMX_BUILD_TESTING "Build testing" ON)

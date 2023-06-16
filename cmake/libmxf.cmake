@@ -21,6 +21,9 @@ else()
     include(FetchContent)
 
     set(LIBMXF_SET_MSVC_RUNTIME ${BMX_SET_MSVC_RUNTIME} CACHE INTERNAL "")
+    if(BMX_BUILD_LIB_ONLY)
+        set(LIBMXF_BUILD_LIB_ONLY ON CACHE BOOL "Build MXF library only")
+    endif()
 
     FetchContent_Declare(libMXF
         SOURCE_DIR ${PROJECT_SOURCE_DIR}/deps/libMXF
