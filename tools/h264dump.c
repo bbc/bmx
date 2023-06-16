@@ -2564,16 +2564,20 @@ static int parse_nal_unit(ParseContext *context)
 
 
 
-static void print_usage(const char *cmd)
+static void print_usage(const char *cmd, int error)
 {
-    fprintf(stderr, "Text dump raw H.264 bitstream files\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Usage: %s [options] <filename>\n", cmd);
-    fprintf(stderr, "Options:\n");
-    fprintf(stderr, "  -h | --help      Show help and exit\n");
-    fprintf(stderr, "  --isom <llen>    NAL units are prefixed by a <llen> big-endian size word\n");
-    fprintf(stderr, "                   NOTE: NAL units will not be parsed correctly if there is no SPS or PPS\n");
-    fprintf(stderr, "                   An Annex B byte stream format is assumed by default\n");
+    FILE *output = error ? stderr: stdout;
+
+    fprintf(output, "Text dump raw H.264 bitstream files\n");
+    fprintf(output, "\n");
+    fprintf(output, "Usage: %s [options] <filename>\n", cmd);
+    fprintf(output, "Options:\n");
+    fprintf(output, "  -h | --help      Show help and exit\n");
+    fprintf(output, "  --isom <llen>    NAL units are prefixed by a <llen> big-endian size word\n");
+    fprintf(output, "                   NOTE: NAL units will not be parsed correctly if there is no SPS or PPS\n");
+    fprintf(output, "                   An Annex B byte stream format is assumed by default\n");
+    if (error)
+        fprintf(output, "\n");
 }
 
 int main(int argc, const char **argv)
@@ -2584,7 +2588,7 @@ int main(int argc, const char **argv)
     int cmdln_index;
 
     if (argc <= 1) {
-        print_usage(argv[0]);
+        print_usage(argv[0], 0);
         return 0;
     }
 
@@ -2592,20 +2596,20 @@ int main(int argc, const char **argv)
         if (strcmp(argv[cmdln_index], "-h") == 0 ||
             strcmp(argv[cmdln_index], "--help") == 0)
         {
-            print_usage(argv[0]);
+            print_usage(argv[0], 0);
             return 0;
         }
         else if (strcmp(argv[cmdln_index], "--isom") == 0)
         {
             if (cmdln_index + 1 >= argc)
             {
-                print_usage(argv[0]);
+                print_usage(argv[0], 1);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &isom_llen) != 1 || isom_llen == 0 || isom_llen > 4)
             {
-                print_usage(argv[0]);
+                print_usage(argv[0], 1);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2618,12 +2622,12 @@ int main(int argc, const char **argv)
     }
 
     if (cmdln_index + 1 < argc) {
-        print_usage(argv[0]);
+        print_usage(argv[0], 1);
         fprintf(stderr, "Unknown option '%s'\n", argv[cmdln_index]);
         return 1;
     }
     if (cmdln_index >= argc) {
-        print_usage(argv[0]);
+        print_usage(argv[0], 1);
         fprintf(stderr, "Missing <filename>\n");
         return 1;
     }

@@ -947,14 +947,18 @@ static int parse_marker_segment(ParseContext *context, uint16_t marker, uint16_t
 }
 
 
-static void print_usage(const char *cmd)
+static void print_usage(const char *cmd, int error)
 {
-    fprintf(stderr, "Text dump of J2C codestreams (ISO/IEC 15444-1)\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Usage: %s [options] <filename>\n", cmd);
-    fprintf(stderr, "  Indicate standard input using '-' for <filename>\n");
-    fprintf(stderr, "Options:\n");
-    fprintf(stderr, "  -h | --help      Show help and exit\n");
+    FILE *output = error ? stderr: stdout;
+
+    fprintf(output, "Text dump of J2C codestreams (ISO/IEC 15444-1)\n");
+    fprintf(output, "\n");
+    fprintf(output, "Usage: %s [options] <filename>\n", cmd);
+    fprintf(output, "  Indicate standard input using '-' for <filename>\n");
+    fprintf(output, "Options:\n");
+    fprintf(output, "  -h | --help      Show help and exit\n");
+    if (error)
+        fprintf(output, "\n");
 }
 
 int main(int argc, const char **argv)
@@ -967,7 +971,7 @@ int main(int argc, const char **argv)
     uint16_t tile_part_index = 0;
 
     if (argc <= 1) {
-        print_usage(argv[0]);
+        print_usage(argv[0], 0);
         return 0;
     }
 
@@ -975,7 +979,7 @@ int main(int argc, const char **argv)
         if (strcmp(argv[cmdln_index], "-h") == 0 ||
             strcmp(argv[cmdln_index], "--help") == 0)
         {
-            print_usage(argv[0]);
+            print_usage(argv[0], 0);
             return 0;
         }
         else
@@ -985,12 +989,12 @@ int main(int argc, const char **argv)
     }
 
     if (cmdln_index + 1 < argc) {
-        print_usage(argv[0]);
+        print_usage(argv[0], 1);
         fprintf(stderr, "Unknown option '%s'\n", argv[cmdln_index]);
         return 1;
     }
     if (cmdln_index >= argc) {
-        print_usage(argv[0]);
+        print_usage(argv[0], 1);
         fprintf(stderr, "Missing <filename>\n");
         return 1;
     }

@@ -4160,15 +4160,19 @@ static void dump_file()
     }
 }
 
-static void usage(const char *cmd)
+static void usage(const char *cmd, bool error)
 {
-    fprintf(stderr, "Text dump Quicktime / MP4 files\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Usage: %s [options] <quicktime filename>\n", cmd);
-    fprintf(stderr, "Options:\n");
-    fprintf(stderr, " -h | --help       Print this usage message and exit\n");
-    fprintf(stderr, "  --avcc <fname>   Write SPS and PPS NAL units in the 'avcC' box to <fname> file\n");
-    fprintf(stderr, "                   The NAL units are prefixed by a length word with size defined in the 'avcC' box\n");
+    FILE *output = error ? stderr: stdout;
+
+    fprintf(output, "Text dump Quicktime / MP4 files\n");
+    fprintf(output, "\n");
+    fprintf(output, "Usage: %s [options] <quicktime filename>\n", cmd);
+    fprintf(output, "Options:\n");
+    fprintf(output, " -h | --help       Print this usage message and exit\n");
+    fprintf(output, "  --avcc <fname>   Write SPS and PPS NAL units in the 'avcC' box to <fname> file\n");
+    fprintf(output, "                   The NAL units are prefixed by a length word with size defined in the 'avcC' box\n");
+    if (error)
+        fprintf(output, "\n");
 }
 
 int main(int argc, const char **argv)
@@ -4182,14 +4186,14 @@ int main(int argc, const char **argv)
         if (strcmp(argv[cmdln_index], "-h") == 0 ||
             strcmp(argv[cmdln_index], "--help") == 0)
         {
-            usage(argv[0]);
+            usage(argv[0], false);
             return 0;
         }
         else if (strcmp(argv[cmdln_index], "--avcc") == 0)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage(argv[0], true);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -4203,16 +4207,16 @@ int main(int argc, const char **argv)
     }
 
     if (cmdln_index + 1 < argc) {
-        usage(argv[0]);
+        usage(argv[0], true);
         fprintf(stderr, "Unknown argument '%s'\n", argv[cmdln_index]);
         return 1;
     }
     if (cmdln_index + 1 > argc) {
         if (argc == 1) {
-            usage(argv[0]);
+            usage(argv[0], false);
             return 0;
         }
-        usage(argv[0]);
+        usage(argv[0], true);
         fprintf(stderr, "Missing quicktime filename\n");
         return 1;
     }

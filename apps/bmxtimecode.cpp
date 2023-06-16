@@ -63,9 +63,9 @@ static bool parse_frame_rate(const char *rate_str, Rational *frame_rate)
     return false;
 }
 
-static void usage(const char *name)
+static void usage(const char *cmd)
 {
-    fprintf(stderr, "%s [--output tc-drop|tc-non-drop|count] [--rate (<n>|<n>/<d>)] (all|<timecode>|<frame count>)\n", name);
+    fprintf(stderr, "%s [--output tc-drop|tc-non-drop|count] [--rate (<n>|<n>/<d>)] (all|<timecode>|<frame count>)\n", strip_path(cmd).c_str());
 }
 
 int main(int argc, const char **argv)

@@ -394,451 +394,458 @@ static bool parse_avci_guess(const char *str, bool *interlaced, bool *progressiv
     return false;
 }
 
-static void usage(const char *cmd)
+static void usage_ref(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
-    fprintf(stderr, "Create MXF files from raw essence files\n");
+    fprintf(stderr, "Run '%s -h' to show detailed commandline usage.\n", strip_path(cmd).c_str());
     fprintf(stderr, "\n");
-    fprintf(stderr, "Usage: %s <<Options>> [<<Input Options>> <Input>]+\n", cmd);
-    fprintf(stderr, "Options (* means option is required):\n");
-    fprintf(stderr, "  -h | --help             Show usage and exit\n");
-    fprintf(stderr, "  -v | --version          Print version info\n");
-    fprintf(stderr, "  -l <file>               Log filename. Default log to stderr/stdout\n");
-    fprintf(stderr, " --log-level <level>      Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
-    fprintf(stderr, "  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, rdd9, as10, wave, imf. Default is op1a\n");
-    fprintf(stderr, "                          Note that an 'op1a' or 'as11op1a' output file type could be signalled as other operational patterns if there is a Timed Text track\n");
-    fprintf(stderr, "* -o <name>               as02: <name> is a bundle name\n");
-    fprintf(stderr, "                          as11op1a/as11d10/op1a/d10/rdd9/as10/wave: <name> is a filename or filename pattern (see Notes at the end)\n");
-    fprintf(stderr, "                          avid: <name> is a filename prefix\n");
-    fprintf(stderr, "  --ess-type-names <names>  A comma separated list of 4 names for video, audio, data or mixed essence types\n");
-    fprintf(stderr, "                            The names can be used to replace {type} in output filename patterns\n");
-    fprintf(stderr, "                            The default names are: video,audio,data,mixed\n");
-    fprintf(stderr, "  --prod-info <cname>\n");
-    fprintf(stderr, "              <pname>\n");
-    fprintf(stderr, "              <ver>\n");
-    fprintf(stderr, "              <verstr>\n");
-    fprintf(stderr, "              <uid>\n");
-    fprintf(stderr, "                          Set the product info in the MXF Identification set\n");
-    fprintf(stderr, "                          <cname> is a string and is the Company Name property\n");
-    fprintf(stderr, "                          <pname> is a string and is the Product Name property\n");
-    fprintf(stderr, "                          <ver> has format '<major>.<minor>.<patch>.<build>.<release>' and is the Product Version property. Set to '0.0.0.0.0' to omit it\n");
-    fprintf(stderr, "                          <verstr> is a string and is the Version String property\n");
-    fprintf(stderr, "                          <uid> is a UUID (see Notes at the end) and is the Product UID property\n");
-    fprintf(stderr, "  --create-date <tstamp>  Set the creation date in the MXF Identification set. Default is 'now'\n");
-    fprintf(stderr, "  -f <rate>               Set the frame rate, overriding any frame rate parsed from the essence data\n");
-    fprintf(stderr, "                          The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)\n");
-    fprintf(stderr, "  --dflt-rate <rate>      Set the default frame rate which is used when no rate is provided by the essence data. Without this option the default is 25\n");
-    fprintf(stderr, "                          The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)\n");
-    fprintf(stderr, "  -y <hh:mm:sscff>        Start timecode. Default 00:00:00:00\n");
-    fprintf(stderr, "                          The c character in the pattern should be ':' for non-drop frame; any other character indicates drop frame\n");
-    fprintf(stderr, "  --clip <name>           Set the clip name\n");
-    fprintf(stderr, "  --dur <frame>           Set the duration in frames in frame rate units. Default is minimum input duration\n");
-    fprintf(stderr, "  --rt <factor>           Wrap at realtime rate x <factor>, where <factor> is a floating point value\n");
-    fprintf(stderr, "                          <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
-    fprintf(stderr, "  --avcihead <format> <file> <offset>\n");
-    fprintf(stderr, "                          Default AVC-Intra sequence header data (512 bytes) to use when the input file does not have it\n");
-    fprintf(stderr, "                          <format> is a comma separated list of one or more of the following integer values:\n");
+}
+
+static void usage(const char *cmd)
+{
+    printf("%s\n", get_app_version_info(APP_NAME).c_str());
+    printf("Create MXF files from raw essence files\n");
+    printf("\n");
+    printf("Usage: %s <<Options>> [<<Input Options>> <Input>]+\n", strip_path(cmd).c_str());
+    printf("Options (* means option is required):\n");
+    printf("  -h | --help             Show usage and exit\n");
+    printf("  -v | --version          Print version info\n");
+    printf("  -l <file>               Log filename. Default log to stderr/stdout\n");
+    printf(" --log-level <level>      Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
+    printf("  -t <type>               Clip type: as02, as11op1a, as11d10, op1a, avid, d10, rdd9, as10, wave, imf. Default is op1a\n");
+    printf("                          Note that an 'op1a' or 'as11op1a' output file type could be signalled as other operational patterns if there is a Timed Text track\n");
+    printf("* -o <name>               as02: <name> is a bundle name\n");
+    printf("                          as11op1a/as11d10/op1a/d10/rdd9/as10/wave: <name> is a filename or filename pattern (see Notes at the end)\n");
+    printf("                          avid: <name> is a filename prefix\n");
+    printf("  --ess-type-names <names>  A comma separated list of 4 names for video, audio, data or mixed essence types\n");
+    printf("                            The names can be used to replace {type} in output filename patterns\n");
+    printf("                            The default names are: video,audio,data,mixed\n");
+    printf("  --prod-info <cname>\n");
+    printf("              <pname>\n");
+    printf("              <ver>\n");
+    printf("              <verstr>\n");
+    printf("              <uid>\n");
+    printf("                          Set the product info in the MXF Identification set\n");
+    printf("                          <cname> is a string and is the Company Name property\n");
+    printf("                          <pname> is a string and is the Product Name property\n");
+    printf("                          <ver> has format '<major>.<minor>.<patch>.<build>.<release>' and is the Product Version property. Set to '0.0.0.0.0' to omit it\n");
+    printf("                          <verstr> is a string and is the Version String property\n");
+    printf("                          <uid> is a UUID (see Notes at the end) and is the Product UID property\n");
+    printf("  --create-date <tstamp>  Set the creation date in the MXF Identification set. Default is 'now'\n");
+    printf("  -f <rate>               Set the frame rate, overriding any frame rate parsed from the essence data\n");
+    printf("                          The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)\n");
+    printf("  --dflt-rate <rate>      Set the default frame rate which is used when no rate is provided by the essence data. Without this option the default is 25\n");
+    printf("                          The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)\n");
+    printf("  -y <hh:mm:sscff>        Start timecode. Default 00:00:00:00\n");
+    printf("                          The c character in the pattern should be ':' for non-drop frame; any other character indicates drop frame\n");
+    printf("  --clip <name>           Set the clip name\n");
+    printf("  --dur <frame>           Set the duration in frames in frame rate units. Default is minimum input duration\n");
+    printf("  --rt <factor>           Wrap at realtime rate x <factor>, where <factor> is a floating point value\n");
+    printf("                          <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
+    printf("  --avcihead <format> <file> <offset>\n");
+    printf("                          Default AVC-Intra sequence header data (512 bytes) to use when the input file does not have it\n");
+    printf("                          <format> is a comma separated list of one or more of the following integer values:\n");
     size_t i;
     for (i = 0; i < get_num_avci_header_formats(); i++)
-        fprintf(stderr, "                              %2" PRIszt ": %s\n", i, get_avci_header_format_string(i));
-    fprintf(stderr, "                          or set <format> to 'all' for all formats listed above\n");
-    fprintf(stderr, "                          The 512 bytes are extracted from <file> starting at <offset> bytes\n");
-    fprintf(stderr, "                          and incrementing 512 bytes for each format in the list\n");
-    fprintf(stderr, "  --ps-avcihead           Panasonic AVC-Intra sequence header data for Panasonic-compatible files that don't include the header data\n");
-    fprintf(stderr, "                          These formats are supported:\n");
+        printf("                              %2" PRIszt ": %s\n", i, get_avci_header_format_string(i));
+    printf("                          or set <format> to 'all' for all formats listed above\n");
+    printf("                          The 512 bytes are extracted from <file> starting at <offset> bytes\n");
+    printf("                          and incrementing 512 bytes for each format in the list\n");
+    printf("  --ps-avcihead           Panasonic AVC-Intra sequence header data for Panasonic-compatible files that don't include the header data\n");
+    printf("                          These formats are supported:\n");
     for (i = 0; i < get_num_ps_avci_header_formats(); i++) {
         if (i == 0)
-            fprintf(stderr, "                              ");
+            printf("                              ");
         else if (i % 4 == 0)
-            fprintf(stderr, ",\n                              ");
+            printf(",\n                              ");
         else
-            fprintf(stderr, ", ");
-        fprintf(stderr, "%s", get_ps_avci_header_format_string(i));
+            printf(", ");
+        printf("%s", get_ps_avci_header_format_string(i));
     }
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  --track-map <expr>      Map input audio channels to output tracks\n");
-    fprintf(stderr, "                          The default is 'mono', except if --clip-wrap option is set for op1a it is 'singlemca'\n");
-    fprintf(stderr, "                          See below for details of the <expr> format\n");
-    fprintf(stderr, "  --dump-track-map        Dump the output audio track map to stderr.\n");
-    fprintf(stderr, "                          The dumps consists of a list output tracks, where each output track channel\n");
-    fprintf(stderr, "                          is shown as '<output track channel> <- <input channel>\n");
-    fprintf(stderr, "  --dump-track-map-exit   Same as --dump-track-map, but exit immediately afterwards\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/as11d10/as11rdd9/op1a/rdd9/d10:\n");
-    fprintf(stderr, "    --head-fill <bytes>     Reserve minimum <bytes> at the end of the header metadata using a KLV Fill\n");
-    fprintf(stderr, "                            Add a 'K' suffix for kibibytes and 'M' for mibibytes\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as02:\n");
-    fprintf(stderr, "    --mic-type <type>       Media integrity check type: 'md5' or 'none'. Default 'md5'\n");
-    fprintf(stderr, "    --mic-file              Calculate checksum for entire essence component file. Default is essence only\n");
-    fprintf(stderr, "    --shim-name <name>      Set ShimName element value in shim.xml file to <name>. Default is '%s'\n", DEFAULT_SHIM_NAME);
-    fprintf(stderr, "    --shim-id <id>          Set ShimID element value in shim.xml file to <id>. Default is '%s'\n", DEFAULT_SHIM_ID);
-    fprintf(stderr, "    --shim-annot <str>      Set AnnotationText element value in shim.xml file to <str>. Default is '%s'\n", DEFAULT_SHIM_ANNOTATION);
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as02/as11op1a/op1a/rdd9/as10:\n");
-    fprintf(stderr, "    --part <interval>       Video essence partition interval in frames, or (floating point) seconds with 's' suffix. Default single partition\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/as11d10:\n");
-    fprintf(stderr, "    --dm <fwork> <name> <value>    Set descriptive framework property. <fwork> is 'as11' or 'dpp'\n");
-    fprintf(stderr, "    --dm-file <fwork> <name>       Parse and set descriptive framework properties from text file <name>. <fwork> is 'as11' or 'dpp'\n");
-    fprintf(stderr, "    --seg <name>                   Parse and set segmentation data from text file <name>\n");
-    fprintf(stderr, "    --spec-id <id>                 Set the AS-11 specification identifier labels associated with <id>\n");
-    fprintf(stderr, "                                   The <id> is one of the following:\n");
-    fprintf(stderr, "                                       as11-x1 : AMWA AS-11 X1, delivery of finished UHD programs to Digital Production Partnership (DPP) broadcasters\n");
-    fprintf(stderr, "                                       as11-x2 : AMWA AS-11 X2, delivery of finished HD AVC Intra programs to a broadcaster or publisher\n");
-    fprintf(stderr, "                                       as11-x3 : AMWA AS-11 X3, delivery of finished HD AVC Long GOP programs to a broadcaster or publisher\n");
-    fprintf(stderr, "                                       as11-x4 : AMWA AS-11 X4, delivery of finished HD AVC Long GOP programs to a broadcaster or publisher\n");
-    fprintf(stderr, "                                       as11-x5 : AMWA AS-11 X5, delivery of finished UHD TV Commericals and Promotions to UK Digital Production Partnership (DPP) broadcasters\n");
-    fprintf(stderr, "                                       as11-x6 : AMWA AS-11 X6, delivery of finished HD TV Commercials and Promotions to UK Digital Production Partnership (DPP) broadcasters\n");
-    fprintf(stderr, "                                       as11-x7 : AMWA AS-11 X7, delivery of finished SD D10 programs to a broadcaster or publisher\n");
-    fprintf(stderr, "                                       as11-x8 : AMWA AS-11 X8, delivery of finished HD (MPEG-2) programs to North American Broadcasters Association (NABA) broadcasters\n");
-    fprintf(stderr, "                                       as11-x9 : AMWA AS-11 X9, delivery of finished HD TV Programmes (AVC) to North American Broadcasters Association (NABA) broadcasters\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/op1a/rdd9/as10:\n");
-    fprintf(stderr, "    --out-start <offset>    Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
-    fprintf(stderr, "    --out-end <offset>      Offset (positive value) from last frame to last output frame, eg. rollout in MPEG-2 Long GOP\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/as11d10/op1a/d10/rdd9/as10:\n");
-    fprintf(stderr, "    --seq-off <value>       Sound sample sequence offset. Default 0 for as11d10/d10 and not set (0) for as11op1a/op1a\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/op1a/rdd9/as10:\n");
-    fprintf(stderr, "    --single-pass           Write file in a single pass\n");
-    fprintf(stderr, "                            The header and body partitions will be incomplete\n");
-    fprintf(stderr, "    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is assumed)\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  op1a:\n");
-    fprintf(stderr, "    --no-tc-track           Don't create a timecode track in either the material or file source package\n");
-    fprintf(stderr, "    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support\n");
-    fprintf(stderr, "                            separate partitions for header metadata, index tables, essence container data and footer\n");
-    fprintf(stderr, "    --body-part             Create separate body partitions for essence data\n");
-    fprintf(stderr, "                            and don't create separate body partitions for index table segments\n");
-    fprintf(stderr, "    --repeat-index          Repeat the index table segments in the footer partition\n");
-    fprintf(stderr, "    --clip-wrap             Use clip wrapping for a single sound track\n");
-    fprintf(stderr, "    --mp-track-num          Use the material package track number property to define a track order. By default the track number is set to 0\n");
-    fprintf(stderr, "    --aes-3                 Use AES-3 audio mapping\n");
-    fprintf(stderr, "    --kag-size-512          Set KAG size to 512, instead of 1\n");
-    fprintf(stderr, "    --primary-package       Set the header metadata set primary package property to the top-level file source package\n");
-    fprintf(stderr, "    --index-follows         The index partition follows the essence partition, even when it is CBE essence\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  op1a/rdd9/d10:\n");
-    fprintf(stderr, "    --xml-scheme-id <id>    Set the XML payload scheme identifier associated with the following --embed-xml option.\n");
-    fprintf(stderr, "                            The <id> is one of the following:\n");
-    fprintf(stderr, "                                * a SMPTE UL, formatted as a 'urn:smpte:ul:...',\n");
-    fprintf(stderr, "                                * a UUID, formatted as a 'urn:uuid:...'or as 32 hexadecimal characters using a '.' or '-' seperator,\n");
-    fprintf(stderr, "                                * 'as11', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.04010000\n");
-    fprintf(stderr, "                            A default BMX scheme identifier is used if this option is not provided\n");
-    fprintf(stderr, "    --xml-lang <tag>        Set the RFC 5646 language tag associated with the the following --embed-xml option.\n");
-    fprintf(stderr, "                            Defaults to the xml:lang attribute in the root element or empty string if not present\n");
-    fprintf(stderr, "    --embed-xml <filename>  Embed the XML from <filename> using the approach specified in SMPTE RP 2057\n");
-    fprintf(stderr, "                            If the XML size is less than 64KB and uses UTF-8 or UTF-16 encoding (declared in\n");
-    fprintf(stderr, "                            the XML prolog) then the XML data is included in the header metadata. Otherwise\n");
-    fprintf(stderr, "                            a Generic Stream partition is used to hold the XML data.\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  op1a/rdd9:\n");
-    fprintf(stderr, "    --ard-zdf-hdf           Use the ARD ZDF HDF profile\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as11d10/d10:\n");
-    fprintf(stderr, "    --d10-mute <flags>      Indicate using a string of 8 '0' or '1' which sound channels should be muted. The lsb is the rightmost digit\n");
-    fprintf(stderr, "    --d10-invalid <flags>   Indicate using a string of 8 '0' or '1' which sound channels should be flagged invalid. The lsb is the rightmost digit\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as10:\n");
-    fprintf(stderr, "    --shim-name <name>      Shim name for AS10 (used for setting 'ShimName' metadata and setting video/sound parameters' checks)\n");
-    fprintf(stderr, "                            list of known shims: %s\n", get_as10_shim_names().c_str());
-    fprintf(stderr, "    --dm-file as10 <name>   Parse and set descriptive framework properties from text file <name>\n");
-    fprintf(stderr, "                            N.B. 'ShimName' is the only mandatary property of AS10 metadata set\n");
-    fprintf(stderr, "    --dm as10 <name> <value>    Set descriptive framework property\n");
-    fprintf(stderr, "    --pass-dm               Copy descriptive metadata from the input file. The metadata can be overidden by other options\n");
-    fprintf(stderr, "    --mpeg-checks [<name>]  Enable AS-10 compliancy checks. The file <name> is optional and contains expected descriptor values\n");
-    fprintf(stderr, "    --loose-checks          Don't stop processing on detected compliancy violations\n");
-    fprintf(stderr, "    --print-checks          Print default values of mpeg descriptors and report on descriptors either found in mpeg headers or copied from mxf headers\n");
-    fprintf(stderr, "    --max-same-warnings <value>  Max same violations warnings logged, default 3\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as11op1a/as11d10/op1a/d10/rdd9/as10:\n");
-    fprintf(stderr, "    --mp-uid <umid>         Set the Material Package UID. Autogenerated by default\n");
-    fprintf(stderr, "    --fp-uid <umid>         Set the File Package UID. Autogenerated by default\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  avid:\n");
-    fprintf(stderr, "    --project <name>        Set the Avid project name\n");
-    fprintf(stderr, "    --tape <name>           Source tape name\n");
-    fprintf(stderr, "    --import <name>         Source import name. <name> is one of the following:\n");
-    fprintf(stderr, "                              - a file URL starting with 'file://'\n");
-    fprintf(stderr, "                              - an absolute Windows (starts with '[A-Z]:') or *nix (starts with '/') filename\n");
-    fprintf(stderr, "                              - a relative filename, which will be converted to an absolute filename\n");
-    fprintf(stderr, "    --aux <hh:mm:sscff>     Set up to 5 auxiliary start timecodes. Multiple timecodes are separated by commas e.g. --aux 15:02:15:23,09:37:08:10\n");
-    fprintf(stderr, "                            The c character in the pattern should be ':' for non-drop frame; any other character indicates drop frame\n");
-    fprintf(stderr, "    --comment <string>      Add 'Comments' user comment to the MaterialPackage\n");
-    fprintf(stderr, "    --desc <string>         Add 'Descript' user comment to the MaterialPackage\n");
-    fprintf(stderr, "    --tag <name> <value>    Add <name> user comment to the MaterialPackage. Option can be used multiple times\n");
-    fprintf(stderr, "    --locator <position> <comment> <color>\n");
-    fprintf(stderr, "                            Add locator at <position> (in frame rate units) with <comment> and <color>\n");
-    fprintf(stderr, "                            <position> format is o?hh:mm:sscff, where the optional 'o' indicates it is an offset\n");
-    fprintf(stderr, "    --umid-type <type>      Set the UMID type that is generated for the Package UID properties.\n");
-    fprintf(stderr, "                            The default <type> is 'aafsdk'.\n");
-    fprintf(stderr, "                            The <type> is one of the following:\n");
-    fprintf(stderr, "                              uuid       : UUID generation method\n");
-    fprintf(stderr, "                              aafsdk     : same method as implemented in the AAF SDK\n");
-    fprintf(stderr, "                                           This type is required to be compatible with some older Avid product versions\n");
-    fprintf(stderr, "                                           Note: this is not guaranteed to create a unique UMID when used in multiple processes\n");
-    fprintf(stderr, "                              old-aafsdk : same method as implemented in revision 1.47 of AAF/ref-impl/src/impl/AAFUtils.c in the AAF SDK\n");
-    fprintf(stderr, "                                           Note: this is not guaranteed to create a unique UMID when used in multiple processes\n");
-    fprintf(stderr, "    --mp-uid <umid>         Set the Material Package UID. Autogenerated by default\n");
-    fprintf(stderr, "    --mp-created <tstamp>   Set the Material Package creation date. Default is 'now'\n");
-    fprintf(stderr, "    --psp-uid <umid>        Set the tape/import Source Package UID. Autogenerated by default\n");
-    fprintf(stderr, "    --psp-created <tstamp>  Set the tape/import Source Package creation date. Default is 'now'\n");
-    fprintf(stderr, "    --allow-no-avci-head    Allow inputs with no AVCI header (512 bytes, sequence and picture parameter sets)\n");
-    fprintf(stderr, "    --avid-gf               Use the Avid growing file flavour\n");
-    fprintf(stderr, "    --avid-gf-dur <dur>     Set the duration which should be shown whilst the file is growing\n");
-    fprintf(stderr, "                            Avid will show 'Capture in Progress' when this option is used\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  op1a/avid:\n");
-    fprintf(stderr, "    --force-no-avci-head    Strip AVCI header (512 bytes, sequence and picture parameter sets) if present\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  wave:\n");
-    fprintf(stderr, "    --orig <name>           Set originator in the output Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as02/op1a/as11op1a:\n");
-    fprintf(stderr, "    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  op1a/as11op1a/rdd9:\n");
-    fprintf(stderr, "    --audio-layout <label>  Set the Wave essence descriptor channel assignment label which identifies the audio layout mode in operation\n");
-    fprintf(stderr, "                            The <label> is one of the following:\n");
-    fprintf(stderr, "                                * a SMPTE UL, formatted as a 'urn:smpte:ul:...',\n");
-    fprintf(stderr, "                                * 'as11-mode-0', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02010000,\n");
-    fprintf(stderr, "                                * 'as11-mode-1', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02020000,\n");
-    fprintf(stderr, "                                * 'as11-mode-2', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02030000\n");
-    fprintf(stderr, "                                * 'imf', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020210.04010000\n");
-    fprintf(stderr, "    --track-mca-labels <scheme> <file>  Insert audio labels defined in <file>. The 'as11' <scheme> will add an override and otherwise <scheme> is ignored\n");
-    fprintf(stderr, "                                        The format of <file> is described in bmx/docs/mca_labels_format.md\n");
-    fprintf(stderr, "                                        All tag symbols registered in the bmx code are available for use\n");
-    fprintf(stderr, "                                        The 'as11' <scheme> will change the label associated with the 'chVIN' tag symbol to use the 'Visually Impaired Narrative' tag name, i.e. without a '-'\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Input Options (must precede the input to which it applies):\n");
-    fprintf(stderr, "  -a <n:d>                Image aspect ratio. Default parsed from essence or 16:9\n");
-    fprintf(stderr, "  --bsar                  Set image aspect ratio in video bitstream. Currently supports D-10 essence types only\n");
-    fprintf(stderr, "  --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default not set\n");
-    fprintf(stderr, "  -c <depth>              Component depth for uncompressed/DV100/RDD-36 video. Either 8 or 10. Default parsed, 8 for uncompressed/DV100 and 10 for RDD-36\n");
-    fprintf(stderr, "  --height <value>        Height of input uncompressed video data. Default is the production aperture height, except for PAL (592) and NTSC (496)\n");
-    fprintf(stderr, "  --signal-std  <value>   Set the video signal standard. The <value> is one of the following:\n");
-    fprintf(stderr, "                              'none', 'bt601', 'bt1358', 'st347', 'st274', 'st296', 'st349', 'st428'\n");
-    fprintf(stderr, "  --frame-layout <value>  Set the video frame layout. The <value> is one of the following:\n");
-    fprintf(stderr, "                              'fullframe', 'separatefield', 'singlefield', 'mixedfield', 'segmentedframe'\n");
-    fprintf(stderr, "  --field-dom <value>     Set which field is first in temporal order. The <value> is 1 or 2\n");
-    fprintf(stderr, "  --transfer-ch <value>   Set the transfer characteristic label\n");
-    fprintf(stderr, "                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
-    fprintf(stderr, "                              'bt470', 'bt709', 'st240', 'st274', 'bt1361', 'linear', 'dcdm',\n");
-    fprintf(stderr, "                              'iec61966', 'bt2020', 'st2084', 'hlg'\n");
-    fprintf(stderr, "  --coding-eq <value>     Set the coding equations label\n");
-    fprintf(stderr, "                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
-    fprintf(stderr, "                              'bt601', 'bt709', 'st240', 'ycgco', 'gbr', 'bt2020'\n");
-    fprintf(stderr, "  --color-prim <value>    Set the color primaries label\n");
-    fprintf(stderr, "                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
-    fprintf(stderr, "                              'st170', 'bt470', 'bt709', 'bt2020', 'dcdm', 'p3'\n");
-    fprintf(stderr, "  --color-siting <value>  Set the color siting. The <value> is one of the following:\n");
-    fprintf(stderr, "                              'cositing', 'horizmp', '3tap', 'quincunx', 'bt601', 'linealt', 'vertmp', 'unknown'\n");
-    fprintf(stderr, "                              (Note that 'bt601' is deprecated in SMPTE ST 377-1. Use 'cositing' instead)\n");
-    fprintf(stderr, "  --black-level <value>   Set the CDCI black reference level\n");
-    fprintf(stderr, "  --white-level <value>   Set the CDCI white reference level\n");
-    fprintf(stderr, "  --color-range <value>   Set the CDCI color range\n");
-    fprintf(stderr, "  --comp-max-ref <value>  Set the RGBA component maximum reference level\n");
-    fprintf(stderr, "  --comp-min-ref <value>  Set the RGBA component minimum reference level\n");
-    fprintf(stderr, "  --scan-dir <value>      Set the RGBA scanning direction\n");
-    fprintf(stderr, "  --display-primaries <value>    Set the mastering display primaries.\n");
-    fprintf(stderr, "                                 The <value> is an array of 6 unsigned integers separated by a ','.\n");
-    fprintf(stderr, "  --display-white-point <value>  Set the mastering display white point chromaticity.\n");
-    fprintf(stderr, "                                 The <value> is an array of 2 unsigned integers separated by a ','.\n");
-    fprintf(stderr, "  --display-max-luma <value>     Set the mastering display maximum luminance.\n");
-    fprintf(stderr, "  --display-min-luma <value>     Set the mastering display minimum luminance.\n");
-    fprintf(stderr, "  --rdd36-opaque          Treat RDD-36 4444 or 4444 XQ as opaque by omitting the Alpha Sample Depth property\n");
-    fprintf(stderr, "  --active-width          Set the Active Width of the active area rectangle\n");
-    fprintf(stderr, "  --active-height         Set the Active Height of the active area rectangle\n");
-    fprintf(stderr, "  --active-x-offset       Set the Active X Offset of the active area rectangle\n");
-    fprintf(stderr, "  --active-y-offset       Set the Active Y Offset of the active area rectangle\n");
-    fprintf(stderr, "  --display-f2-offset     Set the default Display F2 Offset if none is extracted from the essence\n");
-    fprintf(stderr, "  --center-cut-4-3        Add the Alternative Center Cut 4:3\n");
-    fprintf(stderr, "  --center-cut-14-9       Add the Alternative Center Cut 14:9\n");
-    fprintf(stderr, "  -s <bps>                Audio sampling rate numerator for raw pcm. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);
-    fprintf(stderr, "  -q <bps>                Audio quantization bits per sample for raw pcm. Either 16 or 24. Default 16\n");
-    fprintf(stderr, "  --audio-chan <count>    Audio channel count for raw pcm. Default 1\n");
-    fprintf(stderr, "  --locked <bool>         Indicate whether the number of audio samples is locked to the video. Either true or false. Default not set\n");
-    fprintf(stderr, "  --audio-ref <level>     Audio reference level, number of dBm for 0VU. Default not set\n");
-    fprintf(stderr, "  --dial-norm <value>     Gain to be applied to normalize perceived loudness of the clip. Default not set\n");
-    fprintf(stderr, "  --ref-image-edit-rate <rate>     Override or set the Reference Image Edit Rate\n");
-    fprintf(stderr, "                                   The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)\n");
-    fprintf(stderr, "  --ref-audio-align-level <value>  Override or set the Reference Audio Alignment Level\n");
-    fprintf(stderr, "  --anc-const <size>      Set the constant ANC data frame <size>\n");
-    fprintf(stderr, "  --vbi-const <size>      Set the constant VBI data frame <size>\n");
-    fprintf(stderr, "  --off <bytes>           Skip <bytes> at the start of the next input/track's file\n");
-    fprintf(stderr, "  --maxlen <bytes>        Maximum number of essence data bytes to read from next input/track's file\n");
-    fprintf(stderr, "  --klv <key>             Essence data is read from the KLV data in the next input/track's file\n");
-    fprintf(stderr, "                          <key> should have one of the following values:\n");
-    fprintf(stderr, "                            - 's', which means the first 16 bytes, at file position 0 or --off byte offset, are taken to be the Key\n");
-    fprintf(stderr, "                            - optional '0x' followed by 8 hexadecimal characters which represents the 4-byte track number part of a generic container essence Key\n");
-    fprintf(stderr, "                            - 32 hexadecimal characters representing a 16-byte Key\n");
-    fprintf(stderr, "  --fill-pattern-gaps     Fill gaps in a numbered sequence pattern of raw files by repeating the contents of the file at the start of a gap\n");
-    fprintf(stderr, "  --track-num <num>       Set the output track number. Default track number equals last track number of same picture/sound type + 1\n");
-    fprintf(stderr, "                          For as11d10/d10 the track number must be > 0 and <= 8 because the AES-3 channel index equals track number - 1\n");
-    fprintf(stderr, "  --avci-guess <i/p>      Guess interlaced ('i') or progressive ('p') AVC-Intra when using the --avci option with 1080p25/i50 or 1080p30/i60\n");
-    fprintf(stderr, "                          The default guess uses the H.264 frame_mbs_only_flag field\n");
-    fprintf(stderr, "  --fixed-size            Set to indicate that the d10 frames have a fixed size and therefore do not need to be parsed after the first frame\n");
-    fprintf(stderr, "  --vc2-mode <mode>       Set the mode that determines how the VC-2 data is wrapped\n");
-    fprintf(stderr, "                          <mode> is one of the following integer values:\n");
-    fprintf(stderr, "                            0: Passthrough input, but add a sequence header if not present, remove duplicate/redundant sequence headers\n");
-    fprintf(stderr, "                               and fix any incorrect parse info offsets and picture numbers\n");
-    fprintf(stderr, "                            1: (default) Same as 0, but remove auxiliary and padding data units and complete the sequence in each frame\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "  as02:\n");
-    fprintf(stderr, "    --trk-out-start <offset>   Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
-    fprintf(stderr, "    --trk-out-end <offset>     Offset (positive value) from last frame to last output frame, eg. rollout in MPEG-2 Long GOP\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Inputs:\n");
-    fprintf(stderr, "  --dv <name>             Raw DV video input file\n");
-    fprintf(stderr, "  --iecdv25 <name>        Raw IEC DV25 video input file\n");
-    fprintf(stderr, "  --dvbased25 <name>      Raw DV-Based DV25 video input file\n");
-    fprintf(stderr, "  --dv50 <name>           Raw DV50 video input file\n");
-    fprintf(stderr, "  --dv100_1080i <name>    Raw DV100 1080i video input file\n");
-    fprintf(stderr, "  --dv100_1080p <name>    Raw DV100 1080p video input file\n");
-    fprintf(stderr, "  --dv100_720p <name>     Raw DV100 720p video input file\n");
-    fprintf(stderr, "  --d10 <name>            Raw D10 video input file\n");
-    fprintf(stderr, "  --d10_30 <name>         Raw D10 30Mbps video input file\n");
-    fprintf(stderr, "  --d10_40 <name>         Raw D10 40Mbps video input file\n");
-    fprintf(stderr, "  --d10_50 <name>         Raw D10 50Mbps video input file\n");
-    fprintf(stderr, "  --avci <name>           Raw AVC-Intra video input file. See also --avci-guess option\n");
-    fprintf(stderr, "  --avci200_1080i <name>  Raw AVC-Intra 200 1080i video input file\n");
-    fprintf(stderr, "  --avci200_1080p <name>  Raw AVC-Intra 200 1080p video input file\n");
-    fprintf(stderr, "  --avci200_720p <name>   Raw AVC-Intra 200 720p video input file\n");
-    fprintf(stderr, "  --avci100_1080i <name>  Raw AVC-Intra 100 1080i video input file\n");
-    fprintf(stderr, "  --avci100_1080p <name>  Raw AVC-Intra 100 1080p video input file\n");
-    fprintf(stderr, "  --avci100_720p <name>   Raw AVC-Intra 100 720p video input file\n");
-    fprintf(stderr, "  --avci50_1080i <name>   Raw AVC-Intra 50 1080i video input file\n");
-    fprintf(stderr, "  --avci50_1080p <name>   Raw AVC-Intra 50 1080p video input file\n");
-    fprintf(stderr, "  --avci50_720p <name>    Raw AVC-Intra 50 720p video input file\n");
-    fprintf(stderr, "  --avc <name>                 Raw AVC video input file\n");
-    fprintf(stderr, "  --avc_baseline <name>        Raw AVC Baseline profile video input file\n");
-    fprintf(stderr, "  --avc_constr_baseline <name> Raw AVC Constrained Baseline profile video input file\n");
-    fprintf(stderr, "  --avc_main <name>            Raw AVC Main profile video input file\n");
-    fprintf(stderr, "  --avc_extended <name>        Raw AVC Extended profile video input file\n");
-    fprintf(stderr, "  --avc_high <name>            Raw AVC High profile video input file\n");
-    fprintf(stderr, "  --avc_high_10 <name>         Raw AVC High 10 profile video input file\n");
-    fprintf(stderr, "  --avc_high_422 <name>        Raw AVC High 422 profile video input file\n");
-    fprintf(stderr, "  --avc_high_444 <name>        Raw AVC High 444 profile video input file\n");
-    fprintf(stderr, "  --avc_high_10_intra <name>   Raw AVC High 10 Intra profile video input file\n");
-    fprintf(stderr, "  --avc_high_422_intra <name>  Raw AVC High 422 Intra profile video input file\n");
-    fprintf(stderr, "  --avc_high_444_intra <name>  Raw AVC High 444 Intra profile video input file\n");
-    fprintf(stderr, "  --avc_cavlc_444 <name>       Raw AVC CAVLC 444 profile video input file\n");
-    fprintf(stderr, "  --unc <name>            Raw uncompressed SD UYVY 422 video input file\n");
-    fprintf(stderr, "  --unc_1080i <name>      Raw uncompressed HD 1080i UYVY 422 video input file\n");
-    fprintf(stderr, "  --unc_1080p <name>      Raw uncompressed HD 1080p UYVY 422 video input file\n");
-    fprintf(stderr, "  --unc_720p <name>       Raw uncompressed HD 720p UYVY 422 video input file\n");
-    fprintf(stderr, "  --unc_3840 <name>       Raw uncompressed UHD 3840x2160 UYVY 422 video input file\n");
-    fprintf(stderr, "  --avid_alpha <name>               Raw Avid alpha component SD video input file\n");
-    fprintf(stderr, "  --avid_alpha_1080i <name>         Raw Avid alpha component HD 1080i video input file\n");
-    fprintf(stderr, "  --avid_alpha_1080p <name>         Raw Avid alpha component HD 1080p video input file\n");
-    fprintf(stderr, "  --avid_alpha_720p <name>          Raw Avid alpha component HD 720p video input file\n");
-    fprintf(stderr, "  --mpeg2lg <name>                  Raw MPEG-2 Long GOP video input file\n");
-    fprintf(stderr, "  --mpeg2lg_422p_ml_576i <name>     Raw MPEG-2 Long GOP 422P@ML 576i video input file\n");
-    fprintf(stderr, "  --mpeg2lg_mp_ml_576i <name>       Raw MPEG-2 Long GOP MP@ML 576i video input file\n");
-    fprintf(stderr, "  --mpeg2lg_422p_hl_1080i <name>    Raw MPEG-2 Long GOP 422P@HL 1080i video input file\n");
-    fprintf(stderr, "  --mpeg2lg_422p_hl_1080p <name>    Raw MPEG-2 Long GOP 422P@HL 1080p video input file\n");
-    fprintf(stderr, "  --mpeg2lg_422p_hl_720p <name>     Raw MPEG-2 Long GOP 422P@HL 720p video input file\n");
-    fprintf(stderr, "  --mpeg2lg_mp_hl_1920_1080i <name> Raw MPEG-2 Long GOP MP@HL 1920x1080i video input file\n");
-    fprintf(stderr, "  --mpeg2lg_mp_hl_1920_1080p <name> Raw MPEG-2 Long GOP MP@HL 1920x1080p video input file\n");
-    fprintf(stderr, "  --mpeg2lg_mp_hl_1440_1080i <name> Raw MPEG-2 Long GOP MP@HL 1440x1080i video input file\n");
-    fprintf(stderr, "  --mpeg2lg_mp_hl_1440_1080p <name> Raw MPEG-2 Long GOP MP@HL 1440x1080p video input file\n");
-    fprintf(stderr, "  --mpeg2lg_mp_hl_720p <name>       Raw MPEG-2 Long GOP MP@HL 720p video input file\n");
-    fprintf(stderr, "  --mpeg2lg_mp_h14_1080i <name>     Raw MPEG-2 Long GOP MP@H14 1080i video input file\n");
-    fprintf(stderr, "  --mpeg2lg_mp_h14_1080p <name>     Raw MPEG-2 Long GOP MP@H14 1080p video input file\n");
-    fprintf(stderr, "  --mjpeg21 <name>        Raw Avid MJPEG 2:1 video input file\n");
-    fprintf(stderr, "  --mjpeg31 <name>        Raw Avid MJPEG 3:1 video input file\n");
-    fprintf(stderr, "  --mjpeg101 <name>       Raw Avid MJPEG 10:1 video input file\n");
-    fprintf(stderr, "  --mjpeg201 <name>       Raw Avid MJPEG 20:1 video input file\n");
-    fprintf(stderr, "  --mjpeg41m <name>       Raw Avid MJPEG 4:1m video input file\n");
-    fprintf(stderr, "  --mjpeg101m <name>      Raw Avid MJPEG 10:1m video input file\n");
-    fprintf(stderr, "  --mjpeg151s <name>      Raw Avid MJPEG 15:1s video input file\n");
-    fprintf(stderr, "  --rdd36_422_proxy <name>   Raw SMPTE RDD-36 (ProRes) 4:2:2 Proxy profile input file\n");
-    fprintf(stderr, "  --rdd36_422_lt <name>      Raw SMPTE RDD-36 (ProRes) 4:2:2 LT profile input file\n");
-    fprintf(stderr, "  --rdd36_422 <name>         Raw SMPTE RDD-36 (ProRes) 4:2:2 profile input file\n");
-    fprintf(stderr, "  --rdd36_422_hq <name>      Raw SMPTE RDD-36 (ProRes) 4:2:2 HQ profile input file\n");
-    fprintf(stderr, "  --rdd36_4444 <name>        Raw SMPTE RDD-36 (ProRes) 4:4:4:4 profile input file\n");
-    fprintf(stderr, "  --rdd36_4444_xq <name>     Raw SMPTE RDD-36 (ProRes) 4:4:4:4 XQ profile input file\n");
-    fprintf(stderr, "  --j2c_cdci <name|j2cpattern>  Raw JPEG 2000 (ISO/IEC 15444-1) codestream representing components (e.g. YCbCr) described by a MXF CDCI descriptor\n");
-    fprintf(stderr, "                                If a '%%' is in the value then it is assumed to be a <j2cpattern> for a sequence of files, each containing a single frame\n");
-    fprintf(stderr, "                                See Notes below for a detailed description of <j2cpattern>\n");
-    fprintf(stderr, "  --j2c_rgba <name|j2cpattern>  Raw JPEG 2000 (ISO/IEC 15444-1) codestream representing components (e.g. RGB) described by a MXF RGBA descriptor\n");
-    fprintf(stderr, "                                If a '%%' is in the value then it is assumed to be a <j2cpattern> for a sequence of files, each containing a single frame\n");
-    fprintf(stderr, "                                See Notes below for a detailed description of <j2cpattern>\n");
-    fprintf(stderr, "  --vc2 <name>            Raw VC2 input file\n");
-    fprintf(stderr, "  --vc3 <name>            Raw VC3/DNxHD input file\n");
-    fprintf(stderr, "  --vc3_1080p_1235 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps 10bit input file\n");
-    fprintf(stderr, "  --vc3_1080p_1237 <name> Raw VC3/DNxHD 1920x1080p 145/120/115 Mbps input file\n");
-    fprintf(stderr, "  --vc3_1080p_1238 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps input file\n");
-    fprintf(stderr, "  --vc3_1080i_1241 <name> Raw VC3/DNxHD 1920x1080i 220/185 Mbps 10bit input file\n");
-    fprintf(stderr, "  --vc3_1080i_1242 <name> Raw VC3/DNxHD 1920x1080i 145/120 Mbps input file\n");
-    fprintf(stderr, "  --vc3_1080i_1243 <name> Raw VC3/DNxHD 1920x1080i 220/185 Mbps input file\n");
-    fprintf(stderr, "  --vc3_1080i_1244 <name> Raw VC3/DNxHD 1920x1080i 145/120 Mbps input file\n");
-    fprintf(stderr, "  --vc3_720p_1250 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps 10bit input file\n");
-    fprintf(stderr, "  --vc3_720p_1251 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps input file\n");
-    fprintf(stderr, "  --vc3_720p_1252 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps input file\n");
-    fprintf(stderr, "  --vc3_1080p_1253 <name> Raw VC3/DNxHD 1920x1080p 45/36 Mbps input file\n");
-    fprintf(stderr, "  --vc3_720p_1258 <name>  Raw VC3/DNxHD 1280x720p 45 Mbps input file\n");
-    fprintf(stderr, "  --vc3_1080p_1259 <name> Raw VC3/DNxHD 1920x1080p 85 Mbps input file\n");
-    fprintf(stderr, "  --vc3_1080i_1260 <name> Raw VC3/DNxHD 1920x1080i 85 Mbps input file\n");
-    fprintf(stderr, "  --pcm <name>            Raw PCM audio input file\n");
-    fprintf(stderr, "  --wave <name>           Wave PCM audio input file\n");
-    fprintf(stderr, "  --anc <name>            Raw ST 436 Ancillary data. Currently requires the --anc-const option\n");
-    fprintf(stderr, "  --vbi <name>            Raw ST 436 Vertical Blanking Interval data. Currently requires the --vbi-const option\n");
-    fprintf(stderr, "  --tt <manifest>         Manifest file containing Timed Text metadata\n");
-    fprintf(stderr, "\n\n");
-    fprintf(stderr, "Notes:\n");
-    fprintf(stderr, " - filename pattern: Clip types producing a single output file may use a filename pattern with variables that get substituted\n");
-    fprintf(stderr, "                     Pattern variables start with a '{' and end with a '}'. E.g. 'output_{type}_{fp_uuid}.mxf'\n");
-    fprintf(stderr, "                     The following variables are available:\n");
-    fprintf(stderr, "                       - {type}: Is replaced with the name for video, audio, data or mixed essence types\n");
-    fprintf(stderr, "                                 See the --ess-type-names option for the default names and use the option to change them\n");
-    fprintf(stderr, "                       - {mp_uuid}: The UUID material number in a material package UMID\n");
-    fprintf(stderr, "                                    The clip writers will by default generate UMIDs with UUID material numbers\n");
-    fprintf(stderr, "                       - {mp_umid}: The material package UMID\n");
-    fprintf(stderr, "                       - {fp_uuid}: The UUID material number in a file source package UMID\n");
-    fprintf(stderr, "                                    The clip writers will by default generate UMIDs with UUID material numbers\n");
-    fprintf(stderr, "                       - {fp_umid}: The file source package UMID\n");
-    fprintf(stderr, " - <umid> format is 64 hexadecimal characters and any '.' and '-' characters are ignored\n");
-    fprintf(stderr, " - <uuid> format is 32 hexadecimal characters and any '.' and '-' characters are ignored\n");
-    fprintf(stderr, " - <tstamp> format is YYYY-MM-DDThh:mm:ss:qm where qm is in units of 1/250th second\n");
-    fprintf(stderr, " - <j2cpattern>: Each file name must include an integer frame number in the sequence.\n");
-    fprintf(stderr, "                 <j2cpattern> is a file path that must contain a single '%%d' where the frame number appears in the name.\n");
-    fprintf(stderr, "                 <j2cpattern> must not contain any other '%%' characters.\n");
-    fprintf(stderr, "                 If --fill-pattern-gaps option is used then gaps in frame numbers are filled by repeating the previous frame.\n");
-    fprintf(stderr, "                 Example: 'inputs/frame_%%d.j2c' for input files `inputs/frame_00001.j2c' etc..\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, " The track mapping <expr> format is one of the following:\n");
-    fprintf(stderr, "     'mono'     : each input audio channel is mapped to a single-channel output track\n");
-    fprintf(stderr, "     'stereo'   : input audio channels are paired to stereo-channel output tracks\n");
-    fprintf(stderr, "                  A silence channel is added to the last output track if the channel count is odd\n");
-    fprintf(stderr, "     'singlemca': all input audio channels are mapped to a single multi-channel output track\n");
-    fprintf(stderr, "     <pattern>  : a pattern defining how input channels map to output track channels - see below\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, " The track mapping <pattern> specifies how input audio channels are mapped to output track channels\n");
-    fprintf(stderr, " A <pattern> consists of a list of <group>s separated by a ';'.\n");
-    fprintf(stderr, " A <group> starts with an optional 'm', followed by a list of <element> separated by a ','.\n");
-    fprintf(stderr, "   An 'm' indicates that each channel in the <group> is mapped to separate single-channel output track.\n");
-    fprintf(stderr, "   If an 'm' is not present then the channels are mapped to a single output track.\n");
-    fprintf(stderr, " A <element> is either a <channel>, <range>, <silence> or <remainder>.\n");
-    fprintf(stderr, " A <channel> is an input channel number starting from 0.\n");
-    fprintf(stderr, "   The input channel number is the number derived from the input track order reported by mxf2raw for the\n");
-    fprintf(stderr, "   input files in the same order and including any --disable input options. Each channel in a track\n");
-    fprintf(stderr, "   contributes 1 to the overall channel number.\n");
-    fprintf(stderr, " A <range> is 2 <channel>s separated by a '-' and includes all channels starting with the first number\n");
-    fprintf(stderr, "   and ending with the last number.\n");
-    fprintf(stderr, " A <silence> is 's' followed by a <count> and results in <count> silence channels added to the output track.\n");
-    fprintf(stderr, " A <remainder> is 'x', and results in all remaining channels being added to the output track.\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Here are some <pattern> examples:\n");
-    fprintf(stderr, "    'mx'     : equivalent to 'mono'\n");
-    fprintf(stderr, "    '0,1;x'  : the first 2 channels mapped to a stereo output track and all remaining channels mapped\n");
-    fprintf(stderr, "               to a single multi-channel track\n");
-    fprintf(stderr, "    '2-7;0,1': 6 channel output track followed by a 2 channel output track\n");
-    fprintf(stderr, "    '0,1,s2' : 2 input channels plus 2 silence channels mapped to a single output track\n");
+    printf("\n");
+    printf("  --track-map <expr>      Map input audio channels to output tracks\n");
+    printf("                          The default is 'mono', except if --clip-wrap option is set for op1a it is 'singlemca'\n");
+    printf("                          See below for details of the <expr> format\n");
+    printf("  --dump-track-map        Dump the output audio track map to stderr.\n");
+    printf("                          The dumps consists of a list output tracks, where each output track channel\n");
+    printf("                          is shown as '<output track channel> <- <input channel>\n");
+    printf("  --dump-track-map-exit   Same as --dump-track-map, but exit immediately afterwards\n");
+    printf("\n");
+    printf("  as11op1a/as11d10/as11rdd9/op1a/rdd9/d10:\n");
+    printf("    --head-fill <bytes>     Reserve minimum <bytes> at the end of the header metadata using a KLV Fill\n");
+    printf("                            Add a 'K' suffix for kibibytes and 'M' for mibibytes\n");
+    printf("\n");
+    printf("  as02:\n");
+    printf("    --mic-type <type>       Media integrity check type: 'md5' or 'none'. Default 'md5'\n");
+    printf("    --mic-file              Calculate checksum for entire essence component file. Default is essence only\n");
+    printf("    --shim-name <name>      Set ShimName element value in shim.xml file to <name>. Default is '%s'\n", DEFAULT_SHIM_NAME);
+    printf("    --shim-id <id>          Set ShimID element value in shim.xml file to <id>. Default is '%s'\n", DEFAULT_SHIM_ID);
+    printf("    --shim-annot <str>      Set AnnotationText element value in shim.xml file to <str>. Default is '%s'\n", DEFAULT_SHIM_ANNOTATION);
+    printf("\n");
+    printf("  as02/as11op1a/op1a/rdd9/as10:\n");
+    printf("    --part <interval>       Video essence partition interval in frames, or (floating point) seconds with 's' suffix. Default single partition\n");
+    printf("\n");
+    printf("  as11op1a/as11d10:\n");
+    printf("    --dm <fwork> <name> <value>    Set descriptive framework property. <fwork> is 'as11' or 'dpp'\n");
+    printf("    --dm-file <fwork> <name>       Parse and set descriptive framework properties from text file <name>. <fwork> is 'as11' or 'dpp'\n");
+    printf("    --seg <name>                   Parse and set segmentation data from text file <name>\n");
+    printf("    --spec-id <id>                 Set the AS-11 specification identifier labels associated with <id>\n");
+    printf("                                   The <id> is one of the following:\n");
+    printf("                                       as11-x1 : AMWA AS-11 X1, delivery of finished UHD programs to Digital Production Partnership (DPP) broadcasters\n");
+    printf("                                       as11-x2 : AMWA AS-11 X2, delivery of finished HD AVC Intra programs to a broadcaster or publisher\n");
+    printf("                                       as11-x3 : AMWA AS-11 X3, delivery of finished HD AVC Long GOP programs to a broadcaster or publisher\n");
+    printf("                                       as11-x4 : AMWA AS-11 X4, delivery of finished HD AVC Long GOP programs to a broadcaster or publisher\n");
+    printf("                                       as11-x5 : AMWA AS-11 X5, delivery of finished UHD TV Commericals and Promotions to UK Digital Production Partnership (DPP) broadcasters\n");
+    printf("                                       as11-x6 : AMWA AS-11 X6, delivery of finished HD TV Commercials and Promotions to UK Digital Production Partnership (DPP) broadcasters\n");
+    printf("                                       as11-x7 : AMWA AS-11 X7, delivery of finished SD D10 programs to a broadcaster or publisher\n");
+    printf("                                       as11-x8 : AMWA AS-11 X8, delivery of finished HD (MPEG-2) programs to North American Broadcasters Association (NABA) broadcasters\n");
+    printf("                                       as11-x9 : AMWA AS-11 X9, delivery of finished HD TV Programmes (AVC) to North American Broadcasters Association (NABA) broadcasters\n");
+    printf("\n");
+    printf("  as11op1a/op1a/rdd9/as10:\n");
+    printf("    --out-start <offset>    Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
+    printf("    --out-end <offset>      Offset (positive value) from last frame to last output frame, eg. rollout in MPEG-2 Long GOP\n");
+    printf("\n");
+    printf("  as11op1a/as11d10/op1a/d10/rdd9/as10:\n");
+    printf("    --seq-off <value>       Sound sample sequence offset. Default 0 for as11d10/d10 and not set (0) for as11op1a/op1a\n");
+    printf("\n");
+    printf("  as11op1a/op1a/rdd9/as10:\n");
+    printf("    --single-pass           Write file in a single pass\n");
+    printf("                            The header and body partitions will be incomplete\n");
+    printf("    --file-md5              Calculate an MD5 checksum of the file. This requires writing in a single pass (--single-pass is assumed)\n");
+    printf("\n");
+    printf("  op1a:\n");
+    printf("    --no-tc-track           Don't create a timecode track in either the material or file source package\n");
+    printf("    --min-part              Only use a header and footer MXF file partition. Use this for applications that don't support\n");
+    printf("                            separate partitions for header metadata, index tables, essence container data and footer\n");
+    printf("    --body-part             Create separate body partitions for essence data\n");
+    printf("                            and don't create separate body partitions for index table segments\n");
+    printf("    --repeat-index          Repeat the index table segments in the footer partition\n");
+    printf("    --clip-wrap             Use clip wrapping for a single sound track\n");
+    printf("    --mp-track-num          Use the material package track number property to define a track order. By default the track number is set to 0\n");
+    printf("    --aes-3                 Use AES-3 audio mapping\n");
+    printf("    --kag-size-512          Set KAG size to 512, instead of 1\n");
+    printf("    --primary-package       Set the header metadata set primary package property to the top-level file source package\n");
+    printf("    --index-follows         The index partition follows the essence partition, even when it is CBE essence\n");
+    printf("\n");
+    printf("  op1a/rdd9/d10:\n");
+    printf("    --xml-scheme-id <id>    Set the XML payload scheme identifier associated with the following --embed-xml option.\n");
+    printf("                            The <id> is one of the following:\n");
+    printf("                                * a SMPTE UL, formatted as a 'urn:smpte:ul:...',\n");
+    printf("                                * a UUID, formatted as a 'urn:uuid:...'or as 32 hexadecimal characters using a '.' or '-' seperator,\n");
+    printf("                                * 'as11', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.04010000\n");
+    printf("                            A default BMX scheme identifier is used if this option is not provided\n");
+    printf("    --xml-lang <tag>        Set the RFC 5646 language tag associated with the the following --embed-xml option.\n");
+    printf("                            Defaults to the xml:lang attribute in the root element or empty string if not present\n");
+    printf("    --embed-xml <filename>  Embed the XML from <filename> using the approach specified in SMPTE RP 2057\n");
+    printf("                            If the XML size is less than 64KB and uses UTF-8 or UTF-16 encoding (declared in\n");
+    printf("                            the XML prolog) then the XML data is included in the header metadata. Otherwise\n");
+    printf("                            a Generic Stream partition is used to hold the XML data.\n");
+    printf("\n");
+    printf("  op1a/rdd9:\n");
+    printf("    --ard-zdf-hdf           Use the ARD ZDF HDF profile\n");
+    printf("\n");
+    printf("  as11d10/d10:\n");
+    printf("    --d10-mute <flags>      Indicate using a string of 8 '0' or '1' which sound channels should be muted. The lsb is the rightmost digit\n");
+    printf("    --d10-invalid <flags>   Indicate using a string of 8 '0' or '1' which sound channels should be flagged invalid. The lsb is the rightmost digit\n");
+    printf("\n");
+    printf("  as10:\n");
+    printf("    --shim-name <name>      Shim name for AS10 (used for setting 'ShimName' metadata and setting video/sound parameters' checks)\n");
+    printf("                            list of known shims: %s\n", get_as10_shim_names().c_str());
+    printf("    --dm-file as10 <name>   Parse and set descriptive framework properties from text file <name>\n");
+    printf("                            N.B. 'ShimName' is the only mandatary property of AS10 metadata set\n");
+    printf("    --dm as10 <name> <value>    Set descriptive framework property\n");
+    printf("    --pass-dm               Copy descriptive metadata from the input file. The metadata can be overidden by other options\n");
+    printf("    --mpeg-checks [<name>]  Enable AS-10 compliancy checks. The file <name> is optional and contains expected descriptor values\n");
+    printf("    --loose-checks          Don't stop processing on detected compliancy violations\n");
+    printf("    --print-checks          Print default values of mpeg descriptors and report on descriptors either found in mpeg headers or copied from mxf headers\n");
+    printf("    --max-same-warnings <value>  Max same violations warnings logged, default 3\n");
+    printf("\n");
+    printf("  as11op1a/as11d10/op1a/d10/rdd9/as10:\n");
+    printf("    --mp-uid <umid>         Set the Material Package UID. Autogenerated by default\n");
+    printf("    --fp-uid <umid>         Set the File Package UID. Autogenerated by default\n");
+    printf("\n");
+    printf("  avid:\n");
+    printf("    --project <name>        Set the Avid project name\n");
+    printf("    --tape <name>           Source tape name\n");
+    printf("    --import <name>         Source import name. <name> is one of the following:\n");
+    printf("                              - a file URL starting with 'file://'\n");
+    printf("                              - an absolute Windows (starts with '[A-Z]:') or *nix (starts with '/') filename\n");
+    printf("                              - a relative filename, which will be converted to an absolute filename\n");
+    printf("    --aux <hh:mm:sscff>     Set up to 5 auxiliary start timecodes. Multiple timecodes are separated by commas e.g. --aux 15:02:15:23,09:37:08:10\n");
+    printf("                            The c character in the pattern should be ':' for non-drop frame; any other character indicates drop frame\n");
+    printf("    --comment <string>      Add 'Comments' user comment to the MaterialPackage\n");
+    printf("    --desc <string>         Add 'Descript' user comment to the MaterialPackage\n");
+    printf("    --tag <name> <value>    Add <name> user comment to the MaterialPackage. Option can be used multiple times\n");
+    printf("    --locator <position> <comment> <color>\n");
+    printf("                            Add locator at <position> (in frame rate units) with <comment> and <color>\n");
+    printf("                            <position> format is o?hh:mm:sscff, where the optional 'o' indicates it is an offset\n");
+    printf("    --umid-type <type>      Set the UMID type that is generated for the Package UID properties.\n");
+    printf("                            The default <type> is 'aafsdk'.\n");
+    printf("                            The <type> is one of the following:\n");
+    printf("                              uuid       : UUID generation method\n");
+    printf("                              aafsdk     : same method as implemented in the AAF SDK\n");
+    printf("                                           This type is required to be compatible with some older Avid product versions\n");
+    printf("                                           Note: this is not guaranteed to create a unique UMID when used in multiple processes\n");
+    printf("                              old-aafsdk : same method as implemented in revision 1.47 of AAF/ref-impl/src/impl/AAFUtils.c in the AAF SDK\n");
+    printf("                                           Note: this is not guaranteed to create a unique UMID when used in multiple processes\n");
+    printf("    --mp-uid <umid>         Set the Material Package UID. Autogenerated by default\n");
+    printf("    --mp-created <tstamp>   Set the Material Package creation date. Default is 'now'\n");
+    printf("    --psp-uid <umid>        Set the tape/import Source Package UID. Autogenerated by default\n");
+    printf("    --psp-created <tstamp>  Set the tape/import Source Package creation date. Default is 'now'\n");
+    printf("    --allow-no-avci-head    Allow inputs with no AVCI header (512 bytes, sequence and picture parameter sets)\n");
+    printf("    --avid-gf               Use the Avid growing file flavour\n");
+    printf("    --avid-gf-dur <dur>     Set the duration which should be shown whilst the file is growing\n");
+    printf("                            Avid will show 'Capture in Progress' when this option is used\n");
+    printf("\n");
+    printf("  op1a/avid:\n");
+    printf("    --force-no-avci-head    Strip AVCI header (512 bytes, sequence and picture parameter sets) if present\n");
+    printf("\n");
+    printf("  wave:\n");
+    printf("    --orig <name>           Set originator in the output Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
+    printf("\n");
+    printf("  as02/op1a/as11op1a:\n");
+    printf("    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");
+    printf("\n");
+    printf("  op1a/as11op1a/rdd9:\n");
+    printf("    --audio-layout <label>  Set the Wave essence descriptor channel assignment label which identifies the audio layout mode in operation\n");
+    printf("                            The <label> is one of the following:\n");
+    printf("                                * a SMPTE UL, formatted as a 'urn:smpte:ul:...',\n");
+    printf("                                * 'as11-mode-0', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02010000,\n");
+    printf("                                * 'as11-mode-1', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02020000,\n");
+    printf("                                * 'as11-mode-2', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02030000\n");
+    printf("                                * 'imf', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020210.04010000\n");
+    printf("    --track-mca-labels <scheme> <file>  Insert audio labels defined in <file>. The 'as11' <scheme> will add an override and otherwise <scheme> is ignored\n");
+    printf("                                        The format of <file> is described in bmx/docs/mca_labels_format.md\n");
+    printf("                                        All tag symbols registered in the bmx code are available for use\n");
+    printf("                                        The 'as11' <scheme> will change the label associated with the 'chVIN' tag symbol to use the 'Visually Impaired Narrative' tag name, i.e. without a '-'\n");
+    printf("\n");
+    printf("\n");
+    printf("Input Options (must precede the input to which it applies):\n");
+    printf("  -a <n:d>                Image aspect ratio. Default parsed from essence or 16:9\n");
+    printf("  --bsar                  Set image aspect ratio in video bitstream. Currently supports D-10 essence types only\n");
+    printf("  --afd <value>           Active Format Descriptor 4-bit code from table 1 in SMPTE ST 2016-1. Default not set\n");
+    printf("  -c <depth>              Component depth for uncompressed/DV100/RDD-36 video. Either 8 or 10. Default parsed, 8 for uncompressed/DV100 and 10 for RDD-36\n");
+    printf("  --height <value>        Height of input uncompressed video data. Default is the production aperture height, except for PAL (592) and NTSC (496)\n");
+    printf("  --signal-std  <value>   Set the video signal standard. The <value> is one of the following:\n");
+    printf("                              'none', 'bt601', 'bt1358', 'st347', 'st274', 'st296', 'st349', 'st428'\n");
+    printf("  --frame-layout <value>  Set the video frame layout. The <value> is one of the following:\n");
+    printf("                              'fullframe', 'separatefield', 'singlefield', 'mixedfield', 'segmentedframe'\n");
+    printf("  --field-dom <value>     Set which field is first in temporal order. The <value> is 1 or 2\n");
+    printf("  --transfer-ch <value>   Set the transfer characteristic label\n");
+    printf("                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
+    printf("                              'bt470', 'bt709', 'st240', 'st274', 'bt1361', 'linear', 'dcdm',\n");
+    printf("                              'iec61966', 'bt2020', 'st2084', 'hlg'\n");
+    printf("  --coding-eq <value>     Set the coding equations label\n");
+    printf("                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
+    printf("                              'bt601', 'bt709', 'st240', 'ycgco', 'gbr', 'bt2020'\n");
+    printf("  --color-prim <value>    Set the color primaries label\n");
+    printf("                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
+    printf("                              'st170', 'bt470', 'bt709', 'bt2020', 'dcdm', 'p3'\n");
+    printf("  --color-siting <value>  Set the color siting. The <value> is one of the following:\n");
+    printf("                              'cositing', 'horizmp', '3tap', 'quincunx', 'bt601', 'linealt', 'vertmp', 'unknown'\n");
+    printf("                              (Note that 'bt601' is deprecated in SMPTE ST 377-1. Use 'cositing' instead)\n");
+    printf("  --black-level <value>   Set the CDCI black reference level\n");
+    printf("  --white-level <value>   Set the CDCI white reference level\n");
+    printf("  --color-range <value>   Set the CDCI color range\n");
+    printf("  --comp-max-ref <value>  Set the RGBA component maximum reference level\n");
+    printf("  --comp-min-ref <value>  Set the RGBA component minimum reference level\n");
+    printf("  --scan-dir <value>      Set the RGBA scanning direction\n");
+    printf("  --display-primaries <value>    Set the mastering display primaries.\n");
+    printf("                                 The <value> is an array of 6 unsigned integers separated by a ','.\n");
+    printf("  --display-white-point <value>  Set the mastering display white point chromaticity.\n");
+    printf("                                 The <value> is an array of 2 unsigned integers separated by a ','.\n");
+    printf("  --display-max-luma <value>     Set the mastering display maximum luminance.\n");
+    printf("  --display-min-luma <value>     Set the mastering display minimum luminance.\n");
+    printf("  --rdd36-opaque          Treat RDD-36 4444 or 4444 XQ as opaque by omitting the Alpha Sample Depth property\n");
+    printf("  --active-width          Set the Active Width of the active area rectangle\n");
+    printf("  --active-height         Set the Active Height of the active area rectangle\n");
+    printf("  --active-x-offset       Set the Active X Offset of the active area rectangle\n");
+    printf("  --active-y-offset       Set the Active Y Offset of the active area rectangle\n");
+    printf("  --display-f2-offset     Set the default Display F2 Offset if none is extracted from the essence\n");
+    printf("  --center-cut-4-3        Add the Alternative Center Cut 4:3\n");
+    printf("  --center-cut-14-9       Add the Alternative Center Cut 14:9\n");
+    printf("  -s <bps>                Audio sampling rate numerator for raw pcm. Default %d\n", DEFAULT_SAMPLING_RATE.numerator);
+    printf("  -q <bps>                Audio quantization bits per sample for raw pcm. Either 16 or 24. Default 16\n");
+    printf("  --audio-chan <count>    Audio channel count for raw pcm. Default 1\n");
+    printf("  --locked <bool>         Indicate whether the number of audio samples is locked to the video. Either true or false. Default not set\n");
+    printf("  --audio-ref <level>     Audio reference level, number of dBm for 0VU. Default not set\n");
+    printf("  --dial-norm <value>     Gain to be applied to normalize perceived loudness of the clip. Default not set\n");
+    printf("  --ref-image-edit-rate <rate>     Override or set the Reference Image Edit Rate\n");
+    printf("                                   The <rate> is either 'num', 'num'/'den', 23976 (=24000/1001), 2997 (=30000/1001) or 5994 (=60000/1001)\n");
+    printf("  --ref-audio-align-level <value>  Override or set the Reference Audio Alignment Level\n");
+    printf("  --anc-const <size>      Set the constant ANC data frame <size>\n");
+    printf("  --vbi-const <size>      Set the constant VBI data frame <size>\n");
+    printf("  --off <bytes>           Skip <bytes> at the start of the next input/track's file\n");
+    printf("  --maxlen <bytes>        Maximum number of essence data bytes to read from next input/track's file\n");
+    printf("  --klv <key>             Essence data is read from the KLV data in the next input/track's file\n");
+    printf("                          <key> should have one of the following values:\n");
+    printf("                            - 's', which means the first 16 bytes, at file position 0 or --off byte offset, are taken to be the Key\n");
+    printf("                            - optional '0x' followed by 8 hexadecimal characters which represents the 4-byte track number part of a generic container essence Key\n");
+    printf("                            - 32 hexadecimal characters representing a 16-byte Key\n");
+    printf("  --fill-pattern-gaps     Fill gaps in a numbered sequence pattern of raw files by repeating the contents of the file at the start of a gap\n");
+    printf("  --track-num <num>       Set the output track number. Default track number equals last track number of same picture/sound type + 1\n");
+    printf("                          For as11d10/d10 the track number must be > 0 and <= 8 because the AES-3 channel index equals track number - 1\n");
+    printf("  --avci-guess <i/p>      Guess interlaced ('i') or progressive ('p') AVC-Intra when using the --avci option with 1080p25/i50 or 1080p30/i60\n");
+    printf("                          The default guess uses the H.264 frame_mbs_only_flag field\n");
+    printf("  --fixed-size            Set to indicate that the d10 frames have a fixed size and therefore do not need to be parsed after the first frame\n");
+    printf("  --vc2-mode <mode>       Set the mode that determines how the VC-2 data is wrapped\n");
+    printf("                          <mode> is one of the following integer values:\n");
+    printf("                            0: Passthrough input, but add a sequence header if not present, remove duplicate/redundant sequence headers\n");
+    printf("                               and fix any incorrect parse info offsets and picture numbers\n");
+    printf("                            1: (default) Same as 0, but remove auxiliary and padding data units and complete the sequence in each frame\n");
+    printf("\n");
+    printf("  as02:\n");
+    printf("    --trk-out-start <offset>   Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
+    printf("    --trk-out-end <offset>     Offset (positive value) from last frame to last output frame, eg. rollout in MPEG-2 Long GOP\n");
+    printf("\n");
+    printf("\n");
+    printf("Inputs:\n");
+    printf("  --dv <name>             Raw DV video input file\n");
+    printf("  --iecdv25 <name>        Raw IEC DV25 video input file\n");
+    printf("  --dvbased25 <name>      Raw DV-Based DV25 video input file\n");
+    printf("  --dv50 <name>           Raw DV50 video input file\n");
+    printf("  --dv100_1080i <name>    Raw DV100 1080i video input file\n");
+    printf("  --dv100_1080p <name>    Raw DV100 1080p video input file\n");
+    printf("  --dv100_720p <name>     Raw DV100 720p video input file\n");
+    printf("  --d10 <name>            Raw D10 video input file\n");
+    printf("  --d10_30 <name>         Raw D10 30Mbps video input file\n");
+    printf("  --d10_40 <name>         Raw D10 40Mbps video input file\n");
+    printf("  --d10_50 <name>         Raw D10 50Mbps video input file\n");
+    printf("  --avci <name>           Raw AVC-Intra video input file. See also --avci-guess option\n");
+    printf("  --avci200_1080i <name>  Raw AVC-Intra 200 1080i video input file\n");
+    printf("  --avci200_1080p <name>  Raw AVC-Intra 200 1080p video input file\n");
+    printf("  --avci200_720p <name>   Raw AVC-Intra 200 720p video input file\n");
+    printf("  --avci100_1080i <name>  Raw AVC-Intra 100 1080i video input file\n");
+    printf("  --avci100_1080p <name>  Raw AVC-Intra 100 1080p video input file\n");
+    printf("  --avci100_720p <name>   Raw AVC-Intra 100 720p video input file\n");
+    printf("  --avci50_1080i <name>   Raw AVC-Intra 50 1080i video input file\n");
+    printf("  --avci50_1080p <name>   Raw AVC-Intra 50 1080p video input file\n");
+    printf("  --avci50_720p <name>    Raw AVC-Intra 50 720p video input file\n");
+    printf("  --avc <name>                 Raw AVC video input file\n");
+    printf("  --avc_baseline <name>        Raw AVC Baseline profile video input file\n");
+    printf("  --avc_constr_baseline <name> Raw AVC Constrained Baseline profile video input file\n");
+    printf("  --avc_main <name>            Raw AVC Main profile video input file\n");
+    printf("  --avc_extended <name>        Raw AVC Extended profile video input file\n");
+    printf("  --avc_high <name>            Raw AVC High profile video input file\n");
+    printf("  --avc_high_10 <name>         Raw AVC High 10 profile video input file\n");
+    printf("  --avc_high_422 <name>        Raw AVC High 422 profile video input file\n");
+    printf("  --avc_high_444 <name>        Raw AVC High 444 profile video input file\n");
+    printf("  --avc_high_10_intra <name>   Raw AVC High 10 Intra profile video input file\n");
+    printf("  --avc_high_422_intra <name>  Raw AVC High 422 Intra profile video input file\n");
+    printf("  --avc_high_444_intra <name>  Raw AVC High 444 Intra profile video input file\n");
+    printf("  --avc_cavlc_444 <name>       Raw AVC CAVLC 444 profile video input file\n");
+    printf("  --unc <name>            Raw uncompressed SD UYVY 422 video input file\n");
+    printf("  --unc_1080i <name>      Raw uncompressed HD 1080i UYVY 422 video input file\n");
+    printf("  --unc_1080p <name>      Raw uncompressed HD 1080p UYVY 422 video input file\n");
+    printf("  --unc_720p <name>       Raw uncompressed HD 720p UYVY 422 video input file\n");
+    printf("  --unc_3840 <name>       Raw uncompressed UHD 3840x2160 UYVY 422 video input file\n");
+    printf("  --avid_alpha <name>               Raw Avid alpha component SD video input file\n");
+    printf("  --avid_alpha_1080i <name>         Raw Avid alpha component HD 1080i video input file\n");
+    printf("  --avid_alpha_1080p <name>         Raw Avid alpha component HD 1080p video input file\n");
+    printf("  --avid_alpha_720p <name>          Raw Avid alpha component HD 720p video input file\n");
+    printf("  --mpeg2lg <name>                  Raw MPEG-2 Long GOP video input file\n");
+    printf("  --mpeg2lg_422p_ml_576i <name>     Raw MPEG-2 Long GOP 422P@ML 576i video input file\n");
+    printf("  --mpeg2lg_mp_ml_576i <name>       Raw MPEG-2 Long GOP MP@ML 576i video input file\n");
+    printf("  --mpeg2lg_422p_hl_1080i <name>    Raw MPEG-2 Long GOP 422P@HL 1080i video input file\n");
+    printf("  --mpeg2lg_422p_hl_1080p <name>    Raw MPEG-2 Long GOP 422P@HL 1080p video input file\n");
+    printf("  --mpeg2lg_422p_hl_720p <name>     Raw MPEG-2 Long GOP 422P@HL 720p video input file\n");
+    printf("  --mpeg2lg_mp_hl_1920_1080i <name> Raw MPEG-2 Long GOP MP@HL 1920x1080i video input file\n");
+    printf("  --mpeg2lg_mp_hl_1920_1080p <name> Raw MPEG-2 Long GOP MP@HL 1920x1080p video input file\n");
+    printf("  --mpeg2lg_mp_hl_1440_1080i <name> Raw MPEG-2 Long GOP MP@HL 1440x1080i video input file\n");
+    printf("  --mpeg2lg_mp_hl_1440_1080p <name> Raw MPEG-2 Long GOP MP@HL 1440x1080p video input file\n");
+    printf("  --mpeg2lg_mp_hl_720p <name>       Raw MPEG-2 Long GOP MP@HL 720p video input file\n");
+    printf("  --mpeg2lg_mp_h14_1080i <name>     Raw MPEG-2 Long GOP MP@H14 1080i video input file\n");
+    printf("  --mpeg2lg_mp_h14_1080p <name>     Raw MPEG-2 Long GOP MP@H14 1080p video input file\n");
+    printf("  --mjpeg21 <name>        Raw Avid MJPEG 2:1 video input file\n");
+    printf("  --mjpeg31 <name>        Raw Avid MJPEG 3:1 video input file\n");
+    printf("  --mjpeg101 <name>       Raw Avid MJPEG 10:1 video input file\n");
+    printf("  --mjpeg201 <name>       Raw Avid MJPEG 20:1 video input file\n");
+    printf("  --mjpeg41m <name>       Raw Avid MJPEG 4:1m video input file\n");
+    printf("  --mjpeg101m <name>      Raw Avid MJPEG 10:1m video input file\n");
+    printf("  --mjpeg151s <name>      Raw Avid MJPEG 15:1s video input file\n");
+    printf("  --rdd36_422_proxy <name>   Raw SMPTE RDD-36 (ProRes) 4:2:2 Proxy profile input file\n");
+    printf("  --rdd36_422_lt <name>      Raw SMPTE RDD-36 (ProRes) 4:2:2 LT profile input file\n");
+    printf("  --rdd36_422 <name>         Raw SMPTE RDD-36 (ProRes) 4:2:2 profile input file\n");
+    printf("  --rdd36_422_hq <name>      Raw SMPTE RDD-36 (ProRes) 4:2:2 HQ profile input file\n");
+    printf("  --rdd36_4444 <name>        Raw SMPTE RDD-36 (ProRes) 4:4:4:4 profile input file\n");
+    printf("  --rdd36_4444_xq <name>     Raw SMPTE RDD-36 (ProRes) 4:4:4:4 XQ profile input file\n");
+    printf("  --j2c_cdci <name|j2cpattern>  Raw JPEG 2000 (ISO/IEC 15444-1) codestream representing components (e.g. YCbCr) described by a MXF CDCI descriptor\n");
+    printf("                                If a '%%' is in the value then it is assumed to be a <j2cpattern> for a sequence of files, each containing a single frame\n");
+    printf("                                See Notes below for a detailed description of <j2cpattern>\n");
+    printf("  --j2c_rgba <name|j2cpattern>  Raw JPEG 2000 (ISO/IEC 15444-1) codestream representing components (e.g. RGB) described by a MXF RGBA descriptor\n");
+    printf("                                If a '%%' is in the value then it is assumed to be a <j2cpattern> for a sequence of files, each containing a single frame\n");
+    printf("                                See Notes below for a detailed description of <j2cpattern>\n");
+    printf("  --vc2 <name>            Raw VC2 input file\n");
+    printf("  --vc3 <name>            Raw VC3/DNxHD input file\n");
+    printf("  --vc3_1080p_1235 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps 10bit input file\n");
+    printf("  --vc3_1080p_1237 <name> Raw VC3/DNxHD 1920x1080p 145/120/115 Mbps input file\n");
+    printf("  --vc3_1080p_1238 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps input file\n");
+    printf("  --vc3_1080i_1241 <name> Raw VC3/DNxHD 1920x1080i 220/185 Mbps 10bit input file\n");
+    printf("  --vc3_1080i_1242 <name> Raw VC3/DNxHD 1920x1080i 145/120 Mbps input file\n");
+    printf("  --vc3_1080i_1243 <name> Raw VC3/DNxHD 1920x1080i 220/185 Mbps input file\n");
+    printf("  --vc3_1080i_1244 <name> Raw VC3/DNxHD 1920x1080i 145/120 Mbps input file\n");
+    printf("  --vc3_720p_1250 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps 10bit input file\n");
+    printf("  --vc3_720p_1251 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps input file\n");
+    printf("  --vc3_720p_1252 <name>  Raw VC3/DNxHD 1280x720p 220/185/110/90 Mbps input file\n");
+    printf("  --vc3_1080p_1253 <name> Raw VC3/DNxHD 1920x1080p 45/36 Mbps input file\n");
+    printf("  --vc3_720p_1258 <name>  Raw VC3/DNxHD 1280x720p 45 Mbps input file\n");
+    printf("  --vc3_1080p_1259 <name> Raw VC3/DNxHD 1920x1080p 85 Mbps input file\n");
+    printf("  --vc3_1080i_1260 <name> Raw VC3/DNxHD 1920x1080i 85 Mbps input file\n");
+    printf("  --pcm <name>            Raw PCM audio input file\n");
+    printf("  --wave <name>           Wave PCM audio input file\n");
+    printf("  --anc <name>            Raw ST 436 Ancillary data. Currently requires the --anc-const option\n");
+    printf("  --vbi <name>            Raw ST 436 Vertical Blanking Interval data. Currently requires the --vbi-const option\n");
+    printf("  --tt <manifest>         Manifest file containing Timed Text metadata\n");
+    printf("\n\n");
+    printf("Notes:\n");
+    printf(" - filename pattern: Clip types producing a single output file may use a filename pattern with variables that get substituted\n");
+    printf("                     Pattern variables start with a '{' and end with a '}'. E.g. 'output_{type}_{fp_uuid}.mxf'\n");
+    printf("                     The following variables are available:\n");
+    printf("                       - {type}: Is replaced with the name for video, audio, data or mixed essence types\n");
+    printf("                                 See the --ess-type-names option for the default names and use the option to change them\n");
+    printf("                       - {mp_uuid}: The UUID material number in a material package UMID\n");
+    printf("                                    The clip writers will by default generate UMIDs with UUID material numbers\n");
+    printf("                       - {mp_umid}: The material package UMID\n");
+    printf("                       - {fp_uuid}: The UUID material number in a file source package UMID\n");
+    printf("                                    The clip writers will by default generate UMIDs with UUID material numbers\n");
+    printf("                       - {fp_umid}: The file source package UMID\n");
+    printf(" - <umid> format is 64 hexadecimal characters and any '.' and '-' characters are ignored\n");
+    printf(" - <uuid> format is 32 hexadecimal characters and any '.' and '-' characters are ignored\n");
+    printf(" - <tstamp> format is YYYY-MM-DDThh:mm:ss:qm where qm is in units of 1/250th second\n");
+    printf(" - <j2cpattern>: Each file name must include an integer frame number in the sequence.\n");
+    printf("                 <j2cpattern> is a file path that must contain a single '%%d' where the frame number appears in the name.\n");
+    printf("                 <j2cpattern> must not contain any other '%%' characters.\n");
+    printf("                 If --fill-pattern-gaps option is used then gaps in frame numbers are filled by repeating the previous frame.\n");
+    printf("                 Example: 'inputs/frame_%%d.j2c' for input files `inputs/frame_00001.j2c' etc..\n");
+    printf("\n");
+    printf(" The track mapping <expr> format is one of the following:\n");
+    printf("     'mono'     : each input audio channel is mapped to a single-channel output track\n");
+    printf("     'stereo'   : input audio channels are paired to stereo-channel output tracks\n");
+    printf("                  A silence channel is added to the last output track if the channel count is odd\n");
+    printf("     'singlemca': all input audio channels are mapped to a single multi-channel output track\n");
+    printf("     <pattern>  : a pattern defining how input channels map to output track channels - see below\n");
+    printf("\n");
+    printf(" The track mapping <pattern> specifies how input audio channels are mapped to output track channels\n");
+    printf(" A <pattern> consists of a list of <group>s separated by a ';'.\n");
+    printf(" A <group> starts with an optional 'm', followed by a list of <element> separated by a ','.\n");
+    printf("   An 'm' indicates that each channel in the <group> is mapped to separate single-channel output track.\n");
+    printf("   If an 'm' is not present then the channels are mapped to a single output track.\n");
+    printf(" A <element> is either a <channel>, <range>, <silence> or <remainder>.\n");
+    printf(" A <channel> is an input channel number starting from 0.\n");
+    printf("   The input channel number is the number derived from the input track order reported by mxf2raw for the\n");
+    printf("   input files in the same order and including any --disable input options. Each channel in a track\n");
+    printf("   contributes 1 to the overall channel number.\n");
+    printf(" A <range> is 2 <channel>s separated by a '-' and includes all channels starting with the first number\n");
+    printf("   and ending with the last number.\n");
+    printf(" A <silence> is 's' followed by a <count> and results in <count> silence channels added to the output track.\n");
+    printf(" A <remainder> is 'x', and results in all remaining channels being added to the output track.\n");
+    printf("\n");
+    printf("Here are some <pattern> examples:\n");
+    printf("    'mx'     : equivalent to 'mono'\n");
+    printf("    '0,1;x'  : the first 2 channels mapped to a stereo output track and all remaining channels mapped\n");
+    printf("               to a single multi-channel track\n");
+    printf("    '2-7;0,1': 6 channel output track followed by a 2 channel output track\n");
+    printf("    '0,1,s2' : 2 input channels plus 2 silence channels mapped to a single output track\n");
 }
 
 int main(int argc, const char** argv)
@@ -982,7 +989,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -993,13 +1000,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_log_level(argv[cmdln_index + 1], &log_level))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1009,13 +1016,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_clip_type(argv[cmdln_index + 1], &clip_type, &clip_sub_type))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1025,7 +1032,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1036,13 +1043,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_essence_type_names(argv[cmdln_index + 1], &filename_essence_type_names))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1052,14 +1059,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 5 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing arguments for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_product_info(&argv[cmdln_index + 1], 5, &company_name, &product_name, &product_version,
                                     &version_string, &product_uid))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid values '%s' etc. for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1070,13 +1077,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_timestamp(argv[cmdln_index + 1], &creation_date))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1087,13 +1094,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_frame_rate(argv[cmdln_index + 1], &frame_rate))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1104,13 +1111,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_frame_rate(argv[cmdln_index + 1], &default_frame_rate))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1120,7 +1127,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1131,7 +1138,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1142,13 +1149,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &duration) != 1 || duration < 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1158,13 +1165,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%f", &rt_factor) != 1 || rt_factor <= 0.0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1175,14 +1182,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 3 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_avci_header(argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3],
                                    &avci_header_inputs))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid values '%s', '%s', '%s' for Option '%s'\n",
                         argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3], argv[cmdln_index]);
                 return 1;
@@ -1197,13 +1204,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_mic_type(argv[cmdln_index + 1], &mic_type))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1237,14 +1244,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &max_mpeg_check_same_warn_messages) != 1 ||
                 max_mpeg_check_same_warn_messages < 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1254,7 +1261,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1268,7 +1275,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1279,7 +1286,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1290,7 +1297,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1301,14 +1308,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 3 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument(s) for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (as10_helper.SupportFrameworkType(argv[cmdln_index + 1]) &&
                 !as10_helper.SetFrameworkProperty(argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3]))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Failed to set '%s' framework property '%s' to '%s'\n",
                         argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3]);
                 return 1;
@@ -1316,7 +1323,7 @@ int main(int argc, const char** argv)
             if (as11_helper.SupportFrameworkType(argv[cmdln_index + 1]) &&
                 !as11_helper.SetFrameworkProperty(argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3]))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Failed to set '%s' framework property '%s' to '%s'\n",
                         argv[cmdln_index + 1], argv[cmdln_index + 2], argv[cmdln_index + 3]);
                 return 1;
@@ -1327,14 +1334,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 2 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument(s) for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (as10_helper.SupportFrameworkType(argv[cmdln_index + 1]) &&
                 !as10_helper.ParseFrameworkFile(argv[cmdln_index + 1], argv[cmdln_index + 2]))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Failed to parse '%s' framework file '%s'\n",
                         argv[cmdln_index + 1], argv[cmdln_index + 2]);
                 return 1;
@@ -1342,7 +1349,7 @@ int main(int argc, const char** argv)
             if (as11_helper.SupportFrameworkType(argv[cmdln_index + 1]) &&
                 !as11_helper.ParseFrameworkFile(argv[cmdln_index + 1], argv[cmdln_index + 2]))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Failed to parse '%s' framework file '%s'\n",
                         argv[cmdln_index + 1], argv[cmdln_index + 2]);
                 return 1;
@@ -1353,7 +1360,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1364,13 +1371,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!as11_helper.ParseSpecificationId(argv[cmdln_index + 1]))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1380,14 +1387,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &output_start_offset) != 1 ||
                 output_start_offset < 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1397,14 +1404,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &output_end_offset) != 1 ||
                 output_end_offset < 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1414,14 +1421,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
                 value < 0 || value > 255)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1477,14 +1484,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!AS11Helper::ParseXMLSchemeId(argv[cmdln_index + 1], &next_embed_xml.scheme_id) &&
                 !parse_mxf_auid(argv[cmdln_index + 1], &next_embed_xml.scheme_id))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1494,7 +1501,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1505,7 +1512,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1526,13 +1533,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_d10_sound_flags(argv[cmdln_index + 1], &d10_mute_sound_flags))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1542,13 +1549,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_d10_sound_flags(argv[cmdln_index + 1], &d10_invalid_sound_flags))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1558,7 +1565,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1569,7 +1576,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1580,7 +1587,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1591,7 +1598,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1607,7 +1614,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1618,7 +1625,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for %s\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1629,7 +1636,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 2 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument(s) for %s\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1640,7 +1647,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 3 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument(s) for %s\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1649,7 +1656,7 @@ int main(int argc, const char** argv)
             locator.locator.comment = argv[cmdln_index + 2];
             if (!parse_color(argv[cmdln_index + 3], &locator.locator.color))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Failed to read --locator <color> value '%s'\n", argv[cmdln_index + 3]);
                 return 1;
             }
@@ -1660,13 +1667,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_avid_umid_type(argv[cmdln_index + 1], &avid_umid_type))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1676,13 +1683,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_umid(argv[cmdln_index + 1], &mp_uid))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1693,13 +1700,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_timestamp(argv[cmdln_index + 1], &mp_created))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1710,13 +1717,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_umid(argv[cmdln_index + 1], &fp_uid))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1727,13 +1734,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_umid(argv[cmdln_index + 1], &psp_uid))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1744,13 +1751,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_timestamp(argv[cmdln_index + 1], &psp_created))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1769,13 +1776,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &avid_gf_duration) != 1 || avid_gf_duration < 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1790,7 +1797,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1801,13 +1808,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!track_mapper.ParseMapDef(argv[cmdln_index + 1]))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1827,13 +1834,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_bytes_size(argv[cmdln_index + 1], &i64value) || i64value > UINT32_MAX)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1844,7 +1851,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 3 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument(s) for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1859,14 +1866,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!AppMCALabelHelper::ParseAudioLayoutMode(argv[cmdln_index + 1], &audio_layout_mode_label) &&
                 !parse_mxf_auid(argv[cmdln_index + 1], &audio_layout_mode_label))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1881,13 +1888,13 @@ int main(int argc, const char** argv)
             BMX_REGRESSION_TEST = true;
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &regtest_end) != 1 || regtest_end < 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1913,13 +1920,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d:%d", &num, &den) != 2 || num <= 0 || den <= 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1938,14 +1945,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
                 value <= 0 || value > 255)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1957,14 +1964,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
                 (value != 8 && value != 10))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1976,12 +1983,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 || value == 0) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1993,12 +2000,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_signal_standard(argv[cmdln_index + 1], &input.signal_standard)) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2010,12 +2017,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_frame_layout(argv[cmdln_index + 1], &input.frame_layout)) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2027,12 +2034,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_field_dominance(argv[cmdln_index + 1], &input.field_dominance)) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2044,12 +2051,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_transfer_ch(argv[cmdln_index + 1], &input.transfer_ch)) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2061,12 +2068,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_coding_equations(argv[cmdln_index + 1], &input.coding_equations)) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2078,12 +2085,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_color_primaries(argv[cmdln_index + 1], &input.color_primaries)) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2095,12 +2102,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_color_siting(argv[cmdln_index + 1], &input.color_siting)) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2112,12 +2119,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2129,12 +2136,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2146,12 +2153,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2163,12 +2170,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2180,12 +2187,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2197,12 +2204,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2214,12 +2221,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_three_color_primaries(argv[cmdln_index + 1], &three_color_primaries)) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2231,12 +2238,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_color_primary(argv[cmdln_index + 1], &color_primary)) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2248,12 +2255,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2265,12 +2272,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2287,12 +2294,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2304,12 +2311,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2321,12 +2328,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2338,12 +2345,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2355,12 +2362,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2382,13 +2389,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1 && uvalue > 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2401,14 +2408,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
                 (value != 16 && value != 24))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2420,14 +2427,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
                 value == 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2439,13 +2446,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_bool(argv[cmdln_index + 1], &input.locked))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2457,14 +2464,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
                 value < -128 || value > 127)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2476,14 +2483,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
                 value < -128 || value > 127)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2495,13 +2502,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_frame_rate(argv[cmdln_index + 1], &rate))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2513,12 +2520,12 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2530,13 +2537,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2548,13 +2555,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2566,14 +2573,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.file_start_offset) != 1 ||
                 input.file_start_offset < 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2584,14 +2591,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.ess_max_length) != 1 ||
                 input.ess_max_length <= 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2602,13 +2609,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_klv_opt(argv[cmdln_index + 1], &input.klv_key, &input.klv_track_num))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2625,13 +2632,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2643,7 +2650,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2651,7 +2658,7 @@ int main(int argc, const char** argv)
                                   &input.avci_guess_interlaced,
                                   &input.avci_guess_progressive))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2667,13 +2674,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_vc2_mode(argv[cmdln_index + 1], &input.vc2_mode_flags))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2684,14 +2691,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.output_start_offset) != 1 ||
                 input.output_start_offset < 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2702,14 +2709,14 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.output_end_offset) != 1 ||
                 input.output_end_offset < 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2731,7 +2738,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2744,7 +2751,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2757,7 +2764,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2770,7 +2777,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2783,7 +2790,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2796,7 +2803,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2809,7 +2816,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2822,7 +2829,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2835,7 +2842,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2848,7 +2855,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2861,7 +2868,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2874,7 +2881,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2890,7 +2897,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2906,7 +2913,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2922,7 +2929,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2935,7 +2942,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2948,7 +2955,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2961,7 +2968,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2974,7 +2981,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2987,7 +2994,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3000,7 +3007,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3013,7 +3020,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3026,7 +3033,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3039,7 +3046,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3052,7 +3059,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3065,7 +3072,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3078,7 +3085,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3091,7 +3098,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3104,7 +3111,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3117,7 +3124,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3130,7 +3137,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3143,7 +3150,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3156,7 +3163,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3169,7 +3176,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3182,7 +3189,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3195,7 +3202,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3208,7 +3215,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3221,7 +3228,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3234,7 +3241,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3247,7 +3254,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3260,7 +3267,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3273,7 +3280,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3286,7 +3293,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3299,7 +3306,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3312,7 +3319,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3325,7 +3332,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3338,7 +3345,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3351,7 +3358,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3364,7 +3371,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3377,7 +3384,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3390,7 +3397,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3403,7 +3410,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3416,7 +3423,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3429,7 +3436,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3442,7 +3449,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3455,7 +3462,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3468,7 +3475,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3481,7 +3488,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3494,7 +3501,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3507,7 +3514,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3520,7 +3527,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3533,7 +3540,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3546,7 +3553,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3559,7 +3566,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3572,7 +3579,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3585,7 +3592,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3601,7 +3608,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3617,7 +3624,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3630,7 +3637,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3643,7 +3650,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3656,7 +3663,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3669,7 +3676,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3682,7 +3689,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3695,7 +3702,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3708,7 +3715,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3721,7 +3728,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3734,7 +3741,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3747,7 +3754,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3760,7 +3767,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3773,7 +3780,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3786,7 +3793,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3799,7 +3806,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3812,7 +3819,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3825,7 +3832,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3838,7 +3845,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3852,19 +3859,19 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (have_anc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Multiple '%s' inputs are not permitted\n", argv[cmdln_index]);
                 return 1;
             }
             if (input.anc_const_size == 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing or zero '--anc-const' option for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3878,19 +3885,19 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (have_vbi)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Multiple '%s' inputs are not permitted\n", argv[cmdln_index]);
                 return 1;
             }
             if (input.vbi_const_size == 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing or zero '--vbi-const' option for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3904,7 +3911,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -3925,26 +3932,26 @@ int main(int argc, const char** argv)
     clear_input(&input);
 
     if (cmdln_index != argc) {
-        usage(argv[0]);
+        usage_ref(argv[0]);
         fprintf(stderr, "Unknown Input Option '%s'\n", argv[cmdln_index]);
         return 1;
     }
 
     if (!output_name) {
-        usage(argv[0]);
+        usage_ref(argv[0]);
         fprintf(stderr, "No output name given\n");
         return 1;
     }
 
     if (inputs.empty()) {
-        usage(argv[0]);
+        usage_ref(argv[0]);
         fprintf(stderr, "No raw inputs given\n");
         return 1;
     }
 
     if (clip_type == CW_AS02_CLIP_TYPE || clip_type == CW_AVID_CLIP_TYPE) {
         if (uses_filename_pattern_variables(output_name)) {
-            usage(argv[0]);
+            usage_ref(argv[0]);
             fprintf(stderr, "Clip type '%s' does not support output filename pattern variables\n",
                     clip_type_to_string(clip_type, clip_sub_type));
             return 1;
@@ -3957,7 +3964,7 @@ int main(int argc, const char** argv)
     if (clip_sub_type == AS10_CLIP_SUB_TYPE) {
         const char *as10_shim_name = as10_helper.GetShimName();
         if (!as10_shim_name) {
-            usage(argv[0]);
+            usage_ref(argv[0]);
             fprintf(stderr, "Set required 'ShimName' property for as10 output");
             return 1;
         }
@@ -4547,7 +4554,7 @@ int main(int argc, const char** argv)
 
         start_timecode.Init(frame_rate, false);
         if (start_timecode_str && !parse_timecode(start_timecode_str, frame_rate, &start_timecode)) {
-            usage(argv[0]);
+            usage_ref(argv[0]);
             log_error("Invalid value '%s' for Option '-t'\n", start_timecode_str);
             throw false;
         }
@@ -4561,7 +4568,7 @@ int main(int argc, const char** argv)
         {
             Timecode auxiliary_timecode;
             if (!parse_timecode(auxiliary_timecode_strings[i].c_str(), frame_rate, &auxiliary_timecode)) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 log_error("Invalid value '%s' for Option '--aux'\n", auxiliary_timecode_strings[i].c_str());
                 throw false;
             }
@@ -4571,7 +4578,7 @@ int main(int argc, const char** argv)
         if (partition_interval_str) {
             if (!parse_partition_interval(partition_interval_str, frame_rate, &partition_interval))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 log_error("Invalid value '%s' for Option '--part'\n", partition_interval_str);
                 throw false;
             }
@@ -4587,7 +4594,7 @@ int main(int argc, const char** argv)
 
         for (i = 0; i < locators.size(); i++) {
             if (!parse_position(locators[i].position_str, start_timecode, frame_rate, &locators[i].locator.position)) {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 log_error("Invalid value '%s' for Option '--locator'\n", locators[i].position_str);
                 throw false;
             }
