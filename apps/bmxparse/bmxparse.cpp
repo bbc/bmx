@@ -678,19 +678,23 @@ static bool parse_type_str(const char *type_str, InputType *input_type)
     return true;
 }
 
-static void usage(const char *cmd)
+static void usage(const char *cmd, bool error)
 {
-    fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
-    fprintf(stderr, "Text dump raw essence files using the bmx library's parser class\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Usage: %s <<Options>> <type> <filename>\n", cmd);
-    fprintf(stderr, "    <type> is 'avc', 'dv', 'j2c', 'mjpeg', 'm2v', 'rdd36', 'vc2' or 'vc3'\n");
-    fprintf(stderr, "Options:\n");
-    fprintf(stderr, " -h | --help           Show usage and exit\n");
-    fprintf(stderr, " -v | --version        Print version info to stderr\n");
-    fprintf(stderr, " -l <file>             Log filename. Default log to stderr\n");
-    fprintf(stderr, " --log-level <level>   Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
-    fprintf(stderr, " --single-field        Assume MJPEG single field encoding. Default is to parse field pairs\n");
+    FILE *output = error ? stderr: stdout;
+
+    fprintf(output, "%s\n", get_app_version_info(APP_NAME).c_str());
+    fprintf(output, "Text dump raw essence files using the bmx library's parser class\n");
+    fprintf(output, "\n");
+    fprintf(output, "Usage: %s <<Options>> <type> <filename>\n", strip_path(cmd).c_str());
+    fprintf(output, "    <type> is 'avc', 'dv', 'j2c', 'mjpeg', 'm2v', 'rdd36', 'vc2' or 'vc3'\n");
+    fprintf(output, "Options:\n");
+    fprintf(output, " -h | --help           Show usage and exit\n");
+    fprintf(output, " -v | --version        Print version info to stderr\n");
+    fprintf(output, " -l <file>             Log filename. Default log to stderr\n");
+    fprintf(output, " --log-level <level>   Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
+    fprintf(output, " --single-field        Assume MJPEG single field encoding. Default is to parse field pairs\n");
+    if (error)
+        fprintf(output, "\n");
 }
 
 int main(int argc, const char **argv)
@@ -703,7 +707,7 @@ int main(int argc, const char **argv)
     int cmdln_index;
 
     if (argc == 1) {
-        usage(argv[0]);
+        usage(argv[0], false);
         return 0;
     }
 
@@ -712,7 +716,7 @@ int main(int argc, const char **argv)
         if (strcmp(argv[cmdln_index], "--help") == 0 ||
             strcmp(argv[cmdln_index], "-h") == 0)
         {
-            usage(argv[0]);
+            usage(argv[0], false);
             return 0;
         }
         else if (strcmp(argv[cmdln_index], "--version") == 0 ||
@@ -728,7 +732,7 @@ int main(int argc, const char **argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage(argv[0], true);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -739,13 +743,13 @@ int main(int argc, const char **argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage(argv[0], true);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_log_level(argv[cmdln_index + 1], &log_level))
             {
-                usage(argv[0]);
+                usage(argv[0], true);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -761,22 +765,22 @@ int main(int argc, const char **argv)
         }
     }
     if (cmdln_index + 2 < argc) {
-        usage(argv[0]);
+        usage(argv[0], true);
         fprintf(stderr, "Unknown option '%s'\n", argv[cmdln_index]);
         return 1;
     }
     if (cmdln_index + 1 > argc) {
-        usage(argv[0]);
+        usage(argv[0], true);
         fprintf(stderr, "Missing <type> and <filename>\n");
         return 1;
     }
     if (cmdln_index + 2 > argc) {
-        usage(argv[0]);
+        usage(argv[0], true);
         fprintf(stderr, "Missing <filename>\n");
         return 1;
     }
     if (!parse_type_str(argv[cmdln_index], &input_type)) {
-        usage(argv[0]);
+        usage(argv[0], true);
         fprintf(stderr, "Invalid value '%s' for <type>\n", argv[cmdln_index]);
         return 1;
     }

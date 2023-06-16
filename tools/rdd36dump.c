@@ -513,18 +513,22 @@ static int read_next_frame_offset(FILE *offsets_file, int64_t *offset_out)
     return 0;
 }
 
-static void print_usage(const char *cmd)
+static void print_usage(const char *cmd, int error)
 {
-    fprintf(stderr, "Text dump SMPTE RDD 36 (Apple ProRes) bitstream files\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Usage: %s [options] <filename>\n", cmd);
-    fprintf(stderr, "Options:\n");
-    fprintf(stderr, "  -h | --help        Show help and exit\n");
-    fprintf(stderr, "  --start <frame>    Skip <frame>s before dumping\n");
-    fprintf(stderr, "  --dur <frame>      Limit dump to <frame> count\n");
-    fprintf(stderr, "  --offsets <file>   Text file containing decimal file offsets for each frame separated by a newline\n");
-    fprintf(stderr, "                     E.g. using ffprobe to extract offsets from a Quicktime file:\n");
-    fprintf(stderr, "                       'ffprobe -show_packets -select_streams v:0 example.mov | grep pos >offsets.txt'\n");
+    FILE *output = error ? stderr: stdout;
+
+    fprintf(output, "Text dump SMPTE RDD 36 (Apple ProRes) bitstream files\n");
+    fprintf(output, "\n");
+    fprintf(output, "Usage: %s [options] <filename>\n", cmd);
+    fprintf(output, "Options:\n");
+    fprintf(output, "  -h | --help        Show help and exit\n");
+    fprintf(output, "  --start <frame>    Skip <frame>s before dumping\n");
+    fprintf(output, "  --dur <frame>      Limit dump to <frame> count\n");
+    fprintf(output, "  --offsets <file>   Text file containing decimal file offsets for each frame separated by a newline\n");
+    fprintf(output, "                     E.g. using ffprobe to extract offsets from a Quicktime file:\n");
+    fprintf(output, "                       'ffprobe -show_packets -select_streams v:0 example.mov | grep pos >offsets.txt'\n");
+    if (error)
+        fprintf(output, "\n");
 }
 
 int main(int argc, const char **argv)
@@ -542,7 +546,7 @@ int main(int argc, const char **argv)
     context.next_bit = -1;
 
     if (argc <= 1) {
-        print_usage(argv[0]);
+        print_usage(argv[0], 0);
         return 0;
     }
 
@@ -550,20 +554,20 @@ int main(int argc, const char **argv)
         if (strcmp(argv[cmdln_index], "-h") == 0 ||
             strcmp(argv[cmdln_index], "--help") == 0)
         {
-            print_usage(argv[0]);
+            print_usage(argv[0], 0);
             return 0;
         }
         else if (strcmp(argv[cmdln_index], "--start") == 0)
         {
             if (cmdln_index + 1 >= argc)
             {
-                print_usage(argv[0]);
+                print_usage(argv[0], 1);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &start) != 1 || start < 0)
             {
-                print_usage(argv[0]);
+                print_usage(argv[0], 1);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -573,13 +577,13 @@ int main(int argc, const char **argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                print_usage(argv[0]);
+                print_usage(argv[0], 1);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &duration) != 1 || duration < 0)
             {
-                print_usage(argv[0]);
+                print_usage(argv[0], 1);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -589,7 +593,7 @@ int main(int argc, const char **argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                print_usage(argv[0]);
+                print_usage(argv[0], 1);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -603,12 +607,12 @@ int main(int argc, const char **argv)
     }
 
     if (cmdln_index + 1 < argc) {
-        print_usage(argv[0]);
+        print_usage(argv[0], 1);
         fprintf(stderr, "Unknown option '%s'\n", argv[cmdln_index]);
         return 1;
     }
     if (cmdln_index >= argc) {
-        print_usage(argv[0]);
+        print_usage(argv[0], 1);
         fprintf(stderr, "Missing <filename>\n");
         return 1;
     }

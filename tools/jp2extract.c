@@ -340,17 +340,21 @@ static int extract_box(ParseContext *context, int with_header)
     return 1;
 }
 
-static void print_usage(const char *cmd)
+static void print_usage(const char *cmd, int error)
 {
-    fprintf(stderr, "Extract J2C codestreams from 'jp2c' boxes from a JP2 file (ISO/IEC 15444-1 Annex I)\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Usage: %s [options] <input filename> <output filename>\n", cmd);
-    fprintf(stderr, "  Indicate standard input or output using '-'\n");
-    fprintf(stderr, "Options:\n");
-    fprintf(stderr, "  -h | --help      Show help and exit\n");
-    fprintf(stderr, "  --with-header    Include the input file's 'jp2c' box header in the output\n");
-    fprintf(stderr, "  --start <n>      Start extracting from the <n>th 'jp2c' box\n");
-    fprintf(stderr, "  --count <n>      Extract at most <n> 'jp2c' boxes\n");
+    FILE *output = error ? stderr: stdout;
+
+    fprintf(output, "Extract J2C codestreams from 'jp2c' boxes from a JP2 file (ISO/IEC 15444-1 Annex I)\n");
+    fprintf(output, "\n");
+    fprintf(output, "Usage: %s [options] <input filename> <output filename>\n", cmd);
+    fprintf(output, "  Indicate standard input or output using '-'\n");
+    fprintf(output, "Options:\n");
+    fprintf(output, "  -h | --help      Show help and exit\n");
+    fprintf(output, "  --with-header    Include the input file's 'jp2c' box header in the output\n");
+    fprintf(output, "  --start <n>      Start extracting from the <n>th 'jp2c' box\n");
+    fprintf(output, "  --count <n>      Extract at most <n> 'jp2c' boxes\n");
+    if (error)
+        fprintf(output, "\n");
 }
 
 int main(int argc, const char **argv)
@@ -369,7 +373,7 @@ int main(int argc, const char **argv)
     int result = 0;
 
     if (argc <= 1) {
-        print_usage(argv[0]);
+        print_usage(argv[0], 0);
         return 0;
     }
 
@@ -377,7 +381,7 @@ int main(int argc, const char **argv)
         if (strcmp(argv[cmdln_index], "-h") == 0 ||
             strcmp(argv[cmdln_index], "--help") == 0)
         {
-            print_usage(argv[0]);
+            print_usage(argv[0], 0);
             return 0;
         }
         else if (strcmp(argv[cmdln_index], "--with-header") == 0)
@@ -387,12 +391,12 @@ int main(int argc, const char **argv)
         else if (strcmp(argv[cmdln_index], "--start") == 0)
         {
             if (cmdln_index + 1 >= argc) {
-                print_usage(argv[0]);
+                print_usage(argv[0], 1);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &start) != 1) {
-                print_usage(argv[0]);
+                print_usage(argv[0], 1);
                 fprintf(stderr, "Invalid argument '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -401,12 +405,12 @@ int main(int argc, const char **argv)
         else if (strcmp(argv[cmdln_index], "--count") == 0)
         {
             if (cmdln_index + 1 >= argc) {
-                print_usage(argv[0]);
+                print_usage(argv[0], 1);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &count) != 1) {
-                print_usage(argv[0]);
+                print_usage(argv[0], 1);
                 fprintf(stderr, "Invalid argument '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -419,17 +423,17 @@ int main(int argc, const char **argv)
     }
 
     if (cmdln_index + 2 < argc) {
-        print_usage(argv[0]);
+        print_usage(argv[0], 1);
         fprintf(stderr, "Unknown option '%s'\n", argv[cmdln_index]);
         return 1;
     }
     if (cmdln_index >= argc) {
-        print_usage(argv[0]);
+        print_usage(argv[0], 1);
         fprintf(stderr, "Missing <input filename> and <output filename>\n");
         return 1;
     }
     if (cmdln_index + 1 >= argc) {
-        print_usage(argv[0]);
+        print_usage(argv[0], 1);
         fprintf(stderr, "Missing <output filename>\n");
         return 1;
     }

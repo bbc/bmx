@@ -1600,112 +1600,119 @@ static bool parse_info_format(const char *format_str, InfoFormat *format)
     return true;
 }
 
-static void usage(const char *cmd)
+static void usage_ref(const char *cmd)
 {
     fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
-    fprintf(stderr, "Output MXF file metadata and raw essence\n");
+    fprintf(stderr, "Run '%s -h' to show detailed commandline usage.\n", strip_path(cmd).c_str());
     fprintf(stderr, "\n");
-    fprintf(stderr, "Usage: %s <<Options>> [<<Input Options>> <filename>]+\n", cmd);
-    fprintf(stderr, "   Use <filename> '-' for standard input\n");
-    fprintf(stderr, "Options:\n");
-    fprintf(stderr, " -h | --help           Show usage and exit\n");
-    fprintf(stderr, " -v | --version        Print version info to stderr\n");
-    fprintf(stderr, " -l <file>             Log filename. Default log to stderr\n");
-    fprintf(stderr, " --log-level <level>   Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, " --file-chksum-only <type>\n");
-    fprintf(stderr, "                       Calculate checksum of the file(s) and exit\n");
-    fprintf(stderr, "                       <type> is one of the following: 'crc32', 'md5', 'sha1'\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, " --group               Use the group reader instead of the sequence reader\n");
-    fprintf(stderr, "                       Use this option if the files have different material packages\n");
-    fprintf(stderr, "                       but actually belong to the same virtual package / group\n");
-    fprintf(stderr, " --no-reorder          Don't attempt to re-order the inputs, based on timecode, when constructing a sequence\n");
-    fprintf(stderr, "                       Use this option for files with broken timecode\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, " --check-end           Check that the last edit unit (start + duration - 1) can be read when opening the files\n");
-    fprintf(stderr, " --check-complete      Check that the input file structure info can be read and is complete\n");
-    fprintf(stderr, " --check-app-issues    Check that there are no known issues with the APP (Archive Preservation Project) file\n");
-    fprintf(stderr, " --check-app-crc32     Check APP essence CRC-32 data\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, " -i | --info           Extract input information. Default output is to stdout\n");
-    fprintf(stderr, " --info-format <fmt>   Input info format. 'text' or 'xml'. Default 'text'\n");
-    fprintf(stderr, " --info-file <name>    Input info output file <name>\n");
-    fprintf(stderr, " --track-chksum <type> Calculate checksum of the track essence data\n");
-    fprintf(stderr, "                       <type> is one of the following: 'crc32', 'md5', 'sha1'\n");
-    fprintf(stderr, " --file-chksum <type>  Calculate checksum of the input file(s)\n");
-    fprintf(stderr, "                       <type> is one of the following: 'crc32', 'md5', 'sha1'\n");
-    fprintf(stderr, " --as11                Extract AS-11 and UK DPP metadata\n");
-    fprintf(stderr, " --as10                Extract AS-10 metadata\n");
-    fprintf(stderr, " --app                 Extract APP metadata\n");
-    fprintf(stderr, " --app-events <mask>   Extract APP events metadata\n");
-    fprintf(stderr, "                       <mask> is a sequence of event types (e.g. dtv) identified using the following characters:\n");
-    fprintf(stderr, "                           d=digibeta dropout, p=PSE failure, t=timecode break, v=VTR error\n");
-    fprintf(stderr, " --no-app-events-tc    Don't extract timecodes from the essence container to associate with the APP events metadata\n");
-    fprintf(stderr, " --app-crc32 <fname>   Extract APP CRC-32 frame data to <fname>\n");
-    fprintf(stderr, " --app-tc <fname>      Extract APP timecodes to <fname>\n");
-    fprintf(stderr, " --all-tc <fname>      Extract header and content package metadata timecodes to <fname>\n");
-    fprintf(stderr, "                       The list of timecodes extracted for each frame is as follows:\n");
-    fprintf(stderr, "                         frame position, material package, file source package, physical source package,\n");
-    fprintf(stderr, "                         5 x Avid auxiliary, system item user, system item creation,\n");
-    fprintf(stderr, "                         4 x system scheme 1 timecode array\n");
-    fprintf(stderr, "                       The header metadata timecodes are limited to the set extracted by bmx and what bmx accepts\n");
-    fprintf(stderr, "                       If the timecode property is not present then __:__:__:__ is printed\n");
-    fprintf(stderr, " --index               Extract index tables\n");
-    fprintf(stderr, " --avid                Extract Avid metadata\n");
-    fprintf(stderr, " --st436-mf <count>    Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
-    fprintf(stderr, " --rdd6 <frames> <filename>\n");
-    fprintf(stderr, "                       Extract RDD-6 audio metadata from <frames> to XML <filename>.\n");
-    fprintf(stderr, "                       <frames> can either be a single frame or a range using '-' as a separator\n");
-    fprintf(stderr, "                       RDD-6 metadata is extracted from the first frame and program description text is accumulated using the other frames\n");
-    fprintf(stderr, "                       Not all frames will be required if a complete program text has been extracted\n");
-    fprintf(stderr, " --mca-detail          Show detailed MCA channel label information\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, " -p | --ess-out <prefix>\n");
-    fprintf(stderr, "                       Extract essence to files starting with <prefix> and suffix '.raw'\n");
-    fprintf(stderr, " --wrap-klv <mask>     Wrap essence frames in KLV using the input Key and an 8-byte Length\n");
-    fprintf(stderr, "                       The filename suffix is '.klv' rather than '.raw'\n");
-    fprintf(stderr, "                       <mask> is a sequence of characters which identify which data types to wrap\n");
-    fprintf(stderr, "                           v=video, a=audio, d=data\n");
-    fprintf(stderr, " --read-ess            Read the essence data, even when no other option requires it\n");
-    fprintf(stderr, " --deint               De-interleave multi-channel / AES-3 sound\n");
-    fprintf(stderr, " --start <count>       Set the start edit unit to read from. Default is 0\n");
-    fprintf(stderr, " --dur <count>         Set the duration in edit units. Default is minimum available duration\n");
-    fprintf(stderr, " --nopc                Don't include pre-charge frames\n");
-    fprintf(stderr, " --noro                Don't include roll-out frames\n");
-    fprintf(stderr, " --rt <factor>         Read at realtime rate x <factor>, where <factor> is a floating point value\n");
-    fprintf(stderr, "                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
+}
+
+static void usage(const char *cmd)
+{
+    printf("%s\n", get_app_version_info(APP_NAME).c_str());
+    printf("Output MXF file metadata and raw essence\n");
+    printf("\n");
+    printf("Usage: %s <<Options>> [<<Input Options>> <filename>]+\n", strip_path(cmd).c_str());
+    printf("   Use <filename> '-' for standard input\n");
+    printf("Options:\n");
+    printf(" -h | --help           Show usage and exit\n");
+    printf(" -v | --version        Print version info to stderr\n");
+    printf(" -l <file>             Log filename. Default log to stderr\n");
+    printf(" --log-level <level>   Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
+    printf("\n");
+    printf(" --file-chksum-only <type>\n");
+    printf("                       Calculate checksum of the file(s) and exit\n");
+    printf("                       <type> is one of the following: 'crc32', 'md5', 'sha1'\n");
+    printf("\n");
+    printf(" --group               Use the group reader instead of the sequence reader\n");
+    printf("                       Use this option if the files have different material packages\n");
+    printf("                       but actually belong to the same virtual package / group\n");
+    printf(" --no-reorder          Don't attempt to re-order the inputs, based on timecode, when constructing a sequence\n");
+    printf("                       Use this option for files with broken timecode\n");
+    printf("\n");
+    printf(" --check-end           Check that the last edit unit (start + duration - 1) can be read when opening the files\n");
+    printf(" --check-complete      Check that the input file structure info can be read and is complete\n");
+    printf(" --check-app-issues    Check that there are no known issues with the APP (Archive Preservation Project) file\n");
+    printf(" --check-app-crc32     Check APP essence CRC-32 data\n");
+    printf("\n");
+    printf(" -i | --info           Extract input information. Default output is to stdout\n");
+    printf(" --info-format <fmt>   Input info format. 'text' or 'xml'. Default 'text'\n");
+    printf(" --info-file <name>    Input info output file <name>\n");
+    printf(" --track-chksum <type> Calculate checksum of the track essence data\n");
+    printf("                       <type> is one of the following: 'crc32', 'md5', 'sha1'\n");
+    printf(" --file-chksum <type>  Calculate checksum of the input file(s)\n");
+    printf("                       <type> is one of the following: 'crc32', 'md5', 'sha1'\n");
+    printf(" --as11                Extract AS-11 and UK DPP metadata\n");
+    printf(" --as10                Extract AS-10 metadata\n");
+    printf(" --app                 Extract APP metadata\n");
+    printf(" --app-events <mask>   Extract APP events metadata\n");
+    printf("                       <mask> is a sequence of event types (e.g. dtv) identified using the following characters:\n");
+    printf("                           d=digibeta dropout, p=PSE failure, t=timecode break, v=VTR error\n");
+    printf(" --no-app-events-tc    Don't extract timecodes from the essence container to associate with the APP events metadata\n");
+    printf(" --app-crc32 <fname>   Extract APP CRC-32 frame data to <fname>\n");
+    printf(" --app-tc <fname>      Extract APP timecodes to <fname>\n");
+    printf(" --all-tc <fname>      Extract header and content package metadata timecodes to <fname>\n");
+    printf("                       The list of timecodes extracted for each frame is as follows:\n");
+    printf("                         frame position, material package, file source package, physical source package,\n");
+    printf("                         5 x Avid auxiliary, system item user, system item creation,\n");
+    printf("                         4 x system scheme 1 timecode array\n");
+    printf("                       The header metadata timecodes are limited to the set extracted by bmx and what bmx accepts\n");
+    printf("                       If the timecode property is not present then __:__:__:__ is printed\n");
+    printf(" --index               Extract index tables\n");
+    printf(" --avid                Extract Avid metadata\n");
+    printf(" --st436-mf <count>    Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
+    printf(" --rdd6 <frames> <filename>\n");
+    printf("                       Extract RDD-6 audio metadata from <frames> to XML <filename>.\n");
+    printf("                       <frames> can either be a single frame or a range using '-' as a separator\n");
+    printf("                       RDD-6 metadata is extracted from the first frame and program description text is accumulated using the other frames\n");
+    printf("                       Not all frames will be required if a complete program text has been extracted\n");
+    printf(" --mca-detail          Show detailed MCA channel label information\n");
+    printf("\n");
+    printf(" -p | --ess-out <prefix>\n");
+    printf("                       Extract essence to files starting with <prefix> and suffix '.raw'\n");
+    printf(" --wrap-klv <mask>     Wrap essence frames in KLV using the input Key and an 8-byte Length\n");
+    printf("                       The filename suffix is '.klv' rather than '.raw'\n");
+    printf("                       <mask> is a sequence of characters which identify which data types to wrap\n");
+    printf("                           v=video, a=audio, d=data\n");
+    printf(" --read-ess            Read the essence data, even when no other option requires it\n");
+    printf(" --deint               De-interleave multi-channel / AES-3 sound\n");
+    printf(" --start <count>       Set the start edit unit to read from. Default is 0\n");
+    printf(" --dur <count>         Set the duration in edit units. Default is minimum available duration\n");
+    printf(" --nopc                Don't include pre-charge frames\n");
+    printf(" --noro                Don't include roll-out frames\n");
+    printf(" --rt <factor>         Read at realtime rate x <factor>, where <factor> is a floating point value\n");
+    printf("                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
 #if defined(_WIN32)
-    fprintf(stderr, " --no-seq-scan         Do not set the sequential scan hint for optimizing file caching\n");
+    printf(" --no-seq-scan         Do not set the sequential scan hint for optimizing file caching\n");
 #if !defined(__MINGW32__)
-    fprintf(stderr, " --mmap-file           Use memory-mapped file I/O for the MXF files\n");
-    fprintf(stderr, "                       Note: this may reduce file I/O performance and was found to be slower over network drives\n");
+    printf(" --mmap-file           Use memory-mapped file I/O for the MXF files\n");
+    printf("                       Note: this may reduce file I/O performance and was found to be slower over network drives\n");
 #endif
 #endif
-    fprintf(stderr, " --gf                  Support growing files. Retry reading a frame when it fails\n");
-    fprintf(stderr, " --gf-retries <max>    Set the maximum times to retry reading a frame. The default is %u.\n", DEFAULT_GF_RETRIES);
-    fprintf(stderr, " --gf-delay <sec>      Set the delay (in seconds) between a failure to read and a retry. The default is %f.\n", DEFAULT_GF_RETRY_DELAY);
-    fprintf(stderr, " --gf-rate <factor>    Limit the read rate to realtime rate x <factor> after a read failure. The default is %f\n", DEFAULT_GF_RATE_AFTER_FAIL);
-    fprintf(stderr, "                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
-    fprintf(stderr, " --disable-indexing-file   Use this option to stop the reader creating an index of the partitions and essence positions in the file up front\n");
-    fprintf(stderr, "                           This option can be used to avoid indexing files containing many partitions\n");
+    printf(" --gf                  Support growing files. Retry reading a frame when it fails\n");
+    printf(" --gf-retries <max>    Set the maximum times to retry reading a frame. The default is %u.\n", DEFAULT_GF_RETRIES);
+    printf(" --gf-delay <sec>      Set the delay (in seconds) between a failure to read and a retry. The default is %f.\n", DEFAULT_GF_RETRY_DELAY);
+    printf(" --gf-rate <factor>    Limit the read rate to realtime rate x <factor> after a read failure. The default is %f\n", DEFAULT_GF_RATE_AFTER_FAIL);
+    printf("                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
+    printf(" --disable-indexing-file   Use this option to stop the reader creating an index of the partitions and essence positions in the file up front\n");
+    printf("                           This option can be used to avoid indexing files containing many partitions\n");
     if (mxf_http_is_supported()) {
-        fprintf(stderr, " --http-min-read <bytes>\n");
-        fprintf(stderr, "                       Set the minimum number of bytes to read when accessing a file over HTTP. The default is %u.\n", DEFAULT_HTTP_MIN_READ);
-        fprintf(stderr, " --http-disable-seek   Disable seeking when reading file over HTTP\n");
+        printf(" --http-min-read <bytes>\n");
+        printf("                       Set the minimum number of bytes to read when accessing a file over HTTP. The default is %u.\n", DEFAULT_HTTP_MIN_READ);
+        printf(" --http-disable-seek   Disable seeking when reading file over HTTP\n");
     }
-    fprintf(stderr, "\n");
-    fprintf(stderr, " --text-out <prefix>   Extract text based objects to files starting with <prefix>\n");
-    fprintf(stderr, "                       and suffix '.xml' if it is XML and otherwise '.txt'\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Input options:\n");
-    fprintf(stderr, " --disable-tracks <tracks> A comma separated list of track indexes and/or ranges to disable when reading essence data.\n");
-    fprintf(stderr, "                           A track is identified by the index reported by mxf2raw\n");
-    fprintf(stderr, "                           A range of track indexes is specified as '<first>-<last>', e.g. 0-3\n");
-    fprintf(stderr, " --disable-audio       Disable audio tracks when reading essence data\n");
-    fprintf(stderr, " --disable-video       Disable video tracks when reading essence data\n");
-    fprintf(stderr, " --disable-data        Disable data tracks when reading essence data\n");
-    fprintf(stderr, "\n");
+    printf("\n");
+    printf(" --text-out <prefix>   Extract text based objects to files starting with <prefix>\n");
+    printf("                       and suffix '.xml' if it is XML and otherwise '.txt'\n");
+    printf("\n");
+    printf("Input options:\n");
+    printf(" --disable-tracks <tracks> A comma separated list of track indexes and/or ranges to disable when reading essence data.\n");
+    printf("                           A track is identified by the index reported by mxf2raw\n");
+    printf("                           A range of track indexes is specified as '<first>-<last>', e.g. 0-3\n");
+    printf(" --disable-audio       Disable audio tracks when reading essence data\n");
+    printf(" --disable-video       Disable video tracks when reading essence data\n");
+    printf(" --disable-data        Disable data tracks when reading essence data\n");
+    printf("\n");
 }
 
 int main(int argc, const char** argv)
@@ -1805,7 +1812,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1816,13 +1823,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_log_level(argv[cmdln_index + 1], &log_level))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1832,13 +1839,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_checksum_type(argv[cmdln_index + 1], &checkum_type))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1886,13 +1893,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_info_format(argv[cmdln_index + 1], &info_format))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1903,7 +1910,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -1915,13 +1922,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_checksum_type(argv[cmdln_index + 1], &checkum_type))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1935,13 +1942,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_checksum_type(argv[cmdln_index + 1], &checkum_type))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1972,13 +1979,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_app_events_mask(argv[cmdln_index + 1], &app_events_mask))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -1995,7 +2002,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2008,7 +2015,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2021,7 +2028,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2047,13 +2054,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2066,13 +2073,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 2 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (parse_rdd6_frames(argv[cmdln_index + 1], &rdd6_frame_min, &rdd6_frame_max) != 1)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2091,7 +2098,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2104,13 +2111,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_wrap_klv_mask(argv[cmdln_index + 1], &wrap_klv_mask))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2129,13 +2136,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &start) != 1 || start < 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2146,13 +2153,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%" PRId64, &duration) != 1 || duration < 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2170,13 +2177,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%f", &rt_factor) != 1 || rt_factor <= 0.0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2203,13 +2210,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &gf_retries) != 1 || gf_retries == 0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2220,13 +2227,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%f", &gf_retry_delay) != 1 || gf_retry_delay < 0.0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2237,13 +2244,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%f", &gf_rate_after_fail) != 1 || gf_rate_after_fail <= 0.0)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2258,7 +2265,7 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
@@ -2270,13 +2277,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2298,11 +2305,11 @@ int main(int argc, const char** argv)
     }
 
     if (cmdln_index + 1 > argc) {
-        usage(argv[0]);
+        usage_ref(argv[0]);
         fprintf(stderr, "Missing parameters\n");
         return 1;
     } else if (cmdln_index >= argc) {
-        usage(argv[0]);
+        usage_ref(argv[0]);
         fprintf(stderr, "No <filename> given\n");
         return 1;
     }
@@ -2317,13 +2324,13 @@ int main(int argc, const char** argv)
         {
             if (cmdln_index + 1 >= argc)
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             if (!parse_track_indexes(argv[cmdln_index + 1], &disable_track_indexes[input_filenames.size()]))
             {
-                usage(argv[0]);
+                usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
             }
@@ -2354,7 +2361,7 @@ int main(int argc, const char** argv)
                     }
                 } else if (!check_file_exists(argv[cmdln_index])) {
                     if (argv[cmdln_index][0] == '-') {
-                        usage(argv[0]);
+                        usage_ref(argv[0]);
                         fprintf(stderr, "Unknown argument '%s'\n", argv[cmdln_index]);
                     } else {
                         fprintf(stderr, "Failed to open input filename '%s'\n", argv[cmdln_index]);
