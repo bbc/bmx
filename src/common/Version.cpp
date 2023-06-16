@@ -219,7 +219,8 @@ mxfProductVersion bmx::get_bmx_mxf_product_version()
         // Set the patch version value to the commit offset from the release tag.
         // The commit offset is part of the git describe tag string which has the
         // format "<tag>-<offset>-g<commit id>"
-        string describe = bmx_git::DescribeTag();
+        string describe;
+        describe = bmx_git::DescribeTag();
 #ifdef PACKAGE_GIT_VERSION_STRING
         if (describe.empty() || describe == "unknown")
             describe = PACKAGE_GIT_VERSION_STRING;

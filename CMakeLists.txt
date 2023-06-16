@@ -23,7 +23,6 @@ if(BUILD_SHARED_LIBS)
     # Ensure that static library code can be linked into the dynamic libraries (-fPIC compile option)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
-set(CMAKE_CXX_STANDARD 11)
 
 # Set the test samples output directory
 if(BMX_TEST_SAMPLES_DIR STREQUAL "")
