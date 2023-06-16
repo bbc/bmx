@@ -162,6 +162,7 @@ MXFFileReader::MXFFileReader()
     mReadStartPosition = 0;
     mReadDuration = -1;
     mFileOrigin = 0;
+    mEnableIndexFile = true;
     mEssenceReader = 0;
     mRequireFrameInfoCount = 0;
     mST436ManifestCount = 2;
@@ -248,6 +249,11 @@ void MXFFileReader::SetMCALabelIndex(MXFMCALabelIndex *label_index, bool take_ow
     size_t i;
     for (i = 0; i < mExternalReaders.size(); i++)
         mExternalReaders[i]->SetMCALabelIndex(label_index, false);
+}
+
+void MXFFileReader::SetEnableIndexFile(bool enable)
+{
+    mEnableIndexFile = enable;
 }
 
 MXFFileReader::OpenResult MXFFileReader::Open(string filename, int mode_flags)
@@ -337,47 +343,93 @@ MXFFileReader::OpenResult MXFFileReader::Open(File *file, const URI &abs_uri, co
         }
 
 
-        // try read all partitions find and get last partition with header metadata
+        // try read all partitions find and the last partition with header metadata
 
-        bool file_is_complete;
-        if (mFile->isSeekable()) {
-            file_is_complete = mFile->readPartitions();
-            if (!file_is_complete) {
-                BMX_ASSERT(mFile->getPartitions().size() == 1);
-                if (mFile->getPartition(0).isClosed() || mFile->getPartition(0).getFooterPartition() != 0)
-                    log_warn("Failed to read all partitions. File may be incomplete or invalid\n");
+        bool file_is_complete = false;
+        Partition *metadata_partition = 0;
+        bool own_metadata_partition = false;
+        if (mEnableIndexFile) {
+            if (mFile->isSeekable()) {
+                file_is_complete = mFile->readPartitions();
+                if (!file_is_complete) {
+                    BMX_ASSERT(mFile->getPartitions().size() == 1);
+                    if (mFile->getPartition(0).isClosed() || mFile->getPartition(0).getFooterPartition() != 0)
+                        log_warn("Failed to read all partitions. File may be incomplete or invalid\n");
+                }
+            }
+
+            if (file_is_complete) {
+                const vector<Partition*> &partitions = mFile->getPartitions();
+                for (i = partitions.size(); i > 0 ; i--) {
+                    if (partitions[i - 1]->getHeaderByteCount() > 0) {
+                        metadata_partition = partitions[i - 1];
+                        break;
+                    }
+                }
+            } else {
+                metadata_partition = &header_partition;
             }
         } else {
-            file_is_complete = false;
-        }
-        const vector<Partition*> &partitions = mFile->getPartitions();
-        Partition *metadata_partition = 0;
-        for (i = partitions.size(); i > 0 ; i--) {
-            if (partitions[i - 1]->getHeaderByteCount() > 0) {
-                metadata_partition = partitions[i - 1];
-                break;
+            // Only try reading the footer partition to see if it has metadata (if seeking is possible)
+            if (mFile->isSeekable()) {
+                Partition *footer_partition = mFile->readFooterPartition();
+                if (footer_partition) {
+                    if (footer_partition->getHeaderByteCount() > 0) {
+                        metadata_partition = footer_partition;
+                        own_metadata_partition = true;
+                    } else {
+                        delete footer_partition;
+                    }
+                }
+            }
+            if (!metadata_partition && header_partition.getHeaderByteCount() > 0) {
+                metadata_partition = &header_partition;
             }
         }
+
         if (!metadata_partition)
             THROW_RESULT(MXF_RESULT_NO_HEADER_METADATA);
 
 
         // read and process the header metadata
 
-        mxfKey key;
-        uint8_t llen;
-        uint64_t len;
-        if (mFile->isSeekable()) {
-            mFile->seek(metadata_partition->getThisPartition(), SEEK_SET);
-            mFile->readKL(&key, &llen, &len);
-            mFile->skip(len);
+        try
+        {
+            mxfKey key;
+            uint8_t llen;
+            uint64_t len;
+            if (mFile->isSeekable()) {
+                mFile->seek(metadata_partition->getThisPartition(), SEEK_SET);
+                mFile->readKL(&key, &llen, &len);
+                mFile->skip(len);
+            }
+            mFile->readNextNonFillerKL(&key, &llen, &len);
+            BMX_CHECK(mxf_is_header_metadata(&key));
+
+            mHeaderMetadata->read(mFile, metadata_partition, &key, llen, len);
+
+            ProcessMetadata(metadata_partition);
+
+            if (!file_is_complete && metadata_partition != &header_partition && mFile->isSeekable()) {
+                // The mFile->getPartitions().size() == 1 when the file is incomplete and so the
+                // EssenceReader will assume that the file was positioned after the header partition pack.
+                // In this case the header metadata was read from the footer and so a seek is needed back
+                // to after the header partition pack.
+                mFile->seek(header_partition.getThisPartition(), SEEK_SET);
+                mFile->readKL(&key, &llen, &len);
+                mFile->skip(len);
+            }
+
+            if (own_metadata_partition)
+                delete metadata_partition;
+            metadata_partition = 0;
         }
-        mFile->readNextNonFillerKL(&key, &llen, &len);
-        BMX_CHECK(mxf_is_header_metadata(&key));
-
-        mHeaderMetadata->read(mFile, metadata_partition, &key, llen, len);
-
-        ProcessMetadata(metadata_partition);
+        catch (...)
+        {
+            if (own_metadata_partition)
+                delete metadata_partition;
+            throw;
+        }
 
 
         // create internal essence reader

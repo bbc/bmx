@@ -66,6 +66,7 @@ public:
     void SetInputFlags(int flags);
     void SetRWInterleave(uint32_t rw_interleave_size);
     void SetHTTPMinReadSize(uint32_t size);
+    void SetHTTPEnableSeek(bool enable);  // Default true
 #if defined(_WIN32) && !defined(__MINGW32__)
     void SetUseMMapFile(bool enable);
 #endif
@@ -105,6 +106,7 @@ private:
     std::vector<InputChecksumFile> mInputChecksumFiles;
     MXFRWInterleaver *mRWInterleaver;
     uint32_t mHTTPMinReadSize;
+    bool mHTTPEnableSeek;
 #if defined(_WIN32) && !defined(__MINGW32__)
     bool mUseMMapFile;
 #endif

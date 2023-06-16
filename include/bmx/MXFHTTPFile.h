@@ -45,7 +45,7 @@ bool mxf_http_is_supported();
 
 bool mxf_http_is_url(const std::string &url_str);
 
-MXFFile* mxf_http_file_open_read(const std::string &url_str, uint32_t min_read_size);
+MXFFile* mxf_http_file_open_read(const std::string &url_str, uint32_t min_read_size, bool enable_seek);
 
 
 };

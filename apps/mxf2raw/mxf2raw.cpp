@@ -1624,7 +1624,7 @@ static void usage(const char *cmd)
     fprintf(stderr, "                       Use this option for files with broken timecode\n");
     fprintf(stderr, "\n");
     fprintf(stderr, " --check-end           Check that the last edit unit (start + duration - 1) can be read when opening the files\n");
-    fprintf(stderr, " --check-complete      Check that the input files are complete\n");
+    fprintf(stderr, " --check-complete      Check that the input file structure info can be read and is complete\n");
     fprintf(stderr, " --check-app-issues    Check that there are no known issues with the APP (Archive Preservation Project) file\n");
     fprintf(stderr, " --check-app-crc32     Check APP essence CRC-32 data\n");
     fprintf(stderr, "\n");
@@ -1687,9 +1687,12 @@ static void usage(const char *cmd)
     fprintf(stderr, " --gf-delay <sec>      Set the delay (in seconds) between a failure to read and a retry. The default is %f.\n", DEFAULT_GF_RETRY_DELAY);
     fprintf(stderr, " --gf-rate <factor>    Limit the read rate to realtime rate x <factor> after a read failure. The default is %f\n", DEFAULT_GF_RATE_AFTER_FAIL);
     fprintf(stderr, "                       <factor> value 1.0 results in realtime rate, value < 1.0 slower and > 1.0 faster\n");
+    fprintf(stderr, " --disable-indexing-file   Use this option to stop the reader creating an index of the partitions and essence positions in the file up front\n");
+    fprintf(stderr, "                           This option can be used to avoid indexing files containing many partitions\n");
     if (mxf_http_is_supported()) {
         fprintf(stderr, " --http-min-read <bytes>\n");
         fprintf(stderr, "                       Set the minimum number of bytes to read when accessing a file over HTTP. The default is %u.\n", DEFAULT_HTTP_MIN_READ);
+        fprintf(stderr, " --http-disable-seek   Disable seeking when reading file over HTTP\n");
     }
     fprintf(stderr, "\n");
     fprintf(stderr, " --text-out <prefix>   Extract text based objects to files starting with <prefix>\n");
@@ -1707,6 +1710,7 @@ static void usage(const char *cmd)
 
 int main(int argc, const char** argv)
 {
+    bool have_action = false;  // true when an option is selected to take a specific action
     std::vector<const char *> input_filenames;
     const char *log_filename = 0;
     LogLevel log_level = INFO_LOG;
@@ -1761,7 +1765,9 @@ int main(int argc, const char** argv)
     unsigned int gf_retries = DEFAULT_GF_RETRIES;
     float gf_retry_delay = DEFAULT_GF_RETRY_DELAY;
     float gf_rate_after_fail = DEFAULT_GF_RATE_AFTER_FAIL;
+    bool enable_indexing_file = true;
     uint32_t http_min_read = DEFAULT_HTTP_MIN_READ;
+    bool http_enable_seek = true;
     ChecksumType checkum_type;
 #if defined(_WIN32) && !defined(__MINGW32__)
     bool use_mmap_file = false;
@@ -1793,6 +1799,7 @@ int main(int argc, const char** argv)
                 return 0;
             }
             fprintf(stderr, "%s\n", get_app_version_info(APP_NAME).c_str());
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "-l") == 0)
         {
@@ -1836,6 +1843,7 @@ int main(int argc, const char** argv)
                 return 1;
             }
             file_checksum_only_types.insert(checkum_type);
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--group") == 0)
@@ -1849,25 +1857,30 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--check-end") == 0)
         {
             check_end = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--check-complete") == 0)
         {
             check_complete = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--check-app-issues") == 0)
         {
             check_app_issues = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--check-app-crc32") == 0)
         {
             check_app_crc32 = true;
             do_ess_read = true;
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "-i") == 0 ||
                  strcmp(argv[cmdln_index], "--info") == 0)
         {
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--info-format") == 0)
         {
@@ -1915,6 +1928,7 @@ int main(int argc, const char** argv)
             track_checksum_types.insert(checkum_type);
             do_write_info = true;
             do_ess_read = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--file-chksum") == 0)
@@ -1933,22 +1947,26 @@ int main(int argc, const char** argv)
             }
             file_checksum_types.insert(checkum_type);
             do_write_info = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--as11") == 0)
         {
             do_as11_info = true;
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--as10") == 0)
         {
             do_as10_info = true;
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--app") == 0)
         {
             do_app_info = true;
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--app-events") == 0)
         {
@@ -1966,6 +1984,7 @@ int main(int argc, const char** argv)
             }
             do_app_info = true;
             do_write_info = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--no-app-events-tc") == 0)
@@ -1982,6 +2001,7 @@ int main(int argc, const char** argv)
             }
             app_crc32_filename = argv[cmdln_index + 1];
             do_ess_read = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--app-tc") == 0)
@@ -1994,6 +2014,7 @@ int main(int argc, const char** argv)
             }
             app_tc_filename = argv[cmdln_index + 1];
             do_ess_read = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--all-tc") == 0)
@@ -2006,6 +2027,7 @@ int main(int argc, const char** argv)
             }
             all_tc_filename = argv[cmdln_index + 1];
             do_ess_read = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--index") == 0)
@@ -2013,11 +2035,13 @@ int main(int argc, const char** argv)
             do_index_info = true;
             do_write_info = true;
             do_parse_read = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--avid") == 0)
         {
             do_avid_info = true;
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--st436-mf") == 0)
         {
@@ -2035,6 +2059,7 @@ int main(int argc, const char** argv)
             }
             st436_manifest_count = (uint32_t)(uvalue);
             do_write_info = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--rdd6") == 0)
@@ -2052,12 +2077,14 @@ int main(int argc, const char** argv)
                 return 1;
             }
             rdd6_filename = argv[cmdln_index + 2];
+            have_action = true;
             cmdln_index += 2;
         }
         else if (strcmp(argv[cmdln_index], "--mca-detail") == 0)
         {
             mca_detail = true;
             do_write_info = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "-p") == 0 ||
                  strcmp(argv[cmdln_index], "--ess-out") == 0)
@@ -2070,6 +2097,7 @@ int main(int argc, const char** argv)
             }
             ess_output_prefix = argv[cmdln_index + 1];
             do_ess_read = true;
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--wrap-klv") == 0)
@@ -2091,6 +2119,7 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--read-ess") == 0)
         {
             do_ess_read = true;
+            have_action = true;
         }
         else if (strcmp(argv[cmdln_index], "--deint") == 0)
         {
@@ -2221,6 +2250,10 @@ int main(int argc, const char** argv)
             growing_file = true;
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--disable-indexing-file") == 0)
+        {
+            enable_indexing_file = false;
+        }
         else if (strcmp(argv[cmdln_index], "--text-out") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -2230,6 +2263,7 @@ int main(int argc, const char** argv)
                 return 1;
             }
             text_output_prefix = argv[cmdln_index + 1];
+            have_action = true;
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--http-min-read") == 0)
@@ -2248,6 +2282,10 @@ int main(int argc, const char** argv)
             }
             http_min_read = (uint32_t)(uvalue);
             cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--http-disable-seek") == 0)
+        {
+            http_enable_seek = false;
         }
         else if (strcmp(argv[cmdln_index], "--regtest") == 0)
         {
@@ -2269,8 +2307,8 @@ int main(int argc, const char** argv)
         return 1;
     }
 
-    if (cmdln_index == 1) {
-        // default to outputting info if no options are given
+    if (!have_action) {
+        // default to outputting info if no specific action has been selected
         do_write_info = true;
     }
 
@@ -2409,6 +2447,7 @@ int main(int argc, const char** argv)
             file_factory.SetInputChecksumTypes(file_checksum_types);
         file_factory.SetInputFlags(file_flags);
         file_factory.SetHTTPMinReadSize(http_min_read);
+        file_factory.SetHTTPEnableSeek(http_enable_seek);
 #if defined(_WIN32) && !defined(__MINGW32__)
         file_factory.SetUseMMapFile(use_mmap_file);
 #endif
@@ -2423,6 +2462,7 @@ int main(int argc, const char** argv)
                 grp_file_reader->SetFileFactory(&file_factory, false);
                 grp_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
                 grp_file_reader->SetST436ManifestFrameCount(st436_manifest_count);
+                grp_file_reader->SetEnableIndexFile(enable_indexing_file);
                 result = grp_file_reader->Open(input_filenames[i], input_open_flags);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", get_input_filename(input_filenames[i]),
@@ -2446,6 +2486,7 @@ int main(int argc, const char** argv)
                 seq_file_reader->SetFileFactory(&file_factory, false);
                 seq_file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
                 seq_file_reader->SetST436ManifestFrameCount(st436_manifest_count);
+                seq_file_reader->SetEnableIndexFile(enable_indexing_file);
                 result = seq_file_reader->Open(input_filenames[i], input_open_flags);
                 if (result != MXFFileReader::MXF_RESULT_SUCCESS) {
                     log_error("Failed to open MXF file '%s': %s\n", get_input_filename(input_filenames[i]),
@@ -2466,6 +2507,7 @@ int main(int argc, const char** argv)
             file_reader->SetFileFactory(&file_factory, false);
             file_reader->GetPackageResolver()->SetFileFactory(&file_factory, false);
             file_reader->SetST436ManifestFrameCount(st436_manifest_count);
+            file_reader->SetEnableIndexFile(enable_indexing_file);
             if (do_as11_info)
                 as11_register_extensions(file_reader);
             if (do_as10_info)
@@ -2491,10 +2533,10 @@ int main(int argc, const char** argv)
                 complete_result = false;
                 cmd_result = 1;
             }
-            if (reader->IsSeekable())
+            if (reader->IsSeekable() && enable_indexing_file)
                 log_warn("Input file is incomplete\n");
             else
-                log_debug("Input file is not seekable\n");
+                log_debug("Input file is incomplete, probably because the file is not seekable\n");
         }
 
         mxfRational edit_rate = reader->GetEditRate();

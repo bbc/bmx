@@ -44,6 +44,7 @@
 #include <curl/curl.h>
 
 #include <mxf/mxf.h>
+#include <mxf/mxf_stream_file.h>
 
 #include <bmx/MXFHTTPFile.h>
 #include <bmx/Utils.h>
@@ -452,7 +453,7 @@ bool bmx::mxf_http_is_url(const string &url_str)
            url_str.compare(0, 8, "https://") == 0;
 }
 
-MXFFile* bmx::mxf_http_file_open_read(const string &url_str, uint32_t min_read_size)
+MXFFile* bmx::mxf_http_file_open_read(const string &url_str, uint32_t min_read_size, bool enable_seek)
 {
     MXFFile *http_file = 0;
     try
@@ -490,7 +491,13 @@ MXFFile* bmx::mxf_http_file_open_read(const string &url_str, uint32_t min_read_s
         http_file->size          = http_file_size;
         http_file->free_sys_data = free_http_file;
 
-        return http_file;
+        if (enable_seek) {
+            return http_file;
+        } else {
+            MXFFile *stream_file = 0;
+            BMX_CHECK(mxf_stream_file_wrap(http_file, true, &stream_file));
+            return stream_file;
+        }
     }
     catch (...)
     {
@@ -525,10 +532,11 @@ bool bmx::mxf_http_is_url(const string &url_str)
            url_str.compare(0, 8, "https://") == 0;
 }
 
-MXFFile* bmx::mxf_http_file_open_read(const string &url_str, uint32_t min_read_size)
+MXFFile* bmx::mxf_http_file_open_read(const string &url_str, uint32_t min_read_size, bool enable_seek)
 {
     (void)url_str;
     (void)min_read_size;
+    (void)enable_seek;
     BMX_EXCEPTION(("HTTP file access is not supported in this build"));
 }
 

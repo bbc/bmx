@@ -99,6 +99,7 @@ public:
     void SetST436ManifestFrameCount(uint32_t count);     // default: 2 frames used to extract manifest
     virtual void SetFileIndex(MXFFileIndex *file_index, bool take_ownership);
     virtual void SetMCALabelIndex(MXFMCALabelIndex *label_index, bool take_ownership);
+    void SetEnableIndexFile(bool enable);  // Default true
 
     OpenResult Open(std::string filename, int mode_flags=0);
     OpenResult Open(mxfpp::File *file, std::string filename, int mode_flags=0);
@@ -259,6 +260,7 @@ private:
     std::vector<MXFTextObject*> mTextObjects; // internal and external text objects
     std::vector<MXFTextObject*> mInternalTextObjects;
 
+    bool mEnableIndexFile;
     EssenceReader *mEssenceReader;
 
     uint32_t mRequireFrameInfoCount;

@@ -53,7 +53,8 @@ AppMXFFileFactory::AppMXFFileFactory()
 {
     mInputFlags = 0;
     mRWInterleaver = 0;
-    mHTTPMinReadSize = 64 * 1024;
+    mHTTPMinReadSize = 1024 * 1024;
+    mHTTPEnableSeek = true;
 #if defined(_WIN32) && !defined(__MINGW32__)
     mUseMMapFile = false;
 #endif
@@ -96,6 +97,11 @@ void AppMXFFileFactory::SetRWInterleave(uint32_t rw_interleave_size)
 void AppMXFFileFactory::SetHTTPMinReadSize(uint32_t size)
 {
     mHTTPMinReadSize = size;
+}
+
+void AppMXFFileFactory::SetHTTPEnableSeek(bool enable)
+{
+    mHTTPEnableSeek = enable;
 }
 
 #if defined(_WIN32) && !defined(__MINGW32__)
@@ -152,7 +158,7 @@ File* AppMXFFileFactory::OpenRead(string filename)
             uri_str = "stdin:";
         } else {
             if (mxf_http_is_url(filename)) {
-                mxf_file = mxf_http_file_open_read(filename, mHTTPMinReadSize);
+                mxf_file = mxf_http_file_open_read(filename, mHTTPMinReadSize, mHTTPEnableSeek);
                 uri_str = filename;
             } else {
 #if defined(_WIN32)
