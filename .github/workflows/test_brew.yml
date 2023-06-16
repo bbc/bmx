@@ -1,0 +1,17 @@
+name: Test Homebrew Formula
+on:
+  push:
+jobs:
+  test_brew:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+          ref: philipn-homebrew
+      - name: Build
+        shell: bash
+        run: |
+          brew install Formula/bmx.rb
