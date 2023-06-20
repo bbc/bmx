@@ -21,15 +21,11 @@ RUN DEBIAN_FRONTEND=noninteractive \
 
 # Copy, configure and make install
 COPY . bmx
-ARG BUILD_SHARED_LIBS=ON
-ARG LIBMXF_BUILD_ARCHIVE=ON
-ARG BMX_BUILD_WITH_LIBCURL=ON
+ARG CONFIG_ARGS='-DBMX_BUILD_WITH_LIBCURL=ON -DLIBMXF_BUILD_ARCHIVE=ON'
 RUN mkdir build && cd build && \
     cmake -G "Unix Makefiles" \
         -DCMAKE_INSTALL_PREFIX=/build/install \
-        -DBMX_BUILD_WITH_LIBCURL=$BMX_BUILD_WITH_LIBCURL \
-        -DLIBMXF_BUILD_ARCHIVE=$LIBMXF_BUILD_ARCHIVE \
-        -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
+        -DCONFIG_ARGS=$CONFIG_ARGS \
         ../bmx && \
     make && make test && make install
 
