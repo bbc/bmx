@@ -25,7 +25,7 @@ ARG CONFIG_ARGS='-DBMX_BUILD_WITH_LIBCURL=ON -DLIBMXF_BUILD_ARCHIVE=ON'
 RUN mkdir build && cd build && \
     cmake -G "Unix Makefiles" \
         -DCMAKE_INSTALL_PREFIX=/build/install \
-        -DCONFIG_ARGS=$CONFIG_ARGS \
+        $CONFIG_ARGS \
         ../bmx && \
     make && make test && make install
 
