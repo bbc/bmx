@@ -217,6 +217,7 @@ static void set_mpeg_start_code(unsigned char *data, uint32_t offset, uint32_t c
 static void fill_mpeg_frame(unsigned char *data, uint32_t data_size, const MPEGInfo *info)
 {
     assert(data_size > 400);
+    (void)data_size;
 
     uint32_t set_offset = 0;
     if (info->seq_header) {
