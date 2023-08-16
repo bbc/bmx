@@ -101,6 +101,7 @@ public:
     void ForceWriteCBEDuration0(bool enable);                           // force duration=0 for CBE index table
     void SetPrimaryPackage(bool enable);                                // default false
     void SetIndexFollowsEssence(bool enable);                           // default false. If true then place index partition after the essence it indexes, even for CBE
+    void SetSignalST3792(bool enable);                                  // default false. If true then signal ST 379-2 compliance using sub-descriptor
 
 public:
     void SetOutputStartOffset(int64_t offset);
@@ -187,6 +188,7 @@ private:
     bool mFrameWrapped;
     mxfUL mOPLabel;
     bool mIndexFollowsEssence;
+    bool mSignalST3792;
 
     int64_t mOutputStartOffset;
     int64_t mOutputEndOffset;

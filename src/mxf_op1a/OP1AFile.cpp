@@ -125,6 +125,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mCBEIndexPartitionIndex = 0;
     mSetPrimaryPackage = false;
     mIndexFollowsEssence = false;
+    mSignalST3792 = false;
 
     mTrackIdHelper.SetId("TimecodeTrack", 901);
     mTrackIdHelper.SetStartId(MXF_PICTURE_DDEF, 1001);
@@ -282,6 +283,11 @@ void OP1AFile::SetPrimaryPackage(bool enable)
 void OP1AFile::SetIndexFollowsEssence(bool enable)
 {
     mIndexFollowsEssence = enable;
+}
+
+void OP1AFile::SetSignalST3792(bool enable)
+{
+    mSignalST3792 = enable;
 }
 
 void OP1AFile::SetOutputStartOffset(int64_t offset)
@@ -922,8 +928,8 @@ void OP1AFile::CreateHeaderMetadata()
     for (i = 0; i < mXMLTracks.size(); i++)
         mXMLTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage);
 
-    // Signal ST 379-2 generic container compliance if there is RDD 36 / ProRes video.
-    // This is required by RDD 44 (RDD 36 / ProRes in MXF)
+    // Signal ST 379-2 generic container compliance if mSignalST3792 or there is RDD 36 / ProRes video.
+    // RDD 44 (RDD 36 / ProRes in MXF) requires ST 379-2 and specifically mentions ContainerConstraintSubDescriptor.
     bool have_rdd36 = false;
     for (i = 0; i < mTracks.size(); i++) {
         if (dynamic_cast<OP1ARDD36Track*>(mTracks[i])) {
@@ -931,7 +937,7 @@ void OP1AFile::CreateHeaderMetadata()
             break;
         }
     }
-    if (have_rdd36) {
+    if (mSignalST3792 || have_rdd36) {
         GenericDescriptor *descriptor = dynamic_cast<GenericDescriptor*>(mFileSourcePackage->getDescriptor());
         descriptor->appendSubDescriptors(new ContainerConstraintsSubDescriptor(mHeaderMetadata));
     }

@@ -619,6 +619,8 @@ static void usage(const char *cmd)
     printf("    --system-item           Add system item\n");
     printf("    --primary-package       Set the header metadata set primary package property to the top-level file source package\n");
     printf("    --index-follows         The index partition follows the essence partition, even when it is CBE essence\n");
+    printf("    --st379-2               Add ContainerConstraintsSubDescriptor to signal compliance with ST 379-2, MXF Constrained Generic Container\n");
+    printf("                            The sub-descriptor will be added anyway if there is RDD 36 video present\n");
     printf("\n");
     printf("  op1a/rdd9:\n");
     printf("    --ard-zdf-hdf           Use the ARD ZDF HDF profile\n");
@@ -777,6 +779,7 @@ int main(int argc, const char** argv)
     bool op1a_system_item = false;
     bool op1a_primary_package = false;
     bool op1a_index_follows = false;
+    bool st379_2 = false;
     AS10Shim as10_shim = AS10_UNKNOWN_SHIM;
     const char *output_name = "";
     map<EssenceType, string> filename_essence_type_names;
@@ -2351,6 +2354,10 @@ int main(int argc, const char** argv)
         {
             op1a_index_follows = true;
         }
+        else if (strcmp(argv[cmdln_index], "--st379-2") == 0)
+        {
+            st379_2 = true;
+        }
         else if (strcmp(argv[cmdln_index], "--ard-zdf-hdf") == 0)
         {
             ard_zdf_hdf_profile = true;
@@ -3655,6 +3662,9 @@ int main(int argc, const char** argv)
                 op1a_clip->SetRepeatIndexTable(true);
             if (op1a_index_follows)
                 op1a_clip->SetIndexFollowsEssence(true);
+
+            if (st379_2)
+                op1a_clip->SetSignalST3792(true);
 
             if (mp_uid_set)
                 op1a_clip->SetMaterialPackageUID(mp_uid);

@@ -526,6 +526,8 @@ static void usage(const char *cmd)
     printf("    --kag-size-512          Set KAG size to 512, instead of 1\n");
     printf("    --primary-package       Set the header metadata set primary package property to the top-level file source package\n");
     printf("    --index-follows         The index partition follows the essence partition, even when it is CBE essence\n");
+    printf("    --st379-2               Add ContainerConstraintsSubDescriptor to signal compliance with ST 379-2, MXF Constrained Generic Container\n");
+    printf("                            The sub-descriptor will be added anyway if there is RDD 36 video present\n");
     printf("\n");
     printf("  op1a/rdd9/d10:\n");
     printf("    --xml-scheme-id <id>    Set the XML payload scheme identifier associated with the following --embed-xml option.\n");
@@ -859,6 +861,7 @@ int main(int argc, const char** argv)
     bool kag_size_512 = false;
     bool op1a_primary_package = false;
     bool op1a_index_follows = false;
+    bool st379_2 = false;
     AS10Shim as10_shim = AS10_UNKNOWN_SHIM;
     const char *mpeg_descr_defaults_name = 0;
     bool mpeg_descr_frame_checks = true;
@@ -1479,6 +1482,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--index-follows") == 0)
         {
             op1a_index_follows = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--st379-2") == 0)
+        {
+            st379_2 = true;
         }
         else if (strcmp(argv[cmdln_index], "--xml-scheme-id") == 0)
         {
@@ -4951,6 +4958,9 @@ int main(int argc, const char** argv)
                 op1a_clip->SetRepeatIndexTable(true);
             if (op1a_index_follows)
                 op1a_clip->SetIndexFollowsEssence(true);
+
+            if (st379_2)
+                op1a_clip->SetSignalST3792(true);
 
             if (mp_uid_set)
                 op1a_clip->SetMaterialPackageUID(mp_uid);
