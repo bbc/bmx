@@ -997,7 +997,7 @@ bool bmx::parse_avid_umid_type(const char *str, AvidUMIDType *value)
     return false;
 }
 
-int bmx::parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *three_color_primaries)
+bool bmx::parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *three_color_primaries)
 {
     unsigned int value[6];
     if (sscanf(str, "%d,%d,%d,%d,%d,%d", &value[0], &value[1], &value[2], &value[3], &value[4], &value[5]) != 6)
@@ -1013,7 +1013,7 @@ int bmx::parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *th
     return true;
 }
 
-int bmx::parse_color_primary(const char *str, mxfColorPrimary *color_primary)
+bool bmx::parse_color_primary(const char *str, mxfColorPrimary *color_primary)
 {
     unsigned int value[2];
     if (sscanf(str, "%d,%d", &value[0], &value[1]) != 2)

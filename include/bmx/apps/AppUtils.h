@@ -145,8 +145,8 @@ bool parse_color_primaries(const char *str, UL *label);
 bool parse_color_siting(const char *str, MXFColorSiting *value);
 bool parse_vc2_mode(const char *mode_str, int *vc2_mode_flags);
 bool parse_avid_umid_type(const char *str, AvidUMIDType *value);
-int parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *three_color_primaries);
-int parse_color_primary(const char *str, mxfColorPrimary *color_primary);
+bool parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *three_color_primaries);
+bool parse_color_primary(const char *str, mxfColorPrimary *color_primary);
 bool parse_essence_type_names(const char *str, std::map<EssenceType, std::string> *essence_type_names);
 bool parse_video_line_map(const char *str, mxfVideoLineMap *video_line_map);
 
