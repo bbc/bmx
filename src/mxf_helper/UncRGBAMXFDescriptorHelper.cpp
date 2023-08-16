@@ -156,8 +156,7 @@ UncRGBAMXFDescriptorHelper::UncRGBAMXFDescriptorHelper()
     mStoredDimensionsSet = false;
     mDisplayDimensionsSet = false;
     mSampledDimensionsSet = false;
-    mVideoLineMap = SUPPORTED_ESSENCE[0].video_line_map;
-    mVideoLineMapSet = false;
+    BMX_OPT_PROP_DEFAULT(mVideoLineMap, SUPPORTED_ESSENCE[0].video_line_map);
 
     SetDefaultDimensions();
 }
@@ -228,10 +227,6 @@ void UncRGBAMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uin
     else
         mSampledYOffset = 0;
     mSampledDimensionsSet = true;
-
-    mVideoLineMap = g_Null_Video_Line_Map;
-    if (rgba_descriptor->haveVideoLineMap())
-        mVideoLineMap = rgba_descriptor->getVideoLineMapStruct();
 }
 
 void UncRGBAMXFDescriptorHelper::SetStoredDimensions(uint32_t width, uint32_t height)
@@ -260,13 +255,6 @@ void UncRGBAMXFDescriptorHelper::SetSampledDimensions(uint32_t width, uint32_t h
     mSampledYOffset       = y_offset;
     mSampledDimensionsSet = true;
     SetDefaultDimensions();
-}
-
-void UncRGBAMXFDescriptorHelper::SetVideoLineMap(int32_t field1, int32_t field2)
-{
-    mVideoLineMap.first  = field1;
-    mVideoLineMap.second = field2;
-    mVideoLineMapSet = true;
 }
 
 void UncRGBAMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
@@ -318,6 +306,8 @@ void UncRGBAMXFDescriptorHelper::UpdateFileDescriptor()
         rgba_descriptor->setSampledXOffset(mSampledXOffset);
     if (mSampledYOffset != 0 || (mFlavour & MXFDESC_AVID_FLAVOUR))
         rgba_descriptor->setSampledYOffset(mSampledYOffset);
+    // PictureMXFDescriptorHelper::UpdateFileDescriptor() above would have written VideoLineMap
+    // if it was set. This line ensures that the default value gets written if it was not set.
     rgba_descriptor->setVideoLineMap(mVideoLineMap);
     rgba_descriptor->setPixelLayout(SUPPORTED_ESSENCE[mEssenceIndex].pixel_layout);
 }
@@ -430,7 +420,7 @@ void UncRGBAMXFDescriptorHelper::SetDefaultDimensions()
         }
     }
 
-    if (!mVideoLineMapSet) {
+    if (!BMX_OPT_PROP_IS_SET(mVideoLineMap)) {
         mVideoLineMap = SUPPORTED_ESSENCE[mEssenceIndex].video_line_map;
         if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
             if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_MIXED_FIELDS) {

@@ -211,6 +211,7 @@ PictureMXFDescriptorHelper::PictureMXFDescriptorHelper()
     BMX_OPT_PROP_DEFAULT(mFrameLayout, MXF_FULL_FRAME);
     BMX_OPT_PROP_DEFAULT(mColorSiting, MXF_COLOR_SITING_UNKNOWN);
     BMX_OPT_PROP_DEFAULT(mFieldDominance, 1);
+    BMX_OPT_PROP_DEFAULT(mVideoLineMap, g_Null_Video_Line_Map);
     BMX_OPT_PROP_DEFAULT(mBlackRefLevel, 0);
     BMX_OPT_PROP_DEFAULT(mWhiteRefLevel, 0);
     BMX_OPT_PROP_DEFAULT(mColorRange, 0);
@@ -268,6 +269,8 @@ void PictureMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uin
         BMX_OPT_PROP_SET(mFrameLayout, picture_descriptor->getFrameLayout());
     if (picture_descriptor->haveFieldDominance())
         BMX_OPT_PROP_SET(mFieldDominance, picture_descriptor->getFieldDominance());
+    if (picture_descriptor->haveVideoLineMap())
+        BMX_OPT_PROP_SET(mVideoLineMap, picture_descriptor->getVideoLineMapStruct());
     if (picture_descriptor->haveCaptureGamma())
         BMX_OPT_PROP_SET(mTransferCh, picture_descriptor->getCaptureGamma());
     if (picture_descriptor->haveCodingEquations())
@@ -347,6 +350,12 @@ void PictureMXFDescriptorHelper::SetFrameLayout(MXFFrameLayout frame_layout)
 void PictureMXFDescriptorHelper::SetFieldDominance(uint8_t field_num)
 {
     BMX_OPT_PROP_SET(mFieldDominance, field_num);
+}
+
+void PictureMXFDescriptorHelper::SetVideoLineMap(int32_t first, int32_t second)
+{
+    mxfVideoLineMap value = {first, second};
+    BMX_OPT_PROP_SET(mVideoLineMap, value);
 }
 
 void PictureMXFDescriptorHelper::SetTransferCharacteristic(mxfUL label)
@@ -477,6 +486,8 @@ void PictureMXFDescriptorHelper::UpdateFileDescriptor()
         picture_descriptor->setFrameLayout(mFrameLayout);
     if (BMX_OPT_PROP_IS_SET(mFieldDominance))
         picture_descriptor->setFieldDominance(mFieldDominance);
+    if (BMX_OPT_PROP_IS_SET(mVideoLineMap))
+        picture_descriptor->setVideoLineMap(mVideoLineMap);
     if (BMX_OPT_PROP_IS_SET(mTransferCh))
         picture_descriptor->setCaptureGamma(mTransferCh);
     if (BMX_OPT_PROP_IS_SET(mCodingEquations))

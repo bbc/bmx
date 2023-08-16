@@ -63,7 +63,6 @@ public:
     void SetStoredDimensions(uint32_t width, uint32_t height);
     void SetDisplayDimensions(uint32_t width, uint32_t height, int32_t x_offset, int32_t y_offset);
     void SetSampledDimensions(uint32_t width, uint32_t height, int32_t x_offset, int32_t y_offset);
-    void SetVideoLineMap(int32_t field1, int32_t field2);
     virtual void SetEssenceType(EssenceType essence_type);
     virtual void SetSampleRate(mxfRational sample_rate);
 
@@ -99,8 +98,6 @@ private:
     uint32_t mSampledHeight;
     int32_t mSampledXOffset;
     int32_t mSampledYOffset;
-    mxfVideoLineMap mVideoLineMap;
-    bool mVideoLineMapSet;
 };
 
 
