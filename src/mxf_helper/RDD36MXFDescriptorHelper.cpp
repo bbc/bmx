@@ -297,9 +297,10 @@ void RDD36MXFDescriptorHelper::UpdateFileDescriptor(RDD36EssenceParser *essence_
         cdci_descriptor->setDisplayF2Offset(0);
     }
 
-    // stored dimensions are a multiple of 16, the macro block size
-    cdci_descriptor->setStoredWidth((cdci_descriptor->getDisplayWidth() + 15) / 16 * 16);
-    cdci_descriptor->setStoredHeight((cdci_descriptor->getDisplayHeight() + 15) / 16 * 16);
+    // RDD 44:2022 revised the stored dimensions to not be a multiple of the macro block size as
+    // is suggested by ST 377-1 section G.1.1
+    cdci_descriptor->setStoredWidth(cdci_descriptor->getDisplayWidth());
+    cdci_descriptor->setStoredHeight(cdci_descriptor->getDisplayHeight());
     cdci_descriptor->setDisplayXOffset(0);
     cdci_descriptor->setDisplayYOffset(0);
     if (essence_parser->GetChromaFormat() == RDD36_CHROMA_422)
