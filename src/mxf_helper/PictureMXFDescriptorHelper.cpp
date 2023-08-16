@@ -358,6 +358,11 @@ void PictureMXFDescriptorHelper::SetVideoLineMap(int32_t first, int32_t second)
     BMX_OPT_PROP_SET(mVideoLineMap, value);
 }
 
+void PictureMXFDescriptorHelper::SetVideoLineMap(mxfVideoLineMap video_line_map)
+{
+    BMX_OPT_PROP_SET(mVideoLineMap, video_line_map);
+}
+
 void PictureMXFDescriptorHelper::SetTransferCharacteristic(mxfUL label)
 {
     BMX_OPT_PROP_SET(mTransferCh, label);

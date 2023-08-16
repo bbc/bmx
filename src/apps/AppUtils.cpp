@@ -1039,6 +1039,18 @@ bool bmx::parse_essence_type_names(const char *str, map<EssenceType, string> *es
     return true;
 }
 
+bool bmx::parse_video_line_map(const char *str, mxfVideoLineMap *video_line_map)
+{
+    int value[2];
+    if (sscanf(str, "%d,%d", &value[0], &value[1]) != 2)
+        return false;
+
+    video_line_map->first = value[0];
+    video_line_map->second = value[1];
+
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {

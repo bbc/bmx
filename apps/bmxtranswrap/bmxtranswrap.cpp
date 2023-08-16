@@ -481,6 +481,7 @@ static void usage(const char *cmd)
     printf("  --frame-layout <value>  Override or set the video frame layout. The <value> is one of the following:\n");
     printf("                              'fullframe', 'separatefield', 'singlefield', 'mixedfield', 'segmentedframe'\n");
     printf("  --field-dom <value>     Override or set which field is first in temporal order. The <value> is 1 or 2\n");
+    printf("  --video-line-map <value>  Override or set the video line map. The <value> is 2 line numbers separated by a comma\n");
     printf("  --transfer-ch <value>   Override or set the transfer characteristic label\n");
     printf("                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
     printf("                              'bt470', 'bt709', 'st240', 'st274', 'bt1361', 'linear', 'dcdm',\n");
@@ -833,6 +834,7 @@ int main(int argc, const char** argv)
     BMX_OPT_PROP_DECL_DEF(MXFSignalStandard, user_signal_standard, MXF_SIGNAL_STANDARD_NONE);
     BMX_OPT_PROP_DECL_DEF(MXFFrameLayout, user_frame_layout, MXF_FULL_FRAME);
     BMX_OPT_PROP_DECL_DEF(uint8_t, user_field_dominance, 1);
+    BMX_OPT_PROP_DECL_DEF(mxfVideoLineMap, user_video_line_map, g_Null_Video_Line_Map);
     BMX_OPT_PROP_DECL_DEF(mxfUL, user_transfer_ch, g_Null_UL);
     BMX_OPT_PROP_DECL_DEF(mxfUL, user_coding_equations, g_Null_UL);
     BMX_OPT_PROP_DECL_DEF(mxfUL, user_color_primaries, g_Null_UL);
@@ -1542,6 +1544,22 @@ int main(int argc, const char** argv)
                 return 1;
             }
             BMX_OPT_PROP_MARK(user_field_dominance, true);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--video-line-map") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage_ref(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_video_line_map(argv[cmdln_index + 1], &user_video_line_map)) {
+                usage_ref(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_MARK(user_video_line_map, true);
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--transfer-ch") == 0)
@@ -4264,6 +4282,8 @@ int main(int argc, const char** argv)
                     pict_helper->SetFrameLayout(user_frame_layout);
                 if (BMX_OPT_PROP_IS_SET(user_field_dominance))
                     pict_helper->SetFieldDominance(user_field_dominance);
+                if (BMX_OPT_PROP_IS_SET(user_video_line_map))
+                    pict_helper->SetVideoLineMap(user_video_line_map);
                 if (BMX_OPT_PROP_IS_SET(user_transfer_ch))
                     pict_helper->SetTransferCharacteristic(user_transfer_ch);
                 if (BMX_OPT_PROP_IS_SET(user_coding_equations))
