@@ -78,7 +78,7 @@ void OP1ARDD36Track::PrepareWrite(uint8_t track_count)
     CompleteEssenceKeyAndTrackNum(track_count);
 
     mCPManager->RegisterPictureTrackElement(mTrackIndex, mEssenceElementKey, false, 5);
-    mIndexTable->RegisterPictureTrackElement(mTrackIndex, false, true);
+    mIndexTable->RegisterPictureTrackElement(mTrackIndex, false, false);
 }
 
 void OP1ARDD36Track::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
