@@ -148,6 +148,8 @@
     <EssenceStreamID        type="UInt32"       use="required"  globalKey="06 0e 2b 34 01 01 01 04 01 03 04 04 00 00 00 00"/>
   </DCTimedTextResourceSubDescriptor>
 
+  <ContainerConstraintsSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 67 00"/>
+
   <Filler base="StructuralComponent" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 09 00"/>
 
 </MXFDictionary>

@@ -42,6 +42,7 @@
 #include <bmx/mxf_op1a/OP1AFile.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
+#include <bmx/mxf_op1a/OP1ARDD36Track.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/MXFMCALabelHelper.h>
 #include <bmx/MXFUtils.h>
@@ -920,6 +921,20 @@ void OP1AFile::CreateHeaderMetadata()
     }
     for (i = 0; i < mXMLTracks.size(); i++)
         mXMLTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage);
+
+    // Signal ST 379-2 generic container compliance if there is RDD 36 / ProRes video.
+    // This is required by RDD 44 (RDD 36 / ProRes in MXF)
+    bool have_rdd36 = false;
+    for (i = 0; i < mTracks.size(); i++) {
+        if (dynamic_cast<OP1ARDD36Track*>(mTracks[i])) {
+            have_rdd36 = true;
+            break;
+        }
+    }
+    if (have_rdd36) {
+        GenericDescriptor *descriptor = dynamic_cast<GenericDescriptor*>(mFileSourcePackage->getDescriptor());
+        descriptor->appendSubDescriptors(new ContainerConstraintsSubDescriptor(mHeaderMetadata));
+    }
 }
 
 void OP1AFile::CreateFile()
