@@ -59,7 +59,7 @@ typedef struct
     uint32_t display_width;
     uint32_t display_height;
     int32_t avid_display_y_offset;
-    int32_t video_line_map[2];
+    mxfVideoLineMap video_line_map;
     uint8_t frame_layout;
     mxfRGBALayout pixel_layout;
 } SupportedEssence;
@@ -156,8 +156,7 @@ UncRGBAMXFDescriptorHelper::UncRGBAMXFDescriptorHelper()
     mStoredDimensionsSet = false;
     mDisplayDimensionsSet = false;
     mSampledDimensionsSet = false;
-    mVideoLineMap[0] = SUPPORTED_ESSENCE[0].video_line_map[0];
-    mVideoLineMap[1] = SUPPORTED_ESSENCE[0].video_line_map[1];
+    mVideoLineMap = SUPPORTED_ESSENCE[0].video_line_map;
     mVideoLineMapSet = false;
 
     SetDefaultDimensions();
@@ -230,15 +229,9 @@ void UncRGBAMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uin
         mSampledYOffset = 0;
     mSampledDimensionsSet = true;
 
-    mVideoLineMap[0] = 0;
-    mVideoLineMap[1] = 0;
-    if (rgba_descriptor->haveVideoLineMap()) {
-        vector<int32_t> video_line_map = rgba_descriptor->getVideoLineMap();
-        if (video_line_map.size() > 0)
-            mVideoLineMap[0] = video_line_map[0];
-        if (video_line_map.size() > 1)
-            mVideoLineMap[1] = video_line_map[1];
-    }
+    mVideoLineMap = g_Null_Video_Line_Map;
+    if (rgba_descriptor->haveVideoLineMap())
+        mVideoLineMap = rgba_descriptor->getVideoLineMapStruct();
 }
 
 void UncRGBAMXFDescriptorHelper::SetStoredDimensions(uint32_t width, uint32_t height)
@@ -271,8 +264,8 @@ void UncRGBAMXFDescriptorHelper::SetSampledDimensions(uint32_t width, uint32_t h
 
 void UncRGBAMXFDescriptorHelper::SetVideoLineMap(int32_t field1, int32_t field2)
 {
-    mVideoLineMap[0] = field1;
-    mVideoLineMap[1] = field2;
+    mVideoLineMap.first  = field1;
+    mVideoLineMap.second = field2;
     mVideoLineMapSet = true;
 }
 
@@ -325,8 +318,7 @@ void UncRGBAMXFDescriptorHelper::UpdateFileDescriptor()
         rgba_descriptor->setSampledXOffset(mSampledXOffset);
     if (mSampledYOffset != 0 || (mFlavour & MXFDESC_AVID_FLAVOUR))
         rgba_descriptor->setSampledYOffset(mSampledYOffset);
-    rgba_descriptor->appendVideoLineMap(mVideoLineMap[0]);
-    rgba_descriptor->appendVideoLineMap(mVideoLineMap[1]);
+    rgba_descriptor->setVideoLineMap(mVideoLineMap);
     rgba_descriptor->setPixelLayout(SUPPORTED_ESSENCE[mEssenceIndex].pixel_layout);
 }
 
@@ -439,14 +431,13 @@ void UncRGBAMXFDescriptorHelper::SetDefaultDimensions()
     }
 
     if (!mVideoLineMapSet) {
-        mVideoLineMap[0] = SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0];
-        mVideoLineMap[1] = SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1];
+        mVideoLineMap = SUPPORTED_ESSENCE[mEssenceIndex].video_line_map;
         if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
             if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_MIXED_FIELDS) {
-                mVideoLineMap[0] -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;
-                mVideoLineMap[1] -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;
+                mVideoLineMap.first  -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;
+                mVideoLineMap.second -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;
             } else {
-                mVideoLineMap[0] -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
+                mVideoLineMap.first -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
             }
         }
     }

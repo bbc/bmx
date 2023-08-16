@@ -60,7 +60,7 @@ typedef struct
     uint32_t stored_height;
     uint32_t display_width;
     uint32_t display_height;
-    int32_t video_line_map[2];
+    mxfVideoLineMap video_line_map;
     uint8_t frame_layout;
     uint8_t signal_standard;
     mxfUL avid_pc_label;
@@ -248,8 +248,7 @@ void VC3MXFDescriptorHelper::UpdateFileDescriptor()
         cdci_descriptor->setDisplayXOffset(0);
         cdci_descriptor->setDisplayYOffset(0);
     }
-    cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0]);
-    cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1]);
+    cdci_descriptor->setVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map);
     cdci_descriptor->setHorizontalSubsampling(SUPPORTED_ESSENCE[mEssenceIndex].horiz_subsampling);
     cdci_descriptor->setVerticalSubsampling(1);
     if ((mFlavour & MXFDESC_AVID_FLAVOUR))

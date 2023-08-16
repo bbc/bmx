@@ -256,11 +256,9 @@ void JPEG2000MXFDescriptorHelper::UpdateFileDescriptor(J2CEssenceParser *essence
     }
     if (!pict_descriptor->haveVideoLineMap()) {
         if (pict_descriptor->getFrameLayout() == MXF_FULL_FRAME) {
-            pict_descriptor->appendVideoLineMap(1);
-            pict_descriptor->appendVideoLineMap(0);
+            pict_descriptor->setVideoLineMap(1, 0);
         } else {
-            pict_descriptor->appendVideoLineMap(1);
-            pict_descriptor->appendVideoLineMap(pict_descriptor->getDisplayHeight() / 2 + 1);
+            pict_descriptor->setVideoLineMap(1, pict_descriptor->getDisplayHeight() / 2 + 1);
         }
     }
 

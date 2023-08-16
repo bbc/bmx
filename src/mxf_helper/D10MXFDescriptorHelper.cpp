@@ -59,7 +59,7 @@ typedef struct
     uint32_t stored_width;
     uint32_t stored_height;
     int32_t display_y_offset;
-    int32_t video_line_map[2];
+    mxfVideoLineMap video_line_map;
 } SupportedEssence;
 
 static const SupportedEssence SUPPORTED_ESSENCE[] =
@@ -239,8 +239,7 @@ void D10MXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setDisplayHeight(cdci_descriptor->getStoredHeight() - SUPPORTED_ESSENCE[mEssenceIndex].display_y_offset);
     cdci_descriptor->setDisplayXOffset(0);
     cdci_descriptor->setDisplayYOffset(SUPPORTED_ESSENCE[mEssenceIndex].display_y_offset);
-    cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0]);
-    cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1]);
+    cdci_descriptor->setVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map);
     cdci_descriptor->setStoredF2Offset(0);
     cdci_descriptor->setSampledXOffset(0);
     cdci_descriptor->setSampledYOffset(0);

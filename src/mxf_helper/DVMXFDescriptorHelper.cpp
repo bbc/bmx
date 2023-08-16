@@ -61,7 +61,7 @@ typedef struct
     uint32_t stored_width;
     uint32_t stored_height;
     uint32_t avid_stored_width;
-    int32_t video_line_map[2];
+    mxfVideoLineMap video_line_map;
     uint8_t color_siting;
     uint8_t frame_layout;
     uint8_t signal_standard;
@@ -265,8 +265,7 @@ void DVMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setColorRange(225);
     cdci_descriptor->setSignalStandard(SUPPORTED_ESSENCE[mEssenceIndex].signal_standard);
     SetCodingEquationsMod(SUPPORTED_ESSENCE[mEssenceIndex].coding_eq);
-    cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0]);
-    cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1]);
+    cdci_descriptor->setVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map);
     if ((mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setStoredWidth(SUPPORTED_ESSENCE[mEssenceIndex].avid_stored_width);
     else

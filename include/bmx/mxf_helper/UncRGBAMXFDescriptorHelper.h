@@ -99,7 +99,7 @@ private:
     uint32_t mSampledHeight;
     int32_t mSampledXOffset;
     int32_t mSampledYOffset;
-    int32_t mVideoLineMap[2];
+    mxfVideoLineMap mVideoLineMap;
     bool mVideoLineMapSet;
 };
 

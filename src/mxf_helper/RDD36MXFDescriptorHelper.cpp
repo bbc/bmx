@@ -57,7 +57,7 @@ typedef struct
     // guesses
     uint8_t signal_standard;
     Rational aspect_ratio;
-    int32_t video_line_map[2];
+    mxfVideoLineMap video_line_map;
     uint8_t color_siting;
 } DefaultParameterMatch;
 
@@ -369,8 +369,7 @@ void RDD36MXFDescriptorHelper::UpdateFileDescriptor(RDD36EssenceParser *essence_
                 if (!cdci_descriptor->haveAspectRatio())
                     cdci_descriptor->setAspectRatio(DEFAULT_PARAM_MATCHES[i].aspect_ratio);
                 if (!cdci_descriptor->haveVideoLineMap()) {
-                    cdci_descriptor->appendVideoLineMap(DEFAULT_PARAM_MATCHES[i].video_line_map[0]);
-                    cdci_descriptor->appendVideoLineMap(DEFAULT_PARAM_MATCHES[i].video_line_map[1]);
+                    cdci_descriptor->setVideoLineMap(DEFAULT_PARAM_MATCHES[i].video_line_map);
                 }
                 if (!cdci_descriptor->haveColorSiting())
                     SetColorSitingMod(DEFAULT_PARAM_MATCHES[i].color_siting);
@@ -387,11 +386,9 @@ void RDD36MXFDescriptorHelper::UpdateFileDescriptor(RDD36EssenceParser *essence_
     }
     if (!cdci_descriptor->haveVideoLineMap()) {
         if (cdci_descriptor->getFrameLayout() == MXF_FULL_FRAME) {
-            cdci_descriptor->appendVideoLineMap(1);
-            cdci_descriptor->appendVideoLineMap(0);
+            cdci_descriptor->setVideoLineMap(1, 0);
         } else {
-            cdci_descriptor->appendVideoLineMap(1);
-            cdci_descriptor->appendVideoLineMap(essence_parser->GetHeight() / 2 + 1);
+            cdci_descriptor->setVideoLineMap(1, essence_parser->GetHeight() / 2 + 1);
         }
     }
 }

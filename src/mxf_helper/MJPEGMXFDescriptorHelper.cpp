@@ -218,6 +218,7 @@ void MJPEGMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0]);
     if (SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1])
         cdci_descriptor->appendVideoLineMap(SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1]);
+    // Note: else this doesn't comply with ST 377-1:2019 which defines VideoLineMap to always have 2 elements
     cdci_descriptor->setHorizontalSubsampling(2);
     cdci_descriptor->setVerticalSubsampling(1);
 }
