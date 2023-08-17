@@ -82,8 +82,14 @@ public:
 
     virtual bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position = CURRENT_POSITION_VALUE) const = 0;
 
+    // Returns the precharge required for the given position.
     virtual int16_t GetPrecharge(int64_t position, bool limit_to_available) const = 0;
+    // Returns the precharge available before the given position.
+    virtual int64_t GetAvailablePrecharge(int64_t position) const = 0;
+    // Returns the rollout required for the given position.
     virtual int16_t GetRollout(int64_t position, bool limit_to_available) const = 0;
+    // Returns the rollout available after the given position.
+    virtual int64_t GetAvailableRollout(int64_t position) const = 0;
 
     virtual MXFTrackInfo* GetTrackInfo() const = 0;
     virtual mxfpp::FileDescriptor* GetFileDescriptor() const = 0;

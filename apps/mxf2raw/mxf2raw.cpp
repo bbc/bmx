@@ -812,10 +812,14 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
     const MXFDataTrackInfo *data_info = dynamic_cast<const MXFDataTrackInfo*>(track_info);
 
     int16_t precharge = 0;
+    int64_t available_precharge = 0;
     int16_t rollout = 0;
+    int64_t available_rollout = 0;
     if (reader->IsComplete() && track_reader->GetDuration() > 0) {
         precharge = track_reader->GetPrecharge(0, true);
+        available_precharge = track_reader->GetAvailablePrecharge(0);
         rollout = track_reader->GetRollout(track_reader->GetDuration() - 1, true);
+        available_rollout = track_reader->GetAvailableRollout(track_reader->GetDuration() - 1);
     }
 
     info_writer->WriteEnumStringItem("essence_kind", ESSENCE_KIND_EINFO, track_info->data_def);
@@ -831,8 +835,12 @@ static void write_track_info(AppInfoWriter *info_writer, MXFReader *reader, MXFT
     }
     if (precharge != 0)
         info_writer->WriteIntegerItem("precharge", precharge);
+    if (available_precharge != 0)
+        info_writer->WriteIntegerItem("available_precharge", available_precharge);
     if (rollout != 0)
         info_writer->WriteIntegerItem("rollout", rollout);
+    if (available_rollout != 0)
+        info_writer->WriteIntegerItem("available_rollout", available_rollout);
     if (checksums) {
         size_t i;
         for (i = 0; i < checksums->size(); i++) {
@@ -1032,10 +1040,14 @@ static void write_clip_info(AppInfoWriter *info_writer, MXFReader *reader,
     bool have_track_crc32_data = (track_crc32_data.size() == reader->GetNumTrackReaders());
 
     int16_t max_precharge = 0;
+    int64_t max_available_precharge = 0;
     int16_t max_rollout = 0;
+    int64_t max_available_rollout = 0;
     if (reader->IsComplete() && reader->GetDuration() > 0) {
         max_precharge = reader->GetMaxPrecharge(0, false);
+        max_available_precharge = reader->GetMaxAvailablePrecharge(0);
         max_rollout = reader->GetMaxRollout(reader->GetDuration() - 1, false);
+        max_available_rollout = reader->GetMaxAvailableRollout(reader->GetDuration() - 1);
     }
 
     string clip_name = reader->GetMaterialPackageName();
@@ -1046,8 +1058,12 @@ static void write_clip_info(AppInfoWriter *info_writer, MXFReader *reader,
     info_writer->WriteDurationItem("duration", reader->GetDuration(), edit_rate);
     if (max_precharge != 0)
         info_writer->WriteIntegerItem("max_precharge", max_precharge);
+    if (max_available_precharge != 0)
+        info_writer->WriteIntegerItem("max_available_precharge", max_available_precharge);
     if (max_rollout != 0)
         info_writer->WriteIntegerItem("max_rollout", max_rollout);
+    if (max_available_rollout != 0)
+        info_writer->WriteIntegerItem("max_available_rollout", max_available_rollout);
 
     // Write Primary Package if it's a single (main) file only
     MXFFileReader *file_reader = dynamic_cast<MXFFileReader*>(reader);

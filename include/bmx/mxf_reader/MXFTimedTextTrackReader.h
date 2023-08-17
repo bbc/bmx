@@ -48,6 +48,14 @@ public:
                             mxfpp::FileDescriptor *file_descriptor, mxfpp::SourcePackage *file_source_package);
     virtual ~MXFTimedTextTrackReader();
 
+    virtual int64_t GetOrigin() const;
+
+    virtual int16_t GetPrecharge(int64_t position, bool limit_to_available) const;
+    virtual int64_t GetAvailablePrecharge(int64_t position) const;
+    virtual int16_t GetRollout(int64_t position, bool limit_to_available) const;
+    virtual int64_t GetAvailableRollout(int64_t position) const;
+
+public:
     void SetBodySID(uint32_t body_sid);
 
     TimedTextManifest* GetManifest();

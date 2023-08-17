@@ -50,6 +50,7 @@
   <clip>
     <edit_rate>25/1</edit_rate>
     <duration count="8">00:00:00:08</duration>
+    <max_available_precharge>-4</max_available_precharge>
     <start_timecodes>
       <material>09:59:59:24</material>
       <file_source>09:59:59:24</file_source>
@@ -61,6 +62,7 @@
         <ec_label>urn:smpte:ul:060e2b34.04010102.0d010301.02046001</ec_label>
         <edit_rate>25/1</edit_rate>
         <duration count="8">00:00:00:08</duration>
+        <available_precharge>-4</available_precharge>
         <packages size="1">
           <package index="0">
             <material>

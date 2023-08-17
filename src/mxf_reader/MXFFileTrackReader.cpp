@@ -173,9 +173,19 @@ int16_t MXFFileTrackReader::GetPrecharge(int64_t position, bool limit_to_availab
     return mFileReader->GetInternalPrecharge(position, limit_to_available);
 }
 
+int64_t MXFFileTrackReader::GetAvailablePrecharge(int64_t position) const
+{
+    return mFileReader->GetInternalAvailablePrecharge(position);
+}
+
 int16_t MXFFileTrackReader::GetRollout(int64_t position, bool limit_to_available) const
 {
     return mFileReader->GetInternalRollout(position, limit_to_available);
+}
+
+int64_t MXFFileTrackReader::GetAvailableRollout(int64_t position) const
+{
+    return mFileReader->GetInternalAvailableRollout(position);
 }
 
 void MXFFileTrackReader::SetNextFramePosition(Rational edit_rate, int64_t position)

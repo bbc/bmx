@@ -361,6 +361,26 @@ int16_t MXFSequenceTrackReader::GetPrecharge(int64_t position, bool limit_to_ava
     return segment->GetPrecharge(segment_position, limit_to_available);
 }
 
+int64_t MXFSequenceTrackReader::GetAvailablePrecharge(int64_t position) const
+{
+    BMX_CHECK(!mTrackSegments.empty());
+
+    int64_t target_position = position;
+    if (target_position == CURRENT_POSITION_VALUE)
+        target_position = GetPosition();
+
+    MXFTrackReader *segment;
+    int64_t segment_position;
+    GetSegmentPosition(0, &segment, &segment_position);
+
+    int64_t available_at_start = segment->GetAvailablePrecharge(segment_position);
+    int64_t available_precharge = available_at_start - target_position;
+    if (available_precharge > 0)
+        available_precharge = 0;
+
+    return available_precharge;
+}
+
 int16_t MXFSequenceTrackReader::GetRollout(int64_t position, bool limit_to_available) const
 {
     BMX_CHECK(!mTrackSegments.empty());
@@ -370,6 +390,26 @@ int16_t MXFSequenceTrackReader::GetRollout(int64_t position, bool limit_to_avail
     GetSegmentPosition(position, &segment, &segment_position);
 
     return segment->GetRollout(segment_position, limit_to_available);
+}
+
+int64_t MXFSequenceTrackReader::GetAvailableRollout(int64_t position) const
+{
+    BMX_CHECK(!mTrackSegments.empty());
+
+    int64_t target_position = position;
+    if (target_position == CURRENT_POSITION_VALUE)
+        target_position = GetPosition();
+
+    MXFTrackReader *segment;
+    int64_t segment_position;
+    GetSegmentPosition(mDuration - 1, &segment, &segment_position);
+
+    int64_t available_at_end = segment->GetAvailableRollout(segment_position);
+    int64_t available_rollout = (mDuration - 1) + available_at_end - target_position;
+    if (available_rollout < 0)
+        available_rollout = 0;
+
+    return available_rollout;
 }
 
 void MXFSequenceTrackReader::SetNextFramePosition(Rational edit_rate, int64_t position)

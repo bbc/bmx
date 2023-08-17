@@ -64,6 +64,42 @@ MXFTimedTextTrackReader::~MXFTimedTextTrackReader()
 {
 }
 
+int64_t MXFTimedTextTrackReader::GetOrigin() const
+{
+    // MXFFileReader would throw a MXF_RESULT_NOT_SUPPORTED if origin != 0
+    return 0;
+}
+
+int16_t MXFTimedTextTrackReader::GetPrecharge(int64_t position, bool limit_to_available) const
+{
+    (void)position;
+    (void)limit_to_available;
+    return 0;
+}
+
+int64_t MXFTimedTextTrackReader::GetAvailablePrecharge(int64_t position) const
+{
+    if (position < 0)
+        return 0;
+    else
+        return - position;
+}
+
+int16_t MXFTimedTextTrackReader::GetRollout(int64_t position, bool limit_to_available) const
+{
+    (void)position;
+    (void)limit_to_available;
+    return 0;
+}
+
+int64_t MXFTimedTextTrackReader::GetAvailableRollout(int64_t position) const
+{
+    if (position >= GetDuration())
+        return 0;
+    else
+        return GetDuration() - 1 - position;
+}
+
 void MXFTimedTextTrackReader::SetBodySID(uint32_t body_sid)
 {
     mBodySID = body_sid;
