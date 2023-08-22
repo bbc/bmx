@@ -335,8 +335,7 @@ void AVCWriterHelper::CompleteProcess()
     if (!cdci_descriptor->haveVideoLineMap()) {
         // TODO: take signal standard into account
         if (cdci_descriptor->getFrameLayout() == MXF_FULL_FRAME) {
-            cdci_descriptor->appendVideoLineMap(1);
-            cdci_descriptor->appendVideoLineMap(0);
+            cdci_descriptor->setVideoLineMap(1, 0);
         } else {
             int32_t height_factor = 1;
             if (cdci_descriptor->getFrameLayout() == MXF_MIXED_FIELDS ||
@@ -344,11 +343,10 @@ void AVCWriterHelper::CompleteProcess()
             {
                 height_factor = 2;
             }
-            cdci_descriptor->appendVideoLineMap(1);
             if (cdci_descriptor->haveDisplayHeight())
-              cdci_descriptor->appendVideoLineMap((int32_t)(cdci_descriptor->getDisplayHeight() / height_factor + 1));
+                cdci_descriptor->setVideoLineMap(1, (int32_t)(cdci_descriptor->getDisplayHeight() / height_factor + 1));
             else
-              cdci_descriptor->appendVideoLineMap(0);
+                cdci_descriptor->setVideoLineMap(1, 0);
         }
     }
 

@@ -481,6 +481,7 @@ static void usage(const char *cmd)
     printf("  --frame-layout <value>  Override or set the video frame layout. The <value> is one of the following:\n");
     printf("                              'fullframe', 'separatefield', 'singlefield', 'mixedfield', 'segmentedframe'\n");
     printf("  --field-dom <value>     Override or set which field is first in temporal order. The <value> is 1 or 2\n");
+    printf("  --video-line-map <value>  Override or set the video line map. The <value> is 2 line numbers separated by a comma\n");
     printf("  --transfer-ch <value>   Override or set the transfer characteristic label\n");
     printf("                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
     printf("                              'bt470', 'bt709', 'st240', 'st274', 'bt1361', 'linear', 'dcdm',\n");
@@ -619,6 +620,8 @@ static void usage(const char *cmd)
     printf("    --system-item           Add system item\n");
     printf("    --primary-package       Set the header metadata set primary package property to the top-level file source package\n");
     printf("    --index-follows         The index partition follows the essence partition, even when it is CBE essence\n");
+    printf("    --st379-2               Add ContainerConstraintsSubDescriptor to signal compliance with ST 379-2, MXF Constrained Generic Container\n");
+    printf("                            The sub-descriptor will be added anyway if there is RDD 36 video present\n");
     printf("\n");
     printf("  op1a/rdd9:\n");
     printf("    --ard-zdf-hdf           Use the ARD ZDF HDF profile\n");
@@ -777,6 +780,7 @@ int main(int argc, const char** argv)
     bool op1a_system_item = false;
     bool op1a_primary_package = false;
     bool op1a_index_follows = false;
+    bool st379_2 = false;
     AS10Shim as10_shim = AS10_UNKNOWN_SHIM;
     const char *output_name = "";
     map<EssenceType, string> filename_essence_type_names;
@@ -830,6 +834,7 @@ int main(int argc, const char** argv)
     BMX_OPT_PROP_DECL_DEF(MXFSignalStandard, user_signal_standard, MXF_SIGNAL_STANDARD_NONE);
     BMX_OPT_PROP_DECL_DEF(MXFFrameLayout, user_frame_layout, MXF_FULL_FRAME);
     BMX_OPT_PROP_DECL_DEF(uint8_t, user_field_dominance, 1);
+    BMX_OPT_PROP_DECL_DEF(mxfVideoLineMap, user_video_line_map, g_Null_Video_Line_Map);
     BMX_OPT_PROP_DECL_DEF(mxfUL, user_transfer_ch, g_Null_UL);
     BMX_OPT_PROP_DECL_DEF(mxfUL, user_coding_equations, g_Null_UL);
     BMX_OPT_PROP_DECL_DEF(mxfUL, user_color_primaries, g_Null_UL);
@@ -1539,6 +1544,22 @@ int main(int argc, const char** argv)
                 return 1;
             }
             BMX_OPT_PROP_MARK(user_field_dominance, true);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--video-line-map") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage_ref(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_video_line_map(argv[cmdln_index + 1], &user_video_line_map)) {
+                usage_ref(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_MARK(user_video_line_map, true);
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--transfer-ch") == 0)
@@ -2350,6 +2371,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--index-follows") == 0)
         {
             op1a_index_follows = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--st379-2") == 0)
+        {
+            st379_2 = true;
         }
         else if (strcmp(argv[cmdln_index], "--ard-zdf-hdf") == 0)
         {
@@ -3656,6 +3681,9 @@ int main(int argc, const char** argv)
             if (op1a_index_follows)
                 op1a_clip->SetIndexFollowsEssence(true);
 
+            if (st379_2)
+                op1a_clip->SetSignalST3792(true);
+
             if (mp_uid_set)
                 op1a_clip->SetMaterialPackageUID(mp_uid);
             if (fp_uid_set)
@@ -4254,6 +4282,8 @@ int main(int argc, const char** argv)
                     pict_helper->SetFrameLayout(user_frame_layout);
                 if (BMX_OPT_PROP_IS_SET(user_field_dominance))
                     pict_helper->SetFieldDominance(user_field_dominance);
+                if (BMX_OPT_PROP_IS_SET(user_video_line_map))
+                    pict_helper->SetVideoLineMap(user_video_line_map);
                 if (BMX_OPT_PROP_IS_SET(user_transfer_ch))
                     pict_helper->SetTransferCharacteristic(user_transfer_ch);
                 if (BMX_OPT_PROP_IS_SET(user_coding_equations))

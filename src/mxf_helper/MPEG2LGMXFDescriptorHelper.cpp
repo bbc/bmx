@@ -279,8 +279,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setStoredHeight(288);
             cdci_descriptor->setDisplayWidth(720);
             cdci_descriptor->setDisplayHeight(288);
-            cdci_descriptor->appendVideoLineMap(23);
-            cdci_descriptor->appendVideoLineMap(336);
+            cdci_descriptor->setVideoLineMap(23, 336);
             break;
         case MPEG2LG_422P_HL_1080I:
         case MPEG2LG_MP_HL_1920_1080I:
@@ -290,8 +289,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setStoredHeight(544);
             cdci_descriptor->setDisplayWidth(1920);
             cdci_descriptor->setDisplayHeight(540);
-            cdci_descriptor->appendVideoLineMap(21);
-            cdci_descriptor->appendVideoLineMap(584);
+            cdci_descriptor->setVideoLineMap(21, 584);
             break;
         case MPEG2LG_422P_HL_1080P:
         case MPEG2LG_MP_HL_1920_1080P:
@@ -301,8 +299,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setStoredHeight(1088);
             cdci_descriptor->setDisplayWidth(1920);
             cdci_descriptor->setDisplayHeight(1080);
-            cdci_descriptor->appendVideoLineMap(42);
-            cdci_descriptor->appendVideoLineMap(0);
+            cdci_descriptor->setVideoLineMap(42, 0);
             break;
         case MPEG2LG_422P_HL_720P:
         case MPEG2LG_MP_HL_720P:
@@ -312,8 +309,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setStoredHeight(720);
             cdci_descriptor->setDisplayWidth(1280);
             cdci_descriptor->setDisplayHeight(720);
-            cdci_descriptor->appendVideoLineMap(26);
-            cdci_descriptor->appendVideoLineMap(0);
+            cdci_descriptor->setVideoLineMap(26, 0);
             break;
         case MPEG2LG_MP_HL_1440_1080I:
         case MPEG2LG_MP_H14_1080I:
@@ -323,8 +319,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setStoredHeight(544);
             cdci_descriptor->setDisplayWidth(1440);
             cdci_descriptor->setDisplayHeight(540);
-            cdci_descriptor->appendVideoLineMap(21);
-            cdci_descriptor->appendVideoLineMap(584);
+            cdci_descriptor->setVideoLineMap(21, 584);
             break;
         case MPEG2LG_MP_HL_1440_1080P:
         case MPEG2LG_MP_H14_1080P:
@@ -334,8 +329,7 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
             cdci_descriptor->setStoredHeight(1088);
             cdci_descriptor->setDisplayWidth(1440);
             cdci_descriptor->setDisplayHeight(1080);
-            cdci_descriptor->appendVideoLineMap(42);
-            cdci_descriptor->appendVideoLineMap(0);
+            cdci_descriptor->setVideoLineMap(42, 0);
             break;
         default:
             BMX_ASSERT(false);

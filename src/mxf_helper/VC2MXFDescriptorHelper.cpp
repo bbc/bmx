@@ -48,7 +48,7 @@ typedef struct
     VC2EssenceParser::VideoParameters params;
     uint8_t signal_standard;
     Rational aspect_ratio;
-    int32_t video_line_map[2];
+    mxfVideoLineMap video_line_map;
     uint8_t color_siting;
 } DefaultParameterMatch;
 
@@ -283,8 +283,7 @@ void VC2MXFDescriptorHelper::SetSequenceHeader(const VC2EssenceParser::SequenceH
                 cdci_descriptor->setAspectRatio(DEFAULT_PARAM_MATCHES[i].aspect_ratio);
                 if (cdci_descriptor->haveVideoLineMap())
                     cdci_descriptor->removeItem(&MXF_ITEM_K(GenericPictureEssenceDescriptor, VideoLineMap));
-                cdci_descriptor->appendVideoLineMap(DEFAULT_PARAM_MATCHES[i].video_line_map[0]);
-                cdci_descriptor->appendVideoLineMap(DEFAULT_PARAM_MATCHES[i].video_line_map[1]);
+                cdci_descriptor->setVideoLineMap(DEFAULT_PARAM_MATCHES[i].video_line_map);
                 SetColorSitingMod(DEFAULT_PARAM_MATCHES[i].color_siting);
                 break;
             }
@@ -301,13 +300,11 @@ void VC2MXFDescriptorHelper::SetSequenceHeader(const VC2EssenceParser::SequenceH
             sequence_header->picture_coding_mode == 0)
         {
             // MXF_FULL_FRAME
-            cdci_descriptor->appendVideoLineMap(1);
-            cdci_descriptor->appendVideoLineMap(0);
+            cdci_descriptor->setVideoLineMap(1, 0);
         }
         else
         {
-            cdci_descriptor->appendVideoLineMap(1);
-            cdci_descriptor->appendVideoLineMap((int32_t)((sequence_header->source_params.frame_height / 2) + 1));
+            cdci_descriptor->setVideoLineMap(1, (int32_t)((sequence_header->source_params.frame_height / 2) + 1));
         }
     }
 }

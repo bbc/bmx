@@ -382,8 +382,7 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
                 cdci_descriptor->setStoredHeight(544);
             else
                 cdci_descriptor->setStoredHeight(540);
-            cdci_descriptor->appendVideoLineMap(21);
-            cdci_descriptor->appendVideoLineMap(584);
+            cdci_descriptor->setVideoLineMap(21, 584);
             break;
         case AVCI200_1080P:
         case AVCI100_1080P:
@@ -393,16 +392,14 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
                 cdci_descriptor->setStoredHeight(1088);
             else
                 cdci_descriptor->setStoredHeight(1080);
-            cdci_descriptor->appendVideoLineMap(42);
-            cdci_descriptor->appendVideoLineMap(0);
+            cdci_descriptor->setVideoLineMap(42, 0);
             break;
         case AVCI200_720P:
         case AVCI100_720P:
         case AVCI50_720P:
             cdci_descriptor->setStoredWidth(1280);
             cdci_descriptor->setStoredHeight(720);
-            cdci_descriptor->appendVideoLineMap(26);
-            cdci_descriptor->appendVideoLineMap(0);
+            cdci_descriptor->setVideoLineMap(26, 0);
             break;
         default:
             BMX_ASSERT(false);

@@ -164,6 +164,7 @@ struct RawInput
     BMX_OPT_PROP_DECL(MXFSignalStandard, signal_standard);
     BMX_OPT_PROP_DECL(MXFFrameLayout, frame_layout);
     BMX_OPT_PROP_DECL(uint8_t, field_dominance);
+    BMX_OPT_PROP_DECL(mxfVideoLineMap, video_line_map);
     BMX_OPT_PROP_DECL(mxfUL, transfer_ch);
     BMX_OPT_PROP_DECL(mxfUL, coding_equations);
     BMX_OPT_PROP_DECL(mxfUL, color_primaries);
@@ -340,6 +341,7 @@ static void init_input(RawInput *input)
     BMX_OPT_PROP_DEFAULT(input->signal_standard, MXF_SIGNAL_STANDARD_NONE);
     BMX_OPT_PROP_DEFAULT(input->frame_layout, MXF_FULL_FRAME);
     BMX_OPT_PROP_DEFAULT(input->field_dominance, 1);
+    BMX_OPT_PROP_DEFAULT(input->video_line_map, g_Null_Video_Line_Map);
     BMX_OPT_PROP_DEFAULT(input->transfer_ch, g_Null_UL);
     BMX_OPT_PROP_DEFAULT(input->coding_equations, g_Null_UL);
     BMX_OPT_PROP_DEFAULT(input->color_primaries, g_Null_UL);
@@ -526,6 +528,8 @@ static void usage(const char *cmd)
     printf("    --kag-size-512          Set KAG size to 512, instead of 1\n");
     printf("    --primary-package       Set the header metadata set primary package property to the top-level file source package\n");
     printf("    --index-follows         The index partition follows the essence partition, even when it is CBE essence\n");
+    printf("    --st379-2               Add ContainerConstraintsSubDescriptor to signal compliance with ST 379-2, MXF Constrained Generic Container\n");
+    printf("                            The sub-descriptor will be added anyway if there is RDD 36 video present\n");
     printf("\n");
     printf("  op1a/rdd9/d10:\n");
     printf("    --xml-scheme-id <id>    Set the XML payload scheme identifier associated with the following --embed-xml option.\n");
@@ -631,6 +635,7 @@ static void usage(const char *cmd)
     printf("  --frame-layout <value>  Set the video frame layout. The <value> is one of the following:\n");
     printf("                              'fullframe', 'separatefield', 'singlefield', 'mixedfield', 'segmentedframe'\n");
     printf("  --field-dom <value>     Set which field is first in temporal order. The <value> is 1 or 2\n");
+    printf("  --video-line-map <value>  Override or set the video line map. The <value> is 2 line numbers separated by a comma\n");
     printf("  --transfer-ch <value>   Set the transfer characteristic label\n");
     printf("                          The <value> is a SMPTE UL, formatted as a 'urn:smpte:ul:...' or one of the following:\n");
     printf("                              'bt470', 'bt709', 'st240', 'st274', 'bt1361', 'linear', 'dcdm',\n");
@@ -859,6 +864,7 @@ int main(int argc, const char** argv)
     bool kag_size_512 = false;
     bool op1a_primary_package = false;
     bool op1a_index_follows = false;
+    bool st379_2 = false;
     AS10Shim as10_shim = AS10_UNKNOWN_SHIM;
     const char *mpeg_descr_defaults_name = 0;
     bool mpeg_descr_frame_checks = true;
@@ -1480,6 +1486,10 @@ int main(int argc, const char** argv)
         {
             op1a_index_follows = true;
         }
+        else if (strcmp(argv[cmdln_index], "--st379-2") == 0)
+        {
+            st379_2 = true;
+        }
         else if (strcmp(argv[cmdln_index], "--xml-scheme-id") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -2044,6 +2054,23 @@ int main(int argc, const char** argv)
                 return 1;
             }
             BMX_OPT_PROP_MARK(input.field_dominance, true);
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--video-line-map") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage_ref(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_video_line_map(argv[cmdln_index + 1], &input.video_line_map)) {
+                usage_ref(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            BMX_OPT_PROP_MARK(input.video_line_map, true);
             cmdln_index++;
             continue; // skip input reset at the end
         }
@@ -4952,6 +4979,9 @@ int main(int argc, const char** argv)
             if (op1a_index_follows)
                 op1a_clip->SetIndexFollowsEssence(true);
 
+            if (st379_2)
+                op1a_clip->SetSignalST3792(true);
+
             if (mp_uid_set)
                 op1a_clip->SetMaterialPackageUID(mp_uid);
             if (fp_uid_set)
@@ -5430,6 +5460,8 @@ int main(int argc, const char** argv)
                     pict_helper->SetFrameLayout(input->frame_layout);
                 if (BMX_OPT_PROP_IS_SET(input->field_dominance))
                     pict_helper->SetFieldDominance(input->field_dominance);
+                if (BMX_OPT_PROP_IS_SET(input->video_line_map))
+                    pict_helper->SetVideoLineMap(input->video_line_map);
                 if (BMX_OPT_PROP_IS_SET(input->transfer_ch))
                     pict_helper->SetTransferCharacteristic(input->transfer_ch);
                 if (BMX_OPT_PROP_IS_SET(input->coding_equations))

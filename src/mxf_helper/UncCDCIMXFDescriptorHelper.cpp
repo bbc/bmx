@@ -59,7 +59,7 @@ typedef struct
     uint32_t display_width;
     uint32_t display_height;
     int32_t avid_display_y_offset;
-    int32_t video_line_map[2];
+    mxfVideoLineMap video_line_map;
     uint8_t frame_layout;
     uint8_t signal_standard;
     mxfUL coding_eq;
@@ -206,9 +206,7 @@ UncCDCIMXFDescriptorHelper::UncCDCIMXFDescriptorHelper()
     mStoredDimensionsSet = false;
     mDisplayDimensionsSet = false;
     mSampledDimensionsSet = false;
-    mVideoLineMap[0] = SUPPORTED_ESSENCE[0].video_line_map[0];
-    mVideoLineMap[1] = SUPPORTED_ESSENCE[0].video_line_map[1];
-    mVideoLineMapSet = false;
+    BMX_OPT_PROP_DEFAULT(mVideoLineMap, SUPPORTED_ESSENCE[0].video_line_map);
 
     SetDefaultDimensions();
 }
@@ -290,16 +288,6 @@ void UncCDCIMXFDescriptorHelper::Initialize(FileDescriptor *file_descriptor, uin
     else
         mSampledYOffset = 0;
     mSampledDimensionsSet = true;
-
-    mVideoLineMap[0] = 0;
-    mVideoLineMap[1] = 0;
-    if (cdci_descriptor->haveVideoLineMap()) {
-        vector<int32_t> video_line_map = cdci_descriptor->getVideoLineMap();
-        if (video_line_map.size() > 0)
-            mVideoLineMap[0] = video_line_map[0];
-        if (video_line_map.size() > 1)
-            mVideoLineMap[1] = video_line_map[1];
-    }
 }
 
 void UncCDCIMXFDescriptorHelper::SetComponentDepth(uint32_t depth)
@@ -336,13 +324,6 @@ void UncCDCIMXFDescriptorHelper::SetSampledDimensions(uint32_t width, uint32_t h
     mSampledYOffset       = y_offset;
     mSampledDimensionsSet = true;
     SetDefaultDimensions();
-}
-
-void UncCDCIMXFDescriptorHelper::SetVideoLineMap(int32_t field1, int32_t field2)
-{
-    mVideoLineMap[0] = field1;
-    mVideoLineMap[1] = field2;
-    mVideoLineMapSet = true;
 }
 
 void UncCDCIMXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
@@ -429,8 +410,9 @@ void UncCDCIMXFDescriptorHelper::UpdateFileDescriptor()
     }
     if (!(mFlavour & MXFDESC_AVID_FLAVOUR))
         cdci_descriptor->setSignalStandard(SUPPORTED_ESSENCE[mEssenceIndex].signal_standard);
-    cdci_descriptor->appendVideoLineMap(mVideoLineMap[0]);
-    cdci_descriptor->appendVideoLineMap(mVideoLineMap[1]);
+    // PictureMXFDescriptorHelper::UpdateFileDescriptor() above would have written VideoLineMap
+    // if it was set. This line ensures that the default value gets written if it was not set.
+    cdci_descriptor->setVideoLineMap(mVideoLineMap);
     cdci_descriptor->setStoredWidth(mStoredWidth);
     cdci_descriptor->setStoredHeight(mStoredHeight);
     cdci_descriptor->setDisplayWidth(mDisplayWidth);
@@ -561,15 +543,14 @@ void UncCDCIMXFDescriptorHelper::SetDefaultDimensions()
         }
     }
 
-    if (!mVideoLineMapSet) {
-        mVideoLineMap[0] = SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[0];
-        mVideoLineMap[1] = SUPPORTED_ESSENCE[mEssenceIndex].video_line_map[1];
+    if (!BMX_OPT_PROP_IS_SET(mVideoLineMap)) {
+        mVideoLineMap = SUPPORTED_ESSENCE[mEssenceIndex].video_line_map;
         if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
             if (SUPPORTED_ESSENCE[mEssenceIndex].frame_layout == MXF_MIXED_FIELDS) {
-                mVideoLineMap[0] -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;
-                mVideoLineMap[1] -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;
+                mVideoLineMap.first  -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;
+                mVideoLineMap.second -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset / 2;
             } else {
-                mVideoLineMap[0] -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
+                mVideoLineMap.first -= SUPPORTED_ESSENCE[mEssenceIndex].avid_display_y_offset;
             }
         }
     }

@@ -42,6 +42,7 @@
 #include <bmx/mxf_op1a/OP1AFile.h>
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
+#include <bmx/mxf_op1a/OP1ARDD36Track.h>
 #include <bmx/mxf_helper/MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/MXFMCALabelHelper.h>
 #include <bmx/MXFUtils.h>
@@ -124,6 +125,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mCBEIndexPartitionIndex = 0;
     mSetPrimaryPackage = false;
     mIndexFollowsEssence = false;
+    mSignalST3792 = false;
 
     mTrackIdHelper.SetId("TimecodeTrack", 901);
     mTrackIdHelper.SetStartId(MXF_PICTURE_DDEF, 1001);
@@ -281,6 +283,11 @@ void OP1AFile::SetPrimaryPackage(bool enable)
 void OP1AFile::SetIndexFollowsEssence(bool enable)
 {
     mIndexFollowsEssence = enable;
+}
+
+void OP1AFile::SetSignalST3792(bool enable)
+{
+    mSignalST3792 = enable;
 }
 
 void OP1AFile::SetOutputStartOffset(int64_t offset)
@@ -920,6 +927,20 @@ void OP1AFile::CreateHeaderMetadata()
     }
     for (i = 0; i < mXMLTracks.size(); i++)
         mXMLTracks[i]->AddHeaderMetadata(mHeaderMetadata, mMaterialPackage);
+
+    // Signal ST 379-2 generic container compliance if mSignalST3792 or there is RDD 36 / ProRes video.
+    // RDD 44 (RDD 36 / ProRes in MXF) requires ST 379-2 and specifically mentions ContainerConstraintSubDescriptor.
+    bool have_rdd36 = false;
+    for (i = 0; i < mTracks.size(); i++) {
+        if (dynamic_cast<OP1ARDD36Track*>(mTracks[i])) {
+            have_rdd36 = true;
+            break;
+        }
+    }
+    if (mSignalST3792 || have_rdd36) {
+        GenericDescriptor *descriptor = dynamic_cast<GenericDescriptor*>(mFileSourcePackage->getDescriptor());
+        descriptor->appendSubDescriptors(new ContainerConstraintsSubDescriptor(mHeaderMetadata));
+    }
 }
 
 void OP1AFile::CreateFile()
@@ -1230,33 +1251,38 @@ void OP1AFile::WriteContentPackages(bool end_of_samples)
 
                 mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
 
-                Partition &index_partition = mMXFFile->createPartition();
-                index_partition.setKey(&MXF_PP_K(OpenComplete, Body));
-                index_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
+                Partition &body_partition = mMXFFile->createPartition();
+                body_partition.setKey(&MXF_PP_K(OpenComplete, Body));
+                body_partition.setIndexSID(mStreamIdHelper.GetId("IndexStream"));
                 if ((mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR)) {
-                    index_partition.setBodySID(mStreamIdHelper.GetId("BodyStream"));
-                    index_partition.setKagSize(mEssencePartitionKAGSize);
-                    index_partition.setBodyOffset(ess_partition_body_offset);
+                    // Index and essence are contained in the same body partition
+                    body_partition.setBodySID(mStreamIdHelper.GetId("BodyStream"));
+                    body_partition.setKagSize(mEssencePartitionKAGSize);
+                    body_partition.setBodyOffset(ess_partition_body_offset);
                     start_ess_partition = false;
                 } else {
-                    index_partition.setBodySID(0);
-                    index_partition.setKagSize(mKAGSize);
+                    // Index and essence are contained in separate body partitions
+                    body_partition.setBodySID(0);
+                    body_partition.setKagSize(mKAGSize);
                 }
-                index_partition.write(mMXFFile);
+                body_partition.write(mMXFFile);
 
-                mIndexTable->WriteSegments(mMXFFile, &index_partition, true);
+                mIndexTable->WriteSegments(mMXFFile, &body_partition, true);
             }
 
-            Partition &ess_partition = mMXFFile->createPartition();
-            if (mSupportCompleteSinglePass)
-                ess_partition.setKey(&MXF_PP_K(ClosedComplete, Body));
-            else
-                ess_partition.setKey(&MXF_PP_K(OpenComplete, Body));
-            ess_partition.setIndexSID(0);
-            ess_partition.setBodySID(mStreamIdHelper.GetId("BodyStream"));
-            ess_partition.setKagSize(mEssencePartitionKAGSize);
-            ess_partition.setBodyOffset(ess_partition_body_offset);
-            ess_partition.write(mMXFFile);
+            if (start_ess_partition) {
+                Partition &ess_partition = mMXFFile->createPartition();
+                if (mSupportCompleteSinglePass)
+                    ess_partition.setKey(&MXF_PP_K(ClosedComplete, Body));
+                else
+                    ess_partition.setKey(&MXF_PP_K(OpenComplete, Body));
+                ess_partition.setIndexSID(0);
+                ess_partition.setBodySID(mStreamIdHelper.GetId("BodyStream"));
+                ess_partition.setKagSize(mEssencePartitionKAGSize);
+                ess_partition.setBodyOffset(ess_partition_body_offset);
+                ess_partition.write(mMXFFile);
+            }
+            // else the body_partition created above will contain the essence
         }
 
         if (mMXFFile->isMemoryFileOpen()) {

@@ -997,7 +997,7 @@ bool bmx::parse_avid_umid_type(const char *str, AvidUMIDType *value)
     return false;
 }
 
-int bmx::parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *three_color_primaries)
+bool bmx::parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *three_color_primaries)
 {
     unsigned int value[6];
     if (sscanf(str, "%d,%d,%d,%d,%d,%d", &value[0], &value[1], &value[2], &value[3], &value[4], &value[5]) != 6)
@@ -1013,7 +1013,7 @@ int bmx::parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *th
     return true;
 }
 
-int bmx::parse_color_primary(const char *str, mxfColorPrimary *color_primary)
+bool bmx::parse_color_primary(const char *str, mxfColorPrimary *color_primary)
 {
     unsigned int value[2];
     if (sscanf(str, "%d,%d", &value[0], &value[1]) != 2)
@@ -1035,6 +1035,18 @@ bool bmx::parse_essence_type_names(const char *str, map<EssenceType, string> *es
     (*essence_type_names)[SOUND_ESSENCE] = names[1];
     (*essence_type_names)[DATA_ESSENCE] = names[2];
     (*essence_type_names)[UNKNOWN_ESSENCE_TYPE] = names[3];
+
+    return true;
+}
+
+bool bmx::parse_video_line_map(const char *str, mxfVideoLineMap *video_line_map)
+{
+    int value[2];
+    if (sscanf(str, "%d,%d", &value[0], &value[1]) != 2)
+        return false;
+
+    video_line_map->first = value[0];
+    video_line_map->second = value[1];
 
     return true;
 }

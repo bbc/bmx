@@ -57,7 +57,7 @@ typedef struct
     // guesses
     uint8_t signal_standard;
     Rational aspect_ratio;
-    int32_t video_line_map[2];
+    mxfVideoLineMap video_line_map;
     uint8_t color_siting;
 } DefaultParameterMatch;
 
@@ -71,12 +71,34 @@ static const DefaultParameterMatch DEFAULT_PARAM_MATCHES[] =
             MXF_SIGNAL_STANDARD_ITU601, {16, 9}, {23, 336}, MXF_COLOR_SITING_COSITING},
     {1280, 720, true, ITU709_COLOR_PRIM, ITUR_BT709_TRANSFER_CH, ITUR_BT709_CODING_EQ,
             MXF_SIGNAL_STANDARD_SMPTE296M, {16, 9}, {26, 0}, MXF_COLOR_SITING_COSITING},
+    {1280, 720, true, ITU2020_COLOR_PRIM, ITU2020_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
+            MXF_SIGNAL_STANDARD_SMPTE296M, {16, 9}, {26, 0}, MXF_COLOR_SITING_COSITING},
+    {1280, 720, true, ITU2020_COLOR_PRIM, SMPTE_ST2084_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
+            MXF_SIGNAL_STANDARD_SMPTE296M, {16, 9}, {26, 0}, MXF_COLOR_SITING_COSITING},
+    {1280, 720, true, ITU2020_COLOR_PRIM, HLG_OETF_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
+            MXF_SIGNAL_STANDARD_SMPTE296M, {16, 9}, {26, 0}, MXF_COLOR_SITING_COSITING},
     {1920, 1080, false, ITU709_COLOR_PRIM, ITUR_BT709_TRANSFER_CH, ITUR_BT709_CODING_EQ,
+            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {21, 584}, MXF_COLOR_SITING_COSITING},
+    {1920, 1080, false, ITU2020_COLOR_PRIM, ITU2020_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
+            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {21, 584}, MXF_COLOR_SITING_COSITING},
+    {1920, 1080, false, ITU2020_COLOR_PRIM, SMPTE_ST2084_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
+            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {21, 584}, MXF_COLOR_SITING_COSITING},
+    {1920, 1080, false, ITU2020_COLOR_PRIM, HLG_OETF_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
             MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {21, 584}, MXF_COLOR_SITING_COSITING},
     {1920, 1080, true, ITU709_COLOR_PRIM, ITUR_BT709_TRANSFER_CH, ITUR_BT709_CODING_EQ,
             MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {42, 0}, MXF_COLOR_SITING_COSITING},
+    {1920, 1080, true, ITU2020_COLOR_PRIM, ITU2020_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
+            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {42, 0}, MXF_COLOR_SITING_COSITING},
+    {1920, 1080, true, ITU2020_COLOR_PRIM, SMPTE_ST2084_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
+            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {42, 0}, MXF_COLOR_SITING_COSITING},
+    {1920, 1080, true, ITU2020_COLOR_PRIM, HLG_OETF_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
+            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {42, 0}, MXF_COLOR_SITING_COSITING},
     {3840, 2160, false, ITU2020_COLOR_PRIM, ITU2020_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
             MXF_SIGNAL_STANDARD_NONE, {16, 9}, {1, 0}, MXF_COLOR_SITING_COSITING},
+    {3840, 2160, false, ITU2020_COLOR_PRIM, SMPTE_ST2084_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
+            MXF_SIGNAL_STANDARD_NONE, {16, 9}, {1, 0}, MXF_COLOR_SITING_COSITING},
+    {3840, 2160, false, ITU2020_COLOR_PRIM, HLG_OETF_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
+            MXF_SIGNAL_STANDARD_NONE, {16, 9}, {1, 0}, MXF_COLOR_SITING_COSITING}
 };
 
 typedef struct
@@ -297,9 +319,10 @@ void RDD36MXFDescriptorHelper::UpdateFileDescriptor(RDD36EssenceParser *essence_
         cdci_descriptor->setDisplayF2Offset(0);
     }
 
-    // stored dimensions are a multiple of 16, the macro block size
-    cdci_descriptor->setStoredWidth((cdci_descriptor->getDisplayWidth() + 15) / 16 * 16);
-    cdci_descriptor->setStoredHeight((cdci_descriptor->getDisplayHeight() + 15) / 16 * 16);
+    // RDD 44:2022 revised the stored dimensions to not be a multiple of the macro block size as
+    // is suggested by ST 377-1 section G.1.1
+    cdci_descriptor->setStoredWidth(cdci_descriptor->getDisplayWidth());
+    cdci_descriptor->setStoredHeight(cdci_descriptor->getDisplayHeight());
     cdci_descriptor->setDisplayXOffset(0);
     cdci_descriptor->setDisplayYOffset(0);
     if (essence_parser->GetChromaFormat() == RDD36_CHROMA_422)
@@ -369,8 +392,7 @@ void RDD36MXFDescriptorHelper::UpdateFileDescriptor(RDD36EssenceParser *essence_
                 if (!cdci_descriptor->haveAspectRatio())
                     cdci_descriptor->setAspectRatio(DEFAULT_PARAM_MATCHES[i].aspect_ratio);
                 if (!cdci_descriptor->haveVideoLineMap()) {
-                    cdci_descriptor->appendVideoLineMap(DEFAULT_PARAM_MATCHES[i].video_line_map[0]);
-                    cdci_descriptor->appendVideoLineMap(DEFAULT_PARAM_MATCHES[i].video_line_map[1]);
+                    cdci_descriptor->setVideoLineMap(DEFAULT_PARAM_MATCHES[i].video_line_map);
                 }
                 if (!cdci_descriptor->haveColorSiting())
                     SetColorSitingMod(DEFAULT_PARAM_MATCHES[i].color_siting);
@@ -387,11 +409,9 @@ void RDD36MXFDescriptorHelper::UpdateFileDescriptor(RDD36EssenceParser *essence_
     }
     if (!cdci_descriptor->haveVideoLineMap()) {
         if (cdci_descriptor->getFrameLayout() == MXF_FULL_FRAME) {
-            cdci_descriptor->appendVideoLineMap(1);
-            cdci_descriptor->appendVideoLineMap(0);
+            cdci_descriptor->setVideoLineMap(1, 0);
         } else {
-            cdci_descriptor->appendVideoLineMap(1);
-            cdci_descriptor->appendVideoLineMap(essence_parser->GetHeight() / 2 + 1);
+            cdci_descriptor->setVideoLineMap(1, essence_parser->GetHeight() / 2 + 1);
         }
     }
 }

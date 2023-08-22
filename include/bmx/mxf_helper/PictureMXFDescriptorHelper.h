@@ -70,6 +70,8 @@ public:
     void SetSignalStandard(MXFSignalStandard signal_standard);
     void SetFrameLayout(MXFFrameLayout frame_layout);
     void SetFieldDominance(uint8_t field_num);
+    void SetVideoLineMap(int32_t first, int32_t second);
+    void SetVideoLineMap(mxfVideoLineMap video_line_map);
     void SetTransferCharacteristic(mxfUL label);
     void SetCodingEquations(mxfUL label);
     void SetColorPrimaries(mxfUL label);
@@ -140,6 +142,7 @@ protected:
     BMX_OPT_PROP_DECL(MXFSignalStandard, mSignalStandard);
     BMX_OPT_PROP_DECL(MXFFrameLayout, mFrameLayout);
     BMX_OPT_PROP_DECL(uint8_t, mFieldDominance);
+    BMX_OPT_PROP_DECL(mxfVideoLineMap, mVideoLineMap);
     BMX_OPT_PROP_DECL(mxfUL, mTransferCh);
     BMX_OPT_PROP_DECL(mxfUL, mCodingEquations);
     BMX_OPT_PROP_DECL(mxfUL, mColorPrimaries);
