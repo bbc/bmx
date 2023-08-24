@@ -1,0 +1,299 @@
+From f771b6e67b3086f02ae3d5b173b97d4f76c9f801 Mon Sep 17 00:00:00 2001
+From: Philip de Nier <philipn@rd.bbc.co.uk>
+Date: Wed, 15 Feb 2023 10:12:09 +0000
+Subject: [PATCH] Updates for bmx
+
+---
+ CMakeLists.txt    | 12 +++++++----
+ git.c.in          | 23 +++++++++++----------
+ git.h => git.h.in | 51 +++++++++++++++++++++++++++--------------------
+ git_watcher.cmake | 20 ++++++++++++++++++-
+ 4 files changed, 69 insertions(+), 37 deletions(-)
+ rename git.h => git.h.in (61%)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 55e6d07..e1ce4a0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,7 +1,11 @@
+ cmake_minimum_required(VERSION 3.2)
+-project(cmake_git_version_tracking
++
++project(${GIT_VERSION_PROJECT_PREFIX}git_version
+     LANGUAGES C)
+ 
++# Apply the GIT_VERSION_PROJECT_PREFIX to the function names
++configure_file(git.h.in git.h)
++
+ # Define the two required variables before including
+ # the source code for watching a git repository.
+ set(PRE_CONFIGURE_FILE "git.c.in")
+@@ -13,9 +17,9 @@ include(git_watcher.cmake)
+ # Note that the include is a system include. This was done
+ # so downstream projects don't suffer from warnings on a
+ # 3rdparty library.
+-add_library(${PROJECT_NAME} STATIC ${POST_CONFIGURE_FILE})
+-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+-add_dependencies(${PROJECT_NAME} check_git)
++add_library(${PROJECT_NAME} OBJECT ${POST_CONFIGURE_FILE})
++target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
++add_dependencies(${PROJECT_NAME} ${GIT_VERSION_PROJECT_PREFIX}check_git)
+ 
+ # The C99 standard is only required because we're using <stdbool.h>.
+ # This could be removed if it's a problem for users, but would require the
+diff --git a/git.c.in b/git.c.in
+index a26d27c..319b33f 100644
+--- a/git.c.in
++++ b/git.c.in
+@@ -1,32 +1,35 @@
+ #include "git.h"
+ 
+-bool git_IsPopulated() {
++bool @GIT_VERSION_PROJECT_PREFIX@git_IsPopulated() {
+     return @GIT_RETRIEVED_STATE@;
+ }
+-bool git_AnyUncommittedChanges() {
++bool @GIT_VERSION_PROJECT_PREFIX@git_AnyUncommittedChanges() {
+     return @GIT_IS_DIRTY@;
+ }
+-const char* git_AuthorName() {
++const char* @GIT_VERSION_PROJECT_PREFIX@git_AuthorName() {
+     return "@GIT_AUTHOR_NAME@";
+ }
+-const char* git_AuthorEmail() {
++const char* @GIT_VERSION_PROJECT_PREFIX@git_AuthorEmail() {
+     return "@GIT_AUTHOR_EMAIL@";
+ }
+-const char* git_CommitSHA1() {
++const char* @GIT_VERSION_PROJECT_PREFIX@git_CommitSHA1() {
+     return "@GIT_HEAD_SHA1@";
+ }
+-const char* git_CommitDate() {
++const char* @GIT_VERSION_PROJECT_PREFIX@git_CommitDate() {
+     return "@GIT_COMMIT_DATE_ISO8601@";
+ }
+-const char* git_CommitSubject() {
++const char* @GIT_VERSION_PROJECT_PREFIX@git_CommitSubject() {
+     return "@GIT_COMMIT_SUBJECT@";
+ }
+-const char* git_CommitBody() {
++const char* @GIT_VERSION_PROJECT_PREFIX@git_CommitBody() {
+     return "@GIT_COMMIT_BODY@";
+ }
+-const char* git_Describe() {
++const char* @GIT_VERSION_PROJECT_PREFIX@git_Describe() {
+     return "@GIT_DESCRIBE@";
+ }
+-const char* git_Branch() {
++const char* @GIT_VERSION_PROJECT_PREFIX@git_Branch() {
+     return "@GIT_BRANCH@";
+ }
++const char* @GIT_VERSION_PROJECT_PREFIX@git_DescribeTag() {
++    return "@GIT_DESCRIBE_TAG@";
++}
+diff --git a/git.h b/git.h.in
+similarity index 61%
+rename from git.h
+rename to git.h.in
+index fee780e..739bd34 100644
+--- a/git.h
++++ b/git.h.in
+@@ -22,35 +22,38 @@ GIT_VERSION_TRACKING_EXTERN_C_BEGIN
+ //
+ /// We may not have metadata if there wasn't a .git directory
+ /// (e.g. downloaded source code without revision history).
+-bool git_IsPopulated();
++bool @GIT_VERSION_PROJECT_PREFIX@git_IsPopulated();
+ 
+ /// Were there any uncommitted changes that won't be reflected
+ /// in the CommitID?
+-bool git_AnyUncommittedChanges();
++bool @GIT_VERSION_PROJECT_PREFIX@git_AnyUncommittedChanges();
+ 
+ /// The commit author's name.
+-const char* git_AuthorName();
++const char* @GIT_VERSION_PROJECT_PREFIX@git_AuthorName();
+ 
+ /// The commit author's email.
+-const char* git_AuthorEmail();
++const char* @GIT_VERSION_PROJECT_PREFIX@git_AuthorEmail();
+ 
+ /// The commit SHA1.
+-const char* git_CommitSHA1();
++const char* @GIT_VERSION_PROJECT_PREFIX@git_CommitSHA1();
+ 
+ /// The ISO8601 commit date.
+-const char* git_CommitDate();
++const char* @GIT_VERSION_PROJECT_PREFIX@git_CommitDate();
+ 
+ /// The commit subject.
+-const char* git_CommitSubject();
++const char* @GIT_VERSION_PROJECT_PREFIX@git_CommitSubject();
+ 
+ /// The commit body.
+-const char* git_CommitBody();
++const char* @GIT_VERSION_PROJECT_PREFIX@git_CommitBody();
+ 
+ /// The commit describe.
+-const char* git_Describe();
++const char* @GIT_VERSION_PROJECT_PREFIX@git_Describe();
+ 
+ /// The symbolic reference tied to HEAD.
+-const char* git_Branch();
++const char* @GIT_VERSION_PROJECT_PREFIX@git_Branch();
++
++/// The commit describe relative to matching tag.
++const char* @GIT_VERSION_PROJECT_PREFIX@git_DescribeTag();
+ 
+ GIT_VERSION_TRACKING_EXTERN_C_END
+ #undef GIT_VERSION_TRACKING_EXTERN_C_BEGIN
+@@ -84,7 +87,7 @@ GIT_VERSION_TRACKING_EXTERN_C_END
+ #include <string>
+ #endif
+ 
+-namespace git {
++namespace @GIT_VERSION_PROJECT_PREFIX@git {
+ 
+ #if GIT_VERSION_USE_STRING_VIEW
+ using StringOrView = std::string_view;
+@@ -106,45 +109,49 @@ const StringOrView InitString(const char* from_c_interface) {
+ }  // namespace internal
+ 
+ inline bool IsPopulated() {
+-  return git_IsPopulated();
++  return @GIT_VERSION_PROJECT_PREFIX@git_IsPopulated();
+ }
+ inline bool AnyUncommittedChanges() {
+-  return  git_AnyUncommittedChanges();
++  return  @GIT_VERSION_PROJECT_PREFIX@git_AnyUncommittedChanges();
+ }
+ inline const StringOrView& AuthorName() {
+-  static const StringOrView kValue = internal::InitString(git_AuthorName());
++  static const StringOrView kValue = internal::InitString(@GIT_VERSION_PROJECT_PREFIX@git_AuthorName());
+   return kValue;
+ }
+ inline const StringOrView AuthorEmail() {
+-  static const StringOrView kValue = internal::InitString(git_AuthorEmail());
++  static const StringOrView kValue = internal::InitString(@GIT_VERSION_PROJECT_PREFIX@git_AuthorEmail());
+   return kValue;
+ }
+ inline const StringOrView CommitSHA1() {
+-  static const StringOrView kValue = internal::InitString(git_CommitSHA1());
++  static const StringOrView kValue = internal::InitString(@GIT_VERSION_PROJECT_PREFIX@git_CommitSHA1());
+   return kValue;
+ }
+ inline const StringOrView CommitDate() {
+-  static const StringOrView kValue = internal::InitString(git_CommitDate());
++  static const StringOrView kValue = internal::InitString(@GIT_VERSION_PROJECT_PREFIX@git_CommitDate());
+   return kValue;
+ }
+ inline const StringOrView CommitSubject() {
+-  static const StringOrView kValue = internal::InitString(git_CommitSubject());
++  static const StringOrView kValue = internal::InitString(@GIT_VERSION_PROJECT_PREFIX@git_CommitSubject());
+   return kValue;
+ }
+ inline const StringOrView CommitBody() {
+-  static const StringOrView kValue = internal::InitString(git_CommitBody());
++  static const StringOrView kValue = internal::InitString(@GIT_VERSION_PROJECT_PREFIX@git_CommitBody());
+   return kValue;
+ }
+ inline const StringOrView Describe() {
+-  static const StringOrView kValue = internal::InitString(git_Describe());
++  static const StringOrView kValue = internal::InitString(@GIT_VERSION_PROJECT_PREFIX@git_Describe());
+   return kValue;
+ }
+ inline const StringOrView Branch() {
+-  static const StringOrView kValue = internal::InitString(git_Branch());
++  static const StringOrView kValue = internal::InitString(@GIT_VERSION_PROJECT_PREFIX@git_Branch());
++  return kValue;
++}
++inline const StringOrView DescribeTag() {
++  static const StringOrView kValue = internal::InitString(@GIT_VERSION_PROJECT_PREFIX@git_DescribeTag());
+   return kValue;
+ }
+ 
+-}  // namespace git
++}  // namespace @GIT_VERSION_PROJECT_PREFIX@git
+ 
+ 
+ // Cleanup our defines to avoid polluting.
+diff --git a/git_watcher.cmake b/git_watcher.cmake
+index 32313a3..b45b106 100644
+--- a/git_watcher.cmake
++++ b/git_watcher.cmake
+@@ -15,6 +15,9 @@
+ #   POST_CONFIGURE_FILE (REQUIRED)
+ #   -- The path to the configured PRE_CONFIGURE_FILE.
+ #
++#   GIT_VERSION_PROJECT_PREFIX (OPTIONAL)
++#   -- Name prefix for source code functions.
++#
+ #   GIT_STATE_FILE (OPTIONAL)
+ #   -- The path to the file used to store the previous build's git state.
+ #      Defaults to the current binary directory.
+@@ -36,6 +39,9 @@
+ #   -- Ignore the presence of untracked files when detecting if the
+ #      working tree is dirty. This is set to FALSE by default.
+ #
++#   GIT_DESCRIBE_TAG_PATTERN (OPTIONAL)
++#   -- Git tag pattern to match against to produce the GIT_DESCRIBE_TAG variable.
++#
+ # DESIGN
+ #   - This script was designed similar to a Python application
+ #     with a Main() function. I wanted to keep it compact to
+@@ -81,6 +87,7 @@ endmacro()
+ 
+ CHECK_REQUIRED_VARIABLE(PRE_CONFIGURE_FILE)
+ CHECK_REQUIRED_VARIABLE(POST_CONFIGURE_FILE)
++CHECK_OPTIONAL_VARIABLE_NOPATH(GIT_VERSION_PROJECT_PREFIX "")
+ CHECK_OPTIONAL_VARIABLE(GIT_STATE_FILE "${CMAKE_CURRENT_BINARY_DIR}/git-state-hash")
+ CHECK_OPTIONAL_VARIABLE(GIT_WORKING_DIR "${CMAKE_SOURCE_DIR}")
+ CHECK_OPTIONAL_VARIABLE_NOPATH(GIT_FAIL_IF_NONZERO_EXIT TRUE)
+@@ -105,6 +112,7 @@ set(_state_variable_names
+     GIT_COMMIT_BODY
+     GIT_DESCRIBE
+     GIT_BRANCH
++    GIT_DESCRIBE_TAG
+     # >>>
+     # 1. Add the name of the additional git variable you're interested in monitoring
+     #    to this list.
+@@ -242,6 +250,14 @@ function(GetGitState _working_dir)
+         set(ENV{GIT_BRANCH} "${output}")
+     endif()
+ 
++    # Get output of git describe relative to the matching tag
++    RunGitCommand(describe --match ${GIT_DESCRIBE_TAG_PATTERN} ${object})
++    if(NOT exit_code EQUAL 0)
++        set(ENV{GIT_DESCRIBE_TAG} "unknown")
++    else()
++        set(ENV{GIT_DESCRIBE_TAG} "${output}")
++    endif()
++
+     # >>>
+     # 2. Additional git properties can be added here via the
+     #    "execute_process()" command. Be sure to set them in
+@@ -324,7 +340,7 @@ endfunction()
+ #              check the state of git before every build. If the state has
+ #              changed, then a file is configured.
+ function(SetupGitMonitoring)
+-    add_custom_target(check_git
++    add_custom_target(${GIT_VERSION_PROJECT_PREFIX}check_git
+         ALL
+         DEPENDS ${PRE_CONFIGURE_FILE}
+         BYPRODUCTS
+@@ -337,10 +353,12 @@ function(SetupGitMonitoring)
+             -DGIT_WORKING_DIR=${GIT_WORKING_DIR}
+             -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+             -DGIT_STATE_FILE=${GIT_STATE_FILE}
++            -DGIT_VERSION_PROJECT_PREFIX=${GIT_VERSION_PROJECT_PREFIX}
+             -DPRE_CONFIGURE_FILE=${PRE_CONFIGURE_FILE}
+             -DPOST_CONFIGURE_FILE=${POST_CONFIGURE_FILE}
+             -DGIT_FAIL_IF_NONZERO_EXIT=${GIT_FAIL_IF_NONZERO_EXIT}
+             -DGIT_IGNORE_UNTRACKED=${GIT_IGNORE_UNTRACKED}
++            -DGIT_DESCRIBE_TAG_PATTERN=${GIT_DESCRIBE_TAG_PATTERN}
+             -P "${CMAKE_CURRENT_LIST_FILE}")
+ endfunction()
+ 
+-- 
+2.25.1
+

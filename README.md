@@ -4,6 +4,8 @@ bmx is a library and set of utilities to read and write the [SMPTE ST 377-1 MXF 
 
 bmx is used to support standardisation efforts in the broadcast industry. It provides utilities for creating standard compliant sample files. It serves as an example implementation for MXF file format standards.
 
+bmx includes the [libMXF](./deps/libMXF) low-level MXF C library and the [libMXF++](./deps/libMXFpp) C++ wrapper library.
+
 bmx provides a set of commandline applications:
 
 * **raw2bmx**: create MXF files from raw essence files
@@ -19,7 +21,7 @@ bmx provides a set of file format text dumper and essence extraction tools:
 * **movdump**: text dump Quicktime / MP4 files
 * **rdd36dump**: text dump SMPTE RDD 36 (Apple ProRes) bitstream files
 * **vc2dump**:  text dump SMPTE ST 2042 VC-2 bitstream files
-* **MXFDump**: text dumper for MXF files from the [AAF SDK](https://sourceforge.net/projects/aaf/). This utility is made available and built as part of [libMXF](https://github.com/bbc/libMXF).
+* **MXFDump**: text dumper for MXF files from the [AAF SDK](https://sourceforge.net/projects/aaf/). This utility is made available and built as part of [libMXF](./deps/libMXF).
 
 The following input and output wrapper formats and flavours are supported:
 
@@ -73,13 +75,7 @@ The build process has been tested on Ubuntu, Debian, MacOS and Windows (Microsof
 
 ### Dependencies
 
-The [libMXF](https://github.com/bbc/libMXF) and [libMXF++](https://github.com/bbc/libMXFpp) libraries are required. They are included as git submodules in the `deps/` directory. Run
-
-```bash
-git submodule update --init
-```
-
-to ensure the submodules are available and up-to-date in the working tree.
+The [libMXF](./deps/libMXF/) and [libMXF++](./deps/libMXFpp/) libraries are required.
 
 The [uriparser](https://github.com/uriparser/uriparser) and [expat](https://github.com/libexpat/libexpat) libraries are required. These libraries are typically provided as software packages on Unix-like systems; the Ubuntu / Debian package names are `liburiparser-dev` and `libexpat1-dev`. The libraries are built from the GitHub source when building on Windows using Microsoft Visual Studio C++.
 
@@ -89,7 +85,7 @@ The [libcurl](https://curl.haxx.se/libcurl/) (Ubuntu / Debian package name `libc
 
 ### Commands
 
-A basic commandline process is described here for platforms that default to the Unix Makefiles or Visual Studio cmake generators. See [./docs/build.md](./docs/build.md) for more detailed build options.
+A basic commandline process is described here for platforms that default to the Unix Makefiles or Visual Studio cmake generators. See [build.md](./docs/build.md) for more detailed build options.
 
 Replace `<build type>` in the commandlines below with `Debug` or `Release`. Note that the Visual Studio generator supports multiple build types for a configuration, which is why the build type is selected _after_ configuration.
 
@@ -167,7 +163,7 @@ add_executable(example example.cpp)
 target_link_libraries(example bmx)
 ```
 
-The `BMX_BUILD_LIB_ONLY` cmake option can be set to `ON` to avoid building the apps and examples in bmx, libMXF and libMXF++. Setting the option to `ON` will disable the bmx tests because they requires the apps. Add this line to the cmake
+The `BMX_BUILD_LIB_ONLY` cmake option can be set to `ON` to avoid building the apps and examples in bmx, [libMXF](./deps/libMXF) and [libMXF++](./deps/libMXFpp). Setting the option to `ON` will disable the bmx tests because they requires the apps. Add this line to the cmake
 
 ```text
 set(BMX_BUILD_LIB_ONLY ON CACHE BOOL "Build bmx, MXF and MXF++ libraries only")
@@ -191,18 +187,12 @@ See [Docker Run](#docker-run) for more details on the script.
 
 ### Docker Build
 
-The [Dockerfile](./Dockerfile) is used for building a Docker image containing a set of tools from bmx, libMXF and AAF SDK.
+The [Dockerfile](./Dockerfile) is used for building a Docker image containing a set of tools from bmx, [libMXF](./deps/libMXF) and [AAF SDK](https://sourceforge.net/projects/aaf/).
 
 The Dockerfile contains a **build** and **runtime** layer:
 
-* **build**: builds and checks the libMXF, libMXF++ and bmx code.
+* **build**: builds and checks the [libMXF](./deps/libMXF), [libMXF++](./deps/libMXFpp) and bmx code.
 * **runtime**: provides the commandline tool executables built in the `build` layer.
-
-Ensure that the libMXF and libMXFpp git submodules are available and up-to-date in the `deps/` directory by running,
-
-```bash
-git submodule update --init
-```
 
 The runtime Docker image can be built in the top-level directory using docker build,
 

@@ -1,0 +1,11 @@
+if(LIBMXFPP_BUILD_EXAMPLES OR LIBMXFPP_BUILD_D10_WRITER OR LIBMXFPP_BUILD_OPATOM_READER)
+    add_subdirectory(Common)
+
+    if(LIBMXFPP_BUILD_EXAMPLES OR LIBMXFPP_BUILD_D10_WRITER)
+        add_subdirectory(D10MXFOP1AWriter)
+    endif()
+
+    if(LIBMXFPP_BUILD_EXAMPLES OR LIBMXFPP_BUILD_OPATOM_READER)
+        add_subdirectory(OPAtomReader)
+    endif()
+endif()

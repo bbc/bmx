@@ -1,0 +1,5 @@
+add_subdirectory(info)
+add_subdirectory(write)
+if(LIBMXF_BUILD_TESTING AND (NOT DEFINED BUILD_TESTING OR BUILD_TESTING))
+    add_subdirectory(test)
+endif()

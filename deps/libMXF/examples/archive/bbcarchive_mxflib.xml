@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MXFDictionary>
+	<APP_VTRErrorCount detail="The number of VTR errors detected when recording" type="UInt32" key="06 0E 2B 34 01 01 01 01 0D 04 01 01 40 01 01 00"/>
+	<APP_PSEFailureCount detail="The number of PSE failures detected" type="UInt32" key="06 0E 2B 34 01 01 01 01 0D 04 01 01 40 01 02 00"/>
+	<APP_DigiBetaDropoutCount detail="The number of DigiBeta dropouts detected" type="UInt32" key="06 0E 2B 34 01 01 01 01 0D 04 01 01 40 01 03 00"/>
+	<APP_TimecodeBreakCount detail="The number of Timecode breaks detected" type="UInt32" key="06 0E 2B 34 01 01 01 01 0D 04 01 01 40 01 04 00"/>
+	<APP_InfaxFramework base="DM_Framework" detail="BBC Infax framework" type="localSet" key="06 0E 2B 34 02 53 01 01 0D 04 01 01 01 01 00 00">
+		<APP_Format detail="OFFLINE_STORAGE::OFS_VT_Technical_Code_Number" use="optional" type="UTF16String" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 01 00"/>
+		<APP_ProgrammeTitle detail="EDITORIAL_OBJECT_GROUP::EOG_Title" use="optional" type="UTF16String" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 02 00"/>
+		<APP_EpisodeTitle detail="EDITORIAL_OBJECT_CONCEPT::EOC_Title" use="optional" type="UTF16String" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 03 00"/>
+		<APP_TransmissionDate detail="PUBLICATION_EVENT::PEV_Actual_Start_Date or PEV_Planned_Start_Date (TODO)" use="optional" type="Timestamp" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 04 00"/>
+		<APP_MagazinePrefix detail="TV_RADIO_CONCEPT::TRC_Magazine_Prefix_Number" use="optional" type="UTF16String" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 05 00"/>
+		<APP_ProgrammeNumber detail="TV_RADIO_CONCEPT::TRC_Core_Number" use="optional" type="UTF16String" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 06 00"/>
+		<APP_ProductionCode detail="?" use="optional" type="UTF16String" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 0F 00"/>
+		<APP_SpoolStatus detail="STORAGE::SGE_Status" use="optional" type="UTF16String" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 07 00"/>
+		<APP_StockDate detail="MEDIA_OBJECT_GROUP_INSTANCE::MOI_Creation_Date" use="optional" type="Timestamp" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 08 00"/>
+		<APP_SpoolDescriptor detail="MEDIA_OBJECT_GROUP_INSTANCE::MOI_Description" use="optional" type="UTF16String" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 09 00"/>
+		<APP_Memo detail="CATALOGUE_ITEM::CIT_Analytical_Description" use="optional" type="UTF16String" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 0A 00"/>
+		<APP_Duration detail="MEDIA_OBJECT_GROUP::MOG_Duration" use="optional" type="Int64" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 0B 00"/>
+		<APP_SpoolNumber detail="OFFLINE_STORAGE::OFS_Spool_Number" use="optional" type="UTF16String" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 0C 00"/>
+		<APP_AccessionNumber detail="OFFLINE_STORAGE::OFS_Library_Accession_Number" use="optional" type="UTF16String" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 0D 00"/>
+		<APP_CatalogueDetail detail="CATALOGUE::Cat_Code" use="optional" type="UTF16String" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 0E 00"/>
+		<APP_ItemNumber detail="?" use="optional" type="UInt32" globalKey="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 01 10 00"/>
+	</APP_InfaxFramework>
+	<APP_PSEAnalysisFramework base="DM_Framework" detail="BBC PSE analysis framework" type="localSet" key="06 0E 2B 34 02 53 01 01 0D 04 01 01 01 02 00 00">
+		<APP_RedFlash detail="The HardingFPA photosensitive epilepsy red flash analysis result" type="Int16" key="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 02 01 00"/>
+		<APP_SpatialPattern detail="The HardingFPA photosensitive epilepsy spatial pattern analysis result" type="Int16" key="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 02 02 00"/>
+		<APP_LuminanceFlash detail="The HardingFPA photosensitive epilepsy luminance flash result" type="Int16" key="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 02 03 00"/>
+		<APP_ExtendedFailure detail="The HardingFPA photosensitive epilepsy cumulative sequence result" type="Boolean" key="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 02 04 00"/>
+	</APP_PSEAnalysisFramework>
+	<APP_VTRReplayErrorFramework base="DM_Framework" detail="BBC VTR replay error framework" type="localSet" key="06 0E 2B 34 02 53 01 01 0D 04 01 01 01 03 00 00">
+		<APP_ErrorCode detail="The VTR error code" type="UInt8" key="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 03 01 00"/>
+	</APP_VTRReplayErrorFramework>
+	<APP_DigiBetaDropoutFramework base="DM_Framework" detail="BBC DigiBeta dropout framework" type="localSet" key="06 0E 2B 34 02 53 01 01 0D 04 01 01 01 04 00 00">
+		<APP_Strength detail="The normalized maximum digibeta dropout strength in the picture" type="Int32" key="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 04 01 00"/>
+	</APP_DigiBetaDropoutFramework>
+	<APP_TimecodeBreakFramework base="DM_Framework" detail="BBC timecode break framework" type="localSet" key="06 0E 2B 34 02 53 01 01 0D 04 01 01 01 05 00 00">
+		<APP_TimecodeType detail="Or of timecode types that have a break" type="UInt16" key="06 0E 2B 34 01 01 01 01 0D 04 01 01 01 05 01 00"/>
+	</APP_TimecodeBreakFramework>
+	<TapeDescriptor base="GenericDescriptor" detail="A Tape Physical Descriptor" type="localSet" key="06 0E 2b 34 02 53 01 01 0D 01 01 01 01 01 2E 00"/>
+</MXFDictionary>

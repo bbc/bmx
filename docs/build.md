@@ -2,9 +2,9 @@
 
 ## Configure Options
 
-The bmx cmake configure options can be found in [cmake/options.cmake](../cmake/options.cmake). Additionaly, there are [libMXF options](https://github.com/bbc/libMXF/cmake/options.cmake) (or in a code checkout at `deps/libMXF/cmake/options.cmake`) and [libMXFpp options](https://github.com/bbc/libMXFpp/cmake/options.cmake) (or in a code checkout at `deps/libMXFpp/cmake/options.cmake`).
+The bmx cmake configure options can be found in [cmake/options.cmake](../cmake/options.cmake). Additionaly, there are [libMXF options](../deps/libMXF/cmake/options.cmake) and [libMXF++ options](../deps/libMXFpp/cmake/options.cmake).
 
-Most options are booleans and can be set to `ON` or `OFF` using the `cmake` commandline option `-D<option>=<value>`. E.g. `-DBMX_BUILD_APPS=OFF` will disable building the bmx commandline apps and `-DLIBMXF_BUILD_EXAMPLES=ON` will enable building the libMXF examples.
+Most options are booleans and can be set to `ON` or `OFF` using the `cmake` commandline option `-D<option>=<value>`. E.g. `-DBMX_BUILD_APPS=OFF` will disable building the bmx commandline apps and `-DLIBMXF_BUILD_EXAMPLES=ON` will enable building the [libMXF examples](../deps/libMXF/examples).
 
 The `BMX_TEST_SAMPLES_DIR` option accepts a string value that is an absolute or relative (to the build directory) file path for the test sample files.
 
@@ -20,11 +20,11 @@ The `BUILD_SHARED_LIBS` option can be used to select building shared or static l
 
 ## Build Dependencies From Source
 
-The libMXF and libMXF++ dependencies are included as git submodules in `deps/`. The other dependencies can also be built from source by including them in the `deps/` directory and enabling it using configuration options.
+The [libMXF](../deps/libMXF/) and [libMXF++](../deps/libMXFpp) dependencies are provided in `deps/`. The other dependencies can also be built from source by including them in the `deps/` directory and enabling it using configuration options.
 
 On Unix-like systems the configuration options to build dependencies from source in `deps/` are: `BMX_BUILD_EXPAT_SOURCE` and `BMX_BUILD_URIPARSER_SOURCE`. Checkout the code from GitHub into the `deps/` directory and set the corresponding option to `ON`. See the [ext_expat.cmake](../cmake/ext_expat.cmake) and [ext_uriparser.cmake](../cmake/ext_uriparser.cmake) files for git URL and tags used in the Windows build.
 
-The `BMX_BUILD_LIBMXF_LIB` and `BMX_BUILD_LIBMXFPP_LIB` options can be used to build from installed libraries rather than the submodules in `deps/`.
+The `BMX_BUILD_LIBMXF_LIB` and `BMX_BUILD_LIBMXFPP_LIB` options can be used to build from installed libraries.
 
 ## Windows Build
 
