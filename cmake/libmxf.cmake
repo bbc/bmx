@@ -13,8 +13,7 @@ if(BMX_BUILD_LIBMXF_LIB)
 else()
     if(NOT EXISTS ${PROJECT_SOURCE_DIR}/deps/libMXF/CMakeLists.txt)
         message(FATAL_ERROR
-            "libMXF submodule source code does not exist at 'deps/libMXF'\n"
-            "Run 'git submodule update --init' to fetch the source"
+            "libMXF source code does not exist at 'deps/libMXF'"
         )
     endif()
 
