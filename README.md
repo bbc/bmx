@@ -75,7 +75,7 @@ The build process has been tested on Ubuntu, Debian, MacOS and Windows (Microsof
 
 ### Dependencies
 
-The [libMXF](./deps/libMXF/) and [libMXF++](./deps/libMXFpp/) libraries are required.
+The [libMXF](./deps/libMXF/) and [libMXF++](./deps/libMXFpp/) libraries are provided in the [deps/](./deps) directory.
 
 The [uriparser](https://github.com/uriparser/uriparser) and [expat](https://github.com/libexpat/libexpat) libraries are required. These libraries are typically provided as software packages on Unix-like systems; the Ubuntu / Debian package names are `liburiparser-dev` and `libexpat1-dev`. The libraries are built from the GitHub source when building on Windows using Microsoft Visual Studio C++.
 

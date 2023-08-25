@@ -23,7 +23,7 @@ The build process has been tested on Ubuntu, Debian, MacOS and Windows (Microsof
 
 ### Dependencies
 
-The [libMXF](../libMXF/) library is required.
+The [libMXF](../libMXF/) library is provided here alongside libMXF++.
 
 ### Commands
 
