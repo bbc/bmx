@@ -34,6 +34,7 @@
 #endif
 
 #include <bmx/mxf_helper/AVCIMXFDescriptorHelper.h>
+#include <bmx/mxf_helper/AVCMXFDescriptorHelper.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
@@ -368,10 +369,6 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
     cdci_descriptor->setBlackRefLevel(64);
     cdci_descriptor->setWhiteReflevel(940);
     cdci_descriptor->setColorRange(897);
-    if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR))
-        cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
-    else
-        SetCodingEquationsMod(ITUR_BT709_CODING_EQ);
     switch (mEssenceType)
     {
         case AVCI200_1080I:
@@ -488,6 +485,30 @@ void AVCIMXFDescriptorHelper::UpdateFileDescriptor()
            mAVCSubDescriptor->setAVCSequenceParameterSetFlag(0xa0);    // constant and present in every access unit
            mAVCSubDescriptor->setAVCPictureParameterSetFlag(0xa0);     // constant and present in every access unit
         }
+    }
+}
+
+void AVCIMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_parser)
+{
+    UpdateFileDescriptor();
+
+    CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
+    BMX_ASSERT(cdci_descriptor);
+
+    if (!cdci_descriptor->haveColorPrimaries())
+        AVCMXFDescriptorHelper::MapColorPrimaries(essence_parser->GetColorPrimaries(), this);
+    if (!cdci_descriptor->haveCaptureGamma())
+        AVCMXFDescriptorHelper::MapTransferCharacteristic(essence_parser->GetTransferCharacteristics(), this);
+    if (!cdci_descriptor->haveCodingEquations())
+        AVCMXFDescriptorHelper::MapMatrixCoefficients(essence_parser->GetMatrixCoefficients(), this);
+
+    // The defaults below were previously set in UpdateFileDescriptor()
+    if ((mFlavour & MXFDESC_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+        if (!cdci_descriptor->haveCaptureGamma())
+            cdci_descriptor->setCaptureGamma(ITUR_BT709_TRANSFER_CH);
+    } else {
+        if (!cdci_descriptor->haveCodingEquations())
+            SetCodingEquationsMod(ITUR_BT709_CODING_EQ);
     }
 }
 

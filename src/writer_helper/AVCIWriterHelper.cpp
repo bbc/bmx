@@ -227,6 +227,9 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
             mPPSFirstAUOnly = true;
             mPPSEveryAU     = true;
         }
+
+        if (mDescriptorHelper)
+            mDescriptorHelper->UpdateFileDescriptor(&mEssenceParser);
     } else {
         if (output_has_header) {
             mSPSFirstAUOnly = false;
