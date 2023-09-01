@@ -34,6 +34,7 @@
 
 
 #include <bmx/mxf_helper/PictureMXFDescriptorHelper.h>
+#include <bmx/essence_parser/AVCEssenceParser.h>
 
 
 
@@ -66,6 +67,7 @@ public:
 
     virtual mxfpp::FileDescriptor* CreateFileDescriptor(mxfpp::HeaderMetadata *header_metadata);
     virtual void UpdateFileDescriptor();
+    void UpdateFileDescriptor(AVCEssenceParser *essence_parser);
 
     mxfpp::AVCSubDescriptor* GetAVCSubDescriptor() const { return mAVCSubDescriptor; }
 
