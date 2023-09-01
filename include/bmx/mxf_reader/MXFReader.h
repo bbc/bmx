@@ -93,8 +93,14 @@ public:
 
     virtual int64_t GetPosition() const = 0;
 
+    // Returns the maximum precharge required for the given position.
     virtual int16_t GetMaxPrecharge(int64_t position, bool limit_to_available) const = 0;
+    // Returns the maximum precharge available before the given position.
+    virtual int64_t GetMaxAvailablePrecharge(int64_t position) const = 0;
+    // Returns the maximum rollout required for the given position.
     virtual int16_t GetMaxRollout(int64_t position, bool limit_to_available) const = 0;
+    // Returns the maximum rollout available after the given position.
+    virtual int64_t GetMaxAvailableRollout(int64_t position) const = 0;
 
     mxfRational GetEditRate() const   { return mEditRate; }
     int64_t GetDuration() const       { return mDuration; }

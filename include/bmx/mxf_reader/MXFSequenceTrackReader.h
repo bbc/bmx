@@ -87,7 +87,9 @@ public:
     virtual bool GetIndexEntry(MXFIndexEntryExt *entry, int64_t position = CURRENT_POSITION_VALUE) const;
 
     virtual int16_t GetPrecharge(int64_t position, bool limit_to_available) const;
+    virtual int64_t GetAvailablePrecharge(int64_t position) const;
     virtual int16_t GetRollout(int64_t position, bool limit_to_available) const;
+    virtual int64_t GetAvailableRollout(int64_t position) const;
 
     virtual MXFTrackInfo* GetTrackInfo() const                 { return mTrackInfo; }
     virtual mxfpp::FileDescriptor* GetFileDescriptor() const   { return mFileDescriptor; }

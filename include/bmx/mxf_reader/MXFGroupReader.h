@@ -73,7 +73,9 @@ public:
     virtual int64_t GetPosition() const;
 
     virtual int16_t GetMaxPrecharge(int64_t position, bool limit_to_available) const;
+    virtual int64_t GetMaxAvailablePrecharge(int64_t position) const;
     virtual int16_t GetMaxRollout(int64_t position, bool limit_to_available) const;
+    virtual int64_t GetMaxAvailableRollout(int64_t position) const;
 
 public:
     virtual int64_t GetFixedLeadFillerOffset() const;

@@ -666,6 +666,27 @@ int16_t MXFSequenceReader::GetMaxPrecharge(int64_t position, bool limit_to_avail
     return segment->GetMaxPrecharge(segment_position, limit_to_available);
 }
 
+int64_t MXFSequenceReader::GetMaxAvailablePrecharge(int64_t position) const
+{
+    BMX_CHECK(!mGroupSegments.empty());
+
+    int64_t target_position = position;
+    if (target_position == CURRENT_POSITION_VALUE)
+        target_position = GetPosition();
+
+    MXFGroupReader *segment;
+    size_t segment_index;
+    int64_t segment_position;
+    GetSegmentPosition(0, &segment, &segment_index, &segment_position);
+
+    int64_t available_at_start = segment->GetMaxAvailablePrecharge(segment_position);
+    int64_t max_available_precharge = available_at_start - target_position;
+    if (max_available_precharge > 0)
+        max_available_precharge = 0;
+
+    return max_available_precharge;
+}
+
 int16_t MXFSequenceReader::GetMaxRollout(int64_t position, bool limit_to_available) const
 {
     BMX_CHECK(!mGroupSegments.empty());
@@ -676,6 +697,27 @@ int16_t MXFSequenceReader::GetMaxRollout(int64_t position, bool limit_to_availab
     GetSegmentPosition(position, &segment, &segment_index, &segment_position);
 
     return segment->GetMaxRollout(segment_position, limit_to_available);
+}
+
+int64_t MXFSequenceReader::GetMaxAvailableRollout(int64_t position) const
+{
+    BMX_CHECK(!mGroupSegments.empty());
+
+    int64_t target_position = position;
+    if (target_position == CURRENT_POSITION_VALUE)
+        target_position = GetPosition();
+
+    MXFGroupReader *segment;
+    size_t segment_index;
+    int64_t segment_position;
+    GetSegmentPosition(mDuration - 1, &segment, &segment_index, &segment_position);
+
+    int64_t available_at_end = segment->GetMaxAvailableRollout(segment_position);
+    int64_t max_available_rollout = (mDuration - 1) + available_at_end - target_position;
+    if (max_available_rollout < 0)
+        max_available_rollout = 0;
+
+    return max_available_rollout;
 }
 
 int64_t MXFSequenceReader::GetFixedLeadFillerOffset() const

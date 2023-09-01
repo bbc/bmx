@@ -129,7 +129,9 @@ public:
     virtual int64_t GetPosition() const;
 
     virtual int16_t GetMaxPrecharge(int64_t position, bool limit_to_available) const;
+    virtual int64_t GetMaxAvailablePrecharge(int64_t position) const;
     virtual int16_t GetMaxRollout(int64_t position, bool limit_to_available) const;
+    virtual int64_t GetMaxAvailableRollout(int64_t position) const;
 
 public:
     virtual int64_t GetFixedLeadFillerOffset() const;
@@ -207,7 +209,9 @@ private:
 
     bool GetInternalIndexEntry(MXFIndexEntryExt *entry, int64_t position) const;
     int16_t GetInternalPrecharge(int64_t position, bool limit_to_available) const;
+    int64_t GetInternalAvailablePrecharge(int64_t position) const;
     int16_t GetInternalRollout(int64_t position, bool limit_to_available) const;
+    int64_t GetInternalAvailableRollout(int64_t position) const;
     void GetInternalAvailableReadLimits(int64_t *start_position, int64_t *duration) const;
 
     bool HaveInterFrameEncodingTrack() const;

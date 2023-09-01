@@ -514,6 +514,32 @@ int16_t MXFGroupReader::GetMaxPrecharge(int64_t position, bool limit_to_availabl
     return max_precharge < 0 ? (int16_t)max_precharge : 0;
 }
 
+int64_t MXFGroupReader::GetMaxAvailablePrecharge(int64_t position) const
+{
+    int64_t target_position = position;
+    if (target_position == CURRENT_POSITION_VALUE)
+        target_position = GetPosition();
+
+    int64_t max_available_precharge = 0;
+    size_t i;
+    for (i = 0; i < mReaders.size(); i++) {
+        if (!mReaders[i]->IsEnabled())
+            continue;
+
+        int64_t mem_max_available_precharge = mReaders[i]->GetMaxAvailablePrecharge(CONVERT_GROUP_POS(target_position));
+        if (mem_max_available_precharge != 0) {
+            if (mReaders[i]->GetEditRate() != mEditRate) {
+                log_warn("Currently only support available precharge in group members if "
+                         "member edit rate equals group edit rate");
+            } else if (mem_max_available_precharge < max_available_precharge) {
+                max_available_precharge = mem_max_available_precharge;
+            }
+        }
+    }
+
+    return max_available_precharge;
+}
+
 int16_t MXFGroupReader::GetMaxRollout(int64_t position, bool limit_to_available) const
 {
     int64_t max_rollout = 0;
@@ -546,6 +572,32 @@ int16_t MXFGroupReader::GetMaxRollout(int64_t position, bool limit_to_available)
         max_rollout = min_end_position - position;
 
     return max_rollout > 0 ? (int16_t)max_rollout : 0;
+}
+
+int64_t MXFGroupReader::GetMaxAvailableRollout(int64_t position) const
+{
+    int64_t target_position = position;
+    if (target_position == CURRENT_POSITION_VALUE)
+        target_position = GetPosition();
+
+    int64_t max_available_rollout = 0;
+    size_t i;
+    for (i = 0; i < mReaders.size(); i++) {
+        if (!mReaders[i]->IsEnabled())
+            continue;
+
+        int64_t mem_max_available_rollout = mReaders[i]->GetMaxAvailableRollout(CONVERT_GROUP_POS(target_position + 1) - 1);
+        if (mem_max_available_rollout != 0) {
+            if (mReaders[i]->GetEditRate() != mEditRate) {
+                log_warn("Currently only support available rollout in group members if "
+                         "member edit rate equals group edit rate");
+            } else if (mem_max_available_rollout > max_available_rollout) {
+                max_available_rollout = mem_max_available_rollout;
+            }
+        }
+    }
+
+    return max_available_rollout;
 }
 
 int64_t MXFGroupReader::GetFixedLeadFillerOffset() const

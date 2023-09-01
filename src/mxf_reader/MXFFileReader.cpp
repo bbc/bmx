@@ -793,6 +793,38 @@ int16_t MXFFileReader::GetMaxPrecharge(int64_t position, bool limit_to_available
     return precharge < 0 ? (int16_t)precharge : 0;
 }
 
+int64_t MXFFileReader::GetMaxAvailablePrecharge(int64_t position) const
+{
+    CHECK_SUPPORT_PC_RO_INFO;
+
+    int64_t target_position = position;
+    if (target_position == CURRENT_POSITION_VALUE)
+        target_position = GetPosition();
+
+    int64_t max_available_precharge = 0;
+    if (InternalIsEnabled())
+        max_available_precharge = GetInternalAvailablePrecharge(target_position);
+
+    size_t i;
+    for (i = 0; i < mExternalReaders.size(); i++) {
+        if (!mExternalReaders[i]->IsEnabled())
+            continue;
+
+        int64_t ext_max_available_precharge = mExternalReaders[i]->GetMaxAvailablePrecharge(
+            CONVERT_INTERNAL_POS(target_position));
+        if (ext_max_available_precharge != 0) {
+            if (mExternalReaders[i]->GetEditRate() != mEditRate) {
+                log_warn("Currently only support available precharge in external reader if "
+                         "external reader edit rate equals group edit rate");
+            } else if (ext_max_available_precharge < max_available_precharge) {
+                max_available_precharge = ext_max_available_precharge;
+            }
+        }
+    }
+
+    return max_available_precharge;
+}
+
 int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available) const
 {
     CHECK_SUPPORT_PC_RO_INFO;
@@ -840,6 +872,38 @@ int16_t MXFFileReader::GetMaxRollout(int64_t position, bool limit_to_available) 
         rollout = min_end_position - target_position;
 
     return rollout > 0 ? (int16_t)rollout : 0;
+}
+
+int64_t MXFFileReader::GetMaxAvailableRollout(int64_t position) const
+{
+    CHECK_SUPPORT_PC_RO_INFO;
+
+    int64_t target_position = position;
+    if (target_position == CURRENT_POSITION_VALUE)
+        target_position = GetPosition();
+
+    int64_t max_available_rollout = 0;
+    if (InternalIsEnabled())
+        max_available_rollout = GetInternalAvailableRollout(target_position);
+
+    size_t i;
+    for (i = 0; i < mExternalReaders.size(); i++) {
+        if (!mExternalReaders[i]->IsEnabled())
+            continue;
+
+        int16_t ext_max_available_rollout = mExternalReaders[i]->GetMaxAvailableRollout(
+            CONVERT_INTERNAL_POS(target_position + 1) - 1);
+        if (ext_max_available_rollout != 0) {
+            if (mExternalReaders[i]->GetEditRate() != mEditRate) {
+                log_warn("Currently only support available rollout in external reader if "
+                         "external reader edit rate equals group edit rate");
+            } else if (ext_max_available_rollout > max_available_rollout) {
+                max_available_rollout = ext_max_available_rollout;
+            }
+        }
+    }
+
+    return max_available_rollout;
 }
 
 int64_t MXFFileReader::GetFixedLeadFillerOffset() const
@@ -2146,6 +2210,24 @@ int16_t MXFFileReader::GetInternalPrecharge(int64_t position, bool limit_to_avai
     return precharge < 0 ? precharge : 0;
 }
 
+int64_t MXFFileReader::GetInternalAvailablePrecharge(int64_t position) const
+{
+    CHECK_SUPPORT_PC_RO_INFO;
+
+    if (!mEssenceReader)
+        return 0;
+
+    int64_t target_position = position;
+    if (target_position == CURRENT_POSITION_VALUE)
+        target_position = GetPosition();
+
+    int64_t available_precharge = FROM_ESS_READER_POS(mEssenceReader->LegitimisePosition(0)) - target_position;
+    if (available_precharge > 0)
+        available_precharge = 0;
+
+    return available_precharge;
+}
+
 int16_t MXFFileReader::GetInternalRollout(int64_t position, bool limit_to_available) const
 {
     CHECK_SUPPORT_PC_RO_INFO;
@@ -2174,6 +2256,24 @@ int16_t MXFFileReader::GetInternalRollout(int64_t position, bool limit_to_availa
     }
 
     return rollout > 0 ? rollout : 0;
+}
+
+int64_t MXFFileReader::GetInternalAvailableRollout(int64_t position) const
+{
+    CHECK_SUPPORT_PC_RO_INFO;
+
+    if (!mEssenceReader)
+        return 0;
+
+    int64_t target_position = position;
+    if (target_position == CURRENT_POSITION_VALUE)
+        target_position = GetPosition();
+
+    int64_t available_rollout = FROM_ESS_READER_POS(mEssenceReader->LegitimisePosition(INT64_MAX)) - target_position;
+    if (available_rollout < 0)
+        available_rollout = 0;
+
+    return available_rollout;
 }
 
 void MXFFileReader::GetInternalAvailableReadLimits(int64_t *start_position, int64_t *duration) const
