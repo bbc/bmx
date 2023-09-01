@@ -528,7 +528,6 @@ void OP1AFile::CompleteWrite()
 
     if (HAVE_PRIMARY_EC &&
         !(mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) &&
-        !(mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR) &&
         ((mIndexTable->IsVBE() && mIndexTable->HaveSegments()) ||
             (mIndexTable->IsCBE() && !mIndexTable->HaveWrittenCBE() && mIndexTable->GetDuration() > 0)))
     {

@@ -8,6 +8,7 @@ if(TEST_MODE STREQUAL "check")
     set(output_file_2 test_index_follows_2.mxf)
     set(output_file_3 test_index_follows_3.mxf)
     set(output_file_4 test_index_follows_4.mxf)
+    set(output_file_5 test_index_follows_5.mxf)
 elseif(TEST_MODE STREQUAL "samples")
     file(MAKE_DIRECTORY ${BMX_TEST_SAMPLES_DIR})
 
@@ -15,11 +16,13 @@ elseif(TEST_MODE STREQUAL "samples")
     set(output_file_2 ${BMX_TEST_SAMPLES_DIR}/test_index_follows_2.mxf)
     set(output_file_3 ${BMX_TEST_SAMPLES_DIR}/test_index_follows_3.mxf)
     set(output_file_4 ${BMX_TEST_SAMPLES_DIR}/test_index_follows_4.mxf)
+    set(output_file_5 ${BMX_TEST_SAMPLES_DIR}/test_index_follows_5.mxf)
 else()
     set(output_file_1 test_index_follows_1.mxf)
     set(output_file_2 test_index_follows_2.mxf)
     set(output_file_3 test_index_follows_3.mxf)
     set(output_file_4 test_index_follows_4.mxf)
+    set(output_file_5 test_index_follows_5.mxf)
 endif()
 
 set(create_test_audio ${CREATE_TEST_ESSENCE}
@@ -40,6 +43,7 @@ set(tests
     "--min-part"
     "--body-part"
     "--repeat-index"
+    "--body-part\;--repeat-index"
 )
 
 list(LENGTH tests num_tests)
@@ -49,8 +53,13 @@ foreach(index RANGE 1 ${max_index})
     math(EXPR test_index "${index} - 1")
     list(GET tests ${test_index} test)
 
-    if(${test} STREQUAL "x")
-        set(add_opt "")
+    list(LENGTH test num_test_options)
+    if(${num_test_options} EQUAL 1)
+        if(${test} STREQUAL "x")
+            set(add_opt "")
+        else()
+            set(add_opt ${test})
+        endif()
     else()
         set(add_opt ${test})
     endif()
