@@ -111,7 +111,8 @@ typedef enum
     TYPE_RDD36_422                      = 55,
     TYPE_RDD36_4444                     = 56,
     TYPE_16BIT_PCM_SAMPLES              = 57,
-    TYPE_END                            = 58,
+    TYPE_RDD36_422_ITU2020              = 58,
+    TYPE_END                            = 59,
 } EssenceType;
 
 typedef struct
@@ -719,7 +720,7 @@ static void write_rdd36(FILE *file, int type, unsigned int duration)
     set_rdd36_bits(data, &bit_offset, 32, 0x20626d78);              // encoder identifier
     set_rdd36_bits(data, &bit_offset, 16, 1920);                    // width
     set_rdd36_bits(data, &bit_offset, 16, 1080);                    // height
-    if (type == TYPE_RDD36_422)
+    if (type == TYPE_RDD36_422 || type == TYPE_RDD36_422_ITU2020)
         set_rdd36_bits(data, &bit_offset, 2, 2);                    // chroma_format
     else
         set_rdd36_bits(data, &bit_offset, 2, 3);                    // chroma_format
@@ -730,15 +731,21 @@ static void write_rdd36(FILE *file, int type, unsigned int duration)
         set_rdd36_bits(data, &bit_offset,  2, 0);                   // interlace mode
     set_rdd36_bits(data, &bit_offset,  2, 0);                       // reserved
     set_rdd36_bits(data, &bit_offset,  4, 3);                       // aspect ratio
-    if (type == TYPE_RDD36_422)
+    if (type == TYPE_RDD36_422 || type == TYPE_RDD36_422_ITU2020)
         set_rdd36_bits(data, &bit_offset,  4, 3);                   // frame rate
     else
         set_rdd36_bits(data, &bit_offset,  4, 6);                   // frame rate
-    set_rdd36_bits(data, &bit_offset,  8, 1);                       // color primaries
-    set_rdd36_bits(data, &bit_offset,  8, 1);                       // transfer characteristic
-    set_rdd36_bits(data, &bit_offset,  8, 1);                       // matrix coefficients
+    if (type == TYPE_RDD36_422_ITU2020) {
+        set_rdd36_bits(data, &bit_offset,  8, 9);                   // color primaries
+        set_rdd36_bits(data, &bit_offset,  8, 15);                  // transfer characteristic
+        set_rdd36_bits(data, &bit_offset,  8, 9);                   // matrix coefficients
+    } else {
+        set_rdd36_bits(data, &bit_offset,  8, 1);                   // color primaries
+        set_rdd36_bits(data, &bit_offset,  8, 1);                   // transfer characteristic
+        set_rdd36_bits(data, &bit_offset,  8, 1);                   // matrix coefficients
+    }
     set_rdd36_bits(data, &bit_offset,  4, 0);                       // reserved
-    if (type == TYPE_RDD36_422)
+    if (type == TYPE_RDD36_422 || type == TYPE_RDD36_422_ITU2020)
         set_rdd36_bits(data, &bit_offset, 4, 0);                    // alpha channel type
     else
         set_rdd36_bits(data, &bit_offset, 4, 1);                    // alpha channel type
@@ -1129,6 +1136,7 @@ int main(int argc, const char **argv)
             break;
         case TYPE_RDD36_422:
         case TYPE_RDD36_4444:
+        case TYPE_RDD36_422_ITU2020:
             write_rdd36(file, type, duration);
             break;
         case TYPE_VC2:
