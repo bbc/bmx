@@ -65,7 +65,7 @@ typedef struct
 static const DefaultParameterMatch DEFAULT_PARAM_MATCHES[] =
 {
     {720, 480, false,
-        {SMPTE170M_COLOR_PRIM, ITUR_BT470_TRANSFER_CH},
+        {SMPTE170M_COLOR_PRIM, g_Null_UL},
         {ITUR_BT709_TRANSFER_CH, g_Null_UL, g_Null_UL, g_Null_UL},
         {ITUR_BT601_CODING_EQ, g_Null_UL},
             MXF_SIGNAL_STANDARD_ITU601, {16, 9}, {23, 285}, MXF_COLOR_SITING_COSITING},
