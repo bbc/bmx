@@ -300,7 +300,7 @@ OP1AIndexTable::OP1AIndexTable(uint32_t index_sid, uint32_t body_sid, mxfRationa
     mAVCIFirstIndexSegment = 0;
     mDuration = 0;
     mStreamOffset = 0;
-    mHaveWrittenCBE = false;
+    mHaveWritten = false;
 }
 
 OP1AIndexTable::~OP1AIndexTable()
@@ -541,7 +541,7 @@ bool OP1AIndexTable::HaveSegments()
 bool OP1AIndexTable::HaveFooterSegments()
 {
     if (mIsCBE)
-        return mDuration > 0 && (!mHaveWrittenCBE || mRepeatIndexTable);
+        return mDuration > 0 && (!mHaveWritten || mRepeatIndexTable);
     else
         return HaveSegments() || (!mWrittenVBEIndexSegments.empty() && mRepeatIndexTable);
 }
@@ -560,9 +560,8 @@ void OP1AIndexTable::WriteSegments(File *mxf_file, Partition *partition, bool fi
     }
     partition->markIndexEnd(mxf_file);
 
-    if (mIsCBE) {
-        mHaveWrittenCBE = true;
-    } else {
+    mHaveWritten = true;
+    if (!mIsCBE) {
         if (!partition->isFooter() && mRepeatIndexTable) {
             size_t i;
             for (i = 0; i < mIndexSegments.size(); i++)
