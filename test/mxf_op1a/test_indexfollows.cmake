@@ -9,6 +9,8 @@ if(TEST_MODE STREQUAL "check")
     set(output_file_3 test_index_follows_3.mxf)
     set(output_file_4 test_index_follows_4.mxf)
     set(output_file_5 test_index_follows_5.mxf)
+    set(output_file_6 test_index_follows_6.mxf)
+    set(output_file_7 test_index_follows_7.mxf)
 elseif(TEST_MODE STREQUAL "samples")
     file(MAKE_DIRECTORY ${BMX_TEST_SAMPLES_DIR})
 
@@ -17,23 +19,27 @@ elseif(TEST_MODE STREQUAL "samples")
     set(output_file_3 ${BMX_TEST_SAMPLES_DIR}/test_index_follows_3.mxf)
     set(output_file_4 ${BMX_TEST_SAMPLES_DIR}/test_index_follows_4.mxf)
     set(output_file_5 ${BMX_TEST_SAMPLES_DIR}/test_index_follows_5.mxf)
+    set(output_file_6 ${BMX_TEST_SAMPLES_DIR}/test_index_follows_6.mxf)
+    set(output_file_7 ${BMX_TEST_SAMPLES_DIR}/test_index_follows_7.mxf)
 else()
     set(output_file_1 test_index_follows_1.mxf)
     set(output_file_2 test_index_follows_2.mxf)
     set(output_file_3 test_index_follows_3.mxf)
     set(output_file_4 test_index_follows_4.mxf)
     set(output_file_5 test_index_follows_5.mxf)
+    set(output_file_6 test_index_follows_6.mxf)
+    set(output_file_7 test_index_follows_7.mxf)
 endif()
 
 set(create_test_audio ${CREATE_TEST_ESSENCE}
     -t 1
-    -d 3
+    -d 24
     audio_index_follows
 )
 
 set(create_test_video ${CREATE_TEST_ESSENCE}
-    -t 7
-    -d 3
+    -t 14
+    -d 24
     video_index_follows
 )
 
@@ -44,6 +50,8 @@ set(tests
     "--body-part"
     "--repeat-index"
     "--body-part\;--repeat-index"
+    "--part\;12\;--body-part"
+    "--part\;12\;--body-part\;--repeat-index"
 )
 
 list(LENGTH tests num_tests)
@@ -71,7 +79,7 @@ foreach(index RANGE 1 ${max_index})
         -o ${output_file_${index}}
         --index-follows
         ${add_opt}
-        --avci100_1080i video_index_follows
+        --mpeg2lg_422p_hl_1080i video_index_follows
         -q 16 --pcm audio_index_follows
     )
 

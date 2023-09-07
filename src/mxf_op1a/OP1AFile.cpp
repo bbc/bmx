@@ -524,12 +524,14 @@ void OP1AFile::CompleteWrite()
     mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
 
 
-    // non-minimal partition flavour: write any remaining VBE index segments or follow CBE index segments
+    // write any remaining VBE index segments or follow CBE index segments
 
     if (HAVE_PRIMARY_EC &&
         !(mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) &&
+        (!(mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR) ||
+            (mIndexTable->RepeatIndexTable() && mIndexTable->HaveWritten())) &&
         ((mIndexTable->IsVBE() && mIndexTable->HaveSegments()) ||
-            (mIndexTable->IsCBE() && !mIndexTable->HaveWrittenCBE() && mIndexTable->GetDuration() > 0)))
+            (mIndexTable->IsCBE() && !mIndexTable->HaveWritten() && mIndexTable->GetDuration() > 0)))
     {
         Partition &index_partition = mMXFFile->createPartition();
         index_partition.setKey(&MXF_PP_K(ClosedComplete, Body)); // will be complete when memory flushed
@@ -577,7 +579,7 @@ void OP1AFile::CompleteWrite()
     // minimal/body partitions flavour: write any remaining index segments
 
     if (HAVE_PRIMARY_EC && mIndexTable->HaveFooterSegments()) {
-        if (mIndexTable->IsCBE() && !mIndexTable->HaveWrittenCBE()) {
+        if (mIndexTable->IsCBE() && !mIndexTable->HaveWritten()) {
             // CBE index table that is not a repeat
             mCBEIndexPartitionIndex = mMXFFile->getPartitions().size() - 1;
         }

@@ -193,7 +193,8 @@ public:
     void UpdateIndex(uint32_t size, uint32_t num_samples);
 
 public:
-    bool HaveWrittenCBE() const { return mHaveWrittenCBE; }
+    bool HaveWrittenCBE() const { return mIsCBE && mHaveWritten; }
+    bool HaveWritten() const { return mHaveWritten; }
 
     bool HaveSegments();
     bool HaveFooterSegments();
@@ -243,7 +244,7 @@ private:
     int64_t mStreamOffset;
 
     std::vector<OP1AIndexTableSegment*> mWrittenVBEIndexSegments;
-    bool mHaveWrittenCBE;
+    bool mHaveWritten;
 };
 
 
