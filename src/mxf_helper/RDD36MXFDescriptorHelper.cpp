@@ -50,54 +50,49 @@ typedef struct
     uint32_t width;
     uint32_t height;
     bool is_full_frame;
-    mxfUL color_primaries;
-    mxfUL transfer_characteristic;
-    mxfUL matrix_coefficients;
+    mxfUL color_primaries[2];
+    mxfUL transfer_characteristic[4];
+    mxfUL matrix_coefficients[2];
 
     // guesses
-    uint8_t signal_standard;
+    uint8_t signal_standard;  // Can be changed to "none" if the colorimetry values don't match
     Rational aspect_ratio;
     mxfVideoLineMap video_line_map;
     uint8_t color_siting;
 } DefaultParameterMatch;
 
-// TODO: add more defaults
-// TODO: are the SD NTSC video line numbers correct?
+// TODO: add more guesses
 static const DefaultParameterMatch DEFAULT_PARAM_MATCHES[] =
 {
-    {720, 480, false, SMPTE170M_COLOR_PRIM, ITUR_BT709_TRANSFER_CH, ITUR_BT601_CODING_EQ,
-            MXF_SIGNAL_STANDARD_ITU601, {16, 9}, {23, 285}, MXF_COLOR_SITING_COSITING},
-    {720, 576, false, ITUR_BT470_TRANSFER_CH, ITUR_BT709_TRANSFER_CH, ITUR_BT601_CODING_EQ,
+    {720, 480, false,
+        {SMPTE170M_COLOR_PRIM, g_Null_UL},
+        {ITUR_BT709_TRANSFER_CH, g_Null_UL, g_Null_UL, g_Null_UL},
+        {ITUR_BT601_CODING_EQ, g_Null_UL},
+            MXF_SIGNAL_STANDARD_ITU601, {16, 9}, {20, 283}, MXF_COLOR_SITING_COSITING},
+    {720, 576, false,
+        {ITU470_PAL_COLOR_PRIM, g_Null_UL},
+        {ITUR_BT709_TRANSFER_CH, g_Null_UL, g_Null_UL, g_Null_UL},
+        {ITUR_BT601_CODING_EQ, g_Null_UL},
             MXF_SIGNAL_STANDARD_ITU601, {16, 9}, {23, 336}, MXF_COLOR_SITING_COSITING},
-    {1280, 720, true, ITU709_COLOR_PRIM, ITUR_BT709_TRANSFER_CH, ITUR_BT709_CODING_EQ,
-            MXF_SIGNAL_STANDARD_SMPTE296M, {16, 9}, {26, 0}, MXF_COLOR_SITING_COSITING},
-    {1280, 720, true, ITU2020_COLOR_PRIM, ITU2020_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
-            MXF_SIGNAL_STANDARD_SMPTE296M, {16, 9}, {26, 0}, MXF_COLOR_SITING_COSITING},
-    {1280, 720, true, ITU2020_COLOR_PRIM, SMPTE_ST2084_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
-            MXF_SIGNAL_STANDARD_SMPTE296M, {16, 9}, {26, 0}, MXF_COLOR_SITING_COSITING},
-    {1280, 720, true, ITU2020_COLOR_PRIM, HLG_OETF_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
-            MXF_SIGNAL_STANDARD_SMPTE296M, {16, 9}, {26, 0}, MXF_COLOR_SITING_COSITING},
-    {1920, 1080, false, ITU709_COLOR_PRIM, ITUR_BT709_TRANSFER_CH, ITUR_BT709_CODING_EQ,
-            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {21, 584}, MXF_COLOR_SITING_COSITING},
-    {1920, 1080, false, ITU2020_COLOR_PRIM, ITU2020_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
-            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {21, 584}, MXF_COLOR_SITING_COSITING},
-    {1920, 1080, false, ITU2020_COLOR_PRIM, SMPTE_ST2084_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
-            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {21, 584}, MXF_COLOR_SITING_COSITING},
-    {1920, 1080, false, ITU2020_COLOR_PRIM, HLG_OETF_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
-            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {21, 584}, MXF_COLOR_SITING_COSITING},
-    {1920, 1080, true, ITU709_COLOR_PRIM, ITUR_BT709_TRANSFER_CH, ITUR_BT709_CODING_EQ,
-            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {42, 0}, MXF_COLOR_SITING_COSITING},
-    {1920, 1080, true, ITU2020_COLOR_PRIM, ITU2020_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
-            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {42, 0}, MXF_COLOR_SITING_COSITING},
-    {1920, 1080, true, ITU2020_COLOR_PRIM, SMPTE_ST2084_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
-            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {42, 0}, MXF_COLOR_SITING_COSITING},
-    {1920, 1080, true, ITU2020_COLOR_PRIM, HLG_OETF_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
-            MXF_SIGNAL_STANDARD_SMPTE274M, {16, 9}, {42, 0}, MXF_COLOR_SITING_COSITING},
-    {3840, 2160, false, ITU2020_COLOR_PRIM, ITU2020_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
-            MXF_SIGNAL_STANDARD_NONE, {16, 9}, {1, 0}, MXF_COLOR_SITING_COSITING},
-    {3840, 2160, false, ITU2020_COLOR_PRIM, SMPTE_ST2084_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
-            MXF_SIGNAL_STANDARD_NONE, {16, 9}, {1, 0}, MXF_COLOR_SITING_COSITING},
-    {3840, 2160, false, ITU2020_COLOR_PRIM, HLG_OETF_TRANSFER_CH, ITU2020_NCL_CODING_EQ,
+    {1280, 720, true,
+        {ITU709_COLOR_PRIM, ITU2020_COLOR_PRIM},
+        {ITUR_BT709_TRANSFER_CH, ITU2020_TRANSFER_CH, SMPTE_ST2084_TRANSFER_CH, HLG_OETF_TRANSFER_CH},
+        {ITUR_BT709_CODING_EQ, ITU2020_NCL_CODING_EQ},
+            MXF_SIGNAL_STANDARD_SMPTE296M /* or None */, {16, 9}, {26, 0}, MXF_COLOR_SITING_COSITING},
+    {1920, 1080, false,
+        {ITU709_COLOR_PRIM, ITU2020_COLOR_PRIM},
+        {ITUR_BT709_TRANSFER_CH,ITU2020_TRANSFER_CH, SMPTE_ST2084_TRANSFER_CH, HLG_OETF_TRANSFER_CH},
+        {ITUR_BT709_CODING_EQ, ITU2020_NCL_CODING_EQ},
+            MXF_SIGNAL_STANDARD_SMPTE274M /* or None */, {16, 9}, {21, 584}, MXF_COLOR_SITING_COSITING},
+    {1920, 1080, true,
+        {ITU709_COLOR_PRIM, ITU2020_COLOR_PRIM},
+        {ITUR_BT709_TRANSFER_CH, ITU2020_TRANSFER_CH, SMPTE_ST2084_TRANSFER_CH, HLG_OETF_TRANSFER_CH},
+        {ITUR_BT709_CODING_EQ, ITU2020_NCL_CODING_EQ},
+            MXF_SIGNAL_STANDARD_SMPTE274M /* or None */, {16, 9}, {42, 0}, MXF_COLOR_SITING_COSITING},
+    {3840, 2160, false,
+        {ITU2020_COLOR_PRIM, g_Null_UL},
+        {ITU2020_TRANSFER_CH, SMPTE_ST2084_TRANSFER_CH, HLG_OETF_TRANSFER_CH, g_Null_UL},
+        {ITU2020_NCL_CODING_EQ, g_Null_UL},
             MXF_SIGNAL_STANDARD_NONE, {16, 9}, {1, 0}, MXF_COLOR_SITING_COSITING}
 };
 
@@ -377,18 +372,71 @@ void RDD36MXFDescriptorHelper::UpdateFileDescriptor(RDD36EssenceParser *essence_
 
         size_t i;
         for (i = 0; i < BMX_ARRAY_SIZE(DEFAULT_PARAM_MATCHES); i++) {
+            bool match = false;
             if (DEFAULT_PARAM_MATCHES[i].width == width &&
                 DEFAULT_PARAM_MATCHES[i].height == height &&
-                DEFAULT_PARAM_MATCHES[i].is_full_frame == is_full_frame &&
-                (DEFAULT_PARAM_MATCHES[i].color_primaries == color_primaries ||
-                    color_primaries == g_Null_UL) &&
-                (DEFAULT_PARAM_MATCHES[i].transfer_characteristic == transfer_characteristic ||
-                    transfer_characteristic == g_Null_UL) &&
-                (DEFAULT_PARAM_MATCHES[i].matrix_coefficients == matrix_coefficients ||
-                    matrix_coefficients == g_Null_UL))
+                DEFAULT_PARAM_MATCHES[i].is_full_frame == is_full_frame)
             {
-                if (!cdci_descriptor->haveSignalStandard())
-                    cdci_descriptor->setSignalStandard(DEFAULT_PARAM_MATCHES[i].signal_standard);
+                match = true;
+            }
+            if (match && color_primaries != g_Null_UL) {
+                // Check at least one color primary matches
+                match = false;
+                for (size_t k = 0; k < BMX_ARRAY_SIZE(DEFAULT_PARAM_MATCHES[i].color_primaries); k++) {
+                    if (DEFAULT_PARAM_MATCHES[i].color_primaries[k] == color_primaries) {
+                        match = true;
+                        break;
+                    } else if (DEFAULT_PARAM_MATCHES[i].color_primaries[k] == g_Null_UL) {
+                        break;
+                    }
+                }
+            }
+            if (match && transfer_characteristic != g_Null_UL) {
+                // Check at least one transfer characteristic matches
+                match = false;
+                for (size_t k = 0; k < BMX_ARRAY_SIZE(DEFAULT_PARAM_MATCHES[i].transfer_characteristic); k++) {
+                    if (DEFAULT_PARAM_MATCHES[i].transfer_characteristic[k] == transfer_characteristic) {
+                        match = true;
+                        break;
+                    } else if (DEFAULT_PARAM_MATCHES[i].transfer_characteristic[k] == g_Null_UL) {
+                        break;
+                    }
+                }
+            }
+            if (match && matrix_coefficients != g_Null_UL) {
+                // Check at least one matrix coefficients matches
+                match = false;
+                for (size_t k = 0; k < BMX_ARRAY_SIZE(DEFAULT_PARAM_MATCHES[i].matrix_coefficients); k++) {
+                    if (DEFAULT_PARAM_MATCHES[i].matrix_coefficients[k] == matrix_coefficients) {
+                        match = true;
+                        break;
+                    } else if (DEFAULT_PARAM_MATCHES[i].matrix_coefficients[k] == g_Null_UL) {
+                        break;
+                    }
+                }
+            }
+            if (match) {
+                if (!cdci_descriptor->haveSignalStandard()) {
+                    // Only set a 296M or 274M signal standard if the colorimetry matches BT709
+                    if (DEFAULT_PARAM_MATCHES[i].signal_standard == MXF_SIGNAL_STANDARD_SMPTE296M ||
+                        DEFAULT_PARAM_MATCHES[i].signal_standard == MXF_SIGNAL_STANDARD_SMPTE274M)
+                    {
+                        if ((color_primaries == ITU709_COLOR_PRIM              || color_primaries == g_Null_UL) &&
+                            (transfer_characteristic == ITUR_BT709_TRANSFER_CH || transfer_characteristic == g_Null_UL) &&
+                            (matrix_coefficients == ITUR_BT709_CODING_EQ       || matrix_coefficients == g_Null_UL))
+                        {
+                            cdci_descriptor->setSignalStandard(DEFAULT_PARAM_MATCHES[i].signal_standard);
+                        }
+                        else
+                        {
+                            cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_NONE);
+                        }
+                    }
+                    else
+                    {
+                        cdci_descriptor->setSignalStandard(DEFAULT_PARAM_MATCHES[i].signal_standard);
+                    }
+                }
                 if (!cdci_descriptor->haveAspectRatio())
                     cdci_descriptor->setAspectRatio(DEFAULT_PARAM_MATCHES[i].aspect_ratio);
                 if (!cdci_descriptor->haveVideoLineMap()) {
