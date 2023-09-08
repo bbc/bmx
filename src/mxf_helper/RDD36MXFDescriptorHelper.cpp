@@ -68,7 +68,7 @@ static const DefaultParameterMatch DEFAULT_PARAM_MATCHES[] =
         {SMPTE170M_COLOR_PRIM, g_Null_UL},
         {ITUR_BT709_TRANSFER_CH, g_Null_UL, g_Null_UL, g_Null_UL},
         {ITUR_BT601_CODING_EQ, g_Null_UL},
-            MXF_SIGNAL_STANDARD_ITU601, {16, 9}, {23, 285}, MXF_COLOR_SITING_COSITING},
+            MXF_SIGNAL_STANDARD_ITU601, {16, 9}, {20, 283}, MXF_COLOR_SITING_COSITING},
     {720, 576, false,
         {ITU470_PAL_COLOR_PRIM, g_Null_UL},
         {ITUR_BT709_TRANSFER_CH, g_Null_UL, g_Null_UL, g_Null_UL},
