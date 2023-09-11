@@ -449,6 +449,8 @@ void RDD36MXFDescriptorHelper::UpdateFileDescriptor(RDD36EssenceParser *essence_
         }
     }
 
+    if (!cdci_descriptor->haveSignalStandard())
+        cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_NONE);
     if (!cdci_descriptor->haveAspectRatio()) {
         Rational calc_aspect_ratio;
         calc_aspect_ratio.numerator   = essence_parser->GetWidth();
