@@ -3,7 +3,7 @@
   <first_subframe>
     <sync>
       <rev_id>0x00</rev_id>
-      <orig_id manufacturer="Dolby Laboratories">0x01</orig_id>
+      <orig_id>0x01</orig_id>
       <orig_addr>0x0000</orig_addr>
       <frame_count>3000</frame_count>
     </sync>
@@ -53,7 +53,7 @@
   <second_subframe>
     <sync>
       <rev_id>0x00</rev_id>
-      <orig_id manufacturer="Dolby Laboratories">0x01</orig_id>
+      <orig_id>0x01</orig_id>
       <orig_addr>0x0000</orig_addr>
       <frame_count>3000</frame_count>
     </sync>
