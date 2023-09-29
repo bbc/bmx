@@ -344,7 +344,7 @@ void RDD9File::PrepareHeaderMetadata()
 
 void RDD9File::PrepareWrite()
 {
-    mReserveMinBytes += 256; // account for extra bytes when updating header metadata
+    mReserveMinBytes += 8192; // account for extra bytes when updating header metadata
 
     if (!mHavePreparedHeaderMetadata)
         PrepareHeaderMetadata();

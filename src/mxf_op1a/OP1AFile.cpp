@@ -445,7 +445,7 @@ void OP1AFile::PrepareHeaderMetadata()
 
 void OP1AFile::PrepareWrite()
 {
-    mReserveMinBytes += 256; // account for extra bytes when updating header metadata
+    mReserveMinBytes += 8192; // account for extra bytes when updating header metadata
 
     if (!mHavePreparedHeaderMetadata)
         PrepareHeaderMetadata();
