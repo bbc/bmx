@@ -109,6 +109,14 @@ const char* get_avci_header_format_string(size_t index);
 size_t get_num_ps_avci_header_formats();
 const char* get_ps_avci_header_format_string(size_t index);
 
+bool parse_int(const char *int_str, int *value);
+bool parse_int(const char *int_str, unsigned int *value);
+bool parse_int(const char *int_str, int64_t *value);
+bool parse_float(const char *int_str, float *value);
+bool parse_float(const char *int_str, double *value);
+bool parse_int_pair(const char *int_pair_str, char separator, int *first, int *second);
+bool parse_int_pair(const char *int_pair_str, char separator, unsigned int *first, unsigned int *second);
+bool parse_int_pair(const char *int_pair_str, char separator, int64_t *first, int64_t *second);
 bool parse_log_level(const char *level_str, LogLevel *level);
 bool parse_frame_rate(const char *rate_str, Rational *frame_rate);
 bool parse_timecode(const char *tc_str, Rational frame_rate, Timecode *timecode);
