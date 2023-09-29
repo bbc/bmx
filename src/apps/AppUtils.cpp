@@ -349,6 +349,12 @@ bool bmx::parse_float(const char *int_str, double *value)
     return sscanf(int_str, "%lf%n", value, &len) == 1 && len == (int)strlen(int_str);
 }
 
+bool bmx::parse_size(const char *size_str, size_t *value)
+{
+    int len;
+    return sscanf(size_str, "%" PRIszt "%n", value, &len) == 1 && len == (int)strlen(size_str);
+}
+
 bool bmx::parse_int_pair(const char *int_pair_str, char separator, int *first, int *second)
 {
     int len;
@@ -374,6 +380,15 @@ bool bmx::parse_int_pair(const char *int_pair_str, char separator, int64_t *firs
     return sscanf(int_pair_str, "%" PRId64 "%c%" PRId64 "%n", first, &sep_char, second, &len) == 3 &&
            sep_char == separator &&
            len == (int)strlen(int_pair_str);
+}
+
+bool bmx::parse_size_pair(const char *size_pair_str, char separator, size_t *first, size_t *second)
+{
+    int len;
+    char sep_char;
+    return sscanf(size_pair_str, "%" PRIszt "%c%" PRIszt "%n", first, &sep_char, second, &len) == 3 &&
+           sep_char == separator &&
+           len == (int)strlen(size_pair_str);
 }
 
 bool bmx::parse_log_level(const char *level_str, LogLevel *level)
@@ -508,16 +523,15 @@ bool bmx::parse_avci_header(const char *format_str, const char *filename, const 
         for (i = 0; i < BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO); i++)
             input.formats.push_back(AVCI_HEADER_FORMAT_INFO[i].format);
     } else {
-        size_t index;
-        const char *format_str_ptr = format_str;
-        while (format_str_ptr) {
-            if (sscanf(format_str_ptr, "%" PRIszt, &index) != 1 || index >= BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO))
+        vector<string> format_index_strings = split_string(format_str, ',', false, true);
+        for (size_t i = 0; i < format_index_strings.size(); i++) {
+            size_t index;
+            if (!parse_size(format_index_strings[i].c_str(), &index) ||
+                index >= BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO))
+            {
                 return false;
+            }
             input.formats.push_back(AVCI_HEADER_FORMAT_INFO[index].format);
-
-            format_str_ptr = strchr(format_str_ptr, ',');
-            if (format_str_ptr)
-                format_str_ptr++;
         }
     }
 
@@ -822,25 +836,22 @@ bool bmx::parse_rdd6_lines(const char *lines_str, uint16_t *lines)
 
 bool bmx::parse_track_indexes(const char *tracks_str, set<size_t> *track_indexes)
 {
-    size_t first_index, last_index;
-    const char *tracks_str_ptr = tracks_str;
-    while (tracks_str_ptr) {
-        size_t result = sscanf(tracks_str_ptr, "%" PRIszt "-%" PRIszt, &first_index, &last_index);
-        if (result == 2) {
+    vector<string> track_strings = split_string(tracks_str, ',', false, true);
+    for (size_t i = 0; i < track_strings.size(); i++) {
+        size_t first_index, last_index;
+        if (parse_size_pair(track_strings[i].c_str(), '-', &first_index, &last_index)) {
             if (first_index > last_index)
                 return false;
-            size_t index;
-            for (index = first_index; index <= last_index; index++)
+            for (size_t index = first_index; index <= last_index; index++) {
+                fprintf(stderr, "%zu\n", index);
                 track_indexes->insert(index);
-        } else if (result == 1) {
+            }
+        } else if (parse_size(track_strings[i].c_str(), &first_index)) {
+            fprintf(stderr, "%zu\n", first_index);
             track_indexes->insert(first_index);
         } else {
             return false;
         }
-
-        tracks_str_ptr = strchr(tracks_str_ptr, ',');
-        if (tracks_str_ptr)
-            tracks_str_ptr++;
     }
 
     return true;
@@ -1065,11 +1076,14 @@ bool bmx::parse_avid_umid_type(const char *str, AvidUMIDType *value)
 bool bmx::parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *three_color_primaries)
 {
     unsigned int value[6];
-    int len;
-    if (sscanf(str, "%d,%d,%d,%d,%d,%d%n", &value[0], &value[1], &value[2], &value[3], &value[4], &value[5], &len) != 6 ||
-        len != (int)strlen(str))
-    {
+
+    vector<string> value_strings = split_string(str, ',', false, true);
+    if (value_strings.size() != BMX_ARRAY_SIZE(value))
         return false;
+
+    for (size_t i = 0; i < BMX_ARRAY_SIZE(value); i++) {
+        if (!parse_int(value_strings[i].c_str(), &value[i]))
+            return false;
     }
 
     three_color_primaries->primaries[0].x = value[0];
