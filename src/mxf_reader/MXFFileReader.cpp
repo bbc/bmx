@@ -891,7 +891,7 @@ int64_t MXFFileReader::GetMaxAvailableRollout(int64_t position) const
         if (!mExternalReaders[i]->IsEnabled())
             continue;
 
-        int16_t ext_max_available_rollout = mExternalReaders[i]->GetMaxAvailableRollout(
+        int64_t ext_max_available_rollout = mExternalReaders[i]->GetMaxAvailableRollout(
             CONVERT_INTERNAL_POS(target_position + 1) - 1);
         if (ext_max_available_rollout != 0) {
             if (mExternalReaders[i]->GetEditRate() != mEditRate) {
