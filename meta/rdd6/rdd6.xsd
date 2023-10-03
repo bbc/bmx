@@ -60,7 +60,15 @@
   <xs:complexType name="orig_id_type">
     <xs:simpleContent>
       <xs:extension base="hex_uint8_type">
-        <xs:attribute name="manufacturer" type="xs:string" use="optional"/>
+        <xs:attribute name="manufacturer" type="xs:string" use="optional">
+          <xs:annotation>
+            <xs:documentation>
+              The manufacturer string attribute may be included here for known integer values,
+              but note that it is not part in the RDD 6 serial bitstream.
+              This attribute may be removed in future.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>

@@ -1595,10 +1595,6 @@ void RDD6MetadataSubFrame::UnparseXML(XMLWriter *writer) const
     writer->WriteElementStart(RDD6_NAMESPACE, "sync");
     writer->WriteElement(RDD6_NAMESPACE, "rev_id", unparse_xml_hex_uint8(sync_segment.revision_id));
     writer->WriteElementStart(RDD6_NAMESPACE, "orig_id");
-    if (sync_segment.originator_id >= 1 && sync_segment.originator_id <= 32)
-        writer->WriteAttribute(RDD6_NAMESPACE, "manufacturer", "Dolby Laboratories");
-    else if (sync_segment.originator_id >= 33 && sync_segment.originator_id <= 42)
-        writer->WriteAttribute(RDD6_NAMESPACE, "manufacturer", "Harris Broadcast Communications (Leitch)");
     writer->WriteElementContent(unparse_xml_hex_uint8(sync_segment.originator_id));
     writer->WriteElementEnd();
     if (sync_segment.originator_id != 0) {
