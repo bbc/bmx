@@ -319,10 +319,82 @@ void bmx::check_avid_avci_stop_bit(const unsigned char *input_data, const unsign
 }
 
 
+bool bmx::parse_int(const char *int_str, int *value)
+{
+    int len;
+    return sscanf(int_str, "%d%n", value, &len) == 1 && len == (int)strlen(int_str);
+}
+
+bool bmx::parse_int(const char *int_str, unsigned int *value)
+{
+    int len;
+    return sscanf(int_str, "%u%n", value, &len) == 1 && len == (int)strlen(int_str);
+}
+
+bool bmx::parse_int(const char *int_str, int64_t *value)
+{
+    int len;
+    return sscanf(int_str, "%" PRId64 "%n", value, &len) == 1 && len == (int)strlen(int_str);
+}
+
+bool bmx::parse_float(const char *int_str, float *value)
+{
+    int len;
+    return sscanf(int_str, "%f%n", value, &len) == 1 && len == (int)strlen(int_str);
+}
+
+bool bmx::parse_float(const char *int_str, double *value)
+{
+    int len;
+    return sscanf(int_str, "%lf%n", value, &len) == 1 && len == (int)strlen(int_str);
+}
+
+bool bmx::parse_size(const char *size_str, size_t *value)
+{
+    int len;
+    return sscanf(size_str, "%" PRIszt "%n", value, &len) == 1 && len == (int)strlen(size_str);
+}
+
+bool bmx::parse_int_pair(const char *int_pair_str, char separator, int *first, int *second)
+{
+    int len;
+    char sep_char;
+    return sscanf(int_pair_str, "%d%c%d%n", first, &sep_char, second, &len) == 3 &&
+           sep_char == separator &&
+           len == (int)strlen(int_pair_str);
+}
+
+bool bmx::parse_int_pair(const char *int_pair_str, char separator, unsigned int *first, unsigned int *second)
+{
+    int len;
+    char sep_char;
+    return sscanf(int_pair_str, "%u%c%u%n", first, &sep_char, second, &len) == 3 &&
+           sep_char == separator &&
+           len == (int)strlen(int_pair_str);
+}
+
+bool bmx::parse_int_pair(const char *int_pair_str, char separator, int64_t *first, int64_t *second)
+{
+    int len;
+    char sep_char;
+    return sscanf(int_pair_str, "%" PRId64 "%c%" PRId64 "%n", first, &sep_char, second, &len) == 3 &&
+           sep_char == separator &&
+           len == (int)strlen(int_pair_str);
+}
+
+bool bmx::parse_size_pair(const char *size_pair_str, char separator, size_t *first, size_t *second)
+{
+    int len;
+    char sep_char;
+    return sscanf(size_pair_str, "%" PRIszt "%c%" PRIszt "%n", first, &sep_char, second, &len) == 3 &&
+           sep_char == separator &&
+           len == (int)strlen(size_pair_str);
+}
+
 bool bmx::parse_log_level(const char *level_str, LogLevel *level)
 {
     unsigned int value;
-    if (sscanf(level_str, "%u", &value) != 1)
+    if (!parse_int(level_str, &value))
         return false;
 
     if (value > ERROR_LOG)
@@ -336,11 +408,11 @@ bool bmx::parse_log_level(const char *level_str, LogLevel *level)
 bool bmx::parse_frame_rate(const char *rate_str, Rational *frame_rate)
 {
     unsigned int num, den;
-    if (sscanf(rate_str, "%u/%u", &num, &den) == 2) {
+    if (parse_int_pair(rate_str, '/', &num, &den)) {
         frame_rate->numerator   = num;
         frame_rate->denominator = den;
         return true;
-    } else if (sscanf(rate_str, "%u", &num) == 1) {
+    } else if (parse_int(rate_str, &num)) {
         if (num == 23976) {
             *frame_rate = FRAME_RATE_23976;
         } else if (num == 2997) {
@@ -361,9 +433,13 @@ bool bmx::parse_timecode(const char *tc_str, Rational frame_rate, Timecode *time
 {
     int hour, min, sec, frame;
     char c;
+    int len;
 
-    if (sscanf(tc_str, "%d:%d:%d%c%d", &hour, &min, &sec, &c, &frame) != 5)
+    if (sscanf(tc_str, "%d:%d:%d%c%d%n", &hour, &min, &sec, &c, &frame, &len) != 5 ||
+        len != (int)strlen(tc_str))
+    {
         return false;
+    }
 
     timecode->Init(frame_rate, (c != ':'), hour, min, sec, frame);
     return true;
@@ -403,12 +479,12 @@ bool bmx::parse_partition_interval(const char *partition_interval_str, Rational 
 
     if (in_seconds) {
         float sec;
-        if (sscanf(partition_interval_str, "%f", &sec) != 1)
+        if (!parse_float(partition_interval_str, &sec))
             return false;
         *partition_interval = (int64_t)(sec * frame_rate.numerator / frame_rate.denominator);
         return true;
     } else {
-        return sscanf(partition_interval_str, "%" PRId64, partition_interval) == 1;
+        return parse_int(partition_interval_str, partition_interval);
     }
 }
 
@@ -447,21 +523,20 @@ bool bmx::parse_avci_header(const char *format_str, const char *filename, const 
         for (i = 0; i < BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO); i++)
             input.formats.push_back(AVCI_HEADER_FORMAT_INFO[i].format);
     } else {
-        size_t index;
-        const char *format_str_ptr = format_str;
-        while (format_str_ptr) {
-            if (sscanf(format_str_ptr, "%" PRIszt, &index) != 1 || index >= BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO))
+        vector<string> format_index_strings = split_string(format_str, ',', false, true);
+        for (size_t i = 0; i < format_index_strings.size(); i++) {
+            size_t index;
+            if (!parse_size(format_index_strings[i].c_str(), &index) ||
+                index >= BMX_ARRAY_SIZE(AVCI_HEADER_FORMAT_INFO))
+            {
                 return false;
+            }
             input.formats.push_back(AVCI_HEADER_FORMAT_INFO[index].format);
-
-            format_str_ptr = strchr(format_str_ptr, ',');
-            if (format_str_ptr)
-                format_str_ptr++;
         }
     }
 
     input.filename = filename;
-    if (sscanf(offset_str, "%" PRId64, &input.offset) != 1)
+    if (!parse_int(offset_str, &input.offset))
         return false;
 
     avci_header_inputs->push_back(input);
@@ -491,9 +566,13 @@ bool bmx::parse_timestamp(const char *timestamp_str, Timestamp *timestamp)
 {
     int year;
     unsigned int month, day, hour, min, sec, qmsec;
+    int len;
 
-    if (sscanf(timestamp_str, "%d-%u-%uT%u:%u:%u:%u", &year, &month, &day, &hour, &min, &sec, &qmsec) != 7)
+    if (sscanf(timestamp_str, "%d-%u-%uT%u:%u:%u:%u%n", &year, &month, &day, &hour, &min, &sec, &qmsec, &len) != 7 ||
+        len != (int)strlen(timestamp_str))
+    {
         return false;
+    }
 
     timestamp->year  = (int16_t)year;
     timestamp->month = (uint8_t)month;
@@ -523,9 +602,13 @@ bool bmx::parse_uuid(const char *uuid_str_in, UUID *uuid)
 bool bmx::parse_product_version(const char *version_str, mxfProductVersion *version)
 {
     unsigned int major, minor, patch, build, release;
+    int len;
 
-    if (sscanf(version_str, "%u.%u.%u.%u.%u", &major, &minor, &patch, &build, &release) != 5)
+    if (sscanf(version_str, "%u.%u.%u.%u.%u%n", &major, &minor, &patch, &build, &release, &len) != 5 ||
+        len != (int)strlen(version_str))
+    {
         return false;
+    }
 
     version->major   = (uint16_t)major;
     version->minor   = (uint16_t)minor;
@@ -736,46 +819,39 @@ bool bmx::parse_checksum_type(const char *type_str, ChecksumType *type)
 
 bool bmx::parse_rdd6_lines(const char *lines_str, uint16_t *lines)
 {
-    const char *line_1_str = lines_str;
-    const char *line_2_str = strchr(lines_str, ',');
-    if (line_2_str)
-        line_2_str++;
+    unsigned int line_1;
+    unsigned int line_2;
+    if (parse_int_pair(lines_str, ',', &line_1, &line_2)) {
+        lines[0] = line_1;
+        lines[1] = line_2;
+        return true;
+    } else if (parse_int(lines_str, &line_1)) {
+        lines[0] = line_1;
+        lines[1] = line_1;
+        return true;
+    }
 
-    unsigned int line_1, line_2;
-    if (sscanf(line_1_str, "%u", &line_1) != 1)
-        return false;
-    if (!line_2_str)
-        line_2 = line_1;
-    else if (sscanf(line_2_str, "%u", &line_2) != 1)
-        return false;
-
-    lines[0] = line_1;
-    lines[1] = line_2;
-
-    return true;
+    return false;
 }
 
 bool bmx::parse_track_indexes(const char *tracks_str, set<size_t> *track_indexes)
 {
-    size_t first_index, last_index;
-    const char *tracks_str_ptr = tracks_str;
-    while (tracks_str_ptr) {
-        size_t result = sscanf(tracks_str_ptr, "%" PRIszt "-%" PRIszt, &first_index, &last_index);
-        if (result == 2) {
+    vector<string> track_strings = split_string(tracks_str, ',', false, true);
+    for (size_t i = 0; i < track_strings.size(); i++) {
+        size_t first_index, last_index;
+        if (parse_size_pair(track_strings[i].c_str(), '-', &first_index, &last_index)) {
             if (first_index > last_index)
                 return false;
-            size_t index;
-            for (index = first_index; index <= last_index; index++)
+            for (size_t index = first_index; index <= last_index; index++) {
+                fprintf(stderr, "%zu\n", index);
                 track_indexes->insert(index);
-        } else if (result == 1) {
+            }
+        } else if (parse_size(track_strings[i].c_str(), &first_index)) {
+            fprintf(stderr, "%zu\n", first_index);
             track_indexes->insert(first_index);
         } else {
             return false;
         }
-
-        tracks_str_ptr = strchr(tracks_str_ptr, ',');
-        if (tracks_str_ptr)
-            tracks_str_ptr++;
     }
 
     return true;
@@ -798,7 +874,7 @@ bool bmx::parse_mxf_auid(const char *mxf_auid_str, UL *mxf_auid)
 bool bmx::parse_bytes_size(const char *size_str, int64_t *size_out)
 {
     double sizef;
-    if (sscanf(size_str, "%lf", &sizef) != 1 || sizef < 0.0)
+    if (!parse_float(size_str, &sizef) || sizef < 0.0)
         return false;
 
     const char *suffix = size_str;
@@ -859,7 +935,7 @@ bool bmx::parse_frame_layout(const char *str, MXFFrameLayout *value)
 bool bmx::parse_field_dominance(const char *str, uint8_t *field_num)
 {
     int value;
-    if (sscanf(str, "%d", &value) == 1 && value >= 1 && value <= 2) {
+    if (parse_int(str, &value) && value >= 1 && value <= 2) {
         *field_num = value;
         return true;
     }
@@ -966,7 +1042,7 @@ bool bmx::parse_color_siting(const char *str, MXFColorSiting *value)
 bool bmx::parse_vc2_mode(const char *mode_str, int *vc2_mode_flags)
 {
     int mode;
-    if (sscanf(mode_str, "%d", &mode) != 1)
+    if (!parse_int(mode_str, &mode))
         return false;
 
     if (mode == 0)
@@ -1000,8 +1076,15 @@ bool bmx::parse_avid_umid_type(const char *str, AvidUMIDType *value)
 bool bmx::parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *three_color_primaries)
 {
     unsigned int value[6];
-    if (sscanf(str, "%d,%d,%d,%d,%d,%d", &value[0], &value[1], &value[2], &value[3], &value[4], &value[5]) != 6)
+
+    vector<string> value_strings = split_string(str, ',', false, true);
+    if (value_strings.size() != BMX_ARRAY_SIZE(value))
         return false;
+
+    for (size_t i = 0; i < BMX_ARRAY_SIZE(value); i++) {
+        if (!parse_int(value_strings[i].c_str(), &value[i]))
+            return false;
+    }
 
     three_color_primaries->primaries[0].x = value[0];
     three_color_primaries->primaries[0].y = value[1];
@@ -1016,7 +1099,7 @@ bool bmx::parse_three_color_primaries(const char *str, mxfThreeColorPrimaries *t
 bool bmx::parse_color_primary(const char *str, mxfColorPrimary *color_primary)
 {
     unsigned int value[2];
-    if (sscanf(str, "%d,%d", &value[0], &value[1]) != 2)
+    if (!parse_int_pair(str, ',', &value[0], &value[1]))
         return false;
 
     color_primary->x = value[0];
@@ -1042,7 +1125,7 @@ bool bmx::parse_essence_type_names(const char *str, map<EssenceType, string> *es
 bool bmx::parse_video_line_map(const char *str, mxfVideoLineMap *video_line_map)
 {
     int value[2];
-    if (sscanf(str, "%d,%d", &value[0], &value[1]) != 2)
+    if (!parse_int_pair(str, ',', &value[0], &value[1]))
         return false;
 
     video_line_map->first = value[0];

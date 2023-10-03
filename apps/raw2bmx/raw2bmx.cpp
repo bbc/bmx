@@ -1159,7 +1159,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &duration) != 1 || duration < 0)
+            if (!parse_int(argv[cmdln_index + 1], &duration) || duration < 0)
             {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -1175,7 +1175,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%f", &rt_factor) != 1 || rt_factor <= 0.0)
+            if (!parse_float(argv[cmdln_index + 1], &rt_factor) || rt_factor <= 0.0)
             {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -1254,7 +1254,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%d", &max_mpeg_check_same_warn_messages) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &max_mpeg_check_same_warn_messages) ||
                 max_mpeg_check_same_warn_messages < 0)
             {
                 usage_ref(argv[0]);
@@ -1397,7 +1397,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &output_start_offset) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &output_start_offset) ||
                 output_start_offset < 0)
             {
                 usage_ref(argv[0]);
@@ -1414,7 +1414,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &output_end_offset) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &output_end_offset) ||
                 output_end_offset < 0)
             {
                 usage_ref(argv[0]);
@@ -1431,7 +1431,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &value) ||
                 value < 0 || value > 255)
             {
                 usage_ref(argv[0]);
@@ -1790,7 +1790,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &avid_gf_duration) != 1 || avid_gf_duration < 0)
+            if (!parse_int(argv[cmdln_index + 1], &avid_gf_duration) || avid_gf_duration < 0)
             {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -1902,7 +1902,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &regtest_end) != 1 || regtest_end < 0)
+            if (!parse_int(argv[cmdln_index + 1], &regtest_end) || regtest_end < 0)
             {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -1934,7 +1934,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%d:%d", &num, &den) != 2 || num <= 0 || den <= 0)
+            if (!parse_int_pair(argv[cmdln_index + 1], ':', &num, &den) || num <= 0 || den <= 0)
             {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -1959,7 +1959,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &value) ||
                 value <= 0 || value > 255)
             {
                 usage_ref(argv[0]);
@@ -1978,7 +1978,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &value) ||
                 (value != 8 && value != 10))
             {
                 usage_ref(argv[0]);
@@ -1997,7 +1997,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 || value == 0) {
+            if (!parse_int(argv[cmdln_index + 1], &value) || value == 0) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2150,7 +2150,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &uvalue)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2167,7 +2167,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &uvalue)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2184,7 +2184,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &uvalue)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2201,7 +2201,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &uvalue)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2218,7 +2218,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &uvalue)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2235,7 +2235,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &uvalue)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2286,7 +2286,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &uvalue)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2303,7 +2303,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &uvalue)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2325,7 +2325,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &uvalue)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2342,7 +2342,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &uvalue)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2359,7 +2359,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &uvalue)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2376,7 +2376,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &uvalue)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2393,7 +2393,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &value)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2420,7 +2420,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1 && uvalue > 0)
+            if (!parse_int(argv[cmdln_index + 1], &uvalue) && uvalue > 0)
             {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -2439,7 +2439,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &value) ||
                 (value != 16 && value != 24))
             {
                 usage_ref(argv[0]);
@@ -2458,7 +2458,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &value) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &value) ||
                 value == 0)
             {
                 usage_ref(argv[0]);
@@ -2495,7 +2495,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &value) ||
                 value < -128 || value > 127)
             {
                 usage_ref(argv[0]);
@@ -2514,7 +2514,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &value) ||
                 value < -128 || value > 127)
             {
                 usage_ref(argv[0]);
@@ -2551,7 +2551,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%d", &value) != 1) {
+            if (!parse_int(argv[cmdln_index + 1], &value)) {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
                 return 1;
@@ -2568,7 +2568,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            if (!parse_int(argv[cmdln_index + 1], &uvalue))
             {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -2586,7 +2586,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            if (!parse_int(argv[cmdln_index + 1], &uvalue))
             {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -2604,7 +2604,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.file_start_offset) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &input.file_start_offset) ||
                 input.file_start_offset < 0)
             {
                 usage_ref(argv[0]);
@@ -2622,7 +2622,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.ess_max_length) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &input.ess_max_length) ||
                 input.ess_max_length <= 0)
             {
                 usage_ref(argv[0]);
@@ -2663,7 +2663,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%u", &uvalue) != 1)
+            if (!parse_int(argv[cmdln_index + 1], &uvalue))
             {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
@@ -2722,7 +2722,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.output_start_offset) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &input.output_start_offset) ||
                 input.output_start_offset < 0)
             {
                 usage_ref(argv[0]);
@@ -2740,7 +2740,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
                 return 1;
             }
-            if (sscanf(argv[cmdln_index + 1], "%" PRId64, &input.output_end_offset) != 1 ||
+            if (!parse_int(argv[cmdln_index + 1], &input.output_end_offset) ||
                 input.output_end_offset < 0)
             {
                 usage_ref(argv[0]);

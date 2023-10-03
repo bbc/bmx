@@ -47,22 +47,6 @@ using namespace std;
 using namespace bmx;
 
 
-static bool parse_frame_rate(const char *rate_str, Rational *frame_rate)
-{
-    unsigned int num, den;
-    if (sscanf(rate_str, "%u/%u", &num, &den) == 2) {
-        frame_rate->numerator   = num;
-        frame_rate->denominator = den;
-        return true;
-    } else if (sscanf(rate_str, "%u", &num) == 1) {
-        frame_rate->numerator   = num;
-        frame_rate->denominator = 1;
-        return true;
-    }
-
-    return false;
-}
-
 static void usage(const char *cmd)
 {
     fprintf(stderr, "%s [--output tc-drop|tc-non-drop|count] [--rate (<n>|<n>/<d>)] (all|<timecode>|<frame count>)\n", strip_path(cmd).c_str());
@@ -102,7 +86,7 @@ int main(int argc, const char **argv)
                 usage(argv[0]);
                 return 1;
             }
-            if (!::parse_frame_rate(argv[cmdln_index + 1], &frame_rate)) {
+            if (!parse_frame_rate(argv[cmdln_index + 1], &frame_rate)) {
                 usage(argv[0]);
                 return 1;
             }
@@ -129,7 +113,7 @@ int main(int argc, const char **argv)
               timecode.Init(frame_rate, drop_frame, timecode.GetOffset());
         } else {
             int64_t offset;
-            if (sscanf(value_str, "%" PRId64, &offset) != 1) {
+            if (!parse_int(value_str, &offset)) {
                 fprintf(stderr, "Failed to parse timecode or frame offset\n");
                 return 1;
             }
