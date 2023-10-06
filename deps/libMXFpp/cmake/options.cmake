@@ -33,6 +33,7 @@ elseif(MSVC)
     # Shared library currently not supported
     set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build using shared libraries")
 
-    # Option to set to use the MultiThreadedDLL runtime
-    option(LIBMXFPP_SET_MSVC_RUNTIME "Enable setting MSVC runtime to MultiThreadedDLL" ON)
+    # Option to set to use the runtime
+    set(LIBMXFPP_SET_MSVC_RUNTIME "MD" CACHE STRING "Set MSVC debug/release runtime to 'MD' (MultiThreadedDLL), 'MT' (MultiThreaded) or 'default' (use the default)")
+    set_property(CACHE LIBMXFPP_SET_MSVC_RUNTIME PROPERTY STRINGS MD MT default)
 endif()
