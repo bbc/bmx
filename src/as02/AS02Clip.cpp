@@ -167,7 +167,7 @@ void AS02Clip::PrepareHeaderMetadata()
 
 void AS02Clip::PrepareWrite()
 {
-    mReserveMinBytes += 256; // account for extra bytes when updating header metadata
+    mReserveMinBytes += 8192; // account for extra bytes when updating header metadata
 
     if (!mHavePreparedHeaderMetadata)
         PrepareHeaderMetadata();
