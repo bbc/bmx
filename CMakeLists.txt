@@ -1,8 +1,15 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.15.0)
-    # Set policy CMP0091 to new to allow use of CMAKE_MSVC_RUNTIME_LIBRARY
-    cmake_policy(SET CMP0091 NEW)
+# Set the policy CMP0091 to new to allow use of CMAKE_MSVC_RUNTIME_LIBRARY,
+# unless it has already been set
+if(POLICY CMP0091)
+    cmake_policy(GET CMP0091 CMP0091_value)
+    if(NOT CMP0091_value)
+        cmake_policy(SET CMP0091 NEW)
+        cmake_policy(GET CMP0091 CMP0091_value)
+    endif()
+else()
+    set(CMP0091_value OLD)
 endif()
 
 project(bmx
@@ -14,15 +21,19 @@ project(bmx
 
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/options.cmake")
 
-if(MSVC AND BMX_SET_MSVC_RUNTIME AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.15.0)
-    # cmake version >= 3.15: Use MultiThreadedDLL runtime
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+if(MSVC AND CMP0091_value STREQUAL NEW)
+    if(BMX_SET_MSVC_RUNTIME STREQUAL "MD")
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    elseif(BMX_SET_MSVC_RUNTIME STREQUAL "MT")
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
 endif()
 
-if(BUILD_SHARED_LIBS)
+if(BUILD_SHARED_LIBS OR NOT DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
     # Ensure that static library code can be linked into the dynamic libraries (-fPIC compile option)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
+
 set(CMAKE_CXX_STANDARD 11)
 
 # Set the test samples output directory
@@ -44,10 +55,16 @@ if(MSVC)
     add_compile_options(/W3 /EHsc)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
-    if(BMX_SET_MSVC_RUNTIME AND CMAKE_VERSION VERSION_LESS 3.15.0)
-        # cmake version < 3.15: Update compiler flags to use the MultiThreadedDLL runtime
+    if(CMP0091_value STREQUAL OLD AND NOT BMX_SET_MSVC_RUNTIME STREQUAL "default")
+        # Update compiler flags to use a particular runtime
         macro(update_msvc_runtime_flags flags)
-            string(REGEX REPLACE "/MT" "/MD" ${flags} "${${flags}}")
+            if(BMX_SET_MSVC_RUNTIME STREQUAL "MD")
+                # Use MultiThreadedDLL runtime
+                string(REGEX REPLACE "/MT" "/MD" ${flags} "${${flags}}")
+            elseif(BMX_SET_MSVC_RUNTIME STREQUAL "MT")
+                # Use MultiThreaded runtime
+                string(REGEX REPLACE "/MD" "/MT" ${flags} "${${flags}}")
+            endif()
         endmacro()
 
         update_msvc_runtime_flags(CMAKE_C_FLAGS)

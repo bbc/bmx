@@ -23,11 +23,23 @@ jobs:
               -DBMX_TEST_WITH_VALGRIND=ON
               -DLIBMXF_TEST_WITH_VALGRIND=ON
               -DLIBMXFPP_TEST_WITH_VALGRIND=ON
-          - name: macos
+          - name: macos-brew
             os: macos-latest
             cmake_config_args: >-
               -DCMAKE_BUILD_TYPE=Debug
               -DBMX_BUILD_WITH_LIBCURL=ON
+          - name: macos-xcode-universal
+            os: macos-latest
+            cmake_config_args: >-
+              -G Xcode
+              -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+              -DBUILD_SHARED_LIBS=OFF
+              -DBMX_BUILD_URIPARSER_SOURCE=ON
+              -DBMX_BUILD_WITH_LIBCURL=ON
+            cmake_build_args: >-
+              --config Debug
+            cmake_test_args: >-
+              -C Debug
           - name: windows
             os: windows-latest
             cmake_build_args: >-
@@ -38,7 +50,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Install dependencies (Ubuntu)
+      - name: Install dependencies (ubuntu)
         if: ${{ contains(matrix.os, 'ubuntu') }}
         shell: bash
         run: |
@@ -54,11 +66,18 @@ jobs:
             liburiparser-dev \
             libexpat1-dev \
             libcurl4-openssl-dev
-      - name: Install dependencies (MacOS)
-        if: ${{ contains(matrix.os, 'macos') }}
+
+      - name: Install dependencies (macos-brew)
+        if: ${{ matrix.name == 'macos-brew' }}
         shell: bash
         run: |
           brew install git cmake expat uriparser curl
+
+      - name: Install dependencies (macos-xcode-universal)
+        if: ${{ matrix.name == 'macos-xcode-universal' }}
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
 
       - name: Show Versions
         shell: bash
