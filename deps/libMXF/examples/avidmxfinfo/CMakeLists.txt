@@ -25,10 +25,10 @@ include("${PROJECT_SOURCE_DIR}/cmake/source_filename.cmake")
 set_source_filename(avidmxfinfo "${CMAKE_CURRENT_LIST_DIR}" "libMXF")
 
 install(TARGETS avidmxfinfo
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES ${avidmxfinfo_headers} DESTINATION include/mxf/examples/avidmxfinfo)
+install(FILES ${avidmxfinfo_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mxf/examples/avidmxfinfo)
 
 
 add_executable(avidmxfinfo-bin
@@ -46,7 +46,7 @@ set_target_properties(avidmxfinfo-bin PROPERTIES
 include("${PROJECT_SOURCE_DIR}/cmake/source_filename.cmake")
 set_source_filename(avidmxfinfo-bin "${CMAKE_CURRENT_LIST_DIR}" "libMXF")
 
-install(TARGETS avidmxfinfo-bin DESTINATION bin)
+install(TARGETS avidmxfinfo-bin DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 
 if(LIBMXF_BUILD_TESTING AND (NOT DEFINED BUILD_TESTING OR BUILD_TESTING))

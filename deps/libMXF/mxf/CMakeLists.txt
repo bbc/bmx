@@ -124,13 +124,13 @@ include("${PROJECT_SOURCE_DIR}/cmake/source_filename.cmake")
 set_source_filename(MXF "${CMAKE_CURRENT_LIST_DIR}" "libMXF")
 
 install(TARGETS MXF
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-install(FILES ${MXF_headers} DESTINATION include/mxf)
+install(FILES ${MXF_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mxf)
 
 if(UNIX)
     configure_file(../${PROJECT_NAME}.pc.in ${PROJECT_NAME}.pc @ONLY)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()

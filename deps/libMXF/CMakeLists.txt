@@ -19,6 +19,7 @@ project(libMXF
     LANGUAGES C CXX
 )
 
+include(GNUInstallDirs) # provides access to ${CMAKE_INSTALL_BINDIR} etc.
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/options.cmake")
 
 if(MSVC AND CMP0091_value STREQUAL NEW)
