@@ -1679,11 +1679,11 @@ static void usage(const char *cmd)
     printf(" --st436-mf <count>    Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
     printf(" --rdd6 <frames> <filename>\n");
     printf("                       Extract RDD 6 audio metadata from <frames> to XML <filename>, e.g. '--rdd6 0-500 output.xml'\n");
-    printf("                       RDD 6 metadata has a fixed value in every frame except for the program description text\n");
-    printf("                       which is spread over frames, 1 program description text character per frame.\n");
+    printf("                       The output XML will contain the static RDD 6 metadata, the frame count from the first frame processed\n");
+    printf("                       and the accumulated program description text. The descriptive text is spread over frames, 1 character per frame for each program.\n");
     printf("                       <frames> specifies which frames to extract from and can either be a single frame or a range using '-' as a separator.\n");
     printf("                       <frames> is the maximum range of frames to extract a complete description text for all programs.\n");
-    printf("                       A program text is complete if a start and then finally an end marker character have been read.\n");
+    printf("                       The description text is complete for a program if a start and finally an end marker character have been found.\n");
     printf("                       The <frames> range should account for the maximum expected text size and whether programs start their text together or not.\n");
     printf("                       Extraction stops once a complete text has been extracted for all programs.\n");
     printf("                       If the program description text is not required then set <frames> to 0 to extract RDD 6 from frame 0 only.\n");
