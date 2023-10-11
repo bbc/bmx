@@ -30,10 +30,10 @@ include("${PROJECT_SOURCE_DIR}/cmake/source_filename.cmake")
 set_source_filename(mxfreader "${CMAKE_CURRENT_LIST_DIR}" "libMXF")
 
 install(TARGETS mxfreader
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES ${mxfreader_headers} DESTINATION include/mxf/examples/reader)
+install(FILES ${mxfreader_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mxf/examples/reader)
 
 
 if(LIBMXF_BUILD_TESTING AND (NOT DEFINED BUILD_TESTING OR BUILD_TESTING))

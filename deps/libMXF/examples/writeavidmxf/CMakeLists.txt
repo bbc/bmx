@@ -30,10 +30,10 @@ set_source_filename(writeavidmxf "${CMAKE_CURRENT_LIST_DIR}" "libMXF")
 # Only install if build is enabled, and not only for testing avidmxfinfo & reader
 if(LIBMXF_BUILD_EXAMPLES OR LIBMXF_BUILD_WRITEAVIDMXF)
     install(TARGETS writeavidmxf
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
-    install(FILES ${writeavidmxf_headers} DESTINATION include/mxf/examples/writeavidmxf)
+    install(FILES ${writeavidmxf_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mxf/examples/writeavidmxf)
 endif()
 
 
@@ -57,7 +57,7 @@ set_source_filename(writeavidmxf-bin "${CMAKE_CURRENT_LIST_DIR}" "libMXF")
 
 # Only install if build is enabled, and not only for testing avidmxfinfo & reader
 if(LIBMXF_BUILD_EXAMPLES OR LIBMXF_BUILD_WRITEAVIDMXF)
-    install(TARGETS writeavidmxf-bin DESTINATION bin)
+    install(TARGETS writeavidmxf-bin DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 

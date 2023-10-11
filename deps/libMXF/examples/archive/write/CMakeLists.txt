@@ -32,10 +32,10 @@ include("${PROJECT_SOURCE_DIR}/cmake/source_filename.cmake")
 set_source_filename(writearchivemxf "${CMAKE_CURRENT_LIST_DIR}" "libMXF")
 
 install(TARGETS writearchivemxf
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES ${writearchivemxf_headers} DESTINATION include/mxf/examples/archive)
+install(FILES ${writearchivemxf_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mxf/examples/archive)
 
 
 add_executable(update_archive_mxf
