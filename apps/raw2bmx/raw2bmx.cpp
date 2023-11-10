@@ -60,6 +60,7 @@
 #include <bmx/essence_parser/J2CEssenceParser.h>
 #include <bmx/essence_parser/VC3EssenceParser.h>
 #include <bmx/essence_parser/VC2EssenceParser.h>
+#include <bmx/essence_parser/JXSEssenceParser.h>
 #include <bmx/essence_parser/RawEssenceReader.h>
 #include <bmx/essence_parser/FileEssenceSource.h>
 #include <bmx/essence_parser/KLVEssenceSource.h>
@@ -102,6 +103,7 @@ typedef enum
     D10_ESSENCE_GROUP,
     AVCI_ESSENCE_GROUP,
     AVC_ESSENCE_GROUP,
+	JXS_ESSENCE_GROUP,
 } EssenceTypeGroup;
 
 
@@ -780,6 +782,10 @@ static void usage(const char *cmd)
     printf("  --j2c_rgba <name|j2cpattern>  Raw JPEG 2000 (ISO/IEC 15444-1) codestream representing components (e.g. RGB) described by a MXF RGBA descriptor\n");
     printf("                                If a '%%' is in the value then it is assumed to be a <j2cpattern> for a sequence of files, each containing a single frame\n");
     printf("                                See Notes below for a detailed description of <j2cpattern>\n");
+	printf("  --jxs_cdci <name|jxspattern>  Raw JPEG XS codestream representing components (e.g. YCbCr) described by a MXF CDCI descriptor\n");
+	printf("                                If a '%%' is in the value then it is assumed to be a <jxspattern> for a sequence of files, each containing a single frame\n");
+	printf("  --jxs_rgba <name|jxspattern>  Raw JPEG XS codestream representing components (e.g. RGB) described by a MXF RGBA descriptor\n");
+	printf("                                If a '%%' is in the value then it is assumed to be a <jxspattern> for a sequence of files, each containing a single frame\n");
     printf("  --vc2 <name>            Raw VC2 input file\n");
     printf("  --vc3 <name>            Raw VC3/DNxHD input file\n");
     printf("  --vc3_1080p_1235 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps 10bit input file\n");
@@ -3537,6 +3543,38 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
+		else if (strcmp(argv[cmdln_index], "--jxs_rgba") == 0)
+		{
+			if (cmdln_index + 1 >= argc)
+			{
+				usage(argv[0]);
+				fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+				return 1;
+			}
+			input.essence_type = JPEGXS_RGBA;
+			if (strchr(argv[cmdln_index + 1], '%') != 0)
+				input.file_pattern = argv[cmdln_index + 1];
+			else
+				input.filename = argv[cmdln_index + 1];
+			inputs.push_back(input);
+			cmdln_index++;
+		}
+		else if (strcmp(argv[cmdln_index], "--jxs_cdci") == 0)
+		{
+		if (cmdln_index + 1 >= argc)
+		{
+			usage(argv[0]);
+			fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+			return 1;
+		}
+		input.essence_type = JPEGXS_CDCI;
+		if (strchr(argv[cmdln_index + 1], '%') != 0)
+			input.file_pattern = argv[cmdln_index + 1];
+		else
+			input.filename = argv[cmdln_index + 1];
+		inputs.push_back(input);
+		cmdln_index++;
+		}
         else if (strcmp(argv[cmdln_index], "--rdd36_422_proxy") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -3641,9 +3679,9 @@ int main(int argc, const char** argv)
             }
             input.essence_type = JPEG2000_RGBA;
             if (strchr(argv[cmdln_index + 1], '%') != 0)
-                input.file_pattern = argv[cmdln_index + 1];
+				input.file_pattern = argv[cmdln_index + 1];
             else
-                input.filename = argv[cmdln_index + 1];
+               input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
             cmdln_index++;
         }
@@ -4137,7 +4175,6 @@ int main(int argc, const char** argv)
 
             if (!open_raw_reader(input))
                 throw false;
-
             if (input->essence_type_group == DV_ESSENCE_GROUP ||
                 input->essence_type == IEC_DV25 ||
                 input->essence_type == DVBASED_DV25 ||
@@ -4848,7 +4885,6 @@ int main(int argc, const char** argv)
             log_info("Output filename set to '%s'\n", complete_output_name.c_str());
         }
 
-
         // create clip
 
         int flavour = 0;
@@ -4925,8 +4961,6 @@ int main(int argc, const char** argv)
                 BMX_ASSERT(false);
                 break;
         }
-
-
         // initialize clip properties
 
         SourcePackage *physical_package = 0;
@@ -5396,6 +5430,12 @@ int main(int argc, const char** argv)
                     if (BMX_OPT_PROP_IS_SET(input->afd))
                         clip_track->SetAFD(input->afd);
                     break;
+				case JPEGXS_CDCI:
+				case JPEGXS_RGBA:
+					clip_track->SetAspectRatio(input->aspect_ratio);
+					if (BMX_OPT_PROP_IS_SET(input->afd))
+						clip_track->SetAFD(input->afd);
+					break;
                 case VC2:
                     clip_track->SetAspectRatio(input->aspect_ratio);
                     if (BMX_OPT_PROP_IS_SET(input->afd))
@@ -5648,6 +5688,13 @@ int main(int argc, const char** argv)
                     input->raw_reader->SetEssenceParser(new J2CEssenceParser());
                     input->raw_reader->SetCheckMaxSampleSize(100000000);
                     break;
+				case JPEGXS_CDCI:
+				case JPEGXS_RGBA:
+					input->sample_sequence[0] = 1;
+					input->sample_sequence_size = 1;
+					input->raw_reader->SetEssenceParser(new JXSEssenceParser());
+					input->raw_reader->SetCheckMaxSampleSize(100000000);
+					break;
                 case VC2:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;

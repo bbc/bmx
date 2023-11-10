@@ -233,6 +233,12 @@ int mxf_is_jpeg2000_ec(const mxfUL *label)
            label->octet13 == 0x0c;
 }
 
+int mxf_is_jpegxs_ec(const mxfUL *label)
+{
+	return mxf_is_generic_container_label(label) &&
+		label->octet13 == 0x21;
+}
+
 
 void mxf_complete_essence_element_key(mxfKey *key, uint8_t count, uint8_t type, uint8_t num)
 {

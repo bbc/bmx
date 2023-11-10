@@ -48,6 +48,7 @@
 #include <bmx/mxf_helper/VC2MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/mxf_helper/JPEG2000MXFDescriptorHelper.h>
+#include <bmx/mxf_helper/JPEGXSMXFDescriptorHelper.h>
 #include <bmx/MXFUtils.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/BMXException.h>
@@ -93,6 +94,9 @@ EssenceType PictureMXFDescriptorHelper::IsSupported(FileDescriptor *file_descrip
     if (essence_type)
         return essence_type;
     essence_type = JPEG2000MXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
+	if (essence_type)
+		return essence_type;
+	essence_type = JPEGXSMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
     if (essence_type)
         return essence_type;
     essence_type = VC2MXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label);
@@ -130,6 +134,8 @@ PictureMXFDescriptorHelper* PictureMXFDescriptorHelper::Create(FileDescriptor *f
         helper = new RDD36MXFDescriptorHelper();
     else if (JPEG2000MXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
         helper = new JPEG2000MXFDescriptorHelper();
+	else if (JPEGXSMXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
+		helper = new JPEGXSMXFDescriptorHelper();
     else if (VC2MXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
         helper = new VC2MXFDescriptorHelper();
     else if (VC3MXFDescriptorHelper::IsSupported(file_descriptor, alternative_ec_label))
@@ -155,6 +161,7 @@ bool PictureMXFDescriptorHelper::IsSupported(EssenceType essence_type)
            MPEG2LGMXFDescriptorHelper::IsSupported(essence_type) ||
            RDD36MXFDescriptorHelper::IsSupported(essence_type) ||
            JPEG2000MXFDescriptorHelper::IsSupported(essence_type) ||
+		   JPEGXSMXFDescriptorHelper::IsSupported(essence_type) ||
            VC2MXFDescriptorHelper::IsSupported(essence_type) ||
            VC3MXFDescriptorHelper::IsSupported(essence_type) ||
            MJPEGMXFDescriptorHelper::IsSupported(essence_type);
@@ -183,6 +190,8 @@ MXFDescriptorHelper* PictureMXFDescriptorHelper::Create(EssenceType essence_type
         helper = new RDD36MXFDescriptorHelper();
     else if (JPEG2000MXFDescriptorHelper::IsSupported(essence_type))
         helper = new JPEG2000MXFDescriptorHelper();
+	else if (JPEGXSMXFDescriptorHelper::IsSupported(essence_type))
+		helper = new JPEGXSMXFDescriptorHelper();
     else if (VC2MXFDescriptorHelper::IsSupported(essence_type))
         helper = new VC2MXFDescriptorHelper();
     else if (VC3MXFDescriptorHelper::IsSupported(essence_type))

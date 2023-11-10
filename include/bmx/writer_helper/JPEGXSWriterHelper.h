@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2021, British Broadcasting Corporation
+ * Copyright (C) 2023, Fraunhofer IIS
  * All Rights Reserved.
+ *
+ * Author: Nisha Bhaskar
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,58 +29,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_FILE_PATTERN_ESSENCE_SOURCE_H_
-#define BMX_FILE_PATTERN_ESSENCE_SOURCE_H_
+#ifndef BMX_JPEGXS_WRITER_HELPER_H_
+#define BMX_JPEGXS_WRITER_HELPER_H_
 
-#include <map>
-
-#include <bmx/essence_parser/EssenceSource.h>
 #include <bmx/ByteArray.h>
-
+#include <bmx/essence_parser/JXSEssenceParser.h>
+#include <bmx/mxf_helper/JPEGXSMXFDescriptorHelper.h>
 
 
 namespace bmx
 {
+	class JPEGXSWriterHelper
+	{
+	public:
+		JPEGXSWriterHelper();
+		~JPEGXSWriterHelper();
 
-class FilePatternEssenceSource : public EssenceSource
-{
-public:
-    FilePatternEssenceSource(bool fill_gaps);
-    virtual ~FilePatternEssenceSource();
+		void SetDescriptorHelper(JPEGXSMXFDescriptorHelper *descriptor_helper);
 
-    bool Open(const std::string &pattern, int64_t start_offset);
+		void ProcessFrame(const unsigned char *data, uint32_t size);
+		void CompleteProcess();
 
-public:
-    virtual uint32_t Read(unsigned char *data, uint32_t size);
-	int64_t ReadFileSize(uint32_t index);
-    virtual bool SeekStart();
-    virtual bool Skip(int64_t offset);
+	public:
+		int64_t GetFramePosition() const { return mPosition - 1; }
 
-    virtual bool HaveError() const { return mErrno != 0; }
-    virtual int GetErrno() const   { return mErrno; }
-    virtual std::string GetStrError() const;
+	private:
+		int64_t mPosition;
+		JPEGXSMXFDescriptorHelper *mDescriptorHelper;
+		JXSEssenceParser *mEssenceParser;
+	};
 
-private:
-    int64_t ReadOrSkip(unsigned char *data, uint32_t size, int64_t skip_offset);
-
-    bool NextFile();
-    bool BufferFile();
-
-    std::string GetCurrentFilePath() const { return mDirname + "/" + mCurrentFilename; }
-
-private:
-    bool mFillGaps;
-    int64_t mStartOffset;
-    int64_t mCurrentOffset;
-    int mErrno;
-    std::string mDirname;
-    std::map<int, std::string> mFilenames;
-    std::map<int, std::string>::const_iterator mNextFilenamesIter;
-    int64_t mCurrentNumber;
-    std::string mCurrentFilename;
-    bmx::ByteArray mFileBuffer;
-    uint32_t mFileBufferOffset;
-};
 
 
 };

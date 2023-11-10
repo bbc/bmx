@@ -6,6 +6,7 @@ list(APPEND bmx_sources
     mxf_helper/DVMXFDescriptorHelper.cpp
     mxf_helper/DataMXFDescriptorHelper.cpp
     mxf_helper/JPEG2000MXFDescriptorHelper.cpp
+	mxf_helper/JPEGXSMXFDescriptorHelper.cpp
     mxf_helper/MJPEGMXFDescriptorHelper.cpp
     mxf_helper/MPEG2LGMXFDescriptorHelper.cpp
     mxf_helper/MPEG2Validator.cpp

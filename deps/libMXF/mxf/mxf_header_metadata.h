@@ -264,6 +264,8 @@ int mxf_set_video_line_map_item(MXFMetadataSet *set, const mxfKey *itemKey, cons
 
 int mxf_alloc_array_item_elements(MXFMetadataSet *set, const mxfKey *itemKey, uint32_t elementLen,
                                   uint32_t count, uint8_t **elements);
+int mxf_alloc_jxs_array(MXFMetadataSet *set, const mxfKey *itemKey, uint32_t elementLen,
+							uint32_t count, uint8_t **elements);
 int mxf_grow_array_item(MXFMetadataSet *set, const mxfKey *itemKey, uint32_t elementLen,
                         uint32_t count, uint8_t **newElements);
 int mxf_set_empty_array_item(MXFMetadataSet *set, const mxfKey *itemKey, uint32_t elementLen);

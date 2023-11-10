@@ -216,6 +216,7 @@ public:
     void setStrongRefItem(const mxfKey *itemKey, MetadataSet *value);
     void setWeakRefItem(const mxfKey *itemKey, MetadataSet *value);
 
+	void setUInt8JxsArray(const mxfKey *itemKey, const std::vector<uint8_t> &value);
     void setUInt8ArrayItem(const mxfKey *itemKey, const std::vector<uint8_t> &value);
     void setUInt16ArrayItem(const mxfKey *itemKey, const std::vector<uint16_t> &value);
     void setUInt32ArrayItem(const mxfKey *itemKey, const std::vector<uint32_t> &value);

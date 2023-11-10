@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2021, British Broadcasting Corporation
+ * Copyright (C) 2023, Fraunhofer IIS
  * All Rights Reserved.
+ *
+ * Author: Nisha Bhaskar
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,61 +29,50 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_FILE_PATTERN_ESSENCE_SOURCE_H_
-#define BMX_FILE_PATTERN_ESSENCE_SOURCE_H_
+#ifndef MXFPP_JPEGXSSUBDESCRIPTOR_BASE_H_
+#define MXFPP_JPEGXSSUBDESCRIPTOR_BASE_H_
 
-#include <map>
+#include <libMXF++/metadata/SubDescriptor.h>
 
-#include <bmx/essence_parser/EssenceSource.h>
-#include <bmx/ByteArray.h>
-
-
-
-namespace bmx
+namespace mxfpp
 {
 
-class FilePatternEssenceSource : public EssenceSource
-{
-public:
-    FilePatternEssenceSource(bool fill_gaps);
-    virtual ~FilePatternEssenceSource();
+	class JPEGXSSubDescriptorBase : public SubDescriptor
+	{
 
-    bool Open(const std::string &pattern, int64_t start_offset);
+	public:
+		friend class MetadataSetFactory<JPEGXSSubDescriptorBase>;
 
-public:
-    virtual uint32_t Read(unsigned char *data, uint32_t size);
-	int64_t ReadFileSize(uint32_t index);
-    virtual bool SeekStart();
-    virtual bool Skip(int64_t offset);
+		static const mxfKey setKey;
 
-    virtual bool HaveError() const { return mErrno != 0; }
-    virtual int GetErrno() const   { return mErrno; }
-    virtual std::string GetStrError() const;
+	public:
+		JPEGXSSubDescriptorBase(HeaderMetadata *headerMetadata);
+		virtual ~JPEGXSSubDescriptorBase();
 
-private:
-    int64_t ReadOrSkip(unsigned char *data, uint32_t size, int64_t skip_offset);
+		uint16_t getJPEGXSPpih() const;
+		uint16_t getJPEGXSPlev() const;
+		uint16_t getJPEGXSWf() const;
+		uint16_t getJPEGXSHf() const;
+		uint8_t getJPEGXSNc() const;
+		uint16_t getJPEGXSCw() const;
+		uint16_t getJPEGXSHsl() const;
+		uint32_t getJPEGXSMaximumBitRate() const;
+		std::vector<uint8_t> getJPEGXSComponentTable() const;
 
-    bool NextFile();
-    bool BufferFile();
+		void setJPEGXSPpih(uint16_t value);
+		void setJPEGXSPlev(uint16_t value);
+		void setJPEGXSWf(uint16_t value);
+		void setJPEGXSHf(uint16_t value);
+		void setJPEGXSNc(uint8_t value);
+		void setJPEGXSCw(uint16_t value);
+		void setJPEGXSHsl(uint16_t value);
+		void setJPEGXSMaximumBitRate(uint32_t value);
+		void setJPEGXSComponentTable(std::vector<uint8_t> value);
 
-    std::string GetCurrentFilePath() const { return mDirname + "/" + mCurrentFilename; }
+	protected:
+		JPEGXSSubDescriptorBase(HeaderMetadata *headerMetadata, ::MXFMetadataSet *cMetadataSet);
 
-private:
-    bool mFillGaps;
-    int64_t mStartOffset;
-    int64_t mCurrentOffset;
-    int mErrno;
-    std::string mDirname;
-    std::map<int, std::string> mFilenames;
-    std::map<int, std::string>::const_iterator mNextFilenamesIter;
-    int64_t mCurrentNumber;
-    std::string mCurrentFilename;
-    bmx::ByteArray mFileBuffer;
-    uint32_t mFileBufferOffset;
+	};
 };
-
-
-};
-
 
 #endif

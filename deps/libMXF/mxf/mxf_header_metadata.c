@@ -2134,6 +2134,43 @@ fail:
     return 0;
 }
 
+int mxf_alloc_jxs_array(MXFMetadataSet *set, const mxfKey *itemKey, uint32_t elementLen,
+	uint32_t count, uint8_t **elements)
+{
+	MXFMetadataItem *newItem = NULL;
+	uint8_t *buffer = NULL;
+
+	assert(set->headerMetadata != NULL);
+
+	if (count == 0)
+	{
+		int result = mxf_set_empty_array_item(set, itemKey, elementLen);
+		if (result)
+		{
+			*elements = NULL;
+		}
+		return result;
+	}
+
+	CHK_OFAIL(count * elementLen < 65536);
+
+	CHK_ORET(get_or_create_set_item(set->headerMetadata, set, itemKey, &newItem));
+
+	CHK_MALLOC_ARRAY_ORET(buffer, uint8_t, count * elementLen);
+	//mxf_set_array_header(count, elementLen, buffer);
+	memset(&buffer[0], 0, elementLen * count);
+
+	CHK_OFAIL(mxf_set_item_value(newItem, buffer, (uint16_t)(count * elementLen)));
+	*elements = &newItem->value[0];
+
+	SAFE_FREE(buffer);
+	return 1;
+
+fail:
+	SAFE_FREE(buffer);
+	return 0;
+}
+
 int mxf_grow_array_item(MXFMetadataSet *set, const mxfKey *itemKey, uint32_t elementLen,
                         uint32_t count, uint8_t **newElements)
 {

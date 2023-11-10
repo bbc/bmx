@@ -53,9 +53,10 @@ using namespace std;
 using namespace bmx;
 
 
-#define READ_BLOCK_SIZE         8192
-#define PARSE_FRAME_START_SIZE  8192
-
+//#define READ_BLOCK_SIZE         8192
+//#define PARSE_FRAME_START_SIZE  8192
+#define READ_BLOCK_SIZE         3000000
+#define PARSE_FRAME_START_SIZE  3000000   // 156556800
 
 
 RawEssenceReader::RawEssenceReader(EssenceSource *essence_source)
@@ -68,6 +69,7 @@ RawEssenceReader::RawEssenceReader(EssenceSource *essence_source)
     mEssenceParser = 0;
     mSampleDataSize = 0;
     mNumSamples = 0;
+
     mReadFirstSample = false;
     mLastSampleRead = false;
 
@@ -176,15 +178,16 @@ bool RawEssenceReader::ReadAndParseSample()
             ShiftSampleData(sample_start_offset, sample_start_offset + offset);
             sample_num_read -= offset;
         }
-
         mReadFirstSample = true;
     } else {
         sample_num_read += ReadBytes(READ_BLOCK_SIZE);
     }
 
     uint32_t sample_size = 0;
+	
     while (true) {
         sample_size = mEssenceParser->ParseFrameSize(mSampleBuffer.GetBytes() + sample_start_offset, sample_num_read);
+
         if (sample_size != ESSENCE_PARSER_NULL_OFFSET)
             break;
 

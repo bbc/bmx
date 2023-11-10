@@ -313,6 +313,7 @@ void HeaderMetadata::initialiseObjectFactory()
     REGISTER_CLASS(DCTimedTextDescriptor);
     REGISTER_CLASS(DCTimedTextResourceSubDescriptor);
     REGISTER_CLASS(JPEG2000SubDescriptor);
+	REGISTER_CLASS(JPEGXSSubDescriptor);
     REGISTER_CLASS(ContainerConstraintsSubDescriptor);
 
     // Add new classes here

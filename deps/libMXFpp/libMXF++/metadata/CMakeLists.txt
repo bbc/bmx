@@ -26,6 +26,7 @@ list(APPEND MXFpp_sources
     metadata/Identification.cpp
     metadata/InterchangeObject.cpp
     metadata/JPEG2000SubDescriptor.cpp
+    metadata/JPEGXSSubDescriptor.cpp
     metadata/Locator.cpp
     metadata/MCALabelSubDescriptor.cpp
     metadata/MPEGVideoDescriptor.cpp
@@ -81,6 +82,7 @@ list(APPEND MXFpp_headers
     metadata/Identification.h
     metadata/InterchangeObject.h
     metadata/JPEG2000SubDescriptor.h
+    metadata/JPEGXSSubDescriptor.h
     metadata/Locator.h
     metadata/MCALabelSubDescriptor.h
     metadata/MPEGVideoDescriptor.h

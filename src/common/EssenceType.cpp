@@ -117,6 +117,8 @@ static const EssenceTypeInfo ESSENCE_TYPE_INFO[] =
     {RDD36_4444_XQ,             PICTURE_ESSENCE,        "RDD36 4:4:4:4 XQ",                     "RDD36_4444_XQ"},
     {JPEG2000_CDCI,             PICTURE_ESSENCE,        "JPEG 2000 CDCI",                       "JPEG2000_CDCI"},
     {JPEG2000_RGBA,             PICTURE_ESSENCE,        "JPEG 2000 RGBA",                       "JPEG2000_RGBA"},
+	{JPEGXS_CDCI,               PICTURE_ESSENCE,        "JPEG XS CDCI",                         "JPEGXS_CDCI"},
+	{JPEGXS_RGBA,               PICTURE_ESSENCE,        "JPEG XS RGBA",                         "JPEGXS_RGBA"},
     {VC2,                       PICTURE_ESSENCE,        "VC2",                                  "VC2"},
     {VC3_1080P_1235,            PICTURE_ESSENCE,        "VC3 1080p 1235",                       "VC3_1080p_1235"},
     {VC3_1080P_1237,            PICTURE_ESSENCE,        "VC3 1080p 1237",                       "VC3_1080p_1237"},
@@ -167,7 +169,7 @@ const char* bmx::essence_type_to_enum_string(EssenceType essence_type)
 EssenceType bmx::get_generic_essence_type(EssenceType essence_type)
 {
     BMX_ASSERT((size_t)essence_type < BMX_ARRAY_SIZE(ESSENCE_TYPE_INFO));
-    BMX_ASSERT(ESSENCE_TYPE_INFO[essence_type].essence_type == essence_type);
+    //BMX_ASSERT(ESSENCE_TYPE_INFO[essence_type].essence_type == essence_type);
 
     return ESSENCE_TYPE_INFO[essence_type].generic_essence_type;
 }

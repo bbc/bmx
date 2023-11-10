@@ -327,6 +327,24 @@ static const mxfUL MXF_CMDEF_L(JPEG2000_HTJ2K_GENERIC) = MXF_JPEG2000_CMDEV_L(MX
 void mxf_get_jpeg2000_coding_label(uint16_t profile, uint8_t main_level, uint8_t sub_level, mxfUL *label);
 
 
+/* JPEG XS */
+
+#define MXF_JPEGXS_CMDEV_L(profile) \
+    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x02, 0x02, 0x03, 0x08, profile, 0x00}
+
+static const mxfUL MXF_CMDEF_L(JPEGXSPictureCodingSchemes)		= MXF_JPEGXS_CMDEV_L(0x00);
+static const mxfUL MXF_CMDEF_L(JPEGXSUnrestrictedCodestream)	= MXF_JPEGXS_CMDEV_L(0x01);
+static const mxfUL MXF_CMDEF_L(JPEGXSMain422_10Profile)			= MXF_JPEGXS_CMDEV_L(0x02);
+static const mxfUL MXF_CMDEF_L(JPEGXSMain444_12Profile)			= MXF_JPEGXS_CMDEV_L(0x03);
+static const mxfUL MXF_CMDEF_L(JPEGXSMain4444_12Profile)		= MXF_JPEGXS_CMDEV_L(0x04);
+static const mxfUL MXF_CMDEF_L(JPEGXSLight422_10Profile)        = MXF_JPEGXS_CMDEV_L(0x05);
+static const mxfUL MXF_CMDEF_L(JPEGXSLight444_12Profile)        = MXF_JPEGXS_CMDEV_L(0x06);
+static const mxfUL MXF_CMDEF_L(JPEGXSLightSubline422_10Profile) = MXF_JPEGXS_CMDEV_L(0x07);
+static const mxfUL MXF_CMDEF_L(JPEGXSHigh444_12Profile)			= MXF_JPEGXS_CMDEV_L(0x08);
+static const mxfUL MXF_CMDEF_L(JPEGXSHigh4444_12Profile)		= MXF_JPEGXS_CMDEV_L(0x09);
+
+//void mxf_get_jpegxs_coding_label(mxfUL *label);
+
 /* uncompressed picture coding */
 
 /* fourcc 2vuy */
@@ -563,6 +581,18 @@ static const mxfUL MXF_EC_L(JPEG2000F1Wrapped) = MXF_JPEG2000_EC_L(0x0d, 0x05);
 static const mxfUL MXF_EC_L(JPEG2000P1Wrapped) = MXF_JPEG2000_EC_L(0x0d, 0x06);
 
 int mxf_is_jpeg2000_ec(const mxfUL *label);
+
+/* JPEG XS */
+
+#define MXF_JPEGXS_EC_L(byte15) \
+    MXF_GENERIC_CONTAINER_LABEL(0x0d, 0x21, byte15, 0x00)
+
+static const mxfUL MXF_EC_L(MXFGCJPEGXSPictures)                        = MXF_JPEGXS_EC_L(0x00);
+static const mxfUL MXF_EC_L(MXFGCFrameWrappedProgressiveJPEGXSPictures) = MXF_JPEGXS_EC_L(0x01);
+static const mxfUL MXF_EC_L(MXFGCFrameWrappedInterlacedJPEGXSPictures)  = MXF_JPEGXS_EC_L(0x02);
+static const mxfUL MXF_EC_L(MXFGCClipWrappedJPEGXSPictures)             = MXF_JPEGXS_EC_L(0x03);
+
+int mxf_is_jpegxs_ec(const mxfUL *label); 
 
 
 /* Data */
@@ -883,6 +913,18 @@ static const mxfKey MXF_EE_K(SDTI_CP_System_Pack) =
 
 #define MXF_JPEG2000_NOT_CLIP_WRAPPED_EE_TYPE   0x08
 #define MXF_JPEG2000_CLIP_WRAPPED_EE_TYPE       0x09
+
+
+/* JPEG XS */
+
+#define MXF_JPEGXS_EE_K(elecount, eletype, elenum) \
+    MXF_GENERIC_CONTAINER_ELEMENT_KEY(0x01, 0x15, elecount, eletype, elenum)
+
+#define MXF_JPEGXS_TRACK_NUM(elecount, eletype, elenum) \
+    MXF_TRACK_NUM(0x15, elecount, eletype, elenum)
+
+#define MXF_JPEGXS_FRAME_WRAPPED_EE_TYPE      0x1A
+#define MXF_JPEGXS_CLIP_WRAPPED_EE_TYPE       0x1B
 
 
 /* Data mappings */
