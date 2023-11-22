@@ -939,6 +939,11 @@ static const mxfKey MXF_EE_K(RP2057_ENDIAN_UNK) = MXF_GS_DATA_ELEMENT_KEY(MXF_GS
 static const mxfKey MXF_EE_K(TimedTextAnc)  = MXF_GS_DATA_ELEMENT_KEY(MXF_GS_DATA_BASE | MXF_GS_DATA_BYTES, MXF_GS_WRAP_BASE);
 
 
+/* Wave Chunk */
+
+static const mxfKey MXF_EE_K(WaveChunk) = MXF_GS_DATA_ELEMENT_KEY(MXF_GS_DATA_BASE | MXF_GS_DATA_BYTES, MXF_GS_WRAP_BASE);
+
+
 /*
  *
  * Partition pack keys
