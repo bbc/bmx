@@ -176,10 +176,16 @@
     <RIFFChunkStreamIDsArray    type="UInt32Batch"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 08 06 00 00 00"/>
   </RIFFChunkReferencesSubDescriptor>
 
-  <ADMSoundfieldGroupLabelSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 11">
-    <ADMAudioProgrammeID_ADMsg  type="UTF16String"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0a 01 00 00 00"/>
-    <ADMAudioContentID_ADMsg    type="UTF16String"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0a 02 00 00 00"/>
-    <ADMAudioObjectID_ADMsg     type="UTF16String"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0a 03 00 00 00"/>
+  <ADMAudioMetadataSubDescriptor base="InterchangeObject" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 11">
+    <RIFFChunkStreamID_link1     type="UInt32"   use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0a 01 00 00 00"/>
+    <ADMProfileLevelULBatch      type="ULBatch"  use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0a 02 00 00 00"/>
+  </ADMAudioMetadataSubDescriptor>
+
+  <ADMSoundfieldGroupLabelSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 12">
+    <RIFFChunkStreamID_link2     type="UInt32"          use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0b 01 00 00 00"/>
+    <ADMAudioProgrammeID_ST2131  type="UTF16String"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0b 02 00 00 00"/>
+    <ADMAudioContentID_ST2131    type="UTF16String"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0b 03 00 00 00"/>
+    <ADMAudioObjectID_ST2131     type="UTF16String"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0b 04 00 00 00"/>
   </ADMSoundfieldGroupLabelSubDescriptor>
 
   <ContainerConstraintsSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 67 00"/>
