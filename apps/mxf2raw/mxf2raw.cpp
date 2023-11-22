@@ -69,6 +69,7 @@
 #include <bmx/apps/AppMXFFileFactory.h>
 #include <bmx/apps/AppTextInfoWriter.h>
 #include <bmx/apps/AppXMLInfoWriter.h>
+#include <bmx/apps/ADMCHNATextFileHelper.h>
 #include "AS11InfoOutput.h"
 #include "AS10InfoOutput.h"
 #include "APPInfoOutput.h"
@@ -1603,6 +1604,17 @@ static void write_wave_chunk(MXFWaveChunk *chunk, string wave_chunks_output_pref
     log_info("Extracted wave chunk to '%s'\n", filename.c_str());
 }
 
+static void write_wave_chna_text(size_t track_index, WaveCHNA *chna, string chna_text_output_prefix)
+{
+    char suffix[32];
+    bmx_snprintf(suffix, sizeof(suffix), "_% " PRIszt ".txt", track_index);
+    string filename = chna_text_output_prefix + suffix;
+
+    write_chna_text_file(filename, chna);
+
+    log_info("Extracted ADM chna as text to '%s'\n", filename.c_str());
+}
+
 static bool parse_rdd6_frames(const char *frames_str, int64_t *min, int64_t *max)
 {
     if (parse_int_pair(frames_str, '-', min, max)) {
@@ -1784,6 +1796,8 @@ static void usage(const char *cmd)
     printf(" --wave-chunks-out <prefix>   Extract Wave chunks to files starting with <prefix>\n");
     printf("                              The file suffix is '_<chunk id>_<generic stream id>'\n");
     printf(" --filter-wave-chunks <ids>   A comma separated list of Wave chunk identifiers to extract\n");
+    printf(" --chna-text-out <prefix>     Extract mapped ADM CHNA descriptors as a text files starting with <prefix>\n");
+    printf("                              and suffix '_<MXF track index>.txt'\n");
     printf("\n");
     printf("Input options:\n");
     printf(" --disable-tracks <tracks> A comma separated list of track indexes and/or ranges to disable when reading essence data.\n");
@@ -1862,6 +1876,7 @@ int main(int argc, const char** argv)
     const char *text_output_prefix = 0;
     const char *wave_chunks_output_prefix = 0;
     set<WaveChunkId> filter_wave_chunks;
+    const char *chna_text_output_prefix = 0;
     bool mca_detail = false;
     unsigned int uvalue;
     int cmdln_index;
@@ -2383,6 +2398,17 @@ int main(int argc, const char** argv)
             }
             if (have_all)
                 filter_wave_chunks.clear();
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--chna-text-out") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            chna_text_output_prefix = argv[cmdln_index + 1];
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--http-min-read") == 0)
@@ -3267,6 +3293,16 @@ int main(int argc, const char** argv)
                         }
                     }
                 }
+            }
+        }
+
+        // extract ADM CHNA as text file
+        if (chna_text_output_prefix) {
+            for (size_t i = 0; i < reader->GetNumTrackReaders(); i++) {
+                MXFTrackReader *track_reader = reader->GetTrackReader(i);
+                WaveCHNA *chna = track_reader->GetWaveCHNA();
+                if (chna)
+                    write_wave_chna_text(track_reader->GetTrackIndex(), chna, chna_text_output_prefix);
             }
         }
 
