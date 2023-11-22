@@ -91,6 +91,10 @@
 #include <libMXF++/metadata/ADMAudioMetadataSubDescriptor.h>
 #include <libMXF++/metadata/RIFFChunkReferencesSubDescriptor.h>
 #include <libMXF++/metadata/ADMSoundfieldGroupLabelSubDescriptor.h>
+#include <libMXF++/metadata/MGASoundEssenceDescriptor.h>
+#include <libMXF++/metadata/MGAAudioMetadataSubDescriptor.h>
+#include <libMXF++/metadata/SADMAudioMetadataSubDescriptor.h>
+#include <libMXF++/metadata/MGASoundfieldGroupLabelSubDescriptor.h>
 #include <libMXF++/metadata/ContainerConstraintsSubDescriptor.h>
 
 
