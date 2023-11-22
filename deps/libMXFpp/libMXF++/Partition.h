@@ -32,6 +32,7 @@
 #ifndef MXFPP_PARTITION_H_
 #define MXFPP_PARTITION_H_
 
+#include <mxf/mxf.h>
 
 
 namespace mxfpp

@@ -35,6 +35,7 @@
 #include <map>
 #include <vector>
 
+#include <mxf/mxf.h>
 
 
 namespace mxfpp

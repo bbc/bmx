@@ -35,10 +35,10 @@
 #include <string>
 #include <vector>
 
-#include <libMXF++/Partition.h>
-
+#include <mxf/mxf.h>
 #include <mxf/mxf_memory_file.h>
 
+#include <libMXF++/Partition.h>
 
 
 namespace mxfpp
