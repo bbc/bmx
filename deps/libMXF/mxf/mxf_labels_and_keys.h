@@ -704,6 +704,11 @@ static const mxfUL CENTER_CUT_4_3  = MXF_ALTERNATIVE_CENTER_CUT_L(0x01)
 static const mxfUL CENTER_CUT_14_9 = MXF_ALTERNATIVE_CENTER_CUT_L(0x02)
 
 
+/* ADM audio metadata profiles and levels */
+
+static const mxfUL ADM_ITU2076_PROFILES_LEVELS =
+    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x02, 0x02, 0x11, 0x01, 0x01, 0x00, 0x00};
+
 
 /*
  *
