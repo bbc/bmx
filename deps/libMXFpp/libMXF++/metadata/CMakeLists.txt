@@ -1,4 +1,8 @@
 list(APPEND MXFpp_sources
+    metadata/ADM_CHNASubDescriptor.cpp
+    metadata/ADMAudioMetadataSubDescriptor.cpp
+    metadata/ADMChannelMapping.cpp
+    metadata/ADMSoundfieldGroupLabelSubDescriptor.cpp
     metadata/AES3AudioDescriptor.cpp
     metadata/ANCDataDescriptor.cpp
     metadata/AVCSubDescriptor.cpp
@@ -28,12 +32,18 @@ list(APPEND MXFpp_sources
     metadata/JPEG2000SubDescriptor.cpp
     metadata/Locator.cpp
     metadata/MCALabelSubDescriptor.cpp
+    metadata/MGAAudioMetadataSubDescriptor.cpp
+    metadata/MGASoundEssenceDescriptor.cpp
+    metadata/MGASoundfieldGroupLabelSubDescriptor.cpp
     metadata/MPEGVideoDescriptor.cpp
     metadata/MaterialPackage.cpp
     metadata/MultipleDescriptor.cpp
     metadata/NetworkLocator.cpp
     metadata/Preface.cpp
     metadata/RGBAEssenceDescriptor.cpp
+    metadata/RIFFChunkDefinitionSubDescriptor.cpp
+    metadata/RIFFChunkReferencesSubDescriptor.cpp
+    metadata/SADMAudioMetadataSubDescriptor.cpp
     metadata/Sequence.cpp
     metadata/SoundfieldGroupLabelSubDescriptor.cpp
     metadata/SourceClip.cpp
@@ -54,6 +64,10 @@ list(APPEND MXFpp_sources
 )
 
 list(APPEND MXFpp_headers
+    metadata/ADM_CHNASubDescriptor.h
+    metadata/ADMAudioMetadataSubDescriptor.h
+    metadata/ADMChannelMapping.h
+    metadata/ADMSoundfieldGroupLabelSubDescriptor.h
     metadata/AES3AudioDescriptor.h
     metadata/ANCDataDescriptor.h
     metadata/AVCSubDescriptor.h
@@ -83,6 +97,9 @@ list(APPEND MXFpp_headers
     metadata/JPEG2000SubDescriptor.h
     metadata/Locator.h
     metadata/MCALabelSubDescriptor.h
+    metadata/MGAAudioMetadataSubDescriptor.h
+    metadata/MGASoundEssenceDescriptor.h
+    metadata/MGASoundfieldGroupLabelSubDescriptor.h
     metadata/MPEGVideoDescriptor.h
     metadata/MaterialPackage.h
     metadata/Metadata.h
@@ -90,6 +107,9 @@ list(APPEND MXFpp_headers
     metadata/NetworkLocator.h
     metadata/Preface.h
     metadata/RGBAEssenceDescriptor.h
+    metadata/RIFFChunkDefinitionSubDescriptor.h
+    metadata/RIFFChunkReferencesSubDescriptor.h
+    metadata/SADMAudioMetadataSubDescriptor.h
     metadata/Sequence.h
     metadata/SoundfieldGroupLabelSubDescriptor.h
     metadata/SourceClip.h
