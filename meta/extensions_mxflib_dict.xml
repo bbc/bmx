@@ -16,6 +16,7 @@
       <UInt8Batch           base="UInt8"         type="Batch"/>
       <ULBatch              base="Label"         type="Batch"/>
       <ThreeColorPrimaries  base="ColorPrimary"  type="Array"  size="3"/>
+      <RIFFChunkIDType      base="ISO7"          type="Array"  size="4"  ul="urn:x-ul:060E2B34.0104.0101.01100300.00000000"/>
     </Multiple>
   </MXFTypes>
 
@@ -147,6 +148,33 @@
     <MIMEType               type="UTF16String"  use="required"  globalKey="06 0e 2b 34 01 01 01 07 04 09 02 01 00 00 00 00"/>
     <EssenceStreamID        type="UInt32"       use="required"  globalKey="06 0e 2b 34 01 01 01 04 01 03 04 04 00 00 00 00"/>
   </DCTimedTextResourceSubDescriptor>
+
+  <RIFFChunkDefinitionSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 30">
+    <RIFFChunkStreamID         type="UInt32"          use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 10 01 00 00 00"/>
+    <RIFFChunkID               type="RIFFChunkIDType" use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 10 02 00 00 00"/>
+    <RIFFChunkUUID             type="UUID"            use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 10 03 00 00 00"/>
+    <RIFFChunkHash             type="DataValue"       use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 10 04 00 00 00"/>
+    <RIFFChunkHashAlgorithm    type="UTF16String"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 10 05 00 00 00"/>
+  </RIFFChunkDefinitionSubDescriptor>
+
+  <ADM_CHNASubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 31">
+    <NumLocalChannels           type="UInt16"     use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 11 01 00 00 00"/>
+    <NumADMAudioTrackUIDs       type="UInt16"     use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 11 02 00 00 00"/>
+    <ADMChannelMappingsArray    type="subVector"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 11 03 00 00 00">
+      <ADMChannelMapping            type="UUID" ref="strong" target="ADMChannelMapping"/>
+    </ADMChannelMappingsArray>
+  </ADM_CHNASubDescriptor>
+
+  <ADMChannelMapping base="InterchangeObject" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 32">
+    <LocalChannelID                  type="UInt32"      use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 11 04 00 00 00"/>
+    <ADMAudioTrackUID                type="ISO7String"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 11 05 00 00 00"/>
+    <ADMAudioTrackChannelFormatID    type="ISO7String"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 11 06 00 00 00"/>
+    <ADMAudioPackFormatID            type="ISO7String"  use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 11 07 00 00 00"/>
+  </ADMChannelMapping>
+
+  <RIFFChunkReferencesSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 33">
+    <RIFFChunkStreamIDsArray    type="UInt32Batch"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 10 06 00 00 00"/>
+  </RIFFChunkReferencesSubDescriptor>
 
   <ContainerConstraintsSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 67 00"/>
 
