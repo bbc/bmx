@@ -347,6 +347,14 @@ static const mxfUL MXF_CMDEF_L(ST382_UNC_SOUND) = MXF_UNC_SOUND_CMDEV_L(0x0a, 0x
 static const mxfUL MXF_CMDEF_L(UNDEFINED_SOUND) = MXF_UNC_SOUND_CMDEV_L(0x01, 0x7f, 0x00, 0x00, 0x00);
 
 
+/* Metadata-Guided Audio sound coding */
+
+#define MXF_MGA_SOUND_CMDEV_L(byte14) \
+    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x02, 0x02, 0x01, 0x02, byte14, 0x00, 0x00}
+
+static const mxfUL MXF_CMDEF_L(MGA_UNC_SOUND) = MXF_MGA_SOUND_CMDEV_L(0x01);
+
+
 /*
  *
  * Essence container labels
@@ -571,6 +579,15 @@ static const mxfUL MXF_EC_L(VBIData) = MXF_GENERIC_CONTAINER_LABEL(0x09, 0x0d, 0
 static const mxfUL MXF_EC_L(ANCData) = MXF_GENERIC_CONTAINER_LABEL(0x09, 0x0e, 0x00, 0x00);
 
 static const mxfUL MXF_EC_L(TimedText) = MXF_GENERIC_CONTAINER_LABEL(0x0a, 0x13, 0x01, 0x01);
+
+
+/* Metadata-Guided Audio */
+
+#define MXF_MGA_EC_L(byte15) \
+    MXF_GENERIC_CONTAINER_LABEL(0x0d, 0x25, byte15, 0x00)
+
+static const mxfUL MXF_EC_L(MGAFrameWrapped)  = MXF_MGA_EC_L(0x01);
+static const mxfUL MXF_EC_L(MGAClipWrapped)   = MXF_MGA_EC_L(0x02);
 
 
 
