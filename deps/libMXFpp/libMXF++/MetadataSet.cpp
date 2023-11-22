@@ -331,6 +331,13 @@ mxfColorPrimary MetadataSet::getColorPrimaryItem(const mxfKey *itemKey) const
     return result;
 }
 
+mxfRIFFChunkIDType MetadataSet::getRIFFChunkIDTypeItem(const mxfKey *itemKey) const
+{
+    mxfRIFFChunkIDType result;
+    MXFPP_CHECK(mxf_get_riff_chunk_id_type_item(_cMetadataSet, itemKey, &result));
+    return result;
+}
+
 string MetadataSet::getStringItem(const mxfKey *itemKey) const
 {
     string result;
@@ -942,6 +949,11 @@ void MetadataSet::setThreeColorPrimariesItem(const mxfKey *itemKey, mxfThreeColo
 void MetadataSet::setColorPrimaryItem(const mxfKey *itemKey, mxfColorPrimary value) const
 {
     MXFPP_CHECK(mxf_set_color_primary_item(_cMetadataSet, itemKey, &value));
+}
+
+void MetadataSet::setRIFFChunkIDTypeItem(const mxfKey *itemKey, mxfRIFFChunkIDType value) const
+{
+    MXFPP_CHECK(mxf_set_riff_chunk_id_type_item(_cMetadataSet, itemKey, &value));
 }
 
 void MetadataSet::setStringItem(const mxfKey *itemKey, string value)
