@@ -2,9 +2,24 @@ name: Release
 on:
   workflow_dispatch:
 jobs:
-  release:
-    runs-on: windows-2019
+  binary_release:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows
+            os: windows-2019
+          - name: macos-xcode-universal
+            os: macos-11
+
+    runs-on: ${{ matrix.os }}
+
     steps:
+      - uses: maxim-lobanov/setup-xcode@v1
+        if: ${{ contains(matrix.name, 'xcode') }}
+        with:
+          xcode-version: latest-stable
+
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -16,6 +31,7 @@ jobs:
           cmake -P bmx/release/source_release.cmake
 
       - name: Win64 binary release
+        if: ${{ contains(matrix.name, 'windows') }}
         shell: bash
         working-directory: ../
         run: |
@@ -25,6 +41,17 @@ jobs:
           cd bmx-*
           cmake -P release/win64_binary_release.cmake
 
+      - name: MacOS Universal binary release
+        if: ${{ contains(matrix.os, 'macos') }}
+        shell: bash
+        working-directory: ../
+        run: |
+          mkdir binary_release
+          cd binary_release
+          unzip -q ../source_release/bmx-*.zip
+          cd bmx-*
+          cmake -P release/macos_universal_binary_release.cmake
+
       # actions/upload-artifact doesn't allow . and .. in paths
       - name: Move artefacts into working directory
         shell: bash
@@ -33,6 +60,7 @@ jobs:
           mv ../binary_release/bmx-*/out/package ./binary_release
 
       - name: Upload source release
+        if: ${{ contains(matrix.name, 'windows') }}
         uses: actions/upload-artifact@v3
         with:
           name: source-release
@@ -43,6 +71,6 @@ jobs:
       - name: Upload binary release
         uses: actions/upload-artifact@v3
         with:
-          name: binary-release
+          name: binary-release-${{ matrix.name }}
           path: |
             binary_release/*.zip
