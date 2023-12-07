@@ -158,7 +158,7 @@
           <channel_assignment>urn:smpte:ul:060e2b34.0401010d.04020210.05010000</channel_assignment>
           <mca_labels>
             <channel_summary>chM1</channel_summary>
-            <sg_summary>ADM</sg_summary>
+            <sg_summary>ADM(ADM)</sg_summary>
             <channels size="1">
               <channel index="0">
                 <index>0</index>
@@ -175,12 +175,12 @@
               </channel>
             </channels>
             <soundfield_groups size="1">
-              <soundfield_group index="0">
+              <adm_soundfield_group index="0">
                 <link_id>urn:uuid:00000000-0000-0000-0000-000000010002</link_id>
                 <dict_id>urn:smpte:ul:060e2b34.0401010d.03020223.00000000</dict_id>
                 <tag_symbol>ADM</tag_symbol>
                 <tag_name>ADM</tag_name>
-              </soundfield_group>
+              </adm_soundfield_group>
             </soundfield_groups>
           </mca_labels>
         </sound_descriptor>

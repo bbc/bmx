@@ -189,12 +189,12 @@ static const MCALabelEntry ADM_MCA_LABELS[] =
 #define ADM_PROPERTY_FUNCTIONS(name) \
     static void Set##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
         ADMSoundfieldGroupLabelSubDescriptor *adm_descriptor = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(descriptor);  \
-        BMX_CHECK_M(adm_descriptor, ("Can't set ADM SG label property on non-ADM SG label descriptor"));  \
+        BMX_CHECK_M(adm_descriptor, ("Can't set ADM SG label property on non-ADM SG label descriptor. Missing 'chunk_id'?"));  \
         adm_descriptor->set##name (value);  \
     }  \
     static bool Check##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
         ADMSoundfieldGroupLabelSubDescriptor *adm_descriptor = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(descriptor);  \
-        BMX_CHECK_M(adm_descriptor, ("Can't check ADM SG label property on non-ADM SG label descriptor"));  \
+        BMX_CHECK_M(adm_descriptor, ("Can't check ADM SG label property on non-ADM SG label descriptor. Missing 'chunk_id'?"));  \
         return adm_descriptor->have##name () && adm_descriptor->get##name () == value;  \
     }
 
@@ -672,23 +672,14 @@ void AppMCALabelHelper::ParseTrackLines(const vector<string> &lines)
                 next_sg.c_label_lines.push_back(label_line);
 
             } else if (label_line.label->type == SOUNDFIELD_GROUP_LABEL) {
-                // The ADM SG sub-descriptor allows the SG to have no references from CH.
-                // The ADM SG sub-descriptor also allows multiple SGs in a track.
-                // If there are no ADM properties present (!adm_sg_subdesc) then force a
-                // "ADM" SG label to use the ADM SG sub-descriptor if the conditions fail below
+                // If not using the ADM SG sub-descriptor then check there is a reference from
+                // a CH and that there aren't multiple SGs. The ADM SG sub-descriptor allows
+                // those 2 conditions.
                 if (!label_line.adm_sg_subdesc) {
-                    if (next_sg.c_label_lines.empty()) {
-                        if (label_line.label->dict_id == ADM_SG_DICT_ID)
-                            label_line.adm_sg_subdesc = true;
-                        else
-                            throw BMXException("No channels in soundfield group");
-                    }
-                    if (!sgs.empty()) {
-                        if (label_line.label->dict_id == ADM_SG_DICT_ID)
-                            label_line.adm_sg_subdesc = true;
-                        else
-                            throw BMXException("Multiple soundfield group labels");
-                    }
+                    if (next_sg.c_label_lines.empty())
+                        throw BMXException("No channels in non-ADM soundfield group. Missing 'chunk_id'?");
+                    if (!sgs.empty())
+                        throw BMXException("Multiple soundfield group labels with non-ADM soundfield group. Missing 'chunk_id'?");
                 }
 
                 next_sg.sg_label_line = label_line;
@@ -954,6 +945,7 @@ AppMCALabelHelper::LabelLine AppMCALabelHelper::ParseLabelLine(const string &lin
 
                     value.resize(4, ' ');
                     label_line.adm_sg_chunk_id = WAVE_CHUNK_ID(value.c_str());
+                    label_line.adm_sg_subdesc = true;
 
                 } else {
                     if (value.empty())
@@ -972,10 +964,6 @@ AppMCALabelHelper::LabelLine AppMCALabelHelper::ParseLabelLine(const string &lin
                         if (!mMCAPropertySetterMap.count(map_name))
                             throw BMXException("Unknown MCA label property '%s', %s", name.c_str());
                     }
-
-                    // If there are ADM properties then the ADM SG subdescriptor must be used
-                    if (map_name.compare(0, 3, "adm") == 0)
-                        label_line.adm_sg_subdesc = true;
 
                     label_line.string_properties.push_back(make_pair(map_name, value));
                 }
