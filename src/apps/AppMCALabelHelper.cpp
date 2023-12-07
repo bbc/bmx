@@ -247,12 +247,12 @@ struct MCAPropertyMapEntry {
    {"rfc5646additionalspokenlanguages", PROPERTY_FUNCTION_REFS(RFC5646AdditionalSpokenLanguages)},
    {"mcaadditionallanguageattributes", PROPERTY_FUNCTION_REFS(MCAAdditionalLanguageAttributes)},
    // ADM propertues will be identified by the "adm" prefix in AppMCALabelHelper
-   {"admaudioprogrammeid_st2131", PROPERTY_FUNCTION_REFS(ADMAudioProgrammeID_ST2131)},
-   {"admaudioprogrammeid", PROPERTY_FUNCTION_REFS(ADMAudioProgrammeID_ST2131)},  // without "_st2131" suffix
-   {"admaudiocontentid_st2131", PROPERTY_FUNCTION_REFS(ADMAudioContentID_ST2131)},
-   {"admaudiocontentid", PROPERTY_FUNCTION_REFS(ADMAudioContentID_ST2131)},  // without "_st2131" suffix
-   {"admaudioobjectid_st2131", PROPERTY_FUNCTION_REFS(ADMAudioObjectID_ST2131)},
-   {"admaudioobjectid", PROPERTY_FUNCTION_REFS(ADMAudioObjectID_ST2131)},  // without "_st2131" suffix
+   {"admaudioprogrammeidst2131", PROPERTY_FUNCTION_REFS(ADMAudioProgrammeID_ST2131)},
+   {"admaudioprogrammeid", PROPERTY_FUNCTION_REFS(ADMAudioProgrammeID_ST2131)},  // without "st2131" suffix
+   {"admaudiocontentidst2131", PROPERTY_FUNCTION_REFS(ADMAudioContentID_ST2131)},
+   {"admaudiocontentid", PROPERTY_FUNCTION_REFS(ADMAudioContentID_ST2131)},  // without "st2131" suffix
+   {"admaudioobjectidst2131", PROPERTY_FUNCTION_REFS(ADMAudioObjectID_ST2131)},
+   {"admaudioobjectid", PROPERTY_FUNCTION_REFS(ADMAudioObjectID_ST2131)},  // without "st2131" suffix
 };
 
 
