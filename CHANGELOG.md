@@ -1,5 +1,39 @@
 # bmx Changelog
 
+## v1.2
+
+### Breaking changes
+
+* None
+
+### Features
+
+* Add support for a templated output filename that can automatically follow IMF file naming conventions (https://github.com/bbc/bmx/pull/6)
+* Various improvements to file access over HTTP (https://github.com/bbc/bmx/pull/9 and https://github.com/bbc/bmx/pull/15)
+* Write app usage messages to stdout for less, and show a shortened usage on error (https://github.com/bbc/bmx/pull/20)
+* Add precharge and rollout properties to the mxf2raw output (https://github.com/bbc/bmx/pull/26 and https://github.com/bbc/bmx/pull/41)
+* Extract colormetry properties from AVC-Intra bitstreams (https://github.com/bbc/bmx/pull/29)
+* Improve descriptor property guesses for RDD 36 / 44 (ProRes) (https://github.com/bbc/bmx/pull/32)
+* Don't include the `manufacturer` attribute in RDD 6 XML output (https://github.com/bbc/bmx/pull/42)
+* Add provisional support for ADM and other audio metadata RIFF chunks in MXF (https://github.com/bbc/bmx/pull/51)
+
+### Bug fixes
+
+* Various updates to improve compliance with RDD 36 / 44 (ProRes) (https://github.com/bbc/bmx/pull/25)
+* Ensure all Index Table Segments have been written (in separate Partitions) before repeating in the Footer Partition (https://github.com/bbc/bmx/pull/31 and https://github.com/bbc/bmx/pull/35)
+* Stricter commandline option processing to help avoid misinterpretation (https://github.com/bbc/bmx/pull/40)
+* Increase the KLV Fill at the end of the Header Partition to ensure minimum requirements are met (https://github.com/bbc/bmx/pull/43)
+
+### Build changes
+
+* Fix the git version returned by bmx (https://github.com/bbc/bmx/pull/8)
+* Fix the include path used for the uuid library (https://github.com/bbc/bmx/pull/19)
+* Improve static library builds and add the git version code to the bmx libraries (https://github.com/bbc/bmx/pull/16)
+* Add ARGS to the Dockerfile to allow customisation of cmake config options (https://github.com/bbc/bmx/pull/21)
+* Move the libMXF and libMXF++ code into the bmx `deps/` folder and archive the repos (https://github.com/bbc/bmx/pull/27)
+* Build improvements to support MacOS and different Windows runtime libraries (https://github.com/bbc/bmx/pull/46)
+* Use gnuinstalldirs and don't limit pkg-config generation (https://github.com/bbc/bmx/pull/47 and https://github.com/bbc/bmx/pull/49)
+
 ## v1.1
 
 ### Breaking changes
