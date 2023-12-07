@@ -114,7 +114,7 @@ sudo make install
 
 The installation may require root permissions. Add `-DCMAKE_INSTALL_PREFIX=<install dir>` (fill in `<install dir>`) to the first `cmake` command above to change the installation directory.
 
-Run `ldconfig` to update the runtime linker cache. This avoids library link errors similar to "error while loading shared libraries".
+If not using macOS, run `ldconfig` to update the runtime linker cache. This avoids library link errors similar to "error while loading shared libraries".
 
 ```bash
 sudo /sbin/ldconfig
