@@ -83,15 +83,13 @@ include("${PROJECT_SOURCE_DIR}/cmake/source_filename.cmake")
 set_source_filename(MXFpp "${CMAKE_CURRENT_LIST_DIR}" "libMXF++")
 
 install(TARGETS MXFpp
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 foreach(include_file ${MXFpp_headers})
     get_filename_component(dir ${include_file} DIRECTORY)
-    install(FILES ${include_file} DESTINATION include/libMXF++/${dir})
+    install(FILES ${include_file} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libMXF++/${dir})
 endforeach()
 
-if(UNIX)
-    configure_file(../${PROJECT_NAME}.pc.in ${PROJECT_NAME}.pc @ONLY)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
-endif()
+configure_file(../${PROJECT_NAME}.pc.in ${PROJECT_NAME}.pc @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)

@@ -42,10 +42,10 @@ include("${PROJECT_SOURCE_DIR}/cmake/source_filename.cmake")
 set_source_filename(opatomreader "${CMAKE_CURRENT_LIST_DIR}" "libMXF++")
 
 install(TARGETS opatomreader
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES ${opatomreader_headers} DESTINATION include/libMXF++/examples/OPAtomReader)
+install(FILES ${opatomreader_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libMXF++/examples/OPAtomReader)
 
 
 add_executable(test_opatomreader
