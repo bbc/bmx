@@ -99,7 +99,7 @@ bool bmx::check_mca_labels(const vector<MCALabelSubDescriptor*> &mca_labels)
             return false;
         }
         if (iter->second.first && !iter->second.second) {
-            log_warn("Soundfield group descriptor with id '%s' is not referenced\n",
+            log_warn("Soundfield group descriptor with id '%s' is not linked by an audio channel descriptor\n",
                      get_uuid_string(iter->first).c_str());
         }
     }
@@ -110,7 +110,7 @@ bool bmx::check_mca_labels(const vector<MCALabelSubDescriptor*> &mca_labels)
             return false;
         }
         if (iter->second.first && !iter->second.second) {
-            log_warn("Group of soundfield group descriptor with id '%s' is not referenced\n",
+            log_warn("Group of soundfield group descriptor with id '%s' is not linked by a soundfield group descriptor\n",
                      get_uuid_string(iter->first).c_str());
         }
     }
