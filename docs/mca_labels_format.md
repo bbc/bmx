@@ -1,20 +1,20 @@
 # MCA Labels Format
 
-The `--track-mca-labels` option in raw2bmx and bmxtranswrap can be used to add Multi-channel Audio Labels as specified in SMPTE ST 377-4:2021. The format for the text file that is passed to that option is described in this document.
+The `--track-mca-labels` option in raw2bmx and bmxtranswrap can be used to add Multichannel Audio Labeling as specified in SMPTE ST 377-4:2021. The format for the text file that is passed to that option is described in this document.
 
 ## General Layout
 
-The text file contains one of the following line types:
+Each line in the text file is one of the following line types:
 
 - audio track index
-- audio channel (CH), soundfield group (SG) or group of soundfield group (GOSG) label
+- Label line specifying the audio channel (CH), soundfield group (SG) or group of soundfield group (GOSG)
 - empty
 
 A `#` character can be used to add a comment.
 
-The file defines the set of audio labels to include for each MXF audio track. The audio tracks are identified by an integer index starting from 0 and incrementing by 1 in the order that the audio tracks are written (the Track ID order).
+The file defines the set of audio labels to include for each MXF audio track (aka Sound Track). The audio tracks are identified by an integer index starting from 0 and incrementing by 1 in the order that the audio tracks are written (the Track ID order).
 
-A set of labels for an audio track starts with a line containing the index and is followed by lines defining audio labels. There can be multiple channel CH label lines, 0 or 1 SG label lines and 0 or more GOSG label lines.
+A set of labels for an audio track starts with a line containing the index and is followed by label lines (each one defining an audio label). These audio labels can include zero or more of each type (CH, SG, GOSG).
 
 An empty line is used to signal the start of a new audio track.
 
@@ -22,7 +22,7 @@ An empty line is used to signal the start of a new audio track.
 
  A label line consists of the value of the MCA Tag Symbol label property, followed by a comma and a comma-separated list of name`=`value pairs of properties for that label.
 
- The label identifies either a CH (e.g. `chL` for Left), SG (e.g. `sg51` for 5.1) or GOSG (e.g. `ggMPg` for Main Program). The list of supported labels can be found in the [AppMCALabelHelper.cpp](../src/apps/AppMCALabelHelper.cpp) source code file. The supported names are listed below.
+ The label identifies either a CH (e.g. `chL` for Left), SG (e.g. `sg51` for 5.1) or GOSG (e.g. `ggMPg` for Main Program). The list of supported labels can be found in the [AppMCALabelHelper.cpp](../src/apps/AppMCALabelHelper.cpp) source code file.
 
  The label properties are described in the next section, including how to insert characters such as commas into values.
 
@@ -39,8 +39,6 @@ The `id` property is only needed if they are referenced by or reference audio la
 The `repeat` property is used to decide whether to repeat a SG or GOSG label that is already defined in another track with the same `id`. It is a boolean property that defaults to True and can be set to False using the value `false`, `0` or `no`.
 
 The first instance of a SG or GOSG label with a given `id` will always be stored in the MXF track's file descriptor. Subsequent SG or GOSG labels with the same `id` will be stored as a copy of the earlier label if `repeat` is True.
-
-The `chunk_id` property is required for the `ADM` SG label. It is used to set the `RIFFChunkStreamID_link2` property value in the `ADM` SG label to the ID of the MXF generic stream that contains the ADM audio metadata chunk (with the given `chunk_id` chunk ID).
 
 The following string value properties can be used:
 
@@ -60,21 +58,22 @@ The following string value properties can be used:
 - MCASpokenLanguageAttribute
 - RFC5646AdditionalSpokenLanguages
 - MCAAdditionalLanguageAttributes
-- ADMAudioProgrammeID_ST2131
-- ADMAudioContentID_ST2131
-- ADMAudioObjectID_ST2131
+- ADMAudioProgrammeID
+- ADMAudioContentID
+- ADMAudioObjectID
 
 The "lang" name can be used instead of "RFC5646SpokenLanguage".
 
 The name may omit the "MCA" prefix, e.g. "TitleVersion" is accepted. The name matching is case-insenstive, e.g. "titleversion" is accepted. Underscores are ignored, e.g. "title_version" is accepted.
-
-The ADM properties, which are the properties with the "ADM" prefix, may also omit the "_ST2131" suffix. The ADM properties can only be used in a `ADM` SG label.
 
 The property value may be between quotation marks, either single or double quotes.
 
 Some special characters (e.g. used in RFC5646AdditionalSpokenLanguages and MCAAdditionalLanguageAttributes) can be set by using the `\` escape character. They are tab `\t` (0x09), line feed `\n` (0x0a) and carriage return `\r` (0x0d).
 
 The `\` escape character can be used before special characters, e.g. characters such as `,` and `#` when not using quotation marks or `"` when using double quotes. A `\` character can be inserted using a double backslash `\\`.
+
+See [audio_definition_model.md](./audio_definition_model.md) for an explanation, and examples, of using the ADM properties (those with the "ADM" prefix) and the `chunk_id` property.
+
 
 ## Example Files
 
@@ -112,4 +111,3 @@ sgST, id=sg1, repeat=false
 ggAPg, id=gosg1, repeat=false
 ```
 
-See [audio_definition_model.md](./audio_definition_model.md#add-adm-mca-labels-to-mxfadm) for an example that uses the ADM properties.

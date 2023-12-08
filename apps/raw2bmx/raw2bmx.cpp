@@ -720,7 +720,7 @@ static void usage(const char *cmd)
     printf("  --wave-chunks <ids>                List of non-builtin WAVE chunk IDs to transfer across from the input\n");
     printf("                                     The <ids> is a comma separated list of chunk IDs. Spaces are automatically appended to IDs if they are less than 4 letters\n");
     printf("                                     The built-in WAVE chunk IDs are: %s\n", WaveReader::GetBuiltinChunkListString().c_str());
-    printf("  --adm-wave-chunk <id>[,<label>]*   Identifies a npn-builtin ADM WAVE chunk to transfer across from the input\n");
+    printf("  --adm-wave-chunk <id>[,<label>]*   Identifies a non-builtin ADM WAVE chunk to transfer across from the input\n");
     printf("                                     ADM Soundfield Groups can be reference this chunk\n");
     printf("                                     A comma separated list of profile and level labels can be provided as well. A <label> can be:\n");
     printf("                                       * a SMPTE UL, formatted as a 'urn:smpte:ul:...',\n");
