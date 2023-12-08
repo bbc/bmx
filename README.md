@@ -239,7 +239,7 @@ This example runs `bmxtranswrap` from input `./sources/in.mxf` to output `./dest
 
 ## Source and Binary Distributions
 
-Source distributions, including dependencies for the Windows build, and Windows binaries are made available in this GitHub repo. Older distributions can be found on [SourceForge](https://sourceforge.net/projects/bmxlib/files/).
+Source distributions, including dependencies, and binaries are made available in the [Releases](https://github.com/bbc/bmx/releases) on GitHub. Older distributions can be found on [SourceForge](https://sourceforge.net/projects/bmxlib/files/).
 
 Source and binary distributions are generally only created when a new feature is required for creating standard compliant sample files for example, or when a release hasn't been made for a long time.
 
