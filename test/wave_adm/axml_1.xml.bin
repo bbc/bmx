@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ebuCoreMain xmlns="urn:ebu:metadata-schema:ebuCore_2014" xml:lang="en">
+  <coreMetadata>
+    <format>
+      <audioFormatExtended>
+        <audioProgramme audioProgrammeID="APR_1001" audioProgrammeName="Test Example 1" audioProgrammeLanguage="eng">
+          <audioContentIDRef>ACO_1001</audioContentIDRef>
+          <audioContentIDRef>ACO_1002</audioContentIDRef>
+        </audioProgramme>
+        <audioContent audioContentID="ACO_1001" audioContentName="speakers" audioContentLanguage="eng">
+          <audioObjectIDRef>AO_1001</audioObjectIDRef>
+        </audioContent>
+        <audioContent audioContentID="ACO_1002" audioContentName="audience_sounds">
+          <audioObjectIDRef>AO_1002</audioObjectIDRef>
+        </audioContent>
+        <audioObject audioObjectID="AO_1001" audioObjectName="dialogue_stereo" dialogue="1">
+          <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>
+          <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+          <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+        </audioObject>
+        <audioObject audioObjectID="AO_1002" audioObjectName="background_stereo">
+          <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>
+          <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+          <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>
+        </audioObject>
+        <audioTrackUID UID="ATU_00000001" sampleRate="48000" bitDepth="24" />
+        <audioTrackUID UID="ATU_00000002" sampleRate="48000" bitDepth="24" />
+        <audioTrackUID UID="ATU_00000003" sampleRate="48000" bitDepth="24" />
+        <audioTrackUID UID="ATU_00000004" sampleRate="48000" bitDepth="24" />
+      </audioFormatExtended>
+    </format>
+  </coreMetadata>
+</ebuCoreMain>

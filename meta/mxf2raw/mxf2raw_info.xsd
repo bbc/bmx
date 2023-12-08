@@ -427,11 +427,19 @@
     </xs:complexContent>
   </xs:complexType>
 
+  <xs:group name="mca_sg_group">
+    <xs:choice>
+      <xs:element name="soundfield_group" type="mca_sg_label_type"/>
+      <xs:element name="adm_soundfield_group" type="mca_sg_label_type"/>
+      <xs:element name="mga_soundfield_group" type="mca_sg_label_type"/>
+    </xs:choice>
+  </xs:group>
+
   <xs:complexType name="mca_sg_type">
     <xs:complexContent>
       <xs:extension base="array_type">
         <xs:sequence>
-          <xs:element name="soundfield_group" type="mca_sg_label_type" maxOccurs="unbounded"/>
+          <xs:group ref="mca_sg_group" maxOccurs="unbounded"/>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>
@@ -1004,6 +1012,8 @@
       <xs:enumeration value="MJPEG_15_1_S"/>
       <xs:enumeration value="WAVE_PCM"/>
       <xs:enumeration value="D10_AES3_PCM"/>
+      <xs:enumeration value="MGA"/>
+      <xs:enumeration value="MGA_SADM"/>
       <xs:enumeration value="ANC_Data"/>
       <xs:enumeration value="VBI_Data"/>
       <xs:enumeration value="Timed_Text"/>

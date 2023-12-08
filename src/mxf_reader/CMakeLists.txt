@@ -3,6 +3,7 @@ list(APPEND bmx_sources
     mxf_reader/EssenceReader.cpp
     mxf_reader/FrameMetadataReader.cpp
     mxf_reader/IndexTableHelper.cpp
+    mxf_reader/GenericStreamReader.cpp
     mxf_reader/MXFAPPInfo.cpp
     mxf_reader/MXFFileIndex.cpp
     mxf_reader/MXFFileReader.cpp
@@ -19,6 +20,8 @@ list(APPEND bmx_sources
     mxf_reader/MXFTextObject.cpp
     mxf_reader/MXFTimedTextTrackReader.cpp
     mxf_reader/MXFTrackInfo.cpp
+    mxf_reader/MXFTrackReader.cpp
+    mxf_reader/MXFWaveChunk.cpp
 )
 
 set(bmx_sources ${bmx_sources} PARENT_SCOPE)

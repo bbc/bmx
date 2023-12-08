@@ -1,5 +1,8 @@
 list(APPEND bmx_headers
     bmx/wave/WaveBEXT.h
+    bmx/wave/WaveCHNA.h
+    bmx/wave/WaveChunk.h
+    bmx/wave/WaveFileChunk.h
     bmx/wave/WaveFileIO.h
     bmx/wave/WaveIO.h
     bmx/wave/WaveReader.h

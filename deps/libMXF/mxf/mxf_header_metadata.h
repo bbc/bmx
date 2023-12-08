@@ -164,6 +164,7 @@ void mxf_get_j2k_component_sizing(const uint8_t *value, mxfJ2KComponentSizing *r
 int mxf_get_j2k_ext_capabilities(const uint8_t *value, uint16_t value_len, mxfJ2KExtendedCapabilities *result);
 void mxf_get_color_primary(const uint8_t *value, mxfColorPrimary *result);
 void mxf_get_three_color_primaries(const uint8_t *value, mxfThreeColorPrimaries *result);
+void mxf_get_riff_chunk_id_type(const uint8_t *value, mxfRIFFChunkIDType *result);
 void mxf_get_array_header(const uint8_t *value, uint32_t *arrayLen, uint32_t *arrayItemLen);
 uint16_t mxf_get_utf16string_size(const uint8_t *value, uint16_t valueLen);
 void mxf_get_utf16string(const uint8_t *value, uint16_t valueLen, mxfUTF16Char *result);
@@ -220,6 +221,7 @@ uint16_t mxf_get_external_j2k_ext_capabilities_size(const mxfJ2KExtendedCapabili
 void mxf_set_j2k_ext_capabilities(const mxfJ2KExtendedCapabilities *value, uint8_t *result);
 void mxf_set_color_primary(const mxfColorPrimary *value, uint8_t *result);
 void mxf_set_three_color_primaries(const mxfThreeColorPrimaries *value, uint8_t *result);
+void mxf_set_riff_chunk_id_type(const mxfRIFFChunkIDType *value, uint8_t *result);
 void mxf_set_array_header(uint32_t arrayLen, uint32_t arrayElementLen, uint8_t *result);
 
 
@@ -260,6 +262,7 @@ int mxf_set_rgba_layout_item(MXFMetadataSet *set, const mxfKey *itemKey, const m
 int mxf_set_j2k_ext_capabilities_item(MXFMetadataSet *set, const mxfKey *itemKey, const mxfJ2KExtendedCapabilities *value);
 int mxf_set_color_primary_item(MXFMetadataSet *set, const mxfKey *itemKey, const mxfColorPrimary *value);
 int mxf_set_three_color_primaries_item(MXFMetadataSet *set, const mxfKey *itemKey, const mxfThreeColorPrimaries *value);
+int mxf_set_riff_chunk_id_type_item(MXFMetadataSet *set, const mxfKey *itemKey, const mxfRIFFChunkIDType *value);
 int mxf_set_video_line_map_item(MXFMetadataSet *set, const mxfKey *itemKey, const mxfVideoLineMap *value);
 
 int mxf_alloc_array_item_elements(MXFMetadataSet *set, const mxfKey *itemKey, uint32_t elementLen,
@@ -310,6 +313,7 @@ int mxf_get_rgba_layout_item(MXFMetadataSet *set, const mxfKey *itemKey, mxfRGBA
 int mxf_get_j2k_ext_capabilities_item(MXFMetadataSet *set, const mxfKey *itemKey, mxfJ2KExtendedCapabilities *value);
 int mxf_get_color_primary_item(MXFMetadataSet *set, const mxfKey *itemKey, mxfColorPrimary *value);
 int mxf_get_three_color_primaries_item(MXFMetadataSet *set, const mxfKey *itemKey, mxfThreeColorPrimaries *value);
+int mxf_get_riff_chunk_id_type_item(MXFMetadataSet *set, const mxfKey *itemKey, mxfRIFFChunkIDType *value);
 int mxf_get_video_line_map_item(MXFMetadataSet *set, const mxfKey *itemKey, mxfVideoLineMap *value);
 
 int mxf_get_array_item_count(MXFMetadataSet *set, const mxfKey *itemKey, uint32_t *count);

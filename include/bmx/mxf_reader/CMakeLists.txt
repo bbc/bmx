@@ -2,6 +2,7 @@ list(APPEND bmx_headers
     bmx/mxf_reader/EssenceChunkHelper.h
     bmx/mxf_reader/EssenceReader.h
     bmx/mxf_reader/FrameMetadataReader.h
+    bmx/mxf_reader/GenericStreamReader.h
     bmx/mxf_reader/IndexTableHelper.h
     bmx/mxf_reader/MXFAPPInfo.h
     bmx/mxf_reader/MXFFileIndex.h
@@ -20,6 +21,7 @@ list(APPEND bmx_headers
     bmx/mxf_reader/MXFTimedTextTrackReader.h
     bmx/mxf_reader/MXFTrackInfo.h
     bmx/mxf_reader/MXFTrackReader.h
+    bmx/mxf_reader/MXFWaveChunk.h
 )
 
 set(bmx_headers ${bmx_headers} PARENT_SCOPE)

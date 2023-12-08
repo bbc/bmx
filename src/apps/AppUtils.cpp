@@ -1134,6 +1134,72 @@ bool bmx::parse_video_line_map(const char *str, mxfVideoLineMap *video_line_map)
     return true;
 }
 
+bool bmx::parse_wave_chunk_refs(const char *str, map<string, WaveChunkRef> *refs)
+{
+    vector<string> ids = split_string(str, ',', false, true);
+    if (ids.empty())
+        return false;
+
+    for (size_t i = 0; i < ids.size(); i++) {
+        ids[i].resize(4, ' ');
+        // Don't override existing refs which may be ADM
+        if (refs->count(ids[i]) == 0) {
+            WaveChunkRef ref;
+            ref.is_adm = false;
+            (*refs)[ids[i]] = ref;
+        }
+    }
+    return true;
+}
+
+bool bmx::parse_adm_wave_chunk_ref(const char *str, map<string, WaveChunkRef> *refs)
+{
+    vector<string> values = split_string(str, ',', false, true);
+    if (values.empty())
+        return false;
+
+    WaveChunkRef ref;
+    ref.is_adm = true;
+    for (size_t i = 1; i < values.size(); i++) {
+        if (values[i] == "adm_itu2076") {
+            ref.profile_and_level_uls.push_back(ADM_ITU2076_PROFILES_LEVELS);
+        } else {
+            UL label;
+            if (!parse_mxf_auid(values[i].c_str(), &label))
+                return false;
+            ref.profile_and_level_uls.push_back(label);
+        }
+    }
+
+    string id = values[0];
+    id.resize(4, ' ');
+    (*refs)[id] = ref;
+
+    return true;
+}
+
+bool bmx::parse_wave_chunk_ids(const char *str, std::set<WaveChunkId> *ids_out, bool *have_all)
+{
+    vector<string> ids = split_string(str, ',', false, true);
+    if (ids.empty())
+        return false;
+
+    *have_all = false;
+    for (size_t i = 0; i < ids.size(); i++) {
+        if (ids[i] == "all") {
+            *have_all = true;
+            return true;
+        }
+    }
+
+    for (size_t i = 0; i < ids.size(); i++) {
+        ids[i].resize(4, ' ');
+        ids_out->insert(WAVE_CHUNK_ID(ids[i]));
+    }
+
+    return true;
+}
+
 
 string bmx::create_mxf_track_filename(const char *prefix, uint32_t track_number, MXFDataDefEnum data_def)
 {

@@ -60,6 +60,7 @@
 #include <bmx/clip_writer/ClipWriter.h>
 #include <bmx/as02/AS02PictureTrack.h>
 #include <bmx/wave/WaveFileIO.h>
+#include <bmx/wave/WaveChunk.h>
 #include <bmx/st436/ST436Element.h>
 #include <bmx/st436/RDD6Metadata.h>
 #include <bmx/URI.h>
@@ -689,7 +690,9 @@ static void usage(const char *cmd)
     printf("    --force-no-avci-head    Strip AVCI header (512 bytes, sequence and picture parameter sets) if present\n");
     printf("\n");
     printf("  wave:\n");
-    printf("    --orig <name>           Set originator in the Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
+    printf("    --orig <name>                Set originator in the Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
+    printf("    --exclude-wave-chunks <ids>  Don't transfer non-builtin or <chna> Wave chunks with ID in the comma-separated list of chunk <ids>\n");
+    printf("                                 Set <ids> to 'all' to exclude all Wave chunks\n");
     printf("\n");
     printf("  as02/op1a/as11op1a:\n");
     printf("    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");
@@ -702,6 +705,7 @@ static void usage(const char *cmd)
     printf("                                * 'as11-mode-1', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02020000,\n");
     printf("                                * 'as11-mode-2', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02030000\n");
     printf("                                * 'imf', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020210.04010000\n");
+    printf("                                * 'adm', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020210.05010000\n");
     printf("    --track-mca-labels <scheme> <file>  Insert audio labels defined in <file>. The 'as11' <scheme> will add an override and otherwise <scheme> is ignored\n");
     printf("                                        The format of <file> is described in bmx/docs/mca_labels_format.md\n");
     printf("                                        All tag symbols registered in the bmx code are available for use\n");
@@ -871,6 +875,8 @@ int main(int argc, const char** argv)
     uint8_t d10_mute_sound_flags = 0;
     uint8_t d10_invalid_sound_flags = 0;
     const char *originator = DEFAULT_BEXT_ORIGINATOR;
+    set<WaveChunkId> exclude_wave_chunks;
+    bool exclude_all_wave_chunks = false;
     AvidUMIDType avid_umid_type = AAFSDK_UMID_TYPE;
     UMID mp_uid = g_Null_UMID;
     bool mp_uid_set = false;
@@ -2647,6 +2653,22 @@ int main(int argc, const char** argv)
             originator = argv[cmdln_index + 1];
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--exclude-wave-chunks") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_wave_chunk_ids(argv[cmdln_index + 1], &exclude_wave_chunks, &exclude_all_wave_chunks))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--track-map") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -4263,6 +4285,8 @@ int main(int argc, const char** argv)
                     break;
                 }
                 case D10_AES3_PCM:
+                case MGA:
+                case MGA_SADM:
                 case PICTURE_ESSENCE:
                 case SOUND_ESSENCE:
                 case DATA_ESSENCE:
@@ -4384,6 +4408,72 @@ int main(int argc, const char** argv)
         }
 
 
+        // Add wave chunks
+
+        if (clip_type == CW_WAVE_CLIP_TYPE) {
+            WaveWriter *wave_clip = clip->GetWaveClip();
+
+            // Ensure that the start channels are up-to-date for each track
+            wave_clip->UpdateChannelCounts();
+
+            // Use the generic stream identifier to ensure chunks are included only once
+            set<uint32_t> unique_chunk_stream_ids;
+
+            // Loop over the wave output tracks
+            for (size_t i = 0; i < output_tracks.size(); i++) {
+                OutputTrack *output_track = output_tracks[i];
+
+                WaveTrackWriter *wave_track = output_track->GetClipTrack()->GetWaveTrack();
+
+                // Loop over the output track channels, where each has a mapping from an input track channel
+                const map<uint32_t, OutputTrack::InputMap> &input_maps = output_track->GetInputMaps();
+                map<uint32_t, OutputTrack::InputMap>::const_iterator iter;
+                for (iter = input_maps.begin(); iter != input_maps.end(); iter++) {
+                    uint32_t output_channel_index = iter->first;
+                    uint32_t input_channel_index = iter->second.input_channel_index;
+
+                    InputTrack *input_track = iter->second.input_track;
+                    const MXFTrackReader *input_track_reader = dynamic_cast<MXFInputTrack*>(input_track)->GetTrackReader();
+
+                    // Add all referenced chunks if not already present
+                    for (size_t k = 0; k < input_track_reader->GetNumWaveChunks(); k++) {
+                        MXFWaveChunk *wave_chunk = input_track_reader->GetWaveChunk(k);
+
+                        // Don't write chunks in the exclusion list
+                        if (exclude_all_wave_chunks || exclude_wave_chunks.count(wave_chunk->Id()) > 0)
+                            continue;
+
+                        if (!unique_chunk_stream_ids.count(wave_chunk->GetStreamId())) {
+                            if (wave_clip->HaveChunk(wave_chunk->Id())) {
+                                // E.g. this can happen if multiple <axml> chunks exist that came from different Wave files
+                                // and the <axml> chunks may or may not be identical or equivalent.
+                                // The assumption is that only 1 chunk with a given ID can exist in a BWF64 / Wave file.
+                                // The exception is probably <JUNK>, but that shouldn't be transferred between Wave or MXF.
+                                log_warn("Replaced chunk <%s> with another with the same ID in the output\n",
+                                         get_wave_chunk_id_str(wave_chunk->Id()).c_str());
+                            }
+                            wave_clip->AddChunk(wave_chunk, false);
+                            unique_chunk_stream_ids.insert(wave_chunk->GetStreamId());
+                        }
+                    }
+
+                    if (!exclude_all_wave_chunks && exclude_wave_chunks.count(WAVE_CHUNK_ID("chna")) == 0) {
+                        // Add audio IDs for the ADM <chna> chunk
+                        vector<WaveCHNA::AudioID> audio_ids = input_track_reader->GetCHNAAudioIDs(input_channel_index);
+                        for (size_t k = 0; k < audio_ids.size(); k++) {
+                            WaveCHNA::AudioID &audio_id = audio_ids[k];
+
+                            // Change the input channel track_index to the output channel track_index
+                            // + 1 because the <chna> track_index starts at 1
+                            audio_id.track_index = output_channel_index + 1;
+                            wave_track->AddADMAudioID(audio_id);
+                        }
+                    }
+                }
+            }
+        }
+
+
         // prepare the clip's header metadata and update file descriptors from input where supported
 
         clip->PrepareHeaderMetadata();
@@ -4428,6 +4518,8 @@ int main(int argc, const char** argv)
 
 
         // insert MCA labels
+        // Note: this must happen after processing wave chunks because the ADM soundfield group label requires
+        // the MXF stream ID for a given wave chunk ID
 
         for (i = 0; i < track_mca_labels.size(); i++) {
             const string &scheme = track_mca_labels[i].first;

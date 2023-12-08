@@ -16,6 +16,7 @@
       <UInt8Batch           base="UInt8"         type="Batch"/>
       <ULBatch              base="Label"         type="Batch"/>
       <ThreeColorPrimaries  base="ColorPrimary"  type="Array"  size="3"/>
+      <RIFFChunkIDType      base="ISO7"          type="Array"  size="4"  ul="urn:x-ul:060E2B34.0104.0101.01100300.00000000"/>
     </Multiple>
   </MXFTypes>
 
@@ -147,6 +148,69 @@
     <MIMEType               type="UTF16String"  use="required"  globalKey="06 0e 2b 34 01 01 01 07 04 09 02 01 00 00 00 00"/>
     <EssenceStreamID        type="UInt32"       use="required"  globalKey="06 0e 2b 34 01 01 01 04 01 03 04 04 00 00 00 00"/>
   </DCTimedTextResourceSubDescriptor>
+
+  <RIFFChunkDefinitionSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 0d">
+    <RIFFChunkStreamID         type="UInt32"          use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 08 01 00 00 00"/>
+    <RIFFChunkID               type="RIFFChunkIDType" use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 08 02 00 00 00"/>
+    <RIFFChunkUUID             type="UUID"            use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 08 03 00 00 00"/>
+    <RIFFChunkHashSHA1         type="DataValue"       use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 08 04 00 00 00"/>
+  </RIFFChunkDefinitionSubDescriptor>
+
+  <ADM_CHNASubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 0e">
+    <NumLocalChannels           type="UInt16"     use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 09 01 00 00 00"/>
+    <NumADMAudioTrackUIDs       type="UInt16"     use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 09 02 00 00 00"/>
+    <ADMChannelMappingsArray    type="subVector"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 09 03 00 00 00">
+      <ADMChannelMapping            type="UUID" ref="strong" target="ADMChannelMapping"/>
+    </ADMChannelMappingsArray>
+  </ADM_CHNASubDescriptor>
+
+  <ADMChannelMapping base="InterchangeObject" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 0f">
+    <LocalChannelID                  type="UInt32"       use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 09 04 00 00 00"/>
+    <ADMAudioTrackUID                type="UTF16String"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 09 05 00 00 00"/>
+    <ADMAudioTrackChannelFormatID    type="UTF16String"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 09 06 00 00 00"/>
+    <ADMAudioPackFormatID            type="UTF16String"  use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 09 07 00 00 00"/>
+  </ADMChannelMapping>
+
+  <RIFFChunkReferencesSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 10">
+    <RIFFChunkStreamIDsArray    type="UInt32Batch"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 08 06 00 00 00"/>
+  </RIFFChunkReferencesSubDescriptor>
+
+  <ADMAudioMetadataSubDescriptor base="InterchangeObject" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 11">
+    <RIFFChunkStreamID_link1     type="UInt32"   use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0a 01 00 00 00"/>
+    <ADMProfileLevelULBatch      type="ULBatch"  use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0a 02 00 00 00"/>
+  </ADMAudioMetadataSubDescriptor>
+
+  <ADMSoundfieldGroupLabelSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 12">
+    <RIFFChunkStreamID_link2     type="UInt32"          use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0b 01 00 00 00"/>
+    <ADMAudioProgrammeID_ST2131  type="UTF16String"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0b 02 00 00 00"/>
+    <ADMAudioContentID_ST2131    type="UTF16String"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0b 03 00 00 00"/>
+    <ADMAudioObjectID_ST2131     type="UTF16String"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 0b 04 00 00 00"/>
+  </ADMSoundfieldGroupLabelSubDescriptor>
+
+  <MGASoundEssenceDescriptor base="GenericSoundEssenceDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 06">
+    <MGASoundEssenceBlockAlign              type="UInt16"   use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 04 01 00 00 00"/>
+    <MGASoundEssenceAverageBytesPerSecond   type="UInt32"   use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 04 02 00 00 00"/>
+    <MGASoundEssenceSequenceOffset          type="UInt8"    use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 04 03 00 00 00"/>
+  </MGASoundEssenceDescriptor>
+
+  <MGAAudioMetadataSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 07">
+    <MGALinkID                        type="UUID"     use="required"  globalKey="06 0e 2b 34 01 01 01 e 04 02 03 05 01 00 00 00"/>
+    <MGAAudioMetadataIndex            type="UInt8"    use="required"  globalKey="06 0e 2b 34 01 01 01 e 04 02 03 05 02 00 00 00"/>
+    <MGAAudioMetadataIdentifier       type="UInt8"    use="required"  globalKey="06 0e 2b 34 01 01 01 e 04 02 03 05 03 00 00 00"/>
+    <MGAAudioMetadataPayloadULArray   type="ULBatch"  use="required"  globalKey="06 0e 2b 34 01 01 01 e 04 02 03 05 04 00 00 00"/>
+  </MGAAudioMetadataSubDescriptor>
+
+  <SADMAudioMetadataSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 09">
+    <SADMMetadataSectionLinkID    type="UUID"     use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 07 01 00 00 00"/>
+    <SADMProfileLevelULBatch      type="ULBatch"  use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 07 02 00 00 00"/>
+  </SADMAudioMetadataSubDescriptor>
+
+  <MGASoundfieldGroupLabelSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 08">
+    <MGAMetadataSectionLinkID   type="UUID"           use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 06 01 00 00 00"/>
+    <ADMAudioProgrammeID        type="UTF16String"    use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 06 02 00 00 00"/>
+    <ADMAudioContentID          type="UTF16String"    use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 06 03 00 00 00"/>
+    <ADMAudioObjectID           type="UTF16String"    use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 06 04 00 00 00"/>
+  </MGASoundfieldGroupLabelSubDescriptor>
 
   <ContainerConstraintsSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 67 00"/>
 

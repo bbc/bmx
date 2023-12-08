@@ -313,6 +313,16 @@ void HeaderMetadata::initialiseObjectFactory()
     REGISTER_CLASS(DCTimedTextDescriptor);
     REGISTER_CLASS(DCTimedTextResourceSubDescriptor);
     REGISTER_CLASS(JPEG2000SubDescriptor);
+    REGISTER_CLASS(RIFFChunkDefinitionSubDescriptor);
+    REGISTER_CLASS(ADM_CHNASubDescriptor);
+    REGISTER_CLASS(ADMAudioMetadataSubDescriptor);
+    REGISTER_CLASS(ADMChannelMapping);
+    REGISTER_CLASS(RIFFChunkReferencesSubDescriptor);
+    REGISTER_CLASS(ADMSoundfieldGroupLabelSubDescriptor);
+    REGISTER_CLASS(MGASoundEssenceDescriptor);
+    REGISTER_CLASS(MGAAudioMetadataSubDescriptor);
+    REGISTER_CLASS(SADMAudioMetadataSubDescriptor);
+    REGISTER_CLASS(MGASoundfieldGroupLabelSubDescriptor);
     REGISTER_CLASS(ContainerConstraintsSubDescriptor);
 
     // Add new classes here

@@ -1,4 +1,5 @@
 list(APPEND bmx_sources
+    apps/ADMCHNATextFileHelper.cpp
     apps/AS10Helper.cpp
     apps/AS11Helper.cpp
     apps/AppInfoWriter.cpp

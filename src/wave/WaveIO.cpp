@@ -50,9 +50,14 @@ WaveIO::~WaveIO()
 {
 }
 
-void WaveIO::WriteTag(const char *tag)
+void WaveIO::WriteId(const char *id)
 {
-    Write((const unsigned char*)tag, 4);
+    Write((const unsigned char*)id, 4);
+}
+
+void WaveIO::WriteId(WaveChunkId id)
+{
+    Write((const unsigned char*)&id, 4);
 }
 
 void WaveIO::WriteZeros(uint32_t size)
@@ -142,10 +147,22 @@ void WaveIO::WriteInt64(int64_t value)
     PutChar((unsigned char)((((uint64_t)value) >> 56) & 0xff));
 }
 
-bool WaveIO::ReadTag(char *tag)
+void WaveIO::WriteChunk(WaveChunk *chunk)
+{
+    WriteId(chunk->Id());
+    WriteSize((uint32_t)chunk->Size());
+    BMXIO::Write(chunk);
+
+    // add pad byte if chunk size is odd
+    if ((chunk->Size() & 1))
+        PutChar(0);
+}
+
+
+bool WaveIO::ReadId(WaveChunkId *id)
 {
     // could fail if reached eof
-    return Read((unsigned char*)tag, 4) == 4;
+    return Read((unsigned char*)id, 4) == 4;
 }
 
 void WaveIO::ReadString(char *value, uint32_t fixed_size)

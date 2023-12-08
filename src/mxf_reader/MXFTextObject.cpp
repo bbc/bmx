@@ -33,17 +33,14 @@
 #include "config.h"
 #endif
 
-#define __STDC_LIMIT_MACROS
-#define __STDC_FORMAT_MACROS
-
 #include <string.h>
 #include <errno.h>
-#include <limits.h>
 
 #include <libMXF++/MXF.h>
 
 #include <bmx/mxf_reader/MXFTextObject.h>
 #include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/mxf_reader/GenericStreamReader.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -63,6 +60,10 @@ MXFTextObject::MXFTextObject(MXFFileReader *file_reader, TextBasedObject *text_o
     mComponentIndex = component_index;
     mIsXML = CheckIsXML();
     mGSByteOrder = UNKNOWN_BYTE_ORDER;
+
+    mExpectedStreamKeys.push_back(MXF_EE_K(RP2057_LE));
+    mExpectedStreamKeys.push_back(MXF_EE_K(RP2057_BE));  // == MXF_EE_K(RP2057_BYTES)
+    mExpectedStreamKeys.push_back(MXF_EE_K(RP2057_ENDIAN_UNK));
 }
 
 MXFTextObject::~MXFTextObject()
@@ -198,128 +199,18 @@ bool MXFTextObject::CheckIsXML()
 
 void MXFTextObject::ReadGenericStream(FILE *text_file_out, unsigned char **data_out, size_t *data_out_size)
 {
-    mxfpp::File *mxf_file = mFileReader->mFile;
-    int64_t original_file_pos = mxf_file->tell();
-    try
-    {
-        GenericStreamTextBasedSet *gs_text = dynamic_cast<GenericStreamTextBasedSet*>(mTextObject);
+    GenericStreamTextBasedSet *gs_text = dynamic_cast<GenericStreamTextBasedSet*>(mTextObject);
 
-        uint64_t body_size = 0;
-        ByteArray buffer;
-        mxfKey key;
-        uint8_t llen;
-        uint64_t len;
-        const vector<Partition*> &partitions = mFileReader->mFile->getPartitions();
-        size_t i;
-        for (i = 0; i < partitions.size(); i++) {
-            if (partitions[i]->getBodySID() != gs_text->getGenericStreamSID())
-                continue;
+    GenericStreamReader stream_reader(mFileReader->mFile, gs_text->getGenericStreamSID(), mExpectedStreamKeys);
+    if (text_file_out)
+        stream_reader.Read(text_file_out);
+    else
+        stream_reader.Read(data_out, data_out_size);
 
-            if (partitions[i]->getBodyOffset() > body_size) {
-                log_warn("Ignoring potential missing text object generic stream data; "
-                         "partition pack's BodyOffset 0x%" PRIx64 " > expected offset 0x" PRIx64 "\n",
-                         partitions[i]->getBodyOffset(), body_size);
-                continue;
-            } else if (partitions[i]->getBodyOffset() < body_size) {
-                log_warn("Ignoring overlapping or repeated text object generic stream data; "
-                         "partition pack's BodyOffset 0x%" PRIx64 " < expected offset 0x" PRIx64 "\n",
-                         partitions[i]->getBodyOffset(), body_size);
-                continue;
-            }
-
-            mxf_file->seek(partitions[i]->getThisPartition(), SEEK_SET);
-            mxf_file->readKL(&key, &llen, &len);
-            mxf_file->skip(len);
-
-            bool have_gs_key = false;
-            while (!mxf_file->eof())
-            {
-                mxf_file->readNextNonFillerKL(&key, &llen, &len);
-
-                if (mxf_is_partition_pack(&key)) {
-                    break;
-                } else if (mxf_is_header_metadata(&key)) {
-                    if (partitions[i]->getHeaderByteCount() > mxfKey_extlen + llen + len)
-                        mxf_file->skip(partitions[i]->getHeaderByteCount() - (mxfKey_extlen + llen));
-                    else
-                        mxf_file->skip(len);
-                } else if (mxf_is_index_table_segment(&key)) {
-                    if (partitions[i]->getIndexByteCount() > mxfKey_extlen + llen + len)
-                        mxf_file->skip(partitions[i]->getIndexByteCount() - (mxfKey_extlen + llen));
-                    else
-                        mxf_file->skip(len);
-                } else if (mxf_is_gs_data_element(&key)) {
-                    if (key != MXF_EE_K(RP2057_LE) &&
-                        key != MXF_EE_K(RP2057_BE) && // == MXF_EE_K(RP2057_BYTES)
-                        key != MXF_EE_K(RP2057_ENDIAN_UNK))
-                    {
-                        BMX_EXCEPTION(("Generic stream essence element key is not a RP 2057 key"));
-                    }
-                    if (body_size == 0 || mGSByteOrder != UNKNOWN_BYTE_ORDER) {
-                        ByteOrder byte_order = UNKNOWN_BYTE_ORDER;
-                        if (key == MXF_EE_K(RP2057_LE))
-                            byte_order = BMX_LITTLE_ENDIAN;
-                        else if (key == MXF_EE_K(RP2057_BE)) // == MXF_EE_K(RP2057_BYTES)
-                            byte_order = BMX_BIG_ENDIAN;
-                        if (body_size == 0)
-                            mGSByteOrder = byte_order;
-                        else if (mGSByteOrder != byte_order)
-                            mGSByteOrder = UNKNOWN_BYTE_ORDER;
-                    }
-
-                    if (data_out) {
-                        if (len > UINT32_MAX || (uint64_t)buffer.GetAllocatedSize() + len > UINT32_MAX)
-                            BMX_EXCEPTION(("Text object in generic stream exceeds maximum supported in-memory size"));
-                        buffer.Grow((uint32_t)len);
-                    } else {
-                        buffer.Allocate(8192);
-                    }
-                    uint64_t rem_len = len;
-                    while (rem_len > 0) {
-                        uint32_t count = 8192;
-                        if (count > rem_len)
-                            count = (uint32_t)rem_len;
-                        uint32_t num_read = mxf_file->read(buffer.GetBytesAvailable(), count);
-                        if (num_read != count)
-                            BMX_EXCEPTION(("Failed to read text object data from generic stream"));
-                        if (text_file_out) {
-                            size_t num_write = fwrite(buffer.GetBytesAvailable(), 1, num_read, text_file_out);
-                            if (num_write != num_read) {
-                                BMX_EXCEPTION(("Failed to write text object to file: %s",
-                                               bmx_strerror(errno).c_str()));
-                            }
-                        } else {
-                            buffer.IncrementSize(num_read);
-                        }
-                        rem_len -= num_read;
-                    }
-
-                    have_gs_key = true;
-                    body_size += mxfKey_extlen + llen + len;
-                } else {
-                    mxf_file->skip(len);
-                    if (have_gs_key)
-                        body_size += mxfKey_extlen + llen + len;
-                }
-            }
-        }
-
-        if (data_out) {
-            if (buffer.GetSize() > 0) {
-                *data_out      = buffer.GetBytes();
-                *data_out_size = buffer.GetSize();
-                buffer.TakeBytes();
-            } else {
-                *data_out      = 0;
-                *data_out_size = 0;
-            }
-        }
-
-        mxf_file->seek(original_file_pos, SEEK_SET);
-    }
-    catch (...)
-    {
-        mxf_file->seek(original_file_pos, SEEK_SET);
-        throw;
-    }
+    if (*stream_reader.GetStreamKey() == MXF_EE_K(RP2057_LE))
+        mGSByteOrder = BMX_LITTLE_ENDIAN;
+    else if (*stream_reader.GetStreamKey() == MXF_EE_K(RP2057_BE))
+        mGSByteOrder = BMX_BIG_ENDIAN;
+    else
+        mGSByteOrder = UNKNOWN_BYTE_ORDER;
 }

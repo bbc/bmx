@@ -1,5 +1,8 @@
 list(APPEND bmx_sources
     common/BMXException.cpp
+    common/BMXIO.cpp
+    common/BMXFileIO.cpp
+    common/BMXMXFIO.cpp
     common/BMXTypes.cpp
     common/BitBuffer.cpp
     common/ByteArray.cpp

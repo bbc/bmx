@@ -273,6 +273,9 @@ static int validate_set(MXFMetadataSet *set, MXFSetDef *setDef, int logErrors)
                 case MXF_THREE_COLOR_PRIMARIES_TYPE:
                     CHECK_LENGTH(12)
                     break;
+                case MXF_RIFF_CHUNK_ID_TYPE:
+                    CHECK_LENGTH(4);
+                    break;
                 case MXF_RATIONAL_TYPE:
                     CHECK_LENGTH(8)
                     break;
@@ -1281,6 +1284,11 @@ void mxf_get_three_color_primaries(const uint8_t *value, mxfThreeColorPrimaries 
     }
 }
 
+void mxf_get_riff_chunk_id_type(const uint8_t *value, mxfRIFFChunkIDType *result)
+{
+    memcpy(result, value, mxfRIFFChunkIDType_extlen);
+}
+
 void mxf_get_array_header(const uint8_t *value, uint32_t *arrayLen, uint32_t *arrayItemLen)
 {
     mxf_get_uint32(value, arrayLen);
@@ -1784,6 +1792,11 @@ void mxf_set_three_color_primaries(const mxfThreeColorPrimaries *value, uint8_t 
     }
 }
 
+void mxf_set_riff_chunk_id_type(const mxfRIFFChunkIDType *value, uint8_t *result)
+{
+    memcpy(result, value, mxfRIFFChunkIDType_extlen);
+}
+
 void mxf_set_array_header(uint32_t arrayLen, uint32_t arrayElementLen, uint8_t *result)
 {
     mxf_set_uint32(arrayLen, result);
@@ -2095,6 +2108,11 @@ int mxf_set_video_line_map_item(MXFMetadataSet *set, const mxfKey *itemKey, cons
     mxf_set_int32(value->second, &itemValue[12]);
 
     return 1;
+}
+
+int mxf_set_riff_chunk_id_type_item(MXFMetadataSet *set, const mxfKey *itemKey, const mxfRIFFChunkIDType *value)
+{
+    SET_VALUE(mxfRIFFChunkIDType_extlen, mxf_set_riff_chunk_id_type);
 }
 
 int mxf_alloc_array_item_elements(MXFMetadataSet *set, const mxfKey *itemKey, uint32_t elementLen,
@@ -2528,6 +2546,11 @@ int mxf_get_video_line_map_item(MXFMetadataSet *set, const mxfKey *itemKey, mxfV
     mxf_get_int32(&item->value[12], &value->second);
 
     return 1;
+}
+
+int mxf_get_riff_chunk_id_type_item(MXFMetadataSet *set, const mxfKey *itemKey, mxfRIFFChunkIDType *value)
+{
+    GET_VALUE(mxfRIFFChunkIDType_extlen, mxf_get_riff_chunk_id_type);
 }
 
 int mxf_get_array_item_count(MXFMetadataSet *set, const mxfKey *itemKey, uint32_t *count)

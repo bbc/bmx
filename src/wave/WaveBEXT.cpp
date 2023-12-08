@@ -247,7 +247,7 @@ void WaveBEXT::Write(WaveIO *output)
 
     BMX_CHECK_M(mWrittenSize <= 0 || mWrittenSize == size, ("BEXT chunk size has changed"));
 
-    output->WriteTag("bext");
+    output->WriteId("bext");
     output->WriteSize(size);
 
     output->Write((const unsigned char*)mDescription, STRING_SIZE(mDescription));
@@ -283,6 +283,10 @@ void WaveBEXT::Write(WaveIO *output)
 
     if (!mCodingHistory.empty())
         output->Write((const unsigned char*)mCodingHistory.c_str(), coding_history_size);
+
+    // WORD alignment byte
+    if ((size & 1))
+        output->PutChar(0);
 
     mWasUpdated = false;
     mWrittenSize = size;

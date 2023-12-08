@@ -1,0 +1,19 @@
+track_index: 1
+uid: ATU_00000001
+track_ref: AT_00010001_01
+pack_ref: AP_00010002
+
+track_index: 2
+uid: ATU_00000002
+track_ref: AT_00010002_01
+pack_ref: AP_00010002
+
+track_index: 3
+uid: ATU_00000003
+track_ref: AT_00010001_01
+pack_ref: AP_00010002
+
+track_index: 4
+uid: ATU_00000004
+track_ref: AT_00010002_01
+pack_ref: AP_00010002

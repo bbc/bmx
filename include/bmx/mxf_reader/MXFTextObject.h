@@ -33,6 +33,7 @@
 #define BMX_MXF_TEXT_OBJECT_H_
 
 #include <stdio.h>
+#include <vector>
 
 #include <bmx/BMXTypes.h>
 
@@ -87,6 +88,7 @@ private:
     uint16_t mComponentIndex;
     bool mIsXML;
     ByteOrder mGSByteOrder;
+    std::vector<mxfKey> mExpectedStreamKeys;
 };
 
 

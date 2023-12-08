@@ -42,7 +42,10 @@
 #include <bmx/mxf_op1a/OP1AMPEG2LGTrack.h>
 #include <bmx/mxf_op1a/OP1AXMLTrack.h>
 #include <bmx/mxf_op1a/OP1ATimedTextTrack.h>
+#include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/mxf_helper/UniqueIdHelper.h>
+#include <bmx/mxf_helper/UniqueIdHelper.h>
+#include <bmx/wave/WaveChunk.h>
 #include <bmx/BMXTypes.h>
 #include <bmx/MXFChecksumFile.h>
 
@@ -74,6 +77,7 @@ public:
     friend class OP1ATrack;
     friend class OP1AMPEG2LGTrack;
     friend class OP1ATimedTextTrack;
+    friend class OP1APCMTrack;
 
 public:
     static mxfUMID CreatePackageUID();
@@ -102,6 +106,9 @@ public:
     void SetPrimaryPackage(bool enable);                                // default false
     void SetIndexFollowsEssence(bool enable);                           // default false. If true then place index partition after the essence it indexes, even for CBE
     void SetSignalST3792(bool enable);                                  // default false. If true then signal ST 379-2 compliance using sub-descriptor
+
+    uint32_t AddWaveChunk(WaveChunk *chunk, bool take_ownership);
+    uint32_t AddADMWaveChunk(WaveChunk *chunk, bool take_ownership, const std::vector<UL> &profile_and_level_uls);
 
 public:
     void SetOutputStartOffset(int64_t offset);
@@ -146,6 +153,9 @@ public:
 
     uint32_t CreateStreamId();
 
+    uint32_t GetWaveChunkStreamID(WaveChunkId chunk_id);
+    uint32_t GetADMWaveChunkStreamID(WaveChunkId chunk_id);
+
 private:
     OP1AIndexTable* GetIndexTable() const { return mIndexTable; }
     OP1AContentPackageManager* GetContentPackageManager() const { return mCPManager; }
@@ -163,6 +173,11 @@ private:
     void SetPartitionsFooterOffset();
 
     void CheckMCALabels();
+
+private:
+    typedef struct {
+        std::vector<UL> profile_and_level_uls;
+    } ADMWaveChunkInfo;
 
 private:
     int mFlavour;
@@ -233,6 +248,10 @@ private:
 
     UniqueIdHelper mTrackIdHelper;
     UniqueIdHelper mStreamIdHelper;
+
+    std::map<uint32_t, WaveChunk*> mWaveChunks;
+    std::vector<WaveChunk*> mOwnedWaveChunks;
+    std::map<uint32_t, ADMWaveChunkInfo> mADMWaveChunkInfo;
 };
 
 

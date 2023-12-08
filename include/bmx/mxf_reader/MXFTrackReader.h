@@ -36,9 +36,11 @@
 
 #include <libMXF++/MXF.h>
 
+#include <bmx/wave/WaveCHNA.h>
 #include <bmx/mxf_reader/MXFFrameBuffer.h>
 #include <bmx/mxf_reader/MXFTrackInfo.h>
 #include <bmx/mxf_reader/MXFIndexEntryExt.h>
+#include <bmx/mxf_reader/MXFWaveChunk.h>
 
 
 #define CURRENT_POSITION_VALUE      (int64_t)(((uint64_t)1)<<63)
@@ -99,6 +101,16 @@ public:
 
     virtual bool HaveAVCIHeader() const = 0;
     virtual const unsigned char* GetAVCIHeader() const = 0;
+
+public:
+    virtual std::vector<WaveCHNA::AudioID> GetCHNAAudioIDs(uint32_t channel_index) const;
+
+    virtual size_t GetNumWaveChunks() const;
+    virtual MXFWaveChunk* GetWaveChunk(size_t index) const;
+
+    virtual MXFWaveChunk* GetWaveChunk(WaveChunkId id) const;
+
+    virtual WaveCHNA* GetWaveCHNA() const;
 
 public:
     virtual bool IsEnabled() const = 0;

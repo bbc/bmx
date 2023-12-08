@@ -1,4 +1,5 @@
 list(APPEND bmx_headers
+    bmx/apps/ADMCHNATextFileHelper.h
     bmx/apps/AS10Helper.h
     bmx/apps/AS11Helper.h
     bmx/apps/AppInfoWriter.h

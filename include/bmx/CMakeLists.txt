@@ -1,5 +1,8 @@
 set(bmx_headers
     bmx/BMXException.h
+    bmx/BMXIO.h
+    bmx/BMXFileIO.h
+    bmx/BMXMXFIO.h
     bmx/BMXTypes.h
     bmx/BitBuffer.h
     bmx/ByteArray.h

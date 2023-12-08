@@ -31,16 +31,12 @@
 #include "config.h"
 #endif
 
-#define __STDC_LIMIT_MACROS
-#define __STDC_FORMAT_MACROS
-
 #include <bmx/mxf_reader/MXFTimedTextTrackReader.h>
 
 #include <string.h>
-#include <errno.h>
-#include <limits.h>
 
 #include <bmx/mxf_reader/MXFFileReader.h>
+#include <bmx/mxf_reader/GenericStreamReader.h>
 #include <bmx/BMXException.h>
 #include <bmx/Utils.h>
 #include <bmx/Logging.h>
@@ -178,115 +174,14 @@ void MXFTimedTextTrackReader::ReadStream(uint32_t stream_id, const mxfKey *strea
                                          unsigned char **data_out, size_t *data_out_size,
                                          std::vector<std::pair<int64_t, int64_t> > *ranges_out)
 {
-    mxfpp::File *mxf_file = GetFileReader()->mFile;
-    int64_t original_file_pos = mxf_file->tell();
-    try
-    {
-        uint64_t body_size = 0;
-        ByteArray buffer;
-        mxfKey key;
-        uint8_t llen;
-        uint64_t len;
-        const vector<Partition*> &partitions = mxf_file->getPartitions();
-        size_t i;
-        for (i = 0; i < partitions.size(); i++) {
-            if (partitions[i]->getBodySID() != stream_id)
-                continue;
+    vector<mxfKey> expected_stream_keys;
+    expected_stream_keys.push_back(*stream_key);
 
-            if (partitions[i]->getBodyOffset() > body_size) {
-                log_warn("Ignoring potential missing stream data; "
-                         "partition pack's BodyOffset 0x%" PRIx64 " > expected offset 0x" PRIx64 "\n",
-                         partitions[i]->getBodyOffset(), body_size);
-                continue;
-            } else if (partitions[i]->getBodyOffset() < body_size) {
-                log_warn("Ignoring overlapping or repeated stream data; "
-                         "partition pack's BodyOffset 0x%" PRIx64 " < expected offset 0x" PRIx64 "\n",
-                         partitions[i]->getBodyOffset(), body_size);
-                continue;
-            }
-
-            mxf_file->seek(partitions[i]->getThisPartition(), SEEK_SET);
-            mxf_file->readKL(&key, &llen, &len);
-            mxf_file->skip(len);
-
-            bool have_stream_key = false;
-            while (!mxf_file->eof())
-            {
-                mxf_file->readNextNonFillerKL(&key, &llen, &len);
-
-                if (mxf_is_partition_pack(&key)) {
-                    break;
-                } else if (mxf_is_header_metadata(&key)) {
-                    if (partitions[i]->getHeaderByteCount() > mxfKey_extlen + llen + len)
-                        mxf_file->skip(partitions[i]->getHeaderByteCount() - (mxfKey_extlen + llen));
-                    else
-                        mxf_file->skip(len);
-                } else if (mxf_is_index_table_segment(&key)) {
-                    if (partitions[i]->getIndexByteCount() > mxfKey_extlen + llen + len)
-                        mxf_file->skip(partitions[i]->getIndexByteCount() - (mxfKey_extlen + llen));
-                    else
-                        mxf_file->skip(len);
-                } else if (mxf_equals_key_mod_regver(&key, stream_key)) {
-                    if (data_out) {
-                        if (len > UINT32_MAX || (uint64_t)buffer.GetAllocatedSize() + len > UINT32_MAX)
-                            BMX_EXCEPTION(("Stream data size exceeds maximum supported in-memory size"));
-                        buffer.Grow((uint32_t)len);
-                    } else if (file_out) {
-                        buffer.Allocate(8192);
-                    }
-                    if (data_out || file_out) {
-                        uint64_t rem_len = len;
-                        while (rem_len > 0) {
-                            uint32_t count = 8192;
-                            if (count > rem_len)
-                                count = (uint32_t)rem_len;
-                            uint32_t num_read = mxf_file->read(buffer.GetBytesAvailable(), count);
-                            if (num_read != count)
-                                BMX_EXCEPTION(("Failed to read text object data from generic stream"));
-                            if (file_out) {
-                                size_t num_write = fwrite(buffer.GetBytesAvailable(), 1, num_read, file_out);
-                                if (num_write != num_read) {
-                                    BMX_EXCEPTION(("Failed to write text object to file: %s",
-                                                   bmx_strerror(errno).c_str()));
-                                }
-                            } else if (data_out) {
-                                buffer.IncrementSize(num_read);
-                            }
-                            rem_len -= num_read;
-                        }
-                    } else {
-                        if (len > 0) {
-                            ranges_out->push_back(make_pair(mxf_file->tell(), len));
-                            mxf_file->skip(len);
-                        }
-                    }
-
-                    have_stream_key = true;
-                    body_size += mxfKey_extlen + llen + len;
-                } else {
-                    mxf_file->skip(len);
-                    if (have_stream_key)
-                        body_size += mxfKey_extlen + llen + len;
-                }
-            }
-        }
-
-        if (data_out) {
-            if (buffer.GetSize() > 0) {
-                *data_out      = buffer.GetBytes();
-                *data_out_size = buffer.GetSize();
-                buffer.TakeBytes();
-            } else {
-                *data_out      = 0;
-                *data_out_size = 0;
-            }
-        }
-
-        mxf_file->seek(original_file_pos, SEEK_SET);
-    }
-    catch (...)
-    {
-        mxf_file->seek(original_file_pos, SEEK_SET);
-        throw;
-    }
+    GenericStreamReader stream_reader(GetFileReader()->mFile, stream_id, expected_stream_keys);
+    if (file_out)
+        stream_reader.Read(file_out);
+    else if (data_out && data_out_size)
+        stream_reader.Read(data_out, data_out_size);
+    else if (ranges_out)
+        *ranges_out = stream_reader.GetFileOffsetRanges();
 }

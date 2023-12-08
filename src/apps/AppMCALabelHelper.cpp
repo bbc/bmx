@@ -45,6 +45,7 @@
 #include <bmx/mxf_op1a/OP1APCMTrack.h>
 #include <bmx/rdd9_mxf/RDD9PCMTrack.h>
 #include <bmx/as11/AS11Labels.h>
+#include <bmx/wave/WaveChunk.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -166,33 +167,59 @@ static const MCALabelEntry AS11_OVERRIDE_MCA_LABELS[] =
 };
 
 
+// Multi-channel audio labels from ADM, SMPTE ST 2131
+
+static const UL ADM_SG_DICT_ID = {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x03, 0x02, 0x02, 0x23, 0x00, 0x00, 0x00, 0x00};
+
+static const MCALabelEntry ADM_MCA_LABELS[] =
+{
+    // Soundfield Groups
+    {SOUNDFIELD_GROUP_LABEL, "ADM", "ADM", ADM_SG_DICT_ID},
+};
+
+
 #define PROPERTY_FUNCTIONS(name) \
-   static void Set##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
-       descriptor->set##name (value);  \
-   }  \
-   static bool Check##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
-       return descriptor->have##name () && descriptor->get##name () == value;  \
-   }
+    static void Set##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
+        descriptor->set##name (value);  \
+    }  \
+    static bool Check##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
+        return descriptor->have##name () && descriptor->get##name () == value;  \
+    }
+
+#define ADM_PROPERTY_FUNCTIONS(name) \
+    static void Set##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
+        ADMSoundfieldGroupLabelSubDescriptor *adm_descriptor = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(descriptor);  \
+        BMX_CHECK_M(adm_descriptor, ("Can't set ADM SG label property on non-ADM SG label descriptor. Missing 'chunk_id'?"));  \
+        adm_descriptor->set##name (value);  \
+    }  \
+    static bool Check##name (MCALabelSubDescriptor *descriptor, const string &value) {  \
+        ADMSoundfieldGroupLabelSubDescriptor *adm_descriptor = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(descriptor);  \
+        BMX_CHECK_M(adm_descriptor, ("Can't check ADM SG label property on non-ADM SG label descriptor. Missing 'chunk_id'?"));  \
+        return adm_descriptor->have##name () && adm_descriptor->get##name () == value;  \
+    }
 
 class MCAPropertyFunctions
 {
 public:
-   PROPERTY_FUNCTIONS(MCAPartitionKind);
-   PROPERTY_FUNCTIONS(MCAPartitionNumber);
-   PROPERTY_FUNCTIONS(MCATitle);
-   PROPERTY_FUNCTIONS(MCATitleVersion);
-   PROPERTY_FUNCTIONS(MCATitleSubVersion);
-   PROPERTY_FUNCTIONS(MCAEpisode);
-   PROPERTY_FUNCTIONS(RFC5646SpokenLanguage);
-   PROPERTY_FUNCTIONS(MCAAudioContentKind);
-   PROPERTY_FUNCTIONS(MCAAudioElementKind);
-   PROPERTY_FUNCTIONS(MCAContent);
-   PROPERTY_FUNCTIONS(MCAUseClass);
-   PROPERTY_FUNCTIONS(MCAContentSubtype);
-   PROPERTY_FUNCTIONS(MCAContentDifferentiator);
-   PROPERTY_FUNCTIONS(MCASpokenLanguageAttribute);
-   PROPERTY_FUNCTIONS(RFC5646AdditionalSpokenLanguages);
-   PROPERTY_FUNCTIONS(MCAAdditionalLanguageAttributes);
+    PROPERTY_FUNCTIONS(MCAPartitionKind);
+    PROPERTY_FUNCTIONS(MCAPartitionNumber);
+    PROPERTY_FUNCTIONS(MCATitle);
+    PROPERTY_FUNCTIONS(MCATitleVersion);
+    PROPERTY_FUNCTIONS(MCATitleSubVersion);
+    PROPERTY_FUNCTIONS(MCAEpisode);
+    PROPERTY_FUNCTIONS(RFC5646SpokenLanguage);
+    PROPERTY_FUNCTIONS(MCAAudioContentKind);
+    PROPERTY_FUNCTIONS(MCAAudioElementKind);
+    PROPERTY_FUNCTIONS(MCAContent);
+    PROPERTY_FUNCTIONS(MCAUseClass);
+    PROPERTY_FUNCTIONS(MCAContentSubtype);
+    PROPERTY_FUNCTIONS(MCAContentDifferentiator);
+    PROPERTY_FUNCTIONS(MCASpokenLanguageAttribute);
+    PROPERTY_FUNCTIONS(RFC5646AdditionalSpokenLanguages);
+    PROPERTY_FUNCTIONS(MCAAdditionalLanguageAttributes);
+    ADM_PROPERTY_FUNCTIONS(ADMAudioProgrammeID_ST2131);
+    ADM_PROPERTY_FUNCTIONS(ADMAudioContentID_ST2131);
+    ADM_PROPERTY_FUNCTIONS(ADMAudioObjectID_ST2131);
 };
 
 #define PROPERTY_FUNCTION_REFS(name)  MCAPropertyFunctions::Set##name, MCAPropertyFunctions::Check##name
@@ -219,6 +246,10 @@ struct MCAPropertyMapEntry {
    {"mcaspokenlanguageattribute", PROPERTY_FUNCTION_REFS(MCASpokenLanguageAttribute)},
    {"rfc5646additionalspokenlanguages", PROPERTY_FUNCTION_REFS(RFC5646AdditionalSpokenLanguages)},
    {"mcaadditionallanguageattributes", PROPERTY_FUNCTION_REFS(MCAAdditionalLanguageAttributes)},
+   // ADM propertues will be identified by the "adm" prefix in AppMCALabelHelper
+   {"admaudioprogrammeid", PROPERTY_FUNCTION_REFS(ADMAudioProgrammeID_ST2131)},
+   {"admaudiocontentid", PROPERTY_FUNCTION_REFS(ADMAudioContentID_ST2131)},
+   {"admaudioobjectid", PROPERTY_FUNCTION_REFS(ADMAudioObjectID_ST2131)},
 };
 
 
@@ -234,6 +265,8 @@ void AppMCALabelHelper::LabelLine::Reset()
     channel_index = (uint32_t)(-1);
     repeat = true;
     string_properties.clear();
+    adm_sg_subdesc = false;
+    adm_sg_chunk_id = {0, 0, 0, 0};
 }
 
 
@@ -256,6 +289,8 @@ bool AppMCALabelHelper::ParseAudioLayoutMode(const string &audio_mode_str, UL *l
         *label = DEFAULT_LAYOUT_A_WITHOUT_MCA_LABEL;
     else if (audio_mode_str == "imf")
         *label = IMF_MCA_LABEL_FRAMEWORK;
+    else if (audio_mode_str == "adm")
+        *label = ADM_MCA_LABEL_FRAMEWORK;
     else
         return false;
 
@@ -270,6 +305,7 @@ AppMCALabelHelper::AppMCALabelHelper(bool is_as11)
     IndexLabels(AS11_MCA_LABELS, BMX_ARRAY_SIZE(AS11_MCA_LABELS), true);
     if (is_as11)
         IndexLabels(AS11_OVERRIDE_MCA_LABELS, BMX_ARRAY_SIZE(AS11_OVERRIDE_MCA_LABELS), true);
+    IndexLabels(ADM_MCA_LABELS, BMX_ARRAY_SIZE(ADM_MCA_LABELS), true);
 
     // Generate numbered source audio labels
     char buffer[32];
@@ -518,7 +554,17 @@ void AppMCALabelHelper::InsertTrackLabels(ClipWriter *clip)
                                  sg_label_line.id.c_str());
                     }
 
-                    sg_desc = pcm_track->AddSoundfieldGroupLabel();
+                    if (sg_label_line.adm_sg_subdesc) {
+                        if (sg_label_line.adm_sg_chunk_id.c0 == 0) {
+                            BMX_EXCEPTION(("ADM soundfield group label requires a 'chunk_id' property"));
+                        }
+                        uint32_t stream_id = clip->GetADMWaveChunkStreamID(sg_label_line.adm_sg_chunk_id);
+
+                        sg_desc = pcm_track->AddADMSoundfieldGroupLabel();
+                        dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(sg_desc)->setRIFFChunkStreamID_link2(stream_id);
+                    } else {
+                        sg_desc = pcm_track->AddSoundfieldGroupLabel();
+                    }
                     sg_desc->setMCALabelDictionaryID(sg_label_line.label->dict_id);
                     sg_desc->setMCATagSymbol(sg_label_line.label->tag_symbol);
                     if (sg_label_line.label->tag_name && sg_label_line.label->tag_name[0])
@@ -605,7 +651,8 @@ void AppMCALabelHelper::ParseTrackLines(const vector<string> &lines)
         track_labels = new TrackLabels();
         track_labels->track_index = track_index;
 
-        SoundfieldGroup sg;
+        vector<SoundfieldGroup> sgs;
+        SoundfieldGroup next_sg;
         size_t i;
         for (i = 1; i < lines.size(); i++) {
             LabelLine label_line = ParseLabelLine(lines[i]);
@@ -613,27 +660,50 @@ void AppMCALabelHelper::ParseTrackLines(const vector<string> &lines)
                 continue;
 
             if (label_line.label->type == AUDIO_CHANNEL_LABEL) {
-                if (!sg.gosg_label_lines.empty() || sg.sg_label_line.label) {
-                    track_labels->soundfield_groups.push_back(sg);
-                    sg.Reset();
+                // Add all the SGs created for this track before this CH
+                if (!sgs.empty()) {
+                    track_labels->soundfield_groups.insert(track_labels->soundfield_groups.end(), sgs.begin(), sgs.end());
+                    sgs.clear();
                 }
-                sg.c_label_lines.push_back(label_line);
+
+                next_sg.c_label_lines.push_back(label_line);
+
             } else if (label_line.label->type == SOUNDFIELD_GROUP_LABEL) {
-                if (sg.c_label_lines.empty())
-                    throw BMXException("No channels in soundfield group");
-                if (sg.sg_label_line.label)
-                    throw BMXException("Multiple soundfield group labels");
-                sg.sg_label_line = label_line;
+                // If not using the ADM SG sub-descriptor then check there is a reference from
+                // a CH and that there aren't multiple SGs. The ADM SG sub-descriptor allows
+                // those 2 conditions.
+                if (!label_line.adm_sg_subdesc) {
+                    if (next_sg.c_label_lines.empty())
+                        throw BMXException("No channels in non-ADM soundfield group. Missing 'chunk_id'?");
+                    if (!sgs.empty())
+                        throw BMXException("Multiple soundfield group labels with non-ADM soundfield group. Missing 'chunk_id'?");
+                }
+
+                next_sg.sg_label_line = label_line;
+                sgs.push_back(next_sg);
+                next_sg.Reset();
+
             } else { // GROUP_OF_SOUNDFIELD_GROUP_LABEL
-                if (!sg.sg_label_line.label)
+                if (sgs.empty())
                     throw BMXException("No soundfield group label before group of soundfield groups label");
-                sg.gosg_label_lines.push_back(label_line);
+
+                // Add the GOSG to all SG that came before it
+                size_t k;
+                for (k = 0; k < sgs.size(); k++) {
+                    SoundfieldGroup &sg = sgs[k];
+                    sg.gosg_label_lines.push_back(label_line);
+                }
             }
         }
-        if (!sg.gosg_label_lines.empty() || sg.sg_label_line.label || !sg.c_label_lines.empty()) {
-            track_labels->soundfield_groups.push_back(sg);
-            sg.Reset();
+
+        // Add the remaining placeholder SG (sg_label_line not set) that is used to carry the CHs
+        if (!next_sg.c_label_lines.empty()) {
+            sgs.push_back(next_sg);
+            next_sg.Reset();
         }
+
+        // Add all the SGs created for this track
+        track_labels->soundfield_groups.insert(track_labels->soundfield_groups.end(), sgs.begin(), sgs.end());
 
         mTrackLabels.push_back(track_labels);
         mTrackLabelsByTrackIndex[track_index] = track_labels;
@@ -865,6 +935,14 @@ AppMCALabelHelper::LabelLine AppMCALabelHelper::ParseLabelLine(const string &lin
                         label_line.repeat = false;
                     else
                         label_line.repeat = true;
+
+                } else if (name == "chunk_id") {
+                    if (value.empty())
+                        throw BMXException("Empty audio label property value for '%s'\n", name.c_str());
+
+                    value.resize(4, ' ');
+                    label_line.adm_sg_chunk_id = WAVE_CHUNK_ID(value.c_str());
+                    label_line.adm_sg_subdesc = true;
 
                 } else {
                     if (value.empty())
