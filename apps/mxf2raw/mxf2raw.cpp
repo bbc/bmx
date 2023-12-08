@@ -1333,7 +1333,7 @@ static void write_data(FILE *file, const string &filename, const unsigned char *
 }
 
 static bool update_rdd6_xml(Frame *frame, RDD6MetadataFrame *rdd6_frame, vector<string> *cumulative_desc_chars,
-                            vector<bool> *have_start, vector<bool> *have_end, bool *done)
+                            vector<bool> *have_start, vector<bool> *have_end, bool *descriptions_complete)
 {
     ST436Element st436_element(false);
     st436_element.Parse(frame->GetBytes(), frame->GetSize());
@@ -1416,7 +1416,7 @@ static bool update_rdd6_xml(Frame *frame, RDD6MetadataFrame *rdd6_frame, vector<
             all_done = false;
     }
 
-    *done = all_done;
+    *descriptions_complete = all_done;
 
     return true;
 }
@@ -1678,10 +1678,16 @@ static void usage(const char *cmd)
     printf(" --avid                Extract Avid metadata\n");
     printf(" --st436-mf <count>    Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
     printf(" --rdd6 <frames> <filename>\n");
-    printf("                       Extract RDD-6 audio metadata from <frames> to XML <filename>.\n");
-    printf("                       <frames> can either be a single frame or a range using '-' as a separator\n");
-    printf("                       RDD-6 metadata is extracted from the first frame and program description text is accumulated using the other frames\n");
-    printf("                       Not all frames will be required if a complete program text has been extracted\n");
+    printf("                       Extract RDD 6 audio metadata from <frames> to XML <filename>, e.g. '--rdd6 0-500 output.xml'\n");
+    printf("                       The output XML will contain the RDD 6 metadata from the first frame and the accumulated program description text\n");
+    printf("                       from the first and subsequent frames. It is assumed that the RDD 6 metadata is static, except for the frame count and description text.\n");
+    printf("                       The description text is spread over frames, 1 character per frame for each program.\n");
+    printf("                       <frames> specifies which frames to extract from and can either be a single frame or a range using '-' as a separator.\n");
+    printf("                       <frames> is the maximum range of frames to extract a complete description text for all programs.\n");
+    printf("                       The description text is complete for a program if a start and finally an end marker character have been found.\n");
+    printf("                       The <frames> range should account for the maximum expected text size and whether programs start their text together or not.\n");
+    printf("                       Extraction stops once a complete text has been extracted for all programs.\n");
+    printf("                       If the program description text is not required then set <frames> to 0 to extract RDD 6 from frame 0 only.\n");
     printf(" --mca-detail          Show detailed MCA channel label information\n");
     printf("\n");
     printf(" -p | --ess-out <prefix>\n");
@@ -2645,7 +2651,7 @@ int main(int argc, const char** argv)
 
         int64_t last_rdd6_frame = -1;
         bool rdd6_failed = false;
-        bool rdd6_done = false;
+        bool rdd6_descriptions_complete = false;
         RDD6MetadataFrame rdd6_frame;
         vector<string> rdd6_desc_chars;
         vector<bool> rdd6_have_start;
@@ -2934,13 +2940,13 @@ int main(int argc, const char** argv)
                             }
                         }
 
-                        if (track_info->essence_type == ANC_DATA && rdd6_filename && !rdd6_failed && !rdd6_done) {
+                        if (track_info->essence_type == ANC_DATA && rdd6_filename && !rdd6_failed && !rdd6_descriptions_complete) {
                             if ((last_rdd6_frame  < 0 && frame->position == rdd6_frame_min) ||
                                 (last_rdd6_frame >= 0 && frame->position <= rdd6_frame_max &&
                                     frame->position == last_rdd6_frame + 1))
                             {
                                 if (update_rdd6_xml(frame, &rdd6_frame, &rdd6_desc_chars, &rdd6_have_start,
-                                                    &rdd6_have_end, &rdd6_done))
+                                                    &rdd6_have_end, &rdd6_descriptions_complete))
                                 {
                                     last_rdd6_frame = frame->position;
                                 }
@@ -3051,7 +3057,7 @@ int main(int argc, const char** argv)
                 info_writer->EndSection();
         }
 
-        if (have_anc_track && rdd6_filename && !rdd6_failed && last_rdd6_frame != rdd6_frame_max && !rdd6_done) {
+        if (have_anc_track && rdd6_filename && !rdd6_failed && last_rdd6_frame != rdd6_frame_max && !rdd6_descriptions_complete) {
             reader->ClearFrameBuffers(true);
             if (reader->IsComplete())
                 reader->SetReadLimits();
@@ -3059,7 +3065,7 @@ int main(int argc, const char** argv)
                 reader->Seek(rdd6_frame_min);
             else
                 reader->Seek(last_rdd6_frame + 1);
-            while (!rdd6_failed && !rdd6_done && last_rdd6_frame < rdd6_frame_max &&
+            while (!rdd6_failed && !rdd6_descriptions_complete && last_rdd6_frame < rdd6_frame_max &&
                    reader->GetPosition() <= rdd6_frame_max && reader->Read(1))
             {
                 bool have_anc_data = false;
@@ -3076,7 +3082,7 @@ int main(int argc, const char** argv)
 
                         if (reader->GetTrackReader(i)->GetTrackInfo()->essence_type == ANC_DATA) {
                             if (update_rdd6_xml(frame, &rdd6_frame, &rdd6_desc_chars, &rdd6_have_start,
-                                                &rdd6_have_end, &rdd6_done))
+                                                &rdd6_have_end, &rdd6_descriptions_complete))
                             {
                                 last_rdd6_frame = frame->position;
                             }
@@ -3096,8 +3102,14 @@ int main(int argc, const char** argv)
             if (rdd6_frame.IsEmpty()) {
                 log_warn("Failed to extract RDD-6 frame data to XML file\n");
             } else {
-                if (!rdd6_failed && last_rdd6_frame > rdd6_frame_min)
+                if (!rdd6_failed && last_rdd6_frame > rdd6_frame_min) {
                     rdd6_frame.SetCumulativeDescriptionTextChars(rdd6_desc_chars);
+                    if (!rdd6_descriptions_complete &&
+                         rdd6_frame_max > rdd6_frame_min + 2)  // start + end marker and at least 1 char
+                    {
+                        log_warn("RDD-6 program description text is incomplete\n");
+                    }
+                }
                 rdd6_frame.UnparseXML(rdd6_filename);
 
                 log_info("Extracted RDD-6 frame data to '%s'\n", rdd6_filename);
