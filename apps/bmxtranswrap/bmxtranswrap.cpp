@@ -4180,6 +4180,9 @@ int main(int argc, const char** argv)
                     if (BMX_OPT_PROP_IS_SET(user_aspect_ratio))
                         clip_track->SetAspectRatio(user_aspect_ratio);
                     break;
+                case JPEGXS_CDCI:
+                case JPEGXS_RGBA:
+                    break;
                 case VC2:
                     if (afd)
                         clip_track->SetAFD(afd);

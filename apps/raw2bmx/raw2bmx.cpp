@@ -103,7 +103,7 @@ typedef enum
     D10_ESSENCE_GROUP,
     AVCI_ESSENCE_GROUP,
     AVC_ESSENCE_GROUP,
-	JXS_ESSENCE_GROUP,
+    JXS_ESSENCE_GROUP,
 } EssenceTypeGroup;
 
 
@@ -776,16 +776,18 @@ static void usage(const char *cmd)
     printf("  --rdd36_422_hq <name>      Raw SMPTE RDD-36 (ProRes) 4:2:2 HQ profile input file\n");
     printf("  --rdd36_4444 <name>        Raw SMPTE RDD-36 (ProRes) 4:4:4:4 profile input file\n");
     printf("  --rdd36_4444_xq <name>     Raw SMPTE RDD-36 (ProRes) 4:4:4:4 XQ profile input file\n");
-    printf("  --j2c_cdci <name|j2cpattern>  Raw JPEG 2000 (ISO/IEC 15444-1) codestream representing components (e.g. YCbCr) described by a MXF CDCI descriptor\n");
-    printf("                                If a '%%' is in the value then it is assumed to be a <j2cpattern> for a sequence of files, each containing a single frame\n");
-    printf("                                See Notes below for a detailed description of <j2cpattern>\n");
-    printf("  --j2c_rgba <name|j2cpattern>  Raw JPEG 2000 (ISO/IEC 15444-1) codestream representing components (e.g. RGB) described by a MXF RGBA descriptor\n");
-    printf("                                If a '%%' is in the value then it is assumed to be a <j2cpattern> for a sequence of files, each containing a single frame\n");
-    printf("                                See Notes below for a detailed description of <j2cpattern>\n");
-	printf("  --jxs_cdci <name|jxspattern>  Raw JPEG XS codestream representing components (e.g. YCbCr) described by a MXF CDCI descriptor\n");
-	printf("                                If a '%%' is in the value then it is assumed to be a <jxspattern> for a sequence of files, each containing a single frame\n");
-	printf("  --jxs_rgba <name|jxspattern>  Raw JPEG XS codestream representing components (e.g. RGB) described by a MXF RGBA descriptor\n");
-	printf("                                If a '%%' is in the value then it is assumed to be a <jxspattern> for a sequence of files, each containing a single frame\n");
+    printf("  --j2c_cdci <name|file pattern>  Raw JPEG 2000 (ISO/IEC 15444-1) codestream representing components (e.g. YCbCr) described by a MXF CDCI descriptor\n");
+    printf("                                If a '%%' is in the value then it is assumed to be a <file pattern> for a sequence of files, each containing a single frame\n");
+    printf("                                See Notes below for a detailed description of <file pattern>\n");
+    printf("  --j2c_rgba <name|file pattern>  Raw JPEG 2000 (ISO/IEC 15444-1) codestream representing components (e.g. RGB) described by a MXF RGBA descriptor\n");
+    printf("                                If a '%%' is in the value then it is assumed to be a <file pattern> for a sequence of files, each containing a single frame\n");
+    printf("                                See Notes below for a detailed description of <file pattern>\n");
+    printf("  --jxs_cdci <name|file pattern>  Raw JPEG XS codestream representing components (e.g. YCbCr) described by a MXF CDCI descriptor\n");
+    printf("                                If a '%%' is in the value then it is assumed to be a <file pattern> for a sequence of files, each containing a single frame\n");
+    printf("                                See Notes below for a detailed description of <file pattern>\n");
+    printf("  --jxs_rgba <name|file pattern>  Raw JPEG XS codestream representing components (e.g. RGB) described by a MXF RGBA descriptor\n");
+    printf("                                If a '%%' is in the value then it is assumed to be a <file pattern> for a sequence of files, each containing a single frame\n");
+    printf("                                See Notes below for a detailed description of <file pattern>\n");
     printf("  --vc2 <name>            Raw VC2 input file\n");
     printf("  --vc3 <name>            Raw VC3/DNxHD input file\n");
     printf("  --vc3_1080p_1235 <name> Raw VC3/DNxHD 1920x1080p 220/185/175 Mbps 10bit input file\n");
@@ -823,9 +825,9 @@ static void usage(const char *cmd)
     printf(" - <umid> format is 64 hexadecimal characters and any '.' and '-' characters are ignored\n");
     printf(" - <uuid> format is 32 hexadecimal characters and any '.' and '-' characters are ignored\n");
     printf(" - <tstamp> format is YYYY-MM-DDThh:mm:ss:qm where qm is in units of 1/250th second\n");
-    printf(" - <j2cpattern>: Each file name must include an integer frame number in the sequence.\n");
-    printf("                 <j2cpattern> is a file path that must contain a single '%%d' where the frame number appears in the name.\n");
-    printf("                 <j2cpattern> must not contain any other '%%' characters.\n");
+    printf(" - <file pattern>: Each file name must include an integer frame number in the sequence.\n");
+    printf("                 <file pattern> is a file path that must contain a single '%%d' where the frame number appears in the name.\n");
+    printf("                 <file pattern> must not contain any other '%%' characters.\n");
     printf("                 If --fill-pattern-gaps option is used then gaps in frame numbers are filled by repeating the previous frame.\n");
     printf("                 Example: 'inputs/frame_%%d.j2c' for input files `inputs/frame_00001.j2c' etc..\n");
     printf("\n");
@@ -3543,38 +3545,38 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
-		else if (strcmp(argv[cmdln_index], "--jxs_rgba") == 0)
-		{
-			if (cmdln_index + 1 >= argc)
-			{
-				usage(argv[0]);
-				fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
-				return 1;
-			}
-			input.essence_type = JPEGXS_RGBA;
-			if (strchr(argv[cmdln_index + 1], '%') != 0)
-				input.file_pattern = argv[cmdln_index + 1];
-			else
-				input.filename = argv[cmdln_index + 1];
-			inputs.push_back(input);
-			cmdln_index++;
-		}
-		else if (strcmp(argv[cmdln_index], "--jxs_cdci") == 0)
-		{
-		if (cmdln_index + 1 >= argc)
-		{
-			usage(argv[0]);
-			fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
-			return 1;
-		}
-		input.essence_type = JPEGXS_CDCI;
-		if (strchr(argv[cmdln_index + 1], '%') != 0)
-			input.file_pattern = argv[cmdln_index + 1];
-		else
-			input.filename = argv[cmdln_index + 1];
-		inputs.push_back(input);
-		cmdln_index++;
-		}
+        else if (strcmp(argv[cmdln_index], "--jxs_rgba") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }           
+            input.essence_type = JPEGXS_RGBA;
+            if (strchr(argv[cmdln_index + 1], '%') != 0)
+                input.file_pattern = argv[cmdln_index + 1];
+            else
+                input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--jxs_cdci") == 0)
+        {
+        if (cmdln_index + 1 >= argc)
+        {
+            usage(argv[0]);
+            fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+            return 1;
+        }
+        input.essence_type = JPEGXS_CDCI;
+        if (strchr(argv[cmdln_index + 1], '%') != 0)
+            input.file_pattern = argv[cmdln_index + 1];
+        else
+            input.filename = argv[cmdln_index + 1];
+        inputs.push_back(input);
+        cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--rdd36_422_proxy") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -3679,7 +3681,7 @@ int main(int argc, const char** argv)
             }
             input.essence_type = JPEG2000_RGBA;
             if (strchr(argv[cmdln_index + 1], '%') != 0)
-				input.file_pattern = argv[cmdln_index + 1];
+               input.file_pattern = argv[cmdln_index + 1];
             else
                input.filename = argv[cmdln_index + 1];
             inputs.push_back(input);
@@ -5430,12 +5432,12 @@ int main(int argc, const char** argv)
                     if (BMX_OPT_PROP_IS_SET(input->afd))
                         clip_track->SetAFD(input->afd);
                     break;
-				case JPEGXS_CDCI:
-				case JPEGXS_RGBA:
-					clip_track->SetAspectRatio(input->aspect_ratio);
-					if (BMX_OPT_PROP_IS_SET(input->afd))
-						clip_track->SetAFD(input->afd);
-					break;
+                case JPEGXS_CDCI:
+                case JPEGXS_RGBA:
+                    clip_track->SetAspectRatio(input->aspect_ratio);
+                    if (BMX_OPT_PROP_IS_SET(input->afd))
+                        clip_track->SetAFD(input->afd);
+                    break;
                 case VC2:
                     clip_track->SetAspectRatio(input->aspect_ratio);
                     if (BMX_OPT_PROP_IS_SET(input->afd))
@@ -5688,13 +5690,15 @@ int main(int argc, const char** argv)
                     input->raw_reader->SetEssenceParser(new J2CEssenceParser());
                     input->raw_reader->SetCheckMaxSampleSize(100000000);
                     break;
-				case JPEGXS_CDCI:
-				case JPEGXS_RGBA:
-					input->sample_sequence[0] = 1;
-					input->sample_sequence_size = 1;
-					input->raw_reader->SetEssenceParser(new JXSEssenceParser());
-					input->raw_reader->SetCheckMaxSampleSize(100000000);
-					break;
+                case JPEGXS_CDCI:
+                case JPEGXS_RGBA:
+                    input->sample_sequence[0] = 1;
+                    input->sample_sequence_size = 1;
+                    input->raw_reader->SetEssenceParser(new JXSEssenceParser());
+                    input->raw_reader->SetCheckMaxSampleSize(100000000);
+                    input->raw_reader->SetMaxReadLength(30000000);
+                    input->raw_reader->SetFrameStartSize(30000000); // 4k, 3bpp, RGB
+                    break;
                 case VC2:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;

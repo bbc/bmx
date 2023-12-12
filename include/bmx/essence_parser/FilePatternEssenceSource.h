@@ -50,7 +50,6 @@ public:
 
 public:
     virtual uint32_t Read(unsigned char *data, uint32_t size);
-	int64_t ReadFileSize(uint32_t index);
     virtual bool SeekStart();
     virtual bool Skip(int64_t offset);
 

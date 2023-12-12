@@ -51,6 +51,8 @@ public:
 
     void SetMaxReadLength(int64_t len);
 
+    void SetFrameStartSize(int64_t len);
+
     void SetFixedSampleSize(uint32_t size);
 
     virtual void SetEssenceParser(EssenceParser *essence_parser);
@@ -81,6 +83,7 @@ protected:
     EssenceSource *mEssenceSource;
 
     int64_t mMaxReadLength;
+    int64_t mFrameStartSize;
     int64_t mTotalReadLength;
     uint32_t mMaxSampleSize;
 

@@ -45,13 +45,13 @@ const mxfKey JPEGXSSubDescriptorBase::setKey = MXF_SET_K(JPEGXSSubDescriptor);
 
 
 JPEGXSSubDescriptorBase::JPEGXSSubDescriptorBase(HeaderMetadata *headerMetadata)
-	: SubDescriptor(headerMetadata, headerMetadata->createCSet(&setKey))
+    : SubDescriptor(headerMetadata, headerMetadata->createCSet(&setKey))
 {
-	headerMetadata->add(this);
+    headerMetadata->add(this);
 }
 
 JPEGXSSubDescriptorBase::JPEGXSSubDescriptorBase(HeaderMetadata *headerMetadata, ::MXFMetadataSet *cMetadataSet)
-	: SubDescriptor(headerMetadata, cMetadataSet)
+    : SubDescriptor(headerMetadata, cMetadataSet)
 {}
 
 JPEGXSSubDescriptorBase::~JPEGXSSubDescriptorBase()
@@ -61,95 +61,94 @@ JPEGXSSubDescriptorBase::~JPEGXSSubDescriptorBase()
 
 uint16_t JPEGXSSubDescriptorBase::getJPEGXSPpih() const
 {
-	return getUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSPpih));
+    return getUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSPpih));
 }
 
 uint16_t JPEGXSSubDescriptorBase::getJPEGXSPlev() const
 {
-	return getUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSPlev));
+    return getUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSPlev));
 }
 
 uint16_t JPEGXSSubDescriptorBase::getJPEGXSWf() const
 {
-	return getUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSWf));
+    return getUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSWf));
 }
 
 uint16_t JPEGXSSubDescriptorBase::getJPEGXSHf() const
 {
-	return getUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSHf));
+    return getUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSHf));
 }
 
 uint8_t JPEGXSSubDescriptorBase::getJPEGXSNc() const
 {
-	return getUInt8Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSNc));
+    return getUInt8Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSNc));
 }
 
 uint16_t JPEGXSSubDescriptorBase::getJPEGXSCw() const
 {
-	return getUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSCw));
+    return getUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSCw));
 }
 
 uint16_t JPEGXSSubDescriptorBase::getJPEGXSHsl() const
 {
-	return getUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSHsl));
+    return getUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSHsl));
 }
 
 uint32_t JPEGXSSubDescriptorBase::getJPEGXSMaximumBitRate() const
 {
-	return getUInt32Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSMaximumBitRate));
+    return getUInt32Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSMaximumBitRate));
 }
 
-std::vector<uint8_t> JPEGXSSubDescriptorBase::getJPEGXSComponentTable() const
+ByteArray JPEGXSSubDescriptorBase::getJPEGXSComponentTable() const
 {
-	return getUInt8ArrayItem(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSComponentTable));
+    return getRawBytesItem(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSComponentTable));
 }
 
 
 // setters
 
-
 void JPEGXSSubDescriptorBase::setJPEGXSPpih(uint16_t value)
 {
-	setUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSPpih), value);
+    setUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSPpih), value);
 }
 
 void JPEGXSSubDescriptorBase::setJPEGXSPlev(uint16_t value)
 {
-	setUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSPlev), value);
+    setUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSPlev), value);
 }
 
 void JPEGXSSubDescriptorBase::setJPEGXSWf(uint16_t value)
 {
-	setUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSWf), value);
+    setUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSWf), value);
 }
 
 void JPEGXSSubDescriptorBase::setJPEGXSHf(uint16_t value)
 {
-	setUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSHf), value);
+    setUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSHf), value);
 }
 
 void JPEGXSSubDescriptorBase::setJPEGXSNc(uint8_t value)
 {
-	setUInt8Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSNc), value);
+    setUInt8Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSNc), value);
 }
 
 void JPEGXSSubDescriptorBase::setJPEGXSCw(uint16_t value)
 {
-	setUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSCw), value);
+    setUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSCw), value);
 }
 
 void JPEGXSSubDescriptorBase::setJPEGXSHsl(uint16_t value)
 {
-	setUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSHsl), value);
+    setUInt16Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSHsl), value);
 }
 
 void JPEGXSSubDescriptorBase::setJPEGXSMaximumBitRate(uint32_t value)
 {
-	setUInt32Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSMaximumBitRate), value);
+    setUInt32Item(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSMaximumBitRate), value);
 }
 
-void JPEGXSSubDescriptorBase::setJPEGXSComponentTable(std::vector<uint8_t> value)
+void JPEGXSSubDescriptorBase::setJPEGXSComponentTable(ByteArray value)
 {
-	setUInt8JxsArray(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSComponentTable), value);
+    setRawBytesItem(&MXF_ITEM_K(JPEGXSSubDescriptor, JPEGXSComponentTable), value);
 }
 

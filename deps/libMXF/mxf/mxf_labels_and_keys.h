@@ -343,8 +343,6 @@ static const mxfUL MXF_CMDEF_L(JPEGXSLightSubline422_10Profile) = MXF_JPEGXS_CMD
 static const mxfUL MXF_CMDEF_L(JPEGXSHigh444_12Profile)			= MXF_JPEGXS_CMDEV_L(0x08);
 static const mxfUL MXF_CMDEF_L(JPEGXSHigh4444_12Profile)		= MXF_JPEGXS_CMDEV_L(0x09);
 
-//void mxf_get_jpegxs_coding_label(mxfUL *label);
-
 /* uncompressed picture coding */
 
 /* fourcc 2vuy */

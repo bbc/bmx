@@ -37,42 +37,42 @@
 namespace mxfpp
 {
 
-	class JPEGXSSubDescriptorBase : public SubDescriptor
-	{
+    class JPEGXSSubDescriptorBase : public SubDescriptor
+    {
 
-	public:
-		friend class MetadataSetFactory<JPEGXSSubDescriptorBase>;
+    public:
+        friend class MetadataSetFactory<JPEGXSSubDescriptorBase>;
 
-		static const mxfKey setKey;
+        static const mxfKey setKey;
 
-	public:
-		JPEGXSSubDescriptorBase(HeaderMetadata *headerMetadata);
-		virtual ~JPEGXSSubDescriptorBase();
+    public:
+        JPEGXSSubDescriptorBase(HeaderMetadata *headerMetadata);
+        virtual ~JPEGXSSubDescriptorBase();
 
-		uint16_t getJPEGXSPpih() const;
-		uint16_t getJPEGXSPlev() const;
-		uint16_t getJPEGXSWf() const;
-		uint16_t getJPEGXSHf() const;
-		uint8_t getJPEGXSNc() const;
-		uint16_t getJPEGXSCw() const;
-		uint16_t getJPEGXSHsl() const;
-		uint32_t getJPEGXSMaximumBitRate() const;
-		std::vector<uint8_t> getJPEGXSComponentTable() const;
+        uint16_t getJPEGXSPpih() const;
+        uint16_t getJPEGXSPlev() const;
+        uint16_t getJPEGXSWf() const;
+        uint16_t getJPEGXSHf() const;
+        uint8_t getJPEGXSNc() const;
+        uint16_t getJPEGXSCw() const;
+        uint16_t getJPEGXSHsl() const;
+        uint32_t getJPEGXSMaximumBitRate() const;
+        ByteArray getJPEGXSComponentTable() const;
 
-		void setJPEGXSPpih(uint16_t value);
-		void setJPEGXSPlev(uint16_t value);
-		void setJPEGXSWf(uint16_t value);
-		void setJPEGXSHf(uint16_t value);
-		void setJPEGXSNc(uint8_t value);
-		void setJPEGXSCw(uint16_t value);
-		void setJPEGXSHsl(uint16_t value);
-		void setJPEGXSMaximumBitRate(uint32_t value);
-		void setJPEGXSComponentTable(std::vector<uint8_t> value);
+        void setJPEGXSPpih(uint16_t value);
+        void setJPEGXSPlev(uint16_t value);
+        void setJPEGXSWf(uint16_t value);
+        void setJPEGXSHf(uint16_t value);
+        void setJPEGXSNc(uint8_t value);
+        void setJPEGXSCw(uint16_t value);
+        void setJPEGXSHsl(uint16_t value);
+        void setJPEGXSMaximumBitRate(uint32_t value);
+        void setJPEGXSComponentTable(ByteArray value);
 
-	protected:
-		JPEGXSSubDescriptorBase(HeaderMetadata *headerMetadata, ::MXFMetadataSet *cMetadataSet);
+    protected:
+        JPEGXSSubDescriptorBase(HeaderMetadata *headerMetadata, ::MXFMetadataSet *cMetadataSet);
 
-	};
+    };
 };
 
 #endif

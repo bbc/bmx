@@ -235,8 +235,8 @@ int mxf_is_jpeg2000_ec(const mxfUL *label)
 
 int mxf_is_jpegxs_ec(const mxfUL *label)
 {
-	return mxf_is_generic_container_label(label) &&
-		label->octet13 == 0x21;
+    return mxf_is_generic_container_label(label) &&
+        label->octet13 == 0x21;
 }
 
 

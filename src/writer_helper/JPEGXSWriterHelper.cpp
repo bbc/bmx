@@ -41,48 +41,40 @@ using namespace std;
 using namespace bmx;
 using namespace mxfpp;
 
-
 JPEGXSWriterHelper::JPEGXSWriterHelper()
 {
-	mPosition = 0;
-	mDescriptorHelper = 0;
-	mEssenceParser = NULL; 
+    mPosition = 0;
+    mDescriptorHelper = 0;
+    mEssenceParser = NULL; 
 }
 
 JPEGXSWriterHelper::~JPEGXSWriterHelper()
 {
-	delete mEssenceParser;
+    delete mEssenceParser;
 }
 
 void JPEGXSWriterHelper::SetDescriptorHelper(JPEGXSMXFDescriptorHelper *descriptor_helper)
 {
-	mDescriptorHelper = descriptor_helper;
+    mDescriptorHelper = descriptor_helper;
 }
 
 void JPEGXSWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
 {
-	mPosition++;
+    
+    if (mDescriptorHelper->GetParseStatus())
+    {
+        if (mPosition == 0)
+            mEssenceParser = new JXSEssenceParser();
+        mEssenceParser->ParseFrameInfo(data, size);
+    }
 
-	if (mDescriptorHelper->getParseStatus())
-	{
-		mEssenceParser = new JXSEssenceParser();
-		mEssenceParser->ParseFrameInfo(data, size);
-	}
+    mPosition++;
 
-	if (mPosition == 1)  // the first frame. mPosition has already been incremented
-	{
-		if(mDescriptorHelper->getParseStatus())
-			mDescriptorHelper->UpdateFileDescriptor(mEssenceParser);
-		else
-			mDescriptorHelper->UpdateFileDescriptor();
-	}
-		
-	
-}
-
-void JPEGXSWriterHelper::CompleteProcess()
-{
-	// Doesn't do anything
-	//JPEGXSSubDescriptor *jpegxs_sub_desc = dynamic_cast<JPEGXSMXFDescriptorHelper*>(mDescriptorHelper)->GetJPEGXSSubDescriptor();
-
+    if (mPosition == 1)  // the first frame. mPosition has already been incremented
+    {
+        if(mDescriptorHelper->GetParseStatus())
+            mDescriptorHelper->UpdateFileDescriptor(mEssenceParser);
+        else
+            mDescriptorHelper->UpdateFileDescriptor();
+    }
 }

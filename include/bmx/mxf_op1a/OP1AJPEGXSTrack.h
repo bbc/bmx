@@ -39,21 +39,21 @@
 
 namespace bmx
 {
-	class OP1AJPEGXSTrack : public OP1APictureTrack
-	{
-	public:
-		OP1AJPEGXSTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-			mxfRational frame_rate, EssenceType essence_type);
-		virtual ~OP1AJPEGXSTrack();
+    class OP1AJPEGXSTrack : public OP1APictureTrack
+    {
+    public:
+        OP1AJPEGXSTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
+            mxfRational frame_rate, EssenceType essence_type);
+        virtual ~OP1AJPEGXSTrack();
 
-	protected:
-		virtual void PrepareWrite(uint8_t track_count);
-		virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
-		virtual void CompleteWrite();
+    protected:
+        virtual void PrepareWrite(uint8_t track_count);
+        virtual void WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples);
+        virtual void CompleteWrite();
 
-	private:
-		JPEGXSWriterHelper mWriterHelper;
-	};
+    private:
+        JPEGXSWriterHelper mWriterHelper;
+    };
 
 };
 

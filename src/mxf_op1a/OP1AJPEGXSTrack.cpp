@@ -43,19 +43,16 @@ using namespace std;
 using namespace bmx;
 using namespace mxfpp;
 
-// to-do: Frame wrapped or clip wrapped? - same as ChooseEssenceContainerUL()??
-
 static const mxfKey VIDEO_ELEMENT_KEY = MXF_JPEGXS_EE_K(0x01, MXF_JPEGXS_FRAME_WRAPPED_EE_TYPE, 0x00);
 
-
 OP1AJPEGXSTrack::OP1AJPEGXSTrack(OP1AFile *file, uint32_t track_index, uint32_t track_id, uint8_t track_type_number,
-	mxfRational frame_rate, EssenceType essence_type)
-	: OP1APictureTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
+    mxfRational frame_rate, EssenceType essence_type)
+    : OP1APictureTrack(file, track_index, track_id, track_type_number, frame_rate, essence_type)
 {
-	mWriterHelper.SetDescriptorHelper(dynamic_cast<JPEGXSMXFDescriptorHelper*>(mDescriptorHelper));
+    mWriterHelper.SetDescriptorHelper(dynamic_cast<JPEGXSMXFDescriptorHelper*>(mDescriptorHelper));
 
-	mTrackNumber = MXF_JPEGXS_TRACK_NUM(0x01, MXF_JPEGXS_FRAME_WRAPPED_EE_TYPE, 0x00);
-	mEssenceElementKey = VIDEO_ELEMENT_KEY;
+    mTrackNumber = MXF_JPEGXS_TRACK_NUM(0x01, MXF_JPEGXS_FRAME_WRAPPED_EE_TYPE, 0x00);
+    mEssenceElementKey = VIDEO_ELEMENT_KEY;
 }
 
 OP1AJPEGXSTrack::~OP1AJPEGXSTrack()
@@ -64,23 +61,21 @@ OP1AJPEGXSTrack::~OP1AJPEGXSTrack()
 
 void OP1AJPEGXSTrack::PrepareWrite(uint8_t track_count)
 {
-	CompleteEssenceKeyAndTrackNum(track_count);
+    CompleteEssenceKeyAndTrackNum(track_count);
 
-	mCPManager->RegisterPictureTrackElement(mTrackIndex, mEssenceElementKey, false);
-	mIndexTable->RegisterPictureTrackElement(mTrackIndex, false, false);
+    mCPManager->RegisterPictureTrackElement(mTrackIndex, mEssenceElementKey, false);
+    mIndexTable->RegisterPictureTrackElement(mTrackIndex, false, false);
 }
 
 void OP1AJPEGXSTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
-	mWriterHelper.ProcessFrame(data, size);
+    mWriterHelper.ProcessFrame(data, size);
 
-	mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
-	mIndexTable->AddIndexEntry(mTrackIndex, mWriterHelper.GetFramePosition(), 0, 0, 0x80, true, false);
+    mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
+    mIndexTable->AddIndexEntry(mTrackIndex, mWriterHelper.GetFramePosition(), 0, 0, 0x80, true, false);
 }
 
 void OP1AJPEGXSTrack::CompleteWrite()
 {
-	mWriterHelper.CompleteProcess();
-
-	OP1APictureTrack::CompleteWrite();
+    OP1APictureTrack::CompleteWrite();
 }

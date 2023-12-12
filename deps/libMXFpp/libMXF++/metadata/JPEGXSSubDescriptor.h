@@ -36,18 +36,18 @@
 
 namespace mxfpp
 {
-	class JPEGXSSubDescriptor : public JPEGXSSubDescriptorBase
-	{
-	public:
-		friend class MetadataSetFactory<JPEGXSSubDescriptor>;
+    class JPEGXSSubDescriptor : public JPEGXSSubDescriptorBase
+    {
+    public:
+        friend class MetadataSetFactory<JPEGXSSubDescriptor>;
 
-	public:
-		JPEGXSSubDescriptor(HeaderMetadata *headerMetadata);
-		virtual ~JPEGXSSubDescriptor();
+    public:
+        JPEGXSSubDescriptor(HeaderMetadata *headerMetadata);
+        virtual ~JPEGXSSubDescriptor();
 
-	protected:
-		JPEGXSSubDescriptor(HeaderMetadata *headerMetadata, ::MXFMetadataSet *cMetadataSet);
-	};
+    protected:
+        JPEGXSSubDescriptor(HeaderMetadata *headerMetadata, ::MXFMetadataSet *cMetadataSet);
+    };
 };
 
 #endif

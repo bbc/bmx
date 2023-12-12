@@ -53,11 +53,8 @@ using namespace std;
 using namespace bmx;
 
 
-//#define READ_BLOCK_SIZE         8192
-//#define PARSE_FRAME_START_SIZE  8192
-#define READ_BLOCK_SIZE         3000000
-#define PARSE_FRAME_START_SIZE  3000000   // 156556800
-
+#define READ_BLOCK_SIZE         8192
+#define PARSE_FRAME_START_SIZE  8192
 
 RawEssenceReader::RawEssenceReader(EssenceSource *essence_source)
 {
@@ -69,6 +66,7 @@ RawEssenceReader::RawEssenceReader(EssenceSource *essence_source)
     mEssenceParser = 0;
     mSampleDataSize = 0;
     mNumSamples = 0;
+    mFrameStartSize = 0;
 
     mReadFirstSample = false;
     mLastSampleRead = false;
@@ -85,6 +83,11 @@ RawEssenceReader::~RawEssenceReader()
 void RawEssenceReader::SetMaxReadLength(int64_t len)
 {
     mMaxReadLength = len;
+}
+
+void RawEssenceReader::SetFrameStartSize(int64_t len)
+{
+    mFrameStartSize = len;
 }
 
 void RawEssenceReader::SetFixedSampleSize(uint32_t size)
@@ -184,7 +187,7 @@ bool RawEssenceReader::ReadAndParseSample()
     }
 
     uint32_t sample_size = 0;
-	
+    
     while (true) {
         sample_size = mEssenceParser->ParseFrameSize(mSampleBuffer.GetBytes() + sample_start_offset, sample_num_read);
 
@@ -225,6 +228,8 @@ uint32_t RawEssenceReader::ReadBytes(uint32_t size)
     BMX_ASSERT(mMaxReadLength == 0 || mTotalReadLength <= mMaxReadLength);
 
     uint32_t actual_size = size;
+    if (mFrameStartSize > 0)
+        actual_size = mFrameStartSize;
     if (mMaxReadLength > 0 && mTotalReadLength + size > mMaxReadLength)
         actual_size = (uint32_t)(mMaxReadLength - mTotalReadLength);
     if (actual_size == 0)

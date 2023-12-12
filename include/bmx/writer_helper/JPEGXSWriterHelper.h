@@ -36,32 +36,24 @@
 #include <bmx/essence_parser/JXSEssenceParser.h>
 #include <bmx/mxf_helper/JPEGXSMXFDescriptorHelper.h>
 
-
 namespace bmx
 {
-	class JPEGXSWriterHelper
-	{
-	public:
-		JPEGXSWriterHelper();
-		~JPEGXSWriterHelper();
+    class JPEGXSWriterHelper
+    {
+    public:
+        JPEGXSWriterHelper();
+        ~JPEGXSWriterHelper();
 
-		void SetDescriptorHelper(JPEGXSMXFDescriptorHelper *descriptor_helper);
+        void SetDescriptorHelper(JPEGXSMXFDescriptorHelper *descriptor_helper);
+        void ProcessFrame(const unsigned char *data, uint32_t size);
 
-		void ProcessFrame(const unsigned char *data, uint32_t size);
-		void CompleteProcess();
+        int64_t GetFramePosition() const { return mPosition - 1; }
 
-	public:
-		int64_t GetFramePosition() const { return mPosition - 1; }
-
-	private:
-		int64_t mPosition;
-		JPEGXSMXFDescriptorHelper *mDescriptorHelper;
-		JXSEssenceParser *mEssenceParser;
-	};
-
-
-
+    private:
+        int64_t mPosition;
+        JPEGXSMXFDescriptorHelper *mDescriptorHelper;
+        JXSEssenceParser *mEssenceParser;
+    };
 };
-
 
 #endif

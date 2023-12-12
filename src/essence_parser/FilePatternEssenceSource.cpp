@@ -189,26 +189,6 @@ int64_t FilePatternEssenceSource::ReadOrSkip(unsigned char *data, uint32_t size,
         return skip_offset - rem_size;
 }
 
-int64_t FilePatternEssenceSource::ReadFileSize(uint32_t index)
-{
-	if (mFilenames.size() <= index)
-		return 0;
-	mCurrentFilename = mFilenames.at(index);
-	mCurrentNumber = index;
-
-	string filepath = GetCurrentFilePath();
-	FILE *file = fopen(filepath.c_str(), "rb");
-	if (!file) {
-		mErrno = errno;
-		return false;
-	}
-
-	int64_t file_size;
-	file_size = get_file_size(file);
-	bool res = NextFile();
-	return file_size;
-}
-
 string FilePatternEssenceSource::GetStrError() const
 {
     return bmx_strerror(mErrno);

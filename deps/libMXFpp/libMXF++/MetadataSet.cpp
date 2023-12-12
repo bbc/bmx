@@ -1026,18 +1026,6 @@ void MetadataSet::setUInt8ArrayItem(const mxfKey *itemKey, const vector<uint8_t>
     }
 }
 
-void MetadataSet::setUInt8JxsArray(const mxfKey *itemKey, const vector<uint8_t> &value)
-{
-	size_t i;
-	uint8_t *data = 0;
-	MXFPP_CHECK(mxf_alloc_jxs_array(_cMetadataSet, itemKey, 1, (uint32_t)value.size(), &data));
-	for (i = 0; i < value.size(); i++)
-	{
-		mxf_set_uint8(value.at(i), data);
-		data += 1;
-	}
-}
-
 void MetadataSet::setUInt16ArrayItem(const mxfKey *itemKey, const vector<uint16_t> &value)
 {
     size_t i;
