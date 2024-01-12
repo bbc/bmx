@@ -47,6 +47,7 @@
 #include <bmx/mxf_helper/TimedTextManifest.h>
 #include <bmx/mxf_helper/TimedTextMXFResourceProvider.h>
 #include <bmx/apps/AppUtils.h>
+#include <bmx/wave/WaveCHNA.h>
 
 
 
@@ -103,6 +104,11 @@ public:
         mxfpp::SoundfieldGroupLabelSubDescriptor *copy_from = 0);
     mxfpp::GroupOfSoundfieldGroupsLabelSubDescriptor* AddGroupOfSoundfieldGroupLabel(
         mxfpp::GroupOfSoundfieldGroupsLabelSubDescriptor *copy_from = 0);
+    mxfpp::ADMSoundfieldGroupLabelSubDescriptor* AddADMSoundfieldGroupLabel(
+        mxfpp::ADMSoundfieldGroupLabelSubDescriptor *copy_from = 0);
+
+    void AddWaveChunkReference(uint32_t stream_id);
+    void AddADMAudioID(const WaveCHNA::AudioID &audio_id);
 
     // Data properties
     void SetConstantDataSize(uint32_t size);

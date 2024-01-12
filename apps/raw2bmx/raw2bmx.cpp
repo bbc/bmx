@@ -69,7 +69,9 @@
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
 #include <bmx/mxf_helper/RDD36MXFDescriptorHelper.h>
 #include <bmx/wave/WaveFileIO.h>
+#include <bmx/wave/WaveFileChunk.h>
 #include <bmx/wave/WaveReader.h>
+#include <bmx/wave/WaveCHNA.h>
 #include <bmx/essence_parser/SoundConversion.h>
 #include <bmx/URI.h>
 #include <bmx/MXFUtils.h>
@@ -77,6 +79,7 @@
 #include <bmx/Version.h>
 #include <bmx/apps/AppUtils.h>
 #include <bmx/apps/TimedTextManifestParser.h>
+#include <bmx/apps/ADMCHNATextFileHelper.h>
 #include <bmx/as11/AS11Labels.h>
 #include <bmx/as10/AS10ShimNames.h>
 #include <bmx/as10/AS10MPEG2Validator.h>
@@ -120,6 +123,12 @@ typedef struct
     AvidLocator locator;
 } LocatorOption;
 
+typedef struct
+{
+    const char *filename;
+    WaveChunkId id;
+} WaveChunkData;
+
 struct RawInput
 {
     bool disabled;
@@ -155,6 +164,9 @@ struct RawInput
 
     EssenceFilter *filter;
     bool set_bs_aspect_ratio;
+
+    map<string, WaveChunkRef> *wave_chunk_refs;
+    bool no_chna_chunk;
 
     // picture
     BMX_OPT_PROP_DECL(Rational, aspect_ratio);
@@ -338,6 +350,7 @@ static void init_input(RawInput *input)
 {
     memset(input, 0, sizeof(*input));
     input->timed_text_manifest = new TimedTextManifestParser();
+    input->wave_chunk_refs = new map<string, WaveChunkRef>();
     BMX_OPT_PROP_DEFAULT(input->aspect_ratio, ASPECT_RATIO_16_9);
     BMX_OPT_PROP_DEFAULT(input->afd, 0);
     BMX_OPT_PROP_DEFAULT(input->signal_standard, MXF_SIGNAL_STANDARD_NONE);
@@ -381,6 +394,7 @@ static void clear_input(RawInput *input)
     delete input->wave_reader;
     delete input->filter;
     delete input->timed_text_manifest;
+    delete input->wave_chunk_refs;
 }
 
 static bool parse_avci_guess(const char *str, bool *interlaced, bool *progressive)
@@ -607,7 +621,11 @@ static void usage(const char *cmd)
     printf("    --force-no-avci-head    Strip AVCI header (512 bytes, sequence and picture parameter sets) if present\n");
     printf("\n");
     printf("  wave:\n");
-    printf("    --orig <name>           Set originator in the output Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
+    printf("    --orig <name>                      Set originator in the output Wave bext chunk. Default '%s'\n", DEFAULT_BEXT_ORIGINATOR);
+    printf("    --wave-chunk-data <file> <id>      Add a chunk to the output Wave file that has chunk data (not including id and size) from <file> and chunk <id>\n");
+    printf("                                       This chunk will override any non-builtin and <chna> chunk originating from the input Wave files\n");
+    printf("    --chna-audio-ids <file>            Add a <chna> chunk to the output Wave file which is defined in the text <file>\n");
+    printf("                                       This chunk will override any <chna> chunk originating from the input Wave files\n");
     printf("\n");
     printf("  as02/op1a/as11op1a:\n");
     printf("    --use-avc-subdesc       Use the AVC sub-descriptor rather than the MPEG video descriptor for AVC-Intra tracks\n");
@@ -620,6 +638,7 @@ static void usage(const char *cmd)
     printf("                                * 'as11-mode-1', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02020000,\n");
     printf("                                * 'as11-mode-2', which corresponds to urn:smpte:ul:060e2b34.04010101.0d010801.02030000\n");
     printf("                                * 'imf', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020210.04010000\n");
+    printf("                                * 'adm', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020210.05010000\n");
     printf("    --track-mca-labels <scheme> <file>  Insert audio labels defined in <file>. The 'as11' <scheme> will add an override and otherwise <scheme> is ignored\n");
     printf("                                        The format of <file> is described in bmx/docs/mca_labels_format.md\n");
     printf("                                        All tag symbols registered in the bmx code are available for use\n");
@@ -700,6 +719,15 @@ static void usage(const char *cmd)
     printf("                            0: Passthrough input, but add a sequence header if not present, remove duplicate/redundant sequence headers\n");
     printf("                               and fix any incorrect parse info offsets and picture numbers\n");
     printf("                            1: (default) Same as 0, but remove auxiliary and padding data units and complete the sequence in each frame\n");
+    printf("  --wave-chunks <ids>                List of non-builtin WAVE chunk IDs to transfer across from the input\n");
+    printf("                                     The <ids> is a comma separated list of chunk IDs. Spaces are automatically appended to IDs if they are less than 4 letters\n");
+    printf("                                     The built-in WAVE chunk IDs are: %s\n", WaveReader::GetBuiltinChunkListString().c_str());
+    printf("  --adm-wave-chunk <id>[,<label>]*   Identifies a non-builtin ADM WAVE chunk to transfer across from the input\n");
+    printf("                                     ADM Soundfield Groups can be reference this chunk\n");
+    printf("                                     A comma separated list of profile and level labels can be provided as well. A <label> can be:\n");
+    printf("                                       * a SMPTE UL, formatted as a 'urn:smpte:ul:...',\n");
+    printf("                                       * 'adm_itu2076', which corresponds to urn:smpte:ul:060e2b34.0401010d.04020211.01010000\n");
+    printf("  --no-chna-chunk                    Don't transfer the ADM <chna> chunk from the input\n");
     printf("\n");
     printf("  as02:\n");
     printf("    --trk-out-start <offset>   Offset to start of first output frame, eg. pre-charge in MPEG-2 Long GOP\n");
@@ -966,6 +994,8 @@ int main(int argc, const char** argv)
     BMX_OPT_PROP_DECL_DEF(uint32_t, head_fill, 0);
     mxfThreeColorPrimaries three_color_primaries;
     mxfColorPrimary color_primary;
+    vector<WaveChunkData> wave_chunk_datas;
+    const char *chna_audio_ids_file = 0;
     bool real_essence_regtest = false;
     int value, num, den;
     unsigned int uvalue;
@@ -1820,6 +1850,41 @@ int main(int argc, const char** argv)
                 return 1;
             }
             originator = argv[cmdln_index + 1];
+            cmdln_index++;
+        }
+        else if (strcmp(argv[cmdln_index], "--wave-chunk-data") == 0)
+        {
+            if (cmdln_index + 2 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (argv[cmdln_index + 2][0] == 0 || strlen(argv[cmdln_index + 2]) > 4) {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid Wave chunk id '%s' for option '%s'\n", argv[cmdln_index + 2], argv[cmdln_index]);
+                return 1;
+            }
+
+            string id_str = argv[cmdln_index + 2];
+            id_str.resize(4, ' ');
+
+            WaveChunkData wave_chunk_data;
+            wave_chunk_data.filename = argv[cmdln_index + 1];
+            wave_chunk_data.id = WAVE_CHUNK_ID(id_str);
+            wave_chunk_datas.push_back(wave_chunk_data);
+
+            cmdln_index += 2;
+        }
+        else if (strcmp(argv[cmdln_index], "--chna-audio-ids") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument(s) for option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            chna_audio_ids_file = argv[cmdln_index + 1];
             cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--track-map") == 0)
@@ -2722,6 +2787,45 @@ int main(int argc, const char** argv)
             cmdln_index++;
             continue; // skip input reset at the end
         }
+        else if (strcmp(argv[cmdln_index], "--wave-chunks") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_wave_chunk_refs(argv[cmdln_index + 1], input.wave_chunk_refs))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--adm-wave-chunk") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_adm_wave_chunk_ref(argv[cmdln_index + 1], input.wave_chunk_refs))
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+            continue; // skip input reset at the end
+        }
+        else if (strcmp(argv[cmdln_index], "--no-chna-chunk") == 0)
+        {
+            input.no_chna_chunk = true;
+            continue; // skip input reset at the end
+        }
         else if (strcmp(argv[cmdln_index], "--trk-out-start") == 0)
         {
             if (cmdln_index + 1 >= argc)
@@ -3563,19 +3667,19 @@ int main(int argc, const char** argv)
         }
         else if (strcmp(argv[cmdln_index], "--jxs_cdci") == 0)
         {
-        if (cmdln_index + 1 >= argc)
-        {
-            usage(argv[0]);
-            fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
-            return 1;
-        }
-        input.essence_type = JPEGXS_CDCI;
-        if (strchr(argv[cmdln_index + 1], '%') != 0)
-            input.file_pattern = argv[cmdln_index + 1];
-        else
-            input.filename = argv[cmdln_index + 1];
-        inputs.push_back(input);
-        cmdln_index++;
+            if (cmdln_index + 1 >= argc)
+            {
+                usage(argv[0]);
+                fprintf(stderr, "Missing argument for input '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            input.essence_type = JPEGXS_CDCI;
+            if (strchr(argv[cmdln_index + 1], '%') != 0)
+                input.file_pattern = argv[cmdln_index + 1];
+            else
+                input.filename = argv[cmdln_index + 1];
+            inputs.push_back(input);
+            cmdln_index++;
         }
         else if (strcmp(argv[cmdln_index], "--rdd36_422_proxy") == 0)
         {
@@ -4177,6 +4281,7 @@ int main(int argc, const char** argv)
 
             if (!open_raw_reader(input))
                 throw false;
+
             if (input->essence_type_group == DV_ESSENCE_GROUP ||
                 input->essence_type == IEC_DV25 ||
                 input->essence_type == DVBASED_DV25 ||
@@ -4887,6 +4992,7 @@ int main(int argc, const char** argv)
             log_info("Output filename set to '%s'\n", complete_output_name.c_str());
         }
 
+
         // create clip
 
         int flavour = 0;
@@ -4963,6 +5069,8 @@ int main(int argc, const char** argv)
                 BMX_ASSERT(false);
                 break;
         }
+
+
         // initialize clip properties
 
         SourcePackage *physical_package = 0;
@@ -5698,6 +5806,7 @@ int main(int argc, const char** argv)
                     input->raw_reader->SetCheckMaxSampleSize(100000000);
                     input->raw_reader->SetMaxReadLength(30000000);
                     input->raw_reader->SetFrameStartSize(30000000); // 4k, 3bpp, RGB
+                    input->raw_reader->SetReadBlockSize(30000000);
                     break;
                 case VC2:
                     input->sample_sequence[0] = 1;
@@ -5780,6 +5889,191 @@ int main(int argc, const char** argv)
         }
 
 
+        // Add Wave chunk data, descriptors and references
+
+        if (clip_type == CW_OP1A_CLIP_TYPE || clip_type == CW_WAVE_CLIP_TYPE) {
+            // Get the output tracks that reference wave file inputs
+            set<RawInput*> wave_inputs;
+            vector<pair<OutputTrack*, RawInput*> > output_tracks_using_wave;
+            for (size_t i = 0; i < output_tracks.size(); i++) {
+                OutputTrack *output_track = output_tracks[i];
+                if (!output_track->HaveInputTrack())
+                    continue;
+
+                // Loop over the input track channels to find wave file inputs
+                const map<uint32_t, OutputTrack::InputMap> &input_maps = output_track->GetInputMaps();
+                map<uint32_t, OutputTrack::InputMap>::const_iterator iter;
+                for (iter = input_maps.begin(); iter != input_maps.end(); iter++) {
+                    RawInput *input = dynamic_cast<RawInputTrack*>(iter->second.input_track)->GetRawInput();
+                    if (input->essence_type != WAVE_PCM || !input->wave_reader)
+                        continue;
+
+                    wave_inputs.insert(input);
+                    output_tracks_using_wave.push_back(make_pair(output_track, input));
+                }
+            }
+
+            if (!wave_inputs.empty()) {
+                // These refs are only used in MXF. It is ignored for wave
+                map<RawInput*, vector<uint32_t> > input_chunk_refs;
+
+                // Add the (ADM) wave chunk data from the input wave file to the output clip
+                set<RawInput*>::const_iterator iter;
+                for (iter = wave_inputs.begin(); iter != wave_inputs.end(); iter++) {
+                    RawInput *input = *iter;
+                    if (input->wave_chunk_refs->empty()) {
+                        continue;
+                    }
+                    WaveReader *wave_reader = input->wave_reader;
+
+                    map<string, WaveChunkRef>::const_iterator refs_iter;
+                    for (refs_iter = input->wave_chunk_refs->begin(); refs_iter != input->wave_chunk_refs->end(); refs_iter++) {
+                        WaveChunkId chunk_id = WAVE_CHUNK_ID(refs_iter->first.c_str());
+                        const WaveChunkRef &ref = refs_iter->second;
+
+                        WaveFileChunk *chunk = wave_reader->GetAdditionalChunk(chunk_id);
+                        if (chunk) {
+                            if (clip_type == CW_WAVE_CLIP_TYPE) {
+                                WaveWriter *wave_clip = clip->GetWaveClip();
+                                if (wave_clip->HaveChunk(chunk->Id())) {
+                                    // E.g. this can happen if multiple <axml> chunks exist that came from different Wave files
+                                    // and the <axml> chunks may or may not be identical or equivalent.
+                                    // The assumption is that only 1 chunk with a given ID can exist in a BWF64 / Wave file.
+                                    // The exception is probably <JUNK>, but that shouldn't be transferred between Wave or MXF.
+                                    log_warn("Replaced chunk <%s> with another with the same ID in the output\n",
+                                             get_wave_chunk_id_str(chunk->Id()).c_str());
+                                }
+                            }
+
+                            uint32_t stream_id;
+                            if (ref.is_adm)
+                                stream_id = clip->AddADMWaveChunk(chunk, false, ref.profile_and_level_uls);
+                            else
+                                stream_id = clip->AddWaveChunk(chunk, false);
+                            input_chunk_refs[input].push_back(stream_id);
+                        } else {
+                            if (WaveReader::IsBuiltinChunk(chunk_id)) {
+                                log_warn("WAVE chunk '%s' is a builtin\n", refs_iter->first.c_str());
+                            } else {
+                                log_warn("WAVE chunk '%s' does not exist in the input\n", refs_iter->first.c_str());
+                            }
+                        }
+                    }
+                }
+
+                // Add references to the wave chunk streams to the MXF output clip tracks
+                if (clip_type != CW_WAVE_CLIP_TYPE) {
+                    for (size_t i = 0; i < output_tracks_using_wave.size(); i++) {
+                        OutputTrack *output_track = output_tracks_using_wave[i].first;
+                        RawInput *wave_input = output_tracks_using_wave[i].second;
+
+                        ClipWriterTrack *clip_track = output_track->GetClipTrack();
+
+                        const vector<uint32_t> &chunk_refs = input_chunk_refs[wave_input];
+                        for (size_t k = 0; k < chunk_refs.size(); k++) {
+                            clip_track->AddWaveChunkReference(chunk_refs[k]);
+                        }
+                    }
+                }
+            }
+        }
+
+
+        // Map <chna> chunks from the input wave file to MXF descriptors
+
+        if (clip_type == CW_OP1A_CLIP_TYPE || clip_type == CW_WAVE_CLIP_TYPE) {
+            if (clip_type == CW_WAVE_CLIP_TYPE) {
+                // Ensure that the start channels are up-to-date for each wave output track
+                WaveWriter *wave_clip = clip->GetWaveClip();
+                wave_clip->UpdateChannelCounts();
+            }
+
+            // Loop over the output tracks
+            set<RawInput*> checked_wave_inputs;
+            vector<pair<OutputTrack*, RawInput*> > output_tracks_using_chna;
+            for (i = 0; i < output_tracks.size(); i++) {
+                OutputTrack *output_track = output_tracks[i];
+                if (!output_track->HaveInputTrack())
+                    continue;
+
+                ClipWriterTrack *clip_track = output_track->GetClipTrack();
+
+                // Loop over the input track channels for this output track, adding the input <chna> audio IDs
+                const map<uint32_t, OutputTrack::InputMap> &input_maps = output_track->GetInputMaps();
+                map<uint32_t, OutputTrack::InputMap>::const_iterator iter;
+                for (iter = input_maps.begin(); iter != input_maps.end(); iter++) {
+                    RawInput *input = dynamic_cast<RawInputTrack*>(iter->second.input_track)->GetRawInput();
+                    if (input->essence_type != WAVE_PCM || !input->wave_reader)
+                        continue;
+
+                    uint32_t output_channel_index = iter->first;
+                    uint32_t input_channel_index = iter->second.input_channel_index;
+
+                    // Check that the input channel has a <chna> audio ID and that is should be read
+                    if (input->no_chna_chunk)
+                        continue;
+                    WaveCHNA *input_chna = input->wave_reader->GetCHNA();
+                    if (!input_chna)
+                        continue;
+
+                    // Warn if there are no wave chunks transferred whilst there are known ADM chunks in the input
+                    if (!checked_wave_inputs.count(input)) {
+                        if (input->wave_chunk_refs->empty()) {
+                            string available_adm_chunks;
+                            const char *adm_chunks[] = {"axml", "bxml", "sxml"};
+                            for (size_t i = 0; i < BMX_ARRAY_SIZE(adm_chunks); i++) {
+                                if (input->wave_reader->GetAdditionalChunk(WAVE_CHUNK_ID(adm_chunks[i]))) {
+                                    if (!available_adm_chunks.empty())
+                                        available_adm_chunks += ", ";
+                                    available_adm_chunks += "<" + string(adm_chunks[i]) + ">";
+                                }
+                            }
+                            if (!available_adm_chunks.empty()) {
+                                log_warn("Mapping <chna> chunk with no ADM chunks, but %s is available. "
+                                            "Use --wave-chunks or --adm-wave-chunk options to add them\n",
+                                            available_adm_chunks.c_str());
+                            }
+                        }
+                        checked_wave_inputs.insert(input);
+                    }
+
+                    // + 1 below because ADM track (channel) indexes start at 1
+                    vector<WaveCHNA::AudioID> audio_ids = input_chna->GetAudioIDs(input_channel_index + 1);
+                    for (size_t k = 0; k < audio_ids.size(); k++) {
+                        WaveCHNA::AudioID &audio_id = audio_ids[k];
+
+                        // + 1 below because ADM track (channel) indexes start at 1
+                        audio_id.track_index = output_channel_index + 1;
+                        clip_track->AddADMAudioID(audio_id);
+                    }
+                }
+            }
+        }
+
+
+        // Add Wave chunks provided via commandline args.
+        // These chunks will override any chunks added above
+
+        if (clip_type == CW_WAVE_CLIP_TYPE) {
+            WaveWriter *wave_clip = clip->GetWaveClip();
+            size_t i;
+            for (i = 0; i < wave_chunk_datas.size(); i++) {
+                const WaveChunkData &wave_chunk_data = wave_chunk_datas[i];
+
+                // Use the WaveFileIO class as a generic BMXIO class
+                BMXIO *file = WaveFileIO::OpenRead(wave_chunk_data.filename);
+
+                WaveFileChunk *chunk = new WaveFileChunk(wave_chunk_data.id, file, true, 0, (uint32_t)file->Size());
+                wave_clip->AddChunk(chunk, true);
+            }
+
+            if (chna_audio_ids_file) {
+                WaveCHNA *chna = parse_chna_text_file(chna_audio_ids_file);
+                wave_clip->AddCHNA(chna, true);
+            }
+        }
+
+
         // prepare the clip's header metadata
 
         clip->PrepareHeaderMetadata();
@@ -5794,6 +6088,8 @@ int main(int argc, const char** argv)
 
 
         // insert MCA labels
+        // Note: this must happen after processing wave chunks because the ADM soundfield group label requires
+        // the MXF stream ID for a given wave chunk ID
 
         for (i = 0; i < track_mca_labels.size(); i++) {
             const string &scheme = track_mca_labels[i].first;

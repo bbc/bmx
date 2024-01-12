@@ -86,6 +86,16 @@
 #include <libMXF++/metadata/DCTimedTextResourceSubDescriptor.h>
 #include <libMXF++/metadata/JPEG2000SubDescriptor.h>
 #include <libMXF++/metadata/JPEGXSSubDescriptor.h>
+#include <libMXF++/metadata/RIFFChunkDefinitionSubDescriptor.h>
+#include <libMXF++/metadata/ADM_CHNASubDescriptor.h>
+#include <libMXF++/metadata/ADMChannelMapping.h>
+#include <libMXF++/metadata/ADMAudioMetadataSubDescriptor.h>
+#include <libMXF++/metadata/RIFFChunkReferencesSubDescriptor.h>
+#include <libMXF++/metadata/ADMSoundfieldGroupLabelSubDescriptor.h>
+#include <libMXF++/metadata/MGASoundEssenceDescriptor.h>
+#include <libMXF++/metadata/MGAAudioMetadataSubDescriptor.h>
+#include <libMXF++/metadata/SADMAudioMetadataSubDescriptor.h>
+#include <libMXF++/metadata/MGASoundfieldGroupLabelSubDescriptor.h>
 #include <libMXF++/metadata/ContainerConstraintsSubDescriptor.h>
 
 

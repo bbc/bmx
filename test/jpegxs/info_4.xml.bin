@@ -80,7 +80,7 @@
           <stored_height>1080</stored_height>
           <display_width>1920</display_width>
           <display_height>1080</display_height>
-          <aspect_ratio>1920/1080</aspect_ratio>
+          <aspect_ratio>16/9</aspect_ratio>
         </picture_descriptor>
       </track>
     </tracks>

@@ -64,6 +64,7 @@ including the following:
     * [IMF JPEG 2000 Track Files](./docs/imf_jpeg_2000_track_files.md)
     * [IMF Audio Track Files](./docs/imf_audio_track_files.md)
     * [IMF ProRes Image Track Files](./docs/imf_prores_track_files.md)
+* [(Beta) Audio Definition Model (ADM) & metadata RIFF chunks](./docs/audio_definition_model.md)
 
 ## Build, Test and Install
 
@@ -113,7 +114,7 @@ sudo make install
 
 The installation may require root permissions. Add `-DCMAKE_INSTALL_PREFIX=<install dir>` (fill in `<install dir>`) to the first `cmake` command above to change the installation directory.
 
-Run `ldconfig` to update the runtime linker cache. This avoids library link errors similar to "error while loading shared libraries".
+If not using macOS, run `ldconfig` to update the runtime linker cache. This avoids library link errors similar to "error while loading shared libraries".
 
 ```bash
 sudo /sbin/ldconfig
@@ -238,7 +239,7 @@ This example runs `bmxtranswrap` from input `./sources/in.mxf` to output `./dest
 
 ## Source and Binary Distributions
 
-Source distributions, including dependencies for the Windows build, and Windows binaries are made available in this GitHub repo. Older distributions can be found on [SourceForge](https://sourceforge.net/projects/bmxlib/files/).
+Source distributions, including dependencies, and binaries are made available in the [Releases](https://github.com/bbc/bmx/releases) on GitHub. Older distributions can be found on [SourceForge](https://sourceforge.net/projects/bmxlib/files/).
 
 Source and binary distributions are generally only created when a new feature is required for creating standard compliant sample files for example, or when a release hasn't been made for a long time.
 

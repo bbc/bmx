@@ -63,6 +63,8 @@ public:
         mxfpp::SoundfieldGroupLabelSubDescriptor *copy_from = 0);
     mxfpp::GroupOfSoundfieldGroupsLabelSubDescriptor* AddGroupOfSoundfieldGroupLabel(
         mxfpp::GroupOfSoundfieldGroupsLabelSubDescriptor *copy_from = 0);
+    mxfpp::ADMSoundfieldGroupLabelSubDescriptor* AddADMSoundfieldGroupLabel(
+        mxfpp::ADMSoundfieldGroupLabelSubDescriptor *copy_from = 0);
 
 public:
     const std::vector<uint32_t>& GetSampleSequence() const  { return mSampleSequence; }

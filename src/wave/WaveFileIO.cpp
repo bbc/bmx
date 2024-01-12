@@ -66,25 +66,12 @@ WaveFileIO* WaveFileIO::OpenNew(string filename)
 }
 
 WaveFileIO::WaveFileIO(FILE *file, bool read_only)
-: WaveIO()
+: BMXFileIO(file, read_only), WaveIO()
 {
-    mFile = file;
-    mReadOnly = read_only;
 }
 
 WaveFileIO::~WaveFileIO()
 {
-    if (mFile)
-        fclose(mFile);
-}
-
-uint32_t WaveFileIO::Read(unsigned char *data, uint32_t size)
-{
-    size_t result = fread(data, 1, size, mFile);
-    if (result != size && ferror(mFile))
-        log_error("Failed to read %u bytes: %s\n", size, bmx_strerror(errno).c_str());
-
-    return (uint32_t)result;
 }
 
 int WaveFileIO::GetChar()
@@ -92,52 +79,9 @@ int WaveFileIO::GetChar()
     return fgetc(mFile);
 }
 
-uint32_t WaveFileIO::Write(const unsigned char *data, uint32_t size)
-{
-    BMX_ASSERT(!mReadOnly);
-
-    size_t result = fwrite(data, 1, size, mFile);
-    if (result != size)
-        log_error("Failed to write %u bytes: %s\n", size, bmx_strerror(errno).c_str());
-
-    return (uint32_t)result;
-}
-
 int WaveFileIO::PutChar(int c)
 {
     BMX_ASSERT(!mReadOnly);
 
     return fputc(c, mFile);
-}
-
-bool WaveFileIO::Seek(int64_t offset, int whence)
-{
-#if defined(_WIN32)
-    return _fseeki64(mFile, offset, whence) == 0;
-#else
-    return fseeko(mFile, offset, whence) == 0;
-#endif
-}
-
-int64_t WaveFileIO::Tell()
-{
-#if defined(_WIN32)
-    return _ftelli64(mFile);
-#else
-    return ftello(mFile);
-#endif
-}
-
-int64_t WaveFileIO::Size()
-{
-    // flush user-space data because fstat uses the stream's integer descriptor
-    if (!mReadOnly)
-        fflush(mFile);
-
-    try {
-        return get_file_size(mFile);
-    } catch (const BMXIOException &ex) {
-        errno = ex.GetErrno();
-        return -1;
-    }
 }

@@ -306,6 +306,13 @@ typedef struct
     mxfColorPrimary primaries[3];
 } mxfThreeColorPrimaries;
 
+typedef struct {
+    uint8_t c0;
+    uint8_t c1;
+    uint8_t c2;
+    uint8_t c3;
+} mxfRIFFChunkIDType;
+
 typedef struct
 {
     int32_t first;   /* first line number of first field or FULL_FRAME progressive frame */
@@ -334,6 +341,7 @@ typedef struct
 #define mxfJ2KComponentSizing_extlen    3
 #define mxfColorPrimary_extlen          4
 #define mxfThreeColorPrimaries_extlen   12
+#define mxfRIFFChunkIDType_extlen       4
 
 
 static const mxfUUID g_Null_UUID =
@@ -357,6 +365,8 @@ static const mxfRational g_Null_Rational = {0, 0};
 
 static const mxfThreeColorPrimaries g_Null_Three_Color_Primaries = {{{0, 0}}};
 static const mxfColorPrimary g_Null_Color_Primary = {0, 0};
+
+static const mxfRIFFChunkIDType g_Null_RIFFChunkIDType = {0, 0, 0, 0};
 
 static const mxfVideoLineMap g_Null_Video_Line_Map = {0, 0};
 

@@ -50,7 +50,8 @@ JPEGXSWriterHelper::JPEGXSWriterHelper()
 
 JPEGXSWriterHelper::~JPEGXSWriterHelper()
 {
-    delete mEssenceParser;
+    if (mEssenceParser)
+        delete mEssenceParser;
 }
 
 void JPEGXSWriterHelper::SetDescriptorHelper(JPEGXSMXFDescriptorHelper *descriptor_helper)
@@ -63,7 +64,7 @@ void JPEGXSWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
     
     if (mDescriptorHelper->GetParseStatus())
     {
-        if (mPosition == 0)
+        if (!mEssenceParser)
             mEssenceParser = new JXSEssenceParser();
         mEssenceParser->ParseFrameInfo(data, size);
     }

@@ -36,6 +36,7 @@
 #define __STDC_LIMIT_MACROS
 
 #include <cstring>
+#include <set>
 
 #include <bmx/wave/WaveWriter.h>
 #include <bmx/Utils.h>
@@ -51,6 +52,33 @@ using namespace bmx;
 
 
 
+static WaveChunkId BUILTIN_CHUNKS[] = {
+    WAVE_CHUNK_ID("JUNK"), WAVE_CHUNK_ID("ds64"), WAVE_CHUNK_ID("fmt "),
+    WAVE_CHUNK_ID("fact"), WAVE_CHUNK_ID("bext"), WAVE_CHUNK_ID("data"),
+    WAVE_CHUNK_ID("chna")
+};
+
+
+string WaveWriter::GetBuiltinChunkListString()
+{
+    string builtin_list;
+    for (size_t i = 0; i < BMX_ARRAY_SIZE(BUILTIN_CHUNKS); i++) {
+        if (i > 0)
+            builtin_list.append(", ");
+        builtin_list.append("<" + get_wave_chunk_id_str(BUILTIN_CHUNKS[i]) + ">");
+    }
+    return builtin_list;
+}
+
+bool WaveWriter::IsBuiltinChunk(WaveChunkId id)
+{
+    for (size_t i = 0; i < BMX_ARRAY_SIZE(BUILTIN_CHUNKS); i++) {
+        if (id == BUILTIN_CHUNKS[i])
+            return true;
+    }
+    return false;
+}
+
 WaveWriter::WaveWriter(WaveIO *output, bool take_ownership)
 {
     mOutput = output;
@@ -58,6 +86,8 @@ WaveWriter::WaveWriter(WaveIO *output, bool take_ownership)
     mStartTimecodeSet = false;
     mSetSampleCount = -1;
     mBEXT = new WaveBEXT();
+    mCHNA = 0;
+    mOwnCHNA = false;
     mSamplingRate = SAMPLING_RATE_48K;
     mSamplingRateSet = false;
     mQuantizationBits = 16;
@@ -71,7 +101,8 @@ WaveWriter::WaveWriter(WaveIO *output, bool take_ownership)
     mBEXTFilePosition = 0;
     mDataChunkFilePosition = 0;
     mFactChunkFilePosition = 0;
-    mUseRF64 = false;
+    mRequire64Bit = false;
+    mWriteBW64 = false;
     mSetSize = -1;
     mSetDataSize = -1;
 }
@@ -79,6 +110,8 @@ WaveWriter::WaveWriter(WaveIO *output, bool take_ownership)
 WaveWriter::~WaveWriter()
 {
     delete mBEXT;
+    if (mOwnCHNA)
+        delete mCHNA;
     if (mOwnOutput)
         delete mOutput;
 
@@ -88,6 +121,10 @@ WaveWriter::~WaveWriter()
 
     for (i = 0; i < mTracks.size(); i++)
         delete mTracks[i];
+
+    map<WaveChunkId, WaveChunk*>::const_iterator iter;
+    for (iter = mOwnedAdditionalChunks.begin(); iter != mOwnedAdditionalChunks.end(); iter++)
+        delete iter->second;
 }
 
 void WaveWriter::SetStartTimecode(Timecode start_timecode)
@@ -101,22 +138,91 @@ void WaveWriter::SetSampleCount(int64_t count)
     mSetSampleCount = count;
 }
 
+void WaveWriter::AddCHNA(WaveCHNA *chna, bool take_ownership)
+{
+    RemoveChunk(chna->Id());
+
+    mCHNA = chna;
+    mOwnCHNA = take_ownership;
+}
+
+void WaveWriter::AddChunk(WaveChunk *chunk, bool take_ownership)
+{
+    RemoveChunk(chunk->Id());
+
+    mAdditionalChunks[chunk->Id()] = chunk;
+    if (take_ownership)
+        mOwnedAdditionalChunks[chunk->Id()] = chunk;
+}
+
+bool WaveWriter::HaveChunk(WaveChunkId id)
+{
+    return (id == "chna" && mCHNA) || mAdditionalChunks.count(id) > 0;
+}
+
+void WaveWriter::AddADMAudioID(const WaveCHNA::AudioID &audio_id)
+{
+    if (!mCHNA) {
+        mCHNA = new WaveCHNA();
+        mOwnCHNA = true;
+    }
+
+    mCHNA->AppendAudioID(audio_id);
+}
+
 WaveTrackWriter* WaveWriter::CreateTrack()
 {
     mTracks.push_back(new WaveTrackWriter(this, (uint32_t)mTracks.size()));
     return mTracks.back();
 }
 
-void WaveWriter::PrepareWrite()
+void WaveWriter::UpdateChannelCounts()
 {
+    mChannelCount = 0;
+
     size_t i;
     for (i = 0; i < mTracks.size(); i++) {
-        mTracks[i]->mStartChannel = mChannelCount;
-        mChannelCount += mTracks[i]->mChannelCount;
+        WaveTrackWriter *track = mTracks[i];
+
+        track->mStartChannel = mChannelCount;
+        mChannelCount += track->mChannelCount;
     }
+}
+
+void WaveWriter::PrepareWrite()
+{
+    set<WaveChunkId> builtin_chunks_set(BUILTIN_CHUNKS, BUILTIN_CHUNKS + BMX_ARRAY_SIZE(BUILTIN_CHUNKS));
+
+    // Update the channel count and track start channels
+    UpdateChannelCounts();
+
+    // Ensure ADM <chna> chunk is before other chunks. Filter out built-in chunks.
+    // Write BW64 if there are ADM chunks.
+    WaveChunk *chna_chunk = 0;
+    if (mCHNA)
+        mWriteBW64 = true;
+
+    vector<WaveChunk*> write_chunks;
+    map<WaveChunkId, WaveChunk*>::const_iterator iter;
+    for (iter = mAdditionalChunks.begin(); iter != mAdditionalChunks.end(); iter++) {
+        WaveChunk *chunk = iter->second;
+
+        if (chunk->Id() == "axml" || chunk->Id() == "bxml" || chunk->Id() == "sxml") {
+            mWriteBW64 = true;
+            write_chunks.push_back(chunk);
+        } else if (chunk->Id() == "chna") {
+            // Accept a <chna> id passed in using AddChunk() rather than AddCHNA()
+            // Don't add it to write_chunks here because it needs to be written first
+            mWriteBW64 = true;
+            chna_chunk = chunk;
+        } else if (!builtin_chunks_set.count(chunk->Id())) {
+            write_chunks.push_back(chunk);
+        }
+    }
+
     mBlockAlign = mChannelBlockAlign * mChannelCount;
 
-    if (mStartTimecodeSet) {
+    if (!mWriteBW64 && mStartTimecodeSet) {
         mBEXT->SetTimeReference(convert_position(mStartTimecode.GetOffset(),
                                                  mSamplingRate.numerator,
                                                  mStartTimecode.GetRoundedTCBase(),
@@ -125,41 +231,55 @@ void WaveWriter::PrepareWrite()
 
     if (mSetSampleCount >= 0) {
         mSetDataSize = mSetSampleCount * mBlockAlign;
-        mSetSize = 4 + (8 + 28) + (8 + mBEXT->GetSize()) + (8 + 16) + (8 + 4) + (8 + mSetDataSize);
+        mSetSize = 4 + (8 + 28) + (8 + 16) + (8 + mSetDataSize);
+        if (!mWriteBW64)
+            mSetSize += (8 + 4) + (8 + mBEXT->GetAlignedSize());  // fact and bext chunks
+        size_t i;
+        for (i = 0; i < write_chunks.size(); i++)
+            mSetSize += 8 + write_chunks[i]->AlignedSize();
+
         if (mSetSize > UINT32_MAX)
-            mUseRF64 = true;
+            mRequire64Bit = true;
     }
 
-    if (mUseRF64) {
-        mOutput->WriteTag("RF64");
+    if (mRequire64Bit) {
+        if (mWriteBW64)
+            mOutput->WriteId("BW64");
+        else
+            mOutput->WriteId("RF64");
         mOutput->WriteSize(-1);
     } else {
-        mOutput->WriteTag("RIFF");
+        mOutput->WriteId("RIFF");
         if (mSetSize >= 0)
             mOutput->WriteSize((uint32_t)mSetSize);
         else
             mOutput->WriteSize(0);
     }
-    mOutput->WriteTag("WAVE");
+    mOutput->WriteId("WAVE");
 
     mJunkChunkFilePosition = mOutput->Tell();
-    if (mUseRF64) {
-        mOutput->WriteTag("ds64");
+    if (mRequire64Bit) {
+        mOutput->WriteId("ds64");
         mOutput->WriteSize(28);
         mOutput->WriteUInt64((uint64_t)mSetSize);
         mOutput->WriteUInt64((uint64_t)mSetDataSize);
-        mOutput->WriteUInt64((uint64_t)mSetSampleCount);
+        if (mWriteBW64)
+            mOutput->WriteUInt64(0);  // dummy / not used
+        else
+            mOutput->WriteUInt64((uint64_t)mSetSampleCount);
         mOutput->WriteUInt32(0);
     } else {
-        mOutput->WriteTag("JUNK");
+        mOutput->WriteId("JUNK");
         mOutput->WriteSize(28);
         mOutput->WriteZeros(28);
     }
 
-    mBEXTFilePosition = mOutput->Tell();
-    mBEXT->Write(mOutput);
+    if (!mWriteBW64) {
+        mBEXTFilePosition = mOutput->Tell();
+        mBEXT->Write(mOutput);
+    }
 
-    mOutput->WriteTag("fmt ");
+    mOutput->WriteId("fmt ");
     mOutput->WriteSize(16);
     mOutput->WriteUInt16(1); // PCM
     mOutput->WriteUInt16(mChannelCount);
@@ -168,19 +288,30 @@ void WaveWriter::PrepareWrite()
     mOutput->WriteUInt16(mBlockAlign);
     mOutput->WriteUInt16(mQuantizationBits);
 
-    mFactChunkFilePosition = mOutput->Tell();
-    mOutput->WriteTag("fact");
-    mOutput->WriteSize(4);
-    if (mUseRF64)
-        mOutput->WriteUInt32((uint32_t)(-1));
-    else if (mSetSampleCount >= 0)
-        mOutput->WriteUInt32((uint32_t)mSetSampleCount);
-    else
-        mOutput->WriteUInt32(0);
+    if (!mWriteBW64) {
+        mFactChunkFilePosition = mOutput->Tell();
+        mOutput->WriteId("fact");
+        mOutput->WriteSize(4);
+        if (mRequire64Bit)
+            mOutput->WriteUInt32((uint32_t)(-1));
+        else if (mSetSampleCount >= 0)
+            mOutput->WriteUInt32((uint32_t)mSetSampleCount);
+        else
+            mOutput->WriteUInt32(0);
+    }
+
+    if (mCHNA)
+        mCHNA->Write(mOutput);
+    else if (chna_chunk)
+        mOutput->WriteChunk(chna_chunk);
+
+    size_t i;
+    for (i = 0; i < write_chunks.size(); i++)
+        mOutput->WriteChunk(write_chunks[i]);
 
     mDataChunkFilePosition = mOutput->Tell();
-    mOutput->WriteTag("data");
-    if (mUseRF64)
+    mOutput->WriteId("data");
+    if (mRequire64Bit)
         mOutput->WriteSize(-1);
     else if (mSetDataSize >= 0)
         mOutput->WriteSize((uint32_t)mSetDataSize);
@@ -289,7 +420,7 @@ void WaveWriter::CompleteWrite()
         mBufferSegments.clear();
     }
 
-    if (mStartTimecodeSet) {
+    if (!mWriteBW64 && mStartTimecodeSet) {
         mBEXT->SetTimeReference(convert_position(mStartTimecode.GetOffset(),
                                                  mSamplingRate.numerator,
                                                  mStartTimecode.GetRoundedTCBase(),
@@ -304,23 +435,25 @@ void WaveWriter::CompleteWrite()
     if ((data_size & 1))
         mOutput->PutChar(0);
 
-    if (mUseRF64 || riff_size > UINT32_MAX) {
-        if (!mUseRF64) {
+    if (mRequire64Bit || riff_size > UINT32_MAX) {
+        if (!mRequire64Bit) {
             mOutput->Seek(mDataChunkFilePosition + 4, SEEK_SET);
             mOutput->WriteSize((uint32_t)(-1));
 
-            mOutput->Seek(mFactChunkFilePosition + 8, SEEK_SET);
-            mOutput->WriteUInt32((uint32_t)(-1));
+            if (!mWriteBW64) {
+                mOutput->Seek(mFactChunkFilePosition + 8, SEEK_SET);
+                mOutput->WriteUInt32((uint32_t)(-1));
+            }
         }
 
-        if (mBEXT->WasUpdated()) {
+        if (!mWriteBW64 && mBEXT->WasUpdated()) {
             mOutput->Seek(mBEXTFilePosition, SEEK_SET);
             mBEXT->Write(mOutput);
         }
 
-        if (!mUseRF64 || riff_size != mSetSize || mSampleCount != mSetSampleCount) {
+        if (!mRequire64Bit || riff_size != mSetSize || mSampleCount != mSetSampleCount) {
             mOutput->Seek(mJunkChunkFilePosition, SEEK_SET);
-            mOutput->WriteTag("ds64");
+            mOutput->WriteId("ds64");
             mOutput->WriteSize(28);
             mOutput->WriteUInt64((uint64_t)riff_size);
             mOutput->WriteUInt64((uint64_t)data_size);
@@ -328,9 +461,12 @@ void WaveWriter::CompleteWrite()
             mOutput->WriteUInt32(0);
         }
 
-        if (!mUseRF64) {
+        if (!mRequire64Bit) {
             mOutput->Seek(0, SEEK_SET);
-            mOutput->WriteTag("RF64");
+            if (mWriteBW64)
+                mOutput->WriteId("BW64");
+            else
+                mOutput->WriteId("RF64");
             mOutput->WriteSize((uint32_t)(-1));
         }
     } else {
@@ -339,14 +475,16 @@ void WaveWriter::CompleteWrite()
             mOutput->WriteSize((uint32_t)data_size);
         }
 
-        if (mSampleCount != mSetSampleCount) {
-            mOutput->Seek(mFactChunkFilePosition + 8, SEEK_SET);
-            mOutput->WriteUInt32((uint32_t)mSampleCount);
-        }
+        if (!mWriteBW64) {
+            if (mSampleCount != mSetSampleCount) {
+                mOutput->Seek(mFactChunkFilePosition + 8, SEEK_SET);
+                mOutput->WriteUInt32((uint32_t)mSampleCount);
+            }
 
-        if (mBEXT->WasUpdated()) {
-            mOutput->Seek(mBEXTFilePosition, SEEK_SET);
-            mBEXT->Write(mOutput);
+            if (mBEXT->WasUpdated()) {
+                mOutput->Seek(mBEXTFilePosition, SEEK_SET);
+                mBEXT->Write(mOutput);
+            }
         }
 
         if (riff_size != mSetSize) {
@@ -384,3 +522,21 @@ void WaveWriter::SetQuantizationBits(uint16_t bits)
     mChannelBlockAlign = (mQuantizationBits + 7) / 8;
 }
 
+void WaveWriter::RemoveChunk(WaveChunkId id)
+{
+    if (id == "chna") {
+        if (mOwnCHNA)
+            delete mCHNA;
+        mCHNA = 0;
+        mOwnCHNA = false;
+    }
+
+    if (mAdditionalChunks.count(id)) {
+        mAdditionalChunks.erase(id);
+
+        if (mOwnedAdditionalChunks.count(id)) {
+            delete mOwnedAdditionalChunks[id];
+            mOwnedAdditionalChunks.erase(id);
+        }
+    }
+}

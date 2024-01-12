@@ -203,14 +203,13 @@ void JXSEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
                     
                 // size of the bitstream
                 size = PIH_.LcodSize();
-                //if (size < data_size)
-                //    throw InsufficientBytes();
+                if (size > data_size)
+                    throw InsufficientBytes();
                 mFrameSize = size;
                 // Profile and level
                 m_subDesc.JPEGXSPpih = PIH_.Ppih(); // profile
                 m_subDesc.JPEGXSPlev = PIH_.Plev(); // level 
                 // Width and Height
-                m_picDesc.AspectRatio = { PIH_.Wf(), PIH_.Hf() };
                 m_picDesc.StoredWidth = PIH_.Wf();
                 m_picDesc.StoredHeight = PIH_.Hf();
                 m_subDesc.JPEGXSWf = PIH_.Wf();
@@ -281,7 +280,6 @@ void JXSEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
     else
         throw InsufficientBytes();
 
-    const uint32_t cdt_buffer_len = 8 * 2; // at most 8 components.
     int comps = (m_subDesc.JPEGXSNc > 8) ? 8 : m_subDesc.JPEGXSNc;
     m_subDesc.JPEGXSComponentTable.Allocate(4 + (comps << 1));
     m_subDesc.JPEGXSComponentTable.SetSize(4 + (comps << 1));
@@ -313,8 +311,6 @@ JXSEssenceParser::JXSEssenceParser()
     m_picDesc.StoredHeight = 0;
     m_picDesc.StoredWidth = 0;
     m_picDesc.ContainerDuration = 0;
-    m_picDesc.AspectRatio.numerator = 0;
-    m_picDesc.AspectRatio.denominator = 1;
     m_picDesc.PictureEssenceCoding = g_Null_UL;
 
     mFrameSize = 0;

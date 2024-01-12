@@ -35,6 +35,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 #include <libMXF++/MXF.h>
 
@@ -77,6 +78,12 @@ static const UL IMF_MCA_LABEL_FRAMEWORK =
     {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x02, 0x02, 0x10, 0x04, 0x01, 0x00, 0x00};
 
 
+// ADM SMPTE ST 2131 Channel Assignment Label
+
+static const UL ADM_MCA_LABEL_FRAMEWORK =
+    {0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x02, 0x02, 0x10, 0x05, 0x01, 0x00, 0x00};
+
+
 class ClipWriter;
 
 class AppMCALabelHelper
@@ -111,12 +118,15 @@ private:
         uint32_t channel_index; // starts from 0. Note that the descriptor ChannelID starts from 1!
         bool repeat;
         std::vector<std::pair<std::string, std::string> > string_properties;
+        bool adm_sg_subdesc;
+        WaveChunkId adm_sg_chunk_id;
     };
 
     class SoundfieldGroup
     {
     public:
         void Reset();
+        bool IsNull() const { return !sg_label_line.label; }
 
         LabelLine sg_label_line; // can be 'null', indicating that the channels are not assigned to a soundfield group
         std::vector<LabelLine> c_label_lines;

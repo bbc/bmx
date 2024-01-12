@@ -49,6 +49,7 @@ WaveTrackWriter::WaveTrackWriter(WaveWriter *writer, uint32_t track_index)
 {
     mWriter = writer;
     mTrackIndex = track_index;
+    mStartChannel = 0;
     mChannelCount = 1;
     mSampleCount = 0;
 }
@@ -73,6 +74,15 @@ void WaveTrackWriter::SetChannelCount(uint16_t count)
     mChannelCount = count;
 }
 
+void WaveTrackWriter::AddADMAudioID(const WaveCHNA::AudioID &audio_id)
+{
+    // Adjust the track_index in this track to a track_index in the whole clip
+    WaveCHNA::AudioID clip_audio_id = audio_id;
+    clip_audio_id.track_index += mStartChannel;
+
+    mWriter->AddADMAudioID(clip_audio_id);
+}
+
 void WaveTrackWriter::WriteSamples(const unsigned char *data, uint32_t size, uint32_t num_samples)
 {
     mWriter->WriteSamples(mTrackIndex, data, size, num_samples);
@@ -92,4 +102,3 @@ int64_t WaveTrackWriter::GetDuration() const
 {
     return mWriter->GetDuration();
 }
-

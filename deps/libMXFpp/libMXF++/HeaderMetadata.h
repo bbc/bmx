@@ -34,6 +34,8 @@
 
 #include <map>
 
+#include <mxf/mxf.h>
+
 #include <libMXF++/File.h>
 #include <libMXF++/DataModel.h>
 

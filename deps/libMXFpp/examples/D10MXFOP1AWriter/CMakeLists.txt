@@ -30,10 +30,10 @@ include("${PROJECT_SOURCE_DIR}/cmake/source_filename.cmake")
 set_source_filename(d10mxfop1awriter "${CMAKE_CURRENT_LIST_DIR}" "libMXF++")
 
 install(TARGETS d10mxfop1awriter
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES ${d10mxfop1awriter_headers} DESTINATION include/libMXF++/examples/D10MXFOP1AWriter)
+install(FILES ${d10mxfop1awriter_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libMXF++/examples/D10MXFOP1AWriter)
 
 
 add_executable(test_d10mxfop1awriter

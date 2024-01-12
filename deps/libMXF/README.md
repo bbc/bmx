@@ -52,7 +52,7 @@ make test
 sudo make install
 ```
 
-Run `ldconfig` to update the runtime linker cache. This avoids library link errors similar to "error while loading shared libraries".
+If not using macOS, run `ldconfig` to update the runtime linker cache. This avoids library link errors similar to "error while loading shared libraries".
 
 ```bash
 sudo /sbin/ldconfig

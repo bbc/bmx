@@ -59,7 +59,6 @@ public:
 
 private:
     int64_t ReadOrSkip(unsigned char *data, uint32_t size, int64_t skip_offset);
-
     bool NextFile();
     bool BufferFile();
 

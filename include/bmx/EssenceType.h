@@ -147,6 +147,9 @@ typedef enum
     // PCM
     WAVE_PCM,
     D10_AES3_PCM,
+    // Metadata-Guided Audio
+    MGA,
+    MGA_SADM,
     // ST 436 data
     ANC_DATA,
     VBI_DATA,

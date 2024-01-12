@@ -77,6 +77,9 @@ public:
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);
     void ForceWriteCBEDuration0(bool enable);
 
+    uint32_t AddWaveChunk(WaveChunk *chunk, bool take_ownership);
+    uint32_t AddADMWaveChunk(WaveChunk *chunk, bool take_ownership, const std::vector<UL> &profile_and_level_uls);
+
 public:
     ClipWriterTrack* CreateTrack(EssenceType essence_type, std::string track_filename = "");
     ClipWriterTrack* CreateXMLTrack();
@@ -102,6 +105,9 @@ public:
 
     uint32_t GetNumTracks() const { return (uint32_t)mTracks.size(); }
     ClipWriterTrack* GetTrack(uint32_t track_index);
+
+    uint32_t GetWaveChunkStreamID(WaveChunkId chunk_id);
+    uint32_t GetADMWaveChunkStreamID(WaveChunkId chunk_id);
 
 public:
     ClipWriterType GetType() const { return mType; }

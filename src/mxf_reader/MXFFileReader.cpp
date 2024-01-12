@@ -2077,12 +2077,14 @@ void MXFFileReader::IndexMCALabels(GenericDescriptor *descriptor)
 
 void MXFFileReader::ProcessMCALabels(FileDescriptor *file_desc, MXFSoundTrackInfo *sound_track_info)
 {
-    vector<AudioChannelLabelSubDescriptor*> mca_labels;
+    vector<MCALabelSubDescriptor*> mca_labels;
     if (file_desc->haveSubDescriptors()) {
         vector<SubDescriptor*> sub_descs = file_desc->getSubDescriptors();
         size_t i;
         for (i = 0; i < sub_descs.size(); i++) {
             AudioChannelLabelSubDescriptor *c_label = dynamic_cast<AudioChannelLabelSubDescriptor*>(sub_descs[i]);
+            ADMSoundfieldGroupLabelSubDescriptor *adm_sg_label = dynamic_cast<ADMSoundfieldGroupLabelSubDescriptor*>(sub_descs[i]);
+            MGASoundfieldGroupLabelSubDescriptor *mga_sg_label = dynamic_cast<MGASoundfieldGroupLabelSubDescriptor*>(sub_descs[i]);
             if (c_label) {
                 if (sound_track_info->channel_count == 0) {
                     BMX_EXCEPTION(("MCA channel label in track containing 0 channels"));
@@ -2101,6 +2103,14 @@ void MXFFileReader::ProcessMCALabels(FileDescriptor *file_desc, MXFSoundTrackInf
                 }
                 mMCALabelIndex->CheckReferences(c_label);
                 mca_labels.push_back(c_label);
+            } else if (adm_sg_label && !mMCALabelIndex->IsReferenced(adm_sg_label)) {
+                // Add ADM Soundfield Group labels that are not referenced by a Channel label
+                mMCALabelIndex->CheckReferences(adm_sg_label);
+                mca_labels.push_back(adm_sg_label);
+            } else if (mga_sg_label && !mMCALabelIndex->IsReferenced(mga_sg_label)) {
+                // Add MGA Soundfield Group labels that are not referenced by a Channel label
+                mMCALabelIndex->CheckReferences(mga_sg_label);
+                mca_labels.push_back(mga_sg_label);
             }
         }
     }

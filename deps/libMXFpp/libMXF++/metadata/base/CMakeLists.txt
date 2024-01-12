@@ -1,4 +1,8 @@
 list(APPEND MXFpp_sources
+    metadata/base/ADM_CHNASubDescriptorBase.cpp
+    metadata/base/ADMAudioMetadataSubDescriptorBase.cpp
+    metadata/base/ADMChannelMappingBase.cpp
+    metadata/base/ADMSoundfieldGroupLabelSubDescriptorBase.cpp
     metadata/base/AES3AudioDescriptorBase.cpp
     metadata/base/ANCDataDescriptorBase.cpp
     metadata/base/AVCSubDescriptorBase.cpp
@@ -29,12 +33,18 @@ list(APPEND MXFpp_sources
     metadata/base/JPEGXSSubDescriptorBase.cpp
     metadata/base/LocatorBase.cpp
     metadata/base/MCALabelSubDescriptorBase.cpp
+    metadata/base/MGAAudioMetadataSubDescriptorBase.cpp
+    metadata/base/MGASoundEssenceDescriptorBase.cpp
+    metadata/base/MGASoundfieldGroupLabelSubDescriptorBase.cpp
     metadata/base/MPEGVideoDescriptorBase.cpp
     metadata/base/MaterialPackageBase.cpp
     metadata/base/MultipleDescriptorBase.cpp
     metadata/base/NetworkLocatorBase.cpp
     metadata/base/PrefaceBase.cpp
     metadata/base/RGBAEssenceDescriptorBase.cpp
+    metadata/base/RIFFChunkDefinitionSubDescriptorBase.cpp
+    metadata/base/RIFFChunkReferencesSubDescriptorBase.cpp
+    metadata/base/SADMAudioMetadataSubDescriptorBase.cpp
     metadata/base/SequenceBase.cpp
     metadata/base/SoundfieldGroupLabelSubDescriptorBase.cpp
     metadata/base/SourceClipBase.cpp
@@ -55,6 +65,10 @@ list(APPEND MXFpp_sources
 )
 
 list(APPEND MXFpp_headers
+    metadata/base/ADM_CHNASubDescriptorBase.h
+    metadata/base/ADMAudioMetadataSubDescriptorBase.h
+    metadata/base/ADMChannelMappingBase.h
+    metadata/base/ADMSoundfieldGroupLabelSubDescriptorBase.h
     metadata/base/AES3AudioDescriptorBase.h
     metadata/base/ANCDataDescriptorBase.h
     metadata/base/AVCSubDescriptorBase.h
@@ -85,12 +99,18 @@ list(APPEND MXFpp_headers
     metadata/base/JPEGXSSubDescriptorBase.h
     metadata/base/LocatorBase.h
     metadata/base/MCALabelSubDescriptorBase.h
+    metadata/base/MGAAudioMetadataSubDescriptorBase.h
+    metadata/base/MGASoundEssenceDescriptorBase.h
+    metadata/base/MGASoundfieldGroupLabelSubDescriptorBase.h
     metadata/base/MPEGVideoDescriptorBase.h
     metadata/base/MaterialPackageBase.h
     metadata/base/MultipleDescriptorBase.h
     metadata/base/NetworkLocatorBase.h
     metadata/base/PrefaceBase.h
     metadata/base/RGBAEssenceDescriptorBase.h
+    metadata/base/RIFFChunkDefinitionSubDescriptorBase.h
+    metadata/base/RIFFChunkReferencesSubDescriptorBase.h
+    metadata/base/SADMAudioMetadataSubDescriptorBase.h
     metadata/base/SequenceBase.h
     metadata/base/SoundfieldGroupLabelSubDescriptorBase.h
     metadata/base/SourceClipBase.h

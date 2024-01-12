@@ -1,0 +1,16 @@
+# Test ADM Soundfield Group label only
+0
+ADM, chunk_id=axml
+
+# Test ADM Soundfield Group label with Channel label
+1
+chM1, chan=0
+ADM, chunk_id=axml
+
+# Test 377-41 Soundfield Group label and 2 Soundfield Group labels that are changed to use the ADM sub-descriptor
+2 (which is wht chunk_id is required!)
+chL, chan=0
+chR, chan=1
+sgST
+sgST, chunk_id=axml, adm_audio_object_id="AO_1001"
+sgST, chunk_id=axml, adm_audio_object_id="AO_1002"

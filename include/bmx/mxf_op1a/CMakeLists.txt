@@ -9,7 +9,7 @@ list(APPEND bmx_headers
     bmx/mxf_op1a/OP1AFile.h
     bmx/mxf_op1a/OP1AIndexTable.h
     bmx/mxf_op1a/OP1AJPEG2000Track.h
-	bmx/mxf_op1a/OP1AJPEGXSTrack.h
+    bmx/mxf_op1a/OP1AJPEGXSTrack.h
     bmx/mxf_op1a/OP1AMPEG2LGTrack.h
     bmx/mxf_op1a/OP1APCMTrack.h
     bmx/mxf_op1a/OP1APictureTrack.h

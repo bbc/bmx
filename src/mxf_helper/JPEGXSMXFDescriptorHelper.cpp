@@ -150,6 +150,8 @@ void JPEGXSMXFDescriptorHelper::UpdateFileDescriptor()
 
     pict_descriptor->setStoredWidth(mStoredWidth);
     pict_descriptor->setStoredHeight(mStoredHeight);
+    pict_descriptor->setDisplayWidth(mStoredWidth);
+    pict_descriptor->setDisplayHeight(mStoredHeight);
 
     mxfUL pc_label;
     switch (mProfile) {
@@ -319,7 +321,6 @@ void JPEGXSMXFDescriptorHelper::UpdateFileDescriptor(JXSEssenceParser *essence_p
 
     mxfpp::ByteArray tmpArr;
     bmx::ByteArray arr = essence_parser->GetJPEGXSComponentTable();
-    unsigned char *c = ((essence_parser->GetJPEGXSComponentTable()).GetBytes());
     tmpArr.data = arr.GetBytes();
     tmpArr.length = (essence_parser->GetJPEGXSComponentTable()).GetSize();
     
@@ -380,11 +381,21 @@ void JPEGXSMXFDescriptorHelper::UpdateFileDescriptor(JXSEssenceParser *essence_p
     pict_descriptor->setPictureEssenceCoding(pc_label);
 
     // These are also set during parsing
+    pict_descriptor->setDisplayWidth(essence_parser->GetStoredWidth());
+    pict_descriptor->setDisplayHeight(essence_parser->GetStoredHeight());
+    pict_descriptor->setSampledWidth(essence_parser->GetStoredWidth());
+    pict_descriptor->setSampledHeight(essence_parser->GetStoredHeight());
     pict_descriptor->setStoredWidth(essence_parser->GetStoredWidth());
     pict_descriptor->setStoredHeight(essence_parser->GetStoredHeight());
     pict_descriptor->setSampledXOffset(0);
     pict_descriptor->setSampledYOffset(0);
-    mAspectRatio = essence_parser->GetAspectRatio();
+
+    if (!BMX_OPT_PROP_IS_SET(mAspectRatio)) {
+        Rational aspect_ratio;
+        aspect_ratio.numerator = (int32_t)essence_parser->GetStoredWidth();
+        aspect_ratio.denominator = (int32_t)essence_parser->GetStoredHeight();
+        SetAspectRatio(reduce_rational(aspect_ratio));
+    }
     
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mFileDescriptor);
     if (cdci_descriptor) {

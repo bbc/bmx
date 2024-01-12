@@ -88,6 +88,14 @@ public:
     void SkipPrecharge(int64_t num_read);
 
 public:
+    typedef struct
+    {
+        InputTrack *input_track;
+        uint32_t input_channel_index;
+        bool have_sample_data;
+    } InputMap;
+
+public:
     ClipWriterTrack* GetClipTrack() { return mClipWriterTrack; }
     uint32_t GetPhysSrcTrackIndex() { return mPhysSrcTrackIndex; }
     bool HaveInputTrack()           { return !mInputMaps.empty(); }
@@ -97,13 +105,7 @@ public:
     OutputTrackSoundInfo* GetSoundInfo();
     InputTrack* GetFirstInputTrack();
 
-private:
-    typedef struct
-    {
-        InputTrack *input_track;
-        uint32_t input_channel_index;
-        bool have_sample_data;
-    } InputMap;
+    const std::map<uint32_t, InputMap>& GetInputMaps() const { return mInputMaps; }
 
 private:
     ClipWriterTrack *mClipWriterTrack;

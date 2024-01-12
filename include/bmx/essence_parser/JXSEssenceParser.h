@@ -80,7 +80,6 @@ namespace bmx
         uint8_t FrameLayout;
         uint32_t StoredWidth;
         uint32_t StoredHeight;
-        Rational AspectRatio;
         UL PictureEssenceCoding;
         uint64_t ContainerDuration;
     };
@@ -292,7 +291,6 @@ namespace bmx
         uint32_t       GetJPEGXSMaximumBitRate()    { return m_subDesc.JPEGXSMaximumBitRate; }
 
         uint8_t        GetFrameLayout()             { return m_picDesc.FrameLayout; }
-        Rational       GetAspectRatio()             { return m_picDesc.AspectRatio; }
         uint32_t       GetStoredWidth()             { return m_picDesc.StoredWidth; }
         uint32_t       GetStoredHeight()            { return m_picDesc.StoredHeight; }
         UL             GetPictureEssenceCoding()    { return m_picDesc.PictureEssenceCoding; }

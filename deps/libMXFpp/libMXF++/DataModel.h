@@ -32,6 +32,7 @@
 #ifndef MXFPP_DATA_MODEL_H_
 #define MXFPP_DATA_MODEL_H_
 
+#include <mxf/mxf.h>
 
 
 namespace mxfpp

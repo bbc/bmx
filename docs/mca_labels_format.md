@@ -1,20 +1,20 @@
 # MCA Labels Format
 
-The `--track-mca-labels` option in raw2bmx and bmxtranswrap can be used to add Multi-channel Audio Labels as specified in SMPTE ST 377-4:2021. The format for the text file that is passed to that option is described in this document.
+The `--track-mca-labels` option in raw2bmx and bmxtranswrap can be used to add Multichannel Audio Labeling as specified in SMPTE ST 377-4:2021. The format for the text file that is passed to that option is described in this document.
 
 ## General Layout
 
-The text file contains one of the following line types:
+Each line in the text file is one of the following line types:
 
 - audio track index
-- audio channel (CH), soundfield group (SG) or group of soundfield group (GOSG) label
+- Label line specifying the audio channel (CH), soundfield group (SG) or group of soundfield group (GOSG)
 - empty
 
 A `#` character can be used to add a comment.
 
-The file defines the set of audio labels to include for each MXF audio track. The audio tracks are identified by an integer index starting from 0 and incrementing by 1 in the order that the audio tracks are written (the Track ID order).
+The file defines the set of audio labels to include for each MXF audio track (aka Sound Track). The audio tracks are identified by an integer index starting from 0 and incrementing by 1 in the order that the audio tracks are written (the Track ID order).
 
-A set of labels for an audio track starts with a line containing the index and is followed by lines defining audio labels. There can be multiple channel CH label lines, 0 or 1 SG label lines and 0 or more GOSG label lines.
+A set of labels for an audio track starts with a line containing the index and is followed by label lines (each one defining an audio label). These audio labels can include zero or more of each type (CH, SG, GOSG).
 
 An empty line is used to signal the start of a new audio track.
 
@@ -22,7 +22,7 @@ An empty line is used to signal the start of a new audio track.
 
  A label line consists of the value of the MCA Tag Symbol label property, followed by a comma and a comma-separated list of name`=`value pairs of properties for that label.
 
- The label identifies either a CH (e.g. `chL` for Left), SG (e.g. `sg51` for 5.1) or GOSG (e.g. `ggMPg` for Main Program). The list of supported labels can be found in the [AppMCALabelHelper.cpp](../src/apps/AppMCALabelHelper.cpp) source code file. The supported names are listed below.
+ The label identifies either a CH (e.g. `chL` for Left), SG (e.g. `sg51` for 5.1) or GOSG (e.g. `ggMPg` for Main Program). The list of supported labels can be found in the [AppMCALabelHelper.cpp](../src/apps/AppMCALabelHelper.cpp) source code file.
 
  The label properties are described in the next section, including how to insert characters such as commas into values.
 
@@ -58,6 +58,9 @@ The following string value properties can be used:
 - MCASpokenLanguageAttribute
 - RFC5646AdditionalSpokenLanguages
 - MCAAdditionalLanguageAttributes
+- ADMAudioProgrammeID
+- ADMAudioContentID
+- ADMAudioObjectID
 
 The "lang" name can be used instead of "RFC5646SpokenLanguage".
 
@@ -68,6 +71,9 @@ The property value may be between quotation marks, either single or double quote
 Some special characters (e.g. used in RFC5646AdditionalSpokenLanguages and MCAAdditionalLanguageAttributes) can be set by using the `\` escape character. They are tab `\t` (0x09), line feed `\n` (0x0a) and carriage return `\r` (0x0d).
 
 The `\` escape character can be used before special characters, e.g. characters such as `,` and `#` when not using quotation marks or `"` when using double quotes. A `\` character can be inserted using a double backslash `\\`.
+
+See [audio_definition_model.md](./audio_definition_model.md) for an explanation, and examples, of using the ADM properties (those with the "ADM" prefix) and the `chunk_id` property.
+
 
 ## Example Files
 
@@ -104,3 +110,4 @@ chR
 sgST, id=sg1, repeat=false
 ggAPg, id=gosg1, repeat=false
 ```
+

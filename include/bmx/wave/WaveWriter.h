@@ -35,12 +35,14 @@
 
 #include <vector>
 #include <deque>
+#include <map>
 
 #include <bmx/ByteArray.h>
 #include <bmx/wave/WaveIO.h>
 #include <bmx/wave/WaveBEXT.h>
+#include <bmx/wave/WaveCHNA.h>
 #include <bmx/wave/WaveTrackWriter.h>
-
+#include <bmx/wave/WaveChunk.h>
 
 
 namespace bmx
@@ -53,17 +55,30 @@ public:
     friend class WaveTrackWriter;
 
 public:
+    static std::string GetBuiltinChunkListString();
+    static bool IsBuiltinChunk(WaveChunkId id);
+
+public:
     WaveWriter(WaveIO *output, bool take_ownership);
     ~WaveWriter();
 
     void SetStartTimecode(Timecode start_timecode);     // sets time_reference in bext
     void SetSampleCount(int64_t count);                 // metadata and sizes are calculated and set
+
     WaveBEXT* GetBroadcastAudioExtension() { return mBEXT; }
+
+    void AddCHNA(WaveCHNA *chna, bool take_ownership);
+    void AddChunk(WaveChunk *chunk, bool take_ownership);
+    bool HaveChunk(WaveChunkId id);
+
+    void AddADMAudioID(const WaveCHNA::AudioID &audio_id);
 
 public:
     WaveTrackWriter* CreateTrack();
 
 public:
+    void UpdateChannelCounts();
+
     void PrepareWrite();
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
     void CompleteWrite();
@@ -79,6 +94,8 @@ private:
     void SetSamplingRate(Rational sampling_rate);
     void SetQuantizationBits(uint16_t bits);
 
+    void RemoveChunk(WaveChunkId id);
+
 private:
     WaveIO *mOutput;
     bool mOwnOutput;
@@ -86,6 +103,10 @@ private:
     bool mStartTimecodeSet;
     int64_t mSetSampleCount;
     WaveBEXT *mBEXT;
+    WaveCHNA *mCHNA;
+    bool mOwnCHNA;
+    std::map<WaveChunkId, WaveChunk*> mAdditionalChunks;
+    std::map<WaveChunkId, WaveChunk*> mOwnedAdditionalChunks;
 
     Rational mSamplingRate;
     bool mSamplingRateSet;
@@ -114,7 +135,8 @@ private:
     int64_t mDataChunkFilePosition;
     int64_t mFactChunkFilePosition;
 
-    bool mUseRF64;
+    bool mRequire64Bit;
+    bool mWriteBW64;
     int64_t mSetSize;
     int64_t mSetDataSize;
 };

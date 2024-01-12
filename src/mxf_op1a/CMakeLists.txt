@@ -9,7 +9,7 @@ list(APPEND bmx_sources
     mxf_op1a/OP1AFile.cpp
     mxf_op1a/OP1AIndexTable.cpp
     mxf_op1a/OP1AJPEG2000Track.cpp
-	mxf_op1a/OP1AJPEGXSTrack.cpp
+    mxf_op1a/OP1AJPEGXSTrack.cpp
     mxf_op1a/OP1AMPEG2LGTrack.cpp
     mxf_op1a/OP1APCMTrack.cpp
     mxf_op1a/OP1APictureTrack.cpp

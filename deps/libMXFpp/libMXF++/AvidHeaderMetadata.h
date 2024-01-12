@@ -33,6 +33,8 @@
 #define MXFPP_AVIDHEADERMETADATA_H_
 
 
+#include <mxf/mxf.h>
+
 #include <libMXF++/HeaderMetadata.h>
 
 

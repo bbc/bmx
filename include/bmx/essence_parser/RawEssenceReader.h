@@ -52,6 +52,7 @@ public:
     void SetMaxReadLength(int64_t len);
 
     void SetFrameStartSize(int64_t len);
+    void SetReadBlockSize(int64_t len);
 
     void SetFixedSampleSize(uint32_t size);
 
@@ -84,6 +85,7 @@ protected:
 
     int64_t mMaxReadLength;
     int64_t mFrameStartSize;
+    int64_t mReadBlockSize;
     int64_t mTotalReadLength;
     uint32_t mMaxSampleSize;
 

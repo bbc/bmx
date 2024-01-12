@@ -56,6 +56,8 @@ using namespace bmx;
 #define READ_BLOCK_SIZE         8192
 #define PARSE_FRAME_START_SIZE  8192
 
+
+
 RawEssenceReader::RawEssenceReader(EssenceSource *essence_source)
 {
     mEssenceSource = essence_source;
@@ -66,8 +68,8 @@ RawEssenceReader::RawEssenceReader(EssenceSource *essence_source)
     mEssenceParser = 0;
     mSampleDataSize = 0;
     mNumSamples = 0;
-    mFrameStartSize = 0;
-
+    mFrameStartSize = PARSE_FRAME_START_SIZE;
+    mReadBlockSize = READ_BLOCK_SIZE;
     mReadFirstSample = false;
     mLastSampleRead = false;
 
@@ -88,6 +90,11 @@ void RawEssenceReader::SetMaxReadLength(int64_t len)
 void RawEssenceReader::SetFrameStartSize(int64_t len)
 {
     mFrameStartSize = len;
+}
+
+void RawEssenceReader::SetReadBlockSize(int64_t len)
+{
+    mReadBlockSize = len;
 }
 
 void RawEssenceReader::SetFixedSampleSize(uint32_t size)
@@ -168,7 +175,7 @@ bool RawEssenceReader::ReadAndParseSample()
     if (!mReadFirstSample) {
         // find the start of the first sample
 
-        sample_num_read += ReadBytes(PARSE_FRAME_START_SIZE);
+        sample_num_read += ReadBytes(mFrameStartSize);
         uint32_t offset = mEssenceParser->ParseFrameStart(mSampleBuffer.GetBytes() + sample_start_offset, sample_num_read);
         if (offset == ESSENCE_PARSER_NULL_OFFSET) {
             log_warn("Failed to find start of raw essence sample\n");
@@ -181,23 +188,22 @@ bool RawEssenceReader::ReadAndParseSample()
             ShiftSampleData(sample_start_offset, sample_start_offset + offset);
             sample_num_read -= offset;
         }
+
         mReadFirstSample = true;
     } else {
-        sample_num_read += ReadBytes(READ_BLOCK_SIZE);
+        sample_num_read += ReadBytes(mReadBlockSize);
     }
 
     uint32_t sample_size = 0;
-    
     while (true) {
         sample_size = mEssenceParser->ParseFrameSize(mSampleBuffer.GetBytes() + sample_start_offset, sample_num_read);
-
         if (sample_size != ESSENCE_PARSER_NULL_OFFSET)
             break;
 
         BMX_CHECK_M(mMaxSampleSize == 0 || mSampleBuffer.GetSize() - sample_start_offset <= mMaxSampleSize,
                    ("Max raw sample size (%u) exceeded", mMaxSampleSize));
 
-        num_read = ReadBytes(READ_BLOCK_SIZE);
+        num_read = ReadBytes(mReadBlockSize);
         if (num_read == 0)
             break;
 
@@ -228,8 +234,6 @@ uint32_t RawEssenceReader::ReadBytes(uint32_t size)
     BMX_ASSERT(mMaxReadLength == 0 || mTotalReadLength <= mMaxReadLength);
 
     uint32_t actual_size = size;
-    if (mFrameStartSize > 0)
-        actual_size = mFrameStartSize;
     if (mMaxReadLength > 0 && mTotalReadLength + size > mMaxReadLength)
         actual_size = (uint32_t)(mMaxReadLength - mTotalReadLength);
     if (actual_size == 0)

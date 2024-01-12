@@ -143,6 +143,8 @@ static const EssenceTypeInfo ESSENCE_TYPE_INFO[] =
     {MJPEG_15_1S,               PICTURE_ESSENCE,        "MJPEG 15:1s",                          "MJPEG_15_1_S"},
     {WAVE_PCM,                  SOUND_ESSENCE,          "WAVE PCM",                             "WAVE_PCM"},
     {D10_AES3_PCM,              SOUND_ESSENCE,          "D10 AES3 PCM",                         "D10_AES3_PCM"},
+    {MGA,                       SOUND_ESSENCE,          "MGA",                                  "MGA"},
+    {MGA_SADM,                  SOUND_ESSENCE,          "MGA S-ADM",                            "MGA_SADM"},
     {ANC_DATA,                  DATA_ESSENCE,           "ANC data",                             "ANC_Data"},
     {VBI_DATA,                  DATA_ESSENCE,           "VBI data",                             "VBI_Data"},
     {TIMED_TEXT,                DATA_ESSENCE,           "Timed Text",                           "Timed_Text"},

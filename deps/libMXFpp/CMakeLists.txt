@@ -13,12 +13,13 @@ else()
 endif()
 
 project(libMXF++
-    VERSION 1.1
+    VERSION 1.2
     DESCRIPTION "C++ wrapper library for libMXF that supports reading and writing the SMPTE ST 377-1 MXF file format"
     HOMEPAGE_URL https://github.com/bbc/libMXFpp
     LANGUAGES CXX
 )
 
+include(GNUInstallDirs) # provides access to ${CMAKE_INSTALL_BINDIR} etc.
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/options.cmake")
 
 if(MSVC AND CMP0091_value STREQUAL NEW)
