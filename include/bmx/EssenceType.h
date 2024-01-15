@@ -116,6 +116,9 @@ typedef enum
     // JPEG 2000
     JPEG2000_CDCI,
     JPEG2000_RGBA,
+    // JPEG XS
+    JPEGXS_CDCI,
+    JPEGXS_RGBA,
     // VC-2
     VC2,
     // VC-3

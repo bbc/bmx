@@ -18,6 +18,7 @@ list(APPEND bmx_headers
     bmx/essence_parser/SoundConversion.h
     bmx/essence_parser/VC2EssenceParser.h
     bmx/essence_parser/VC3EssenceParser.h
+    bmx/essence_parser/JXSEssenceParser.h
 )
 
 set(bmx_headers ${bmx_headers} PARENT_SCOPE)

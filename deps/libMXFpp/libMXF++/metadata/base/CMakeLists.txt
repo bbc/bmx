@@ -30,6 +30,7 @@ list(APPEND MXFpp_sources
     metadata/base/IdentificationBase.cpp
     metadata/base/InterchangeObjectBase.cpp
     metadata/base/JPEG2000SubDescriptorBase.cpp
+    metadata/base/JPEGXSSubDescriptorBase.cpp
     metadata/base/LocatorBase.cpp
     metadata/base/MCALabelSubDescriptorBase.cpp
     metadata/base/MGAAudioMetadataSubDescriptorBase.cpp
@@ -95,6 +96,7 @@ list(APPEND MXFpp_headers
     metadata/base/IdentificationBase.h
     metadata/base/InterchangeObjectBase.h
     metadata/base/JPEG2000SubDescriptorBase.h
+    metadata/base/JPEGXSSubDescriptorBase.h
     metadata/base/LocatorBase.h
     metadata/base/MCALabelSubDescriptorBase.h
     metadata/base/MGAAudioMetadataSubDescriptorBase.h

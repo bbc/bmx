@@ -85,6 +85,7 @@
 #include <libMXF++/metadata/DCTimedTextDescriptor.h>
 #include <libMXF++/metadata/DCTimedTextResourceSubDescriptor.h>
 #include <libMXF++/metadata/JPEG2000SubDescriptor.h>
+#include <libMXF++/metadata/JPEGXSSubDescriptor.h>
 #include <libMXF++/metadata/RIFFChunkDefinitionSubDescriptor.h>
 #include <libMXF++/metadata/ADM_CHNASubDescriptor.h>
 #include <libMXF++/metadata/ADMChannelMapping.h>
