@@ -43,7 +43,16 @@ namespace bmx
 
 
 class InsufficientBytes : public std::exception
-{};
+{
+public:
+    InsufficientBytes();
+    InsufficientBytes(uint32_t required_size);
+
+    uint32_t GetRequiredSize() const { return mRequiredSize; }
+
+private:
+    uint32_t mRequiredSize;
+};
 
 
 class ByteBuffer

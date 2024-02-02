@@ -100,11 +100,7 @@ uint32_t DVEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t dat
         return ESSENCE_PARSER_NULL_FRAME_SIZE;
     }
 
-    uint32_t frame_size = ParseFrameSizeInt(data, data_size);
-    if (data_size < frame_size)
-        return ESSENCE_PARSER_NULL_OFFSET;
-
-    return frame_size;
+    return ParseFrameSizeInt(data, data_size);
 }
 
 void DVEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)

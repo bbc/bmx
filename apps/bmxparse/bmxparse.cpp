@@ -282,22 +282,22 @@ public:
         delete [] data;
     }
 
-    size_t Fill(FILE *file)
+    size_t Fill(FILE *file, size_t amount = BUFFER_INCREMENT)
     {
-        if (size + BUFFER_INCREMENT > alloc_size) {
-            if (alloc_size + BUFFER_INCREMENT > MAX_BUFFER_SIZE) {
+        if (size + amount > alloc_size) {
+            if (alloc_size + amount > MAX_BUFFER_SIZE) {
                 log_error("Maximum buffer size %u exceeded\n", MAX_BUFFER_SIZE);
                 throw false;
             }
 
-            unsigned char *new_data = new unsigned char[alloc_size + BUFFER_INCREMENT];
+            unsigned char *new_data = new unsigned char[alloc_size + amount];
             memcpy(new_data, data, size);
             delete [] data;
             data = new_data;
-            alloc_size += BUFFER_INCREMENT;
+            alloc_size += amount;
         }
 
-        size_t num_read = fread(data + size, 1, BUFFER_INCREMENT, file);
+        size_t num_read = fread(data + size, 1, amount, file);
         if (num_read == 0 && ferror(file)) {
             log_error("File read failed: %s\n", bmx_strerror(errno).c_str());
             throw false;
@@ -888,6 +888,11 @@ int main(int argc, const char **argv)
                 log_error("Invalid frame start\n");
                 throw false;
             } else {
+                if (frame_size > (uint32_t)buffer.size) {
+                    size_t rem_data_size = frame_size - buffer.size;
+                    if (buffer.Fill(file, rem_data_size) < rem_data_size)
+                        break;
+                }
                 print_frame_info(info_writer, parser, parser_data, &buffer, frame_size, frame_count);
                 frame_start = frame_size;
                 frame_count++;

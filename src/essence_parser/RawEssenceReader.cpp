@@ -210,6 +210,18 @@ bool RawEssenceReader::ReadAndParseSample()
         sample_num_read += num_read;
     }
 
+    // Read remaining bytes if sample_size is larger
+    if (sample_size != ESSENCE_PARSER_NULL_FRAME_SIZE &&
+            sample_size != ESSENCE_PARSER_NULL_OFFSET &&
+            sample_size > sample_num_read)
+    {
+        sample_num_read += ReadBytes(sample_size - sample_num_read);
+        if (sample_size > sample_num_read) {
+            log_warn("Failed to read last remaining bytes %u in frame\n", sample_size - sample_num_read);
+            sample_size = ESSENCE_PARSER_NULL_OFFSET;
+        }
+    }
+
     if (sample_size == ESSENCE_PARSER_NULL_FRAME_SIZE) {
         // invalid or null sample data
         mLastSampleRead = true;

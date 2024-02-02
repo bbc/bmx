@@ -39,6 +39,19 @@ using namespace std;
 using namespace bmx;
 
 
+InsufficientBytes::InsufficientBytes()
+: exception()
+{
+    mRequiredSize = 0;
+}
+
+InsufficientBytes::InsufficientBytes(uint32_t required_size)
+: exception()
+{
+    mRequiredSize = required_size;
+}
+
+
 ByteBuffer::ByteBuffer(const unsigned char *data, uint32_t size, bool big_endian)
 {
     mData = data;
