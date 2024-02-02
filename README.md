@@ -42,6 +42,7 @@ The following essence formats are supported:
 * [DV](https://en.wikipedia.org/wiki/DV) video, 25 / 50 / 100 MBit/s
 * [MPEG-2](https://www.itu.int/rec/T-REC-H.262) Long GOP video, 422P@HL, MP@HL (1920 and 1440) and MP@H14
 * [JPEG 2000](https://www.itu.int/rec/T-REC-T.800) video
+* [JPEG XS](https://jpeg.org/jpegxs/) video
 * [H.264](https://www.itu.int/rec/T-REC-H.264) video
 * [SMPTE ST 2019](https://ieeexplore.ieee.org/document/7291983) VC-3 video (Avid DNxHD)
 * [SMPTE ST 2042](https://ieeexplore.ieee.org/document/7967896) VC-2 video
