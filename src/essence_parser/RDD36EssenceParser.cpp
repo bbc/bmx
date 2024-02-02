@@ -150,8 +150,6 @@ uint32_t RDD36EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t 
     uint32_t frame_identifier = buffer.GetF32(32);
     if (frame_identifier != RDD36_FRAME_ID)
         return ESSENCE_PARSER_NULL_FRAME_SIZE;
-    else if (data_size < frame_size)
-        return ESSENCE_PARSER_NULL_OFFSET;
     else
         return frame_size;
 }

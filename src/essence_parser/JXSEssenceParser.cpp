@@ -125,9 +125,12 @@ uint32_t JXSEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
         ParseFrameInfo(data, data_size);
         return mFrameSize;
     }
-    catch (const InsufficientBytes&)
+    catch (const InsufficientBytes &ex)
     {
-        return ESSENCE_PARSER_NULL_OFFSET;
+        if (ex.GetRequiredSize() > 0)
+            return ex.GetRequiredSize();
+        else
+            return ESSENCE_PARSER_NULL_OFFSET;
     }
     catch (const InvalidData&)
     {
@@ -204,7 +207,7 @@ void JXSEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
                 // size of the bitstream
                 size = PIH_.LcodSize();
                 if (size > data_size)
-                    throw InsufficientBytes();
+                    throw InsufficientBytes(size);
                 mFrameSize = size;
                 // Profile and level
                 m_subDesc.JPEGXSPpih = PIH_.Ppih(); // profile

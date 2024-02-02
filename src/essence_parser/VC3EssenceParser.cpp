@@ -154,12 +154,8 @@ uint32_t VC3EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
     size_t i;
     for (i = 0; i < BMX_ARRAY_SIZE(COMPRESSION_PARAMETERS); i++)
     {
-        if (compression_id == COMPRESSION_PARAMETERS[i].compression_id) {
-            if (data_size >= COMPRESSION_PARAMETERS[i].frame_size)
-                return COMPRESSION_PARAMETERS[i].frame_size;
-            else
-                return ESSENCE_PARSER_NULL_OFFSET;
-        }
+        if (compression_id == COMPRESSION_PARAMETERS[i].compression_id)
+            return COMPRESSION_PARAMETERS[i].frame_size;
     }
 
     return ESSENCE_PARSER_NULL_FRAME_SIZE;
