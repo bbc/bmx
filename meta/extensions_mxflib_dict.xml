@@ -212,6 +212,18 @@
     <ADMAudioObjectID           type="UTF16String"    use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 02 03 06 04 00 00 00"/>
   </MGASoundfieldGroupLabelSubDescriptor>
 
+  <JPEGXSSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 81 02">
+    <JPEGXSPpih            type="UInt16"     use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 0b 01 00 00 00"/>
+    <JPEGXSPlev            type="UInt16"     use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 0b 02 00 00 00"/>
+    <JPEGXSWf              type="UInt16"     use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 0b 03 00 00 00"/>
+    <JPEGXSHf              type="UInt16"     use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 0b 04 00 00 00"/>
+    <JPEGXSNc              type="UInt8"      use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 0b 05 00 00 00"/>
+    <JPEGXSComponentTable  type="DataValue"  use="required"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 0b 06 00 00 00"/>
+    <JPEGXSCw              type="UInt16"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 0b 07 00 00 00"/>
+    <JPEGXSHsl             type="UInt16"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 0b 08 00 00 00"/>
+    <JPEGXSMaximumBitRate  type="UInt32"     use="optional"  globalKey="06 0e 2b 34 01 01 01 0e 04 01 06 0b 09 00 00 00"/>
+  </JPEGXSSubDescriptor>
+
   <ContainerConstraintsSubDescriptor base="SubDescriptor" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 67 00"/>
 
   <Filler base="StructuralComponent" type="localSet" key="06 0e 2b 34 02 53 01 01 0d 01 01 01 01 01 09 00"/>
