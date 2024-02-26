@@ -128,7 +128,7 @@ void WaveBEXT::SetOriginatorTimestamp(Timestamp timestamp)
         timestamp.min    > 59 ||
         timestamp.sec    > 59)
     {
-        log_warn("Ignoring invalid originator timestamp\n");
+        log_warn("Ignoring invalid bext chunk origination date/time timestamp\n");
         return;
     }
 
@@ -307,7 +307,7 @@ void WaveBEXT::Read(WaveIO *input, uint32_t size)
     input->ReadString(&buffer[11], 8);
     buffer[19] = '\0';
     if (sscanf(buffer, "%u%*c%u%*c%u%*c%u%*c%u%*c%u", &year, &month, &day, &hour, &min, &sec) != 6) {
-        log_warn("Failed to parse bext timestamp %s\n", buffer);
+        log_warn("Failed to parse bext chunk's origination date + time value '%s'\n", buffer);
     } else {
         mOriginatorTimestamp.year  = year;
         mOriginatorTimestamp.month = month;
