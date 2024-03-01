@@ -850,6 +850,8 @@ static void usage(const char *cmd)
     printf("                       - {fp_uuid}: The UUID material number in a file source package UMID\n");
     printf("                                    The clip writers will by default generate UMIDs with UUID material numbers\n");
     printf("                       - {fp_umid}: The file source package UMID\n");
+    printf("                     At least one letter in a variable name can also be in uppercase, which will result in\n");
+    printf("                     the corresponding substituted value being in uppercase.\n");
     printf(" - <umid> format is 64 hexadecimal characters and any '.' and '-' characters are ignored\n");
     printf(" - <uuid> format is 32 hexadecimal characters and any '.' and '-' characters are ignored\n");
     printf(" - <tstamp> format is YYYY-MM-DDThh:mm:ss:qm where qm is in units of 1/250th second\n");
