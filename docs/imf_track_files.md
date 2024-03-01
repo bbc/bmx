@@ -36,3 +36,5 @@ and [SMPTE ST 2067-21 - Application #2E](https://ieeexplore.ieee.org/document/90
 * Mastering Display White Point Chromaticity (`--display-white-point`)
 * Mastering Display Maximum Luminance (`--display-max-luma`)
 * Mastering Display Minimum Luminance (`--display-min-luma`)
+
+IMF Track File names conventionally include the UUID material number of the top-level file source package UMID. This can be accomplished automatically by supplying an output filename argument as a pattern, such as `-o {Type}_{fp_uuid}.mxf`. This example pattern results in a filename beginning with `VIDEO`, `AUDIO` or `DATA`, such as `VIDEO_a145db5d-4623-4233-913f-15e16980b840.mxf`, but can be tuned with the `--ess-type-names` parameter.
