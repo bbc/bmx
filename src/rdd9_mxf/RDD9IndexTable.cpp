@@ -237,6 +237,7 @@ RDD9IndexTable::RDD9IndexTable(uint32_t index_sid, uint32_t body_sid, Rational e
     mIndexEntrySize = 0;
     mDuration = 0;
     mStreamOffset = 0;
+    mFirstIndexSegmentCount = 0;
 }
 
 RDD9IndexTable::~RDD9IndexTable()
@@ -479,6 +480,8 @@ void RDD9IndexTable::WriteVBESegments(File *mxf_file, Partition *partition, vect
 {
     size_t i;
     for (i = 0; i < segments.size(); i++) {
+        int64_t segment_start_file_pos = mxf_file->tell();
+
         IndexTableSegment *segment = segments[i]->GetSegment();
         ByteArray *entries = segments[i]->GetEntries();
 
@@ -498,7 +501,20 @@ void RDD9IndexTable::WriteVBESegments(File *mxf_file, Partition *partition, vect
         segment->writeIndexEntryArrayHeader(mxf_file, mSliceCount, 0, (uint32_t)segment->getIndexDuration());
         mxf_file->write(entries->GetBytes(), entries->GetSize());
 
-        partition->fillToKag(mxf_file);
+        // The index byte count for all index segments should all be equal.
+        // The index durations for all index segments, except the last, should all be equal.
+        // The last index segment may have a shorter index duration and the code below should
+        // ensure that it has the same index byte count (as the first index segment).
+        if (mFirstIndexSegmentCount == 0) {
+            mFirstIndexSegmentCount = mxf_file->tell() - segment_start_file_pos;
+            partition->fillToKag(mxf_file);
+        } else {
+            int64_t current_count = mxf_file->tell() - segment_start_file_pos;
+            if (current_count < mFirstIndexSegmentCount)
+                partition->allocateSpaceToKag(mxf_file, mFirstIndexSegmentCount - current_count);
+            else
+                partition->fillToKag(mxf_file);
+        }
     }
 }
 
