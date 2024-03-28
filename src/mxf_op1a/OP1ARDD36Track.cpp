@@ -90,7 +90,7 @@ void OP1ARDD36Track::WriteSamplesInt(const unsigned char *data, uint32_t size, u
     }
 
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
-    mIndexTable->AddIndexEntry(mTrackIndex, mPosition, 0, 0, 0, true, false);
+    mIndexTable->AddIndexEntry(mTrackIndex, mPosition, 0, 0, 0x80, true, false);
 
     mPosition++;
 }

@@ -121,7 +121,7 @@ void OP1ATimedTextTrack::WriteIndexTable(File *mxf_file, Partition *index_partit
     index_segment.setIndexSID(mIndexSID);
     index_segment.setBodySID(mBodySID);
     index_segment.setEditUnitByteCount(0);
-    index_segment.appendIndexEntry(0, 0, 0, 0, vector<uint32_t>(), vector<mxfRational>());
+    index_segment.appendIndexEntry(0, 0, 0x80, 0, vector<uint32_t>(), vector<mxfRational>());
 
     index_segment.write(mxf_file, index_partition, 0);
 }
