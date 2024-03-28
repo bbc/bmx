@@ -74,6 +74,7 @@ private:
 
 private:
     uint32_t mBodySID;
+    mxfKey mEssenceElementKey;
 };
 
 
