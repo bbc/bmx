@@ -377,7 +377,7 @@ static int get_indirect_string(MXFMetadataSet *set, const mxfKey *itemKey, mxfUT
     uint8_t *itemValuePtr;
     uint16_t strSize;
 
-    CHK_OFAIL(mxf_get_item(set, itemKey, &item));
+    CHK_OFAIL_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
 
     /* initial check */
     if (item->length <= sizeof(prefix_BE) ||
@@ -447,7 +447,7 @@ static int get_indirect_int32(MXFMetadataSet *set, const mxfKey *itemKey, int32_
     int isBigEndian;
     MXFMetadataItem *item;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
 
     /* initial check */
     if (item->length <= sizeof(prefix_BE) ||
@@ -840,7 +840,7 @@ int mxf_avid_get_rgb_color_item(MXFMetadataSet *set, const mxfKey *itemKey, RGBC
 {
     MXFMetadataItem *item;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
     CHK_ORET(item->length == 3 * 2);
 
     mxf_get_uint16(item->value, &value->red);
@@ -1112,7 +1112,7 @@ int mxf_avid_get_product_version_item(MXFMetadataSet *set, const mxfKey *itemKey
 {
     MXFMetadataItem *item = NULL;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
     CHK_ORET(item->length == mxfProductVersion_extlen - 1);
 
     mxf_avid_get_product_version(item->value, value);

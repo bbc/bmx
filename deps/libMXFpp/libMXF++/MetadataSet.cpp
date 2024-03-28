@@ -43,6 +43,19 @@ using namespace std;
 using namespace mxfpp;
 
 
+#define MXFPP_CHECK_GET_ITEM(key, cmd)                                                  \
+    do {                                                                                \
+        if (!(cmd)) {                                                                   \
+            char key_str[KEY_STR_SIZE];                                                 \
+            mxf_sprint_key(key_str, key);                                               \
+            mxf_log_error("'%s' for item key '%s' failed, at %s:%d\n",                  \
+                          #cmd, key_str, __FILENAME__, __LINE__);                       \
+            throw MXFException("'%s' for item key '%s' failed, at %s:%d",               \
+                               #cmd, __FILENAME__, __LINE__);                           \
+        }                                                                               \
+    } while (0)
+
+
 
 class ReferencedObjectIterator : public ObjectIterator
 {
@@ -154,7 +167,7 @@ ByteArray MetadataSet::getRawBytesItem(const mxfKey *itemKey) const
 {
     MXFMetadataItem *item;
     ByteArray byteArray;
-    MXFPP_CHECK(mxf_get_item(_cMetadataSet, itemKey, &item));
+    MXFPP_CHECK_GET_ITEM(itemKey, mxf_get_item(_cMetadataSet, itemKey, &item));
     byteArray.data = item->value;
     byteArray.length = item->length;
     return byteArray;
@@ -290,7 +303,7 @@ mxfProductVersion MetadataSet::getProductVersionItem(const mxfKey *itemKey) cons
 {
     mxfProductVersion result;
     MXFMetadataItem *item;
-    MXFPP_CHECK(mxf_get_item(_cMetadataSet, itemKey, &item));
+    MXFPP_CHECK_GET_ITEM(itemKey, mxf_get_item(_cMetadataSet, itemKey, &item));
     if (item->length == mxfProductVersion_extlen - 1)
     {
         mxf_avid_get_product_version(item->value, &result);

@@ -166,7 +166,7 @@ static int append_name_to_string_array(MXFMetadataSet *set, const mxfKey *itemKe
 
     if (mxf_have_item(set, itemKey))
     {
-        CHK_ORET(mxf_get_item(set, itemKey, &namesItem));
+        CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &namesItem));
         existingNameArraySize = namesItem->length;
     }
     nameArraySize = mxf_get_external_utf16string_size(name);
@@ -446,7 +446,7 @@ int mxf_avid_create_classdef(AvidMetaDictionary *metaDict, const mxfUL *id, cons
     CHK_ORET(mxf_set_ul_item(newSet, &MXF_ITEM_K(ClassDefinition, ParentClass), parentId));
     CHK_ORET(mxf_set_boolean_item(newSet, &MXF_ITEM_K(ClassDefinition, IsConcrete), isConcrete));
 
-    CHK_ORET(mxf_get_item(newSet, &MXF_ITEM_K(ClassDefinition, ParentClass), &item));
+    CHK_ORET_GET_ITEM(&MXF_ITEM_K(ClassDefinition, ParentClass), mxf_get_item(newSet, &MXF_ITEM_K(ClassDefinition, ParentClass), &item));
     CHK_ORET(add_weakref_to_list(&metaDict->classWeakRefList, item, -1, parentId));
     CHK_ORET(add_metadef_to_list(&metaDict->classMetaDefList, id, &newSet->instanceUID));
 
@@ -513,7 +513,7 @@ int mxf_avid_create_typedef_enum(AvidMetaDictionary *metaDict, const mxfUL *id, 
 
     CHK_ORET(mxf_set_ul_item(newSet, &MXF_ITEM_K(TypeDefinitionEnumeration, Type), typeId));
 
-    CHK_ORET(mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionEnumeration, Type), &item));
+    CHK_ORET_GET_ITEM(&MXF_ITEM_K(TypeDefinitionEnumeration, Type), mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionEnumeration, Type), &item));
     CHK_ORET(add_weakref_to_list(&metaDict->typeWeakRefList, item, -1, typeId));
 
     *typeDefSet = newSet;
@@ -569,7 +569,7 @@ int mxf_avid_create_typedef_fixedarray(AvidMetaDictionary *metaDict, const mxfUL
     CHK_ORET(mxf_set_ul_item(newSet, &MXF_ITEM_K(TypeDefinitionFixedArray, ElementType), elementTypeId));
     CHK_ORET(mxf_set_uint32_item(newSet, &MXF_ITEM_K(TypeDefinitionFixedArray, ElementCount), elementCount));
 
-    CHK_ORET(mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionFixedArray, ElementType), &item));
+    CHK_ORET_GET_ITEM(&MXF_ITEM_K(TypeDefinitionFixedArray, ElementType), mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionFixedArray, ElementType), &item));
     CHK_ORET(add_weakref_to_list(&metaDict->typeWeakRefList, item, -1, elementTypeId));
 
     *typeDefSet = newSet;
@@ -629,7 +629,7 @@ int mxf_avid_add_typedef_record_member(AvidMetaDictionary *metaDict, MXFMetadata
 
     CHK_ORET(mxf_get_array_item_count(typeDefSet, &MXF_ITEM_K(TypeDefinitionRecord, MemberTypes), &memberCount));
 
-    CHK_ORET(mxf_get_item(typeDefSet, &MXF_ITEM_K(TypeDefinitionRecord, MemberTypes), &item));
+    CHK_ORET_GET_ITEM(&MXF_ITEM_K(TypeDefinitionRecord, MemberTypes), mxf_get_item(typeDefSet, &MXF_ITEM_K(TypeDefinitionRecord, MemberTypes), &item));
     CHK_ORET(add_weakref_to_list(&metaDict->typeWeakRefList, item, memberCount - 1, typeId));
 
     return 1;
@@ -646,7 +646,7 @@ int mxf_avid_create_typedef_rename(AvidMetaDictionary *metaDict, const mxfUL *id
 
     CHK_ORET(mxf_set_ul_item(newSet, &MXF_ITEM_K(TypeDefinitionRename, RenamedType), renamedTypeId));
 
-    CHK_ORET(mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionRename, RenamedType), &item));
+    CHK_ORET_GET_ITEM(&MXF_ITEM_K(TypeDefinitionRename, RenamedType), mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionRename, RenamedType), &item));
     CHK_ORET(add_weakref_to_list(&metaDict->typeWeakRefList, item, -1, renamedTypeId));
 
     *typeDefSet = newSet;
@@ -664,7 +664,7 @@ int mxf_avid_create_typedef_set(AvidMetaDictionary *metaDict, const mxfUL *id, c
 
     CHK_ORET(mxf_set_ul_item(newSet, &MXF_ITEM_K(TypeDefinitionSet, ElementType), elementTypeId));
 
-    CHK_ORET(mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionSet, ElementType), &item));
+    CHK_ORET_GET_ITEM(&MXF_ITEM_K(TypeDefinitionSet, ElementType), mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionSet, ElementType), &item));
     CHK_ORET(add_weakref_to_list(&metaDict->typeWeakRefList, item, -1, elementTypeId));
 
     *typeDefSet = newSet;
@@ -688,7 +688,7 @@ int mxf_avid_create_typedef_string(AvidMetaDictionary *metaDict, const mxfUL *id
 
     CHK_ORET(mxf_set_ul_item(newSet, &MXF_ITEM_K(TypeDefinitionString, ElementType), elementTypeId));
 
-    CHK_ORET(mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionString, ElementType), &item));
+    CHK_ORET_GET_ITEM(&MXF_ITEM_K(TypeDefinitionString, ElementType), mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionString, ElementType), &item));
     CHK_ORET(add_weakref_to_list(&metaDict->typeWeakRefList, item, -1, elementTypeId));
 
     *typeDefSet = newSet;
@@ -708,7 +708,7 @@ int mxf_avid_create_typedef_strongref(AvidMetaDictionary *metaDict, const mxfUL 
     CHK_ORET(mxf_set_ul_item(newSet, &MXF_ITEM_K(TypeDefinitionStrongObjectReference, ReferencedType),
                              referencedTypeId));
 
-    CHK_ORET(mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionStrongObjectReference, ReferencedType), &item));
+    CHK_ORET_GET_ITEM(&MXF_ITEM_K(TypeDefinitionStrongObjectReference, ReferencedType), mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionStrongObjectReference, ReferencedType), &item));
     CHK_ORET(add_weakref_to_list(&metaDict->classWeakRefList, item, -1, referencedTypeId));
 
     *typeDefSet = newSet;
@@ -726,7 +726,7 @@ int mxf_avid_create_typedef_vararray(AvidMetaDictionary *metaDict, const mxfUL *
 
     CHK_ORET(mxf_set_ul_item(newSet, &MXF_ITEM_K(TypeDefinitionVariableArray, ElementType), elementTypeId));
 
-    CHK_ORET(mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionVariableArray, ElementType), &item));
+    CHK_ORET_GET_ITEM(&MXF_ITEM_K(TypeDefinitionVariableArray, ElementType), mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionVariableArray, ElementType), &item));
     CHK_ORET(add_weakref_to_list(&metaDict->typeWeakRefList, item, -1, elementTypeId));
 
     *typeDefSet = newSet;
@@ -745,7 +745,7 @@ int mxf_avid_create_typedef_weakref(AvidMetaDictionary *metaDict, const mxfUL *i
 
     CHK_ORET(mxf_set_ul_item(newSet, &MXF_ITEM_K(TypeDefinitionWeakObjectReference, ReferencedType), referencedTypeId));
 
-    CHK_ORET(mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionWeakObjectReference, ReferencedType), &item));
+    CHK_ORET_GET_ITEM(&MXF_ITEM_K(TypeDefinitionWeakObjectReference, ReferencedType), mxf_get_item(newSet, &MXF_ITEM_K(TypeDefinitionWeakObjectReference, ReferencedType), &item));
     CHK_ORET(add_weakref_to_list(&metaDict->classWeakRefList, item, -1, referencedTypeId));
 
     *typeDefSet = newSet;
