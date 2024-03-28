@@ -777,6 +777,7 @@ static const mxfUL ADM_ITU2076_PROFILES_LEVELS =
 
 
 void mxf_complete_essence_element_key(mxfKey *key, uint8_t count, uint8_t type, uint8_t num);
+void mxf_complete_essence_element_key_from_track_num(mxfKey *key, uint32_t track_num);
 void mxf_complete_essence_element_track_num(uint32_t *trackNum, uint8_t count, uint8_t type, uint8_t num);
 
 

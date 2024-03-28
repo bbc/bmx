@@ -247,6 +247,13 @@ void mxf_complete_essence_element_key(mxfKey *key, uint8_t count, uint8_t type, 
     key->octet15 = num;
 }
 
+void mxf_complete_essence_element_key_from_track_num(mxfKey *key, uint32_t track_num)
+{
+    key->octet13 = (uint8_t)((track_num >> 16) & 0xff);
+    key->octet14 = (uint8_t)((track_num >> 8) & 0xff);
+    key->octet15 = (uint8_t)(track_num & 0xff);
+}
+
 void mxf_complete_essence_element_track_num(uint32_t *trackNum, uint8_t count, uint8_t type, uint8_t num)
 {
     *trackNum &= 0xFF000000;

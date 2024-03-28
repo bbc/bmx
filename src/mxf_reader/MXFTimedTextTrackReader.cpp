@@ -54,6 +54,9 @@ MXFTimedTextTrackReader::MXFTimedTextTrackReader(MXFFileReader *file_reader, siz
 {
     BMX_ASSERT(track_info->essence_type == TIMED_TEXT);
     mBodySID = 0;
+
+    mEssenceElementKey = MXF_EE_K(TimedText);
+    mxf_complete_essence_element_key_from_track_num(&mEssenceElementKey, track_info->file_track_number);
 }
 
 MXFTimedTextTrackReader::~MXFTimedTextTrackReader()
@@ -110,7 +113,7 @@ void MXFTimedTextTrackReader::ReadTimedText(FILE *file_out, unsigned char **data
 {
     BMX_ASSERT(mBodySID != 0);
 
-    ReadStream(mBodySID, &MXF_EE_K(TimedText), file_out, data_out, size_out, 0);
+    ReadStream(mBodySID, &mEssenceElementKey, file_out, data_out, size_out, 0);
 }
 
 void MXFTimedTextTrackReader::ReadAncillaryResourceById(mxfUUID resource_id, FILE *file_out,
@@ -147,7 +150,7 @@ TimedTextMXFResourceProvider* MXFTimedTextTrackReader::CreateResourceProvider()
         provider = new TimedTextMXFResourceProvider(file);
 
         vector<pair<int64_t, int64_t> > ranges;
-        ReadStream(mBodySID, &MXF_EE_K(TimedText), 0, 0, 0, &ranges);
+        ReadStream(mBodySID, &mEssenceElementKey, 0, 0, 0, &ranges);
         provider->AddTimedTextResource(ranges);
 
         vector<TimedTextAncillaryResource> &anc_resources = GetManifest()->GetAncillaryResources();
