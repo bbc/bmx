@@ -85,7 +85,7 @@ void RDD9DataTrack::WriteSamplesInt(const unsigned char *data, uint32_t size, ui
 
     mCPManager->WriteSamples(mTrackIndex, data, size, num_samples);
     if (!mConstantDataSize && !mMaxDataSize)
-        mIndexTable->AddIndexEntry(mTrackIndex, mPosition, 0, 0, 0, true);
+        mIndexTable->AddIndexEntry(mTrackIndex, mPosition, 0, 0, 0x80, true);
 
     mPosition++;
 }

@@ -94,7 +94,7 @@ void OP1AVC2Track::WriteSamplesInt(const unsigned char *data, uint32_t size, uin
     mWriterHelper.ProcessFrame(data, size, &data_array, &array_size);
 
     mCPManager->WriteSample(mTrackIndex, data_array, array_size);
-    mIndexTable->AddIndexEntry(mTrackIndex, mWriterHelper.GetProcessFrameCount() - 1, 0, 0, 0, true, false);
+    mIndexTable->AddIndexEntry(mTrackIndex, mWriterHelper.GetProcessFrameCount() - 1, 0, 0, 0x80, true, false);
 }
 
 void OP1AVC2Track::CompleteWrite()
