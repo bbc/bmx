@@ -45,7 +45,6 @@
 #include <mxf/mxf_macros.h>
 
 
-
 static void free_metadata_item_value(MXFMetadataItem *item)
 {
     SAFE_FREE(item->value);
@@ -170,7 +169,7 @@ static int validate_set(MXFMetadataSet *set, MXFSetDef *setDef, int logErrors)
 
         if (mxf_have_item(set, &itemDef->key))
         {
-            CHK_ORET(mxf_get_item(set, &itemDef->key, &item));
+            CHK_ORET_GET_ITEM(&itemDef->key, mxf_get_item(set, &itemDef->key, &item));
 
 
 #define CHECK_LENGTH(len) \
@@ -809,7 +808,7 @@ int mxf_read_filtered_header_metadata(MXFFile *mxfFile, MXFReadFilter *filter,
 
                 if (!skip)
                 {
-                    CHK_ORET((result = mxf_read_and_return_set(mxfFile, &key, len, headerMetadata, 0, &newSet)) > 0);
+                    CHK_ORET_READ_SET(&key, (result = mxf_read_and_return_set(mxfFile, &key, len, headerMetadata, 0, &newSet)) > 0);
 
                     if (result == 1) /* set was read and returned in "set" parameter */
                     {
@@ -837,7 +836,7 @@ int mxf_read_filtered_header_metadata(MXFFile *mxfFile, MXFReadFilter *filter,
             }
             else
             {
-                CHK_ORET(mxf_read_set(mxfFile, &key, len, headerMetadata, 1) > 0);
+                CHK_ORET_READ_SET(&key, mxf_read_set(mxfFile, &key, len, headerMetadata, 1) > 0);
             }
         }
         count += len;
@@ -1860,7 +1859,7 @@ int mxf_clone_item(MXFMetadataSet *sourceSet, const mxfKey *itemKey, MXFMetadata
 
     assert(destSet->headerMetadata != NULL);
 
-    CHK_ORET(mxf_get_item(sourceSet, itemKey, &sourceItem));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(sourceSet, itemKey, &sourceItem));
     CHK_ORET(get_or_create_set_item(destSet->headerMetadata, destSet, itemKey, &newItem));
     CHK_ORET(mxf_set_item_value(newItem, sourceItem->value, sourceItem->length));
 
@@ -2254,7 +2253,7 @@ int mxf_get_item_len(MXFMetadataSet *set, const mxfKey *itemKey, uint16_t *len)
 {
     MXFMetadataItem *item = NULL;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
 
     *len = item->length;
     return 1;
@@ -2264,7 +2263,7 @@ int mxf_get_item_len(MXFMetadataSet *set, const mxfKey *itemKey, uint16_t *len)
 #define GET_VALUE(len, get_func) \
     MXFMetadataItem *item = NULL; \
     \
-    CHK_ORET(mxf_get_item(set, itemKey, &item)); \
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item)); \
     CHK_ORET(item->length == len); \
     \
     get_func(item->value, value); \
@@ -2346,7 +2345,7 @@ int mxf_get_utf16string_item_size(MXFMetadataSet *set, const mxfKey *itemKey, ui
 {
     MXFMetadataItem *item = NULL;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
 
     *size = mxf_get_utf16string_size(item->value, item->length);
 
@@ -2358,7 +2357,7 @@ int mxf_get_utf16string_item(MXFMetadataSet *set, const mxfKey *itemKey, mxfUTF1
 {
     MXFMetadataItem *item = NULL;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
 
     mxf_get_utf16string(item->value, item->length, value);
 
@@ -2370,7 +2369,7 @@ int mxf_get_utf8string_item_size(MXFMetadataSet *set, const mxfKey *itemKey, uin
 {
     MXFMetadataItem *item = NULL;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
 
     *size = mxf_get_utf8string_size(item->value, item->length);
 
@@ -2382,7 +2381,7 @@ int mxf_get_utf8string_item(MXFMetadataSet *set, const mxfKey *itemKey, char *va
 {
     MXFMetadataItem *item = NULL;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
 
     mxf_get_utf8string(item->value, item->length, value);
 
@@ -2394,7 +2393,7 @@ int mxf_get_iso7string_item_size(MXFMetadataSet *set, const mxfKey *itemKey, uin
 {
     MXFMetadataItem *item = NULL;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
 
     *size = mxf_get_iso7string_size(item->value, item->length);
 
@@ -2406,7 +2405,7 @@ int mxf_get_iso7string_item(MXFMetadataSet *set, const mxfKey *itemKey, char *va
 {
     MXFMetadataItem *item = NULL;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
 
     mxf_get_iso7string(item->value, item->length, value);
 
@@ -2519,7 +2518,7 @@ int mxf_get_j2k_ext_capabilities_item(MXFMetadataSet *set, const mxfKey *itemKey
 {
     MXFMetadataItem *item = NULL;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
     CHK_ORET(mxf_get_j2k_ext_capabilities(item->value, item->length, value));
 
     return 1;
@@ -2539,7 +2538,7 @@ int mxf_get_video_line_map_item(MXFMetadataSet *set, const mxfKey *itemKey, mxfV
 {
     MXFMetadataItem *item = NULL;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
     CHK_ORET(item->length == 16);
 
     mxf_get_int32(&item->value[8], &value->first);
@@ -2558,7 +2557,7 @@ int mxf_get_array_item_count(MXFMetadataSet *set, const mxfKey *itemKey, uint32_
     MXFMetadataItem *item = NULL;
     uint32_t elementLength;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
     CHK_ORET(item->length >= 8);
 
     mxf_get_array_header(item->value, count, &elementLength);
@@ -2571,7 +2570,7 @@ int mxf_get_array_item_element_len(MXFMetadataSet *set, const mxfKey *itemKey, u
     MXFMetadataItem *item = NULL;
     uint32_t count;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
     CHK_ORET(item->length >= 8);
 
     mxf_get_array_header(item->value, &count, elementLen);
@@ -2585,7 +2584,7 @@ int mxf_get_array_item_element(MXFMetadataSet *set, const mxfKey *itemKey, uint3
     uint32_t elementLen;
     uint32_t count;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
     CHK_ORET(item->length >= 8);
 
     mxf_get_array_header(item->value, &count, &elementLen);
@@ -2601,7 +2600,7 @@ int mxf_initialise_array_item_iterator(MXFMetadataSet *set, const mxfKey *itemKe
 {
     MXFMetadataItem *item = NULL;
 
-    CHK_ORET(mxf_get_item(set, itemKey, &item));
+    CHK_ORET_GET_ITEM(itemKey, mxf_get_item(set, itemKey, &item));
     CHK_ORET(item->length >= 8);
 
     arrayIter->item = item;

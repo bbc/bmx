@@ -41,6 +41,52 @@ extern "C"
 #endif
 
 
+#define CHK_ORET_GET_ITEM(key, cmd)                                     \
+    do {                                                                \
+        if (!(cmd)) {                                                   \
+            char key_str[KEY_STR_SIZE];                                 \
+            mxf_sprint_key(key_str, key);                               \
+            mxf_log_error("'%s' for item key '%s' failed, in %s:%d\n",  \
+                          #cmd, key_str, __FILENAME__, __LINE__);       \
+            return 0;                                                   \
+        }                                                               \
+    } while (0)
+
+#define CHK_OFAIL_GET_ITEM(key, cmd)                                    \
+    do {                                                                \
+        if (!(cmd)) {                                                   \
+            char key_str[KEY_STR_SIZE];                                 \
+            mxf_sprint_key(key_str, key);                               \
+            mxf_log_error("'%s' for item key '%s' failed, in %s:%d\n",  \
+                          #cmd, key_str, __FILENAME__, __LINE__);       \
+            goto fail;                                                  \
+        }                                                               \
+    } while (0)
+
+#define CHK_ORET_READ_SET(key, cmd)                                     \
+    do {                                                                \
+        if (!(cmd)) {                                                   \
+            char key_str[KEY_STR_SIZE];                                 \
+            mxf_sprint_key(key_str, key);                               \
+            mxf_log_error("'%s' for set key '%s' failed, in %s:%d\n",   \
+                          #cmd, key_str, __FILENAME__, __LINE__);       \
+            return 0;                                                   \
+        }                                                               \
+    } while (0)
+
+#define CHK_OFAIL_READ_SET(key, cmd)                                    \
+    do {                                                                \
+        if (!(cmd)) {                                                   \
+            char key_str[KEY_STR_SIZE];                                 \
+            mxf_sprint_key(key_str, key);                               \
+            mxf_log_error("'%s' for set key '%s' failed, in %s:%d\n",   \
+                          #cmd, key_str, __FILENAME__, __LINE__);       \
+            goto fail;                                                  \
+        }                                                               \
+    } while (0)
+
+
+
 typedef struct
 {
     mxfKey key;
