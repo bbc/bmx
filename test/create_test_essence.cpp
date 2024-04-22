@@ -50,6 +50,9 @@
 #define MPEG_P_FRAME_TYPE           0x02
 #define MPEG_B_FRAME_TYPE           0x03
 
+#define MPEG_4_3_ASPECT_RATIO       0x02
+#define MPEG_16_9_ASPECT_RATIO      0x03
+
 
 typedef enum
 {
@@ -128,6 +131,7 @@ typedef struct
     uint32_t v_size;
     uint32_t temporal_ref;
     uint8_t frame_type;
+    uint8_t aspect_ratio;
 } MPEGInfo;
 
 
@@ -226,6 +230,7 @@ static void fill_mpeg_frame(unsigned char *data, uint32_t data_size, const MPEGI
         set_offset = 0;
         set_mpeg_bits(data, set_offset * 8 + 32, 12, info->h_size);
         set_mpeg_bits(data, set_offset * 8 + 44, 12, info->v_size);
+        set_mpeg_bits(data, set_offset * 8 + 56, 4,  info->aspect_ratio);
         set_mpeg_bits(data, set_offset * 8 + 64, 18, info->bit_rate);
         set_offset += 100;
 
@@ -397,6 +402,7 @@ static void write_d10(FILE *file, int type, unsigned int duration)
     mpeg_info.low_delay      = true;
     mpeg_info.h_size         = 720;
     mpeg_info.v_size         = 608;
+    mpeg_info.aspect_ratio   = MPEG_16_9_ASPECT_RATIO;
     mpeg_info.frame_type     = MPEG_I_FRAME_TYPE;
 
     uint32_t frame_size;
@@ -430,6 +436,7 @@ static void write_mpeg2lg(FILE *file, int type, unsigned int duration, bool low_
     memset(&mpeg_info, 0, sizeof(mpeg_info));
     mpeg_info.is_progressive = false;
     mpeg_info.low_delay      = low_delay;
+    mpeg_info.aspect_ratio   = MPEG_16_9_ASPECT_RATIO;
 
     uint32_t i_frame_size, non_i_frame_size;
     switch (type)
