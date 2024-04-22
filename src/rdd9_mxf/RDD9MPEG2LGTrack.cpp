@@ -53,6 +53,7 @@ RDD9MPEG2LGTrack::RDD9MPEG2LGTrack(RDD9File *file, uint32_t track_index, uint32_
 {
     mPictureDescriptorHelper = dynamic_cast<PictureMXFDescriptorHelper*>(mDescriptorHelper);
     BMX_ASSERT(mPictureDescriptorHelper);
+    mWriterHelper.SetDescriptorHelper(dynamic_cast<MPEG2LGMXFDescriptorHelper*>(mDescriptorHelper));
     mValidator = 0;
 
     mPictureDescriptorHelper->SetAspectRatio(ASPECT_RATIO_16_9);

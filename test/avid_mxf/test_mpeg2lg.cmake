@@ -1,4 +1,4 @@
-# Test creating an Avid MXF file containing AVC video and 2 PCM tracks
+# Test creating an Avid MXF file containing MPEG2 video and 2 PCM tracks
 
 include("${TEST_SOURCE_DIR}/test_common.cmake")
 

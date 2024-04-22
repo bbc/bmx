@@ -51,6 +51,7 @@ using namespace bmx;
 
 MPEG2LGWriterHelper::MPEG2LGWriterHelper()
 {
+    mDescriptorHelper = 0;
     mFlavour = DEFAULT_FLAVOUR;
     mPosition = 0;
     mPrevKeyFramePosition = -1;
@@ -82,6 +83,11 @@ MPEG2LGWriterHelper::MPEG2LGWriterHelper()
 
 MPEG2LGWriterHelper::~MPEG2LGWriterHelper()
 {
+}
+
+void MPEG2LGWriterHelper::SetDescriptorHelper(MPEG2LGMXFDescriptorHelper *descriptor_helper)
+{
+    mDescriptorHelper = descriptor_helper;
 }
 
 void MPEG2LGWriterHelper::SetFlavour(Flavour flavour)
@@ -221,6 +227,9 @@ void MPEG2LGWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
         mKeyFramePosition = mPosition;
         mKeyFrameTemporalReference = mTemporalReference;
     }
+
+    if (mPosition == 0 && mDescriptorHelper)
+        mDescriptorHelper->UpdateFileDescriptor(&mEssenceParser);
 
     mPosition++;
 }
