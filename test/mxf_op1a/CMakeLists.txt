@@ -9,6 +9,7 @@ set(tests
     dv
     indexfollows
     mpeg2lg
+    mpeg2lg_576i
     rdd36
     soundonly
     unc
