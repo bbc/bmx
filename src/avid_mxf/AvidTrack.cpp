@@ -648,8 +648,6 @@ void AvidTrack::CreateHeaderMetadata()
     if (track_growing_duration >= 0)
         descriptor->setContainerDuration(track_growing_duration);
     descriptor->setLinkedTrackID(AV_TRACK_ID);
-    // replace essence container label with generic AAF-KLV (aka MXF) label
-    descriptor->setEssenceContainer(MXF_EC_L(AvidAAFKLVEssenceContainer));
 
     // Preface - ContentStorage - EssenceContainerData
     EssenceContainerData *ess_container_data = new EssenceContainerData(mHeaderMetadata);
