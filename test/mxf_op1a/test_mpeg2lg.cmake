@@ -1,4 +1,4 @@
-# Test creating an MXF OP1a file containing AVC video and 2 PCM tracks
+# Test creating an MXF OP1a file containing MPEG2LG video and 2 PCM tracks
 
 include("${TEST_SOURCE_DIR}/test_common.cmake")
 

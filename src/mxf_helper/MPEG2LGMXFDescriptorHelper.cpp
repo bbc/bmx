@@ -441,6 +441,17 @@ void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor()
     }
 }
 
+void MPEG2LGMXFDescriptorHelper::UpdateFileDescriptor(MPEG2EssenceParser *essence_parser)
+{
+    UpdateFileDescriptor();
+
+    GenericPictureEssenceDescriptor *picture_descriptor = dynamic_cast<GenericPictureEssenceDescriptor*>(mFileDescriptor);
+    BMX_ASSERT(picture_descriptor);
+
+    if (essence_parser->HaveKnownAspectRatio())
+        picture_descriptor->setAspectRatio(essence_parser->GetAspectRatio());
+}
+
 MXFFrameLayout MPEG2LGMXFDescriptorHelper::GetFrameLayout() const
 {
     return SUPPORTED_ESSENCE[mEssenceIndex].frame_layout;

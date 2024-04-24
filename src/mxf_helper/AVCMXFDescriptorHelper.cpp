@@ -279,6 +279,10 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor()
     BMX_ASSERT(cdci_descriptor);
 
     cdci_descriptor->setPictureEssenceCoding(SUPPORTED_ESSENCE[mEssenceIndex].pc_label);
+
+    // override setting of MXF_EC_L(AvidAAFKLVEssenceContainer) for AVC
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR))
+        cdci_descriptor->setEssenceContainer(ChooseEssenceContainerUL());
 }
 
 void AVCMXFDescriptorHelper::UpdateFileDescriptor(FileDescriptor *file_desc_in)

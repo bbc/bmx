@@ -63,6 +63,7 @@ AS02MPEG2LGTrack::AS02MPEG2LGTrack(AS02Clip *clip, uint32_t track_index, Essence
 {
     mTrackNumber = MXF_MPEG_PICT_TRACK_NUM(0x01, MXF_MPEG_PICT_FRAME_WRAPPED_EE_TYPE, 0x00);
     mEssenceElementKey = VIDEO_ELEMENT_KEY;
+    mWriterHelper.SetDescriptorHelper(dynamic_cast<MPEG2LGMXFDescriptorHelper*>(mDescriptorHelper));
 
     mIndexStartPosition = 0;
 }

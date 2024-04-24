@@ -35,6 +35,7 @@
 #include <vector>
 
 #include <bmx/essence_parser/MPEG2EssenceParser.h>
+#include <bmx/mxf_helper/MPEG2LGMXFDescriptorHelper.h>
 
 
 
@@ -55,6 +56,7 @@ public:
     MPEG2LGWriterHelper();
     ~MPEG2LGWriterHelper();
 
+    void SetDescriptorHelper(MPEG2LGMXFDescriptorHelper *descriptor_helper);
     void SetFlavour(Flavour flavour);
 
 public:
@@ -85,6 +87,7 @@ public:
     uint32_t GetBitRate() const             { return mBitRate; }
 
 private:
+    MPEG2LGMXFDescriptorHelper *mDescriptorHelper;
     Flavour mFlavour;
 
     MPEG2EssenceParser mEssenceParser;

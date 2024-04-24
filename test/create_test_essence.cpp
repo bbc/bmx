@@ -50,6 +50,9 @@
 #define MPEG_P_FRAME_TYPE           0x02
 #define MPEG_B_FRAME_TYPE           0x03
 
+#define MPEG_4_3_ASPECT_RATIO       0x02
+#define MPEG_16_9_ASPECT_RATIO      0x03
+
 
 typedef enum
 {
@@ -112,7 +115,9 @@ typedef enum
     TYPE_RDD36_4444                     = 56,
     TYPE_16BIT_PCM_SAMPLES              = 57,
     TYPE_RDD36_422_ITU2020              = 58,
-    TYPE_END                            = 59,
+    TYPE_MPEG2LG_MP_ML_576I             = 59,
+    TYPE_MPEG2LG_MP_ML_576I_4_3         = 60,
+    TYPE_END                            = 61,
 } EssenceType;
 
 typedef struct
@@ -128,6 +133,7 @@ typedef struct
     uint32_t v_size;
     uint32_t temporal_ref;
     uint8_t frame_type;
+    uint8_t aspect_ratio;
 } MPEGInfo;
 
 
@@ -226,6 +232,7 @@ static void fill_mpeg_frame(unsigned char *data, uint32_t data_size, const MPEGI
         set_offset = 0;
         set_mpeg_bits(data, set_offset * 8 + 32, 12, info->h_size);
         set_mpeg_bits(data, set_offset * 8 + 44, 12, info->v_size);
+        set_mpeg_bits(data, set_offset * 8 + 56, 4,  info->aspect_ratio);
         set_mpeg_bits(data, set_offset * 8 + 64, 18, info->bit_rate);
         set_offset += 100;
 
@@ -397,6 +404,7 @@ static void write_d10(FILE *file, int type, unsigned int duration)
     mpeg_info.low_delay      = true;
     mpeg_info.h_size         = 720;
     mpeg_info.v_size         = 608;
+    mpeg_info.aspect_ratio   = MPEG_16_9_ASPECT_RATIO;
     mpeg_info.frame_type     = MPEG_I_FRAME_TYPE;
 
     uint32_t frame_size;
@@ -424,12 +432,14 @@ static void write_d10(FILE *file, int type, unsigned int duration)
         write_buffer(file, data, frame_size);
 }
 
-static void write_mpeg2lg(FILE *file, int type, unsigned int duration, bool low_delay, bool closed_gop)
+static void write_mpeg2lg(FILE *file, int type, unsigned int duration, bool low_delay, bool closed_gop,
+                          uint8_t aspect_ratio = MPEG_16_9_ASPECT_RATIO)
 {
     MPEGInfo mpeg_info;
     memset(&mpeg_info, 0, sizeof(mpeg_info));
     mpeg_info.is_progressive = false;
     mpeg_info.low_delay      = low_delay;
+    mpeg_info.aspect_ratio   = aspect_ratio;
 
     uint32_t i_frame_size, non_i_frame_size;
     switch (type)
@@ -481,6 +491,15 @@ static void write_mpeg2lg(FILE *file, int type, unsigned int duration, bool low_
             mpeg_info.h_size        = 1440;
             mpeg_info.v_size        = 1080;
             mpeg_info.bit_rate      = (35 * 1000 * 1000) / 400;
+            break;
+        case TYPE_MPEG2LG_MP_ML_576I:
+            i_frame_size     = 19500;
+            non_i_frame_size = 16500;
+            mpeg_info.profile_level = 0x72;
+            mpeg_info.chroma_format = 1;
+            mpeg_info.h_size        = 720;
+            mpeg_info.v_size        = 576;
+            mpeg_info.bit_rate      = (10 * 1000 * 1000) / 400;
             break;
         case TYPE_MPEG2LG_MP_H14_1080I:
         case TYPE_MPEG2LG_MP_H14_1080P:
@@ -1122,10 +1141,14 @@ int main(int argc, const char **argv)
         case TYPE_MPEG2LG_MP_HL_1080P_1440:
         case TYPE_MPEG2LG_422P_HL_720P:
         case TYPE_MPEG2LG_MP_HL_720P:
+        case TYPE_MPEG2LG_MP_ML_576I:
             write_mpeg2lg(file, type, duration, true, false);
             break;
         case TYPE_AS10_MPEG2LG_422P_HL_1080I:
             write_mpeg2lg(file, TYPE_MPEG2LG_422P_HL_1080I, duration, false, true);
+            break;
+        case TYPE_MPEG2LG_MP_ML_576I_4_3:
+            write_mpeg2lg(file, type, duration, true, false, MPEG_4_3_ASPECT_RATIO);
             break;
         case TYPE_UNC_SD:
         case TYPE_UNC_HD_1080I:

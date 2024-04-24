@@ -168,7 +168,12 @@ void MXFDescriptorHelper::SetFlavour(int flavour)
 
 void MXFDescriptorHelper::UpdateFileDescriptor()
 {
-    mFileDescriptor->setEssenceContainer(ChooseEssenceContainerUL());
+    if ((mFlavour & MXFDESC_AVID_FLAVOUR)) {
+        // replace essence container label with generic AAF-KLV (aka MXF) label
+        mFileDescriptor->setEssenceContainer(MXF_EC_L(AvidAAFKLVEssenceContainer));
+    } else {
+        mFileDescriptor->setEssenceContainer(ChooseEssenceContainerUL());
+    }
     mFileDescriptor->setSampleRate(mSampleRate);
 }
 
