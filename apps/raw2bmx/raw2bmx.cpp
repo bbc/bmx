@@ -3748,7 +3748,10 @@ int main(int argc, const char** argv)
             inputs.push_back(input);
             cmdln_index++;
         }
-        else if (strcmp(argv[cmdln_index], "--rdd36_4444_hq") == 0)
+        // Allowing --rdd36_4444_xq as defined in the cli help as well as --rdd36_4444_hq
+        // which was defined first to keep backwards compatibility with older scripts.
+        else if (strcmp(argv[cmdln_index], "--rdd36_4444_xq") == 0 ||
+                 strcmp(argv[cmdln_index], "--rdd36_4444_hq") == 0)
         {
             if (cmdln_index + 1 >= argc)
             {
