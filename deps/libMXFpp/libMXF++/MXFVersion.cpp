@@ -33,6 +33,8 @@
 #include "config.h"
 #endif
 
+#include <string>
+
 #include "git.h"
 #include "fallback_git_version.h"
 
