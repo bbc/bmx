@@ -34,8 +34,6 @@ if(BUILD_SHARED_LIBS OR NOT DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
-set(CMAKE_CXX_STANDARD 11)
-
 # Set the test samples output directory
 if(BMX_TEST_SAMPLES_DIR STREQUAL "")
     set(new_samples_dir ${CMAKE_CURRENT_BINARY_DIR}/test_samples)
