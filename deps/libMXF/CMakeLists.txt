@@ -74,7 +74,7 @@ if(MSVC)
         endforeach()
     endif()
 else()
-    add_compile_options(-W -Wall -O2)
+    add_compile_options(-Wextra -Wall)
 
     # Enable large file support on 32-bit systems.
     add_definitions(
