@@ -137,15 +137,6 @@ void MXFDescriptorHelper::SetEssenceType(EssenceType essence_type)
 void MXFDescriptorHelper::SetSampleRate(mxfRational sample_rate)
 {
     BMX_ASSERT(!mFileDescriptor);
-    BMX_CHECK(sample_rate == FRAME_RATE_23976 ||
-              sample_rate == FRAME_RATE_24 ||
-              sample_rate == FRAME_RATE_25 ||
-              sample_rate == FRAME_RATE_2997 ||
-              sample_rate == FRAME_RATE_30 ||
-              sample_rate == FRAME_RATE_50 ||
-              sample_rate == FRAME_RATE_5994 ||
-              sample_rate == FRAME_RATE_60 ||
-              (IsSound() && sample_rate == SAMPLING_RATE_48K));
 
     mSampleRate = sample_rate;
 }
