@@ -32,6 +32,8 @@ add_library(MXFpp
     ${MXFpp_sources}
 )
 
+target_compile_features(MXFpp PUBLIC cxx_std_11)
+
 target_include_directories(MXFpp PUBLIC
     ${PROJECT_SOURCE_DIR}
 )

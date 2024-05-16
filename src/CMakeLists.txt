@@ -26,6 +26,8 @@ target_include_directories(bmx PUBLIC
     ${PROJECT_SOURCE_DIR}/include
 )
 
+target_compile_features(bmx PUBLIC cxx_std_11)
+
 # Add path to header files if not included in MSVC distribution
 if(MSVC)
     include(CheckIncludeFile)
