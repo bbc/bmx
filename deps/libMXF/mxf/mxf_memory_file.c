@@ -202,8 +202,8 @@ static uint32_t mem_file_read(MXFFileSysData *sysData, uint8_t *data, uint32_t c
 static uint32_t mem_file_write(MXFFileSysData *sysData, const uint8_t *data, uint32_t count)
 {
     uint32_t totalWrite = 0;
-    size_t posChunkIndex;
-    int64_t posChunkPos;
+    size_t posChunkIndex = 0;
+    int64_t posChunkPos = 0;
     int64_t numWrite;
     int64_t fileSize;
 
@@ -220,7 +220,7 @@ static uint32_t mem_file_write(MXFFileSysData *sysData, const uint8_t *data, uin
 
         /* add data from fileSize to sysData->position */
         if (sysData->position > fileSize) {
-            size_t endPosChunkIndex;
+            size_t endPosChunkIndex = 0;
             int64_t endPosChunkPos;
             int64_t chunkRemainder;
             int64_t originalPos = sysData->position;
