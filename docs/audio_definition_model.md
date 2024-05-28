@@ -22,6 +22,8 @@ ADM, chunk_id=axml, RFC5646SpokenLanguage="en-GB", MCATitle="Default", MCATitleV
 ADM, chunk_id=axml, MCATitle="No Commentary", MCATitleVersion="n/a", MCAContent="PRM", MCAUseClass="FCMP", ADMAudioProgrammeID="APR_1002"
 ```
 
+_See below for guidance on writing `mca.txt` including specific IMF advice_
+
 ## SMPTE ST 2131 and SMPTE ST 2067-204
 
 SMPTE ST 2131 defines a mechanism for mapping Resource Interchange File Format (RIFF) Chunks containing audio metadata to MXF files to augment MXF Sound Tracks. It defines additional MXF support specifically for the mapping and labeling of content described by Audio Definition Model (ADM) metadata (Recommendation ITU-R BS.2076) which is often carried in Broadcast Wave 64-bit (BW64) RIFF files (Recommendation ITU-R BS.2088).
@@ -168,6 +170,19 @@ The following extra properties can be used on any line where the `chunk_id` prop
 * ADMAudioProgrammeID
 * ADMAudioContentID
 * ADMAudioObjectID
+
+### MCA details for IMF ADM Audio Track Files
+
+If an IMF Audio Track File is being created following Operational Mode A (see SMPTE ST 2067-204) then the following example approach to creating MCA is likely to be appropriate:
+
+* Write one soundfield group (SG) "label line" for each audioProgramme element defined by the ADM metadata, with the audioProgramme ID put into ADMAudioProgrammeID
+* Start each soundfield group (SG) "label line" with `ADM, chunk_id=axml`
+* Set RFC5646SpokenLanguage and MCATitle to match the ADM metadata (see ST 2067-204 for details)
+  * RFC5646SpokenLanguage can be left out when appropriate
+  * RFC5646SpokenLanguage uses RFC 5646 language tags whereas ADM suggests the use of older ISO 639-1 or -2 codes so translation might be needed
+- MCATitleVersion is always "n/a" unless there are special requirements
+- Set MCAContent and MCAUseClass to properly represent the content of each audioProgramme
+    - Refer to SMPTE ST 377-41 for values and to https://www.imfug.com/TR/audio-track-files/ for examples (Note: the IMF UG document uses the same values but populates older MCA properties)
 
 ### MXF creation commandline for MCA
 
