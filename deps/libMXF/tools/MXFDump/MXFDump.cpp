@@ -3316,8 +3316,8 @@ void updateAAFLocalKey(const mxfKey& key, const mxfLocalKey localKey)
         mxfWarning("Cannot remap static local key as specified by Primer Pack "
                    "(property \"%s\" has local key %04" MXFPRIx16 " in the AAF "
                    "dictionary and %04" MXFPRIx16 " in the Primer)\n",
-                   mxfLocalKeyTable[index]._name,
-                   mxfLocalKeyTable[index]._localKey,
+                   aafLocalKeyTable[index]._name,
+                   aafLocalKeyTable[index]._localKey,
                    localKey );
       }
     }
