@@ -200,6 +200,7 @@ private:
     std::vector<RDD9IndexTableSegment*> mIndexSegments;
     int64_t mDuration;
     int64_t mStreamOffset;
+    int64_t mFirstIndexSegmentCount;
 
     std::vector<RDD9IndexTableSegment*> mWrittenIndexSegments;
 };
