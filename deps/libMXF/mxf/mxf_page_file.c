@@ -129,18 +129,36 @@ static void disk_file_close(FileDescriptor *fileDesc)
 static uint32_t disk_file_read(FileDescriptor *fileDesc, uint8_t *data, uint32_t count)
 {
     char errorBuf[128];
-    uint32_t result = (uint32_t)fread(data, 1, count, fileDesc->file);
-    if (result != count && ferror(fileDesc->file))
-        mxf_log_error("fread failed: %s\n", mxf_strerror(errno, errorBuf, sizeof(errorBuf)));
+    uint32_t result;
+
+    if (data) {
+        result = (uint32_t)fread(data, 1, count, fileDesc->file);
+        if (result != count && ferror(fileDesc->file))
+            mxf_log_error("fread failed: %s\n", mxf_strerror(errno, errorBuf, sizeof(errorBuf)));
+    } else {
+        result = 0;
+        if (result != count)
+            mxf_log_error("fread failed: passed NULL data ptr\n");
+    }
+
     return result;
 }
 
 static uint32_t disk_file_write(FileDescriptor *fileDesc, const uint8_t *data, uint32_t count)
 {
     char errorBuf[128];
-    uint32_t result = (uint32_t)fwrite(data, 1, count, fileDesc->file);
-    if (result != count)
-        mxf_log_error("fwrite failed: %s\n", mxf_strerror(errno, errorBuf, sizeof(errorBuf)));
+    uint32_t result;
+
+    if (data) {
+        result = (uint32_t)fwrite(data, 1, count, fileDesc->file);
+        if (result != count)
+            mxf_log_error("fwrite failed: %s\n", mxf_strerror(errno, errorBuf, sizeof(errorBuf)));
+    } else {
+        result = 0;
+        if (result != count)
+            mxf_log_error("fwrite failed: passed NULL data ptr\n");
+    }
+
     return result;
 }
 
