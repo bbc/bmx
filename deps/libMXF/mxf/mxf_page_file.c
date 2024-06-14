@@ -360,7 +360,8 @@ static Page* open_page(MXFFileSysData *sysData, int64_t position)
 
             Page *newPages;
             CHK_MALLOC_ARRAY_ORET(newPages, Page, sysData->numPagesAllocated + PAGE_ALLOC_INCR);
-            memcpy(newPages, sysData->pages, sizeof(Page) * sysData->numPagesAllocated);
+            if (sysData->pages)
+                memcpy(newPages, sysData->pages, sizeof(Page) * sysData->numPagesAllocated);
             SAFE_FREE(sysData->pages);
             sysData->pages = newPages;
             sysData->numPagesAllocated += PAGE_ALLOC_INCR;
