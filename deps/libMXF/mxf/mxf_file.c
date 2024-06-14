@@ -440,10 +440,10 @@ int mxf_read_uint32(MXFFile *mxfFile, uint32_t *value)
     uint8_t buffer[4];
     CHK_ORET(mxf_file_read(mxfFile, buffer, 4) == 4);
 
-    *value = (buffer[0] << 24) |
-             (buffer[1] << 16) |
-             (buffer[2] << 8) |
-              buffer[3];
+    *value = ((uint32_t)buffer[0] << 24) |
+             ((uint32_t)buffer[1] << 16) |
+             ((uint32_t)buffer[2] << 8) |
+              (uint32_t)buffer[3];
 
     return 1;
 }
