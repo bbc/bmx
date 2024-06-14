@@ -80,9 +80,16 @@ BMXFileIO::~BMXFileIO()
 
 uint32_t BMXFileIO::Read(unsigned char *data, uint32_t size)
 {
-    size_t result = fread(data, 1, size, mFile);
-    if (result != size && ferror(mFile))
-        log_error("Failed to read %u bytes: %s\n", size, bmx_strerror(errno).c_str());
+    size_t result;
+    if (data) {
+        result = fread(data, 1, size, mFile);
+        if (result != size && ferror(mFile))
+            log_error("Failed to read %u bytes: %s\n", size, bmx_strerror(errno).c_str());
+    } else {
+        result = 0;
+        if (result != size)
+            log_error("Failed to read %u bytes: passed NULL data ptr\n", size);
+    }
 
     return (uint32_t)result;
 }
@@ -91,9 +98,16 @@ uint32_t BMXFileIO::Write(const unsigned char *data, uint32_t size)
 {
     BMX_ASSERT(!mReadOnly);
 
-    size_t result = fwrite(data, 1, size, mFile);
-    if (result != size)
-        log_error("Failed to write %u bytes: %s\n", size, bmx_strerror(errno).c_str());
+    size_t result;
+    if (data) {
+        result = fwrite(data, 1, size, mFile);
+        if (result != size)
+            log_error("Failed to write %u bytes: %s\n", size, bmx_strerror(errno).c_str());
+    } else {
+        result = 0;
+        if (result != size)
+            log_error("Failed to write %u bytes: passed NULL data ptr\n", size);
+    }
 
     return (uint32_t)result;
 }

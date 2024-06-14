@@ -430,6 +430,8 @@ static void write_d10(FILE *file, int type, unsigned int duration)
     unsigned int i;
     for (i = 0; i < duration; i++)
         write_buffer(file, data, frame_size);
+
+    delete [] data;
 }
 
 static void write_mpeg2lg(FILE *file, int type, unsigned int duration, bool low_delay, bool closed_gop,

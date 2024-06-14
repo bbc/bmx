@@ -123,18 +123,36 @@ static void disk_file_close(MXFFileSysData *sysData)
 static uint32_t disk_file_read(MXFFileSysData *sysData, uint8_t *data, uint32_t count)
 {
     char errorBuf[128];
-    uint32_t result = (uint32_t)fread(data, 1, count, sysData->file);
-    if (result != count && ferror(sysData->file))
-        mxf_log_error("fread failed: %s\n", mxf_strerror(errno, errorBuf, sizeof(errorBuf)));
+    uint32_t result;
+
+    if (data) {
+        result = (uint32_t)fread(data, 1, count, sysData->file);
+        if (result != count && ferror(sysData->file))
+            mxf_log_error("fread failed: %s\n", mxf_strerror(errno, errorBuf, sizeof(errorBuf)));
+    } else {
+        result = 0;
+        if (result != count)
+            mxf_log_error("fread failed: passed NULL data ptr\n");
+    }
+
     return result;
 }
 
 static uint32_t disk_file_write(MXFFileSysData *sysData, const uint8_t *data, uint32_t count)
 {
     char errorBuf[128];
-    uint32_t result = (uint32_t)fwrite(data, 1, count, sysData->file);
-    if (result != count)
-        mxf_log_error("fwrite failed: %s\n", mxf_strerror(errno, errorBuf, sizeof(errorBuf)));
+    uint32_t result;
+
+    if (data) {
+        result = (uint32_t)fwrite(data, 1, count, sysData->file);
+        if (result != count)
+            mxf_log_error("fwrite failed: %s\n", mxf_strerror(errno, errorBuf, sizeof(errorBuf)));
+    } else {
+        result = 0;
+        if (result != count)
+            mxf_log_error("fwrite failed: passed NULL data ptr\n");
+    }
+
     return result;
 }
 
@@ -422,10 +440,10 @@ int mxf_read_uint32(MXFFile *mxfFile, uint32_t *value)
     uint8_t buffer[4];
     CHK_ORET(mxf_file_read(mxfFile, buffer, 4) == 4);
 
-    *value = (buffer[0] << 24) |
-             (buffer[1] << 16) |
-             (buffer[2] << 8) |
-              buffer[3];
+    *value = ((uint32_t)buffer[0] << 24) |
+             ((uint32_t)buffer[1] << 16) |
+             ((uint32_t)buffer[2] << 8) |
+              (uint32_t)buffer[3];
 
     return 1;
 }

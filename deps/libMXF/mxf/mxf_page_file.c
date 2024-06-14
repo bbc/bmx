@@ -129,18 +129,36 @@ static void disk_file_close(FileDescriptor *fileDesc)
 static uint32_t disk_file_read(FileDescriptor *fileDesc, uint8_t *data, uint32_t count)
 {
     char errorBuf[128];
-    uint32_t result = (uint32_t)fread(data, 1, count, fileDesc->file);
-    if (result != count && ferror(fileDesc->file))
-        mxf_log_error("fread failed: %s\n", mxf_strerror(errno, errorBuf, sizeof(errorBuf)));
+    uint32_t result;
+
+    if (data) {
+        result = (uint32_t)fread(data, 1, count, fileDesc->file);
+        if (result != count && ferror(fileDesc->file))
+            mxf_log_error("fread failed: %s\n", mxf_strerror(errno, errorBuf, sizeof(errorBuf)));
+    } else {
+        result = 0;
+        if (result != count)
+            mxf_log_error("fread failed: passed NULL data ptr\n");
+    }
+
     return result;
 }
 
 static uint32_t disk_file_write(FileDescriptor *fileDesc, const uint8_t *data, uint32_t count)
 {
     char errorBuf[128];
-    uint32_t result = (uint32_t)fwrite(data, 1, count, fileDesc->file);
-    if (result != count)
-        mxf_log_error("fwrite failed: %s\n", mxf_strerror(errno, errorBuf, sizeof(errorBuf)));
+    uint32_t result;
+
+    if (data) {
+        result = (uint32_t)fwrite(data, 1, count, fileDesc->file);
+        if (result != count)
+            mxf_log_error("fwrite failed: %s\n", mxf_strerror(errno, errorBuf, sizeof(errorBuf)));
+    } else {
+        result = 0;
+        if (result != count)
+            mxf_log_error("fwrite failed: passed NULL data ptr\n");
+    }
+
     return result;
 }
 
@@ -342,7 +360,8 @@ static Page* open_page(MXFFileSysData *sysData, int64_t position)
 
             Page *newPages;
             CHK_MALLOC_ARRAY_ORET(newPages, Page, sysData->numPagesAllocated + PAGE_ALLOC_INCR);
-            memcpy(newPages, sysData->pages, sizeof(Page) * sysData->numPagesAllocated);
+            if (sysData->pages)
+                memcpy(newPages, sysData->pages, sizeof(Page) * sysData->numPagesAllocated);
             SAFE_FREE(sysData->pages);
             sysData->pages = newPages;
             sysData->numPagesAllocated += PAGE_ALLOC_INCR;
