@@ -244,6 +244,10 @@ Source distributions, including dependencies, and binaries are made available in
 
 Source and binary distributions are generally only created when a new feature is required for creating standard compliant sample files for example, or when a release hasn't been made for a long time.
 
+## Conan
+
+Additionally bmx (including MXF and MXF++) is available via the Conan package manager for C/C++: [bmx Conan recipe](https://conan.io/center/recipes/bmx). Conan Center Index offers precompiled packages for many target systems and otherwise allows to locally build according to a local conan build profile. Follow the code snippets and documentation on the linked page for integrating it.
+
 ## License
 
 The bmx library is provided under the BSD 3-clause license. See the [COPYING](./COPYING) file provided with this library for more details.
