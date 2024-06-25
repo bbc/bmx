@@ -74,7 +74,7 @@ if(MSVC)
         endforeach()
     endif()
 else()
-    add_compile_options(-Wextra -Wall)
+    add_compile_options(-Wextra -Wall $<$<COMPILE_LANGUAGE:C>:-Werror=implicit-function-declaration>)
 
     # Enable large file support on 32-bit systems.
     add_definitions(
