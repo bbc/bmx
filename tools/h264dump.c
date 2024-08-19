@@ -582,16 +582,6 @@ static int skip_bits(ParseContext *context, uint64_t num_bits)
     return 1;
 }
 
-static int skip_bytes(ParseContext *context, uint64_t num_bytes)
-{
-    CHK(byte_aligned(context));
-    CHK(context->bit_pos + num_bytes * 8 <= context->end_bit_pos);
-
-    context->bit_pos += num_bytes * 8;
-
-    return 1;
-}
-
 static int exp_golumb(ParseContext *context)
 {
     int8_t leading_zero_bits = -1;
@@ -1865,6 +1855,24 @@ static int recovery_point(ParseContext *context, uint64_t payload_type, uint64_t
     return 1;
 }
 
+static int skip_sei_payload(ParseContext *context, uint64_t num_bytes)
+{
+    uint64_t rem_num_bytes = num_bytes;
+    while (rem_num_bytes > 0) {
+        uint8_t read_num_bytes = 8;
+        if (read_num_bytes > rem_num_bytes)
+            read_num_bytes = rem_num_bytes;
+
+        /* Skip payload by calling read_bits to ensure context->emu_prevention_count is updated */
+        if (!read_bits(context, read_num_bytes * 8))
+            return 0;
+
+        rem_num_bytes -= read_num_bytes;
+    }
+
+    return 1;
+}
+
 static int sei_payload(ParseContext *context, uint64_t payload_type, uint64_t payload_size)
 {
     uint64_t next_bit_pos = context->bit_pos + payload_size * 8;
@@ -1875,7 +1883,7 @@ static int sei_payload(ParseContext *context, uint64_t payload_type, uint64_t pa
     } else if (payload_type == 1) {
         // delay dump until active SPS is known (TODO: could avoid delay if there is a buffering period SEI message)
         CHK(buffer_pic_timing(context, payload_type, payload_size));
-        CHK(skip_bytes(context, payload_size));
+        CHK(skip_sei_payload(context, payload_size));
     } else if (payload_type == 5) {
         CHK(user_data_unregistered(context, payload_type, payload_size));
     } else if (payload_type == 6) {
