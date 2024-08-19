@@ -194,9 +194,9 @@ void init_progress(float *next_update);
 void print_progress(int64_t count, int64_t duration, float *next_update);
 
 void sleep_msec(uint32_t msec);
-uint32_t get_tick_count();
-uint32_t delta_tick_count(uint32_t from, uint32_t to);
-void rt_sleep(float rt_factor, uint32_t start_tick, Rational sample_rate, int64_t num_samples);
+uint64_t get_tick_count();
+uint64_t delta_tick_count(uint64_t from, uint64_t to);
+void rt_sleep(float rt_factor, uint64_t start_tick, Rational sample_rate, int64_t num_samples);
 
 
 

@@ -4586,7 +4586,7 @@ int main(int argc, const char** argv)
 
         // realtime transwrapping
 
-        uint32_t rt_start = 0;
+        uint64_t rt_start = 0;
         if (realtime)
             rt_start = get_tick_count();
 
@@ -4596,7 +4596,7 @@ int main(int argc, const char** argv)
         unsigned int gf_retry_count = 0;
         bool gf_read_failure = false;
         int64_t gf_failure_num_read = 0;
-        uint32_t gf_failure_start = 0;
+        uint64_t gf_failure_start = 0;
 
 
         // create clip file(s) and write samples
