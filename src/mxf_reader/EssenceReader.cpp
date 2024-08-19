@@ -83,7 +83,7 @@ bool EssenceReaderBuffer::PopOrPrepareRead(int64_t position, uint32_t num_sample
 {
     size_t offset = GetFrameBufferOffset(position);
     if (offset < GetBufferSize()) {
-        if (mRequestSampleCounts[offset] == num_samples) {
+        if (mRequestSampleCounts[offset] == num_samples && mReadSampleCounts[offset] == num_samples) {
             if (!mBufferFrames) {
                 ClearBeforeFrames(offset);
                 offset = 0;
