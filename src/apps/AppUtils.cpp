@@ -1562,7 +1562,7 @@ void bmx::rt_sleep(float rt_factor, uint64_t start_tick, Rational sample_rate, i
     uint64_t target_tick = start_tick + (uint64_t)(1000 * num_samples *
                                 sample_rate.denominator / (rt_factor * sample_rate.numerator));
     uint64_t delta_tick = delta_tick_count(tick, target_tick);
-    if (delta_tick < 10000) // don't sleep if target_tick < tick or there are bogus tick values
+    if (delta_tick)
         sleep_msec(delta_tick);
 }
 
