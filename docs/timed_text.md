@@ -36,13 +36,13 @@ The `raw2bmx` utility can be used to embed Timed Text XML and ancillary font or 
 *Example 1*: Creates an OP1a file including a timed text track alongside video and audio tracks. The manifest file, `manifest.txt`, references the Timed Text XML file and ancillary resource files.
 
 ```bash
-raw2bmx -t op1a -y 10:00:00:00 --avci video.h264 --wave audio.wav --tt manifest.txt
+raw2bmx -t op1a -o output.mxf -y 10:00:00:00 --avci video.h264 --wave audio.wav --tt manifest.txt
 ```
 
 *Example 2*: Creates a (mono-essence) IMF Timed Text Track File. An edit rate (`-f`) and duration (`--dur`) are required in this case as they are not parsed from the Timed Text XML file (assuming they are specified in there).
 
 ```bash
-raw2bmx -t imf -f 25 --dur 100 --tt manifest.txt
+raw2bmx -t imf -o {Type}_{fp_uuid}.mxf -f 25 --dur 100 --tt manifest.txt
 ```
 
 ### Manifest File Format

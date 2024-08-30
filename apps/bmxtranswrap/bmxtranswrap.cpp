@@ -3568,6 +3568,11 @@ int main(int argc, const char** argv)
             log_info("Output filename set to '%s'\n", complete_output_name.c_str());
         }
 
+        if (complete_output_name.empty()) {
+            log_error("No output name given; use the '-o' option\n");
+            throw false;
+        }
+
 
         // create output clip and initialize
 

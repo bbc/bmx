@@ -4113,12 +4113,6 @@ int main(int argc, const char** argv)
         return 1;
     }
 
-    if (!output_name) {
-        usage_ref(argv[0]);
-        fprintf(stderr, "No output name given\n");
-        return 1;
-    }
-
     if (inputs.empty()) {
         usage_ref(argv[0]);
         fprintf(stderr, "No raw inputs given\n");
@@ -4995,6 +4989,11 @@ int main(int argc, const char** argv)
                                                                 filename_essence_type_names,
                                                                 mp_uid, fp_uid);
             log_info("Output filename set to '%s'\n", complete_output_name.c_str());
+        }
+
+        if (complete_output_name.empty()) {
+            log_error("No output name given; use the '-o' option\n");
+            throw false;
         }
 
 
