@@ -324,6 +324,63 @@ typedef void (*print_frame_info_f)(AppInfoWriter *info_writer, EssenceParser *pa
                                    const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num);
 
 
+static void print_avc_pict_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
+                                const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num)
+{
+    POCState *poc_state = static_cast<POCState*>(parser_data);
+    AVCCodedPictureEssenceParser *avc_parser = dynamic_cast<AVCCodedPictureEssenceParser*>(parser);
+    frame_size = parser->ParseFrameInfo2(frame_data, frame_size);
+
+    int32_t pic_order_cnt;
+    avc_parser->DecodePOC(poc_state, &pic_order_cnt);
+
+    EssenceType essence_type = avc_parser->GetEssenceType();
+    EssenceType avci_essence_type = avc_parser->GetAVCIEssenceType(frame_size.GetSize(), false, false);
+
+    info_writer->StartArrayElement("frame", (size_t)frame_num);
+
+    info_writer->WriteIntegerItem("size", frame_size.GetSize());
+    info_writer->WriteIntegerItem("profile", avc_parser->GetProfile(), true);
+    info_writer->WriteIntegerItem("profile_constraint", avc_parser->GetProfileConstraint(), true);
+    info_writer->WriteIntegerItem("level", avc_parser->GetLevel());
+    info_writer->WriteIntegerItem("max_bit_rate", avc_parser->GetMaxBitRate());
+    info_writer->WriteIntegerItem("max_num_ref_frames", avc_parser->GetMaxNumRefFrames());
+    info_writer->WriteBoolItem("fixed_frame_rate", avc_parser->IsFixedFrameRate());
+    info_writer->WriteRationalItem("frame_rate", avc_parser->GetFrameRate());
+    info_writer->WriteIntegerItem("stored_width", avc_parser->GetStoredWidth());
+    info_writer->WriteIntegerItem("stored_height", avc_parser->GetStoredHeight());
+    info_writer->WriteIntegerItem("display_width", avc_parser->GetDisplayWidth());
+    info_writer->WriteIntegerItem("display_height", avc_parser->GetDisplayHeight());
+    info_writer->WriteIntegerItem("display_x_offset", avc_parser->GetDisplayYOffset());
+    info_writer->WriteIntegerItem("display_y_offset", avc_parser->GetDisplayYOffset());
+    info_writer->WriteRationalItem("sample_aspect_ratio", avc_parser->GetSampleAspectRatio());
+    if (avc_parser->IsIDRFrame()) {
+        info_writer->WriteStringItem("frame_type", "I_IDR");
+    } else {
+        switch (avc_parser->GetFrameType())
+        {
+            case I_FRAME: info_writer->WriteStringItem("frame_type", "I_Non_IDR"); break;
+            case P_FRAME: info_writer->WriteStringItem("frame_type", "P"); break;
+            case B_FRAME: info_writer->WriteStringItem("frame_type", "B"); break;
+            default:      info_writer->WriteStringItem("frame_type", "Unknown"); break;
+        }
+    }
+    info_writer->WriteIntegerItem("frame_num", avc_parser->GetFrameNum());
+    info_writer->WriteIntegerItem("pic_order_cnt", pic_order_cnt);
+    info_writer->WriteBoolItem("frame_mbs_only", avc_parser->IsFrameMBSOnly());
+    if (!avc_parser->IsFrameMBSOnly()) {
+        info_writer->WriteBoolItem("mb_adaptive_ff_encoding", avc_parser->IsMBAdaptiveFFEncoding());
+        info_writer->WriteBoolItem("field_picture", avc_parser->IsFieldPicture());
+        if (avc_parser->IsFieldPicture())
+            info_writer->WriteBoolItem("bottom_field", avc_parser->IsBottomField());
+    }
+    info_writer->WriteStringItem("essence_type", essence_type_to_enum_string(essence_type));
+    if (avci_essence_type != UNKNOWN_ESSENCE_TYPE)
+        info_writer->WriteStringItem("avci_essence_type", essence_type_to_enum_string(avci_essence_type));
+
+    info_writer->EndArrayElement();
+}
+
 static void print_avc_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
                                  const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num)
 {
@@ -693,6 +750,7 @@ static void usage(const char *cmd, bool error)
     fprintf(output, " -l <file>             Log filename. Default log to stderr\n");
     fprintf(output, " --log-level <level>   Set the log level. 0=debug, 1=info, 2=warning, 3=error. Default is 1\n");
     fprintf(output, " --single-field        Assume MJPEG single field encoding. Default is to parse field pairs\n");
+    fprintf(output, " --avc-picture         Parse AVC field or frame coded picture and don't combine field pairs\n");
     if (error)
         fprintf(output, "\n");
 }
@@ -702,6 +760,7 @@ int main(int argc, const char **argv)
     const char *log_filename = 0;
     LogLevel log_level = INFO_LOG;
     bool single_field = false;
+    bool avc_picture = false;
     InputType input_type = AVC_INPUT;
     const char *filename = 0;
     int cmdln_index;
@@ -759,6 +818,10 @@ int main(int argc, const char **argv)
         {
             single_field = true;
         }
+        else if (strcmp(argv[cmdln_index], "--avc-picture") == 0)
+        {
+            avc_picture = true;
+        }
         else
         {
             break;
@@ -811,8 +874,13 @@ int main(int argc, const char **argv)
         switch (input_type)
         {
             case AVC_INPUT:
-                parser = new AVCEssenceParser();
-                print_frame_info = print_avc_frame_info;
+                if (avc_picture) {
+                    parser = new AVCCodedPictureEssenceParser();
+                    print_frame_info = print_avc_pict_info;
+                } else {
+                    parser = new AVCEssenceParser();
+                    print_frame_info = print_avc_frame_info;
+                }
                 parser_data = &poc_state;
                 if (text_info_writer)
                     text_info_writer->PushItemValueIndent(strlen("mb_adaptive_ff_encoding "));
