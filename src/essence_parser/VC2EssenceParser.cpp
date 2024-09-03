@@ -225,12 +225,23 @@ uint32_t VC2EssenceParser::ParseFrameStart(const unsigned char *data, uint32_t d
         return ESSENCE_PARSER_NULL_OFFSET;
 }
 
+void VC2EssenceParser::ResetParseFrameSize()
+{
+    mParseState = PARSE_INFO_STATE;
+    mOffset = 0;
+    memset(&mCurrentParseInfo, 0, sizeof(mCurrentParseInfo));
+    mParseInfos.clear();
+    mPictureCount = 0;
+    mSearchState = 0;
+    mSearchCount = 0;
+}
+
 uint32_t VC2EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
 
     if (mOffset == 0)
-        ResetFrameSize();
+        ResetParseFrameSize();
 
     VC2GetBitBuffer buffer(data, data_size);
     buffer.SetPos(mOffset);
@@ -380,7 +391,7 @@ uint32_t VC2EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
             log_warn("Missing Picture data unit(s)\n");
             return ESSENCE_PARSER_NULL_FRAME_SIZE;
         }
-        mOffset = 0; // results in ResetFrameSize() in next call
+        mOffset = 0; // results in ResetParseFrameSize() in next call
         return frame_size;
     } else {
         return ESSENCE_PARSER_NULL_OFFSET;
@@ -444,7 +455,7 @@ uint32_t VC2EssenceParser::ParsePictureHeader(const unsigned char *data, uint32_
 
 void VC2EssenceParser::ResetFrameParse()
 {
-    ResetFrameSize();
+    ResetParseFrameSize();
     ResetFrameInfo();
 }
 
@@ -706,17 +717,6 @@ void VC2EssenceParser::SetCodingParameters(SequenceHeader *sequence_header)
 
     sequence_header->coding_params.luma_depth = intlog2(sequence_header->source_params.luma_excursion + 1);
     sequence_header->coding_params.color_diff_depth = intlog2(sequence_header->source_params.color_diff_excursion + 1);
-}
-
-void VC2EssenceParser::ResetFrameSize()
-{
-    mParseState = PARSE_INFO_STATE;
-    mOffset = 0;
-    memset(&mCurrentParseInfo, 0, sizeof(mCurrentParseInfo));
-    mParseInfos.clear();
-    mPictureCount = 0;
-    mSearchState = 0;
-    mSearchCount = 0;
 }
 
 void VC2EssenceParser::ResetFrameInfo()

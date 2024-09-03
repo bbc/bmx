@@ -101,6 +101,10 @@ uint32_t J2CEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t d
     return 0;
 }
 
+void J2CEssenceParser::ResetParseFrameSize()
+{
+}
+
 uint32_t J2CEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);

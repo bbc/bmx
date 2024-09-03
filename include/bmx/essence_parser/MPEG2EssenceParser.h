@@ -48,6 +48,8 @@ public:
     virtual ~MPEG2EssenceParser();
 
     virtual uint32_t ParseFrameStart(const unsigned char *data, uint32_t data_size);
+
+    virtual void ResetParseFrameSize();
     virtual uint32_t ParseFrameSize(const unsigned char *data, uint32_t data_size);
 
     virtual void ParseFrameInfo(const unsigned char *data, uint32_t data_size);
@@ -96,7 +98,6 @@ public:
     bool IsTFF() const                          { return mIsTFF; }
 
 private:
-    void ResetFrameSize();
     void ResetFrameInfo();
 
 private:

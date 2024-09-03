@@ -45,7 +45,7 @@ using namespace bmx;
 MJPEGEssenceParser::MJPEGEssenceParser(bool single_field)
 {
     mSingleField = single_field;
-    Reset();
+    ResetParseFrameSize();
 }
 
 MJPEGEssenceParser::~MJPEGEssenceParser()
@@ -58,6 +58,16 @@ uint32_t MJPEGEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t
 
     (void)data;
     return 0;
+}
+
+void MJPEGEssenceParser::ResetParseFrameSize()
+{
+    mOffset = 0;
+    mState = 0;
+    mHaveLenByte1 = false;
+    mHaveLenByte2 = false;
+    mSkipCount = 0;
+    mFieldCount = 0;
 }
 
 uint32_t MJPEGEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
@@ -86,7 +96,7 @@ uint32_t MJPEGEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t 
                     mState = 1;
                 } else {
                     // invalid image start
-                    Reset();
+                    ResetParseFrameSize();
                     return ESSENCE_PARSER_NULL_FRAME_SIZE;
                 }
                 break;
@@ -105,7 +115,7 @@ uint32_t MJPEGEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t 
                 {
                     uint32_t image_size = mOffset + 1;
                     if (mSingleField || mFieldCount == 1) {
-                        Reset();
+                        ResetParseFrameSize();
                         return image_size;
                     }
                     mFieldCount++;
@@ -158,14 +168,3 @@ void MJPEGEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data
     (void)data;
     (void)data_size;
 }
-
-void MJPEGEssenceParser::Reset()
-{
-    mOffset = 0;
-    mState = 0;
-    mHaveLenByte1 = false;
-    mHaveLenByte2 = false;
-    mSkipCount = 0;
-    mFieldCount = 0;
-}
-

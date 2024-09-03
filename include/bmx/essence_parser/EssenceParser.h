@@ -96,6 +96,7 @@ public:
 
     virtual uint32_t ParseFrameStart(const unsigned char *data, uint32_t data_size) = 0;
 
+    virtual void ResetParseFrameSize() = 0;
     virtual uint32_t ParseFrameSize(const unsigned char *data, uint32_t data_size);
     virtual ParsedFrameSize ParseFrameSize2(const unsigned char *data, uint32_t data_size);
 

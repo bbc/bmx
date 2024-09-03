@@ -150,6 +150,8 @@ public:
     void SetPPS(const unsigned char *data, uint32_t size);
 
     virtual uint32_t ParseFrameStart(const unsigned char *data, uint32_t data_size);
+
+    virtual void ResetParseFrameSize();
     virtual uint32_t ParseFrameSize(const unsigned char *data, uint32_t data_size);
 
     virtual void ParseFrameInfo(const unsigned char *data, uint32_t data_size);
@@ -339,7 +341,6 @@ private:
     void SetSPSData(uint8_t id, const unsigned char *data, uint32_t size);
     void SetPPSData(uint8_t id, const unsigned char *data, uint32_t size);
 
-    void ResetFrameSize();
     void ResetFrameInfo();
 
 private:
@@ -398,6 +399,8 @@ public:
     void SetPPS(const unsigned char *data, uint32_t size);
 
     virtual uint32_t ParseFrameStart(const unsigned char *data, uint32_t data_size);
+
+    virtual void ResetParseFrameSize();
     virtual ParsedFrameSize ParseFrameSize2(const unsigned char *data, uint32_t data_size);
 
     virtual ParsedFrameSize ParseFrameInfo2(const unsigned char *data, ParsedFrameSize frame_size);

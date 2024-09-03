@@ -195,6 +195,8 @@ bool RawEssenceReader::ReadAndParseSample()
         sample_num_read += ReadBytes(mReadBlockSize);
     }
 
+    mEssenceParser->ResetParseFrameSize();
+
     ParsedFrameSize sample_size;
     while (true) {
         sample_size = mEssenceParser->ParseFrameSize2(mSampleBuffer.GetBytes() + sample_start_offset, sample_num_read);

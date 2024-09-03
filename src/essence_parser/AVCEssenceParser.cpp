@@ -406,7 +406,7 @@ AVCCodedPictureEssenceParser::POCInfo::~POCInfo()
 
 AVCCodedPictureEssenceParser::AVCCodedPictureEssenceParser()
 {
-    ResetFrameSize();
+    ResetParseFrameSize();
     ResetFrameInfo();
 }
 
@@ -469,6 +469,13 @@ uint32_t AVCCodedPictureEssenceParser::ParseFrameStart(const unsigned char *data
     return offset - 1;
 }
 
+void AVCCodedPictureEssenceParser::ResetParseFrameSize()
+{
+    mHavePrimPicSliceHeader = false;
+    memset(&mPrimPicSliceHeader, 0, sizeof(mPrimPicSliceHeader));
+    mOffset = 0;
+}
+
 uint32_t AVCCodedPictureEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
     BMX_CHECK(data_size < ESSENCE_PARSER_NULL_OFFSET);
@@ -482,7 +489,7 @@ uint32_t AVCCodedPictureEssenceParser::ParseFrameSize(const unsigned char *data,
     //   access unit's NAL unit
 
     if (mOffset == 0)
-        ResetFrameSize();
+        ResetParseFrameSize();
 
     bool have_frame_end = false;
     bool have_issue = false;
@@ -1867,13 +1874,6 @@ void AVCCodedPictureEssenceParser::SetPPSData(uint8_t id, const unsigned char *d
         mPPSData[id] = new ParamSetData(data, size);
 }
 
-void AVCCodedPictureEssenceParser::ResetFrameSize()
-{
-    mHavePrimPicSliceHeader = false;
-    memset(&mPrimPicSliceHeader, 0, sizeof(mPrimPicSliceHeader));
-    mOffset = 0;
-}
-
 void AVCCodedPictureEssenceParser::ResetFrameInfo()
 {
     mHavePrimPicSliceHeader = false;
@@ -1945,10 +1945,16 @@ uint32_t AVCEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t d
     return mCodedPictureParser.ParseFrameStart(data, data_size);
 }
 
+void AVCEssenceParser::ResetParseFrameSize()
+{
+    mCodedPictureParser.ResetParseFrameSize();
+    mParsedFrameSize.Reset();
+}
+
 ParsedFrameSize AVCEssenceParser::ParseFrameSize2(const unsigned char *data, uint32_t data_size)
 {
     if (mParsedFrameSize.IsComplete())
-        mParsedFrameSize.Reset();
+        ResetParseFrameSize();
 
     if (mParsedFrameSize.HaveFirstField()) {
         // It is field coded and the first field has been parsed
@@ -2038,10 +2044,7 @@ ParsedFrameSize AVCEssenceParser::ParseFrameInfo2(const unsigned char *data, Par
 
         // Parse the field sizes if the frame_size passed in doesn't have the second field offset
         if (frame_size.IsFrame()) {
-            // The frame size might've been completed outside ParseFrameSize2 using remaining available
-            // data. That's why an explicit frame size parsing state reset is required here
-            mParsedFrameSize.Reset();
-
+            ResetParseFrameSize();
             ParseFrameSize2(data, frame_size.GetFirstFieldOrFrameSize());
 
             // The second field size won't be known from parsing because there is no next picture.

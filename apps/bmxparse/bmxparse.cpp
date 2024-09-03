@@ -979,6 +979,7 @@ int main(int argc, const char **argv)
 
                 frame_start = frame_size.GetSize();
                 frame_size.Reset();
+                parser->ResetParseFrameSize();
                 frame_count++;
 
                 if (end_of_data)
