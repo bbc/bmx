@@ -71,6 +71,7 @@ AVCWriterHelper::AVCWriterHelper()
     mNextIndexedDecodedPos = 0;
     mNextIndexedPos = 0;
     mKeyFramePosition = -1;
+    mIDRKeyFramePosition = -1;
     mDecodingDelay = 0;
     mBPictureCount = 0;
     mMaxBPictureCount = 0;
@@ -335,6 +336,9 @@ void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
                 ("Duplicate AVC pic order count value %d", pic_order_cnt));
     mDecodedFrames[pic_order_cnt] = mPosition;
 
+    if (mEssenceParser.IsIDRFrame())
+        mIDRKeyFramePosition = mPosition;
+
     if (mPosition == 0)
         mDescriptorHelper->UpdateFileDescriptor(&mEssenceParser);
 
@@ -516,12 +520,27 @@ void AVCWriterHelper::PopDecodedFrame()
     mIndexedDecodedFrames[coded_pos] = mIndexedCodedFrames[coded_pos];
     mIndexedCodedFrames.erase(coded_pos);
     IndexedFrame &indexed_dec_frame = mIndexedDecodedFrames[coded_pos];
-    if (indexed_dec_frame.frame_type == I_FRAME) {
+    if (indexed_dec_frame.frame_type == I_FRAME)
+    {
         indexed_dec_frame.key_frame_offset = 0;
         mKeyFramePosition = coded_pos;
-    } else if (mKeyFramePosition >= 0) {
+    }
+    else if (mKeyFramePosition >= 0)
+    {
         indexed_dec_frame.key_frame_offset = mKeyFramePosition - coded_pos;
-    } else {
+    }
+    else if (mIDRKeyFramePosition >= 0 && mIDRKeyFramePosition <= coded_pos &&
+             (mKeyFramePosition < 0 || mIDRKeyFramePosition >= mKeyFramePosition))
+    {
+        // This first IDR frame is a key frame because it occurs before this frame in coded order
+        // and the frame can't reference / require frames before that
+        indexed_dec_frame.key_frame_offset = mIDRKeyFramePosition - coded_pos;
+        // B-frame can only have backward prediction
+        if (indexed_dec_frame.frame_type == B_FRAME)
+            indexed_dec_frame.flags &= 0xdf;
+    }
+    else
+    {
         // There is no key frame before this frame in coded order
         indexed_dec_frame.key_frame_offset = (int64_t)INT32_MIN - 1;
     }

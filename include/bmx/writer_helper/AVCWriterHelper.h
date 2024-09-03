@@ -126,6 +126,7 @@ private:
     int64_t mNextIndexedDecodedPos;
     int64_t mNextIndexedPos;
     int64_t mKeyFramePosition;
+    int64_t mIDRKeyFramePosition;
 
     uint8_t mDecodingDelay;
     uint16_t mBPictureCount;
