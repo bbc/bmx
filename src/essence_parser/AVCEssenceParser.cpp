@@ -700,6 +700,16 @@ void AVCCodedPictureEssenceParser::ParseFrameInfo(const unsigned char *data, uin
                 break;
             }
         }
+        else if (mHavePrimPicSliceHeader &&
+                    (nal_unit_type == ACCESS_UNIT_DELIMITER ||
+                     nal_unit_type == SEQUENCE_PARAMETER_SET ||
+                     nal_unit_type == PICTURE_PARAMETER_SET ||
+                     nal_unit_type == SEI ||
+                     (nal_unit_type >= 15 && nal_unit_type <= 18)))
+        {
+            // This is the second field or the next frame
+            break;
+        }
         else if (nal_unit_type == SEQUENCE_PARAMETER_SET)
         {
             if (offset + 4 >= data_size)
