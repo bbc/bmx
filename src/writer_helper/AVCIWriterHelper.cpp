@@ -112,8 +112,8 @@ uint32_t AVCIWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size
 
     bool input_has_header = mEssenceParser.CheckFrameHasAVCIHeader(data, size);
     if (input_has_header) {
-       mEssenceParser.ParseFrameInfo(data, size);
-       BMX_CHECK_M(mEssenceParser.FrameHasActiveSPS(), ("AVC-I frame's SPS is not the active SPS"));
+        mEssenceParser.ParseFrameInfo2(data, ParsedFrameSize(size));
+        BMX_CHECK_M(mEssenceParser.FrameHasActiveSPS(), ("AVC-I frame's SPS is not the active SPS"));
     }
 
     uint32_t output_frame_size = 0;

@@ -321,25 +321,25 @@ public:
 
 
 typedef void (*print_frame_info_f)(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
-                                   Buffer *buffer, uint32_t frame_size, int64_t frame_num);
+                                   const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num);
 
 
 static void print_avc_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
-                                 Buffer *buffer, uint32_t frame_size, int64_t frame_num)
+                                 const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num)
 {
     POCState *poc_state = static_cast<POCState*>(parser_data);
     AVCEssenceParser *avc_parser = dynamic_cast<AVCEssenceParser*>(parser);
-    avc_parser->ParseFrameInfo(buffer->data, frame_size);
+    frame_size = parser->ParseFrameInfo2(frame_data, frame_size);
 
     int32_t pic_order_cnt;
     avc_parser->DecodePOC(poc_state, &pic_order_cnt);
 
     EssenceType essence_type = avc_parser->GetEssenceType();
-    EssenceType avci_essence_type = avc_parser->GetAVCIEssenceType(frame_size, false, false);
+    EssenceType avci_essence_type = avc_parser->GetAVCIEssenceType(frame_size.GetSize(), false, false);
 
     info_writer->StartArrayElement("frame", (size_t)frame_num);
 
-    info_writer->WriteIntegerItem("size", frame_size);
+    info_writer->WriteIntegerItem("size", frame_size.GetSize());
     info_writer->WriteIntegerItem("profile", avc_parser->GetProfile(), true);
     info_writer->WriteIntegerItem("profile_constraint", avc_parser->GetProfileConstraint(), true);
     info_writer->WriteIntegerItem("level", avc_parser->GetLevel());
@@ -370,9 +370,9 @@ static void print_avc_frame_info(AppInfoWriter *info_writer, EssenceParser *pars
     info_writer->WriteBoolItem("frame_mbs_only", avc_parser->IsFrameMBSOnly());
     if (!avc_parser->IsFrameMBSOnly()) {
         info_writer->WriteBoolItem("mb_adaptive_ff_encoding", avc_parser->IsMBAdaptiveFFEncoding());
-        info_writer->WriteBoolItem("field_picture", avc_parser->IsFieldPicture());
-        if (avc_parser->IsFieldPicture())
-            info_writer->WriteBoolItem("bottom_field", avc_parser->IsBottomField());
+        info_writer->WriteBoolItem("separate_field_picture", avc_parser->IsSeparateFieldPicture());
+        if (avc_parser->IsSeparateFieldPicture())
+            info_writer->WriteBoolItem("bottom_field_first", avc_parser->IsBottomFieldFirst());
     }
     info_writer->WriteStringItem("essence_type", essence_type_to_enum_string(essence_type));
     if (avci_essence_type != UNKNOWN_ESSENCE_TYPE)
@@ -382,11 +382,11 @@ static void print_avc_frame_info(AppInfoWriter *info_writer, EssenceParser *pars
 }
 
 static void print_dv_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
-                                Buffer *buffer, uint32_t frame_size, int64_t frame_num)
+                                const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num)
 {
     (void)parser_data;
     DVEssenceParser *dv_parser = dynamic_cast<DVEssenceParser*>(parser);
-    dv_parser->ParseFrameInfo(buffer->data, frame_size);
+    frame_size = dv_parser->ParseFrameInfo2(frame_data, frame_size);
 
     Rational frame_rate;
     if (dv_parser->Is50Hz())
@@ -396,7 +396,7 @@ static void print_dv_frame_info(AppInfoWriter *info_writer, EssenceParser *parse
 
     info_writer->StartArrayElement("frame", (size_t)frame_num);
 
-    info_writer->WriteIntegerItem("size", frame_size);
+    info_writer->WriteIntegerItem("size", frame_size.GetSize());
     switch (dv_parser->GetEssenceType())
     {
         case DVEssenceParser::IEC_DV25:     info_writer->WriteStringItem("type", "IEC_DV25"); break;
@@ -413,15 +413,15 @@ static void print_dv_frame_info(AppInfoWriter *info_writer, EssenceParser *parse
 }
 
 static void print_j2c_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
-                                 Buffer *buffer, uint32_t frame_size, int64_t frame_num)
+                                 const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num)
 {
     (void)parser_data;
     J2CEssenceParser *j2c_parser = dynamic_cast<J2CEssenceParser*>(parser);
-    j2c_parser->ParseFrameInfo(buffer->data, frame_size);
+    frame_size = j2c_parser->ParseFrameInfo2(frame_data, frame_size);
 
     info_writer->StartArrayElement("frame", (size_t)frame_num);
 
-    info_writer->WriteIntegerItem("size", frame_size);
+    info_writer->WriteIntegerItem("size", frame_size.GetSize());
     info_writer->WriteIntegerItem("r_siz", j2c_parser->GetRsiz(), true);
     info_writer->WriteIntegerItem("x_siz", j2c_parser->GetXsiz());
     info_writer->WriteIntegerItem("y_siz", j2c_parser->GetYsiz());
@@ -470,29 +470,29 @@ static void print_j2c_frame_info(AppInfoWriter *info_writer, EssenceParser *pars
 }
 
 static void print_mjpeg_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
-                                   Buffer *buffer, uint32_t frame_size, int64_t frame_num)
+                                   const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num)
 {
     (void)parser_data;
     MJPEGEssenceParser *mjpeg_parser = dynamic_cast<MJPEGEssenceParser*>(parser);
-    mjpeg_parser->ParseFrameInfo(buffer->data, frame_size);
+    frame_size = mjpeg_parser->ParseFrameInfo2(frame_data, frame_size);
 
     info_writer->StartArrayElement("frame", (size_t)frame_num);
 
-    info_writer->WriteIntegerItem("size", frame_size);
+    info_writer->WriteIntegerItem("size", frame_size.GetSize());
 
     info_writer->EndArrayElement();
 }
 
 static void print_m2v_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
-                                 Buffer *buffer, uint32_t frame_size, int64_t frame_num)
+                                 const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num)
 {
     (void)parser_data;
     MPEG2EssenceParser *m2v_parser = dynamic_cast<MPEG2EssenceParser*>(parser);
-    m2v_parser->ParseFrameAllInfo(buffer->data, frame_size);
+    m2v_parser->ParseFrameAllInfo(frame_data, frame_size.GetSize());
 
     info_writer->StartArrayElement("frame", (size_t)frame_num);
 
-    info_writer->WriteIntegerItem("size", frame_size);
+    info_writer->WriteIntegerItem("size", frame_size.GetSize());
     info_writer->WriteBoolItem("sequence_header", m2v_parser->HaveSequenceHeader());
     if (m2v_parser->HaveSequenceHeader()) {
         info_writer->WriteIntegerItem("horizontal_size", m2v_parser->GetHorizontalSize());
@@ -536,15 +536,15 @@ static void print_m2v_frame_info(AppInfoWriter *info_writer, EssenceParser *pars
 }
 
 static void print_rdd36_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
-                                   Buffer *buffer, uint32_t frame_size, int64_t frame_num)
+                                   const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num)
 {
     (void)parser_data;
     RDD36EssenceParser *rdd36_parser = dynamic_cast<RDD36EssenceParser*>(parser);
-    rdd36_parser->ParseFrameInfo(buffer->data, frame_size);
+    frame_size = rdd36_parser->ParseFrameInfo2(frame_data, frame_size);
 
     info_writer->StartArrayElement("frame", (size_t)frame_num);
 
-    info_writer->WriteIntegerItem("size", frame_size);
+    info_writer->WriteIntegerItem("size", frame_size.GetSize());
 
     info_writer->WriteRationalItem("frame_rate", rdd36_parser->GetFrameRate());
     info_writer->WriteIntegerItem("frame_width", rdd36_parser->GetWidth());
@@ -561,15 +561,15 @@ static void print_rdd36_frame_info(AppInfoWriter *info_writer, EssenceParser *pa
 }
 
 static void print_vc2_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
-                                 Buffer *buffer, uint32_t frame_size, int64_t frame_num)
+                                 const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num)
 {
     (void)parser_data;
     VC2EssenceParser *vc2_parser = dynamic_cast<VC2EssenceParser*>(parser);
-    vc2_parser->ParseFrameInfo(buffer->data, frame_size);
+    frame_size = vc2_parser->ParseFrameInfo2(frame_data, frame_size);
 
     info_writer->StartArrayElement("frame", (size_t)frame_num);
 
-    info_writer->WriteIntegerItem("size", frame_size);
+    info_writer->WriteIntegerItem("size", frame_size.GetSize());
     if (vc2_parser->FrameHasSequenceHeader()) {
         const VC2EssenceParser::SequenceHeader *sequence_header = vc2_parser->GetSequenceHeader();
         info_writer->StartSection("sequence_header");
@@ -635,15 +635,15 @@ static void print_vc2_frame_info(AppInfoWriter *info_writer, EssenceParser *pars
 }
 
 static void print_vc3_frame_info(AppInfoWriter *info_writer, EssenceParser *parser, void *parser_data,
-                                 Buffer *buffer, uint32_t frame_size, int64_t frame_num)
+                                 const unsigned char *frame_data, ParsedFrameSize frame_size, int64_t frame_num)
 {
     (void)parser_data;
     VC3EssenceParser *vc3_parser = dynamic_cast<VC3EssenceParser*>(parser);
-    vc3_parser->ParseFrameInfo(buffer->data, frame_size);
+    frame_size = vc3_parser->ParseFrameInfo2(frame_data, frame_size);
 
     info_writer->StartArrayElement("frame", (size_t)frame_num);
 
-    info_writer->WriteIntegerItem("size", frame_size);
+    info_writer->WriteIntegerItem("size", frame_size.GetSize());
     info_writer->WriteIntegerItem("compression_id", vc3_parser->GetCompressionId());
     info_writer->WriteBoolItem("progressive", vc3_parser->IsProgressive());
     info_writer->WriteIntegerItem("frame_width", vc3_parser->GetFrameWidth());
@@ -812,8 +812,8 @@ int main(int argc, const char **argv)
         {
             case AVC_INPUT:
                 parser = new AVCEssenceParser();
-                parser_data = &poc_state;
                 print_frame_info = print_avc_frame_info;
+                parser_data = &poc_state;
                 if (text_info_writer)
                     text_info_writer->PushItemValueIndent(strlen("mb_adaptive_ff_encoding "));
                 break;
@@ -873,34 +873,49 @@ int main(int argc, const char **argv)
         info_writer->Start("bmxparse");
 
         int64_t frame_count = 0;
-        uint32_t frame_size;
+        ParsedFrameSize frame_size;
         while (true) {
             if (frame_start > 0) {
                 buffer.Shift(frame_start);
                 frame_start = 0;
             }
 
-            frame_size = parser->ParseFrameSize(buffer.data, (uint32_t)buffer.size);
-            if (frame_size == ESSENCE_PARSER_NULL_OFFSET) {
-                if (buffer.Fill(file) == 0)
-                    break;
-            } else if (frame_size == ESSENCE_PARSER_NULL_FRAME_SIZE) {
-                log_error("Invalid frame start\n");
+            frame_size = parser->ParseFrameSize2(buffer.data, buffer.size);
+
+            if (frame_size.IsNull()) {
+                log_error("Failed to parse frame size\n");
                 throw false;
-            } else {
-                if (frame_size > (uint32_t)buffer.size) {
-                    size_t rem_data_size = frame_size - buffer.size;
+            }
+
+            bool end_of_data = false;
+            if (frame_size.IsUnknown()) {
+                if (buffer.Fill(file) == 0) {
+                    // Try create a complete frame from the available data assuming it's a valid frame
+                    if (!frame_size.CompleteSize(buffer.size))
+                        break;
+
+                    BMX_ASSERT(frame_size.IsComplete());
+                    end_of_data = true;
+                }
+            }
+
+            if (frame_size.IsComplete()) {
+                if (frame_size.GetSize() > (uint32_t)buffer.size) {
+                    // The frame size was parsed from the bitstream and was larger than what was buffered
+                    size_t rem_data_size = frame_size.GetSize() - buffer.size;
                     if (buffer.Fill(file, rem_data_size) < rem_data_size)
                         break;
                 }
-                print_frame_info(info_writer, parser, parser_data, &buffer, frame_size, frame_count);
-                frame_start = frame_size;
+
+                print_frame_info(info_writer, parser, parser_data, buffer.data, frame_size, frame_count);
+
+                frame_start = frame_size.GetSize();
+                frame_size.Reset();
                 frame_count++;
+
+                if (end_of_data)
+                    break;
             }
-        }
-        if (buffer.size > 0) {
-            print_frame_info(info_writer, parser, parser_data, &buffer, (uint32_t)buffer.size, frame_count);
-            frame_count++;
         }
 
         info_writer->End();

@@ -131,12 +131,14 @@ void AVCWriterHelper::SetPPS(const unsigned char *data, uint32_t size)
 
 void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
 {
-    mEssenceParser.ParseFrameInfo(data, size);
+    mEssenceParser.ParseFrameInfo2(data, ParsedFrameSize(size));
+
     int32_t pic_order_cnt;
     mEssenceParser.DecodePOC(&mPOCState, &pic_order_cnt);
 
     MPEGFrameType frame_type = mEssenceParser.GetFrameType();
     BMX_CHECK(frame_type != UNKNOWN_FRAME_TYPE);
+    MPEGFrameType second_field_frame_type = mEssenceParser.GetSecondFieldFrameType();
 
     bool gop_start = (frame_type == I_FRAME);
 
@@ -150,6 +152,18 @@ void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
         mBPictureCount = 0;
     }
 
+    if (mEssenceParser.IsSeparateFieldPicture()) {
+        if (second_field_frame_type == B_FRAME) {
+            mBPictureCount++;
+            if (mBPictureCount > mMaxBPictureCount)
+                mMaxBPictureCount = mBPictureCount;
+        } else if (mBPictureCount > 0) {
+            if (mBPictureCount != mMaxBPictureCount)
+                mConstantBFrames = false;
+            mBPictureCount = 0;
+        }
+    }
+
     if (mPosition == 0) {
         if (mEssenceParser.IsFieldPicture())
             mPictureType = FIELD_PICTURE;
@@ -157,7 +171,7 @@ void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
             mPictureType = FRAME_PICTURE;
         if (mEssenceParser.IsFrameMBSOnly())
             mCodingType = FRAME_CODING;
-        else if (mEssenceParser.IsFieldPicture())
+        else if (mEssenceParser.IsSeparateFieldPicture())
             mCodingType = FIELD_CODING;
         else if (mEssenceParser.IsMBAdaptiveFFEncoding())
             mCodingType = MB_ADAPTIVE_FRAME_FIELD_CODING;
@@ -179,14 +193,17 @@ void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
     if (gop_start && !mEssenceParser.IsIDRFrame())
         mClosedGOP = false;
 
+    // Note that there is a calculation in CompleteProcess as well
     if (gop_start && !mUnlimitedGOPSize) {
-        if (mPosition - mGOPStartPosition > UINT16_MAX) {
+        int64_t gop_size = mPosition - mGOPStartPosition;
+        if (mEssenceParser.IsSeparateFieldPicture())
+            gop_size *= 2;
+
+        if (gop_size > UINT16_MAX) {
             mUnlimitedGOPSize = true;
             mMaxGOP = 0;
-        } else {
-            uint16_t gop_size = (uint16_t)(mPosition - mGOPStartPosition);
-            if (gop_size > mMaxGOP)
-                mMaxGOP = gop_size;
+        } else if (gop_size > mMaxGOP) {
+            mMaxGOP = (uint16_t)gop_size;
         }
     }
 
@@ -201,14 +218,25 @@ void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
 
         if (mFirstGOP) {
             mGOPStructure.push_back(frame_type);
+            if (mEssenceParser.IsSeparateFieldPicture())
+                mGOPStructure.push_back(second_field_frame_type);
+
             if (mGOPStructure.size() >= 4096) {
                 // GOP is so large that we don't care about identical GOP information
                 mIdenticalGOP = false;
             }
         } else {
             size_t pos_in_gop = (gop_start ? 0 : (size_t)(mPosition - mGOPStartPosition));
+            if (mEssenceParser.IsSeparateFieldPicture())
+                pos_in_gop *= 2;
+
             if (pos_in_gop >= mGOPStructure.size() || mGOPStructure[pos_in_gop] != frame_type)
                 mIdenticalGOP = false;
+            if (mIdenticalGOP && mEssenceParser.IsSeparateFieldPicture() &&
+                mGOPStructure[pos_in_gop + 1] != second_field_frame_type)
+            {
+                mIdenticalGOP = false;
+            }
         }
     }
 
@@ -246,6 +274,23 @@ void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
             mPPSEveryAU = false;
             if (gop_start)
                 mPPSGOPStart = false;
+        }
+    }
+
+    if (mEssenceParser.IsSeparateFieldPicture()) {
+        if (mEssenceParser.SecondFieldHasActiveSPS()) {
+            if (mSPSConstant && !mEssenceParser.IsActiveSPSDataConstant())
+                mSPSConstant = false;
+            mSPSFirstAUOnly = false;
+        } else {
+            mSPSEveryAU = false;
+        }
+        if (mEssenceParser.SecondFieldHasActivePPS()) {
+            if (mPPSConstant && !mEssenceParser.IsActivePPSDataConstant())
+                mPPSConstant = false;
+            mPPSFirstAUOnly = false;
+        } else {
+            mPPSEveryAU = false;
         }
     }
 
@@ -303,16 +348,17 @@ void AVCWriterHelper::CompleteProcess()
     PopAllDecodedFrames();
 
     if (!mUnlimitedGOPSize) {
-        if (mPosition - mGOPStartPosition > UINT16_MAX) {
+        int64_t gop_size = mPosition - mGOPStartPosition;
+        if (mEssenceParser.IsSeparateFieldPicture())
+            gop_size *= 2;
+
+        if (gop_size > UINT16_MAX) {
             mUnlimitedGOPSize = true;
             mMaxGOP = 0;
-        } else {
-            uint16_t gop_size = (uint16_t)(mPosition - mGOPStartPosition);
-            if (gop_size > mMaxGOP)
-                mMaxGOP = gop_size;
+        } else if (gop_size > mMaxGOP) {
+            mMaxGOP = (uint16_t)gop_size;
         }
     }
-
 
     CDCIEssenceDescriptor *cdci_descriptor = dynamic_cast<CDCIEssenceDescriptor*>(mDescriptorHelper->GetFileDescriptor());
     BMX_ASSERT(cdci_descriptor);
@@ -460,6 +506,10 @@ void AVCWriterHelper::PopDecodedFrame()
     int64_t coded_pos   = mDecodedFrames.begin()->second;
 
     int64_t decoding_delay = coded_pos - decoded_pos;
+    // AVC Decoding Delay is decoded pictures in number of access units
+    if ((mEssenceParser.IsSeparateFieldPicture()))
+        decoding_delay *= 2;
+
     if (decoding_delay > (int64_t)mDecodingDelay)
         mDecodingDelay = (uint8_t)decoding_delay;
 
@@ -472,6 +522,7 @@ void AVCWriterHelper::PopDecodedFrame()
     } else if (mKeyFramePosition >= 0) {
         indexed_dec_frame.key_frame_offset = mKeyFramePosition - coded_pos;
     } else {
+        // There is no key frame before this frame in coded order
         indexed_dec_frame.key_frame_offset = (int64_t)INT32_MIN - 1;
     }
     indexed_dec_frame.decoded_frame_offset = decoded_pos - coded_pos;
