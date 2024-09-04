@@ -252,6 +252,7 @@ void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
             mSPSEveryAU     = true;
             mSPSGOPStart    = gop_start;
         }
+
         if (mEssenceParser.FrameHasActivePPS()) {
             mPPSFirstAUOnly = true;
             mPPSEveryAU     = true;
@@ -267,6 +268,7 @@ void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
             if (gop_start)
                 mSPSGOPStart = false;
         }
+
         if (mEssenceParser.FrameHasActivePPS()) {
             if (mPPSConstant && !mEssenceParser.IsActivePPSDataConstant())
                 mPPSConstant = false;
@@ -286,6 +288,7 @@ void AVCWriterHelper::ProcessFrame(const unsigned char *data, uint32_t size)
         } else {
             mSPSEveryAU = false;
         }
+
         if (mEssenceParser.SecondFieldHasActivePPS()) {
             if (mPPSConstant && !mEssenceParser.IsActivePPSDataConstant())
                 mPPSConstant = false;
@@ -599,12 +602,13 @@ uint8_t AVCWriterHelper::GetSPSFlag() const
     uint8_t flag = 0;
     if (mSPSConstant)
         flag |= 1 << 7;
-    if (mSPSFirstAUOnly)
-        flag |= 1 << 4;
-    else if (mSPSEveryAU)
+
+    if (mSPSEveryAU)
         flag |= 2 << 4;
     else if (mSPSGOPStart)
         flag |= 3 << 4;
+    else if (mSPSFirstAUOnly)
+        flag |= 1 << 4;
 
     return flag;
 }
@@ -614,12 +618,13 @@ uint8_t AVCWriterHelper::GetPPSFlag() const
     uint8_t flag = 0;
     if (mPPSConstant)
         flag |= 1 << 7;
-    if (mPPSFirstAUOnly)
-        flag |= 1 << 4;
-    else if (mPPSEveryAU)
+
+    if (mPPSEveryAU)
         flag |= 2 << 4;
     else if (mPPSGOPStart)
         flag |= 3 << 4;
+    else if (mPPSFirstAUOnly)
+        flag |= 1 << 4;
 
     return flag;
 }
