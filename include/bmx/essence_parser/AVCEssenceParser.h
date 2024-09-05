@@ -134,19 +134,28 @@ public:
 };
 
 
-class AVCEssenceParser : public EssenceParser
+class AVCEssenceParser;
+
+// Parses either a Coded Frame or Coded Field
+class AVCCodedPictureEssenceParser : public EssenceParser
 {
 public:
-    AVCEssenceParser();
-    virtual ~AVCEssenceParser();
+    friend class AVCEssenceParser;
+
+public:
+    AVCCodedPictureEssenceParser();
+    virtual ~AVCCodedPictureEssenceParser();
 
     void SetSPS(const unsigned char *data, uint32_t size);
     void SetPPS(const unsigned char *data, uint32_t size);
 
     virtual uint32_t ParseFrameStart(const unsigned char *data, uint32_t data_size);
+
+    virtual void ResetParseFrameSize();
     virtual uint32_t ParseFrameSize(const unsigned char *data, uint32_t data_size);
 
     virtual void ParseFrameInfo(const unsigned char *data, uint32_t data_size);
+    // Only call after ParseFrameInfo
     void DecodePOC(POCState *poc_state, int32_t *pic_order_cnt);
 
     void ParseNALUnits(const unsigned char *data, uint32_t size, std::vector<NALReference> *nals);
@@ -248,6 +257,7 @@ private:
     {
     public:
         SPSExtra();
+        SPSExtra(const SPSExtra &other);
         ~SPSExtra();
 
         uint8_t num_ref_frames_in_pic_order_cnt_cycle;
@@ -288,6 +298,21 @@ private:
         uint8_t have_mmco_5;
     } SliceHeader;
 
+    class POCInfo
+    {
+    public:
+        POCInfo();
+        POCInfo(AVCCodedPictureEssenceParser *parser);
+        ~POCInfo();
+
+        bool have_active_sps;
+        SPS active_sps;
+        SPSExtra *active_sps_extra;
+        SliceHeader prim_pic_slice_header;
+        bool is_idr_frame;
+        bool have_mmco5;
+    };
+
 private:
     uint32_t NextStartCodePrefix(const unsigned char *data, uint32_t size);
     uint32_t CompletePSSize(const unsigned char *ps_start, const unsigned char *ps_max_end);
@@ -299,9 +324,13 @@ private:
                           SliceHeader *slice_header, bool *unknown_param_sets = 0);
     void ParseHRDParameters(AVCGetBitBuffer &buffer, SPS *sps);
 
-    void DecodePOCType0(POCState *poc_state, int32_t *top_field_order_cnt, int32_t *bottom_field_order_cnt);
-    void DecodePOCType1(POCState *poc_state, int32_t *top_field_order_cnt, int32_t *bottom_field_order_cnt);
-    void DecodePOCType2(POCState *poc_state, int32_t *top_field_order_cnt, int32_t *bottom_field_order_cnt);
+    void DecodePOC(POCState *poc_state, const POCInfo *poc_info, int32_t *pic_order_cnt);
+    void DecodePOCType0(POCState *poc_state, const POCInfo *poc_info,
+                        int32_t *top_field_order_cnt, int32_t *bottom_field_order_cnt);
+    void DecodePOCType1(POCState *poc_state, const POCInfo *poc_info,
+                        int32_t *top_field_order_cnt, int32_t *bottom_field_order_cnt);
+    void DecodePOCType2(POCState *poc_state, const POCInfo *poc_info,
+                        int32_t *top_field_order_cnt, int32_t *bottom_field_order_cnt);
 
     bool GetParameterSets(uint8_t pic_parameter_set_id, const SPS **sps, const PPS **pps);
 
@@ -312,7 +341,6 @@ private:
     void SetSPSData(uint8_t id, const unsigned char *data, uint32_t size);
     void SetPPSData(uint8_t id, const unsigned char *data, uint32_t size);
 
-    void ResetFrameSize();
     void ResetFrameInfo();
 
 private:
@@ -359,6 +387,99 @@ private:
     uint64_t mFrameNum;
 };
 
+
+// Parses a pair of Coded Fields or a Coded Frame
+class AVCEssenceParser : public EssenceParser
+{
+public:
+    AVCEssenceParser();
+    virtual ~AVCEssenceParser();
+
+    void SetSPS(const unsigned char *data, uint32_t size);
+    void SetPPS(const unsigned char *data, uint32_t size);
+
+    virtual uint32_t ParseFrameStart(const unsigned char *data, uint32_t data_size);
+
+    virtual void ResetParseFrameSize();
+    virtual ParsedFrameSize ParseFrameSize2(const unsigned char *data, uint32_t data_size);
+
+    virtual ParsedFrameSize ParseFrameInfo2(const unsigned char *data, ParsedFrameSize frame_size);
+    // Only call after ParseFrameInfo2
+    void DecodePOC(POCState *poc_state, int32_t *pic_order_cnt);
+
+    void ParseNALUnits(const unsigned char *data, uint32_t size, std::vector<NALReference> *nals);
+
+    bool CheckFrameHasAVCIHeader(const unsigned char *data, uint32_t data_size);
+
+public:
+    uint8_t GetProfile() const            { return mCodedPictureParser.GetProfile(); }
+    uint8_t GetProfileConstraint() const  { return mCodedPictureParser.GetProfileConstraint(); }
+    uint8_t GetLevel() const              { return mCodedPictureParser.GetLevel(); }
+    uint32_t GetMaxBitRate() const        { return mCodedPictureParser.GetMaxBitRate(); }
+    uint8_t GetMaxNumRefFrames() const    { return mCodedPictureParser.GetMaxNumRefFrames(); }
+    bool HaveFrameRate() const            { return mCodedPictureParser.HaveFrameRate(); }
+    bool IsFixedFrameRate() const         { return mCodedPictureParser.IsFixedFrameRate(); }
+    Rational GetFrameRate() const         { return mFrameRate; }
+    uint32_t GetStoredWidth() const       { return mCodedPictureParser.GetStoredWidth(); }
+    uint32_t GetStoredHeight() const      { return mCodedPictureParser.GetStoredHeight(); }
+    uint32_t GetDisplayWidth() const      { return mCodedPictureParser.GetDisplayWidth(); }
+    uint32_t GetDisplayHeight() const     { return mCodedPictureParser.GetDisplayHeight(); }
+    uint32_t GetDisplayXOffset() const    { return mCodedPictureParser.GetDisplayXOffset(); }
+    uint32_t GetDisplayYOffset() const    { return mCodedPictureParser.GetDisplayYOffset(); }
+    Rational GetSampleAspectRatio() const { return mCodedPictureParser.GetSampleAspectRatio(); }
+    uint32_t GetComponentDepth() const    { return mCodedPictureParser.GetComponentDepth(); }
+    uint8_t GetChromaFormat() const       { return mCodedPictureParser.GetChromaFormat(); }
+    uint8_t GetChromaLocation() const     { return mCodedPictureParser.GetChromaLocation(); }
+    uint8_t GetVideoFormat() const        { return mCodedPictureParser.GetVideoFormat(); }
+    uint8_t GetColorPrimaries() const     { return mCodedPictureParser.GetColorPrimaries(); }
+    uint8_t GetTransferCharacteristics() const { return mCodedPictureParser.GetTransferCharacteristics(); }
+    uint8_t GetMatrixCoefficients() const { return mCodedPictureParser.GetMatrixCoefficients(); }
+    MPEGFrameType GetFrameType() const            { return mFrameType; }
+    MPEGFrameType GetSecondFieldFrameType() const { return mSecondFieldFrameType; }
+    bool IsIDRFrame() const               { return mIsIDRFrame; }
+    bool IsFrameMBSOnly() const           { return mFrameMBSOnlyFlag; }
+    bool IsMBAdaptiveFFEncoding() const   { return mMBAdaptiveFFEncoding; }
+    bool IsFieldPicture() const           { return mCodedPictureParser.IsFieldPicture(); }
+    bool IsSeparateFieldPicture() const   { return mSeparateFieldPicture > 0; }
+    bool IsBottomFieldFirst() const       { return mBottomFieldFirst; }
+    uint64_t GetFrameNum() const          { return mCodedPictureParser.GetFrameNum(); }
+
+    bool FrameHasActiveSPS() const        { return mFrameHasActiveSPS; }
+    bool SecondFieldHasActiveSPS() const  { return mSecondFieldHasActiveSPS; }
+    bool FrameHasActivePPS() const        { return mFrameHasActivePPS; }
+    bool SecondFieldHasActivePPS() const  { return mSecondFieldHasActivePPS; }
+    bool IsActiveSPSDataConstant() const  { return mActiveSPSDataConstant; };
+    bool IsActivePPSDataConstant() const  { return mActivePPSDataConstant; };
+
+    EssenceType GetEssenceType() const { return mCodedPictureParser.GetEssenceType(); }
+    EssenceType GetAVCIEssenceType(uint32_t data_size, bool is_interlaced, bool is_progressive) const {
+        return mCodedPictureParser.GetAVCIEssenceType(data_size, is_interlaced, is_progressive);
+    }
+
+private:
+    void ResetFrameInfo();
+
+private:
+    AVCCodedPictureEssenceParser mCodedPictureParser;
+    ParsedFrameSize mParsedFrameSize;
+
+    bool mIsIDRFrame;
+    Rational mFrameRate;
+    MPEGFrameType mFrameType;
+    MPEGFrameType mSecondFieldFrameType;
+    bool mFrameMBSOnlyFlag;
+    bool mMBAdaptiveFFEncoding;
+    int mSeparateFieldPicture;  // <0 unknown, 0 false, >0 true
+    bool mBottomFieldFirst;
+    bool mFrameHasActiveSPS;
+    bool mSecondFieldHasActiveSPS;
+    bool mFrameHasActivePPS;
+    bool mSecondFieldHasActivePPS;
+    bool mActiveSPSDataConstant;
+    bool mActivePPSDataConstant;
+    AVCCodedPictureEssenceParser::POCInfo *mPOCInfo1;
+    AVCCodedPictureEssenceParser::POCInfo *mPOCInfo2;
+};
 
 };
 

@@ -45,6 +45,7 @@
 #endif
 
 #include <bmx/essence_parser/RawEssenceReader.h>
+#include <bmx/essence_parser/AVCEssenceParser.h>
 #include <bmx/Utils.h>
 #include <bmx/BMXException.h>
 #include <bmx/Logging.h>
@@ -194,10 +195,14 @@ bool RawEssenceReader::ReadAndParseSample()
         sample_num_read += ReadBytes(mReadBlockSize);
     }
 
-    uint32_t sample_size = 0;
+    mEssenceParser->ResetParseFrameSize();
+
+    ParsedFrameSize sample_size;
     while (true) {
-        sample_size = mEssenceParser->ParseFrameSize(mSampleBuffer.GetBytes() + sample_start_offset, sample_num_read);
-        if (sample_size != ESSENCE_PARSER_NULL_OFFSET)
+        sample_size = mEssenceParser->ParseFrameSize2(mSampleBuffer.GetBytes() + sample_start_offset, sample_num_read);
+
+        // Break if size is known complete or null / invalid
+        if (!sample_size.IsUnknown())
             break;
 
         BMX_CHECK_M(mMaxSampleSize == 0 || mSampleBuffer.GetSize() - sample_start_offset <= mMaxSampleSize,
@@ -211,32 +216,30 @@ bool RawEssenceReader::ReadAndParseSample()
     }
 
     // Read remaining bytes if sample_size is larger
-    if (sample_size != ESSENCE_PARSER_NULL_FRAME_SIZE &&
-            sample_size != ESSENCE_PARSER_NULL_OFFSET &&
-            sample_size > sample_num_read)
-    {
-        sample_num_read += ReadBytes(sample_size - sample_num_read);
-        if (sample_size > sample_num_read) {
-            log_warn("Failed to read last remaining bytes %u in frame\n", sample_size - sample_num_read);
-            sample_size = ESSENCE_PARSER_NULL_OFFSET;
+    if (sample_size.IsComplete() && sample_size.GetSize() > sample_num_read) {
+        sample_num_read += ReadBytes(sample_size.GetSize() - sample_num_read);
+        if (sample_size.GetSize() > sample_num_read) {
+            log_warn("Failed to read last remaining bytes %u in frame\n", sample_size.GetSize() - sample_num_read);
+            mLastSampleRead = true;
+            return false;
         }
     }
 
-    if (sample_size == ESSENCE_PARSER_NULL_FRAME_SIZE) {
-        // invalid or null sample data
+    if (sample_size.IsNull()) {
+        // Invalid or null sample data
         mLastSampleRead = true;
         return false;
-    } else if (sample_size == ESSENCE_PARSER_NULL_OFFSET) {
-        // assume remaining data is valid sample data
+    } else if (sample_size.IsUnknown()) {
+        // Assume that the remaining data is valid sample data and try complete the frame size
         mLastSampleRead = true;
-        if (sample_num_read > 0) {
-            mSampleDataSize = mSampleBuffer.GetSize();
+        if (sample_size.CompleteSize(sample_num_read)) {
+            mSampleDataSize += sample_size.GetSize();
             mNumSamples++;
         }
         return false;
     }
 
-    mSampleDataSize += sample_size;
+    mSampleDataSize += sample_size.GetSize();
     mNumSamples++;
     return true;
 }

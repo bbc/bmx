@@ -48,12 +48,11 @@ public:
     virtual ~MJPEGEssenceParser();
 
     virtual uint32_t ParseFrameStart(const unsigned char *data, uint32_t data_size);
+
+    virtual void ResetParseFrameSize();
     virtual uint32_t ParseFrameSize(const unsigned char *data, uint32_t data_size);
 
     virtual void ParseFrameInfo(const unsigned char *data, uint32_t data_size);
-
-private:
-    void Reset();
 
 private:
     bool mSingleField;

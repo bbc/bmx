@@ -74,6 +74,10 @@ uint32_t DVEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t da
     return 0;
 }
 
+void DVEssenceParser::ResetParseFrameSize()
+{
+}
+
 uint32_t DVEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
     BMX_ASSERT(DV_PARSER_MIN_DATA_SIZE >= DV_DIF_SEQUENCE_SIZE);

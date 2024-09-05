@@ -87,7 +87,7 @@ static const FrameRateMap FRAME_RATE_MAP[] =
 
 MPEG2EssenceParser::MPEG2EssenceParser()
 {
-    ResetFrameSize();
+    ResetParseFrameSize();
     ResetFrameInfo();
 
     mHorizontalSize = 0;
@@ -137,6 +137,15 @@ uint32_t MPEG2EssenceParser::ParseFrameStart(const unsigned char *data, uint32_t
     return ESSENCE_PARSER_NULL_OFFSET;
 }
 
+void MPEG2EssenceParser::ResetParseFrameSize()
+{
+    mOffset = 0;
+    mState = 0xffffffff;
+    mSequenceHeader = false;
+    mGroupHeader = false;
+    mPictureStart = false;
+}
+
 uint32_t MPEG2EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
@@ -156,7 +165,7 @@ uint32_t MPEG2EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t 
                 (mState == PICTURE_START_CODE && mPictureStart))
             {
                 uint32_t frame_size = mOffset - 3;
-                ResetFrameSize();
+                ResetParseFrameSize();
                 return frame_size;
             }
 
@@ -167,7 +176,7 @@ uint32_t MPEG2EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t 
         else if (mOffset == 3)
         {
             // not a valid frame start
-            ResetFrameSize();
+            ResetParseFrameSize();
             return ESSENCE_PARSER_NULL_FRAME_SIZE;
         }
 
@@ -400,15 +409,6 @@ void MPEG2EssenceParser::ParseFrameAllInfo(const unsigned char *data, uint32_t d
 
         offset++;
     }
-}
-
-void MPEG2EssenceParser::ResetFrameSize()
-{
-    mOffset = 0;
-    mState = 0xffffffff;
-    mSequenceHeader = false;
-    mGroupHeader = false;
-    mPictureStart = false;
 }
 
 void MPEG2EssenceParser::ResetFrameInfo()

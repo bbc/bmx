@@ -137,6 +137,10 @@ uint32_t VC3EssenceParser::ParseFrameStart(const unsigned char *data, uint32_t d
     return ESSENCE_PARSER_NULL_OFFSET;
 }
 
+void VC3EssenceParser::ResetParseFrameSize()
+{
+}
+
 uint32_t VC3EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);

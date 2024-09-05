@@ -350,25 +350,67 @@ void POCState::Reset()
 
 
 
-AVCEssenceParser::SPSExtra::SPSExtra()
+AVCCodedPictureEssenceParser::SPSExtra::SPSExtra()
 {
     num_ref_frames_in_pic_order_cnt_cycle = 0;
     offset_for_ref_frame = 0;
 }
 
-AVCEssenceParser::SPSExtra::~SPSExtra()
+AVCCodedPictureEssenceParser::SPSExtra::SPSExtra(const SPSExtra &other)
+{
+    num_ref_frames_in_pic_order_cnt_cycle = other.num_ref_frames_in_pic_order_cnt_cycle;
+    offset_for_ref_frame = 0;
+
+    if (num_ref_frames_in_pic_order_cnt_cycle > 0) {
+        offset_for_ref_frame = new int32_t[num_ref_frames_in_pic_order_cnt_cycle];
+        for (uint8_t i = 0; i < other.num_ref_frames_in_pic_order_cnt_cycle; i++)
+            offset_for_ref_frame[i] = other.offset_for_ref_frame[i];
+    }
+}
+
+AVCCodedPictureEssenceParser::SPSExtra::~SPSExtra()
 {
     delete [] offset_for_ref_frame;
 }
 
 
-AVCEssenceParser::AVCEssenceParser()
+AVCCodedPictureEssenceParser::POCInfo::POCInfo()
 {
-    ResetFrameSize();
+    active_sps_extra = 0;
+}
+
+AVCCodedPictureEssenceParser::POCInfo::POCInfo(AVCCodedPictureEssenceParser *parser)
+{
+    if (parser->mSPS.count(parser->mActiveSPSId)) {
+        active_sps = parser->mSPS[parser->mActiveSPSId];
+        have_active_sps = true;
+    } else {
+        have_active_sps = false;
+    }
+
+    if (parser->mSPSExtra.count(parser->mActiveSPSId))
+        active_sps_extra = new SPSExtra(*parser->mSPSExtra[parser->mActiveSPSId]);
+    else
+        active_sps_extra = 0;
+
+    prim_pic_slice_header = parser->mPrimPicSliceHeader;
+    is_idr_frame = parser->mIsIDRFrame;
+    have_mmco5 = parser->mHaveMMCO5;
+}
+
+AVCCodedPictureEssenceParser::POCInfo::~POCInfo()
+{
+    delete active_sps_extra;
+}
+
+
+AVCCodedPictureEssenceParser::AVCCodedPictureEssenceParser()
+{
+    ResetParseFrameSize();
     ResetFrameInfo();
 }
 
-AVCEssenceParser::~AVCEssenceParser()
+AVCCodedPictureEssenceParser::~AVCCodedPictureEssenceParser()
 {
     map<uint8_t, SPSExtra*>::const_iterator iter1;
     for (iter1 = mSPSExtra.begin(); iter1 != mSPSExtra.end(); iter1++)
@@ -381,7 +423,7 @@ AVCEssenceParser::~AVCEssenceParser()
         delete iter2->second;
 }
 
-void AVCEssenceParser::SetSPS(const unsigned char *data, uint32_t size)
+void AVCCodedPictureEssenceParser::SetSPS(const unsigned char *data, uint32_t size)
 {
     BMX_CHECK(size > 1);
 
@@ -394,7 +436,7 @@ void AVCEssenceParser::SetSPS(const unsigned char *data, uint32_t size)
     SetSPS(sps.seq_parameter_set_id, &sps, sps_extra);
 }
 
-void AVCEssenceParser::SetPPS(const unsigned char *data, uint32_t size)
+void AVCCodedPictureEssenceParser::SetPPS(const unsigned char *data, uint32_t size)
 {
     BMX_CHECK(size > 1);
 
@@ -406,9 +448,12 @@ void AVCEssenceParser::SetPPS(const unsigned char *data, uint32_t size)
     SetPPS(pps.pic_parameter_set_id, &pps);
 }
 
-uint32_t AVCEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
+uint32_t AVCCodedPictureEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
 {
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
+
+    // Frame size parsing is reset
+    mOffset = 0;
 
     // the access unit shall start with a zero_byte followed by start_code_prefix_one_3byte
 
@@ -424,7 +469,14 @@ uint32_t AVCEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t d
     return offset - 1;
 }
 
-uint32_t AVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
+void AVCCodedPictureEssenceParser::ResetParseFrameSize()
+{
+    mHavePrimPicSliceHeader = false;
+    memset(&mPrimPicSliceHeader, 0, sizeof(mPrimPicSliceHeader));
+    mOffset = 0;
+}
+
+uint32_t AVCCodedPictureEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
     BMX_CHECK(data_size < ESSENCE_PARSER_NULL_OFFSET);
     BMX_CHECK(mOffset < data_size);
@@ -437,7 +489,7 @@ uint32_t AVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
     //   access unit's NAL unit
 
     if (mOffset == 0)
-        ResetFrameSize();
+        ResetParseFrameSize();
 
     bool have_frame_end = false;
     bool have_issue = false;
@@ -557,9 +609,12 @@ uint32_t AVCEssenceParser::ParseFrameSize(const unsigned char *data, uint32_t da
     return frame_size;
 }
 
-void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
+void AVCCodedPictureEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_size)
 {
     ResetFrameInfo();
+
+    BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
+    BMX_CHECK(data_size > 0);
 
     set<uint8_t> frame_sps_ids;
     set<uint8_t> frame_pps_ids;
@@ -569,7 +624,7 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
     uint8_t pps_id = 255;
     uint32_t next_offset = 0;
     uint32_t offset = 0;
-    while (mOffset < data_size) {
+    while (offset < data_size) {
         next_offset = NextStartCodePrefix(&data[offset], data_size - offset);
         if (next_offset == ESSENCE_PARSER_NULL_OFFSET)
             break;
@@ -651,6 +706,16 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
                 // reached end of primary picture slices
                 break;
             }
+        }
+        else if (mHavePrimPicSliceHeader &&
+                    (nal_unit_type == ACCESS_UNIT_DELIMITER ||
+                     nal_unit_type == SEQUENCE_PARAMETER_SET ||
+                     nal_unit_type == PICTURE_PARAMETER_SET ||
+                     nal_unit_type == SEI ||
+                     (nal_unit_type >= 15 && nal_unit_type <= 18)))
+        {
+            // This is the second field or the next frame
+            break;
         }
         else if (nal_unit_type == SEQUENCE_PARAMETER_SET)
         {
@@ -785,7 +850,7 @@ void AVCEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
     mFrameNum             = mPrimPicSliceHeader.frame_num;
 }
 
-bool AVCEssenceParser::CheckFrameHasAVCIHeader(const unsigned char *data, uint32_t data_size)
+bool AVCCodedPictureEssenceParser::CheckFrameHasAVCIHeader(const unsigned char *data, uint32_t data_size)
 {
     // check whether the second NAL is a sequence parameter set
 
@@ -801,35 +866,14 @@ bool AVCEssenceParser::CheckFrameHasAVCIHeader(const unsigned char *data, uint32
     return (data[next_offset + 3] & 0x1f) == SEQUENCE_PARAMETER_SET;
 }
 
-void AVCEssenceParser::DecodePOC(POCState *poc_state, int32_t *pic_order_cnt)
+void AVCCodedPictureEssenceParser::DecodePOC(POCState *poc_state, int32_t *pic_order_cnt)
 {
-    BMX_ASSERT(mSPS.count(mActiveSPSId));
-    const SPS *active_sps = &mSPS[mActiveSPSId];
+    POCInfo poc_info(this);
 
-    int32_t top_field_order_cnt;
-    int32_t bottom_field_order_cnt;
-    if (active_sps->pic_order_cnt_type == 0)
-        DecodePOCType0(poc_state, &top_field_order_cnt, &bottom_field_order_cnt);
-    else if (active_sps->pic_order_cnt_type == 1)
-        DecodePOCType1(poc_state, &top_field_order_cnt, &bottom_field_order_cnt);
-    else if (active_sps->pic_order_cnt_type == 2)
-        DecodePOCType2(poc_state, &top_field_order_cnt, &bottom_field_order_cnt);
-    else
-        BMX_EXCEPTION(("Unknown pic_order_cnt_type %" PRIu64, active_sps->pic_order_cnt_type));
-
-    if (mPrimPicSliceHeader.field_pic_flag) {
-        if (mPrimPicSliceHeader.bottom_field_flag)
-            *pic_order_cnt = bottom_field_order_cnt;
-        else
-            *pic_order_cnt = top_field_order_cnt;
-    } else {
-        *pic_order_cnt = bottom_field_order_cnt;
-        if (*pic_order_cnt > top_field_order_cnt)
-            *pic_order_cnt = top_field_order_cnt;
-    }
+    DecodePOC(poc_state, &poc_info, pic_order_cnt);
 }
 
-void AVCEssenceParser::ParseNALUnits(const unsigned char *data_in, uint32_t size_in, vector<NALReference> *nals)
+void AVCCodedPictureEssenceParser::ParseNALUnits(const unsigned char *data_in, uint32_t size_in, vector<NALReference> *nals)
 {
     const unsigned char *data = data_in;
     uint32_t size = size_in;
@@ -857,17 +901,17 @@ void AVCEssenceParser::ParseNALUnits(const unsigned char *data_in, uint32_t size
     }
 }
 
-bool AVCEssenceParser::IsActiveSPSDataConstant() const
+bool AVCCodedPictureEssenceParser::IsActiveSPSDataConstant() const
 {
     return !mSPSData.count(mActiveSPSId) || mSPSData.at(mActiveSPSId)->is_constant;
 }
 
-bool AVCEssenceParser::IsActivePPSDataConstant() const
+bool AVCCodedPictureEssenceParser::IsActivePPSDataConstant() const
 {
     return !mPPSData.count(mActivePPSId) || mPPSData.at(mActivePPSId)->is_constant;
 }
 
-EssenceType AVCEssenceParser::GetEssenceType() const
+EssenceType AVCCodedPictureEssenceParser::GetEssenceType() const
 {
     switch (mProfile)
     {
@@ -904,7 +948,7 @@ EssenceType AVCEssenceParser::GetEssenceType() const
     }
 }
 
-EssenceType AVCEssenceParser::GetAVCIEssenceType(uint32_t data_size, bool is_interlaced, bool is_progressive) const
+EssenceType AVCCodedPictureEssenceParser::GetAVCIEssenceType(uint32_t data_size, bool is_interlaced, bool is_progressive) const
 {
     if (!mIsIDRFrame || !mFixedFrameRate)
         return UNKNOWN_ESSENCE_TYPE;
@@ -1010,7 +1054,7 @@ EssenceType AVCEssenceParser::GetAVCIEssenceType(uint32_t data_size, bool is_int
     return essence_type;
 }
 
-uint32_t AVCEssenceParser::NextStartCodePrefix(const unsigned char *data, uint32_t size)
+uint32_t AVCCodedPictureEssenceParser::NextStartCodePrefix(const unsigned char *data, uint32_t size)
 {
     const unsigned char *datap3 = data + 3;
     const unsigned char *end    = data + size;
@@ -1032,7 +1076,7 @@ uint32_t AVCEssenceParser::NextStartCodePrefix(const unsigned char *data, uint32
         return ESSENCE_PARSER_NULL_OFFSET;
 }
 
-uint32_t AVCEssenceParser::CompletePSSize(const unsigned char *ps_start, const unsigned char *ps_max_end)
+uint32_t AVCCodedPictureEssenceParser::CompletePSSize(const unsigned char *ps_start, const unsigned char *ps_max_end)
 {
     BMX_ASSERT(ps_max_end > ps_start);
 
@@ -1054,7 +1098,7 @@ uint32_t AVCEssenceParser::CompletePSSize(const unsigned char *ps_start, const u
     return (uint32_t)(ps_end - ps_start) + 1;
 }
 
-bool AVCEssenceParser::ParseSPS(const unsigned char *data, uint32_t data_size, SPS *sps, SPSExtra **sps_extra_out)
+bool AVCCodedPictureEssenceParser::ParseSPS(const unsigned char *data, uint32_t data_size, SPS *sps, SPSExtra **sps_extra_out)
 {
     SPSExtra *sps_extra = new SPSExtra();
     try
@@ -1207,7 +1251,7 @@ bool AVCEssenceParser::ParseSPS(const unsigned char *data, uint32_t data_size, S
     }
 }
 
-bool AVCEssenceParser::ParsePPS(const unsigned char *data, uint32_t data_size, PPS *pps)
+bool AVCCodedPictureEssenceParser::ParsePPS(const unsigned char *data, uint32_t data_size, PPS *pps)
 {
     try
     {
@@ -1269,7 +1313,7 @@ bool AVCEssenceParser::ParsePPS(const unsigned char *data, uint32_t data_size, P
     }
 }
 
-bool AVCEssenceParser::ParseSEI(const unsigned char *data, uint32_t data_size)
+bool AVCCodedPictureEssenceParser::ParseSEI(const unsigned char *data, uint32_t data_size)
 {
     try
     {
@@ -1314,8 +1358,8 @@ bool AVCEssenceParser::ParseSEI(const unsigned char *data, uint32_t data_size)
     }
 }
 
-bool AVCEssenceParser::ParseSliceHeader(const unsigned char *data, uint32_t data_size, uint8_t nal_unit_byte,
-                                        SliceHeader *slice_header, bool *unknown_param_sets)
+bool AVCCodedPictureEssenceParser::ParseSliceHeader(const unsigned char *data, uint32_t data_size, uint8_t nal_unit_byte,
+                                                  SliceHeader *slice_header, bool *unknown_param_sets)
 {
     if (unknown_param_sets)
         *unknown_param_sets = false;
@@ -1516,7 +1560,7 @@ bool AVCEssenceParser::ParseSliceHeader(const unsigned char *data, uint32_t data
     }
 }
 
-void AVCEssenceParser::ParseHRDParameters(AVCGetBitBuffer &buffer, SPS *sps)
+void AVCCodedPictureEssenceParser::ParseHRDParameters(AVCGetBitBuffer &buffer, SPS *sps)
 {
     uint64_t temp;
     uint64_t cpb_cnt_minus1;
@@ -1541,18 +1585,44 @@ void AVCEssenceParser::ParseHRDParameters(AVCGetBitBuffer &buffer, SPS *sps)
     buffer.GetU(5, &temp); // time_offset_length
 }
 
-void AVCEssenceParser::DecodePOCType0(POCState *poc_state, int32_t *top_field_order_cnt,
-                                      int32_t *bottom_field_order_cnt)
+void AVCCodedPictureEssenceParser::DecodePOC(POCState *poc_state, const POCInfo *poc_info, int32_t *pic_order_cnt)
 {
-    BMX_ASSERT(mSPS.count(mActiveSPSId));
-    const SPS *active_sps = &mSPS[mActiveSPSId];
+    BMX_ASSERT(poc_info->have_active_sps);
 
-    int32_t max_pic_order_cnt_lsb = 1 << (active_sps->log2_max_pic_order_cnt_lsb_minus4 + 4);
-    int32_t pic_order_cnt_lsb = (int32_t)mPrimPicSliceHeader.pic_order_cnt_lsb;
+    int32_t top_field_order_cnt;
+    int32_t bottom_field_order_cnt;
+    if (poc_info->active_sps.pic_order_cnt_type == 0)
+        DecodePOCType0(poc_state, poc_info, &top_field_order_cnt, &bottom_field_order_cnt);
+    else if (poc_info->active_sps.pic_order_cnt_type == 1)
+        DecodePOCType1(poc_state, poc_info, &top_field_order_cnt, &bottom_field_order_cnt);
+    else if (poc_info->active_sps.pic_order_cnt_type == 2)
+        DecodePOCType2(poc_state, poc_info, &top_field_order_cnt, &bottom_field_order_cnt);
+    else
+        BMX_EXCEPTION(("Unknown pic_order_cnt_type %" PRIu64, poc_info->active_sps.pic_order_cnt_type));
+
+    if (poc_info->prim_pic_slice_header.field_pic_flag) {
+        if (poc_info->prim_pic_slice_header.bottom_field_flag)
+            *pic_order_cnt = bottom_field_order_cnt;
+        else
+            *pic_order_cnt = top_field_order_cnt;
+    } else {
+        *pic_order_cnt = bottom_field_order_cnt;
+        if (*pic_order_cnt > top_field_order_cnt)
+            *pic_order_cnt = top_field_order_cnt;
+    }
+}
+
+void AVCCodedPictureEssenceParser::DecodePOCType0(POCState *poc_state, const POCInfo *poc_info,
+                                                  int32_t *top_field_order_cnt, int32_t *bottom_field_order_cnt)
+{
+    BMX_ASSERT(poc_info->have_active_sps);
+
+    int32_t max_pic_order_cnt_lsb = 1 << (poc_info->active_sps.log2_max_pic_order_cnt_lsb_minus4 + 4);
+    int32_t pic_order_cnt_lsb = (int32_t)poc_info->prim_pic_slice_header.pic_order_cnt_lsb;
 
     int32_t prev_pic_order_cnt_msb;
     int32_t prev_pic_order_cnt_lsb;
-    if (mIsIDRFrame) {
+    if (poc_info->is_idr_frame) {
         prev_pic_order_cnt_msb = 0;
         prev_pic_order_cnt_lsb = 0;
     } else {
@@ -1586,41 +1656,39 @@ void AVCEssenceParser::DecodePOCType0(POCState *poc_state, int32_t *top_field_or
         pic_order_cnt_msb = prev_pic_order_cnt_msb;
     }
 
-    if (mPrimPicSliceHeader.field_pic_flag) {
-        if (mPrimPicSliceHeader.bottom_field_flag)
+    if (poc_info->prim_pic_slice_header.field_pic_flag) {
+        if (poc_info->prim_pic_slice_header.bottom_field_flag)
             *bottom_field_order_cnt = pic_order_cnt_msb + pic_order_cnt_lsb;
         else
             *top_field_order_cnt = pic_order_cnt_msb + pic_order_cnt_lsb;
     } else {
         *top_field_order_cnt = pic_order_cnt_msb + pic_order_cnt_lsb;
-        *bottom_field_order_cnt = *top_field_order_cnt + (int32_t)mPrimPicSliceHeader.delta_pic_order_cnt_bottom;
+        *bottom_field_order_cnt = *top_field_order_cnt + (int32_t)poc_info->prim_pic_slice_header.delta_pic_order_cnt_bottom;
     }
 
-    if (mIsIDRFrame)
+    if (poc_info->is_idr_frame)
         poc_state->Reset();
-    if (mPrimPicSliceHeader.nal_ref_idc) {
-        poc_state->prev_have_mmco_5         = mHaveMMCO5;
-        poc_state->prev_bottom_field_flag   = mPrimPicSliceHeader.bottom_field_flag;
+    if (poc_info->prim_pic_slice_header.nal_ref_idc) {
+        poc_state->prev_have_mmco_5         = poc_info->have_mmco5;
+        poc_state->prev_bottom_field_flag   = poc_info->prim_pic_slice_header.bottom_field_flag;
         poc_state->prev_pic_order_cnt_msb   = pic_order_cnt_msb;
         poc_state->prev_pic_order_cnt_lsb   = pic_order_cnt_lsb;
         poc_state->prev_top_field_order_cnt = *top_field_order_cnt;
     }
 }
 
-void AVCEssenceParser::DecodePOCType1(POCState *poc_state, int32_t *top_field_order_cnt,
-                                      int32_t *bottom_field_order_cnt)
+void AVCCodedPictureEssenceParser::DecodePOCType1(POCState *poc_state, const POCInfo *poc_info,
+                                                  int32_t *top_field_order_cnt, int32_t *bottom_field_order_cnt)
 {
-    BMX_ASSERT(mSPS.count(mActiveSPSId) && mSPSExtra.count(mActiveSPSId));
-    const SPS *active_sps = &mSPS[mActiveSPSId];
-    const SPSExtra *active_sps_extra = mSPSExtra[mActiveSPSId];
+    BMX_ASSERT(poc_info->have_active_sps && poc_info->active_sps_extra);
 
     int64_t frame_num_offset;
-    if (mIsIDRFrame) {
-        if ((int32_t)mPrimPicSliceHeader.frame_num != 0)
+    if (poc_info->is_idr_frame) {
+        if ((int32_t)poc_info->prim_pic_slice_header.frame_num != 0)
             BMX_EXCEPTION(("frame_num in IDR frame is not zero"));
         frame_num_offset = 0;
     } else {
-        int32_t max_frame_num = 1 << (active_sps->log2_max_frame_num_minus4 + 4);
+        int32_t max_frame_num = 1 << (poc_info->active_sps.log2_max_frame_num_minus4 + 4);
 
         int32_t prev_frame_num_offset;
         if (poc_state->prev_have_mmco_5)
@@ -1628,68 +1696,67 @@ void AVCEssenceParser::DecodePOCType1(POCState *poc_state, int32_t *top_field_or
         else
             prev_frame_num_offset = poc_state->prev_frame_num_offset;
 
-        if (poc_state->prev_frame_num > (int32_t)mPrimPicSliceHeader.frame_num)
+        if (poc_state->prev_frame_num > (int32_t)poc_info->prim_pic_slice_header.frame_num)
             frame_num_offset = prev_frame_num_offset + max_frame_num;
         else
             frame_num_offset = prev_frame_num_offset;
     }
 
     uint32_t abs_frame_num;
-    if (active_sps->num_ref_frames_in_pic_order_cnt_cycle != 0)
-        abs_frame_num = (uint32_t)(frame_num_offset + (int32_t)mPrimPicSliceHeader.frame_num);
+    if (poc_info->active_sps.num_ref_frames_in_pic_order_cnt_cycle != 0)
+        abs_frame_num = (uint32_t)(frame_num_offset + (int32_t)poc_info->prim_pic_slice_header.frame_num);
     else
         abs_frame_num = 0;
-    if (!mPrimPicSliceHeader.nal_ref_idc && abs_frame_num > 0)
+    if (!poc_info->prim_pic_slice_header.nal_ref_idc && abs_frame_num > 0)
         abs_frame_num--;
 
     int32_t pic_order_cnt_cycle_cnt = 0;
     int32_t frame_num_in_pic_order_cnt_cycle = 0;
     int32_t expected_pic_order_cnt = 0;
     if (abs_frame_num > 0) {
-        pic_order_cnt_cycle_cnt = (abs_frame_num - 1) / active_sps->num_ref_frames_in_pic_order_cnt_cycle;
-        frame_num_in_pic_order_cnt_cycle = (abs_frame_num - 1) % active_sps->num_ref_frames_in_pic_order_cnt_cycle;
-        expected_pic_order_cnt = (int32_t)(pic_order_cnt_cycle_cnt * active_sps->expected_delta_per_pic_order_cnt_cycle);
+        pic_order_cnt_cycle_cnt = (abs_frame_num - 1) / poc_info->active_sps.num_ref_frames_in_pic_order_cnt_cycle;
+        frame_num_in_pic_order_cnt_cycle = (abs_frame_num - 1) % poc_info->active_sps.num_ref_frames_in_pic_order_cnt_cycle;
+        expected_pic_order_cnt = (int32_t)(pic_order_cnt_cycle_cnt * poc_info->active_sps.expected_delta_per_pic_order_cnt_cycle);
         int32_t i;
         for (i = 0; i <= frame_num_in_pic_order_cnt_cycle; i++)
-            expected_pic_order_cnt += active_sps_extra->offset_for_ref_frame[i];
+            expected_pic_order_cnt += poc_info->active_sps_extra->offset_for_ref_frame[i];
     }
-    if (!mPrimPicSliceHeader.nal_ref_idc)
-        expected_pic_order_cnt += (int32_t)active_sps->offset_for_non_ref_pic;
+    if (!poc_info->prim_pic_slice_header.nal_ref_idc)
+        expected_pic_order_cnt += (int32_t)poc_info->active_sps.offset_for_non_ref_pic;
 
-    if (mPrimPicSliceHeader.field_pic_flag) {
-        if (mPrimPicSliceHeader.bottom_field_flag) {
-            *bottom_field_order_cnt = (int32_t)(expected_pic_order_cnt + active_sps->offset_for_top_to_bottom_field +
-                                                mPrimPicSliceHeader.delta_pic_order_cnt_0);
+    if (poc_info->prim_pic_slice_header.field_pic_flag) {
+        if (poc_info->prim_pic_slice_header.bottom_field_flag) {
+            *bottom_field_order_cnt = (int32_t)(expected_pic_order_cnt + poc_info->active_sps.offset_for_top_to_bottom_field +
+                                                poc_info->prim_pic_slice_header.delta_pic_order_cnt_0);
         } else {
-            *top_field_order_cnt = (int32_t)(expected_pic_order_cnt + mPrimPicSliceHeader.delta_pic_order_cnt_0);
+            *top_field_order_cnt = (int32_t)(expected_pic_order_cnt + poc_info->prim_pic_slice_header.delta_pic_order_cnt_0);
         }
     } else {
-        *top_field_order_cnt = (int32_t)(expected_pic_order_cnt + mPrimPicSliceHeader.delta_pic_order_cnt_0);
-        *bottom_field_order_cnt = (int32_t)(*top_field_order_cnt + active_sps->offset_for_top_to_bottom_field +
-                                            mPrimPicSliceHeader.delta_pic_order_cnt_1);
+        *top_field_order_cnt = (int32_t)(expected_pic_order_cnt + poc_info->prim_pic_slice_header.delta_pic_order_cnt_0);
+        *bottom_field_order_cnt = (int32_t)(*top_field_order_cnt + poc_info->active_sps.offset_for_top_to_bottom_field +
+                                            poc_info->prim_pic_slice_header.delta_pic_order_cnt_1);
     }
 
     poc_state->Reset();
-    poc_state->prev_have_mmco_5      = mHaveMMCO5;
-    poc_state->prev_frame_num        = (int32_t)mPrimPicSliceHeader.frame_num;
+    poc_state->prev_have_mmco_5      = poc_info->have_mmco5;
+    poc_state->prev_frame_num        = (int32_t)poc_info->prim_pic_slice_header.frame_num;
     poc_state->prev_frame_num_offset = (int32_t)frame_num_offset;
 }
 
-void AVCEssenceParser::DecodePOCType2(POCState *poc_state, int32_t *top_field_order_cnt,
-                                      int32_t *bottom_field_order_cnt)
+void AVCCodedPictureEssenceParser::DecodePOCType2(POCState *poc_state, const POCInfo *poc_info,
+                                                  int32_t *top_field_order_cnt, int32_t *bottom_field_order_cnt)
 {
-    BMX_ASSERT(mSPS.count(mActiveSPSId));
-    const SPS *active_sps = &mSPS[mActiveSPSId];
+    BMX_ASSERT(poc_info->have_active_sps);
 
     int64_t frame_num_offset;
     int32_t tmp_pic_order_cnt;
-    if (mIsIDRFrame) {
-        if ((int32_t)mPrimPicSliceHeader.frame_num != 0)
+    if (poc_info->is_idr_frame) {
+        if ((int32_t)poc_info->prim_pic_slice_header.frame_num != 0)
             BMX_EXCEPTION(("frame_num in IDR frame is not zero"));
         frame_num_offset = 0;
         tmp_pic_order_cnt = 0;
     } else {
-        int32_t max_frame_num = 1 << (active_sps->log2_max_frame_num_minus4 + 4);
+        int32_t max_frame_num = 1 << (poc_info->active_sps.log2_max_frame_num_minus4 + 4);
 
         int32_t prev_frame_num_offset;
         if (poc_state->prev_have_mmco_5)
@@ -1697,19 +1764,19 @@ void AVCEssenceParser::DecodePOCType2(POCState *poc_state, int32_t *top_field_or
         else
             prev_frame_num_offset = poc_state->prev_frame_num_offset;
 
-        if (poc_state->prev_frame_num > (int32_t)mPrimPicSliceHeader.frame_num)
+        if (poc_state->prev_frame_num > (int32_t)poc_info->prim_pic_slice_header.frame_num)
             frame_num_offset = prev_frame_num_offset + max_frame_num;
         else
             frame_num_offset = prev_frame_num_offset;
 
-        if (mPrimPicSliceHeader.nal_ref_idc)
-            tmp_pic_order_cnt = (int32_t)(2 * (frame_num_offset + (int32_t)mPrimPicSliceHeader.frame_num));
+        if (poc_info->prim_pic_slice_header.nal_ref_idc)
+            tmp_pic_order_cnt = (int32_t)(2 * (frame_num_offset + (int32_t)poc_info->prim_pic_slice_header.frame_num));
         else
-            tmp_pic_order_cnt = (int32_t)(2 * (frame_num_offset + (int32_t)mPrimPicSliceHeader.frame_num) - 1);
+            tmp_pic_order_cnt = (int32_t)(2 * (frame_num_offset + (int32_t)poc_info->prim_pic_slice_header.frame_num) - 1);
     }
 
-    if (mPrimPicSliceHeader.field_pic_flag) {
-        if (mPrimPicSliceHeader.bottom_field_flag)
+    if (poc_info->prim_pic_slice_header.field_pic_flag) {
+        if (poc_info->prim_pic_slice_header.bottom_field_flag)
             *bottom_field_order_cnt = tmp_pic_order_cnt;
         else
             *top_field_order_cnt = tmp_pic_order_cnt;
@@ -1719,12 +1786,12 @@ void AVCEssenceParser::DecodePOCType2(POCState *poc_state, int32_t *top_field_or
     }
 
     poc_state->Reset();
-    poc_state->prev_have_mmco_5      = mHaveMMCO5;
-    poc_state->prev_frame_num        = (int32_t)mPrimPicSliceHeader.frame_num;
+    poc_state->prev_have_mmco_5      = poc_info->have_mmco5;
+    poc_state->prev_frame_num        = (int32_t)poc_info->prim_pic_slice_header.frame_num;
     poc_state->prev_frame_num_offset = (int32_t)frame_num_offset;
 }
 
-bool AVCEssenceParser::GetParameterSets(uint8_t pic_parameter_set_id, const SPS **sps, const PPS **pps)
+bool AVCCodedPictureEssenceParser::GetParameterSets(uint8_t pic_parameter_set_id, const SPS **sps, const PPS **pps)
 {
     map<uint8_t, PPS>::const_iterator pps_iter = mPPS.find(pic_parameter_set_id);
     if (pps_iter == mPPS.end()) {
@@ -1744,7 +1811,7 @@ bool AVCEssenceParser::GetParameterSets(uint8_t pic_parameter_set_id, const SPS 
     return true;
 }
 
-void AVCEssenceParser::SetSampleAspectRatio(const SPS *sps)
+void AVCCodedPictureEssenceParser::SetSampleAspectRatio(const SPS *sps)
 {
     static const Rational aspect_ratios[] =
     {
@@ -1778,7 +1845,7 @@ void AVCEssenceParser::SetSampleAspectRatio(const SPS *sps)
     }
 }
 
-void AVCEssenceParser::SetSPS(uint8_t id, SPS *sps, SPSExtra *sps_extra)
+void AVCCodedPictureEssenceParser::SetSPS(uint8_t id, SPS *sps, SPSExtra *sps_extra)
 {
     mSPS[id] = *sps;
     if (mSPSExtra.count(id))
@@ -1786,12 +1853,12 @@ void AVCEssenceParser::SetSPS(uint8_t id, SPS *sps, SPSExtra *sps_extra)
     mSPSExtra[id] = sps_extra;
 }
 
-void AVCEssenceParser::SetPPS(uint8_t id, PPS *pps)
+void AVCCodedPictureEssenceParser::SetPPS(uint8_t id, PPS *pps)
 {
     mPPS[id] = *pps;
 }
 
-void AVCEssenceParser::SetSPSData(uint8_t id, const unsigned char *data, uint32_t size)
+void AVCCodedPictureEssenceParser::SetSPSData(uint8_t id, const unsigned char *data, uint32_t size)
 {
     if (mSPSData.count(id))
         mSPSData[id]->Update(data, size);
@@ -1799,7 +1866,7 @@ void AVCEssenceParser::SetSPSData(uint8_t id, const unsigned char *data, uint32_
         mSPSData[id] = new ParamSetData(data, size);
 }
 
-void AVCEssenceParser::SetPPSData(uint8_t id, const unsigned char *data, uint32_t size)
+void AVCCodedPictureEssenceParser::SetPPSData(uint8_t id, const unsigned char *data, uint32_t size)
 {
     if (mPPSData.count(id))
         mPPSData[id]->Update(data, size);
@@ -1807,14 +1874,7 @@ void AVCEssenceParser::SetPPSData(uint8_t id, const unsigned char *data, uint32_
         mPPSData[id] = new ParamSetData(data, size);
 }
 
-void AVCEssenceParser::ResetFrameSize()
-{
-    mHavePrimPicSliceHeader = false;
-    memset(&mPrimPicSliceHeader, 0, sizeof(mPrimPicSliceHeader));
-    mOffset = 0;
-}
-
-void AVCEssenceParser::ResetFrameInfo()
+void AVCCodedPictureEssenceParser::ResetFrameInfo()
 {
     mHavePrimPicSliceHeader = false;
     memset(&mPrimPicSliceHeader, 0, sizeof(mPrimPicSliceHeader));
@@ -1853,3 +1913,223 @@ void AVCEssenceParser::ResetFrameInfo()
     mFrameNum = 0;
 }
 
+
+AVCEssenceParser::AVCEssenceParser()
+: mCodedPictureParser()
+{
+    mSeparateFieldPicture = -1;
+    mPOCInfo1 = 0;
+    mPOCInfo2 = 0;
+
+    ResetFrameInfo();
+}
+
+AVCEssenceParser::~AVCEssenceParser()
+{
+    ResetFrameInfo();
+}
+
+void AVCEssenceParser::SetSPS(const unsigned char *data, uint32_t size)
+{
+    mCodedPictureParser.SetSPS(data, size);
+}
+
+void AVCEssenceParser::SetPPS(const unsigned char *data, uint32_t size)
+{
+    mCodedPictureParser.SetPPS(data, size);
+}
+
+uint32_t AVCEssenceParser::ParseFrameStart(const unsigned char *data, uint32_t data_size)
+{
+    mParsedFrameSize.Reset();
+    return mCodedPictureParser.ParseFrameStart(data, data_size);
+}
+
+void AVCEssenceParser::ResetParseFrameSize()
+{
+    mCodedPictureParser.ResetParseFrameSize();
+    mParsedFrameSize.Reset();
+}
+
+ParsedFrameSize AVCEssenceParser::ParseFrameSize2(const unsigned char *data, uint32_t data_size)
+{
+    if (mParsedFrameSize.IsComplete())
+        ResetParseFrameSize();
+
+    if (mParsedFrameSize.HaveFirstField()) {
+        // It is field coded and the first field has been parsed
+        BMX_CHECK(data_size >= mParsedFrameSize.GetFirstFieldSize());
+        BMX_CHECK(mSeparateFieldPicture > 0);
+
+        uint32_t second_field_size = mCodedPictureParser.ParseFrameSize(
+            &data[mParsedFrameSize.GetFirstFieldSize()],
+            data_size - mParsedFrameSize.GetFirstFieldSize()
+        );
+        mParsedFrameSize.SetSecondFieldSize(second_field_size);
+
+        return mParsedFrameSize;
+    }
+
+    uint32_t frame_or_field_size = mCodedPictureParser.ParseFrameSize(data, data_size);
+    // Assume it is field coded here but override later when it is complete and mSeparateFieldPicture is known
+    mParsedFrameSize.SetFirstFieldSize(frame_or_field_size);
+
+    if (mParsedFrameSize.HaveFirstFieldOrFrame()) {
+        if (mSeparateFieldPicture < 0) {
+            mCodedPictureParser.ParseFrameInfo(data, frame_or_field_size);
+            mSeparateFieldPicture = mCodedPictureParser.IsFieldPicture();
+        }
+        if (mSeparateFieldPicture < 0)
+            BMX_EXCEPTION(("Failed to determine whether AVC picture is frame or field coded\n"));
+
+        if (mSeparateFieldPicture == 0) {
+            // Override the size for a frame coded picture
+            mParsedFrameSize.SetSize(frame_or_field_size);
+        }
+    }
+
+    return mParsedFrameSize;
+}
+
+ParsedFrameSize AVCEssenceParser::ParseFrameInfo2(const unsigned char *data, ParsedFrameSize frame_size)
+{
+    ResetFrameInfo();
+
+    mCodedPictureParser.ParseFrameInfo(data, frame_size.GetFirstFieldOrFrameSize());
+
+    if (mSeparateFieldPicture < 0) {
+        mSeparateFieldPicture = mCodedPictureParser.IsFieldPicture();
+        if (IsSeparateFieldPicture())
+            mBottomFieldFirst = mCodedPictureParser.IsBottomField();
+    }
+
+    // Only fixed picture coding type and field order is supported
+    if (IsSeparateFieldPicture() != mCodedPictureParser.IsFieldPicture()) {
+        BMX_EXCEPTION(("AVC picture coding changed to %s coded picture\n",
+                       mCodedPictureParser.IsFieldPicture() ? "field" : "frame"));
+    }
+    if (IsSeparateFieldPicture() && mBottomFieldFirst != mCodedPictureParser.IsBottomField()) {
+        BMX_EXCEPTION(("AVC field order changed to %s field first\n",
+                       mCodedPictureParser.IsBottomField() ? "bottom" : "top"));
+    }
+
+    // The frame is IDR only if the first field or frame is IDR
+    mIsIDRFrame = mCodedPictureParser.IsIDRFrame();
+
+    // Change the separate field rate to a frame rate for the field pairs
+    mFrameRate = mCodedPictureParser.GetFrameRate();
+    if (mFrameRate.numerator && IsSeparateFieldPicture()) {
+        if ((mFrameRate.numerator % 2) == 0)
+            mFrameRate.numerator /= 2;
+        else
+            mFrameRate.denominator *= 2;
+    }
+
+    // Frame or first field properties
+    mFrameType = mCodedPictureParser.GetFrameType();
+    mFrameHasActiveSPS = mCodedPictureParser.FrameHasActiveSPS();
+    mFrameHasActivePPS = mCodedPictureParser.FrameHasActivePPS();
+
+    // If there are 2 fields then these properties can be modified by the second field
+    mFrameMBSOnlyFlag = mCodedPictureParser.IsFrameMBSOnly();
+    mMBAdaptiveFFEncoding = mCodedPictureParser.IsMBAdaptiveFFEncoding();
+    mActiveSPSDataConstant = mCodedPictureParser.IsActiveSPSDataConstant();
+    mActivePPSDataConstant = mCodedPictureParser.IsActivePPSDataConstant();
+
+    delete mPOCInfo1;
+    mPOCInfo1 = new AVCCodedPictureEssenceParser::POCInfo(&mCodedPictureParser);
+
+    if (IsSeparateFieldPicture()) {
+        uint64_t first_field_frame_num = mCodedPictureParser.GetFrameNum();
+
+        // Parse the field sizes if the frame_size passed in doesn't have the second field offset
+        if (frame_size.IsFrame()) {
+            ResetParseFrameSize();
+            ParseFrameSize2(data, frame_size.GetFirstFieldOrFrameSize());
+
+            // The second field size won't be known from parsing because there is no next picture.
+            // Complete the size using the known frame size
+            if (mParsedFrameSize.IsUnknown())
+                mParsedFrameSize.CompleteSize(frame_size.GetSize());
+
+            // Double check that both fields sizes are now known
+            if (!mParsedFrameSize.IsComplete())
+                BMX_EXCEPTION(("Failed to parse AVC field coded pictures from data\n"));
+            if (!mParsedFrameSize.IsFields())
+                BMX_EXCEPTION(("Failed to parse AVC field coded picture, got frame coded picture\n"));
+
+            frame_size = mParsedFrameSize;
+        }
+
+        if (!frame_size.HaveSecondField())
+            BMX_EXCEPTION(("No data for the second field\n"));
+        mCodedPictureParser.ParseFrameInfo(&data[frame_size.GetFirstFieldSize()], frame_size.GetSecondFieldSize());
+
+        // Do some checks on the fields
+        if (!mCodedPictureParser.IsFieldPicture())
+            BMX_EXCEPTION(("Expecting second field but got frame coded picture\n"));
+        if (!mBottomFieldFirst && !mCodedPictureParser.mBottomField)
+            BMX_EXCEPTION(("Expecting bottom field as second field but got top field\n"));
+        if (mBottomFieldFirst && mCodedPictureParser.mBottomField)
+            BMX_EXCEPTION(("Expecting top field as second field but got bottom field\n"));
+        if (first_field_frame_num != mCodedPictureParser.mFrameNum) {
+            BMX_EXCEPTION(("Frame number differs from first field %" PRIu64 " to second field %" PRIu64 "\n",
+                           first_field_frame_num, mCodedPictureParser.mFrameNum));
+        }
+
+        mSecondFieldFrameType = mCodedPictureParser.GetFrameType();
+        mFrameMBSOnlyFlag = mFrameMBSOnlyFlag && mCodedPictureParser.IsFrameMBSOnly();
+        mMBAdaptiveFFEncoding = mMBAdaptiveFFEncoding || mCodedPictureParser.IsMBAdaptiveFFEncoding();
+        mSecondFieldHasActiveSPS = mCodedPictureParser.FrameHasActiveSPS();
+        mSecondFieldHasActivePPS = mCodedPictureParser.FrameHasActivePPS();
+        mActiveSPSDataConstant = mActiveSPSDataConstant && mCodedPictureParser.IsActiveSPSDataConstant();
+        mActivePPSDataConstant = mActivePPSDataConstant && mCodedPictureParser.IsActivePPSDataConstant();
+
+        delete mPOCInfo2;
+        mPOCInfo2 = new AVCCodedPictureEssenceParser::POCInfo(&mCodedPictureParser);
+    }
+
+    return frame_size;
+}
+
+void AVCEssenceParser::DecodePOC(POCState *poc_state, int32_t *pic_order_cnt)
+{
+    BMX_CHECK(mPOCInfo1);
+    mCodedPictureParser.DecodePOC(poc_state, mPOCInfo1, pic_order_cnt);
+    if (IsSeparateFieldPicture()) {
+        BMX_CHECK(mPOCInfo2);
+        int32_t dummy_pic_order_cnt;
+        mCodedPictureParser.DecodePOC(poc_state, mPOCInfo2, &dummy_pic_order_cnt);
+    }
+}
+
+void AVCEssenceParser::ParseNALUnits(const unsigned char *data, uint32_t size, vector<NALReference> *nals)
+{
+    mCodedPictureParser.ParseNALUnits(data, size, nals);
+}
+
+bool AVCEssenceParser::CheckFrameHasAVCIHeader(const unsigned char *data, uint32_t data_size)
+{
+    return mCodedPictureParser.CheckFrameHasAVCIHeader(data, data_size);
+}
+
+void AVCEssenceParser::ResetFrameInfo()
+{
+    mIsIDRFrame = false;
+    mFrameType = UNKNOWN_FRAME_TYPE;
+    mSecondFieldFrameType = UNKNOWN_FRAME_TYPE;
+    mFrameMBSOnlyFlag = true;
+    mMBAdaptiveFFEncoding = false;
+    mBottomFieldFirst = false;
+    mFrameHasActiveSPS = false;
+    mFrameHasActivePPS = false;
+    mSecondFieldHasActiveSPS = false;
+    mSecondFieldHasActivePPS = false;
+    mActiveSPSDataConstant = false;
+    mActivePPSDataConstant = false;
+
+    delete mPOCInfo1;
+    mPOCInfo1 = 0;
+    delete mPOCInfo2;
+    mPOCInfo2 = 0;
+}

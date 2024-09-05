@@ -3,6 +3,7 @@ list(APPEND bmx_sources
     essence_parser/AVCIRawEssenceReader.cpp
     essence_parser/D10RawEssenceReader.cpp
     essence_parser/DVEssenceParser.cpp
+    essence_parser/EssenceParser.cpp
     essence_parser/EssenceParserUtils.cpp
     essence_parser/FileEssenceSource.cpp
     essence_parser/FilePatternEssenceSource.cpp

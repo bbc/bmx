@@ -4645,8 +4645,8 @@ int main(int argc, const char** argv)
                     throw false;
                 }
 
-                avc_parser->ParseFrameInfo(input->raw_reader->GetSampleData(),
-                                           input->raw_reader->GetSampleDataSize());
+                avc_parser->ParseFrameInfo2(input->raw_reader->GetSampleData(),
+                                            ParsedFrameSize(input->raw_reader->GetSampleDataSize()));
                 input->essence_type = avc_parser->GetAVCIEssenceType(input->raw_reader->GetSampleDataSize(),
                                                                      input->avci_guess_interlaced,
                                                                      input->avci_guess_progressive);
@@ -4693,8 +4693,8 @@ int main(int argc, const char** argv)
                     if (input->essence_type_group == AVC_ESSENCE_GROUP)
                         input->essence_type = AVC_HIGH_422;
                 } else {
-                    avc_parser->ParseFrameInfo(input->raw_reader->GetSampleData(),
-                                               input->raw_reader->GetSampleDataSize());
+                    avc_parser->ParseFrameInfo2(input->raw_reader->GetSampleData(),
+                                                ParsedFrameSize(input->raw_reader->GetSampleDataSize()));
                     if (input->essence_type_group != AVC_ESSENCE_GROUP &&
                         avc_parser->GetEssenceType() != input->essence_type)
                     {

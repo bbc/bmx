@@ -138,6 +138,10 @@ uint32_t RDD36EssenceParser::ParseFrameStart(const unsigned char *data, uint32_t
         return 0;
 }
 
+void RDD36EssenceParser::ResetParseFrameSize()
+{
+}
+
 uint32_t RDD36EssenceParser::ParseFrameSize(const unsigned char *data, uint32_t data_size)
 {
     BMX_CHECK(data_size != ESSENCE_PARSER_NULL_OFFSET);
