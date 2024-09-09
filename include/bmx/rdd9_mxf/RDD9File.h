@@ -76,6 +76,7 @@ public:
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);                // default 8192
     void SetPartitionInterval(int64_t frame_count);                     // default 10sec
     void SetValidator(RDD9Validator *validator);
+    void SetRepeatIndexTable(bool enable);                              // default false. Repeat index table in Footer if true
 
 public:
     void SetOutputStartOffset(int64_t offset);
