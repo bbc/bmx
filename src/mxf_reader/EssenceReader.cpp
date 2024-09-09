@@ -529,7 +529,7 @@ uint32_t EssenceReader::ReadClipWrappedSamples(uint32_t num_samples)
             frame->Grow((uint32_t)size);
             uint32_t num_read = mFile->read(frame->GetBytesAvailable(), (uint32_t)size);
             current_file_position += num_read;
-            BMX_CHECK(num_read == size);
+            BMX_CHECK_NOLOG(num_read == size);
 
             size -= mImageEndOffset;
             if (mImageStartOffset > 0) {
@@ -638,7 +638,7 @@ uint32_t EssenceReader::ReadFrameWrappedSamples(uint32_t num_samples)
                     if (!mParseOnly)
                     {
                         uint32_t num_read = mFile->read(frame->GetBytesAvailable(), (uint32_t)len);
-                        BMX_CHECK(num_read == len);
+                        BMX_CHECK_NOLOG(num_read == len);
                     } else {
                         mFile->skip(len);
                     }
