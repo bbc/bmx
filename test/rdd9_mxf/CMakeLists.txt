@@ -5,6 +5,7 @@ setup_test_dir("rdd9_mxf")
 set(tests
     ancvbi
     mpeg2lg
+    repeatindex
 )
 
 foreach(test ${tests})

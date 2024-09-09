@@ -259,6 +259,11 @@ void RDD9IndexTable::SetExtensions(mxfOptBool single_index_location, mxfOptBool 
     mForwardIndexDirection = forward_index_direction;
 }
 
+void RDD9IndexTable::SetRepeatIndexTable(bool enable)
+{
+    mRepeatInFooter = enable;
+}
+
 void RDD9IndexTable::RegisterSystemItem()
 {
     mIndexElements.push_back(new RDD9IndexTableElement(0, RDD9IndexTableElement::SYSTEM_ITEM, true, false));

@@ -236,6 +236,11 @@ void RDD9File::SetValidator(RDD9Validator *validator)
     mValidator->SetRDD9File(this);
 }
 
+void RDD9File::SetRepeatIndexTable(bool enable)
+{
+    mIndexTable->SetRepeatIndexTable(enable);
+}
+
 void RDD9File::SetOutputStartOffset(int64_t offset)
 {
     BMX_CHECK(offset >= 0);

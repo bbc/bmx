@@ -537,7 +537,6 @@ static void usage(const char *cmd)
     printf("                            separate partitions for header metadata, index tables, essence container data and footer\n");
     printf("    --body-part             Create separate body partitions for essence data\n");
     printf("                            and don't create separate body partitions for index table segments\n");
-    printf("    --repeat-index          Repeat the index table segments in the footer partition\n");
     printf("    --clip-wrap             Use clip wrapping for a single sound track\n");
     printf("    --mp-track-num          Use the material package track number property to define a track order. By default the track number is set to 0\n");
     printf("    --aes-3                 Use AES-3 audio mapping\n");
@@ -563,6 +562,7 @@ static void usage(const char *cmd)
     printf("\n");
     printf("  op1a/rdd9:\n");
     printf("    --ard-zdf-hdf           Use the ARD ZDF HDF profile\n");
+    printf("    --repeat-index          Repeat the index table segments in the footer partition\n");
     printf("\n");
     printf("  as11d10/d10:\n");
     printf("    --d10-mute <flags>      Indicate using a string of 8 '0' or '1' which sound channels should be muted. The lsb is the rightmost digit\n");
@@ -5224,6 +5224,9 @@ int main(int argc, const char** argv)
                 d10_clip->ReserveHeaderMetadataSpace(head_fill);
         } else if (clip_type == CW_RDD9_CLIP_TYPE) {
             RDD9File *rdd9_clip = clip->GetRDD9Clip();
+
+            if (repeat_index)
+                rdd9_clip->SetRepeatIndexTable(true);
 
             if (partition_interval_set)
                 rdd9_clip->SetPartitionInterval(partition_interval);

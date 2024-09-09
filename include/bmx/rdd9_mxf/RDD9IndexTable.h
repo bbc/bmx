@@ -145,6 +145,7 @@ public:
 
     void SetExtensions(mxfOptBool single_index_location, mxfOptBool single_essence_location,
                        mxfOptBool forward_index_direction);
+    void SetRepeatIndexTable(bool enable);
 
     void RegisterSystemItem();
     void RegisterPictureTrackElement(uint32_t track_index);

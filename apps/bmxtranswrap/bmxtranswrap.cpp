@@ -613,7 +613,6 @@ static void usage(const char *cmd)
     printf("                            separate partitions for header metadata, index tables, essence container data and footer\n");
     printf("    --body-part             Create separate body partitions for essence data\n");
     printf("                            and don't create separate body partitions for index table segments\n");
-    printf("    --repeat-index          Repeat the index table segments in the footer partition\n");
     printf("    --clip-wrap             Use clip wrapping for a single sound track\n");
     printf("    --mp-track-num          Use the material package track number property to define a track order. By default the track number is set to 0\n");
     printf("    --aes-3                 Use AES-3 audio mapping\n");
@@ -626,6 +625,7 @@ static void usage(const char *cmd)
     printf("\n");
     printf("  op1a/rdd9:\n");
     printf("    --ard-zdf-hdf           Use the ARD ZDF HDF profile\n");
+    printf("    --repeat-index          Repeat the index table segments in the footer partition\n");
     printf("\n");
     printf("  op1a/d10:\n");
     printf("    --cbe-index-duration-0  Use duration=0 if index table is CBE\n");
@@ -3827,6 +3827,9 @@ int main(int argc, const char** argv)
 
             if (clip_sub_type == AS10_CLIP_SUB_TYPE)
               rdd9_clip->SetValidator(new AS10RDD9Validator(as10_shim, as10_loose_checks));
+
+            if (repeat_index)
+                rdd9_clip->SetRepeatIndexTable(true);
 
             if (partition_interval_set)
                 rdd9_clip->SetPartitionInterval(partition_interval);
