@@ -51,6 +51,14 @@
             BMX_EXCEPTION(("'%s' check failed", #cond));    \
     } while (0)
 
+#define BMX_CHECK_NOLOG(cond)                                                       \
+    do {                                                                            \
+        if (!(cond)) {                                                              \
+            throw BMXException(                                                     \
+                "'%s' check failed near %s:%d", #cond, __FILENAME__, __LINE__);     \
+        }                                                                           \
+    } while (0)
+
 #define BMX_CHECK_M(cond, err)      \
     do {                            \
         if (!(cond))                \

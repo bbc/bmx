@@ -1526,7 +1526,7 @@ void bmx::sleep_msec(uint32_t msec)
 #endif
 }
 
-uint32_t bmx::get_tick_count()
+uint64_t bmx::get_tick_count()
 {
 #if HAVE_CLOCK_GETTIME
     struct timespec now;
@@ -1536,31 +1536,33 @@ uint32_t bmx::get_tick_count()
     if (clock_gettime(CLOCK_MONOTONIC, &now) != 0)
 #endif
         return 0;
-    return (uint32_t)(now.tv_sec * 1000LL + now.tv_nsec / 1000000L);
+    return (uint64_t)(now.tv_sec * 1000LL + now.tv_nsec / 1000000L);
 
 #elif defined(_WIN32)
-    return GetTickCount();
+    return GetTickCount64();
 
 #else
     struct timeval now;
     if (gettimeofday(&now, 0) != 0)
         return 0;
-    return (uint32_t)(now.tv_sec * 1000LL + now.tv_usec / 1000);
+    return (uint64_t)(now.tv_sec * 1000LL + now.tv_usec / 1000);
 #endif
 }
 
-uint32_t bmx::delta_tick_count(uint32_t from, uint32_t to)
+uint64_t bmx::delta_tick_count(uint64_t from, uint64_t to)
 {
-    return (uint32_t)((int64_t)to - from + UINT32_MAX);
+    if (from >= to)
+        return 0;
+    return to - from;
 }
 
-void bmx::rt_sleep(float rt_factor, uint32_t start_tick, Rational sample_rate, int64_t num_samples)
+void bmx::rt_sleep(float rt_factor, uint64_t start_tick, Rational sample_rate, int64_t num_samples)
 {
-    uint32_t tick = get_tick_count();
-    uint32_t target_tick = (uint32_t)(start_tick + 1000 * num_samples *
-                                            sample_rate.denominator / (rt_factor * sample_rate.numerator));
-    uint32_t delta_tick = delta_tick_count(tick, target_tick);
-    if (delta_tick < 10000) // don't sleep if target_tick < tick or there are bogus tick values
+    uint64_t tick = get_tick_count();
+    uint64_t target_tick = start_tick + (uint64_t)(1000 * num_samples *
+                                sample_rate.denominator / (rt_factor * sample_rate.numerator));
+    uint64_t delta_tick = delta_tick_count(tick, target_tick);
+    if (delta_tick)
         sleep_msec(delta_tick);
 }
 

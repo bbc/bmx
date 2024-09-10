@@ -6137,7 +6137,7 @@ int main(int argc, const char** argv)
 
         // realtime wrapping
 
-        uint32_t rt_start = 0;
+        uint64_t rt_start = 0;
         if (realtime)
             rt_start = get_tick_count();
 
