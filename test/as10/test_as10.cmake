@@ -35,7 +35,7 @@ set(create_command ${RAW2BMX}
     -f 25
     -y 22:22:22:22
     --single-pass
-    --part 25
+    --part 12
     -o ${output_file_1}
     --dm-file as10 ${TEST_SOURCE_DIR}/as10_core_framework.txt
     --shim-name high_hd_2014
