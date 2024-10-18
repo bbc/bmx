@@ -416,7 +416,9 @@ void OP1AFile::PrepareHeaderMetadata()
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite(mTrackCounts[mTracks[i]->GetDataDef()]);
     if (HAVE_PRIMARY_EC) {
-        mCPManager->SetStartTimecode(mStartTimecode);
+        Timecode start_timecode = mStartTimecode;
+        start_timecode.AddOffset(- mOutputStartOffset, mFrameRate);
+        mCPManager->SetStartTimecode(start_timecode);
         mCPManager->PrepareWrite();
         mIndexTable->PrepareWrite();
     }

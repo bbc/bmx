@@ -332,7 +332,9 @@ void RDD9File::PrepareHeaderMetadata()
     for (i = 0; i < mTracks.size(); i++)
         mTracks[i]->PrepareWrite(mTrackCounts[mTracks[i]->GetDataDef()]);
 
-    mCPManager->SetStartTimecode(mStartTimecode);
+    Timecode start_timecode = mStartTimecode;
+    start_timecode.AddOffset(- mOutputStartOffset, mFrameRate);
+    mCPManager->SetStartTimecode(start_timecode);
     mCPManager->PrepareWrite();
     mIndexTable->PrepareWrite();
 
