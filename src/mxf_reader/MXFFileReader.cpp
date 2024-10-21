@@ -2325,7 +2325,15 @@ bool MXFFileReader::HaveInterFrameEncodingTrack() const
                 essence_type == MPEG2LG_MP_HL_1440_1080P ||
                 essence_type == MPEG2LG_MP_HL_720P ||
                 essence_type == MPEG2LG_MP_H14_1080I ||
-                essence_type == MPEG2LG_MP_H14_1080P)
+                essence_type == MPEG2LG_MP_H14_1080P ||
+                essence_type == AVC_BASELINE ||
+                essence_type == AVC_CONSTRAINED_BASELINE ||
+                essence_type == AVC_MAIN ||
+                essence_type == AVC_EXTENDED ||
+                essence_type == AVC_HIGH ||
+                essence_type == AVC_HIGH_10 ||
+                essence_type == AVC_HIGH_422 ||
+                essence_type == AVC_HIGH_444)
             {
                 return true;
             }
