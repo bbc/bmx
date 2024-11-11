@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2013, British Broadcasting Corporation
+ * Copyright (C) 2024, British Broadcasting Corporation
  * All Rights Reserved.
- *
- * Author: Philip de Nier
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,62 +27,56 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_KLV_ESSENCE_SOURCE_H_
-#define BMX_KLV_ESSENCE_SOURCE_H_
-
-
-#include <bmx/essence_parser/EssenceSource.h>
-
-
-
-namespace bmx
-{
-
-
-class KLVEssenceSource : public EssenceSource
-{
-public:
-    KLVEssenceSource(EssenceSource *child_source);
-    KLVEssenceSource(EssenceSource *child_source, const mxfKey *key);
-    KLVEssenceSource(EssenceSource *child_source, uint32_t track_num);
-    KLVEssenceSource(EssenceSource *child_source, const mxfKey *key, uint64_t start_value_len);
-    virtual ~KLVEssenceSource();
-
-public:
-    virtual uint32_t Read(unsigned char *data, uint32_t size);
-    virtual bool SeekStart();
-    virtual bool Skip(int64_t offset);
-
-    virtual bool HaveError() const;
-    virtual int GetErrno() const;
-    virtual std::string GetStrError() const;
-
-public:
-    bool PositionInV(uint64_t *size);
-
-    uint64_t GetOffsetInV() const { return mValueLen - mRemValueLen; }
-
-private:
-    typedef enum
-    {
-        READ_KL_STATE,
-        READ_V_STATE,
-        READ_END_STATE,
-    } KLVState;
-
-private:
-    EssenceSource *mChildSource;
-    mxfKey mKey;
-    uint32_t mTrackNum;
-    KLVState mState;
-    uint64_t mValueLen;
-    uint64_t mRemValueLen;
-};
-
-
-};
-
-
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
 
+#define __STDC_LIMIT_MACROS
+
+#include <libMXF++/MXF.h>
+
+#include <bmx/essence_parser/KLVEssenceReader.h>
+#include <bmx/BMXException.h>
+#include <bmx/Logging.h>
+
+using namespace std;
+using namespace bmx;
+
+
+KLVEssenceReader::KLVEssenceReader(KLVEssenceSource *essence_source)
+{
+    mEssenceSource = essence_source;
+}
+
+KLVEssenceReader::~KLVEssenceReader()
+{
+}
+
+uint32_t KLVEssenceReader::ReadValue()
+{
+    // Position at the next non-zero Value
+    uint64_t v_size = 0;
+    while (v_size == 0) {
+        if (!mEssenceSource->PositionInV(&v_size) || v_size > UINT32_MAX) {
+            if (v_size > UINT32_MAX)
+                log_warn("KLV value size %" PRIu64 " > max uint32 is not supported\n", v_size);
+            mValueBuffer.SetSize(0);
+            return 0;
+        }
+    }
+
+    // Expect to be at the start of the V because the read below reads the whole V
+    BMX_CHECK(mEssenceSource->GetOffsetInV() == 0);
+
+    mValueBuffer.Allocate(v_size);
+
+    uint32_t read_size = mEssenceSource->Read(mValueBuffer.GetBytes(), v_size);
+    if (read_size != v_size) {
+        log_warn("Incomplete KLV; only read %u of %u\n", read_size, v_size);
+        mValueBuffer.SetSize(0);
+        return 0;
+    }
+
+    mValueBuffer.SetSize(read_size);
+    return read_size;
+}

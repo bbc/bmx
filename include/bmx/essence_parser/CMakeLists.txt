@@ -9,6 +9,7 @@ list(APPEND bmx_headers
     bmx/essence_parser/FileEssenceSource.h
     bmx/essence_parser/FilePatternEssenceSource.h
     bmx/essence_parser/J2CEssenceParser.h
+    bmx/essence_parser/KLVEssenceReader.h
     bmx/essence_parser/KLVEssenceSource.h
     bmx/essence_parser/MJPEGEssenceParser.h
     bmx/essence_parser/MPEG2AspectRatioFilter.h

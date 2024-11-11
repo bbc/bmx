@@ -64,6 +64,7 @@
 #include <bmx/essence_parser/RawEssenceReader.h>
 #include <bmx/essence_parser/FileEssenceSource.h>
 #include <bmx/essence_parser/KLVEssenceSource.h>
+#include <bmx/essence_parser/KLVEssenceReader.h>
 #include <bmx/essence_parser/FilePatternEssenceSource.h>
 #include <bmx/essence_parser/D10RawEssenceReader.h>
 #include <bmx/essence_parser/MPEG2AspectRatioFilter.h>
@@ -153,6 +154,7 @@ struct RawInput
 
     RawEssenceReader *raw_reader;
     WaveReader *wave_reader;
+    KLVEssenceReader *klv_reader;
     uint32_t channel_count;
     TimedTextManifestParser *timed_text_manifest;
 
@@ -256,14 +258,20 @@ static uint32_t read_samples(RawInput *input, uint32_t max_samples_per_read)
         uint32_t num_frame_samples    = input->sample_sequence[input->sample_sequence_offset];
         input->sample_sequence_offset = (input->sample_sequence_offset + 1) % input->sample_sequence_size;
 
-        if (input->raw_reader)
+        if (input->raw_reader) {
             return (input->raw_reader->ReadSamples(num_frame_samples) == num_frame_samples ? 1 : 0);
-        else
+        } else if (input->klv_reader) {
+            BMX_ASSERT(num_frame_samples == 1);
+            return (input->klv_reader->ReadValue() ? 1 : 0);
+        } else {
             return (input->wave_reader->Read(num_frame_samples) == num_frame_samples ? 1 : 0);
+        }
     } else {
         BMX_ASSERT(input->sample_sequence_size == 1 && input->sample_sequence[0] == 1);
         if (input->raw_reader)
             return input->raw_reader->ReadSamples(max_samples_per_read);
+        else if (input->klv_reader)
+            return (input->klv_reader->ReadValue() ? 1 : 0);
         else
             return input->wave_reader->Read(max_samples_per_read);
     }
@@ -326,6 +334,12 @@ static bool open_raw_reader(RawInput *input)
              input->essence_type == D10_50)
     {
         input->raw_reader = new D10RawEssenceReader(essence_source);
+    }
+    else if (input->parse_klv &&
+             (input->essence_type == ANC_DATA ||
+              input->essence_type == VBI_DATA))
+    {
+        input->klv_reader = new KLVEssenceReader(dynamic_cast<KLVEssenceSource*>(essence_source));
     }
     else
     {
@@ -392,6 +406,7 @@ static void clear_input(RawInput *input)
 {
     delete input->raw_reader;
     delete input->wave_reader;
+    delete input->klv_reader;
     delete input->filter;
     delete input->timed_text_manifest;
     delete input->wave_chunk_refs;
@@ -834,8 +849,8 @@ static void usage(const char *cmd)
     printf("  --vc3_1080i_1260 <name> Raw VC3/DNxHD 1920x1080i 85 Mbps input file\n");
     printf("  --pcm <name>            Raw PCM audio input file\n");
     printf("  --wave <name>           Wave PCM audio input file\n");
-    printf("  --anc <name>            Raw ST 436 Ancillary data. Currently requires the --anc-const option\n");
-    printf("  --vbi <name>            Raw ST 436 Vertical Blanking Interval data. Currently requires the --vbi-const option\n");
+    printf("  --anc <name>            Raw ST 436 Ancillary data. Requires the --anc-const option or frame wrapped in KLV and the --klv option\n");
+    printf("  --vbi <name>            Raw ST 436 Vertical Blanking Interval data. Requires the --vbi-const option or frame wrapped in KLV and the --klv option\n");
     printf("  --tt <manifest>         Manifest file containing Timed Text metadata\n");
     printf("\n\n");
     printf("Notes:\n");
@@ -4045,10 +4060,10 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Multiple '%s' inputs are not permitted\n", argv[cmdln_index]);
                 return 1;
             }
-            if (input.anc_const_size == 0)
+            if (input.anc_const_size == 0 && !input.parse_klv)
             {
                 usage_ref(argv[0]);
-                fprintf(stderr, "Missing or zero '--anc-const' option for input '%s'\n", argv[cmdln_index]);
+                fprintf(stderr, "Missing or zero '--anc-const' or '--klv' options for input '%s'\n", argv[cmdln_index]);
                 return 1;
             }
             input.essence_type = ANC_DATA;
@@ -4071,7 +4086,7 @@ int main(int argc, const char** argv)
                 fprintf(stderr, "Multiple '%s' inputs are not permitted\n", argv[cmdln_index]);
                 return 1;
             }
-            if (input.vbi_const_size == 0)
+            if (input.vbi_const_size == 0 && !input.parse_klv)
             {
                 usage_ref(argv[0]);
                 fprintf(stderr, "Missing or zero '--vbi-const' option for input '%s'\n", argv[cmdln_index]);
@@ -5593,10 +5608,12 @@ int main(int argc, const char** argv)
                         clip_track->SetChannelAssignment(audio_layout_mode_label);
                     break;
                 case ANC_DATA:
-                    clip_track->SetConstantDataSize(input->anc_const_size);
+                    if (input->anc_const_size)
+                        clip_track->SetConstantDataSize(input->anc_const_size);
                     break;
                 case VBI_DATA:
-                    clip_track->SetConstantDataSize(input->vbi_const_size);
+                    if (input->vbi_const_size)
+                        clip_track->SetConstantDataSize(input->vbi_const_size);
                     break;
                 case TIMED_TEXT:
                     clip_track->SetTimedTextSource(input->timed_text_manifest);
@@ -5863,12 +5880,14 @@ int main(int argc, const char** argv)
                 case ANC_DATA:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
-                    input->raw_reader->SetFixedSampleSize(input->anc_const_size);
+                    if (input->raw_reader && input->anc_const_size)
+                        input->raw_reader->SetFixedSampleSize(input->anc_const_size);
                     break;
                 case VBI_DATA:
                     input->sample_sequence[0] = 1;
                     input->sample_sequence_size = 1;
-                    input->raw_reader->SetFixedSampleSize(input->vbi_const_size);
+                    if (input->raw_reader && input->vbi_const_size)
+                        input->raw_reader->SetFixedSampleSize(input->vbi_const_size);
                     break;
                 case TIMED_TEXT:
                     break;
@@ -6205,6 +6224,16 @@ int main(int argc, const char** argv)
                             output_track->WriteSamples(output_channel_index,
                                                        input->raw_reader->GetSampleData(), input->raw_reader->GetSampleDataSize(),
                                                        num_samples);
+                        }
+                    } else if (input->klv_reader) {
+                        num_samples = input->klv_reader->GetValueSize() ? 1 : 0;
+                        if (num_samples) {
+                            output_track->WriteSamples(
+                                output_channel_index,
+                                input->klv_reader->GetValue(),
+                                input->klv_reader->GetValueSize(),
+                                num_samples
+                            );
                         }
                     } else {
                         Frame *frame = input->wave_reader->GetTrack(input_channel_index)->GetFrameBuffer()->GetLastFrame(false);

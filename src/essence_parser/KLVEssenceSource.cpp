@@ -60,6 +60,7 @@ KLVEssenceSource::KLVEssenceSource(EssenceSource *child_source)
     mTrackNum = 0;
     mState = READ_KL_STATE;
     mValueLen = 0;
+    mRemValueLen = 0;
 }
 
 KLVEssenceSource::KLVEssenceSource(EssenceSource *child_source, const mxfKey *key)
@@ -69,6 +70,7 @@ KLVEssenceSource::KLVEssenceSource(EssenceSource *child_source, const mxfKey *ke
     mTrackNum = 0;
     mState = READ_KL_STATE;
     mValueLen = 0;
+    mRemValueLen = 0;
 }
 
 KLVEssenceSource::KLVEssenceSource(EssenceSource *child_source, const mxfKey *key, uint64_t start_value_len)
@@ -78,6 +80,7 @@ KLVEssenceSource::KLVEssenceSource(EssenceSource *child_source, const mxfKey *ke
     mTrackNum = 0;
     mState = READ_V_STATE;
     mValueLen = start_value_len;
+    mRemValueLen = start_value_len;
 }
 
 KLVEssenceSource::KLVEssenceSource(EssenceSource *child_source, uint32_t track_num)
@@ -87,6 +90,7 @@ KLVEssenceSource::KLVEssenceSource(EssenceSource *child_source, uint32_t track_n
     mTrackNum = track_num;
     mState = READ_KL_STATE;
     mValueLen = 0;
+    mRemValueLen = 0;
 }
 
 KLVEssenceSource::~KLVEssenceSource()
@@ -100,15 +104,16 @@ uint32_t KLVEssenceSource::Read(unsigned char *data, uint32_t size)
     unsigned char len_buffer[9];
     uint32_t total_read = 0;
 
-    while (total_read < size) {
+    while (total_read < size || (size == 0 && mState == READ_KL_STATE)) {
         if (mState == READ_KL_STATE) {
+            uint64_t value_len;
             if (mChildSource->Read(&key.octet0, mxfKey_extlen) != mxfKey_extlen)
                 break;
             if (mChildSource->Read(len_buffer, 1) != 1)
                 break;
-            mValueLen = 0;
+            value_len = 0;
             if (len_buffer[0] < 0x80) {
-                mValueLen = len_buffer[0];
+                value_len = len_buffer[0];
             } else {
                 uint8_t i;
                 uint8_t len_size = len_buffer[0] & 0x7f;
@@ -116,11 +121,11 @@ uint32_t KLVEssenceSource::Read(unsigned char *data, uint32_t size)
                 if (mChildSource->Read(&len_buffer[1], len_size) != len_size)
                     break;
                 for (i = 0; i < len_size; i++) {
-                    mValueLen <<= 8;
-                    mValueLen |= len_buffer[i + 1];
+                    value_len <<= 8;
+                    value_len |= len_buffer[i + 1];
                 }
-                if (mValueLen > INT64_MAX) {
-                    log_error("Unsupported KLV length %" PRIu64 " in essence source\n", mValueLen);
+                if (value_len > INT64_MAX) {
+                    log_error("Unsupported KLV length %" PRIu64 " in essence source\n", value_len);
                     break;
                 }
             }
@@ -136,22 +141,29 @@ uint32_t KLVEssenceSource::Read(unsigned char *data, uint32_t size)
                 mKey = key;
                 mState = READ_V_STATE;
             }
-            if (mState != READ_V_STATE && !mChildSource->Skip(mValueLen))
+
+            if (mState != READ_V_STATE && !mChildSource->Skip(value_len))
                 break;
+
+            if (mState == READ_V_STATE) {
+                mValueLen = value_len;
+                mRemValueLen = value_len;
+            }
+
         } else if (mState == READ_V_STATE) {
             uint32_t num_read = 0;
             uint32_t next_read = size - total_read;
-            if (next_read > mValueLen)
-                next_read = (uint32_t)mValueLen;
+            if (next_read > mRemValueLen)
+                next_read = (uint32_t)mRemValueLen;
             if (data)
                 num_read = mChildSource->Read(&data[total_read], next_read);
             else if (mChildSource->Skip(next_read))
                 num_read = next_read;
             total_read += num_read;
-            mValueLen -= num_read;
+            mRemValueLen -= num_read;
             if (num_read < next_read)
                 break;
-            if (mValueLen == 0)
+            if (mRemValueLen == 0)
                 mState = READ_KL_STATE;
         } else {
             break;
@@ -209,3 +221,16 @@ string KLVEssenceSource::GetStrError() const
     return mChildSource->GetStrError();
 }
 
+bool KLVEssenceSource::PositionInV(uint64_t *size)
+{
+    *size = 0;
+
+    if (mState == READ_KL_STATE)
+        Read(0, 0);
+
+    if (mState != READ_V_STATE)
+        return false;
+
+    *size = mRemValueLen;
+    return true;
+}

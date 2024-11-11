@@ -1,8 +1,6 @@
 /*
- * Copyright (C) 2013, British Broadcasting Corporation
+ * Copyright (C) 2024, British Broadcasting Corporation
  * All Rights Reserved.
- *
- * Author: Philip de Nier
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,62 +27,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BMX_KLV_ESSENCE_SOURCE_H_
-#define BMX_KLV_ESSENCE_SOURCE_H_
+#ifndef BMX_KLV_ESSENCE_READER_H_
+#define BMX_KLV_ESSENCE_READER_H_
 
-
-#include <bmx/essence_parser/EssenceSource.h>
-
+#include <bmx/essence_parser/KLVEssenceSource.h>
+#include <bmx/ByteArray.h>
 
 
 namespace bmx
 {
 
-
-class KLVEssenceSource : public EssenceSource
+class KLVEssenceReader
 {
 public:
-    KLVEssenceSource(EssenceSource *child_source);
-    KLVEssenceSource(EssenceSource *child_source, const mxfKey *key);
-    KLVEssenceSource(EssenceSource *child_source, uint32_t track_num);
-    KLVEssenceSource(EssenceSource *child_source, const mxfKey *key, uint64_t start_value_len);
-    virtual ~KLVEssenceSource();
+    KLVEssenceReader(KLVEssenceSource *essence_source);
+    ~KLVEssenceReader();
 
-public:
-    virtual uint32_t Read(unsigned char *data, uint32_t size);
-    virtual bool SeekStart();
-    virtual bool Skip(int64_t offset);
+    uint32_t ReadValue();
 
-    virtual bool HaveError() const;
-    virtual int GetErrno() const;
-    virtual std::string GetStrError() const;
-
-public:
-    bool PositionInV(uint64_t *size);
-
-    uint64_t GetOffsetInV() const { return mValueLen - mRemValueLen; }
+    unsigned char* GetValue() const { return mValueBuffer.GetBytes(); }
+    uint32_t GetValueSize() const   { return mValueBuffer.GetSize(); }
 
 private:
-    typedef enum
-    {
-        READ_KL_STATE,
-        READ_V_STATE,
-        READ_END_STATE,
-    } KLVState;
-
-private:
-    EssenceSource *mChildSource;
-    mxfKey mKey;
-    uint32_t mTrackNum;
-    KLVState mState;
-    uint64_t mValueLen;
-    uint64_t mRemValueLen;
+    KLVEssenceSource *mEssenceSource;
+    ByteArray mValueBuffer;
 };
 
 
 };
-
 
 
 #endif
-
