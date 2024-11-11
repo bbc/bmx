@@ -1563,6 +1563,6 @@ void bmx::rt_sleep(float rt_factor, uint64_t start_tick, Rational sample_rate, i
                                 sample_rate.denominator / (rt_factor * sample_rate.numerator));
     uint64_t delta_tick = delta_tick_count(tick, target_tick);
     if (delta_tick)
-        sleep_msec(delta_tick);
+        sleep_msec((delta_tick <= UINT32_MAX ? (uint32_t)delta_tick : UINT32_MAX));
 }
 

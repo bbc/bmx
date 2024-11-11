@@ -69,7 +69,7 @@ void JPEGXSMXFDescriptorHelper::SetJPEGXSComponentTable(std::vector<uint8_t> val
 {
     mxfpp::ByteArray arr;
     arr.data = (unsigned char*)value.data();
-    arr.length = value.size();
+    arr.length = (uint16_t)value.size();
 
     mJPEGXSSubDescriptor->setJPEGXSComponentTable(arr);
     mComponentTable = value;

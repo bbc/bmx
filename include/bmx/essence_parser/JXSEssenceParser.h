@@ -139,7 +139,7 @@ namespace bmx
         class CAP
         {
             const unsigned char* m_MarkerData;
-            uint32_t m_DataSize;
+            size_t m_DataSize;
             NO_COPY_CONSTRUCT(CAP);
             CAP();
 
@@ -181,7 +181,7 @@ namespace bmx
         class PIH
         {
             const unsigned char*    m_MarkerData;
-            uint32_t                m_DataSize;
+            size_t                  m_DataSize;
             NO_COPY_CONSTRUCT(PIH);
             PIH();
 

@@ -1861,7 +1861,7 @@ static int skip_sei_payload(ParseContext *context, uint64_t num_bytes)
     while (rem_num_bytes > 0) {
         uint8_t read_num_bytes = 8;
         if (read_num_bytes > rem_num_bytes)
-            read_num_bytes = rem_num_bytes;
+            read_num_bytes = (uint8_t)rem_num_bytes;
 
         /* Skip payload by calling read_bits to ensure context->emu_prevention_count is updated */
         if (!read_bits(context, read_num_bytes * 8))

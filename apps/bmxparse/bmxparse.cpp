@@ -948,7 +948,7 @@ int main(int argc, const char **argv)
                 frame_start = 0;
             }
 
-            frame_size = parser->ParseFrameSize2(buffer.data, buffer.size);
+            frame_size = parser->ParseFrameSize2(buffer.data, (uint32_t)buffer.size);
 
             if (frame_size.IsNull()) {
                 log_error("Failed to parse frame size\n");
@@ -959,7 +959,7 @@ int main(int argc, const char **argv)
             if (frame_size.IsUnknown()) {
                 if (buffer.Fill(file) == 0) {
                     // Try create a complete frame from the available data assuming it's a valid frame
-                    if (!frame_size.CompleteSize(buffer.size))
+                    if (!frame_size.CompleteSize((uint32_t)buffer.size))
                         break;
 
                     BMX_ASSERT(frame_size.IsComplete());
