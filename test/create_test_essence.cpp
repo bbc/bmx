@@ -117,7 +117,9 @@ typedef enum
     TYPE_RDD36_422_ITU2020              = 58,
     TYPE_MPEG2LG_MP_ML_576I             = 59,
     TYPE_MPEG2LG_MP_ML_576I_4_3         = 60,
-    TYPE_END                            = 61,
+    TYPE_KLV_ANC_DATA_VAR_SIZE          = 61,
+    TYPE_KLV_VBI_DATA_VAR_SIZE          = 62,
+    TYPE_END                            = 63,
 } EssenceType;
 
 typedef struct
@@ -902,30 +904,96 @@ static void write_avid_alpha(FILE *file, int type, unsigned int duration)
     write_data(file, duration * frame_size);
 }
 
-static void write_anc_data(FILE *file, unsigned int duration)
+static void write_anc_data(FILE *file, unsigned int duration, bool klv_var_size)
 {
-    static const unsigned char anc_frame[24] =
+    static const unsigned char core_anc_frame[24] =
         {0x00, 0x01,                                        // single line / packet
          0x00, 0x09, 0x01, 0x04, 0x00, 0x07,                // line 9, VANCFrame, ANC_8_BIT_COMP_LUMA, 7 samples
          0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01,    // payload array header: 8 x 1 bytes
          0x45, 0x04, 0x04, 0x21, 0x22, 0x23, 0x24, 0x00};   // payload array: DID (1), SDID (1), DC (1), UDW (4), padding (1)
+    // Any key will do as it is discarded when parsing the data
+    static const unsigned char klv_key[16] = {0x41, 0x4e, 0x43, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+    // Odd and even frame data and sizes
+    unsigned char *anc_data[2];
+    size_t anc_data_size[2];
+
+    if (klv_var_size) {
+        anc_data_size[0] = 16 + 1 + sizeof(core_anc_frame);
+        anc_data[0] = new unsigned char[anc_data_size[0]];
+        memcpy(anc_data[0], klv_key, 16);
+        anc_data[0][16] = anc_data_size[0] - 17;
+        memcpy(&anc_data[0][17], core_anc_frame, sizeof(core_anc_frame));
+
+        // Add an extra padding byte to the odd frame
+        anc_data_size[1] = 16 + 1 + sizeof(core_anc_frame) + 1;
+        anc_data[1] = new unsigned char[anc_data_size[1]];
+        memcpy(anc_data[1], klv_key, 16);
+        anc_data[1][16] = anc_data_size[1] - 17;
+        memcpy(&anc_data[1][17], core_anc_frame, sizeof(core_anc_frame));
+        anc_data[1][16 + 1 + 11] = 0x09;
+        anc_data[1][anc_data_size[1] - 1] = 0x00;
+    } else {
+        anc_data[0] = const_cast<unsigned char*>(core_anc_frame);
+        anc_data[1] = const_cast<unsigned char*>(core_anc_frame);
+        anc_data_size[0] = sizeof(core_anc_frame);
+        anc_data_size[1] = sizeof(core_anc_frame);
+    }
 
     unsigned int i;
     for (i = 0; i < duration; i++)
-        write_buffer(file, anc_frame, sizeof(anc_frame));
+        write_buffer(file, anc_data[i % 2], anc_data_size[i % 2]);
+
+    if (klv_var_size) {
+        delete [] anc_data[0];
+        delete [] anc_data[1];
+    }
 }
 
-static void write_vbi_data(FILE *file, unsigned int duration)
+static void write_vbi_data(FILE *file, unsigned int duration, bool klv_var_size)
 {
-    static const unsigned char vbi_frame[24] =
+    static const unsigned char core_vbi_frame[24] =
         {0x00, 0x01,                                        // single line
          0x00, 0x15, 0x01, 0x04, 0x00, 0x08,                // line 21, VBIFrame, VBI_8_BIT_COMP_LUMA, 8 samples
          0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01,    // payload array header: 8 x 1 bytes
          0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47};   // payload array
+    // Any key will do as it is discarded when parsing the data
+    static const unsigned char klv_key[16] = {0x56, 0x42, 0x49, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+    // Odd and even frame data and sizes
+    unsigned char *vbi_data[2];
+    size_t vbi_data_size[2];
+
+    if (klv_var_size) {
+        vbi_data_size[0] = 16 + 1 + sizeof(core_vbi_frame);
+        vbi_data[0] = new unsigned char[vbi_data_size[0]];
+        memcpy(vbi_data[0], klv_key, 16);
+        vbi_data[0][16] = vbi_data_size[0] - 17;
+        memcpy(&vbi_data[0][17], core_vbi_frame, sizeof(core_vbi_frame));
+
+        // Add an extra padding byte to the odd frame
+        vbi_data_size[1] = 16 + 1 + sizeof(core_vbi_frame) + 1;
+        vbi_data[1] = new unsigned char[vbi_data_size[1]];
+        memcpy(vbi_data[1], klv_key, 16);
+        vbi_data[1][16] = vbi_data_size[1] - 17;
+        memcpy(&vbi_data[1][17], core_vbi_frame, sizeof(core_vbi_frame));
+        vbi_data[1][16 + 1 + 11] = 0x09;
+        vbi_data[1][vbi_data_size[1] - 1] = 0x00;
+    } else {
+        vbi_data[0] = const_cast<unsigned char*>(core_vbi_frame);
+        vbi_data[1] = const_cast<unsigned char*>(core_vbi_frame);
+        vbi_data_size[0] = sizeof(core_vbi_frame);
+        vbi_data_size[1] = sizeof(core_vbi_frame);
+    }
 
     unsigned int i;
     for (i = 0; i < duration; i++)
-        write_buffer(file, vbi_frame, sizeof(vbi_frame));
+        write_buffer(file, vbi_data[i % 2], vbi_data_size[i % 2]);
+
+    if (klv_var_size) {
+        delete [] vbi_data[0];
+        delete [] vbi_data[1];
+    }
 }
 
 
@@ -990,6 +1058,11 @@ static void print_usage(const char *cmd)
     fprintf(stderr, " 55: RDD-36 422 Profile\n");
     fprintf(stderr, " 56: RDD-36 4444 Profile\n");
     fprintf(stderr, " 57: 16-bit PCM with duration in samples\n");
+    fprintf(stderr, " 58: RDD-36 422 ITU 2020\n");
+    fprintf(stderr, " 59: MPEG-2 Long GOP MP@ML 576i\n");
+    fprintf(stderr, " 60: MPEG-2 Long GOP MP@ML 576i 4:3\n");
+    fprintf(stderr, " 61: variable size ANC data in KLV\n");
+    fprintf(stderr, " 62: variable size VBI data in KLV\n");
 }
 
 int main(int argc, const char **argv)
@@ -1190,10 +1263,16 @@ int main(int argc, const char **argv)
             write_pcm(file, 3, duration);
             break;
         case TYPE_ANC_DATA:
-            write_anc_data(file, duration);
+            write_anc_data(file, duration, false);
+            break;
+        case TYPE_KLV_ANC_DATA_VAR_SIZE:
+            write_anc_data(file, duration, true);
             break;
         case TYPE_VBI_DATA:
-            write_vbi_data(file, duration);
+            write_vbi_data(file, duration, false);
+            break;
+        case TYPE_KLV_VBI_DATA_VAR_SIZE:
+            write_vbi_data(file, duration, true);
             break;
         case TYPE_16BIT_PCM_SAMPLES:
             write_pcm_samples(file, 2, duration);
