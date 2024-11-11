@@ -1,5 +1,46 @@
 # bmx Changelog
 
+## v1.3
+
+### Breaking changes
+
+* None
+
+### Features
+
+* Add basic support for ANC / VBI frame wrapped in KLV for input into raw2bmx (https://github.com/bbc/bmx/pull/102)
+* Add a `--repeat-index` option for RDD 9 (https://github.com/bbc/bmx/pull/96)
+* Add support for AVC separate fields (https://github.com/bbc/bmx/pull/94)
+* Improve reading growing files (https://github.com/bbc/bmx/pull/90)
+* Add a reference to the Conan packages in the README (https://github.com/bbc/bmx/pull/81)
+* Add MCA notes for IMF ADM Track Files (https://github.com/bbc/bmx/pull/75)
+* Remove a general sample rate check in File Descriptors that was overly restrictive (https://github.com/bbc/bmx/pull/72)
+* Set the MXF Descriptor Aspect Ratio from the value parsed from the MPEG-2 video bitstream (https://github.com/bbc/bmx/pull/67)
+* Include item and set key in low-level read error messages (https://github.com/bbc/bmx/pull/65)
+* MXFDump dumps Generic Stream Partition Packs (https://github.com/bbc/bmx/pull/64)
+* Tolerate Track Number not equalling 0x01 in Timed Text essence element keys (https://github.com/bbc/bmx/pull/62)
+* Add a link to the [RDD 6 XML Creator](https://bbc.github.io/bmx/meta/rdd6_xml_creator/) (https://github.com/bbc/bmx/pull/61)
+* Document adding UUIDs to IMF filenames (https://github.com/bbc/bmx/pull/59)
+* Speed improvement for parsing DV, RDD 36 (ProRes), JPEG XS and VC3 formats by using bitstream information about the frame size (https://github.com/bbc/bmx/pull/54)
+
+### Bug fixes
+
+* Fix failure to support variable size ANC / VBI alongside variable size video (https://github.com/bbc/bmx/pull/103)
+* Enable precharge and postroll in AVC Long GOP and fix the system timecode when there is precharge (https://github.com/bbc/bmx/pull/100)
+* Fix missing commandline output file arg in docs (https://github.com/bbc/bmx/pull/93)
+* Handle EMU protection bytes in skipped PIC timing SEI payload in h264dump (https://github.com/bbc/bmx/pull/89)
+* Fix various errors found using `-fsanitize` (https://github.com/bbc/bmx/pull/79)
+* Fix index out of bounds error in MXFDump (https://github.com/bbc/bmx/pull/76)
+* Accept the correct the name for the ProRes 4444 XQ commandline option, `--rdd36_4444_xq`, in addition to the old incorrect name `--rdd36_4444_hq` (https://github.com/bbc/bmx/pull/68/files)
+* Set OP1a / RDD 9 default Index Table entry array element flag to 0x80 (random access) to match spec. This effects VC2, Timed Text, RDD 36 and data essence types. (https://github.com/bbc/bmx/pull/63)
+
+### Build changes
+
+* Treat implicit function declarations in C as errors (https://github.com/bbc/bmx/pull/78)
+* Remove the fixed `-O2` compile flag (https://github.com/bbc/bmx/pull/73)
+* Only set C++11 as a minimum requirement, allowing newer versions to be used (https://github.com/bbc/bmx/pull/71)
+* Add a compatibility fix for building using C++20 (https://github.com/bbc/bmx/pull/69)
+
 ## v1.2
 
 ### Breaking changes
