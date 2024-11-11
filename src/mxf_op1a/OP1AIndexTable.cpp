@@ -69,7 +69,7 @@ OP1AIndexEntry::OP1AIndexEntry()
 {
     temporal_offset = 0;
     key_frame_offset = 0;
-    flags = 0;
+    flags = 0x80;
     can_start_partition = true;
 }
 
@@ -84,13 +84,13 @@ OP1AIndexEntry::OP1AIndexEntry(int8_t temporal_offset_, int8_t key_frame_offset_
 
 bool OP1AIndexEntry::IsDefault()
 {
-    return temporal_offset == 0 && key_frame_offset == 0 && flags == 0;
+    return temporal_offset == 0 && key_frame_offset == 0 && flags == 0x80;
 }
 
 bool OP1AIndexEntry::IsCompatible(const OP1AIndexEntry &entry)
 {
     // compatible if current entry is the default entry or the new entry equals the current entry
-    return (temporal_offset == 0 && key_frame_offset == 0 && flags == 0) ||
+    return IsDefault() ||
            (temporal_offset == entry.temporal_offset && key_frame_offset == entry.key_frame_offset &&
                flags == entry.flags);
 }

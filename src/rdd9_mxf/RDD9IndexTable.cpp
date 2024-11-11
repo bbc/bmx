@@ -69,7 +69,7 @@ RDD9IndexEntry::RDD9IndexEntry()
 {
     temporal_offset = 0;
     key_frame_offset = 0;
-    flags = 0;
+    flags = 0x80;
     can_start_partition = true;
 }
 
@@ -84,13 +84,13 @@ RDD9IndexEntry::RDD9IndexEntry(int8_t temporal_offset_, int8_t key_frame_offset_
 
 bool RDD9IndexEntry::IsDefault()
 {
-    return temporal_offset == 0 && key_frame_offset == 0 && flags == 0;
+    return temporal_offset == 0 && key_frame_offset == 0 && flags == 0x80;
 }
 
 bool RDD9IndexEntry::IsCompatible(const RDD9IndexEntry &entry)
 {
     // compatible if current entry is the default entry or the new entry equals the current entry
-    return (temporal_offset == 0 && key_frame_offset == 0 && flags == 0) ||
+    return IsDefault() ||
            (temporal_offset == entry.temporal_offset && key_frame_offset == entry.key_frame_offset &&
                flags == entry.flags);
 }

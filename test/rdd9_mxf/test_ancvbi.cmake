@@ -2,7 +2,7 @@
 
 include("${TEST_SOURCE_DIR}/test_common.cmake")
 
-function(run_ancvbi_test test data_type)
+function(run_ancvbi_test test input_type data_type klv_opt)
     if(TEST_MODE STREQUAL "check")
         set(output_file test.mxf)
     elseif(TEST_MODE STREQUAL "samples")
@@ -11,6 +11,12 @@ function(run_ancvbi_test test data_type)
         set(output_file ${BMX_TEST_SAMPLES_DIR}/test_${test}.mxf)
     else()
         set(output_file test.mxf)
+    endif()
+
+    if(${klv_opt} STREQUAL "TRUE")
+        set(klv_size_opt "--klv;s")
+    else()
+        set(klv_size_opt "--${test}-const;24")
     endif()
 
     set(create_test_video ${CREATE_TEST_ESSENCE}
@@ -38,7 +44,7 @@ function(run_ancvbi_test test data_type)
         --mpeg2lg_422p_hl_1080i video
         -q 16 --pcm audio
         -q 16 --pcm audio
-        --${test}-const 24 --${test} data
+        ${klv_size_opt} --${input_type} data
     )
 
     run_test_a(
@@ -59,19 +65,27 @@ function(run_ancvbi_test test data_type)
 endfunction()
 
 set(tests
-    anc 43
-    vbi 44
+    anc anc 43 FALSE
+    vbi vbi 44 FALSE
+    anc_klv anc 61 TRUE
+    vbi_klv vbi 62 TRUE
 )
 
 list(LENGTH tests len_tests)
-math(EXPR max_index "(${len_tests} / 2) - 1")
+math(EXPR max_index "(${len_tests} / 4) - 1")
 
 foreach(index RANGE ${max_index})
-    math(EXPR test_index "${index} * 2")
+    math(EXPR test_index "${index} * 4")
     list(GET tests ${test_index} test)
-    
-    math(EXPR test_ess_type_index "${index} * 2 + 1")
+
+    math(EXPR test_input_type_index "${index} * 4 + 1")
+    list(GET tests ${test_input_type_index} test_input_type)
+
+    math(EXPR test_ess_type_index "${index} * 4 + 2")
     list(GET tests ${test_ess_type_index} test_ess_type)
 
-    run_ancvbi_test(${test} ${test_ess_type})
+    math(EXPR test_klv_opt_index "${index} * 4 + 3")
+    list(GET tests ${test_klv_opt_index} test_klv_opt)
+
+    run_ancvbi_test(${test} ${test_input_type} ${test_ess_type} ${test_klv_opt})
 endforeach()
