@@ -13,7 +13,7 @@ else()
 endif()
 
 project(libMXF++
-    VERSION 1.2
+    VERSION 1.3
     DESCRIPTION "C++ wrapper library for libMXF that supports reading and writing the SMPTE ST 377-1 MXF file format"
     HOMEPAGE_URL https://github.com/bbc/libMXFpp
     LANGUAGES CXX
