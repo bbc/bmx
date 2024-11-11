@@ -8,6 +8,7 @@ list(APPEND bmx_sources
     essence_parser/FileEssenceSource.cpp
     essence_parser/FilePatternEssenceSource.cpp
     essence_parser/J2CEssenceParser.cpp
+    essence_parser/KLVEssenceReader.cpp
     essence_parser/KLVEssenceSource.cpp
     essence_parser/MJPEGEssenceParser.cpp
     essence_parser/MPEG2AspectRatioFilter.cpp
