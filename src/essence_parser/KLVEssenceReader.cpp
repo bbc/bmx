@@ -50,6 +50,7 @@ KLVEssenceReader::KLVEssenceReader(KLVEssenceSource *essence_source)
 
 KLVEssenceReader::~KLVEssenceReader()
 {
+    delete mEssenceSource;
 }
 
 uint32_t KLVEssenceReader::ReadValue()
