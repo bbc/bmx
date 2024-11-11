@@ -146,7 +146,6 @@ void JXSEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
 {
     int32_t result = 0;
     Marker NextMarker;
-    unsigned char *start_of_data = 0;
     const unsigned char* p = data; 
     const unsigned char* end_p = p + data_size;
     mFrameSize = 0;
@@ -248,7 +247,7 @@ void JXSEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
         {
             if (pih) {
                 Accessor::CDT CDT_(NextMarker);
-                int i, count = NextMarker.m_DataSize >> 1;
+                int i, count = (int)(NextMarker.m_DataSize >> 1);
                 for (i = 0; i < count && i < m_subDesc.JPEGXSNc; i++) {
                     image_components[i].Bc = CDT_.Bc(i);
                     image_components[i].Sx = CDT_.Sx(i); // subsampling in x
@@ -262,8 +261,6 @@ void JXSEssenceParser::ParseFrameInfo(const unsigned char *data, uint32_t data_s
         }
         break;
         case MRK_SLH: // slice header: the entropy coded data starts here
-            if (start_of_data != 0)
-                *start_of_data = p - data; 
             p = end_p;
             break;
         case MRK_NIL:

@@ -56,24 +56,29 @@ KLVEssenceReader::~KLVEssenceReader()
 uint32_t KLVEssenceReader::ReadValue()
 {
     // Position at the next non-zero Value
-    uint64_t v_size = 0;
-    while (v_size == 0) {
-        if (!mEssenceSource->PositionInV(&v_size) || v_size > UINT32_MAX) {
-            if (v_size > UINT32_MAX)
-                log_warn("KLV value size %" PRIu64 " > max uint32 is not supported\n", v_size);
+    uint64_t v_size64 = 0;
+    while (v_size64 == 0) {
+        if (!mEssenceSource->PositionInV(&v_size64)) {
             mValueBuffer.SetSize(0);
             return 0;
         }
     }
 
+    if (v_size64 > UINT32_MAX) {
+        log_warn("KLV value size %" PRIu64 " > max uint32 is not supported\n", v_size64);
+        mValueBuffer.SetSize(0);
+        return 0;
+    }
+    uint32_t value_size = (uint32_t)v_size64;
+
     // Expect to be at the start of the V because the read below reads the whole V
     BMX_CHECK(mEssenceSource->GetOffsetInV() == 0);
 
-    mValueBuffer.Allocate(v_size);
+    mValueBuffer.Allocate(value_size);
 
-    uint32_t read_size = mEssenceSource->Read(mValueBuffer.GetBytes(), v_size);
-    if (read_size != v_size) {
-        log_warn("Incomplete KLV; only read %u of %u\n", read_size, v_size);
+    uint32_t read_size = mEssenceSource->Read(mValueBuffer.GetBytes(), value_size);
+    if (read_size != value_size) {
+        log_warn("Incomplete KLV; only read %u of %u\n", read_size, value_size);
         mValueBuffer.SetSize(0);
         return 0;
     }

@@ -51,8 +51,8 @@ public:
 
     void SetMaxReadLength(int64_t len);
 
-    void SetFrameStartSize(int64_t len);
-    void SetReadBlockSize(int64_t len);
+    void SetFrameStartSize(int64_t len);  // len <= uint32 max
+    void SetReadBlockSize(int64_t len);   // len <= uint32 max
 
     void SetFixedSampleSize(uint32_t size);
 
@@ -84,8 +84,8 @@ protected:
     EssenceSource *mEssenceSource;
 
     int64_t mMaxReadLength;
-    int64_t mFrameStartSize;
-    int64_t mReadBlockSize;
+    uint32_t mFrameStartSize;
+    uint32_t mReadBlockSize;
     int64_t mTotalReadLength;
     uint32_t mMaxSampleSize;
 

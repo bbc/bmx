@@ -922,14 +922,14 @@ static void write_anc_data(FILE *file, unsigned int duration, bool klv_var_size)
         anc_data_size[0] = 16 + 1 + sizeof(core_anc_frame);
         anc_data[0] = new unsigned char[anc_data_size[0]];
         memcpy(anc_data[0], klv_key, 16);
-        anc_data[0][16] = anc_data_size[0] - 17;
+        anc_data[0][16] = (unsigned char)(anc_data_size[0] - 17);
         memcpy(&anc_data[0][17], core_anc_frame, sizeof(core_anc_frame));
 
         // Add an extra padding byte to the odd frame
         anc_data_size[1] = 16 + 1 + sizeof(core_anc_frame) + 1;
         anc_data[1] = new unsigned char[anc_data_size[1]];
         memcpy(anc_data[1], klv_key, 16);
-        anc_data[1][16] = anc_data_size[1] - 17;
+        anc_data[1][16] = (unsigned char)(anc_data_size[1] - 17);
         memcpy(&anc_data[1][17], core_anc_frame, sizeof(core_anc_frame));
         anc_data[1][16 + 1 + 11] = 0x09;
         anc_data[1][anc_data_size[1] - 1] = 0x00;
@@ -968,14 +968,14 @@ static void write_vbi_data(FILE *file, unsigned int duration, bool klv_var_size)
         vbi_data_size[0] = 16 + 1 + sizeof(core_vbi_frame);
         vbi_data[0] = new unsigned char[vbi_data_size[0]];
         memcpy(vbi_data[0], klv_key, 16);
-        vbi_data[0][16] = vbi_data_size[0] - 17;
+        vbi_data[0][16] = (unsigned char)(vbi_data_size[0] - 17);
         memcpy(&vbi_data[0][17], core_vbi_frame, sizeof(core_vbi_frame));
 
         // Add an extra padding byte to the odd frame
         vbi_data_size[1] = 16 + 1 + sizeof(core_vbi_frame) + 1;
         vbi_data[1] = new unsigned char[vbi_data_size[1]];
         memcpy(vbi_data[1], klv_key, 16);
-        vbi_data[1][16] = vbi_data_size[1] - 17;
+        vbi_data[1][16] = (unsigned char)(vbi_data_size[1] - 17);
         memcpy(&vbi_data[1][17], core_vbi_frame, sizeof(core_vbi_frame));
         vbi_data[1][16 + 1 + 11] = 0x09;
         vbi_data[1][vbi_data_size[1] - 1] = 0x00;

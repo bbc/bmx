@@ -34,6 +34,7 @@
 #endif
 
 #define __STDC_FORMAT_MACROS
+#define __STDC_LIMIT_MACROS
 
 #include <cstdio>
 #include <cstring>
@@ -43,6 +44,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <limits.h>
 
 #include <bmx/essence_parser/RawEssenceReader.h>
 #include <bmx/essence_parser/AVCEssenceParser.h>
@@ -90,12 +92,14 @@ void RawEssenceReader::SetMaxReadLength(int64_t len)
 
 void RawEssenceReader::SetFrameStartSize(int64_t len)
 {
-    mFrameStartSize = len;
+    BMX_CHECK(len <= UINT32_MAX);
+    mFrameStartSize = (uint32_t)len;
 }
 
 void RawEssenceReader::SetReadBlockSize(int64_t len)
 {
-    mReadBlockSize = len;
+    BMX_CHECK(len <= UINT32_MAX);
+    mReadBlockSize = (uint32_t)len;
 }
 
 void RawEssenceReader::SetFixedSampleSize(uint32_t size)
