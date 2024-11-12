@@ -22,6 +22,7 @@
 * Add a link to the [RDD 6 XML Creator](https://bbc.github.io/bmx/meta/rdd6_xml_creator/) (https://github.com/bbc/bmx/pull/61)
 * Document adding UUIDs to IMF filenames (https://github.com/bbc/bmx/pull/59)
 * Speed improvement for parsing DV, RDD 36 (ProRes), JPEG XS and VC3 formats by using bitstream information about the frame size (https://github.com/bbc/bmx/pull/54)
+* Add support for JPEG XS video (https://github.com/bbc/bmx/pull/48)
 
 ### Bug fixes
 
