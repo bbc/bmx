@@ -10,7 +10,7 @@ jobs:
           - name: windows
             os: windows-2019
           - name: macos-xcode-universal
-            os: macos-11
+            os: macos-12
 
     runs-on: ${{ matrix.os }}
 
