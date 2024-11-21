@@ -83,8 +83,8 @@ static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L
 static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (PowerPC Darwin 64-bit)";
 static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (PowerPC Darwin 64-bit)";
 #else
-static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (Unknown)";
-static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (Unknown)";
+static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (" LIBMXF_DEFAULT_PLATFORM_NAME ")";
+static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (" LIBMXF_DEFAULT_PLATFORM_WNAME L")";
 #endif
 
 static const char *g_regtestPlatformString              =  "libMXF (Linux)";
