@@ -75,6 +75,7 @@ public:
     void SetFileSourcePackageUID(mxfUMID package_uid);                  // default generated
     void ReserveHeaderMetadataSpace(uint32_t min_bytes);                // default 8192
     void SetPartitionInterval(int64_t frame_count);                     // default 10sec
+    void SetFixedPartitionInterval(bool enable);                        // default false
     void SetValidator(RDD9Validator *validator);
     void SetRepeatIndexTable(bool enable);                              // default false. Repeat index table in Footer if true
 
@@ -153,6 +154,7 @@ private:
     bool mFirstWrite;
 
     int64_t mPartitionInterval;
+    bool mFixedPartitionInterval;
     int64_t mPartitionFrameCount;
 
     std::vector<RDD9Track*> mTracks;
