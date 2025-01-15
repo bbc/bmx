@@ -64,6 +64,7 @@
 #define OP1A_AES_FLAVOUR                    0x0400
 #define OP1A_SYSTEM_ITEM_FLAVOUR            0x0800      // add system item
 #define OP1A_IMF_FLAVOUR                    0x1000
+#define OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR    0x2000
 
 
 
@@ -101,6 +102,7 @@ public:
     void SetInputDuration(int64_t duration);                            // single pass flavours only
     void SetClipWrapped(bool enable);                                   // default false (frame wrapped)
     void SetAddSystemItem(bool enable);                                 // default false, no system item
+    void SetFieldMark(bool enable);                                     // default false
     void SetRepeatIndexTable(bool enable);                              // default false. Repeat index table in Footer if true
     void ForceWriteCBEDuration0(bool enable);                           // force duration=0 for CBE index table
     void SetPrimaryPackage(bool enable);                                // default false

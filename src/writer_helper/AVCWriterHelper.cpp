@@ -408,7 +408,8 @@ void AVCWriterHelper::CompleteProcess()
 
     if (mMaxBPictureCount > 0) {
         avc_sub_desc->setAVCDecodingDelay(mDecodingDelay);
-        avc_sub_desc->setAVCConstantBPictureFlag(mConstantBFrames);
+        if (!avc_sub_desc->haveAVCConstantBPictureFlag())
+            avc_sub_desc->setAVCConstantBPictureFlag(mConstantBFrames);
     } else {
         avc_sub_desc->setAVCDecodingDelay(0);
     }
@@ -445,8 +446,10 @@ void AVCWriterHelper::CompleteProcess()
         avc_sub_desc->setAVCMaximumBitrate(mMaxBitRate);
     //avc_sub_desc->setAVCAverageBitrate(); // TODO
     avc_sub_desc->setAVCMaximumRefFrames(mMaxNumRefFrames);
-    avc_sub_desc->setAVCSequenceParameterSetFlag(GetSPSFlag());
-    avc_sub_desc->setAVCPictureParameterSetFlag(GetPPSFlag());
+    if (!avc_sub_desc->haveAVCSequenceParameterSetFlag())
+        avc_sub_desc->setAVCSequenceParameterSetFlag(GetSPSFlag());
+    if (!avc_sub_desc->haveAVCPictureParameterSetFlag())
+        avc_sub_desc->setAVCPictureParameterSetFlag(GetPPSFlag());
 }
 
 bool AVCWriterHelper::TakeCompleteIndexEntry(int64_t *position, int8_t *temporal_offset, int8_t *key_frame_offset,

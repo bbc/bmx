@@ -579,6 +579,9 @@ static void usage(const char *cmd)
     printf("    --ard-zdf-hdf           Use the ARD ZDF HDF profile\n");
     printf("    --repeat-index          Repeat the index table segments in the footer partition\n");
     printf("\n");
+    printf("  op1a:\n");
+    printf("    --ard-zdf-xdf           Use the ARD ZDF XDF profile\n");
+    printf("\n");
     printf("  as11d10/d10:\n");
     printf("    --d10-mute <flags>      Indicate using a string of 8 '0' or '1' which sound channels should be muted. The lsb is the rightmost digit\n");
     printf("    --d10-invalid <flags>   Indicate using a string of 8 '0' or '1' which sound channels should be flagged invalid. The lsb is the rightmost digit\n");
@@ -913,6 +916,7 @@ int main(int argc, const char** argv)
     ClipWriterType clip_type = CW_OP1A_CLIP_TYPE;
     ClipSubType clip_sub_type = NO_CLIP_SUB_TYPE;
     bool ard_zdf_hdf_profile = false;
+    bool ard_zdf_xdf_profile = false;
     bool aes3 = false;
     bool kag_size_512 = false;
     bool op1a_primary_package = false;
@@ -1593,6 +1597,10 @@ int main(int argc, const char** argv)
         else if (strcmp(argv[cmdln_index], "--ard-zdf-hdf") == 0)
         {
             ard_zdf_hdf_profile = true;
+        }
+        else if (strcmp(argv[cmdln_index], "--ard-zdf-xdf") == 0)
+        {
+            ard_zdf_xdf_profile = true;
         }
         else if (strcmp(argv[cmdln_index], "--d10-mute") == 0)
         {
@@ -5017,7 +5025,9 @@ int main(int argc, const char** argv)
         int flavour = 0;
         if (clip_type == CW_OP1A_CLIP_TYPE) {
             flavour = OP1A_DEFAULT_FLAVOUR;
-            if (ard_zdf_hdf_profile) {
+            if (ard_zdf_xdf_profile) {
+                flavour |= OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR;
+            } else if (ard_zdf_hdf_profile) {
                 flavour |= OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR;
             } else if (clip_sub_type == AS11_CLIP_SUB_TYPE) {
                 if (as11_helper.HaveAS11CoreFramework()) // AS11 Core Framework has the Audio Track Layout property

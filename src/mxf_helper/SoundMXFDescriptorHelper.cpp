@@ -296,7 +296,7 @@ void SoundMXFDescriptorHelper::UpdateFileDescriptor()
     sound_descriptor->setQuantizationBits(mQuantizationBits);
     if (mAudioRefLevelSet)
         sound_descriptor->setAudioRefLevel(mAudioRefLevel);
-    else if ((mFlavour & MXFDESC_RDD9_FLAVOUR))
+    else if ((mFlavour & MXFDESC_RDD9_FLAVOUR) || (mFlavour & MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR))
         sound_descriptor->setAudioRefLevel(0);
     if (mDialNormSet)
         sound_descriptor->setDialNorm(mDialNorm);

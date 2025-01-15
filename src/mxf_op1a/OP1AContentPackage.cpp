@@ -300,7 +300,7 @@ void OP1AContentPackageElementData::Reset(int64_t new_position)
 OP1AContentPackage::OP1AContentPackage(File *mxf_file, OP1AIndexTable *index_table, uint32_t kag_size, uint8_t min_llen,
                                        bool have_system_item, bool have_user_timecode, Rational frame_rate,
                                        uint8_t sys_meta_item_flags, vector<OP1AContentPackageElement*> elements,
-                                       int64_t position, Timecode start_timecode)
+                                       int64_t position, Timecode start_timecode, bool field_mark)
 {
     mMXFFile = mxf_file;
     mIndexTable = index_table;
@@ -325,6 +325,7 @@ OP1AContentPackage::OP1AContentPackage(File *mxf_file, OP1AIndexTable *index_tab
       mStartTimecode = start_timecode;
       mContentPackageRate = get_system_item_cp_rate(frame_rate);
       mUserTimecodeSet = false;
+      mFieldMark = field_mark;
     } else {
       mSystemItemSize = 0;
       mSystemMetadataBitmap = 0;
@@ -481,7 +482,7 @@ void OP1AContentPackage::WriteSystemItem()
     } else {
         user_timecode.Init(get_rounded_tc_base(mFrameRate), false, mPosition);
     }
-    encode_smpte_timecode(user_timecode, false, &ts_bytes[1], sizeof(ts_bytes) - 1);
+    encode_smpte_timecode(user_timecode, mFieldMark, &ts_bytes[1], sizeof(ts_bytes) - 1);
     BMX_CHECK(mMXFFile->write(ts_bytes, sizeof(ts_bytes)) == sizeof(ts_bytes));
 
     // empty Package Metadata Set
@@ -514,6 +515,7 @@ OP1AContentPackageManager::OP1AContentPackageManager(File *mxf_file, OP1AIndexTa
     mHaveSystemItem = false;
     mHaveInputUserTimecode = false;
     mSysMetaItemFlags = 0;
+    mFieldMark = false;
     mPosition = 0;
 }
 
@@ -546,6 +548,11 @@ void OP1AContentPackageManager::SetClipWrapped(bool enable)
 {
     BMX_ASSERT(!enable || !mHaveSystemItem);
     mFrameWrapped = !enable;
+}
+
+void OP1AContentPackageManager::SetFieldMark(bool enable)
+{
+    mFieldMark = enable;
 }
 
 void OP1AContentPackageManager::RegisterSystemItem()
@@ -799,7 +806,7 @@ size_t OP1AContentPackageManager::CreateContentPackage()
         BMX_CHECK(mContentPackages.size() < MAX_CONTENT_PACKAGES);
         mContentPackages.push_back(new OP1AContentPackage(mMXFFile, mIndexTable, mKAGSize, mMinLLen, mHaveSystemItem,
                                                           mHaveInputUserTimecode, mFrameRate, mSysMetaItemFlags,
-                                                          mElements, mPosition + cp_index, mStartTimecode));
+                                                          mElements, mPosition + cp_index, mStartTimecode, mFieldMark));
     } else {
         mContentPackages.push_back(mFreeContentPackages.back());
         mFreeContentPackages.pop_back();
