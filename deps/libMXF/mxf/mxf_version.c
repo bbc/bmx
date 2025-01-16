@@ -64,6 +64,21 @@ static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L
 #elif defined (__linux__) && defined(__x86_64__)
 static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (Linux 64-bit)";
 static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (Linux 64-bit)";
+#elif defined (__linux__) && defined(__arm__)
+static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (Linux ARM)";
+static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (Linux ARM)";
+#elif defined (__linux__) && defined(__aarch64__)
+static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (Linux ARM64)";
+static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (Linux ARM64)";
+#elif defined (__linux__)
+static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (Linux)";
+static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (Linux)";
+#elif defined(_WIN32) && defined(_M_ARM)
+static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (Windows ARM)";
+static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (Windows ARM)";
+#elif defined(_WIN32) && defined(_M_ARM64)
+static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (Windows ARM64)";
+static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (Windows ARM64)";
 #elif defined(_WIN64) /* check first because _WIN32 also defined for Win64 */
 static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (Win64)";
 static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (Win64)";
@@ -82,6 +97,15 @@ static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L
 #elif defined(__APPLE__) && defined(__ppc64__)
 static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (PowerPC Darwin 64-bit)";
 static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (PowerPC Darwin 64-bit)";
+#elif defined(__APPLE__) && defined(__arm__)
+static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (Darwin ARM)";
+static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (Darwin ARM)";
+#elif defined(__APPLE__) && defined(__aarch64__)
+static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (Darwin ARM64)";
+static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (Darwin ARM64)";
+#elif defined(__APPLE__)
+static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (Darwin)";
+static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (Darwin)";
 #else
 static const char *g_libmxfPlatformString           =     LIBMXF_LIBRARY_NAME   " (Unknown)";
 static const mxfUTF16Char *g_libmxfPlatformWString  = L"" LIBMXF_LIBRARY_WNAME L" (Unknown)";
