@@ -328,12 +328,46 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
     cdci_descriptor->setDisplayHeight(essence_parser->GetDisplayHeight());
     cdci_descriptor->setDisplayXOffset(essence_parser->GetDisplayXOffset());
     cdci_descriptor->setDisplayYOffset(essence_parser->GetDisplayYOffset());
-    cdci_descriptor->setSampledWidth(essence_parser->GetStoredWidth());
-    cdci_descriptor->setSampledHeight(essence_parser->GetStoredHeight());
+    if ((mFlavour & MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR)) {
+        cdci_descriptor->setSampledWidth(essence_parser->GetDisplayWidth());
+        cdci_descriptor->setSampledHeight(essence_parser->GetDisplayHeight());
+    }
+    else {
+        cdci_descriptor->setSampledWidth(essence_parser->GetStoredWidth());
+        cdci_descriptor->setSampledHeight(essence_parser->GetStoredHeight());
+    }
     cdci_descriptor->setSampledXOffset(0);
     cdci_descriptor->setSampledYOffset(0);
     cdci_descriptor->setImageStartOffset(0);
     cdci_descriptor->setPaddingBits(0);
+
+    if ((mFlavour & MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR)) {
+        cdci_descriptor->setImageEndOffset(0);
+        cdci_descriptor->setImageAlignmentOffset(0);
+        cdci_descriptor->setReversedByteOrder(false);
+        if (essence_parser->GetDisplayWidth() > 1280) {
+            if (essence_parser->GetDisplayWidth() > 1920)
+                cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_NONE);
+            else
+                cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_SMPTE274M);
+
+            cdci_descriptor->setVideoLineMap(42, 0);
+        }
+        else {
+            cdci_descriptor->setSignalStandard(MXF_SIGNAL_STANDARD_SMPTE296M);
+            cdci_descriptor->setVideoLineMap(26, 0);
+        }
+        if (essence_parser->GetComponentDepth() == 10) {
+            cdci_descriptor->setBlackRefLevel(64);
+            cdci_descriptor->setWhiteReflevel(940);
+            cdci_descriptor->setColorRange(897);
+        }
+        else {
+            cdci_descriptor->setBlackRefLevel(16);
+            cdci_descriptor->setWhiteReflevel(235);
+            cdci_descriptor->setColorRange(225);
+        }
+    }
 
     // TODO: Display/StoredF2Offset
     // TODO: need to parse the pic_timing SEI to set this
@@ -371,7 +405,7 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
         case 2: // 4:2:2
             cdci_descriptor->setHorizontalSubsampling(2);
             cdci_descriptor->setVerticalSubsampling(1);
-            if (!cdci_descriptor->haveColorSiting())
+            if (!cdci_descriptor->haveColorSiting() || (mFlavour & MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR))
                 SetColorSitingMod(MXF_COLOR_SITING_COSITING);
             break;
         case 3: // 4:4:4
@@ -419,6 +453,12 @@ void AVCMXFDescriptorHelper::UpdateFileDescriptor(AVCEssenceParser *essence_pars
     mAVCSubDescriptor->setAVCProfile(essence_parser->GetProfile());
     mAVCSubDescriptor->setAVCProfileConstraint(essence_parser->GetProfileConstraint());
     mAVCSubDescriptor->setAVCLevel(essence_parser->GetLevel());
+
+    if ((mFlavour & MXFDESC_ARD_ZDF_XDF_PROFILE_FLAVOUR)) {
+        mAVCSubDescriptor->setAVCConstantBPictureFlag(0);
+        mAVCSubDescriptor->setAVCSequenceParameterSetFlag(0x30);
+        mAVCSubDescriptor->setAVCPictureParameterSetFlag(0x30);
+    }
 }
 
 mxfUL AVCMXFDescriptorHelper::ChooseEssenceContainerUL() const

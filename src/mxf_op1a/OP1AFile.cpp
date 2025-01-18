@@ -119,7 +119,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mWaitForIndexComplete = false;
     mPartitionInterval = 0;
     mPartitionFrameCount = 0;
-    mKAGSize = ((flavour & OP1A_512_KAG_FLAVOUR) ? 512 : 1);
+    mKAGSize = ((flavour & OP1A_512_KAG_FLAVOUR) || (flavour & OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR) ? 512 : 1);
     mEssencePartitionKAGSize = mKAGSize;
     mSupportCompleteSinglePass = false;
     mFooterPartitionOffset = 0;
@@ -143,7 +143,7 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
     mHeaderMetadata = new HeaderMetadata(mDataModel);
 
     mIndexTable = new OP1AIndexTable(mStreamIdHelper.GetId("IndexStream"), mStreamIdHelper.GetId("BodyStream"), frame_rate,
-                                     (flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR));
+                                     (flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR) || (flavour & OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR));
     mCPManager = new OP1AContentPackageManager(mMXFFile, mIndexTable, frame_rate, mEssencePartitionKAGSize, MIN_LLEN);
 
     if (flavour & OP1A_SINGLE_PASS_MD5_WRITE_FLAVOUR) {
@@ -151,7 +151,17 @@ OP1AFile::OP1AFile(int flavour, mxfpp::File *mxf_file, mxfRational frame_rate)
         mMXFFile->swapCFile(mxf_checksum_file_get_file(mMXFChecksumFile));
     }
 
-    if ((flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
+    if ((flavour & OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR)) {
+        mFlavour |= OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR;
+        mFlavour |= OP1A_BODY_PARTITIONS_FLAVOUR;
+        SetAddSystemItem(true);
+        SetFieldMark(true);
+        SetSignalST3792(true);
+
+        // Some open GOP XAVC files are missing the two leading B-frames in the first GOP.
+        // We therefore subtract 2 frames to ensure that the index duration is not exceeded.
+        SetPartitionInterval(60 * (int64_t)(0.167 * frame_rate.numerator / frame_rate.denominator) - 2);
+    } else if ((flavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR)) {
         mFlavour |= OP1A_BODY_PARTITIONS_FLAVOUR;
         ReserveHeaderMetadataSpace(2 * 1024 * 1024 + 8192);
         SetAddSystemItem(true);
@@ -267,6 +277,11 @@ void OP1AFile::SetAddSystemItem(bool enable)
         mCPManager->RegisterSystemItem();
         mIndexTable->RegisterSystemItem();
     }
+}
+
+void OP1AFile::SetFieldMark(bool enable)
+{
+    mCPManager->SetFieldMark(enable);
 }
 
 void OP1AFile::SetRepeatIndexTable(bool enable)
@@ -407,7 +422,7 @@ void OP1AFile::PrepareHeaderMetadata()
     if (HAVE_PRIMARY_EC &&
         (mFlavour & OP1A_ARD_ZDF_HDF_PROFILE_FLAVOUR))
     {
-        if (mIndexTable->IsCBE())
+        if (mIndexTable->IsCBE() && !(mFlavour & OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR))
             mIndexTable->SetExtensions(MXF_OPT_BOOL_TRUE, MXF_OPT_BOOL_TRUE, MXF_OPT_BOOL_TRUE);
         else
             mIndexTable->SetExtensions(MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE, MXF_OPT_BOOL_FALSE);
@@ -556,7 +571,7 @@ void OP1AFile::CompleteWrite()
 
     if (HAVE_PRIMARY_EC &&
         !(mFlavour & OP1A_MIN_PARTITIONS_FLAVOUR) &&
-        (!(mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR) ||
+        (!(mFlavour & OP1A_BODY_PARTITIONS_FLAVOUR) || (mFlavour & OP1A_ARD_ZDF_XDF_PROFILE_FLAVOUR) ||
             (mIndexTable->RepeatIndexTable() && mIndexTable->HaveWritten())) &&
         ((mIndexTable->IsVBE() && mIndexTable->HaveSegments()) ||
             (mIndexTable->IsCBE() && !mIndexTable->HaveWritten() && mIndexTable->GetDuration() > 0)))

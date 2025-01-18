@@ -133,7 +133,7 @@ class OP1AContentPackage
 public:
     OP1AContentPackage(mxfpp::File *mxf_file, OP1AIndexTable *index_table, uint32_t kag_size, uint8_t min_llen,
                        bool have_system_item, bool have_user_timecode, Rational frame_rate, uint8_t sys_meta_item_flags,
-                       std::vector<OP1AContentPackageElement*> elements, int64_t position, Timecode start_timecode);
+                       std::vector<OP1AContentPackageElement*> elements, int64_t position, Timecode start_timecode, bool field_mark);
     ~OP1AContentPackage();
 
     void Reset(int64_t new_position);
@@ -169,6 +169,7 @@ private:
     bool mHaveUpdatedIndexTable;
     Timecode mUserTimecode;
     bool mUserTimecodeSet;
+    bool mFieldMark;
 };
 
 
@@ -182,6 +183,7 @@ public:
     void SetHaveInputUserTimecode(bool enable);
     void SetStartTimecode(Timecode start_timecode);
     void SetClipWrapped(bool enable);
+    void SetFieldMark(bool enable);
 
     void RegisterSystemItem();
     void RegisterPictureTrackElement(uint32_t track_index, mxfKey element_key, bool is_cbe);
@@ -226,6 +228,7 @@ private:
     bool mHaveInputUserTimecode;
     Timecode mStartTimecode;
     uint8_t mSysMetaItemFlags;
+    bool mFieldMark;
 
     std::vector<OP1AContentPackageElement*> mElements;
     std::map<uint32_t, OP1AContentPackageElement*> mElementTrackIndexMap;
