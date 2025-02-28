@@ -2,24 +2,10 @@ name: Release
 on:
   workflow_dispatch:
 jobs:
-  binary_release:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: windows
-            os: windows-2019
-          - name: macos-xcode-universal
-            os: macos-13
-
-    runs-on: ${{ matrix.os }}
+  source_release:
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: maxim-lobanov/setup-xcode@v1
-        if: ${{ contains(matrix.name, 'xcode') }}
-        with:
-          xcode-version: latest-stable
-
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -30,37 +16,13 @@ jobs:
         run: |
           cmake -P bmx/release/source_release.cmake
 
-      - name: Win64 binary release
-        if: ${{ contains(matrix.name, 'windows') }}
-        shell: bash
-        working-directory: ../
-        run: |
-          mkdir binary_release
-          cd binary_release
-          unzip -q ../source_release/bmx-*.zip
-          cd bmx-*
-          cmake -P release/win64_binary_release.cmake
-
-      - name: MacOS Universal binary release
-        if: ${{ contains(matrix.os, 'macos') }}
-        shell: bash
-        working-directory: ../
-        run: |
-          mkdir binary_release
-          cd binary_release
-          unzip -q ../source_release/bmx-*.zip
-          cd bmx-*
-          cmake -P release/macos_universal_binary_release.cmake
-
       # actions/upload-artifact doesn't allow . and .. in paths
-      - name: Move artefacts into working directory
+      - name: Move source artefacts into working directory
         shell: bash
         run: |
           mv ../source_release .
-          mv ../binary_release/bmx-*/out/package ./binary_release
 
       - name: Upload source release
-        if: ${{ contains(matrix.name, 'windows') }}
         uses: actions/upload-artifact@v4
         with:
           name: source-release
@@ -68,9 +30,86 @@ jobs:
             source_release/*.zip
             source_release/*.tar.gz
 
+  binary_release:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows
+            os: windows-2019
+          - name: macos-xcode-universal
+            os: macos-13
+          - name: ubuntu
+            os: ubuntu-latest
+
+    runs-on: ${{ matrix.os }}
+    needs: source_release
+
+    steps:
+      - name: Install dependencies (ubuntu)
+        if: ${{ contains(matrix.os, 'ubuntu') }}
+        shell: bash
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install \
+            git \
+            pkg-config \
+            g++ \
+            gcc \
+            cmake \
+            uuid-dev \
+            libcurl4-openssl-dev
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        if: ${{ contains(matrix.name, 'xcode') }}
+        with:
+          xcode-version: latest-stable
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: source-release
+
+      - name: Win64 binary release
+        if: ${{ contains(matrix.name, 'windows') }}
+        shell: bash
+        run: |
+          mkdir binary_release
+          cd binary_release
+          unzip -q ../bmx-*.zip
+          cd bmx-*
+          cmake -P release/win64_binary_release.cmake
+
+      - name: MacOS Universal binary release
+        if: ${{ contains(matrix.os, 'macos') }}
+        shell: bash
+        run: |
+          mkdir binary_release
+          cd binary_release
+          unzip -q ../bmx-*.zip
+          cd bmx-*
+          cmake -P release/macos_universal_binary_release.cmake
+
+      - name: Ubuntu binary build (build only, no artefacts)
+        if: ${{ contains(matrix.os, 'ubuntu') }}
+        shell: bash
+        run: |
+          mkdir binary_release
+          cd binary_release
+          tar -xzf ../bmx-*.tar.gz
+          cd bmx-*
+          cmake -P release/ubuntu_binary_release_build_only.cmake
+
+      # actions/upload-artifact doesn't allow . and .. in paths
+      - name: Move binary artefacts into binary_release directory
+        if: ${{ !contains(matrix.os, 'ubuntu') }}
+        shell: bash
+        run: |
+          mv binary_release/bmx-*/out/package/bmx-*.zip ./binary_release
+
       - name: Upload binary release
+        if: ${{ !contains(matrix.os, 'ubuntu') }}
         uses: actions/upload-artifact@v4
         with:
           name: binary-release-${{ matrix.name }}
           path: |
-            binary_release/*.zip
+            binary_release/bmx-*.zip
