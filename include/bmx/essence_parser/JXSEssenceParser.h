@@ -56,10 +56,10 @@ namespace bmx
     inline uint32_t Swap32(uint32_t i)
     {
         return
-            ((i & 0x000000ffUL) << 24) |
-            ((i & 0xff000000UL) >> 24) |
-            ((i & 0x0000ff00UL) << 8) |
-            ((i & 0x00ff0000UL) >> 8);
+            ((i & 0x000000ffU) << 24) |
+            ((i & 0xff000000U) >> 24) |
+            ((i & 0x0000ff00U) << 8) |
+            ((i & 0x00ff0000U) >> 8);
     }
 
     struct JPEGXSPictureSubDescriptor
