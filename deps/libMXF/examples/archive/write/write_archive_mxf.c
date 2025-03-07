@@ -68,6 +68,7 @@
 #define MIN_LLEN                        4
 #define ESS_ELEMENT_LLEN                4
 
+#define LIMIT_UINT32(val)   ((val) > UINT32_MAX ? UINT32_MAX : (uint32_t)(val))
 
 
 typedef struct
@@ -1427,13 +1428,14 @@ int complete_archive_mxf_file(ArchiveMXFWriter **outputRef, const InfaxData *sou
     int i;
     int64_t filePos;
     long j;
+    uint32_t k;
     MXFListIterator iter;
     const PSEFailure *pseFailure;
     const VTRError *vtrError;
     const DigiBetaDropout *digiBetaDropout;
     const TimecodeBreak *timecodeBreak;
     uint32_t nextTrackID;
-    int numTracks;
+    uint32_t numTracks;
     TimecodeIndexSearcher vitcIndexSearcher;
     TimecodeIndexSearcher ltcIndexSearcher;
     int64_t errorPosition;
@@ -1454,10 +1456,10 @@ int complete_archive_mxf_file(ArchiveMXFWriter **outputRef, const InfaxData *sou
 
     /* update the PSE failure and VTR error counts */
 
-    CHK_ORET(mxf_set_uint32_item(output->prefaceSet, &MXF_ITEM_K(Preface, APP_VTRErrorCount), numVTRErrors));
-    CHK_ORET(mxf_set_uint32_item(output->prefaceSet, &MXF_ITEM_K(Preface, APP_PSEFailureCount), numPSEFailures));
-    CHK_ORET(mxf_set_uint32_item(output->prefaceSet, &MXF_ITEM_K(Preface, APP_DigiBetaDropoutCount), numDigiBetaDropouts));
-    CHK_ORET(mxf_set_uint32_item(output->prefaceSet, &MXF_ITEM_K(Preface, APP_TimecodeBreakCount), numTimecodeBreaks));
+    CHK_ORET(mxf_set_uint32_item(output->prefaceSet, &MXF_ITEM_K(Preface, APP_VTRErrorCount), LIMIT_UINT32(numVTRErrors)));
+    CHK_ORET(mxf_set_uint32_item(output->prefaceSet, &MXF_ITEM_K(Preface, APP_PSEFailureCount), LIMIT_UINT32(numPSEFailures)));
+    CHK_ORET(mxf_set_uint32_item(output->prefaceSet, &MXF_ITEM_K(Preface, APP_DigiBetaDropoutCount), LIMIT_UINT32(numDigiBetaDropouts)));
+    CHK_ORET(mxf_set_uint32_item(output->prefaceSet, &MXF_ITEM_K(Preface, APP_TimecodeBreakCount), LIMIT_UINT32(numTimecodeBreaks)));
 
 
     /* update the header metadata durations and audio sequence offset */
@@ -1545,8 +1547,8 @@ int complete_archive_mxf_file(ArchiveMXFWriter **outputRef, const InfaxData *sou
     {
         /* if num PSE failures exceeds MAX_STRONG_REF_ARRAY_COUNT then the failures are
            written in > 1 tracks */
-        numTracks = (numPSEFailures + MAX_STRONG_REF_ARRAY_COUNT - 1) / MAX_STRONG_REF_ARRAY_COUNT;
-        for (i = 0; i < numTracks; i++)
+        numTracks = LIMIT_UINT32((numPSEFailures + MAX_STRONG_REF_ARRAY_COUNT - 1) / MAX_STRONG_REF_ARRAY_COUNT);
+        for (k = 0; k < numTracks; k++)
         {
             /* Preface - ContentStorage - SourcePackage - DM Event Track */
             CHK_ORET(mxf_create_set(output->headerMetadata, &MXF_SET_K(EventTrack), &output->sourcePackageTrackSet));
@@ -1628,8 +1630,8 @@ int complete_archive_mxf_file(ArchiveMXFWriter **outputRef, const InfaxData *sou
         {
             /* if numVTRErrorsLocated exceeds MAX_STRONG_REF_ARRAY_COUNT then the errors are
                written in > 1 tracks */
-            numTracks = (numVTRErrorsLocated + MAX_STRONG_REF_ARRAY_COUNT - 1) / MAX_STRONG_REF_ARRAY_COUNT;
-            for (j = 0; j < numTracks; j++)
+            numTracks = LIMIT_UINT32((numVTRErrorsLocated + MAX_STRONG_REF_ARRAY_COUNT - 1) / MAX_STRONG_REF_ARRAY_COUNT);
+            for (k = 0; k < numTracks; k++)
             {
                 /* Preface - ContentStorage - SourcePackage - DM Event Track */
                 CHK_ORET(mxf_create_set(output->headerMetadata, &MXF_SET_K(EventTrack), &output->sourcePackageTrackSet));
@@ -1656,8 +1658,8 @@ int complete_archive_mxf_file(ArchiveMXFWriter **outputRef, const InfaxData *sou
     {
         /* if num dropouts exceeds MAX_STRONG_REF_ARRAY_COUNT then the failures are
            written in > 1 tracks */
-        numTracks = (numDigiBetaDropouts + MAX_STRONG_REF_ARRAY_COUNT - 1) / MAX_STRONG_REF_ARRAY_COUNT;
-        for (i = 0; i < numTracks; i++)
+        numTracks = LIMIT_UINT32((numDigiBetaDropouts + MAX_STRONG_REF_ARRAY_COUNT - 1) / MAX_STRONG_REF_ARRAY_COUNT);
+        for (k = 0; k < numTracks; k++)
         {
             /* Preface - ContentStorage - SourcePackage - DM Event Track */
             CHK_ORET(mxf_create_set(output->headerMetadata, &MXF_SET_K(EventTrack), &output->sourcePackageTrackSet));
@@ -1681,8 +1683,8 @@ int complete_archive_mxf_file(ArchiveMXFWriter **outputRef, const InfaxData *sou
     {
         /* if num breaks exceeds MAX_STRONG_REF_ARRAY_COUNT then the failures are
            written in > 1 tracks */
-        numTracks = (numTimecodeBreaks + MAX_STRONG_REF_ARRAY_COUNT - 1) / MAX_STRONG_REF_ARRAY_COUNT;
-        for (i = 0; i < numTracks; i++)
+        numTracks = LIMIT_UINT32((numTimecodeBreaks + MAX_STRONG_REF_ARRAY_COUNT - 1) / MAX_STRONG_REF_ARRAY_COUNT);
+        for (k = 0; k < numTracks; k++)
         {
             /* Preface - ContentStorage - SourcePackage - DM Event Track */
             CHK_ORET(mxf_create_set(output->headerMetadata, &MXF_SET_K(EventTrack), &output->sourcePackageTrackSet));
@@ -1733,7 +1735,7 @@ int complete_archive_mxf_file(ArchiveMXFWriter **outputRef, const InfaxData *sou
             CHK_ORET(mxf_set_strongref_item(output->sourcePackageTrackSet, &MXF_ITEM_K(GenericTrack, Sequence), output->sequenceSet));
             CHK_ORET(mxf_set_ul_item(output->sequenceSet, &MXF_ITEM_K(StructuralComponent, DataDefinition), &MXF_DDEF_L(DescriptiveMetadata)));
 
-            for (j = 0; j < MAX_STRONG_REF_ARRAY_COUNT && timecodeBreakIndex < numTimecodeBreaks; j++, timecodeBreakIndex++)
+            for (k = 0; k < MAX_STRONG_REF_ARRAY_COUNT && timecodeBreakIndex < numTimecodeBreaks; k++, timecodeBreakIndex++)
             {
                 timecodeBreak = (const TimecodeBreak*)&timecodeBreaks[timecodeBreakIndex];
 
@@ -1790,7 +1792,7 @@ int complete_archive_mxf_file(ArchiveMXFWriter **outputRef, const InfaxData *sou
             CHK_ORET(mxf_set_strongref_item(output->sourcePackageTrackSet, &MXF_ITEM_K(GenericTrack, Sequence), output->sequenceSet));
             CHK_ORET(mxf_set_ul_item(output->sequenceSet, &MXF_ITEM_K(StructuralComponent, DataDefinition), &MXF_DDEF_L(DescriptiveMetadata)));
 
-            for (j = 0; j < MAX_STRONG_REF_ARRAY_COUNT && digiBetaDropoutIndex < numDigiBetaDropouts; j++, digiBetaDropoutIndex++)
+            for (k = 0; k < MAX_STRONG_REF_ARRAY_COUNT && digiBetaDropoutIndex < numDigiBetaDropouts; k++, digiBetaDropoutIndex++)
             {
                 digiBetaDropout = (const DigiBetaDropout*)&digiBetaDropouts[digiBetaDropoutIndex];
 
@@ -1846,7 +1848,7 @@ int complete_archive_mxf_file(ArchiveMXFWriter **outputRef, const InfaxData *sou
             CHK_ORET(mxf_set_strongref_item(output->sourcePackageTrackSet, &MXF_ITEM_K(GenericTrack, Sequence), output->sequenceSet));
             CHK_ORET(mxf_set_ul_item(output->sequenceSet, &MXF_ITEM_K(StructuralComponent, DataDefinition), &MXF_DDEF_L(DescriptiveMetadata)));
 
-            for (j = 0; j < MAX_STRONG_REF_ARRAY_COUNT && failureIndex < numPSEFailures; j++, failureIndex++)
+            for (k = 0; k < MAX_STRONG_REF_ARRAY_COUNT && failureIndex < numPSEFailures; k++, failureIndex++)
             {
                 pseFailure = (const PSEFailure*)&pseFailures[failureIndex];
 
@@ -1910,7 +1912,7 @@ int complete_archive_mxf_file(ArchiveMXFWriter **outputRef, const InfaxData *sou
             CHK_ORET(mxf_set_strongref_item(output->sourcePackageTrackSet, &MXF_ITEM_K(GenericTrack, Sequence), output->sequenceSet));
             CHK_ORET(mxf_set_ul_item(output->sequenceSet, &MXF_ITEM_K(StructuralComponent, DataDefinition), &MXF_DDEF_L(DescriptiveMetadata)));
 
-            for (j = 0; j < MAX_STRONG_REF_ARRAY_COUNT && errorIndex < numVTRErrors; j++, errorIndex++)
+            for (k = 0; k < MAX_STRONG_REF_ARRAY_COUNT && errorIndex < numVTRErrors; k++, errorIndex++)
             {
                 vtrError = (const VTRError*)&vtrErrors[errorIndex];
 
