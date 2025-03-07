@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <limits.h>
 
 #if defined (_MSC_VER) && defined(_M_IX86) && defined(_WIN32)
 #define MXF_COMPILER_MSC_INTEL_WINDOWS
@@ -7179,11 +7180,11 @@ bool getInteger(int& i, char* s)
   bool result;
   char* expectedEnd = &s[strlen(s)];
   char* end;
-  int b = strtoul(s, &end, 10);
-  if (end != expectedEnd) {
+  long b = strtoul(s, &end, 10);
+  if (end != expectedEnd || b > INT_MAX || b < INT_MIN) {
     result = false;
   } else {
-    i = b;
+    i = (int)b;
     result = true;
   }
   return result;

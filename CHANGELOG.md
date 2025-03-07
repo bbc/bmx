@@ -1,5 +1,25 @@
 # bmx Changelog
 
+## v1.4
+
+### Breaking changes
+
+* None
+
+### Features
+
+* Add support for the ARD ZDF XDF Multi Essence Location Style profile (https://github.com/bbc/bmx/pull/105)
+* Detect more platform and architectures for the MXF Identification platform string (https://github.com/bbc/bmx/pull/84)
+* Improve compliance of RDD 9 partition durations and sizes (https://github.com/bbc/bmx/pull/12)
+
+### Bug fixes
+
+* Fix a missing file execute permission on the libMXF run test file script (https://github.com/bbc/bmx/pull/109)
+
+### Build changes
+
+* None
+
 ## v1.3
 
 ### Breaking changes

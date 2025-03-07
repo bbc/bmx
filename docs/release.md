@@ -13,6 +13,13 @@ This describes the steps for making a release.
 * Check the [runner versions](https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners) (e.g. `windows-2019` and `macos-13`) in the [release.yml](../.github/workflows/release.yml) workflow file are still available
     * Select the oldest macOS version available to help with compatibility
 * Run the [Release](https://github.com/bbc/bmx/actions/workflows/release.yml) workflow in GitHub Actions using the release branch to check it succeeds
+    * Create a temporary tag using the steps from [Create a Release Tag](#create-a-release-tag) and then delete the tag once the workflow succeeds using the following commands:
+
+```bash
+git push --delete origin v${BMX_VERSION}
+git tag -d v${BMX_VERSION}
+```
+
 * Create and merge a PR for the release branch into `main`
 
 ## Create a Release Tag
@@ -24,7 +31,7 @@ This describes the steps for making a release.
 export BMX_VERSION=<major version>.<minor version>
 git checkout main
 git pull --rebase
-git tag -a v${BMX_VERSION} -m "Version ${BMX_VERSION}"`
+git tag -a v${BMX_VERSION} -m "Version ${BMX_VERSION}"
 git push origin v${BMX_VERSION}
 ```
 
