@@ -33,6 +33,10 @@
 #include "config.h"
 #endif
 
+#define __STDC_LIMIT_MACROS
+
+#include <climits>
+
 #include <algorithm>
 
 #include <bmx/rdd9_mxf/RDD9ContentPackage.h>
@@ -515,8 +519,8 @@ void RDD9IndexTable::WriteVBESegments(File *mxf_file, Partition *partition, vect
             partition->fillToKag(mxf_file);
         } else {
             int64_t current_count = mxf_file->tell() - segment_start_file_pos;
-            if (current_count < mFirstIndexSegmentCount)
-                partition->allocateSpaceToKag(mxf_file, mFirstIndexSegmentCount - current_count);
+            if (current_count < mFirstIndexSegmentCount && mFirstIndexSegmentCount - current_count <= UINT32_MAX)
+                partition->allocateSpaceToKag(mxf_file, (uint32_t)(mFirstIndexSegmentCount - current_count));
             else
                 partition->fillToKag(mxf_file);
         }
