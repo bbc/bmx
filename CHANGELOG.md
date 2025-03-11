@@ -1,5 +1,23 @@
 # bmx Changelog
 
+## v1.5
+
+### Breaking changes
+
+* None
+
+### Features
+
+* Enable support for RDD 6 (Dolby E Audio Metadata) in RDD 9 (Sony XDCAM) files (https://github.com/bbc/bmx/pull/112)
+
+### Bug fixes
+
+* None
+
+### Build changes
+
+* None
+
 ## v1.4
 
 ### Breaking changes
