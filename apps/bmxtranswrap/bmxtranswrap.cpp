@@ -572,7 +572,7 @@ static void usage(const char *cmd)
     printf("                            Header and body partitions will be incomplete for as11op1a/op1a if the number if essence container bytes per edit unit is variable\n");
     printf("    --file-md5              Calculate an MD5 checksum of the output file. This requires writing in a single pass (--single-pass is assumed)\n");
     printf("\n");
-    printf("  as11op1a/op1a:\n");
+    printf("  as11op1a/op1a/rdd9:\n");
     printf("    --pass-anc <filter>     Pass through ST 436 ANC data tracks\n");
     printf("                            <filter> is a comma separated list of ANC data types to pass through\n");
     printf("                            The following ANC data types are supported in <filter>:\n");
@@ -3042,8 +3042,8 @@ int main(int argc, const char** argv)
         uint32_t rdd6_const_size = 0;
         bool rdd6_pair_in_frame = true;
         if (rdd6_filename) {
-            if (clip_type != CW_OP1A_CLIP_TYPE) {
-                log_error("RDD-6 file input only supported for op1a clip types and sub-types\n");
+            if (clip_type != CW_OP1A_CLIP_TYPE && clip_type != CW_RDD9_CLIP_TYPE) {
+                log_error("RDD-6 file input only supported for OP1a and RDD 9 clip types and sub-types\n");
                 throw false;
             }
 

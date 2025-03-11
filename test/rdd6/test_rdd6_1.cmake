@@ -1,4 +1,4 @@
-# Test creating an MXF file with RDD6 from test1.xml and interlaced video.
+# Test creating an MXF OP1a file with RDD 6 from test1.xml and interlaced video.
 
 set(test_name 1)
 include("${TEST_SOURCE_DIR}/test_common.cmake")
@@ -18,4 +18,4 @@ set(create_test_video ${CREATE_TEST_ESSENCE}
     video_${test_name}
 )
 
-run_test(25 avci100_1080i "9,572" 4)
+run_test(op1a 25 avci100_1080i "9,572" 4)
