@@ -30,14 +30,6 @@ function(run_test rate video_type rdd6_lines rdd6_sdid)
         -q 24 --pcm audio_${test_name}
         -q 24 --pcm audio_${test_name}
         -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
     )
 
     set(create_command_2 ${BMXTRANSWRAP}
