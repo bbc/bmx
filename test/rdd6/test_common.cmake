@@ -15,21 +15,13 @@ else()
 endif()
 
 
-function(run_test rate video_type rdd6_lines rdd6_sdid)
+function(run_test output_type rate video_type rdd6_lines rdd6_sdid)
     set(create_command_1 ${RAW2BMX}
         --regtest
-        -t op1a
+        -t ${output_type}
         -f ${rate}
         -o test_intermediate_${test_name}.mxf
         --${video_type} video_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
-        -q 24 --pcm audio_${test_name}
         -q 24 --pcm audio_${test_name}
         -q 24 --pcm audio_${test_name}
         -q 24 --pcm audio_${test_name}
@@ -42,7 +34,7 @@ function(run_test rate video_type rdd6_lines rdd6_sdid)
 
     set(create_command_2 ${BMXTRANSWRAP}
         --regtest
-        -t op1a
+        -t ${output_type}
         -o ${output_file}
         --rdd6 ${TEST_SOURCE_DIR}/test${test_name}.xml.bin
         --rdd6-lines ${rdd6_lines}

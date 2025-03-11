@@ -1,4 +1,4 @@
-# Test creating an MXF file with RDD6 from test3.xml on line 0 and progressive video.
+# Test creating an MXF OP1a file with RDD 6 from test3.xml on line 0 and progressive video.
 
 set(test_name 3)
 include("${TEST_SOURCE_DIR}/test_common.cmake")
@@ -18,4 +18,4 @@ set(create_test_video ${CREATE_TEST_ESSENCE}
     video_${test_name}
 )
 
-run_test(50 unc_3840 "0" 4)
+run_test(op1a 50 unc_3840 "0" 4)

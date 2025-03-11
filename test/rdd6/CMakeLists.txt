@@ -6,6 +6,7 @@ set(tests
     rdd6_1
     rdd6_2
     rdd6_3
+    rdd6_4
 )
 
 foreach(test ${tests})
