@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> Seeking input about the ongoing maintenance and future shape of the project. Please provide any thoughts and suggestions in issue [#114](https://github.com/bbc/bmx/issues/114)
+
 # bmx Library and Utilities
 
 bmx is a library and set of utilities to read and write the [SMPTE ST 377-1 MXF file format](https://ieeexplore.ieee.org/document/7292073).
