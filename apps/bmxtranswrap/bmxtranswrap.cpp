@@ -137,7 +137,32 @@ static bool regtest_output_track_map_comp(const TrackMapper::OutputTrackMap &lef
     return left.data_def < right.data_def;
 }
 
-static bool filter_anc_manifest_element(const ANCManifestElement *element, set<ANCDataType> &filter)
+static bool filter_passing_anc_data_type(ANCDataType data_type, set<ANCDataType> &filter)
+{
+    set<ANCDataType>::const_iterator iter;
+    for (iter = filter.begin(); iter != filter.end(); iter++) {
+        if (*iter == ALL_ANC_DATA || *iter == data_type)
+            return true;
+    }
+
+    return false;
+}
+
+static bool passing_anc_data_type(ANCDataType data_type, set<ANCDataType> &pass_filter, set<ANCDataType> &strip_filter)
+{
+    bool passing = false;
+    if (!pass_filter.empty())
+        passing = filter_passing_anc_data_type(data_type, pass_filter);
+    else if (!strip_filter.empty())
+        passing = true; // Default of pass filter changes to ALL_ANC_DATA if strip filter not empty
+
+    if (passing && !strip_filter.empty())
+        passing = !filter_passing_anc_data_type(data_type, strip_filter);
+
+    return passing;
+}
+
+static bool single_filter_anc_manifest_element(const ANCManifestElement *element, set<ANCDataType> &filter)
 {
     set<ANCDataType>::const_iterator iter;
     for (iter = filter.begin(); iter != filter.end(); iter++) {
@@ -167,11 +192,25 @@ static bool filter_anc_manifest_element(const ANCManifestElement *element, set<A
     return false;
 }
 
-static bool filter_anc_manifest(const MXFDataTrackInfo *data_info, set<ANCDataType> &filter)
+static bool filter_anc_manifest_element(const ANCManifestElement *element, set<ANCDataType> &pass_filter, set<ANCDataType> &strip_filter)
+{
+    bool pass = false;
+    if (!pass_filter.empty())
+        pass = single_filter_anc_manifest_element(element, pass_filter);
+    else if (!strip_filter.empty())
+        pass = true; // Default of pass filter changes to ALL_ANC_DATA if strip filter not empty
+
+    if (pass && !strip_filter.empty())
+        pass = !single_filter_anc_manifest_element(element, strip_filter);
+
+    return pass;
+}
+
+static bool filter_anc_manifest(const MXFDataTrackInfo *data_info, set<ANCDataType> &pass_filter, set<ANCDataType> &strip_filter)
 {
     size_t i;
     for (i = 0; i < data_info->anc_manifest.size(); i++) {
-        if (filter_anc_manifest_element(&data_info->anc_manifest[i], filter))
+        if (filter_anc_manifest_element(&data_info->anc_manifest[i], pass_filter, strip_filter))
             return true;
     }
 
@@ -300,11 +339,11 @@ static uint32_t read_samples(MXFReader *reader, const vector<uint32_t> &sample_s
     return num_read;
 }
 
-static void write_anc_samples(OutputTrack *output_track, Frame *frame, set<ANCDataType> &filter, bmx::ByteArray &anc_buffer)
+static void write_anc_samples(OutputTrack *output_track, Frame *frame, set<ANCDataType> &pass_filter, set<ANCDataType> &strip_filter, bmx::ByteArray &anc_buffer)
 {
     BMX_CHECK(frame->num_samples == 1);
 
-    if (filter.empty() || (filter.size() == 1 && (*filter.begin()) == ALL_ANC_DATA)) {
+    if (passing_anc_data_type(ALL_ANC_DATA, pass_filter, strip_filter)) {
         output_track->WriteSamples(0, (unsigned char*)frame->GetBytes(), frame->GetSize(), frame->num_samples);
         return;
     }
@@ -317,7 +356,7 @@ static void write_anc_samples(OutputTrack *output_track, Frame *frame, set<ANCDa
     for (i = 0; i < input_element.lines.size(); i++) {
         ANCManifestElement manifest_element;
         manifest_element.Parse(&input_element.lines[i]);
-        if (filter_anc_manifest_element(&manifest_element, filter))
+        if (filter_anc_manifest_element(&manifest_element, pass_filter, strip_filter))
             output_element.lines.push_back(input_element.lines[i]);
     }
 
@@ -582,6 +621,9 @@ static void usage(const char *cmd)
     printf("                                sdp      : SMPTE RDD 8 / OP-47 Subtitling Distribution Packet data\n");
     printf("                                st12     : SMPTE ST 12 Ancillary timecode\n");
     printf("                                st334    : SMPTE ST 334-1 EIA 708B, EIA 608 and data broadcast (DTV)\n");
+    printf("    --strip-anc <filter>    Don't pass through ST 436 ANC data tracks\n");
+    printf("                            <filter> is a comma separated list of ANC data types to not pass through. The types are listed in the --pass-anc option\n");
+    printf("                            This filter is applied after --pass-anc. The --pass-anc option will default to 'all' when --strip-anc is used\n");
     printf("    --pass-vbi              Pass through ST 436 VBI data tracks\n");
     printf("    --st436-mf <count>      Set the <count> of frames to examine for ST 436 ANC/VBI manifest info. Default is %u\n", DEFAULT_ST436_MANIFEST_COUNT);
     printf("                            The manifest is used at the start to determine whether an output ANC data track is created\n");
@@ -927,6 +969,7 @@ int main(int argc, const char** argv)
     bool avid_gf = false;
     int64_t avid_gf_duration = -1;
     set<ANCDataType> pass_anc;
+    set<ANCDataType> strip_anc;
     bool pass_vbi = false;
     uint32_t st436_manifest_count = DEFAULT_ST436_MANIFEST_COUNT;
     uint32_t anc_const_size = 0;
@@ -2154,6 +2197,22 @@ int main(int argc, const char** argv)
             }
             cmdln_index++;
         }
+        else if (strcmp(argv[cmdln_index], "--strip-anc") == 0)
+        {
+            if (cmdln_index + 1 >= argc)
+            {
+                usage_ref(argv[0]);
+                fprintf(stderr, "Missing argument for Option '%s'\n", argv[cmdln_index]);
+                return 1;
+            }
+            if (!parse_anc_data_types(argv[cmdln_index + 1], &strip_anc))
+            {
+                usage_ref(argv[0]);
+                fprintf(stderr, "Invalid value '%s' for Option '%s'\n", argv[cmdln_index + 1], argv[cmdln_index]);
+                return 1;
+            }
+            cmdln_index++;
+        }
         else if (strcmp(argv[cmdln_index], "--pass-vbi") == 0)
         {
             pass_vbi = true;
@@ -2784,9 +2843,9 @@ int main(int argc, const char** argv)
         }
     }
 
-    if (st2020_max_size && (pass_anc.size() != 1 || *pass_anc.begin() != ST2020_ANC_DATA)) {
+    if (st2020_max_size && !passing_anc_data_type(ST2020_ANC_DATA, pass_anc, strip_anc)) {
         usage_ref(argv[0]);
-        fprintf(stderr, "Option '--st2020-max' requires '--pass st2020'\n");
+        fprintf(stderr, "Option '--st2020-max' requires something equivalent to '--pass st2020'\n");
         return 1;
     }
 
@@ -3188,14 +3247,14 @@ int main(int argc, const char** argv)
                     if (rdd6_filename) {
                         log_warn("Mixing RDD-6 file input and MXF ANC data input not yet supported\n");
                         is_enabled = false;
-                    } else if (pass_anc.empty()) {
+                    } else if (pass_anc.empty() && strip_anc.empty()) {
                         log_warn("Not passing through ANC data track %" PRIszt "\n", i);
                         is_enabled = false;
                     } else if (have_anc_track) {
                         log_warn("Already have an ANC track; not passing through ANC data track %" PRIszt "\n", i);
                         is_enabled = false;
                     } else {
-                        if (st436_manifest_count == 0 || filter_anc_manifest(input_data_info, pass_anc)) {
+                        if (st436_manifest_count == 0 || filter_anc_manifest(input_data_info, pass_anc, strip_anc)) {
                             have_anc_track = true;
                         } else {
                             log_warn("No match found in ANC data manifest; not passing through ANC data track %" PRIszt "\n", i);
@@ -4788,7 +4847,7 @@ int main(int argc, const char** argv)
                         }
                         else if (input_track_info->essence_type == ANC_DATA)
                         {
-                            write_anc_samples(output_track, frame, pass_anc, anc_buffer);
+                            write_anc_samples(output_track, frame, pass_anc, strip_anc, anc_buffer);
                         }
                         else
                         {
