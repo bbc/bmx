@@ -13,7 +13,7 @@ else()
 endif()
 
 project(libMXF
-    VERSION 1.5
+    VERSION 1.6
     DESCRIPTION "Low-level C library for reading and writing the SMPTE ST 377-1 MXF file format"
     HOMEPAGE_URL https://github.com/bbc/libMXF
     LANGUAGES C CXX
