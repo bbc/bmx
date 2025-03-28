@@ -1,5 +1,23 @@
 # bmx Changelog
 
+## v1.6
+
+### Breaking changes
+
+* None
+
+### Features
+
+* Add bmxtranswrap `--strip-anc <filter>` option to set ANC data types to not pass through (https://github.com/bbc/bmx/pull/116)
+
+### Bug fixes
+
+* None
+
+### Build changes
+
+* None
+
 ## v1.5
 
 ### Breaking changes
