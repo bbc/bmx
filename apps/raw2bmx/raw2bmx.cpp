@@ -5374,6 +5374,7 @@ int main(int argc, const char** argv)
         // initialize output clip tracks
 
         unsigned char avci_header_data[AVCI_HEADER_SIZE];
+        bool update_header = false;
         for (i = 0; i < output_tracks.size(); i++) {
             OutputTrack *output_track = output_tracks[i];
 
@@ -5503,6 +5504,7 @@ int main(int argc, const char** argv)
                         clip_track->SetAspectRatio(input->aspect_ratio);
                     if (BMX_OPT_PROP_IS_SET(input->afd))
                         clip_track->SetAFD(input->afd);
+                    update_header = true;
                     break;
                 case UNC_SD:
                 case UNC_HD_1080I:
@@ -6279,6 +6281,11 @@ int main(int argc, const char** argv)
                 OutputTrack *output_track = output_tracks[i];
                 if (output_track->IsSilenceTrack())
                     output_track->WriteSilenceSamples(first_sound_num_samples);
+            }
+
+            if (update_header) {
+                clip->UpdateHeaderMetadata();
+                update_header = false;
             }
 
             if (min_num_samples < max_samples_per_read)
