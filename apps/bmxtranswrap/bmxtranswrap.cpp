@@ -4015,6 +4015,7 @@ int main(int argc, const char** argv)
         // initialise output tracks
 
         unsigned char avci_header_data[AVCI_HEADER_SIZE];
+        bool update_header = false;
         for (i = 0; i < output_tracks.size(); i++) {
             OutputTrack *output_track = output_tracks[i];
 
@@ -4199,6 +4200,7 @@ int main(int argc, const char** argv)
                         clip_track->SetAspectRatio(user_aspect_ratio);
                     if (afd)
                         clip_track->SetAFD(afd);
+                    update_header = true;
                     break;
                 case UNC_SD:
                 case UNC_HD_1080I:
@@ -4911,6 +4913,10 @@ int main(int argc, const char** argv)
                 even_frame = !even_frame;
             }
 
+            if (update_header) {
+                clip->UpdateHeaderMetadata();
+                update_header = false;
+            }
 
             total_read += num_read;
 

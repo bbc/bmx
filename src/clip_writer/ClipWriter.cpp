@@ -535,6 +535,19 @@ void ClipWriter::CompleteWrite()
     }
 }
 
+void ClipWriter::UpdateHeaderMetadata()
+{
+    switch (mType)
+    {
+        case CW_OP1A_CLIP_TYPE:
+            mOP1AClip->UpdateHeaderMetadata();
+            break;
+        case CW_UNKNOWN_CLIP_TYPE:
+            BMX_ASSERT(false);
+            break;
+    }
+}
+
 HeaderMetadata* ClipWriter::GetHeaderMetadata() const
 {
     switch (mType)

@@ -515,6 +515,36 @@ void OP1AFile::WriteSamples(uint32_t track_index, const unsigned char *data, uin
     WriteContentPackages(false);
 }
 
+void OP1AFile::UpdateHeaderMetadata()
+{
+    BMX_ASSERT(mMXFFile);
+
+    int64_t file_pos = mMXFFile->tell();
+
+    // re-write header partition to memory first
+
+    mMXFFile->seek(0, SEEK_SET);
+    mMXFFile->openMemoryFile(MEMORY_WRITE_CHUNK_SIZE);
+    mMXFFile->setMemoryPartitionIndexes(0, 0); // overwriting and updating from header pp
+
+    // re-write the header partition pack
+
+    Partition &header_partition = mMXFFile->getPartition(0);
+    header_partition.write(mMXFFile);
+
+    // re-write the header metadata
+
+    PositionFillerWriter pos_filler_writer(mHeaderMetadataEndPos);
+    mHeaderMetadata->write(mMXFFile, &header_partition, &pos_filler_writer);
+
+    // update header and flush memory writes to file
+
+    mMXFFile->updatePartitions();
+    mMXFFile->closeMemoryFile();
+
+    mMXFFile->seek(file_pos, SEEK_SET);
+}
+
 void OP1AFile::CompleteWrite()
 {
     BMX_ASSERT(mMXFFile);

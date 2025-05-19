@@ -124,6 +124,7 @@ public:
     void PrepareWrite();
     void WriteUserTimecode(Timecode user_timecode);
     void WriteSamples(uint32_t track_index, const unsigned char *data, uint32_t size, uint32_t num_samples);
+    void UpdateHeaderMetadata();
     void CompleteWrite();
 
 public:
