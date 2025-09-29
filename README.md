@@ -1,5 +1,9 @@
 > [!IMPORTANT]
-> Seeking input about the ongoing maintenance and future shape of the project. Please provide any thoughts and suggestions in issue [#114](https://github.com/bbc/bmx/issues/114)
+> _This repository is no longer being actively maintained and has been archived._
+>
+> **👉 An [EBU](https://github.com/ebu) fork of bmx has been created at https://github.com/ebu/bmx**
+> 
+> This fork has been made available to the bmx community to continue development of the project, as discussed in https://github.com/bbc/bmx/issues/114
 
 # bmx Library and Utilities
 
