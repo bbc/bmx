@@ -1,5 +1,6 @@
-> [!IMPORTANT]
-> Seeking input about the ongoing maintenance and future shape of the project. Please provide any thoughts and suggestions in issue [#114](https://github.com/bbc/bmx/issues/114)
+> [!TIP]
+> **The [original bmx repositiory](https://github.com/bbc/bmx) has now been archived.**
+> **This fork has been made available to the bmx community to continue development of the project, as discussed in https://github.com/bbc/bmx/issues/114**
 
 # bmx Library and Utilities
 
